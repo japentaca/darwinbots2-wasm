@@ -1,0 +1,4 @@
+# El fuente es la autoridad de la que se deriva spec/.
+# Sin conversion de finales de linea: cada archivo se guarda y se
+# recupera byte a byte igual al original. Anula el core.autocrlf global.
+* -text
