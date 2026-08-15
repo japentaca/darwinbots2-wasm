@@ -1,0 +1,30 @@
+' Alga minimalis, version 3
+'
+' Vegetable
+'
+
+cond 'new gene from Botsareus and Panda
+  *.chlr
+  *.light
+  <
+start
+160 .mkchlr store
+stop
+cond 'new gene from Botsareus viral defense for a plant is now a must
+*.waste 5000 <
+start
+*.nrg 500 div .mkslime store
+stop
+cond
+  *.nrg
+  6000
+  >
+start
+  50
+  .repro
+  store
+  15
+  .aimdx
+  store
+stop
+end
