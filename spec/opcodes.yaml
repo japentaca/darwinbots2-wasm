@@ -1,0 +1,133 @@
+# opcodes.yaml — registro completo de operadores del ADN de DarwinBots 2.48.32
+# Fuente: commit 02b20d7. Detalle narrativo y casos borde en spec/20-VM.md.
+#
+# Convenciones:
+#   tipo/value: el par (block.tipo, block.value) del token (DNA.bas:10-13).
+#   pops/pushes: efecto sobre IntStack (i) y BoolStack (b). El underflow nunca falla:
+#     pop entero sobre vacio devuelve 0; pop booleano devuelve el centinela -5
+#     ("vacio = true"). Ver 20-VM.md §3.
+#   flow: estados de CurrentFlow en que el token ejecuta (clear|cond|body|elsebody).
+#   cost: indice en SimOpts.Costs (SimOptions.bas:2-11), siempre multiplicado por
+#     Costs(COSTMULTIPLIER=54). El divisor se anota como cost_div.
+#   round: "banker" = redondeo al par de VB6 al convertir a Long en el push.
+
+meta:
+  fuente: Darwinbots2/DNA.bas, Darwinbots2/DNATokenizing.bas, Darwinbots2/Module1.bas, Darwinbots2/Bitwise.bas
+  direccionamiento_mem: "Abs(x) Mod 1000; 0 -> 1000; rango efectivo 1..1000 (MaxMem=1000, Robots.bas:376, main.frm:384)"
+  escritura_mem: "mod32000: x Mod 32000 con signo; multiplos no nulos de 32000 -> +-32000 (DNA.bas:1078-1090)"
+  tope_ejecucion: "hasta token end (10,1), max 32000 tokens, a < UBound(dna) (DNA.bas:87)"
+
+pseudo_tokens:
+  - token: "<numero>"
+    tipo: 0
+    value: "el literal (Integer; el cargador envuelve fuera de +-32767 en el EXE)"
+    flow: [cond, body, elsebody]
+    effect: "push i el literal"
+    cost: NUMCOST=0
+    cite: "DNA.bas:90-94; DNATokenizing.bas:289-292"
+  - token: "*<numero> | *.<sysvar>"
+    tipo: 1
+    value: "direccion; si fuera de 1..1000 se normaliza Abs Mod 1000, 0->1000 (sin write-back)"
+    flow: [cond, body, elsebody]
+    effect: "push i mem(direccion)"
+    cost: DOTNUMCOST=1
+    cite: "DNA.bas:95-112"
+
+basicos: # tipo 2, dispatcher DNA.bas:181-218, cost BCCMDCOST=2 (DNA.bas:186)
+  - {token: add,  value: 1,  pops_i: 2, pushes_i: 1, sem: "a+b; operandos via Single (perdida >2^24) y Mod 2e9; si |c|>2e9 c -= Sgn(c)*2e9 (ENVUELVE)", cite: "DNA.bas:220-234"}
+  - {token: sub,  value: 2,  pops_i: 2, pushes_i: 1, sem: "a-b; identico a add", cite: "DNA.bas:236-251"}
+  - {token: mult, value: 3,  pops_i: 2, pushes_i: 1, sem: "a*b en Double; si |c|>2e9 SATURA a Sgn(c)*2e9", cite: "DNA.bas:253-262"}
+  - {token: div,  value: 4,  pops_i: 2, pushes_i: 1, sem: "b=0 -> 0; si no a/b division REAL, redondeo banker (5 2 div = 2; 7 2 div = 4)", cite: "DNA.bas:264-274"}
+  - {token: rnd,  value: 5,  pops_i: 1, pushes_i: 1, sem: "uniforme 0..n = Int((n+1)*rndy); n<0 -> n+1..0; CONSUME 1 RNG", cite: "DNA.bas:276-278; Common.bas:53-56"}
+  - {token: "*",  value: 6,  pops_i: 1, pushes_i: 1, sem: "deref: push mem(Abs(b) Mod 1000; 0->1000). '0 *' lee mem(1000)", cite: "DNA.bas:280-295"}
+  - {token: mod,  value: 7,  pops_i: 2, pushes_i: 1, sem: "b=0 -> 0 (consume a); si no a Mod b truncado, signo del dividendo", cite: "DNA.bas:297-307"}
+  - {token: sgn,  value: 8,  pops_i: 1, pushes_i: 1, sem: "Sgn", cite: "DNA.bas:309-311"}
+  - {token: abs,  value: 9,  pops_i: 1, pushes_i: 1, sem: "Abs", cite: "DNA.bas:313-315"}
+  - {token: dup,  value: 10, pops_i: 1, pushes_i: 2, aliases: [dupint], sem: "duplica tope; sobre VACIO apila dos ceros (no usa DupIntStack)", cite: "DNA.bas:317-323"}
+  - {token: drop, value: 11, pops_i: 1, pushes_i: 0, aliases: [dropint], sem: "descarta tope", cite: "DNA.bas:209-210"}
+  - {token: clear, value: 12, pops_i: all, pushes_i: 0, aliases: [clearint], sem: "vacia IntStack", cite: "DNA.bas:211-212; Module1.bas:169-172"}
+  - {token: swap, value: 13, pops_i: 2, pushes_i: 2, aliases: [swapint], sem: "intercambia los dos del tope; con <=1 elementos no-op", cite: "DNA.bas:213-214; Module1.bas:187-199"}
+  - {token: over, value: 14, pops_i: 2, pushes_i: 3, aliases: [overint], sem: "a b -> a b a; vacio no-op; con 1 elemento apila 0", cite: "DNA.bas:215-216; Module1.bas:200-217"}
+
+avanzados: # tipo 3, dispatcher DNA.bas:329-363, cost ADCMDCOST=3 solo value<13 (DNA.bas:331)
+  - {token: angle, value: 1, pops_i: 2, pushes_i: 1, sem: "pops by bx (unidades sysvar); angulo desde pos/Divisor del bot, Y invertida, angnorm*200 -> 0..~1256; round banker", cite: "DNA.bas:385-397; Physics.bas:607-635"}
+  - {token: dist,  value: 2, pops_i: 2, pushes_i: 1, sem: "pops by bx escalados *Divisor; distancia euclidea EN UNIDADES DE MUNDO, satura 2e9 (asimetrico con angle en campos >32000)", cite: "DNA.bas:400-415; main.frm:1252-1256"}
+  - {token: ceil,  value: 3, pops_i: 2, pushes_i: 1, sem: "min(a,b), comparacion en Single", cite: "DNA.bas:419-427"}
+  - {token: floor, value: 4, pops_i: 2, pushes_i: 1, sem: "max(a,b), comparacion en Long", cite: "DNA.bas:430-438"}
+  - {token: sqr,   value: 5, pops_i: 1, pushes_i: 1, sem: "a>0 -> Sqr(a) banker; si no 0", cite: "DNA.bas:441-453"}
+  - {token: pow,   value: 6, pops_i: 2, pushes_i: 1, sem: "b saturado +-10; a=0 -> 0; a^b Double saturado +-2e9, banker", cite: "DNA.bas:476-492"}
+  - {token: pyth,  value: 7, pops_i: 2, pushes_i: 1, sem: "Sqr(a^2+b^2) en Single, satura 2e9", cite: "DNA.bas:525-537"}
+  - {token: anglecmp, value: 8, pops_i: 2, pushes_i: 1, sem: "a,b Mod 1256 llevados a [0,1255]; AngDiff(a/200,b/200)*200 con signo, +-~628", cite: "DNA.bas:365-383; Physics.bas:638-648"}
+  - {token: root,  value: 9, pops_i: 2, pushes_i: 1, sem: "Abs de ambos; b=0 -> 0; a^(1/b) banker", cite: "DNA.bas:495-508"}
+  - {token: logx,  value: 10, pops_i: 2, pushes_i: 1, sem: "Abs de ambos; b<2 o a=0 -> 0; Log(a)/Log(b) banker", cite: "DNA.bas:510-523"}
+  - {token: sin,   value: 11, pops_i: 1, pushes_i: 1, sem: "Sin(a/200)*32000 en Single, banker; sin normalizar a", cite: "DNA.bas:455-462"}
+  - {token: cos,   value: 12, pops_i: 1, pushes_i: 1, sem: "Cos(a/200)*32000 en Single, banker", cite: "DNA.bas:464-472"}
+  - {token: debugint,  value: 13, pops_i: 1, pushes_i: 1, sem: "traza a dbgstring; round-trip por Single (puede alterar tope >2^24); SIN coste; no tokeniza si ismutating", cite: "DNA.bas:540-549; DNATokenizing.bas:481-482"}
+  - {token: debugbool, value: 14, pops_b: 1, pushes_b: 1, sem: "traza; sobre bool vacio apila True (CBool(-5)); SIN coste; no tokeniza si ismutating", cite: "DNA.bas:552-561; DNATokenizing.bas:483-484"}
+
+bitwise: # tipo 4, dispatcher DNA.bas:568-592, cost BTCMDCOST=4 (DNA.bas:570); 32 bits complemento a dos via Bitwise.bas
+  - {token: "~",  value: 1, pops_i: 1, pushes_i: 1, sem: "complemento a uno", cite: "DNA.bas:594-602; Bitwise.bas:66-72"}
+  - {token: "&",  value: 2, pops_i: 2, pushes_i: 1, sem: "AND bit a bit", cite: "DNA.bas:604-618; Bitwise.bas:129-135"}
+  - {token: "|",  value: 3, pops_i: 2, pushes_i: 1, sem: "OR bit a bit", cite: "DNA.bas:620-634; Bitwise.bas:137-143"}
+  - {token: "^",  value: 4, pops_i: 2, pushes_i: 1, sem: "XOR bit a bit", cite: "DNA.bas:636-650; Bitwise.bas:145-151"}
+  - {token: "++", value: 5, pops_i: 1, pushes_i: 1, sem: "incremento con acarreo; EDGE: 2147483647 ++ -> 0 (BitToNumber no representa -2^31)", cite: "DNA.bas:652-660; Bitwise.bas:75-87,44-64"}
+  - {token: "--", value: 6, pops_i: 1, pushes_i: 1, sem: "decremento con acarreo", cite: "DNA.bas:662-670; Bitwise.bas:90-102"}
+  - {token: "-",  value: 7, pops_i: 1, pushes_i: 1, sem: "negacion Long directa (sin pasar por bits)", cite: "DNA.bas:585-586"}
+  - {token: "<<", value: 8, pops_i: 1, pushes_i: 1, sem: "shift izquierda 1 bit; bit30 entra al 31 (signo puede cambiar); EDGE: 2^30 << -> 0", cite: "DNA.bas:672-680; Bitwise.bas:105-113"}
+  - {token: ">>", value: 9, pops_i: 1, pushes_i: 1, sem: "shift derecha 1 bit ARITMETICO (bit 31 se conserva y copia)", cite: "DNA.bas:682-690; Bitwise.bas:116-127"}
+
+condiciones: # tipo 5, dispatcher DNA.bas:696-721, cost CONDCOST=5 (DNA.bas:697); pila "... a b" (b tope)
+  - {token: "<",  value: 1,  pops_i: 2, pushes_b: 1, sem: "a < b", cite: "DNA.bas:723-725"}
+  - {token: ">",  value: 2,  pops_i: 2, pushes_b: 1, sem: "a > b", cite: "DNA.bas:727-729"}
+  - {token: "=",  value: 3,  pops_i: 2, pushes_b: 1, sem: "a = b", cite: "DNA.bas:731-733"}
+  - {token: "!=", value: 4,  pops_i: 2, pushes_b: 1, sem: "a <> b", cite: "DNA.bas:735-737"}
+  - {token: "%=", value: 5,  pops_i: 2, pushes_b: 1, sem: "b dentro de +-10% de a (Single); a<0 -> siempre False; a=0 -> b=0", cite: "DNA.bas:739-747"}
+  - {token: "!%=", value: 6, pops_i: 2, pushes_b: 1, sem: "negacion de %=", cite: "DNA.bas:749-757"}
+  - {token: "~=", value: 7,  pops_i: 3, pushes_b: 1, sem: "a b d ~= : b dentro de +-d% de a; c=a/100*d; c<0 -> siempre False", cite: "DNA.bas:758-770"}
+  - {token: "!~=", value: 8, pops_i: 3, pushes_b: 1, sem: "negacion de ~= (con clamp de c a 2e9 que ~= no tiene)", cite: "DNA.bas:772-784"}
+  - {token: ">=", value: 9,  pops_i: 2, pushes_b: 1, sem: "a >= b", cite: "DNA.bas:790-792"}
+  - {token: "<=", value: 10, pops_i: 2, pushes_b: 1, sem: "a <= b", cite: "DNA.bas:786-788"}
+
+logicos: # tipo 6, dispatcher DNA.bas:798-852, cost LOGICCOST=6 (DNA.bas:800); operando ausente (-5) = True
+  - {token: and, value: 1, pops_b: 2, pushes_b: 1, sem: "a And b; b ausente -> True; a ausente -> push b", cite: "DNA.bas:805-813"}
+  - {token: or,  value: 2, pops_b: 2, pushes_b: 1, sem: "a Or b; a ausente -> push True", cite: "DNA.bas:814-822"}
+  - {token: xor, value: 3, pops_b: 2, pushes_b: 1, sem: "a Xor b; a ausente -> push Not b", cite: "DNA.bas:823-831"}
+  - {token: not, value: 4, pops_b: 1, pushes_b: 1, sem: "Not b; pila vacia -> push False", cite: "DNA.bas:832-835"}
+  - {token: "true",  value: 5, pushes_b: 1, sem: "push True", cite: "DNA.bas:836-837"}
+  - {token: "false", value: 6, pushes_b: 1, sem: "push False", cite: "DNA.bas:838-839"}
+  - {token: dropbool,  value: 7, pops_b: 1, sem: "descarta tope", cite: "DNA.bas:840-841"}
+  - {token: clearbool, value: 8, pops_b: all, sem: "vacia BoolStack", cite: "DNA.bas:842-843; Module1.bas:234-237"}
+  - {token: dupbool,  value: 9,  pops_b: 1, pushes_b: 2, sem: "duplica; vacio NO-OP (asimetrico con dup entero)", cite: "DNA.bas:844-845; Module1.bas:239-249"}
+  - {token: swapbool, value: 10, pops_b: 2, pushes_b: 2, sem: "intercambia; <=1 no-op", cite: "DNA.bas:846-847; Module1.bas:251-263"}
+  - {token: overbool, value: 11, pops_b: 2, pushes_b: 3, sem: "a b -> a b a; vacio no-op; con 1 elemento apila True", cite: "DNA.bas:848-849; Module1.bas:264-280"}
+
+# tipo 7: gate doble: CurrentFlow in {body, elsebody} Y CondStateIsTrue (tope bool sin
+# consumir; vacio = True) (DNA.bas:149-153, 1219-1232). Direccion = tope; 0 -> no-op sin
+# coste. cost base COSTSTORE=7, dividido por cost_div. mod32000 salvo indicacion.
+stores:
+  - {token: store, value: 1, pops_i: 2, cost_div: 1, sem: "mem(d) = mod32000(v); con d=0 el valor QUEDA en la pila", flags_tie: true, cite: "DNA.bas:891-910"}
+  - {token: inc,  value: 2, pops_i: 1, cost_div: 10, sem: "mem(d) = mod32000(mem+1)", flags_tie: false, cite: "DNA.bas:912-922"}
+  - {token: dec,  value: 3, pops_i: 1, cost_div: 10, sem: "mem(d) = mod32000(mem-1)", flags_tie: false, cite: "DNA.bas:924-934"}
+  - {token: addstore, value: 4, pops_i: 2, cost_div: 5, sem: "mem(d) = mod32000(mem+v); d=0: valor queda en pila", flags_tie: true, cite: "DNA.bas:936-955"}
+  - {token: substore, value: 5, pops_i: 2, cost_div: 5, sem: "mem(d) = mod32000(mem-v); d=0: valor queda en pila", flags_tie: true, cite: "DNA.bas:957-976"}
+  - {token: multstore, value: 6, pops_i: 2, cost_div: 5, sem: "mem(d) = mod32000(mem * mod32000(v)); d=0: valor queda en pila", flags_tie: true, cite: "DNA.bas:978-1003"}
+  - {token: divstore, value: 7, pops_i: 2, cost_div: 5, sem: "v=0 -> 0; si no mem/v REAL con banker; SIN mod32000; d=0: valor CONSUMIDO", flags_tie: true, cite: "DNA.bas:1005-1030"}
+  - {token: ceilstore, value: 8, pops_i: 2, cost_div: 5, sem: "mem(d) = mod32000(min(mem, v)); d=0: valor consumido", flags_tie: true, cite: "DNA.bas:1032-1053"}
+  - {token: floorstore, value: 9, pops_i: 2, cost_div: 5, sem: "mem(d) = mod32000(max(mem, v)); d=0: valor consumido", flags_tie: true, cite: "DNA.bas:1055-1075"}
+  - {token: rndstore, value: 10, pops_i: 1, cost_div: 7, sem: "mem(d) = Random(0, Abs(mem)) * Sgn(mem); CONSUME 1 RNG; sin mod32000", flags_tie: false, cite: "DNA.bas:1092-1102"}
+  - {token: sgnstore, value: 11, pops_i: 1, cost_div: 7, sem: "mem(d) = Sgn(mem); sin mod32000", flags_tie: false, cite: "DNA.bas:1104-1114"}
+  - {token: absstore, value: 12, pops_i: 1, cost_div: 8, sem: "mem(d) = Abs(mem); sin mod32000", flags_tie: false, cite: "DNA.bas:1116-1126"}
+  - {token: sqrstore, value: 13, pops_i: 1, cost_div: 7, sem: "mem>0 -> Sqr(mem) banker; si no 0; sin mod32000", flags_tie: false, cite: "DNA.bas:1128-1142"}
+  - {token: negstore, value: 14, pops_i: 1, cost_div: 8, sem: "mem(d) = -mem; sin mod32000", flags_tie: false, cite: "DNA.bas:1144-1154"}
+# flags_tie: true = marca TieAngOverwrite/TieLenOverwrite si d en 480-483/484-487
+# (DNA.bas:900-905 y analogos). Los de un operando NO los marcan aunque escriban ahi.
+
+flujo: # tipo 9, ExecuteFlowCommands DNA.bas:1159-1203, cost FLOWCOST=9 SIEMPRE (sin gate de flow).
+      # Tras cada token tipo 9: mem(341)=currgene (thisgene) (DNA.bas:167).
+  - {token: cond,  value: 1, sem: "CurrentFlow=COND; currgene+=1; VACIA BoolStack; ingene=True", cite: "DNA.bas:1167-1172"}
+  - {token: start, value: 2, sem: "si venia de COND: CondFlag=AND de todo el BoolStack (vaciandolo; vacio=True); si no ingene: CondFlag=True; body si CondFlag", cite: "DNA.bas:1173-1190,1205-1216"}
+  - {token: else,  value: 3, sem: "ELSEBODY solo si CondFlag=False; PROBABLE BUG: tras un start nunca ejecuta (DNA.bas:1178 fuerza CondFlag=True); solo vive cond...else sin start", cite: "DNA.bas:1191-1196; 20-VM.md §5.4"}
+  - {token: stop,  value: 4, sem: "CurrentFlow=CLEAR; ingene=False; (prologo fuerza CondFlag=True si no ingene)", cite: "DNA.bas:1197-1199"}
+
+flujo_maestro: # tipo 10
+  - {token: end, value: 1, sem: "termina la ejecucion (condicion del bucle, no un case); el cargador lo anade siempre al final; values != 1 son no-op", cite: "DNA.bas:87,168-169; DNATokenizing.bas:156-161"}
