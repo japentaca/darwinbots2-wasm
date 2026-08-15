@@ -20,6 +20,7 @@ Estado: `ABIERTA` · `EN CURSO` · `RESUELTA (cita)` · `IRRESOLUBLE DESDE EL FU
 | Q06 | ¿`Main.bas` (502 LOC) define un `Sub Main` alternativo para el runner de tests? No está en el EXE, sólo en `UnitTests`. | `00-INVENTARIO.md §3` | ABIERTA |
 | Q07 | Impacto real de `FlPointCheck=0` / `UnroundedFP=0` sobre la reproducibilidad numérica: ¿hay acumuladores `Single` donde la precisión extendida x87 cambie el resultado observable? | `00-INVENTARIO.md §1` | ABIERTA |
 | Q08 | ¿Divergen el EXE compilado y el IDE en algún punto **observable** por culpa de `OverflowCheck=0` / `BoundsCheck=0`? Localizar los sitios donde el overflow es alcanzable desde ADN de bot. | `00-INVENTARIO.md §1` | ABIERTA |
+| Q09 | El árbol llegó **con los finales de línea normalizados**: 68 de los 69 fuentes VB6 del motor tienen LF; sólo `TrayIcon.cls` conserva CRLF, que es lo que VB6 escribe. ¿Carga el IDE de VB6 archivos sin CRLF? Si no, hace falta un paso de conversión para poder abrir `Iersera.vbp` y observar el comportamiento real. Bloquea cualquier validación empírica de la spec contra el binario. No afecta a las citas `archivo:línea`. | verificación de `.gitattributes`, commit `ec0dc6d` | ABIERTA |
 
 ---
 
