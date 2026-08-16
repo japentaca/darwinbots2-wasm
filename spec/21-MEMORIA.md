@@ -6,7 +6,9 @@
 > genética, y las tres tablas `sysvar`/`sysvarIN`/`sysvarOUT`. El detalle posición a
 > posición vive en `spec/sysvars.yaml` (producido en esta misma pasada); aquí van la
 > estructura, las reglas transversales y los hallazgos. La spec describe el EXE
-> (`OverflowCheck=0`, `BoundsCheck=0`); donde el IDE difiere, se anota.
+> **Corrección 2026-08-16** (`00-INVENTARIO.md §1`): el EXE compila **con** chequeos
+> (flags `=0` = casilla sin marcar); EXE ≈ IDE y los errores runtime truncan el tick
+> (`10-CICLO.md §14`). Las notas de wrap silencioso de este documento fueron corregidas.
 > Lo raro pero real va `[PROBABLE BUG]`; lo no derivable, `[SIN VERIFICAR]`.
 
 ---
@@ -185,8 +187,9 @@ Inventario completo de escrituras en `mem` ajeno (importa para el orden por índ
 6. **Espionaje con efecto**: `memloc` apuntando a un ojo del observado marca su
    `View=True` (`Senses.bas:335-337`); `ReadTRefVars` **clampa la velocidad física del
    bot atado** a ±16000 como efecto colateral de leerla (`Ties.bas:776-777`).
-7. **UI/⚙**: consola (`console.frm:362`, escribe `val()` sin límites — error 6 en IDE,
-   wrap en EXE), Player Bot Mode (`Master.bas:352-354`), Eye Designer
+7. **UI/⚙**: consola (`console.frm:362`, escribe `val()` sin límites — fuera de ±32767,
+   error 6 también en el EXE: el comando de consola falla con el handler que haya
+   activo), Player Bot Mode (`Master.bas:352-354`), Eye Designer
    (`frmEYE.frm:367-372`), frmRestriOps (`mem(216)=1`).
 
 ## 5. Memoria genética: 971–990 y `epimem`
@@ -243,12 +246,13 @@ rango (32000, 32767] y el wrap del EXE. Resultado:
 - **Excepción 1 — `Kills` sin clamp en la vía de shots** `[PROBABLE BUG]` teórico:
   al matar por shot, `rob(parent).mem(220) = rob(parent).Kills` **sin** el clamp a
   32000 que sí tiene la vía de ties (`Shots.bas:594-595,712-713` vs `Ties.bas:419-421`).
-  `Kills As Long`: con 32001..32767 kills, `mem(220)` queda sobre 32000; con exactamente
-  32768, el EXE escribe **−32768** (el IDE lanza error 6) — el único camino del motor
-  que puede dejar −32768 en `mem` y habilitar el edge de `absstore`/`negstore`
-  (`20-VM.md §7`). Mismo caso en `mem(715) = rob(o).Kills` (`Senses.bas:327`).
-  Requiere >32000 kills de un mismo bot: irrelevante ecológicamente, pero es la
-  respuesta técnica a Q15.
+  `Kills As Long`: con 32001..32767 kills, `mem(220)` queda sobre 32000; con 32768 o
+  más, la asignación lanza **error 6 también en el EXE** (corrección 2026-08-16) →
+  truncamiento del tick (`10-CICLO.md §14`) **cada vez que ese bot mate por shot** —
+  `mem` nunca llega a contener −32768 por esta vía; el único origen posible de −32768
+  en `mem` queda en la carga de saves con `Integer` crudo (`20-VM.md §7`). Mismo caso
+  en `mem(715) = rob(o).Kills` (`Senses.bas:327`). Requiere >32000 kills de un mismo
+  bot: irrelevante ecológicamente, pero es la respuesta técnica a Q15.
 - **Excepción 2 — fudge**: con `FudgeEyes`/`FudgeAll` (modos evo ⚙), los refvars
   trucados hacen `valor + 1` sin clamp: un `refnrg` de 32000 queda en **32001**
   (`Senses.bas:237,242,278-287,299`; `Ties.bas:743-748,796`).
@@ -292,7 +296,8 @@ mutaciones (B6), no del mapa de memoria en runtime.
    (`Ties.bas:756-758`); compárese con la versión correcta de `lookoccurr`
    (`Senses.bas:335`). Consecuencia: espiar ojos por tie no aviva al espiado, y un
    trefaim entre 501 y 509 lo aviva espuriamente.
-5. **`mem(220)`/`mem(715)` pueden desbordar** por la vía de kills con shots (§7).
+5. **`mem(220)`/`mem(715)` pueden superar 32000** por la vía de kills con shots (§7;
+   con ≥32768 kills, error 6 y truncamiento de tick — corregido 2026-08-16).
 6. **`hitang` (221) no tiene escritor**: el nombre existe (`DNATokenizing.bas:1000`),
    ningún código escribe la celda. Sysvar fantasma; en la práctica es memoria libre con
    nombre.

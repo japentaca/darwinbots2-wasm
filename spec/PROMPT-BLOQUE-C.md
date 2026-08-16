@@ -58,8 +58,10 @@ en `b18d2cc`; el B en `a1d419c`; la decisión de arquitectura en `8cf9864`.
    catalogados en los documentos son la lista de casos de más valor: son exactamente
    donde un port ingenuo divergiría.
 5. **Precisión numérica explícita**: cada valor esperado con su tipo VB6 de origen, y
-   cada paso de redondeo/wrap/clamp citado. Los casos describen el EXE
-   (`OverflowCheck=0`); donde el IDE difiera, se anota.
+   cada paso de redondeo/wrap/clamp citado. **Corrección 2026-08-16**: el EXE compila
+   **con** chequeos (`00-INVENTARIO.md §1`) — EXE ≈ IDE; los wraps de la spec son solo
+   los explícitos del fuente, y los sitios de error 6/9/11 truncan el tick
+   (`10-CICLO.md §14`), con decisión de port propia por sitio.
 6. Un commit al cerrar (o por entregas parciales coherentes si el documento crece).
    Mantené `PROGRESO.md` y `OPEN_QUESTIONS.md` al día.
 

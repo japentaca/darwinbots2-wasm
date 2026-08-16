@@ -250,9 +250,11 @@ Declaradas en `Robots.bas:367-370`: `rep(ROBARRAYMAX)` y `kil(ROBARRAYMAX)` con
 entrar en `UpdateBots` (`Robots.bas:1487-1490`). `ManageReproduction` puede encolar el
 mismo bot dos veces (asexual y sexual, `Robots.bas:1391-1400`; el comentario del autor lo
 reconoce: "Currently possible to reproduce both sexually and asexually in the same
-cycle!"). `[PROBABLE BUG]` teórico: con la población al máximo, `rep` puede recibir hasta
-2×32000 entradas sobre un array de 32001; en el EXE (`BoundsCheck=0`) el desborde escribe
-memoria adyacente en silencio.
+cycle!"). `[PROBABLE BUG]` teórico: con población enorme, `rep` puede recibir hasta
+2×población entradas sobre un array de 32001; el encolamiento 32002.º lanza error 9
+(chequeos activos, ver §14 y la corrección de `00-INVENTARIO.md §1`) y **trunca el resto
+del tick**. Análisis de alcanzabilidad completo en `OPEN_QUESTIONS.md` Q13: exige ≥16001
+bots doblemente encolados en un mismo ciclo — solo escenarios degenerados.
 
 ### `ReproduceAndKill` — `Robots.bas:1659-1696`
 
@@ -307,9 +309,10 @@ bot exista**: matar un slot ya muerto repite estos efectos. Si `n = MaxRobs`, re
 `KillRobot` con `n = MaxRobs` (`Robots.bas:1168`); si además se cumple la condición de
 encogimiento, el array se acorta mientras el bucle de P2 sigue corriendo hasta su límite
 **cacheado** (VB6 evalúa el tope del `For` una sola vez). Las iteraciones restantes leen
-`rob(t)` con `t > UBound`: en el IDE es un error 9; en el EXE (`BoundsCheck=0`) es una
-lectura de memoria adyacente que no falla. Frecuencia baja (requiere que muera justo el
-índice máximo con el array poco poblado), pero es una divergencia EXE/IDE observable (Q08).
+`rob(t)` con `t > UBound`: error 9 también en el EXE (chequeos activos, corrección de
+`00-INVENTARIO.md §1`) → **el resto del tick se trunca** (§14). Frecuencia baja (requiere
+que muera justo el índice máximo con el array poco poblado), pero cuando ocurre el efecto
+es observable: se saltan P3-P7 y los pasos posteriores del tick de ese ciclo.
 
 ### Otros puntos de nacimiento y muerte
 
@@ -407,8 +410,9 @@ Inventario de estado oculto que un port debe inicializar/replicar (el RNG ya est
 1. **`Shock` destruye energía en vez de convertirla a body** (`Robots.bas:1289-1290`):
    `nrg = 0` antes de leer `nrg/10`. Bots que dependan: cualquiera que explote el shock de
    un rival esperando el cadáver con body; el body extra nunca aparece.
-2. **Encogimiento de `rob()` en mitad de pasada** → lectura fuera de rango silenciosa en el
-   EXE (`Robots.bas:1168` + `:3040-3054`). Divergencia EXE/IDE (alimenta Q08).
+2. **Encogimiento de `rob()` en mitad de pasada** → error 9 y truncamiento del resto del
+   tick (`Robots.bas:1168` + `:3040-3054`; §14. Corregido 2026-08-16: los chequeos están
+   activos también en el EXE, no hay lectura silenciosa).
 3. **`KillRobot(0)` alcanzable** desde la matanza por presión de memoria
    (`Master.bas:444`, `:459`) — el slot 0 fantasma recibe efectos de muerte.
 4. **Busy-wait de 67 ms con `limitgraphics`** (`main.frm:2114-2121`): retardo fijo, no
@@ -440,3 +444,44 @@ Inventario de estado oculto que un port debe inicializar/replicar (el RNG ya est
 - **Q01 → parcial**: dentro del tick consumen RNG, además de `rndy`: `Random` en
   `VegsRepopulate`/`aggiungirob` (`Vegs.bas:32`, `Globals.bas:411-415`) y los puntos del §0.1.
   `Obstacles.bas` (`MoveObstacles`, paso 18) queda para B7.
+
+## 14. Semántica de errores del tick — truncamiento silencioso *(añadido 2026-08-16)*
+
+> Sección añadida con la corrección de flags de `00-INVENTARIO.md §1`: el EXE compila
+> **con** chequeos de límites, overflow y FP (`Iersera.vbp:92-101`, todas las casillas
+> de "Advanced Optimizations" sin marcar). Un error 6 (overflow), 9 (índice fuera de
+> rango) u 11 (división por cero) ocurre en el EXE igual que en el IDE; lo que difiere
+> del modelo ingenuo es **qué pasa después**.
+
+Contrato:
+
+1. La simulación arranca **siempre** con `MDIForm1.ignoreerror = True`
+   (`MDIForm1.frm:1701-1703`, "Simulation now always starts with ignoreerror on";
+   declarado en `:975`; el usuario puede alternarlo por menú, `:1831-1832`).
+2. Con `ignoreerror`, el bucle principal ejecuta `On Error Resume Next` en `main()`
+   (`main.frm:2070-2071`). La alternativa `On Error GoTo SaveError` está comentada con
+   la nota de EricL "Uncomment this line in compiled version!" (`:2073`) — no se hizo.
+3. Un error en cualquier profundidad de `UpdateSim` **sin handler local más cercano**
+   desenrolla la pila hasta `main()`; `Resume Next` continúa en la sentencia siguiente
+   a `UpdateSim` (`MDIForm1.Follow`, `main.frm:2079`). Efecto observable: **todo lo que
+   quedaba del tick — pasadas restantes de `UpdateBots`, shots, ties, nacimientos,
+   muertes, repoblación, teleporters — se salta ese ciclo, en silencio**. El estado
+   queda como estuviera en el punto del error (mutaciones a medias incluidas) y el
+   ciclo siguiente arranca normal.
+4. Handlers locales que acotan el truncamiento a su subsistema:
+   `TeleportInBots` (`Teleport.bas:393,422`, `GoTo abandonthiscycle`),
+   `IsArrayBounded` (`Shots.bas:1226-1236`), `IsRobDNABounded` (`Module1.bas:57-62`) —
+   estas dos son *sondas*: detectan arrays sin dimensionar capturando el error que
+   `UBound` lanza sobre ellos —,
+   `Delete`/`Amplification`/`Translocation` (`NeoMutations.bas:98,239,312`),
+   `LoadDNA`/`getvals` (`DNATokenizing.bas:61,770`),
+   `renormalize_mutations`/`scale_mutations` (`Evo.bas:219,278,356,395`).
+5. Con `ignoreerror = False` (elección manual del usuario) no hay handler en `main()`:
+   en el EXE el error es fatal (diálogo de runtime y fin del proceso).
+
+**Decisión de port**: el port no reproduce el truncamiento (no tiene errores runtime
+espontáneos); los sitios del fuente capaces de disparar error 6/9/11 están inventariados
+(`20-VM.md §14`, `30-FISICA.md §8`, Q13, Q15) y el port define en cada uno un
+comportamiento explícito documentado. El truncamiento como mecánica global queda fuera
+de la spec de compatibilidad: es raro, dependiente de configuración degenerada, y ningún
+bot del corpus puede depender de él de forma reproducible.

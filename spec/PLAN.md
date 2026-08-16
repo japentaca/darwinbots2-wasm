@@ -12,11 +12,14 @@ en el original (`10-CICLO.md §1`).
 
 Salvaguardas de build **obligatorias**, derivadas de la spec:
 
-1. **Wrap de enteros de 16 bits**: el EXE original corre con `OverflowCheck=0` y la spec
-   exige overflow envolvente (p. ej. `21-MEMORIA.md §7`). En C++ el overflow con signo
-   es UB → toda aritmética de `mem()`/stacks pasa por helpers sobre `uint16_t` con cast
-   de ida y vuelta (o equivalente verificado); `-fwrapv` como red adicional, nunca como
-   único mecanismo.
+1. **Nada de overflow accidental** *(corregido 2026-08-16, `00-INVENTARIO.md §1`)*: el
+   EXE original corre **con** chequeo de overflow — no existe el wrap silencioso; los
+   envolvimientos reales de la spec son los explícitos del fuente (`Mod 32000`,
+   `Sgn·2·10⁹` en `add`/`sub`), y los sitios donde el original lanzaba error 6/9/11
+   (truncando el tick, `10-CICLO.md §14`) llevan en el port un comportamiento explícito
+   documentado por sitio. En C++ el overflow con signo sigue siendo UB → toda la
+   aritmética de `mem()`/stacks pasa por helpers con los clamps/mods del fuente y
+   detección explícita de los casos de error del original; `-fwrapv` solo como red.
 2. **`float` estricto**: todo el estado físico es `Single` (`30-FISICA.md §0.2`).
    Prohibido `-ffast-math` y variantes; cuidado con promociones implícitas a `double`
    en expresiones intermedias — las fórmulas sensibles se escriben con casts explícitos.
@@ -120,10 +123,12 @@ demás. Va con `spec/constants.yaml`.
    antigua de mutaciones. Cualquier subagente que busque "mutaciones" por nombre de archivo
    caerá ahí. Va como aviso explícito en el prompt de cada subagente del grupo B6.
    Lo mismo con `DoubleWord.cls` frente a `Bitwise.bas`.
-2. **El binario y el IDE pueden divergir.** Con `OverflowCheck=0` y `BoundsCheck=0`
-   (`Iersera.vbp`), el EXE distribuido no lanza error donde el IDE sí lo haría. El corpus
-   evolucionó contra el EXE. Toda la spec numérica se escribe describiendo **el
-   comportamiento del binario**, y donde el IDE difiera lo anoto.
+2. **El binario y el IDE NO divergen por chequeos** *(corregido 2026-08-16)*: los flags
+   `=0` de `Iersera.vbp:92-101` son casillas sin marcar — el EXE compila **con** todos
+   los chequeos y lanza los mismos errores que el IDE; con `ignoreerror` (default) el
+   error trunca el resto del tick en silencio (`00-INVENTARIO.md §1`,
+   `10-CICLO.md §14`). La divergencia residual es solo numérica: precisión x87 dentro
+   de expresiones (Q07).
 3. **Contaminación desde el wiki.** Esta sesión ya tiene contenido del wiki en contexto
    (direcciones de sysvars, orden de acciones, límites de movimiento). El brief prohíbe
    usarlo. Mitigación: **el Bloque A se ejecuta en una sesión limpia.** Ver más abajo.

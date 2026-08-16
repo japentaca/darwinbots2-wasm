@@ -27,7 +27,18 @@ reinicios de contexto.
 | `50-MUNDO.md` | ✅ cerrado | **B7.** Repoblación por cloroplastos (no por vegetales); sol en banda móvil; teleporters = E/S de disco en el tick (Q10); capa torneo deslindada; Q05 resuelta (Roborder pre-buckets). |
 | `60-FORMATOS.md` | ✅ cerrado | **B8.** Texto/.dbo/sim binaria; versionado FE×3 + FileContinue; solo 50 vars persistidas; `sint` = Mod 32000; gen epigenético autodestructivo; **SaveSimulation recursivo en error**; Q01 completa, Q06 y Q14 resueltas. |
 | `31-ENERGIA.md` + `constants.yaml` | ✅ cerrado | **B5, cierra el Bloque B.** Libro mayor del nrg/body/waste/cloroplastos por fase del tick; **P4 anti-gigantes muerta con `bodyfix=32100`**; venom 1:1 vs poison 4:1; constants.yaml con 3 capas (compiladas/arranque/preset F1). |
-| `OPEN_QUESTIONS.md` | 🟡 vivo | Resueltas: Q01, Q03, Q04, Q05, Q06, Q10, Q11, Q12, Q14, Q15, Q16. En curso: Q07, Q08. Abiertas: Q02, Q09, Q13, Q17 (las cuatro requieren correr el binario o son teóricas). |
+| `OPEN_QUESTIONS.md` | ✅ sin abiertas | **Todas las preguntas cerradas** (2026-08-16): Q01-Q17 resueltas; Q09 = irresoluble en este entorno (ni el EXE ni el IDE de VB6 corren en el Windows 11 del proyecto — validación empírica descartada; se levantó la veda de fuentes secundarias para las preguntas de runtime: Q02 con el runtime VB de dotnet/runtime, Q17 con la corrección de flags, Q07/Q08/Q13 por análisis y decisión de port). |
+
+> ⚠️ **CORRECCIÓN DE PREMISA (2026-08-16)** — Los flags `=0` de `Iersera.vbp:92-101` son
+> casillas de "Advanced Optimizations" **sin marcar**: el EXE distribuido compila **con**
+> chequeos de límites/overflow/FP (0 = default = chequear; −1 = eliminar). La premisa del
+> brief y de la Fase 0 ("overflow envuelve, índices no fallan") estaba invertida. Errores
+> 6/9/11 ocurren en el EXE igual que en el IDE, y con `ignoreerror` (default desde 2014)
+> **truncan el resto del tick en silencio** — contrato completo en `10-CICLO.md §14`,
+> corrección de origen en `00-INVENTARIO.md §1`. Documentos barridos y corregidos:
+> `00-INVENTARIO`, `10-CICLO`, `20-VM`, `opcodes.yaml`, `21-MEMORIA`, `30-FISICA`,
+> `PLAN`, `PROMPT-BLOQUE-C`, `OPEN_QUESTIONS`. Los `PROMPT-BLOQUE-A/A2/A3/B.md` se
+> conservan sin tocar como registro histórico (contienen la premisa vieja).
 
 ## Siguiente
 
@@ -48,3 +59,11 @@ Bloque C: `70-CASOS-DORADOS.md`.
 - **2026-08-15** — A2 cerrado (`20-VM.md` + `opcodes.yaml`). Fuentes sin modificar.
 - **2026-08-16** — A3 cerrado (`21-MEMORIA.md` + `sysvars.yaml`). **Bloque A completo.**
   Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-16 (post-Bloque B)** — El usuario confirma que ni el EXE ni el IDE de VB6
+  corren en su máquina: se descarta la validación empírica y se admiten fuentes
+  secundarias para las preguntas de runtime. Q02 resuelta (LCG de VB6, fuente:
+  dotnet/runtime `VBMath.vb`); Q09 reclasificada; Q13 resuelta por análisis.
+- **2026-08-16 (corrección de premisa)** — Descubierto que los flags del `.vbp` estaban
+  leídos al revés: el EXE compila **con** chequeos. Barrido de corrección en 9 archivos
+  de `spec/`, nueva `10-CICLO.md §14` (truncamiento de tick), Q07/Q08/Q17 cerradas bajo
+  la premisa corregida. **No quedan preguntas abiertas.** Fuentes sin modificar.

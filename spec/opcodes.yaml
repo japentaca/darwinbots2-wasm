@@ -20,7 +20,7 @@ meta:
 pseudo_tokens:
   - token: "<numero>"
     tipo: 0
-    value: "el literal (Integer; el cargador envuelve fuera de +-32767 en el EXE)"
+    value: "el literal (Integer; fuera de +-32767 el cargador lanza error 6 y el archivo no carga — correccion 2026-08-16, ver 20-VM.md 2.4)"
     flow: [cond, body, elsebody]
     effect: "push i el literal"
     cost: NUMCOST=0

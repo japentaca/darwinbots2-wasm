@@ -5,8 +5,10 @@
 > bot-bot (buckets + `Repel3`), colisiones con formas, bordes del campo, integración
 > (`UpdatePosition`) y rotación (`SetAimFunc`/`TieTorque`). La posición de cada llamada
 > dentro del tick está en `10-CICLO.md §5` y no se re-deriva; los efectos sobre `mem()`
-> están en `21-MEMORIA.md`/`sysvars.yaml`. La spec describe el EXE (`OverflowCheck=0`,
-> `FlPointCheck=0`); donde el IDE difiera, se anota. `[PROBABLE BUG]` = raro pero real.
+> están en `21-MEMORIA.md`/`sysvars.yaml`. La spec describe el EXE. **Corrección
+> 2026-08-16** (`00-INVENTARIO.md §1`): el EXE compila **con** chequeos (flags `=0` =
+> casilla sin marcar); EXE ≈ IDE y los errores runtime truncan el tick
+> (`10-CICLO.md §14`). `[PROBABLE BUG]` = raro pero real.
 
 ---
 
@@ -151,9 +153,11 @@ El acumulado `mt` alimenta el momento angular: `ma = mt` (clamp ±π/4, `:715-71
   (`:694`) — con pares fuertes el componente Y del torque toma el signo del X.
 - Si `|mt| > 2π`, ejecuta `.Ties(j).ang = dlo` (`:712`) con **`j` apuntando una posición
   después de la última tie** (el `While` terminó con `Ties(j).pnt = 0`): escribe el
-  ángulo en un slot de tie vacío (o en `Ties(11)`, fuera del array declarado
-  `Ties(10)`, si el bot tiene las 10 ties — EXE: escritura silenciosa adyacente;
-  IDE: error 9). `dlo` y `n` conservan los valores de la última tie `angreg` del bucle.
+  ángulo en un slot de tie vacío (o, si el bot tuviera las 10 ties, en `Ties(11)`,
+  fuera del array declarado `Ties(10)` — error 9 también en el EXE, chequeos activos
+  → truncamiento del tick, `10-CICLO.md §14`; con el máximo real de 9 ties de
+  `maketie` la escritura cae dentro). `dlo` y `n` conservan los valores de la última
+  tie `angreg` del bucle.
 
 ---
 
@@ -271,8 +275,10 @@ cuenta. `angle`/`angnorm`/`AngDiff` (`Physics.bas:607-648`): convención Y inver
   (`Physics.bas:306-383`); `CylinderCd` no tiene llamadores vivos (los TieDrag están
   comentados) — **código muerto**.
 - División por cero alcanzable: `GravityForces` divide por `PhysMoving` (`:398`) — con
-  `PhysMoving = 0` configurado, error 11 en IDE; en el EXE (`FlPointCheck=0`),
-  comportamiento x87 **[SIN VERIFICAR]**.
+  `PhysMoving = 0` configurado, **error 11 también en el EXE** (chequeo FP activo,
+  corrección 2026-08-16) → truncamiento del tick cada ciclo (`10-CICLO.md §14`): una
+  sim configurada así no avanza más allá de ese punto del tick. Decisión de port:
+  rechazar/clampar `PhysMoving = 0` en la carga de opciones, documentado.
 
 ## 9. Resumen de `[PROBABLE BUG]`
 
@@ -298,9 +304,10 @@ cuenta. `angle`/`angnorm`/`AngDiff` (`Physics.bas:607-648`): convención Y inver
 
 ## 10. `[SIN VERIFICAR]`
 
-- El valor x87 exacto de `Ygravity/0` (§8) y, en general, el impacto de la precisión
-  extendida sobre `Sqr`/`Atn` encadenados (Q07 sigue abierta; este documento aporta el
-  inventario de guardas manuales como evidencia de sensibilidad).
+- ~~El valor x87 exacto de `Ygravity/0`~~ → resuelto con la corrección de flags
+  (2026-08-16): error 11 + truncamiento, no hay valor (§8). El impacto de la precisión
+  extendida sobre `Sqr`/`Atn` encadenados queda cerrado como decisión de port en Q07
+  (IEEE 754 estricto; divergencia de doble redondeo acotada y no falsable).
 - El efecto neto del bucket-clamp (§9.6) en campos donde los bots pueden salir del
   rango físico (teleporters mal configurados) — cruza con Q10 (B7).
 

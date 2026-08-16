@@ -158,7 +158,7 @@ registros:
   - {addr: 220, names: [kills], const: Kills, sentido: sense, in: true, out: false,
      escribe: "solo al matar: via ties con clamp 32000 (Ties.bas:419-421,624-626); via shots SIN clamp (Shots.bas:594-595,712-713)",
      borra: "no; el bot puede pisarla y el motor no la refresca hasta la proxima muerte causada",
-     rango: "0..32000 via ties; via shots el Long .Kills se asigna sin clamp: >32767 kills desborda el Integer (EXE: wrap; 32768 -> -32768). [PROBABLE BUG] teorico, ver 21-MEMORIA.md par.7",
+     rango: "0..32000 via ties; via shots el Long .Kills se asigna sin clamp: 32001..32767 quedan sobre 32000; >=32768 lanza error 6 y trunca el tick (correccion 2026-08-16, chequeos activos — ver 10-CICLO.md par.14). [PROBABLE BUG] teorico, ver 21-MEMORIA.md par.7",
      cite: "Ties.bas:421; Shots.bas:595"}
   - {addr: 221, names: [hitang], const: null, sentido: free, in: false, out: false,
      escribe: "NADIE. Sysvar muerta: existe el nombre, ningun codigo escribe ni borra mem(221)",
@@ -454,7 +454,7 @@ registros:
      escribe: "lookoccurr = mem(825) del visto", borra: "EraseLookOccurr (:385)", rango: "0..32000", cite: "Senses.bas:326"}
   - {addr: 715, names: [refkills], const: null, sentido: sense, in: true, out: false,
      escribe: "lookoccurr = .Kills del visto (Long -> Integer sin clamp: mismo overflow teorico que mem(220))",
-     borra: "EraseLookOccurr (:386)", rango: "0..32767 (wrap posible en EXE)", cite: "Senses.bas:327"}
+     borra: "EraseLookOccurr (:386)", rango: "0..32767 (>=32768 kills: error 6 y truncamiento de tick, correccion 2026-08-16)", cite: "Senses.bas:327"}
   - {addr: 721, names: [myup], const: null, sentido: sense, in: true, out: false,
      escribe: "makeoccurrlist = occurr(1) propio; SOLO en eventos de ADN (carga, nacimiento, delgene, addgene), NO cada ciclo; las mutaciones normales NO lo refrescan",
      borra: "no (el bot puede pisarlo hasta el proximo evento)", rango: "0..~16000", cite: "Senses.bas:508-511"}

@@ -24,38 +24,61 @@ el motor puede describir una versión anterior a este fuente.
 ### Flags de compilación — hallazgo de primer orden
 
 ```
+CompilationType=0
 OptimizationType=2
+FavorPentiumPro(tm)=0
+CodeViewDebugInfo=0
+NoAliasing=0
 BoundsCheck=0
 OverflowCheck=0
 FlPointCheck=0
 FDIVCheck=0
 UnroundedFP=0
-NoAliasing=0
 ```
-— `Iersera.vbp`
+— `Iersera.vbp:92-101`
 
-Consecuencias directas sobre el comportamiento del binario distribuido:
+> **CORRECCIÓN (2026-08-16).** La lectura original de esta sección estaba **invertida**.
+> En los `.vbp`, estas claves serializan las casillas de "Advanced Optimizations":
+> `0` = casilla **sin marcar** (comportamiento por defecto: chequeos **activos**),
+> `−1` = casilla marcada (chequeo eliminado) — True en VB6 es −1, y la doc de Microsoft
+> confirma que el defecto es chequear ("By default Visual Basic makes a check on every
+> access to an array"; marcar "Remove Array Bounds Checks" es lo que lo elimina)
+> `[FUENTE EXTERNA: MS aa716334]`. Coherente con `OptimizationType=2` = "No
+> Optimization". La corrección se propagó a todos los documentos afectados; los
+> `PROMPT-BLOQUE-*.md` anteriores a la corrección se conservan como registro histórico
+> con la premisa vieja.
 
-- **`OverflowCheck=0`**: el overflow de `Integer`/`Long` **no lanza error** en el EXE
-  compilado; el valor envuelve en silencio. Responde a la pregunta del brief
-  ("¿lanza error, se atrapa, se satura?") **para el binario**, no para el IDE:
-  en el entorno de desarrollo VB6 las comprobaciones se aplican igual, así que
-  el fuente corriendo en IDE y el EXE distribuido **pueden divergir**.
-  El corpus histórico de bots evolucionó contra el EXE.
-- **`BoundsCheck=0`**: índices de array fuera de rango no producen error en el EXE;
-  leen o escriben memoria adyacente. Comportamiento indefinido que un port en Rust
-  no puede reproducir accidentalmente. Ver `Shots.bas:1226 IsArrayBounded` y
-  `Module1.bas IsRobDNABounded`: hay comprobaciones **manuales** de límites, lo que
-  sugiere que los autores sabían que el chequeo automático estaba apagado.
-- **`FlPointCheck=0` / `FDIVCheck=0` / `UnroundedFP=0`**: sin comprobación de errores
-  de coma flotante y sin redondeo forzado a precisión declarada; los `Single`
-  intermedios pueden evaluarse con precisión extendida x87.
-  **[SIN VERIFICAR]** El impacto real sobre la reproducibilidad numérica.
+Consecuencias reales sobre el binario distribuido (`CompilationType=0` = código nativo,
+sin optimizar, **con todos los chequeos**):
 
-`main.frm:2071` refuerza el punto: la línea de captura de errores está **comentada**,
-con la nota del propio autor `'On Error GoTo SaveError  'EricL - Uncomment this line in compiled version!`.
-Y `main.frm:2069` activa `On Error Resume Next` cuando `MDIForm1.ignoreerror` está a `True`:
-los errores en runtime se **tragan** y la simulación continúa con estado inconsistente.
+- **`OverflowCheck=0` (chequeo de overflow ACTIVO)**: el overflow de `Integer`/`Long`
+  y las conversiones fuera de rango (`CInt`/`CLng`) lanzan **error 6** también en el
+  EXE, igual que en el IDE. El valor **nunca envuelve en silencio** por vía del
+  compilador (los envolvimientos explícitos del fuente — `Mod 32000`, la resta
+  `Sgn·2·10⁹` de `add`/`sub` — son código y siguen valiendo).
+- **`BoundsCheck=0` (chequeo de límites ACTIVO)**: índice fuera de rango lanza
+  **error 9** también en el EXE; nunca lee/escribe memoria adyacente. Los chequeos
+  manuales (`Shots.bas:1226 IsArrayBounded`, `Module1.bas IsRobDNABounded`) no son
+  sustitutos de un chequeo apagado: son manejo anticipado de casos esperados.
+- **`FlPointCheck=0` / `FDIVCheck=0` (ACTIVOS)**: los errores de coma flotante se
+  chequean (división FP por cero → **error 11** también en el EXE); el workaround del
+  FDIV del Pentium está incluido (sin efecto observable).
+- **`UnroundedFP=0` (redondeo forzado)**: el compilador **redondea a la precisión
+  declarada en cada asignación** (no retiene valores en registros x87 entre
+  sentencias). Queda como única fuente de divergencia numérica la precisión extendida
+  x87 **dentro de una expresión** (doble redondeo), acotada y no falsable sin el
+  binario (ver Q07).
+
+**Qué pasa con esos errores en runtime — la semántica que importa**: la simulación
+arranca siempre con `MDIForm1.ignoreerror = True` desde 2014 (`MDIForm1.frm:1701-1703`),
+y con él el bucle principal activa `On Error Resume Next` (`main.frm:2070-2071`; la
+alternativa `On Error GoTo SaveError` está comentada, `:2073`). Un error 6/9/11 en
+cualquier profundidad del tick sin handler local más cercano desenrolla la pila hasta
+`main()` y ejecuta la línea siguiente a `UpdateSim` (`main.frm:2079`): **el resto del
+tick se trunca en silencio** y el ciclo siguiente arranca normal. Handlers locales que
+acotan el daño: `Teleport.bas:393,422`, `Shots.bas:1227`, `NeoMutations.bas:98,239,312`,
+`DNATokenizing.bas:61,770`, `Evo.bas:219,278,356,395`, `Module1.bas:58`. Ver
+`10-CICLO.md §14` para el contrato completo de truncamiento.
 
 ---
 

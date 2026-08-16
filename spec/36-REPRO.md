@@ -158,6 +158,7 @@ bot se renombra `(k)Nombre`, resetea `Mutations` y funda especie (máx. 49). Cam
 
 - **Q01**: RNG del subsistema — 1 por elección asexual/sexual doble, 1 por lotería
   vegetal, ~1 por segmento de crossover, y el granizo de `mutate` (B6b).
-- **Q13**: sigue abierta (el desborde de `rep()` exige población máxima con doble
-  encolado; nada nuevo).
+- **Q13**: resuelta post-B (2026-08-16) por análisis: exige ≥16001 bots doblemente
+  encolados en un ciclo; el 32002.º encolamiento da error 9 + truncamiento de tick
+  (ver `OPEN_QUESTIONS.md` Q13 y `10-CICLO.md §14`).
 - **Q16**: señalada en §6.
