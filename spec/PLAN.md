@@ -1,6 +1,37 @@
 # PLAN — Extracción de la especificación
 
-Derivado del reconocimiento en `00-INVENTARIO.md`. **Pendiente de tu aprobación.**
+Derivado del reconocimiento en `00-INVENTARIO.md`.
+
+---
+
+## Decisión de arquitectura del port (fijada 2026-08-16)
+
+**Lenguaje: C++ (core) → WASM vía Emscripten; render 2D en web (Canvas/WebGL desde JS/TS).**
+El core no depende de ningún motor; simulación y presentación quedan desacopladas como
+en el original (`10-CICLO.md §1`).
+
+Salvaguardas de build **obligatorias**, derivadas de la spec:
+
+1. **Wrap de enteros de 16 bits**: el EXE original corre con `OverflowCheck=0` y la spec
+   exige overflow envolvente (p. ej. `21-MEMORIA.md §7`). En C++ el overflow con signo
+   es UB → toda aritmética de `mem()`/stacks pasa por helpers sobre `uint16_t` con cast
+   de ida y vuelta (o equivalente verificado); `-fwrapv` como red adicional, nunca como
+   único mecanismo.
+2. **`float` estricto**: todo el estado físico es `Single` (`30-FISICA.md §0.2`).
+   Prohibido `-ffast-math` y variantes; cuidado con promociones implícitas a `double`
+   en expresiones intermedias — las fórmulas sensibles se escriben con casts explícitos.
+3. **Redondeo bancario centralizado**: un único helper replica `CInt`/`CLng` de VB6
+   (al par más cercano) y se usa en toda conversión float→int que la spec marque.
+4. **RNG propio determinista** consumido en el orden exacto del inventario de Q01
+   (extracciones desperdiciadas incluidas). Q02 (algoritmo del `Rnd` de VB6) sigue
+   abierta: la compatibilidad bit a bit con replays del original no se promete.
+5. **Casos dorados de overflow/redondeo primero**: los tests de `70-CASOS-DORADOS.md`
+   que ejercitan wrap de 16 bits, redondeo bancario y guardas de underflow se
+   implementan antes que cualquier subsistema, para cazar regresiones de build.
+
+---
+
+## Historial: plan de extracción (aprobado; Bloques A y B completados)
 
 ---
 
