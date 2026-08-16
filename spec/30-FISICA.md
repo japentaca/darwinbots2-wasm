@@ -280,8 +280,10 @@ cuenta. `angle`/`angnorm`/`AngDiff` (`Physics.bas:607-648`): convención Y inver
    tuercen el eje Y hacia el signo del X. Multibots con ángulos fijados y palancas
    largas dependen de esta asimetría.
 2. **`TieTorque` con `|mt| > 2π` escribe `Ties(j).ang` en el slot siguiente al último**
-   (`Physics.bas:712`), potencialmente `Ties(11)` fuera del array (EXE: silencioso;
-   IDE: error 9). Alimenta Q03 (índices de `Ties`).
+   (`Physics.bas:712`): como `maketie` limita a 9 ties (`34-TIES.md §1`), `j ≤ 10` y la
+   escritura cae **dentro** del array pero en un slot de tie vacío (`pnt = 0`), cuyo
+   `.ang` rancio puede heredar la próxima tie creada ahí (`maketie` no inicializa
+   `.ang`). Alimenta Q03 (índices de `Ties`).
 3. **La biblioteca de vectores muta sus argumentos** (§0.3) — no es un bug de conducta
    sino una trampa de implementación: los clamps ±32000 de `VectorScalar`/
    `VectorMagnitudeSquare` son parte de la semántica física observable.
