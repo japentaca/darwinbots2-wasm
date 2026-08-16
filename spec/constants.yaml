@@ -1,0 +1,125 @@
+# constants.yaml — constantes del motor de DarwinBots 2.48.32
+# Fuente: commit 02b20d7. Cierra con B5; alimentado por B1-B8.
+#
+# Tres capas, de mas dura a mas blanda:
+#   compiladas : literales del codigo; identicas en toda instalacion.
+#   arranque   : defaults sembrados por el programa al iniciar (antes de leer settings).
+#   preset_f1  : el preset de liga F1 (boton en OptionsForm); referencia del corpus
+#                de competicion. Los ajustes reales de una sim vienen de lastexit.set
+#                y de la UI: [SIN VERIFICAR] por instalacion.
+
+compiladas:
+  # geometria y arrays
+  RobSize: {v: 120, cite: "Robots.bas:359", nota: "diametro fijo; half=60 (:360)"}
+  CubicTwipPerBody: {v: 905, cite: "Robots.bas:361", nota: "radio(1000 body) = 60"}
+  ROBARRAYMAX: {v: 32000, cite: "Robots.bas:365"}
+  MAXTIES: {v: 10, cite: "Ties.bas:42", nota: "maximo real de ties por creacion: 9 (34-TIES.md par.0.1)"}
+  MAXOBSTACLES: {v: 1000, cite: "Obstacles.bas:33"}
+  MAXTELEPORTERS: {v: 10, cite: "Teleport.bas:53"}
+  MAXNATIVESPECIES: {v: 76, cite: "SimOptions.bas:47"}
+  BucketSize: {v: 4000, cite: "Quads.bas:6"}
+  MaxMem: {v: 1000, cite: "Robots.bas:376; main.frm:384"}
+  stacklim: {v: 100, cite: "DNA.bas:30-36", nota: "101 celdas por stack (20-VM.md par.3)"}
+  smudgefactor: {v: 50, cite: "Physics.bas:18"}
+  PI: {v: 3.14159265, cite: "Common.bas:19", nota: "Single; el motor mezcla 6.28/1.57/0.78 literales en touch/taste (Senses.bas:30-55)"}
+
+  # vision
+  eye_default_halfwidth: {v: "PI/36 (5 grados)", cite: "Quads.bas:536-537"}
+  eye_offset_step: {v: "PI/18 por ojo, eye5 frontal", cite: "Quads.bas:526"}
+  sight_base: {v: 1440, cite: "Quads.bas:377-379", nota: "EyeSightDistance = 1440*(1-ln(w/35)/4)*eyestrength"}
+  AbsoluteEyeWidth_base: {v: 35, cite: "Quads.bas:350-357"}
+  EyeEffectiveness: {v: 3, cite: "Quads.bas:384"}
+  night_vision_factor: {v: 0.8, cite: "Quads.bas:393"}
+  eyevalue: {v: "1/((dist+10)/alcance)^2, clamp 32000", cite: "Quads.bas:566-572"}
+
+  # shots
+  shotdecay: {v: 40, cite: "Shots.bas:44"}
+  ShellEffectiveness: {v: 20, cite: "Shots.bas:45"}
+  SlimeEffectiveness: {v: 0.05, cite: "Shots.bas:46"}
+  VenumEffectivenessVSShell: {v: 25, cite: "Shots.bas:47"}
+  MinBotRadius: {v: 0.2, cite: "Shots.bas:48"}
+  shot_speed: {v: 40, cite: "Shots.bas:158", nota: "+ actvel del tirador"}
+  shot_jitter: {v: "Random(-20,20)/200 rad", cite: "Shots.bas:146"}
+  shot_nrg_formula: {v: "Log(vbody)*60*rngmult si vbody>10; Range=(nrg+41)\\40; nrg=Range*40", cite: "Shots.bas:162-171"}
+  virus_range: {v: "11 + CInt(vshoot/2)", cite: "Shots.bas:1102"}
+  sperm_fertility_cycles: {v: 10, cite: "Shots.bas:868"}
+  sexrepro_block: {v: -18, cite: "Robots.bas:2532", nota: "~8 ciclos de bloqueo tras incompatibilidad"}
+  genetic_distance_max_sex: {v: 0.6, cite: "Robots.bas:2531"}
+  genetic_distance_max_chlr_share: {v: 0.25, cite: "Robots.bas:1870"}
+
+  # ties
+  tie_spring_new: {v: "k=0.01 b=0.02 type=0", cite: "Ties.bas:932-934"}
+  tie_spring_bone: {v: "k=0.05 b=0.1 type=3", cite: "Ties.bas:983-985"}
+  tie_deformation_deadzone: {v: 20, cite: "Physics.bas:487"}
+  tie_max_length: {v: "1000 + radios (rotura)", cite: "Physics.bas:517"}
+  tie_birth_last: {v: 100, cite: "Robots.bas:2380"}
+  tie_mtie_last: {v: -20, cite: "Robots.bas:1435", nota: "endurece a los 19 ciclos"}
+  tie_torque_slack: {v: "5 grados", cite: "Physics.bas:666"}
+  tie_feed_limits: {v: "nrg +1000/-3000; body +100/-300; venom +-100; waste +-1000", cite: "Ties.bas:349-350,555-556,447-448,506-507"}
+  maketie_deflect: {v: "Random(2,92) vs slime", cite: "Ties.bas:898-907"}
+  multibot_time_start: {v: 210, cite: "Globals.bas:492", nota: "muerte bajo 10 (Ties.bas:174)"}
+
+  # metabolismo (tipos de cambio y caps por ciclo)
+  body_nrg_ratio: {v: "10 nrg = 1 body", cite: "Robots.bas:1698-1714"}
+  storebody_cap: {v: 100, cite: "Robots.bas:1699"}
+  shell_rate: {v: "10 shell/nrg, cap 100/ciclo", cite: "Robots.bas:892,905"}
+  slime_rate: {v: "10 slime/nrg, cap 200/ciclo", cite: "Robots.bas:939,952"}
+  venom_rate: {v: "1 venom/nrg, cap 100/ciclo", cite: "Robots.bas:2015,2027"}
+  poison_rate: {v: "4 poison/nrg, cap 100/ciclo", cite: "Robots.bas:2055,2067"}
+  decay_slime_poison: {v: "x0.98/ciclo, suelo 0.5->0", cite: "Robots.bas:1028-1035"}
+  corpse_threshold: {v: "nrg < 15 (age>0)", cite: "Robots.bas:1309"}
+  death_threshold: {v: "body < 0.5 (o nrg < 0.5 sin corpses)", cite: "Robots.bas:1331-1332"}
+  shock: {v: "no-veg, nrg>3000, perdida > onrg/2 -> nrg=0", cite: "Robots.bas:1281-1296"}
+  movecost_floor: {v: -1000, cite: "Physics.bas:456-458"}
+  chlr_decay: {v: "0.5/(100^(chlr/16000))", cite: "Robots.bas:1222"}
+  chlr_mass: {v: "(chlr/32000)*31680", cite: "Physics.bas:46"}
+  chlr_radius_target: {v: 415, cite: "Robots.bas:737"}
+  chlr_buy_min_nrg: {v: 100, cite: "Robots.bas:1253"}
+  waste_badlevel_fallback: {v: 400, cite: "Robots.bas:1187", nota: "si BadWastelevel==0"}
+  defacate_trigger: {v: "waste > 32000 -> shot -4 de 200, waste 31500", cite: "Shots.bas:489-502; Robots.bas:1189"}
+  repro_tax: {v: "0.1% padre + 1% hijo + DnaLen*DNACOPYCOST", cite: "Robots.bas:2214,2230,2408"}
+  repro_min_body: {v: "body >= 5 (y > 2 tras guardas)", cite: "Robots.bas:2102,2120"}
+  veg_lottery: {v: "asexual Random(0,10)!=5; sexual Random(0,9)!=5", cite: "Robots.bas:2129,2456"}
+  memory_kill_totlen: {v: "4e6 (matanza), 3e6 (borra LastMutDetail)", cite: "Master.bas:442-466"}
+  feedvegs_divisor: {v: 3.5, cite: "Vegs.bas:237"}
+  feedvegs_gain: {v: "((1-L)^2*4 * chlr/16000 * 1.25 - (chlr/32000)^2) * tok", cite: "Vegs.bas:240-244"}
+  feedvegs_age_tax: {v: "age*chlr/1e9", cite: "Vegs.bas:251"}
+  sun_drift: {v: "+-0.0005/ciclo, cambio de rumbo 1/2000", cite: "Vegs.bas:51-62"}
+  sun_band: {v: "(0.25 + SunRange^3*0.75) * FieldWidth", cite: "Vegs.bas:197-198"}
+
+  # mutaciones
+  overtime: {v: 30, cite: "NeoMutations.bas:19"}
+  mut_floor_K: {v: "Point/P2 400, CopyError 25, CE2 5, Insertion 5, Reversal 105, Translocation 360, Amplification 1200, Minor/MajorDeletion 2.5", cite: "NeoMutations.bas:463,433,582,396,820,860,323,250,904,939"}
+  mut_default_rate: {v: 5000, cite: "NeoMutations.bas:1094", nota: "o DnaLen*valNormMut con NormMut"}
+  mut_default_lengths: {v: "Point 3+-1, Delta 500+-150, MinorDel 1+-0, Insertion 1+-0, CopyError 1+-0, MajorDel 3+-1, Reversal 3+-1, Amplification 250+-75, Translocation 250+-75, WhatToChange 80", cite: "NeoMutations.bas:1104-1138"}
+  point_value_gauss: {v: "50/50 Gauss(94,old)/Gauss(7,old); |old|>1000 Gauss(old/10,old)", cite: "NeoMutations.bas:718-728"}
+  insertion_seed: {v: "Gauss(500,0)", cite: "NeoMutations.bas:713"}
+  dnamatrix: {v: "77 comandos, indices 0..76; DNAtoInt max 32767", cite: "DNATokenizing.bas:15-56"}
+  GeneticSensitivity: {v: 75, cite: "Robots.bas:383"}
+  dna_size_cap: {v: 32000, cite: "NeoMutations.bas:69,270,831"}
+  epimem_cells: {v: "971-975 instantaneas, 976-990 diferidas (epimem 0..14)", cite: "Robots.bas:2277-2287"}
+
+  # tick / infra
+  autosave_interval: {v: "2000 ciclos (safemode)", cite: "Master.bas:469-481"}
+  doevents_interval: {v: "cada 250 bots/shots", cite: "DNA.bas:1250; Shots.bas:307"}
+  busywait_limitgraphics: {v: "67 ms", cite: "main.frm:2114-2121"}
+  MaxBotShotSeperation: {v: "sqrt(radioMax^2 + (2*MaxVelocity+40)^2)", cite: "main.frm:1291"}
+
+costes_indices: # indices en SimOpts.Costs(70); ver opcodes.yaml para los de la VM
+  vm: {NUMCOST: 0, DOTNUMCOST: 1, BCCMDCOST: 2, ADCMDCOST: 3, BTCMDCOST: 4, CONDCOST: 5, LOGICCOST: 6, COSTSTORE: 7, CHLRCOST: 8, FLOWCOST: 9}
+  acciones: {MOVECOST: 20, TURNCOST: 21, TIECOST: 22, SHOTCOST: 23, DNACYCCOST: 24, DNACOPYCOST: 25, VENOMCOST: 26, POISONCOST: 27, SLIMECOST: 28, SHELLCOST: 29, BODYUPKEEP: 30, AGECOST: 31, AGECOSTSTART: 32, AGECOSTLINEARFRACTION: 33}
+  control: {AGECOSTMAKELOG: 51, BOTNOCOSTLEVEL: 52, DYNAMICCOSTTARGET: 53, COSTMULTIPLIER: 54, DYNAMICCOSTSENSITIVITY: 55, USEDYNAMICCOSTS: 56, DYNAMICCOSTTARGETUPPERRANGE: 57, DYNAMICCOSTTARGETLOWERRANGE: 58, COSTXREINSTATEMENTLEVEL: 59, AGECOSTMAKELINEAR: 60, DYNAMICCOSTINCLUDEPLANTS: 61, ALLOWNEGATIVECOSTX: 62}
+  cite: "SimOptions.bas:2-39"
+
+preset_f1: # boton "Set F1" (OptionsForm.frm:2579-2668); F2 = F1 con MaxEnergy=30; SB = F1 con campo 16000x12000
+  costs: {SHOTCOST: 2, COSTSTORE: 0.04, CONDCOST: 0.004, MOVECOST: 0.05, TIECOST: 2, VENOMCOST: 0.01, POISONCOST: 0.01, SLIMECOST: 0.1, SHELLCOST: 0.1, COSTMULTIPLIER: 1, BODYUPKEEP: 0.00001, AGECOST: 0.01, CHLRCOST: 0.2, resto: 0}
+  mundo: {FieldWidth: 9237, FieldHeight: 6928, Toroidal: true, MaxEnergy: 40, MaxPopulation: 25, MinVegs: 10, RepopAmount: 10, RepopCooldown: 25, MaxVelocity: 180, VegFeedingToBody: 0.5, BadWastelevel: 10000, PhysBrown: 0, Zgravity: 2, CoefficientStatic: 0.6, CoefficientKinetic: 0.4, Viscosity: 0, Density: 0, CoefficientElasticity: 0, Ygravity: 0, EnergyExType: true, EnergyProp: 1, CorpseEnabled: false, DayNight: false, SunOnRnd: true, DynamicCosts: false}
+  nota: "mutaciones deshabilitadas para todas las especies; la liga historica corrio contra esto"
+
+arranque: # sembrado antes de leer settings; lastexit.set puede pisar todo
+  mdiform: {chartingInterval: 200, FieldWidth: 16000, FieldHeight: 12000, MaxVelocity: 60, DYNAMICCOSTSENSITIVITY: 50, BOTNOCOSTLEVEL: -1, COSTMULTIPLIER: 1, VegFeedingToBody: 0.75, Gradient: 1.02, BadWastelevel: -1, PhysMoving: 0.66, EnergyExType: true, EnergyFix: 200, EnergyProp: 1, MaxEnergy: 100, MaxPopulation: 100, MinVegs: 50, RepopAmount: 10, RepopCooldown: 10, PhysBrown: 0.5, SunUpThreshold: 500000, SunDownThreshold: 1000000, FluidSolidCustom: 2, CostRadioSetting: 2}
+  cite_mdiform: "MDIForm1.frm:2461-2510"
+  globales: {bodyfix: 32100, UseSafeMode: true, UseEpiGene: false, UseIntRnd: false, intFindBestV2: 100, epiresetemp: 1.3, epiresetOP: 17, Delta2: false, DeltaMainExp: 1, DeltaMainLn: 0, DeltaDevExp: 7, DeltaDevLn: 1, DeltaPM: 3000, DeltaWTC: 15, DeltaMainChance: 100, DeltaDevChance: 30, NormMut: false, valNormMut: 1071, valMaxNormMut: 1071, y_hidePredCycl: 1500, y_LFOR: 10, y_zblen: 255}
+  cite_globales: "HDRoutines.bas:852-887"
+  ui: {StartChlr_default: 16000, cite: "frmGset.frm:1481-1557"}
+  nota: "sunbelt/epireset/FudgeEyes/FudgeAll/Disqualify/StartChlr llegan de Global.gset o la UI; sin archivo, los Boolean quedan False y StartChlr 0 (VB6 default) — [SIN VERIFICAR] el .gset distribuido con el instalador"
