@@ -16,27 +16,25 @@ reinicios de contexto.
 | `PLAN.md` | ✅ cerrado | Orden de lectura y bloques A/B/C. Aprobado (el Bloque A arrancó por orden del brief). |
 | `10-CICLO.md` | ✅ cerrado | **A1.** Iteración secuencial in situ, sin doble búfer. `UpdateBots` = 7 pasadas. Nacimientos antes que muertes en `ReproduceAndKill`. 7 `[PROBABLE BUG]`. Q04 resuelta; Q01 y Q03 parciales. |
 | `20-VM.md` + `opcodes.yaml` | ✅ cerrado | **A2.** Parser y VM completos: 77 opcodes con semántica numérica exacta. Stacks de 101 celdas que nunca fallan (overflow descarta el fondo; underflow: 0 / centinela −5 = "vacío es true"). Stores inmediatos confirmados (`CommandQueue` muerto). **`else` tras `start` es código muerto** (`DNA.bas:1178`). El tokenizador no rechaza nada (desconocido → número 0). Q12 resuelta; Q15-Q17 añadidas. |
-| `OPEN_QUESTIONS.md` | 🟡 vivo | Q04 y Q12 resueltas; Q10-Q17 añadidas. |
+| `21-MEMORIA.md` + `sysvars.yaml` | ✅ cerrado | **A3, cierra el Bloque A.** Mapa completo de `mem(0..1000)`: 247 direcciones con nombre + 971-990 (memoria genética sin nombre) + `mem(0)` como sumidero de venom/poison (exclusión 340). Latencia 1 ciclo para todos los sentidos; comandos consumidos en el mismo ciclo. Q15 resuelta (nada fuera de ±32000 en juego normal). `sysvarIN`/`sysvarOUT` = vocabulario de mutaciones. 10 `[PROBABLE BUG]` (refvelsx siempre 0, trefshell sin borrar, Kills sin clamp…). Q03(mem), Q11, Q14(A3), Q15 cerradas. |
+| `OPEN_QUESTIONS.md` | 🟡 vivo | Q04, Q11, Q12, Q15 resueltas; Q03/Q14 parciales; Q01 ampliada. |
 
 ## Siguiente
 
-**Bloque A3 — `21-MEMORIA.md` + `sysvars.yaml`.** Esperando orden de arranque.
+**Bloque B.** El Bloque A está cerrado. **No arrancar sin orden explícita.**
 
-Punto de entrada para retomar:
-- `DNATokenizing.bas:862-3169` (`LoadSysVars`, ~2300 líneas: la tabla de sysvars; también
-  `sysvarIN(255)`/`sysvarOUT(255)`, que el intérprete no usa — `20-VM.md §11`)
-- Cruzar con los puntos de escritura del motor (`Robots.bas`, `Senses.bas`, `Ties.bas`,
-  `Shots.bas`) y con la tabla de limpieza de `10-CICLO.md §7`.
-- Contexto fijado por A2: direccionamiento siempre normalizado a 1..1000 (`mem(0)`
-  inalcanzable desde ADN); escrituras del intérprete acotadas por `mod32000`; el motor
-  puede escribir otras cosas (Q15). `mem(336)`/`mem(339)`/`mem(341)` ya especificadas.
+Contexto de arranque para B (fijado por A1-A3):
+- El orden del tick y las 7 pasadas: `10-CICLO.md §2, §5`.
+- La VM y el direccionamiento: `20-VM.md`; el mapa de memoria y latencias:
+  `21-MEMORIA.md` + `sysvars.yaml`.
+- Avisos ya conocidos: `DnaOps.bas`/`DoubleWord.cls` son código muerto; el archivo
+  `Darwinbots2/main` (sin extensión) es una copia vieja de `main.frm`, no compilada.
 
 ## Pendiente
 
-Bloque A: `21-MEMORIA.md`.
 Bloque B: `30-FISICA.md`, `31-ENERGIA.md`, `32-VISION.md`, `33-SHOTS.md`, `34-TIES.md`,
 `35-VIRUS.md`, `36-REPRO.md`, `40-MUTACIONES.md`, `50-MUNDO.md`, `60-FORMATOS.md`.
-Bloque C: `constants.yaml`, `sysvars.yaml`, `70-CASOS-DORADOS.md` (`opcodes.yaml` ✅ salió con A2).
+Bloque C: `constants.yaml`, `70-CASOS-DORADOS.md` (`opcodes.yaml` ✅ A2; `sysvars.yaml` ✅ A3).
 
 ---
 
@@ -46,3 +44,5 @@ Bloque C: `constants.yaml`, `sysvars.yaml`, `70-CASOS-DORADOS.md` (`opcodes.yaml
 - **2026-08-15** — A1 cerrado (`10-CICLO.md`). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
 - **2026-08-15** — A2 cerrado (`20-VM.md` + `opcodes.yaml`). Fuentes sin modificar.
+- **2026-08-16** — A3 cerrado (`21-MEMORIA.md` + `sysvars.yaml`). **Bloque A completo.**
+  Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).

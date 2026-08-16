@@ -1,0 +1,594 @@
+# sysvars.yaml — mapa de memoria del bot, DarwinBots 2.48.32
+# Fuente: commit 02b20d7. Narrativa y casos borde en spec/21-MEMORIA.md.
+#
+# Convenciones:
+#   addr:    direccion en mem(0..1000). mem() es Integer de 16 bits (Robots.bas:265).
+#   names:   nombres en la tabla sysvar() de LoadSysVars (DNATokenizing.bas:862-3167),
+#            en orden de indice de tabla. Varios nombres = aliases a la misma direccion.
+#   const:   constante simbolica del motor en Robots.bas:8-163, si existe.
+#   sentido: cmd  = orden del bot al motor (el motor la consume/borra)
+#            sense= el motor la escribe para que el ADN la lea
+#            bidi = entrada y salida a la vez
+#            int  = interna del motor (pinned: el motor la reescribe cada ciclo)
+#            free = sin interaccion del motor (memoria libre con nombre)
+#   in/out:  presencia (activa, no comentada) en sysvarIN()/sysvarOUT(), las tablas
+#            "informational"/"functional" que solo usan las mutaciones ChangeDNA2
+#            (NeoMutations.bas:607-676) para elegir objetivos. El interprete no las usa.
+#   escribe: quien escribe y en que punto del tick (nomenclatura de 10-CICLO.md:
+#            paso 10 ADN, paso 12 EraseSenses, paso 14 updateshots, paso 16 = UpdateBots
+#            con pasadas P1..P6, paso 21 feedvegs).
+#   borra:   quien la pone a 0 (o a su centinela) y cuando.
+#   rango:   valores que el motor puede dejar. El interprete siempre escribe mod32000
+#            (+-32000, 20-VM.md par.7).
+#   Latencia por defecto: los sentidos escritos en el ciclo N (P1/paso 14/P5) los lee el
+#   ADN en N+1 (el ADN corre en el paso 10, antes de todo eso; 10-CICLO.md par.2).
+#   Los comandos escritos por el ADN en el paso 10 se consumen en el MISMO ciclo
+#   (P1/P3/P5). Excepciones anotadas por registro.
+
+meta:
+  declaracion: "mem(1000) As Integer — 1001 celdas, 0..1000 (Robots.bas:265)"
+  direccionamiento_adn: "Abs(x) Mod 1000, 0->1000: el ADN solo alcanza 1..1000; mem(0) inalcanzable (20-VM.md par.0.6)"
+  tabla_sysvar: "sysvar(1000) As var (DNA.bas:25), cargada por LoadSysVars (DNATokenizing.bas:862); entradas 1..255 usadas"
+  tablas_in_out:
+    que_son: "sysvarIN(255)/sysvarOUT(255) (DNA.bas:27-28), cargadas en LoadSysVars con subconjuntos de la tabla principal (IN: sensores; OUT: comandos; entradas no aplicables comentadas)"
+    unico_consumidor: "ChangeDNA2 (PointMutation2/CopyError2): sysvarOUT para generar pares 'numero store' (NeoMutations.bas:645-659) y .tieloc/.shoot/.focuseye especiales (:613-637); sysvarIN para generar lecturas *n (:670-675). El interprete y el resto del motor no las leen."
+  persistencia: "mem() completo (incluido mem(0)) se guarda y carga con la simulacion (HDRoutines.bas:2067 Put, :1655 Get). Al guardar un bot suelto con UseEpiGene, mem(971..990) se re-exporta como lineas de ADN 'valor direccion store' (HDRoutines.bas:2274-2282)."
+  al_nacer: "Erase rob(nuovo).mem — todo a 0 (Robots.bas:2180); despues el motor siembra: mem(19)=aim*200 (:2195), mem(468)=32000 (:2196), mem(216)=1 si Fixed (:2245), mem(310) (:2232), mem(336)/mem(339) (:2377-2378), mem(12) heredado del padre (:2383), mem(971..975) copiados del padre (:2277-2279). SexReproduce identico (:2644-2817)."
+  colisiones_nombre_direccion:
+    - "aimdx/aimright->5, aimsx/aimleft->6, velup/vel->200, depth/ypos->217, refvel/refvelup->699, strvenom/mkvenom->824, strpoison/mkpoison->826, light/availability->923 (aliases puros)"
+    - "TRAMPA: la const Fixed=216 (Robots.bas:42) corresponde al sysvar 'fixpos'; el sysvar 'fixed' es 215. tieport1=450 colisiona con TIEANG=450 (Robots.bas:82-83)."
+  huecos_sin_nombre: # direccionables desde el ADN, persistentes, jamas tocados por el motor salvo altzheimer (aleatorio, Robots.bas:983-998) y los shots de memoria (Shots.bas:357)
+    - "13-17, 20-193 (la zona clasica de variables privadas), 222-299, 304-309, 316-329, 332-334, 342-399, 403-409, 430-436, 472, 500 (const EyeStart sin uso), 512-520, 530, 540-684, 691-694, 700 (const occurrstart sin uso), 716-720, 732-799, 840-899, 902-919, 925-970, 991-1000"
+    - "971-990 tambien carecen de nombre pero SI los usa el motor (memoria genetica, ver registros)"
+  mem_cero:
+    escrito_por: "Poisons (P1): .mem(.Vloc)=.Vval / .mem(.Ploc)=.Pval (Robots.bas:1118,1127) cuando Vloc/Ploc=0. Vloc/Ploc quedan en 0 cuando el vloc/ploc del atacante mapea a 340 (proteccion delgene): Shots.bas:804,849; Ties.bas:396,464."
+    leido_por: "nadie. Es un sumidero deliberado; se persiste en los saves."
+  rng_dependiente_de_memoria: # consumo de rndy condicionado por valores de mem (afecta replays, Q01)
+    - "lookoccurr/ReadTRefVars con FudgeEyes/FudgeAll: 1 rndy por campo trucado (Senses.bas:237,242,278-287,299; Ties.bas:743-748,796)"
+    - "altzheimer: >=2 rndy por iteracion, con re-tiradas si loc=921/922 (Robots.bas:991-995)"
+    - "takeven/takepoison/Ties con vloc/ploc<=0: Random(1,1000) con re-tirada si sale 340 (Shots.bas:806-808,851-853; Ties.bas:398-401,466-469,604-607)"
+    - "newshot: Random(-2,2) y Random(-20,20) por disparo (Shots.bas:130,146); Vshoot: Random(1,1256) (:1106); maketie: Random(2,92) (Ties.bas:898); addgene: Random(0,genenum) (Shots.bas:1194)"
+
+registros:
+  # --- 0: el sumidero ---
+  - {addr: 0, names: [], const: null, sentido: int, in: false, out: false,
+     escribe: "Poisons P1 con Vloc/Ploc=0 (exclusion 340)", borra: "nadie; persiste y se guarda",
+     rango: "Vval/Pval del atacante (+-32000)", cite: "Robots.bas:1118,1127; Shots.bas:804,849; Ties.bas:396,464; HDRoutines.bas:2067"}
+
+  # --- 1..19: comandos de movimiento y estado basico ---
+  - {addr: 1, names: [up], const: dirup, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "VoluntaryForces P1 (Physics.bas:420,429; ignorada si DisableMovementSysvars/DisableDNA/Corpse)",
+     borra: "UpdatePosition P3 =0 tras copiar a lastup (Robots.bas:861-868)", rango: "+-32000", cite: "DNATokenizing.bas:865-866"}
+  - {addr: 2, names: [dn], const: dirdn, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "VoluntaryForces P1", borra: "UpdatePosition P3", rango: "+-32000", cite: "DNATokenizing.bas:868-869; Robots.bas:866"}
+  - {addr: 3, names: [sx], const: dirsx, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "VoluntaryForces P1", borra: "UpdatePosition P3", rango: "+-32000", cite: "DNATokenizing.bas:871-872; Robots.bas:868"}
+  - {addr: 4, names: [dx], const: dirdx, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "VoluntaryForces P1", borra: "UpdatePosition P3", rango: "+-32000", cite: "DNATokenizing.bas:874-875; Robots.bas:867"}
+  - {addr: 5, names: [aimdx, aimright], const: aimdx, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "SetAimFunc P3 (Robots.bas:779)", borra: "SetAimFunc P3 =0 (:818)", rango: "+-32000", cite: "DNATokenizing.bas:877-881"}
+  - {addr: 6, names: [aimsx, aimleft], const: aimsx, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "SetAimFunc P3 (Robots.bas:779)", borra: "SetAimFunc P3 =0 (:817)", rango: "+-32000", cite: "DNATokenizing.bas:883-887"}
+  - {addr: 7, names: [shoot], const: shoot, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "Shooting P5: si <>0 llama robshoot (Robots.bas:1213,1729)",
+     borra: "Shooting P5 =0 siempre (:1214) y robshoot al salir (:1862)", rango: "+-32000; robshoot: >=0 => shot de memoria Mod 1000, <0 => Mod 8 (Shots.bas:120,1786)", cite: "Robots.bas:1211-1215"}
+  - {addr: 8, names: [shootval], const: shootval, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "robshoot (Robots.bas:1730)",
+     borra: "solo cuando robshoot corre (:1863); si el bot nunca dispara, PERSISTE", rango: "+-32000", cite: "Robots.bas:1716-1864"}
+  - {addr: 9, names: [robage], const: robage, sentido: sense, in: true, out: false,
+     escribe: "Ageing P5 = min(age,32000); pisa lo que escriba el bot cada ciclo", borra: "no (se reescribe)",
+     rango: "1..32000 (el primer Ageing del bot escribe 1)", cite: "Robots.bas:1197-1205"}
+  - {addr: 10, names: [mass], const: masssys, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = .mass (Single, redondeo banker)", borra: no,
+     rango: "~0..192 (body/1000+shell/200)", cite: "Robots.bas:876"}
+  - {addr: 11, names: [maxvel], const: maxvelsys, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = SimOpts.MaxVelocity (Single, <=200 tras carga)", borra: no,
+     rango: "1..200 tipico", cite: "Robots.bas:877; HDRoutines.bas:1298-1300"}
+  - {addr: 12, names: [timer], const: timersys, sentido: bidi, in: true, out: false,
+     escribe: "Ageing P5 incrementa +1 sobre el valor actual; >32000 -> -32000 (wrap manual). Semilla: Random(-32000,32000) en loadrobs (main.frm:1556); heredado del padre al nacer (Robots.bas:2383, :2817). El bot puede escribirlo (timer epigenetico ajustable).",
+     borra: no, rango: "-32000..32000", cite: "Robots.bas:1206-1207"}
+  - {addr: 18, names: [aim], const: AimSys, sentido: sense, in: true, out: false,
+     escribe: "SetAimFunc P3 = CInt(aim*200) tras aplicar giro (Robots.bas:819); leido por lookoccurr de otros (->su 711, Senses.bas:292) y ReadTRefVars (->su 479, Ties.bas:766)",
+     borra: no, rango: "0..~2513 (aim+momento angular)", cite: "Robots.bas:774-822"}
+  - {addr: 19, names: [setaim], const: SetAim, sentido: cmd, in: false, out: true,
+     escribe: "ADN; el motor lo resetea a mem(18) cada P3 (Robots.bas:820), lo siembra al nacer (:2195) y en insercion (Globals.bas:469; main.frm:1545); PBM lo pisa en el paso 13 (Master.bas:352)",
+     borra: "reset por ciclo a aim actual", rango: "+-32000 (consumido Mod 1256, Robots.bas:794)", cite: "Robots.bas:781-796,820"}
+
+  # --- 194..221: sentidos por ciclo ---
+  - {addr: 194, names: [bodgain], const: bodgain, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt(body-obody)", borra: "no la borra EraseSenses; se reescribe cada P5",
+     rango: "+-32000", cite: "Senses.bas:201"}
+  - {addr: 195, names: [bodloss], const: bodloss, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt(obody-body)", borra: "se reescribe cada P5", rango: "+-32000", cite: "Senses.bas:200"}
+  - {addr: 196, names: [velscalar], const: velscalar, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = iceil(Sqr(v^2)) (clamp 32000)", borra: no, rango: "0..32000", cite: "Robots.bas:870,881-884"}
+  - {addr: 197, names: [velsx], const: velsx, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = -mem(198)", borra: no, rango: "+-32000", cite: "Robots.bas:874"}
+  - {addr: 198, names: [veldx], const: veldx, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = iceil(vel en eje lateral)", borra: no, rango: "+-32000", cite: "Robots.bas:873"}
+  - {addr: 199, names: [veldn], const: veldn, sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = -mem(200)", borra: no, rango: "+-32000", cite: "Robots.bas:872"}
+  - {addr: 200, names: [velup, vel], const: "velup/vel", sentido: sense, in: true, out: false,
+     escribe: "UpdatePosition P3 = iceil(vel en eje de aim)", borra: no, rango: "+-32000", cite: "Robots.bas:871"}
+  - {addr: 201, names: [hit], const: hit, sentido: sense, in: true, out: false,
+     escribe: "touch=1 (colision bot-bot, Repel3 P1)", borra: "EraseSenses paso 12", rango: "0/1",
+     cite: "Senses.bas:55,106; Physics.bas:964-965"}
+  - {addr: 202, names: [shflav], const: shflav, sentido: sense, in: true, out: false,
+     escribe: "taste (updateshots paso 14) = tipo del shot", borra: "EraseSenses paso 12", rango: "-8..1000",
+     cite: "Senses.bas:94,107; Shots.bas:383"}
+  - {addr: 203, names: [pain], const: pain, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt(onrg-nrg), con onrg/nrg previamente acotados a 0..32000", borra: "se reescribe cada P5",
+     rango: "+-32000", cite: "Senses.bas:193-198"}
+  - {addr: 204, names: [pleas], const: pleas, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt(nrg-onrg)", borra: "se reescribe cada P5", rango: "+-32000", cite: "Senses.bas:199"}
+  - {addr: 205, names: [hitup], const: hitup, sentido: sense, in: true, out: false,
+     escribe: "touch=1 segun angulo", borra: "EraseSenses paso 12", rango: "0/1", cite: "Senses.bas:51,102"}
+  - {addr: 206, names: [hitdn], const: hitdn, sentido: sense, in: true, out: false,
+     escribe: touch, borra: "EraseSenses", rango: "0/1", cite: "Senses.bas:52,103"}
+  - {addr: 207, names: [hitdx], const: hitdx, sentido: sense, in: true, out: false,
+     escribe: touch, borra: "EraseSenses", rango: "0/1", cite: "Senses.bas:53,104"}
+  - {addr: 208, names: [hitsx], const: hitsx, sentido: sense, in: true, out: false,
+     escribe: touch, borra: "EraseSenses", rango: "0/1", cite: "Senses.bas:54,105"}
+  - {addr: 209, names: [shang], const: null, sentido: sense, in: true, out: false,
+     escribe: "taste = angulo del shot * 200", borra: "EraseSenses paso 12", rango: "0..~1256", cite: "Senses.bas:93,108"}
+  - {addr: 210, names: [shup], const: shup, sentido: sense, in: true, out: false,
+     escribe: "taste = tipo del shot segun angulo", borra: "EraseSenses", rango: "-8..1000", cite: "Senses.bas:89,109"}
+  - {addr: 211, names: [shdn], const: shdn, sentido: sense, in: true, out: false,
+     escribe: taste, borra: "EraseSenses", rango: "-8..1000", cite: "Senses.bas:90,110"}
+  - {addr: 212, names: [shdx], const: shdx, sentido: sense, in: true, out: false,
+     escribe: taste, borra: "EraseSenses", rango: "-8..1000", cite: "Senses.bas:91,111"}
+  - {addr: 213, names: [shsx], const: shsx, sentido: sense, in: true, out: false,
+     escribe: taste, borra: "EraseSenses", rango: "-8..1000", cite: "Senses.bas:92,112"}
+  - {addr: 214, names: [edge], const: null, sentido: sense, in: true, out: false,
+     escribe: "bordercolls P1: 0 al acercarse al borde, 1 si contacto (solo corre si el bot esta a menos de radius del borde)",
+     borra: "EraseSenses paso 12", rango: "0/1", cite: "Physics.bas:792-827; Senses.bas:113"}
+  - {addr: 215, names: [fixed], const: null, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = 1 si .Fixed, 0 si no", borra: "se reescribe cada P5", rango: "0/1", cite: "Senses.bas:207"}
+  - {addr: 216, names: [fixpos], const: Fixed, sentido: cmd, in: false, out: true,
+     escribe: "ADN (latch: >0 fija, <=0 libera); semilla 1 si especie Fixed (main.frm:1536; Globals.bas:463; Robots.bas:2245); UI frmRestriOps (:301,:318)",
+     lee: "ManageFixed P1 (solo si Not SimOpts.DisableFixing, Robots.bas:1354-1363, gate :1538)",
+     borra: "NUNCA la borra el motor: es un latch persistente", rango: "+-32000", cite: "Robots.bas:1357"}
+  - {addr: 217, names: [depth, ypos], const: null, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt((pos.y/yDivisor) doble-Mod 32000)", borra: "se reescribe cada P5", rango: "0..31999", cite: "Senses.bas:208-211"}
+  - {addr: 218, names: [daytime], const: null, sentido: sense, in: true, out: false,
+     escribe: "feedvegs paso 21: =0 para todo vivo con nrg>0 (Vegs.bas:160-164); =1 si es ciclo con sol y (sin cloroplastos, o dentro de la franja de sol) (:246)",
+     borra: "se reescribe cada ciclo", rango: "0/1", cite: "Vegs.bas:159-246"}
+  - {addr: 219, names: [xpos], const: null, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt((pos.x/xDivisor) doble-Mod 32000)", borra: "se reescribe cada P5", rango: "0..31999", cite: "Senses.bas:212-215"}
+  - {addr: 220, names: [kills], const: Kills, sentido: sense, in: true, out: false,
+     escribe: "solo al matar: via ties con clamp 32000 (Ties.bas:419-421,624-626); via shots SIN clamp (Shots.bas:594-595,712-713)",
+     borra: "no; el bot puede pisarla y el motor no la refresca hasta la proxima muerte causada",
+     rango: "0..32000 via ties; via shots el Long .Kills se asigna sin clamp: >32767 kills desborda el Integer (EXE: wrap; 32768 -> -32768). [PROBABLE BUG] teorico, ver 21-MEMORIA.md par.7",
+     cite: "Ties.bas:421; Shots.bas:595"}
+  - {addr: 221, names: [hitang], const: null, sentido: free, in: false, out: false,
+     escribe: "NADIE. Sysvar muerta: existe el nombre, ningun codigo escribe ni borra mem(221)",
+     borra: nadie, rango: "lo que deje el bot", cite: "DNATokenizing.bas:1000-1001 (unica mencion)"}
+
+  # --- 300..341: reproduccion, cuerpo, virus ---
+  - {addr: 300, names: [repro], const: Repro, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageReproduction P5 encola si >0 (Robots.bas:1391); ReproduceAndKill P6 usa el valor como % (:1667-1675)",
+     borra: "solo si Reproduce TIENE EXITO (:2391); si falla (guardas de body/colision/vegs) persiste y reintenta cada ciclo",
+     rango: "+-32000; consumido Mod 100 (:2132)", cite: "Robots.bas:1391,2391"}
+  - {addr: 301, names: [mrepro], const: mrepro, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "como repro; ademas activa el regimen de mutacion reforzada del hijo (Robots.bas:2311,2352)",
+     borra: "solo con exito (:2392)", rango: "+-32000, Mod 100", cite: "Robots.bas:1391,1667-1675,2392"}
+  - {addr: 302, names: [sexrepro], const: SEXREPRO, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageReproduction P5 (>0 y fertilized>=0, Robots.bas:1397); SexReproduce usa el valor como % (:2444)",
+     borra: "solo con exito (:2824)", rango: "+-32000", cite: "Robots.bas:1397,2444,2824"}
+  - {addr: 303, names: [fertilized], const: SYSFERTILIZED, sentido: sense, in: true, out: false,
+     escribe: "takesperm =10 (Shots.bas:869); ManageReproduction P5 la espeja del contador .fertilized (Robots.bas:1372-1376)",
+     borra: "=0 cuando el contador expira (:1375) y tras parto sexual (:2826)", rango: "0..10", cite: "Shots.bas:862-874"}
+  - {addr: 310, names: [nrg], const: Energy, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = CInt(nrg) tras clamp 0..32000 (Senses.bas:205); tambien en el parto para padre e hijo (Robots.bas:2226,2232)",
+     borra: "se reescribe cada P5", rango: "0..32000", cite: "Senses.bas:193-205"}
+  - {addr: 311, names: [body], const: body, sentido: sense, in: true, out: false,
+     escribe: "ManageBody P5 = CInt(body) tras clamp 0..32000 (Robots.bas:1277); hack de nacimiento: WriteSenses lo puebla si age=0 y esta a 0 (Senses.bas:206); padre en parto (Robots.bas:2227)",
+     borra: "se reescribe cada P5", rango: "0..32000", cite: "Robots.bas:1275-1277"}
+  - {addr: 312, names: [fdbody], const: fdbody, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageBody P5 si >0: feedbody clampa a <=100 in place, convierte body->nrg",
+     borra: "=0 solo si era >0; VALORES NEGATIVOS PERSISTEN sin consumirse", rango: "+-32000 (efectivo 1..100)", cite: "Robots.bas:1273,1707-1714"}
+  - {addr: 313, names: [strbody], const: strbody, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageBody P5 si >0: storebody clampa <=100, convierte nrg->body",
+     borra: "=0 solo si era >0; negativos persisten", rango: "+-32000 (efectivo 1..100)", cite: "Robots.bas:1272,1698-1705"}
+  - {addr: 314, names: [setboy], const: setboy, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageBouyancy P5 si <>0: Bouyancy += mem/32000, clamp 0..1",
+     borra: "=0 al consumir", rango: "+-32000", cite: "Robots.bas:1342-1352"}
+  - {addr: 315, names: [rdboy], const: rdboy, sentido: sense, in: true, out: false,
+     escribe: "ManageBouyancy = Bouyancy*32000, SOLO cuando setboy<>0 (si no, conserva valor viejo)",
+     borra: no, rango: "0..32000", cite: "Robots.bas:1348"}
+  - {addr: 330, names: [tie], const: mtie, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "FireTies P5: si <>0 y hay lastopp valido, maketie con puerto=valor (Robots.bas:1426-1439)",
+     borra: "=0 siempre que era <>0, con o sin exito (:1442)", rango: "+-32000", cite: "Robots.bas:1404-1447"}
+  - {addr: 331, names: [stifftie], const: stifftie, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "Update_Ties P3 (multibot, tie endurecida, puerto=tienum): normaliza in place Mod 100 (0->100, <0->1) y fija b/k de ambos lados",
+     borra: "=0 en P3, PERO solo si el bot tenia tienum/tiepres<>0 (el reset esta tras el gate de Ties.bas:231-232)", rango: "+-32000 (efectivo 1..100)", cite: "Ties.bas:264-272,279"}
+  - {addr: 335, names: [mkvirus], const: mkvirus, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "BotDNAManipulation P3: si >0 y Vtimer=0 y sin cloroplastos, crea el virus del gen indicado (Robots.bas:1062-1088)",
+     borra: "=0 recien al DISPARAR el virus (:1096); mientras cuenta Vtimer persiste", rango: "+-32000 (gen valido 1..genenum)", cite: "Robots.bas:1049-1112"}
+  - {addr: 336, names: [dnalen], const: DnaLenSys, sentido: int, in: true, out: false,
+     escribe: "pinned: BotDNAManipulation cada P3 (Robots.bas:1108) + carga (Module1.bas:18; HDRoutines.bas:1580), nacimiento (:2377), mutacion (NeoMutations.bas:231), delgene (:1015), addgene (Shots.bas:1216), insercion (Globals.bas:488; main.frm:1569)",
+     borra: "se reescribe cada ciclo; inutil como almacen del bot", rango: "1..32001", cite: "Robots.bas:1108"}
+  - {addr: 337, names: [vtimer], const: Vtimer, sentido: int, in: true, out: false,
+     escribe: "pinned: BotDNAManipulation cada P3 espeja el campo .Vtimer (Robots.bas:1059); =0 al disparar (:1095)",
+     borra: "se reescribe cada ciclo", rango: "0..32000", cite: "Robots.bas:1056-1059"}
+  - {addr: 338, names: [vshoot], const: VshootSys, sentido: cmd, in: false, out: true,
+     escribe: "ADN; Vshoot normaliza in place: <0 -> 1 (Shots.bas:1093)",
+     lee: "BotDNAManipulation P3: si <>0 y Vtimer=1, dispara (Robots.bas:1091-1092)",
+     borra: "=0 al disparar (:1094)", rango: "+-32000", cite: "Robots.bas:1091-1099; Shots.bas:1084-1121"}
+  - {addr: 339, names: [genes], const: GenesSys, sentido: int, in: true, out: false,
+     escribe: "pinned cada P3 + mismos eventos que mem(336)", borra: "se reescribe cada ciclo", rango: "0..32000", cite: "Robots.bas:1109"}
+  - {addr: 340, names: [delgene], const: DelgeneSys, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "BotDNAManipulation P3: si >0 borra ese gen (Robots.bas:1103-1105)",
+     borra: "=0 al consumir", rango: "+-32000 (gen valido 1..genenum)",
+     nota: "direccion blindada contra ataques externos: los shots de memoria la saltan (Shots.bas:354) y venom/poison la remapean a 0 (Shots.bas:804,849; Ties.bas:396,464)",
+     cite: "Robots.bas:1103-1106"}
+  - {addr: 341, names: [thisgene], const: thisgene, sentido: int, in: true, out: false,
+     escribe: "el interprete en cada token de flujo: mem(341)=currgene (DNA.bas:167); ya especificado en 20-VM.md par.5.6",
+     borra: "se reescribe durante el ADN", rango: "0..~16000", cite: "DNA.bas:167"}
+
+  # --- 400..429: mundo y puertos tie ---
+  - {addr: 400, names: [sun], const: LandM, sentido: sense, in: true, out: false,
+     escribe: "LandMark (dentro de WriteSenses P5): 1 si aim en (1.39,1.75) (mirando 'arriba'), 0 si no",
+     borra: "se reescribe cada P5", rango: "0/1", cite: "Senses.bas:12-17,174"}
+  - {addr: 401, names: [totalbots], const: TotalBots, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = TotalRobots (contado en P2 de este mismo ciclo)", borra: "se reescribe", rango: "0..32000", cite: "Senses.bas:177"}
+  - {addr: 402, names: [totalmyspecies], const: TOTALMYSPECIES, sentido: sense, in: true, out: false,
+     escribe: "WriteSenses P5 = poblacion de la especie (clamp 32000 en Robots.bas:1159)", borra: "se reescribe", rango: "0..32000", cite: "Senses.bas:178"}
+  - {addr: 410, names: [tout1], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; lo lee el ReadTRefVars del bot ATADO (su tin1)", borra: "no (canal persistente)", rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 411, names: [tout2], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 412, names: [tout3], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 413, names: [tout4], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 414, names: [tout5], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 415, names: [tout6], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 416, names: [tout7], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 417, names: [tout8], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 418, names: [tout9], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 419, names: [tout10], const: null, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 420, names: [tin1], const: null, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars (P1, via readtie) = tout1 del atado; con FudgeAll y especie distinta, +-1 aleatorio (Ties.bas:794-798)",
+     borra: "EraseTRefVars cuando el bot pierde ties o el puerto no existe (Ties.bas:673-675)", rango: "+-32000 (+-32001 con fudge)", cite: "Ties.bas:788-790"}
+  - {addr: 421, names: [tin2], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 422, names: [tin3], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 423, names: [tin4], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 424, names: [tin5], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 425, names: [tin6], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 426, names: [tin7], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 427, names: [tin8], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 428, names: [tin9], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+  - {addr: 429, names: [tin10], const: null, sentido: sense, in: true, out: false, escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:788-790"}
+
+  # --- 437..487: trefvars y control de ties ---
+  - {addr: 437, names: [trefbody], const: trefbody, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = CInt(body del atado) si |body|<32000, si no 32000", borra: "EraseTRefVars (Ties.bas:663)", rango: "0..32000", cite: "Ties.bas:729-733"}
+  - {addr: 438, names: [trefxpos], const: trefxpos, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = mem(219) del atado", borra: "EraseTRefVars (bucle 438..448, Ties.bas:668-670)", rango: "0..31999", cite: "Ties.bas:768"}
+  - {addr: 439, names: [trefypos], const: trefypos, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = mem(217) del atado", borra: EraseTRefVars, rango: "0..31999", cite: "Ties.bas:769"}
+  - {addr: 440, names: [trefvelmysx], const: trefvelmysx, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = -mem(442)... (= -trefvelmydx)", borra: EraseTRefVars, rango: "~+-23000", cite: "Ties.bas:782"}
+  - {addr: 441, names: [trefvelmydx], const: trefvelmydx, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1: vel del atado en el marco propio, menos mem(198) propio; el vel del atado se clampa a +-16000 ANTES (mutando su fisica, Ties.bas:776-777)", borra: EraseTRefVars, rango: "~+-23000", cite: "Ties.bas:781"}
+  - {addr: 442, names: [trefvelmydn], const: trefvelmydn, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = -mem(443)", borra: EraseTRefVars, rango: "~+-23000", cite: "Ties.bas:780"}
+  - {addr: 443, names: [trefvelmyup], const: trefvelmyup, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1", borra: EraseTRefVars, rango: "~+-23000", cite: "Ties.bas:779"}
+  - {addr: 444, names: [trefvelscalar], const: trefvelscalar, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = mem(196) del atado", borra: EraseTRefVars, rango: "0..32000", cite: "Ties.bas:783"}
+  - {addr: 445, names: [trefvelyoursx], const: trefvelyoursx, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = mem(197) del atado", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:772"}
+  - {addr: 446, names: [trefvelyourdx], const: trefvelyourdx, sentido: sense, in: true, out: false,
+     escribe: "= mem(198) del atado", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:773"}
+  - {addr: 447, names: [trefvelyourdn], const: trefvelyourdn, sentido: sense, in: true, out: false,
+     escribe: "= mem(199) del atado", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:771"}
+  - {addr: 448, names: [trefvelyourup], const: trefvelyourup, sentido: sense, in: true, out: false,
+     escribe: "= mem(200) del atado", borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:770"}
+  - {addr: 449, names: [trefshell], const: trefshell, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = shell del atado",
+     borra: "NADIE: EraseTRefVars borra 438..448 y 456..465 pero se salta 449 -> valor rancio tras perder ties [PROBABLE BUG]",
+     rango: "0..32000", cite: "Ties.bas:785,655-677"}
+  - {addr: 450, names: [tieang], const: "tieport1/TIEANG", sentido: sense, in: true, out: false,
+     escribe: "UpdateTieAngles P5 (corre para TODOS los slots 1..MaxRobs, existan o no): =0 siempre; si hay tie (tienum o tiepres) = -AngDiff*200",
+     borra: "reescrita cada P5; escribir aqui es inutil", rango: "+-628 (AngDiff da +-PI)", cite: "Ties.bas:87,113"}
+  - {addr: 451, names: [tielen], const: TIELEN, sentido: sense, in: true, out: false,
+     escribe: "UpdateTieAngles P5: =0; si hay tie = CInt(dist - radios)", borra: "reescrita cada P5", rango: "~-240..32000", cite: "Ties.bas:88,114"}
+  - {addr: 452, names: [tieloc], const: tieloc, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "tieportcom P1 si 1..1000 (escritura remota en el atado); Update_Ties P3 si negativo: -1 nrg, -3 venom, -4 waste, -6 body",
+     borra: "tieportcom al transferir (Ties.bas:70); Update_Ties =0 tras procesar negativos (:646)", rango: "+-32000 (utiles 1..1000 y -1/-3/-4/-6)", cite: "Ties.bas:56-70,339-648"}
+  - {addr: 453, names: [tieval], const: tieval, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "tieportcom (valor a inyectar) / Update_Ties (cantidad a transferir, clamps por comando)",
+     borra: "con tieloc (Ties.bas:69,647)", rango: "+-32000", cite: "Ties.bas:62,343"}
+  - {addr: 454, names: [tiepres], const: TIEPRES, sentido: sense, in: true, out: false,
+     escribe: "maketie = puerto de la ultima tie creada (Ties.bas:928,945); DeleteTie lo repara al borrar (840-846,852-858); Physics.bas:498-500 al purgar ties invalidas",
+     borra: "=0 cuando no quedan ties", rango: "0..32000", cite: "Ties.bas:928"}
+  - {addr: 455, names: [tienum], const: TIENUM, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "selector de puerto para tieportcom/UpdateTieAngles/Update_Ties (0 = usar tiepres)",
+     borra: "=0 cada P3 (Ties.bas:651); PERO si el bot tiene 0 ties o tienum y tiepres estan a 0, los GoTo getout (:190,:232) saltan el reset — un tienum escrito sin tener ties persiste", rango: "+-32000", cite: "Ties.bas:56-57,94-98,134,231,651"}
+  - {addr: 456, names: [trefup], const: TREFUPSYS, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = occurr(1) del atado (contador de stores a .up en su ADN); fudge posible", borra: "EraseTRefVars (bucle 456..465)", rango: "0..~16000", cite: "Ties.bas:735-737,660-662"}
+  - {addr: 457, names: [trefdn], const: TREFDNSYS, sentido: sense, in: true, out: false, escribe: "= occurr(2) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 458, names: [trefsx], const: TREFSXSYS, sentido: sense, in: true, out: false, escribe: "= occurr(3) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 459, names: [trefdx], const: TREFDXSYS, sentido: sense, in: true, out: false, escribe: "= occurr(4) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 460, names: [trefaimdx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(5) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 461, names: [trefaimsx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(6) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 462, names: [trefshoot], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(7) del atado", borra: EraseTRefVars, rango: "0..~16000", cite: "Ties.bas:736"}
+  - {addr: 463, names: [trefeye], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(8) del atado (lecturas *eye en su ADN); fudge FudgeEyes/FudgeAll", borra: EraseTRefVars, rango: "0..~16000 (32001 posible con fudge)", cite: "Ties.bas:736,742-744"}
+  - {addr: 464, names: [trefnrg], const: trefnrg, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = CInt(nrg del atado) SOLO si |nrg|<32000; con el atado a 32000 exactos conserva el valor viejo [PROBABLE BUG]",
+     borra: EraseTRefVars, rango: "+-32000", cite: "Ties.bas:721-723"}
+  - {addr: 465, names: [trefage], const: null, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars P1 = age+1 del atado, clamp 32000", borra: EraseTRefVars, rango: "1..32000", cite: "Ties.bas:724-728"}
+  - {addr: 466, names: [numties], const: numties, sentido: sense, in: true, out: false,
+     escribe: "Update_Ties P3 (Ties.bas:185); maketie (927,944); DeleteTie (839,851)", borra: "=0 via esos caminos", rango: "0..10", cite: "Ties.bas:185"}
+  - {addr: 467, names: [deltie], const: DELTIE, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "Update_Ties P3: borra las ties cuyo puerto == mem(467)", borra: "=0 al consumir (Ties.bas:198)", rango: "+-32000", cite: "Ties.bas:194-199"}
+  - {addr: 468, names: [fixang], const: FIXANG, sentido: cmd, in: false, out: true,
+     escribe: "ADN; semilla 32000 al nacer (Robots.bas:2196,2645)",
+     lee: "Update_Ties P3 (multibot, tie type 3, puerto=tienum): >=0 fija angulo (Mod 1256)/200; <0 libera; 32000 = centinela 'sin orden'",
+     borra: "reset a 32000 (no a 0) cada P3, solo si tienum/tiepres<>0 (Ties.bas:277, gate :231-232)", rango: "+-32000; 32000=noop", cite: "Ties.bas:242-252,277"}
+  - {addr: 469, names: [fixlen], const: FIXLEN, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "Update_Ties P3: <>0 fija NaturalLength = Abs(valor)+radios (clamp 32000) en ambos extremos",
+     borra: "=0 cada P3 (mismo gate que fixang)", rango: "+-32000", cite: "Ties.bas:255-261,278"}
+  - {addr: 470, names: [multi], const: multi, sentido: sense, in: true, out: false,
+     escribe: "regang =1 al endurecer tie (Ties.bas:982); Update_Ties =0 si el bot se queda sin ties (:189)",
+     borra: "=0 sin ties", rango: "0/1", cite: "Ties.bas:189,982"}
+  - {addr: 471, names: [readtie], const: readtiesys, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "readtie P1: puerto del que leer trefvars (0 = tiepres)",
+     borra: "NUNCA: persiste (seleccion estable)", rango: "+-32000", cite: "Ties.bas:695-699"}
+  - {addr: 473, names: [memval], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(mem(474)) del bot visto (espionaje de memoria)", borra: "EraseLookOccurr paso 12 (Senses.bas:388)", rango: "+-32767 (lo que hubiera en la celda espiada)", cite: "Senses.bas:333-338"}
+  - {addr: 474, names: [memloc], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "lookoccurr: si 1..1000, direccion a espiar en el visto; si apunta a un ojo (501..509) marca View=True en el visto",
+     borra: "NUNCA: persiste", rango: "+-32000 (util 1..1000)", cite: "Senses.bas:333-338"}
+  - {addr: 475, names: [tmemval], const: null, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars = mem(mem(476)) del atado", borra: "EraseTRefVars (Ties.bas:664)", rango: "+-32767", cite: "Ties.bas:754-755"}
+  - {addr: 476, names: [tmemloc], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ReadTRefVars: direccion a espiar en el atado (1..1000)",
+     borra: "NUNCA (reset comentado a proposito, Ties.bas:665)", rango: "+-32000 (util 1..1000)", cite: "Ties.bas:754-759,665"}
+  - {addr: 477, names: [reffixed], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = 1 si el visto esta Fixed, 0 si no; lookoccurrShape = 1 si la forma esta quieta", borra: "EraseLookOccurr (Senses.bas:389)", rango: "0/1", cite: "Senses.bas:339-343,449-453"}
+  - {addr: 478, names: [treffixed], const: null, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars = 1/0 segun Fixed del atado", borra: "EraseTRefVars (Ties.bas:666)", rango: "0/1", cite: "Ties.bas:760-764"}
+  - {addr: 479, names: [trefaim], const: null, sentido: sense, in: true, out: false,
+     escribe: "ReadTRefVars = mem(18) del atado",
+     borra: "EraseTRefVars (Ties.bas:667)", rango: "0..~2513",
+     nota: "[PROBABLE BUG] la marca View del atado al espiar ojos chequea mem(479) en vez de mem(476) (Ties.bas:756-758)", cite: "Ties.bas:766"}
+  - {addr: 480, names: [tieang1], const: null, sentido: bidi, in: true, out: true,
+     escribe: "entrada: store de 2 operandos marca TieAngOverwrite(0) (20-VM.md par.7) y Update_Ties P3 aplica angulo=(valor/200) a la tie 1 si multibot+type3 (Ties.bas:295-298); salida: P3 publica el angulo real *200 (:311)",
+     borra: "reescrita cada P3 (solo multibot con tie 1 endurecida)", rango: "0..1256 publicado", cite: "Ties.bas:284-313"}
+  - {addr: 481, names: [tieang2], const: null, sentido: bidi, in: true, out: true, escribe: "como tieang1, tie 2 (flag TieAngOverwrite(1))", borra: "reescrita P3", rango: "0..1256", cite: "Ties.bas:284-313"}
+  - {addr: 482, names: [tieang3], const: null, sentido: bidi, in: true, out: true, escribe: "como tieang1, tie 3", borra: "reescrita P3", rango: "0..1256", cite: "Ties.bas:284-313"}
+  - {addr: 483, names: [tieang4], const: null, sentido: bidi, in: true, out: true, escribe: "como tieang1, tie 4", borra: "reescrita P3", rango: "0..1256", cite: "Ties.bas:284-313"}
+  - {addr: 484, names: [tielen1], const: null, sentido: bidi, in: true, out: true,
+     escribe: "entrada: flag TieLenOverwrite(0) -> NaturalLength=valor+radios (clamp 32000) en ambos extremos (Ties.bas:289-294); salida: P3 publica CInt(dist-radios) (:310)",
+     borra: "reescrita cada P3 (multibot, tie endurecida)", rango: "~-240..32000", cite: "Ties.bas:284-313"}
+  - {addr: 485, names: [tielen2], const: null, sentido: bidi, in: true, out: true, escribe: "como tielen1, tie 2", borra: "reescrita P3", rango: "~-240..32000", cite: "Ties.bas:284-313"}
+  - {addr: 486, names: [tielen3], const: null, sentido: bidi, in: true, out: true, escribe: "como tielen1, tie 3", borra: "reescrita P3", rango: "~-240..32000", cite: "Ties.bas:284-313"}
+  - {addr: 487, names: [tielen4], const: null, sentido: bidi, in: true, out: true, escribe: "como tielen1, tie 4", borra: "reescrita P3", rango: "~-240..32000", cite: "Ties.bas:284-313"}
+
+  # --- 500..539: vision ---
+  - {addr: 501, names: [eye1], const: null, sentido: sense, in: true, out: false,
+     escribe: "BucketsProximity (WriteSenses P5, solo vivos videntes no-corpse): borra 501..509 y EYEF y reescribe con eyevalue=1/(percentdist^2) clamp 32000, maximo por ojo (Quads.bas:183-186, 569-587); dentro de una forma: 32000 (:649). Corpses y CantSee conservan valores rancios; al volverse corpse se ponen a 0 (Robots.bas:1325-1327)",
+     borra: "el propio barrido", rango: "0..32000", cite: "Quads.bas:183-186,571-587"}
+  - {addr: 502, names: [eye2], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 503, names: [eye3], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 504, names: [eye4], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 505, names: [eye5], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5 (ojo frontal por defecto, a=4)", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 506, names: [eye6], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 507, names: [eye7], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 508, names: [eye8], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 509, names: [eye9], const: null, sentido: sense, in: true, out: false, escribe: "BucketsProximity P5", borra: barrido, rango: "0..32000", cite: "Quads.bas:183-186"}
+  - {addr: 510, names: [eyef], const: "EyeEnd/EYEF", sentido: sense, in: true, out: false,
+     escribe: "BucketsProximity P5: valor del ojo con foco (Abs(mem(511)+4) Mod 9) si lo mas cercano cae en el", borra: "el barrido (=0 al empezar)", rango: "0..32000", cite: "Quads.bas:183,578-583"}
+  - {addr: 511, names: [focuseye], const: FOCUSEYE, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "CompareRobots3/CompareShapes: ojo con foco = Abs(mem+4) Mod 9 (0 -> eye5)", borra: "NUNCA: persiste", rango: "+-32000", cite: "Quads.bas:578,923"}
+  - {addr: 521, names: [eye1dir], const: EYE1DIR, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "CompareRobots3/CompareShapes: offset de direccion del ojo ((valor Mod 1256)/200)", borra: "NUNCA: persiste", rango: "+-32000", cite: "Quads.bas:526,729"}
+  - {addr: 522, names: [eye2dir], const: EYE2DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 523, names: [eye3dir], const: EYE3DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 524, names: [eye4dir], const: EYE4DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 525, names: [eye5dir], const: EYE5DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 526, names: [eye6dir], const: EYE6DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 527, names: [eye7dir], const: EYE7DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 528, names: [eye8dir], const: EYE8DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 529, names: [eye9dir], const: EYE9DIR, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:526"}
+  - {addr: 531, names: [eye1width], const: EYE1WIDTH, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "CompareRobots3/NarrowestEye/EyeSightDistance: anchura del ojo; 0 en las 9 = vision por defecto 1440*eyestrength", borra: "NUNCA: persiste", rango: "+-32000", cite: "Quads.bas:361-370,426-438,514-533"}
+  - {addr: 532, names: [eye2width], const: EYE2WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 533, names: [eye3width], const: EYE3WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 534, names: [eye4width], const: EYE4WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 535, names: [eye5width], const: EYE5WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 536, names: [eye6width], const: EYE6WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 537, names: [eye7width], const: EYE7WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 538, names: [eye8width], const: EYE8WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+  - {addr: 539, names: [eye9width], const: EYE9WIDTH, sentido: cmd, in: false, out: true, escribe: ADN, lee: "idem", borra: "persiste", rango: "+-32000", cite: "Quads.bas:426-434"}
+
+  # --- 685..731: refvars del objeto visto y firma propia ---
+  - {addr: 685, names: [reftype], const: REFTYPE, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr=0 (bot), lookoccurrShape=1 (forma); tambien 1 al tocar una forma sin ver nada (Obstacles.bas:529-531)",
+     borra: "EraseLookOccurr paso 12 (=0, Senses.bas:356)", rango: "0/1", cite: "Senses.bas:227,401"}
+  - {addr: 686, names: [refmulti], const: refmulti, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr: 1 si el visto es multibot", borra: "EraseLookOccurr (Senses.bas:387)", rango: "0/1", cite: "Senses.bas:328-332"}
+  - {addr: 687, names: [refshell], const: refshell, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = shell del visto", borra: EraseLookOccurr, rango: "0..32000", cite: "Senses.bas:304,375"}
+  - {addr: 688, names: [refbody], const: refbody, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = body del visto (clamp 0..32000 por ManageBody)", borra: EraseLookOccurr, rango: "0..32000", cite: "Senses.bas:305,376"}
+  - {addr: 689, names: [refxpos], const: refxpos, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(219) del visto; lookoccurrShape = x de la forma", borra: EraseLookOccurr, rango: "0..31999", cite: "Senses.bas:307,427"}
+  - {addr: 690, names: [refypos], const: refypos, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(217) del visto", borra: EraseLookOccurr, rango: "0..31999", cite: "Senses.bas:306,428"}
+  - {addr: 695, names: [refvelscalar], const: refvelscalar, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = Sqr(refvelup^2+refveldx^2) clamp 32000", borra: EraseLookOccurr, rango: "0..32000", cite: "Senses.bas:320-324"}
+  - {addr: 696, names: [refvelsx], const: refvelsx, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr: [PROBABLE BUG] se asigna -mem(696) en vez de -mem(697): como EraseLookOccurr la dejo a 0, SIEMPRE queda 0 (idem lookoccurrShape)",
+     borra: EraseLookOccurr, rango: "0 en la practica", cite: "Senses.bas:319,434"}
+  - {addr: 697, names: [refveldx], const: refveldx, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr: vel lateral del visto relativa a mi, clamp +-32000", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:310-318"}
+  - {addr: 698, names: [refveldn], const: refveldn, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = -mem(699)", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:317"}
+  - {addr: 699, names: [refvel, refvelup], const: refvelup, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr: vel frontal del visto relativa a mi, clamp +-32000", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:309-316"}
+  - {addr: 701, names: [refup], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr (P5 vision o P1 colision Repel3) = occurr(1) del visto: cuantos 'N .up store' hay en su ADN",
+     borra: "EraseLookOccurr paso 12 (bucle 701..710, Senses.bas:358-360)", rango: "0..~16000", cite: "Senses.bas:229-231; Physics.bas:972-973"}
+  - {addr: 702, names: [refdn], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(2) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 703, names: [refsx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(3) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 704, names: [refdx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(4) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 705, names: [refaimdx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(5) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 706, names: [refaimsx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(6) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 707, names: [refshoot], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(7) del visto", borra: EraseLookOccurr, rango: "0..~16000", cite: "Senses.bas:229-231"}
+  - {addr: 708, names: [refeye], const: null, sentido: sense, in: true, out: false,
+     escribe: "= occurr(8) del visto (sus lecturas *eye); con FudgeEyes/FudgeAll y especie distinta se trucan con rndy (Senses.bas:236-238)",
+     borra: EraseLookOccurr, rango: "0..~16000 (32001 posible con fudge)", cite: "Senses.bas:229-244"}
+  - {addr: 709, names: [refnrg], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = nrg del visto clamp 0..32000", borra: EraseLookOccurr, rango: "0..32000", cite: "Senses.bas:249-255"}
+  - {addr: 710, names: [refage], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = age del visto clamp 32000", borra: EraseLookOccurr, rango: "0..32000", cite: "Senses.bas:257-261"}
+  - {addr: 711, names: [refaim], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(18) del visto", borra: "EraseLookOccurr (Senses.bas:373)", rango: "0..~2513", cite: "Senses.bas:292"}
+  - {addr: 712, names: [reftie], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = occurr(9) del visto (apariciones del literal 330 en su ADN); fudge FudgeAll", borra: "EraseLookOccurr (:374)", rango: "0..~16000", cite: "Senses.bas:293-302"}
+  - {addr: 713, names: [refpoison], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(827) del visto (poison actual, no comandos)", borra: "EraseLookOccurr (:384)", rango: "0..32000", cite: "Senses.bas:325"}
+  - {addr: 714, names: [refvenom], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = mem(825) del visto", borra: "EraseLookOccurr (:385)", rango: "0..32000", cite: "Senses.bas:326"}
+  - {addr: 715, names: [refkills], const: null, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = .Kills del visto (Long -> Integer sin clamp: mismo overflow teorico que mem(220))",
+     borra: "EraseLookOccurr (:386)", rango: "0..32767 (wrap posible en EXE)", cite: "Senses.bas:327"}
+  - {addr: 721, names: [myup], const: null, sentido: sense, in: true, out: false,
+     escribe: "makeoccurrlist = occurr(1) propio; SOLO en eventos de ADN (carga, nacimiento, delgene, addgene), NO cada ciclo; las mutaciones normales NO lo refrescan",
+     borra: "no (el bot puede pisarlo hasta el proximo evento)", rango: "0..~16000", cite: "Senses.bas:508-511"}
+  - {addr: 722, names: [mydn], const: null, sentido: sense, in: true, out: false, escribe: "makeoccurrlist = occurr(2)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 723, names: [mysx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(3)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 724, names: [mydx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(4)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 725, names: [myaimdx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(5)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 726, names: [myaimsx], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(6)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 727, names: [myshoot], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(7)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-511"}
+  - {addr: 728, names: [myeye], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(8) (escrito dos veces: bucle y linea redundante)", borra: no, rango: "0..~16000", cite: "Senses.bas:509-512"}
+  - {addr: 729, names: [myties], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(9) (literales 330)", borra: no, rango: "0..~16000", cite: "Senses.bas:513"}
+  - {addr: 730, names: [mypoison], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(10) (stores a 826)", borra: no, rango: "0..~16000", cite: "Senses.bas:514"}
+  - {addr: 731, names: [myvenom], const: null, sentido: sense, in: true, out: false, escribe: "= occurr(11) (stores a 824)", borra: no, rango: "0..~16000", cite: "Senses.bas:515"}
+
+  # --- 800..839: comunicacion, defensa quimica ---
+  - {addr: 800, names: [out1], const: out1, sentido: cmd, in: false, out: true,
+     escribe: "ADN; lo lee el lookoccurr de quien me ve (-> su in1)", borra: "no (canal persistente)", rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 801, names: [out2], const: out2, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 802, names: [out3], const: out3, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 803, names: [out4], const: out4, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 804, names: [out5], const: out5, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 805, names: [out6], const: out6, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 806, names: [out7], const: out7, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 807, names: [out8], const: out8, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 808, names: [out9], const: out9, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 809, names: [out10], const: out10, sentido: cmd, in: false, out: true, escribe: ADN, borra: no, rango: "+-32000", cite: "Senses.bas:263-272"}
+  - {addr: 810, names: [in1], const: in1, sentido: sense, in: true, out: false,
+     escribe: "lookoccurr = out1 del visto; FudgeAll +-1 si especie distinta y out<>0", borra: "EraseLookOccurr paso 12 (Senses.bas:362-371)", rango: "+-32000 (+-32001 con fudge)", cite: "Senses.bas:263,278"}
+  - {addr: 811, names: [in2], const: in2, sentido: sense, in: true, out: false, escribe: "= out2 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:264"}
+  - {addr: 812, names: [in3], const: in3, sentido: sense, in: true, out: false, escribe: "= out3 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:265"}
+  - {addr: 813, names: [in4], const: in4, sentido: sense, in: true, out: false, escribe: "= out4 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:266"}
+  - {addr: 814, names: [in5], const: in5, sentido: sense, in: true, out: false, escribe: "= out5 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:267"}
+  - {addr: 815, names: [in6], const: in6, sentido: sense, in: true, out: false, escribe: "= out6 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:268"}
+  - {addr: 816, names: [in7], const: in7, sentido: sense, in: true, out: false, escribe: "= out7 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:269"}
+  - {addr: 817, names: [in8], const: in8, sentido: sense, in: true, out: false, escribe: "= out8 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:270"}
+  - {addr: 818, names: [in9], const: in9, sentido: sense, in: true, out: false, escribe: "= out9 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:271"}
+  - {addr: 819, names: [in10], const: in10, sentido: sense, in: true, out: false, escribe: "= out10 del visto", borra: EraseLookOccurr, rango: "+-32000", cite: "Senses.bas:272"}
+  - {addr: 820, names: [mkslime], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; makeslime clampa +-32000 in place", lee: "MakeStuff P5 si <>0: +-200/ciclo de slime, coste nrg",
+     borra: "=0 al consumir (Robots.bas:971)", rango: "+-32000 (efectivo +-200)", cite: "Robots.bas:1181,933-981"}
+  - {addr: 821, names: [slime], const: null, sentido: sense, in: true, out: false,
+     escribe: "Upkeep P1 = CInt(slime*0.98) (decaimiento); makeslime P5 (Robots.bas:972); tras shareslime se refleja recien en el Upkeep siguiente",
+     borra: "se reescribe cada ciclo", rango: "0..32000", cite: "Robots.bas:1028-1030"}
+  - {addr: 822, names: [mkshell], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; makeshell clampa +-32000 in place", lee: "MakeStuff P5 si <>0: +-100/ciclo de shell",
+     borra: "=0 al consumir (Robots.bas:924)", rango: "+-32000 (efectivo +-100)", cite: "Robots.bas:1180,886-931"}
+  - {addr: 823, names: [shell], const: null, sentido: sense, in: true, out: false,
+     escribe: "makeshell P5 (Robots.bas:925); shareshell P3 en ambos bots (:1950-1951); shots que gastan shell (Shots.bas:641,646,780,787)",
+     borra: "no; refleja el ultimo evento", rango: "0..32000", cite: "Robots.bas:925"}
+  - {addr: 824, names: [strvenom, mkvenom], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; storevenom clampa +-32000 in place", lee: "MakeStuff P5 si <>0: +-100/ciclo de venom",
+     borra: "=0 al consumir (Robots.bas:2041)", rango: "+-32000 (efectivo +-100)", cite: "Robots.bas:1178,2010-2048"}
+  - {addr: 825, names: [venom], const: null, sentido: sense, in: true, out: false,
+     escribe: "storevenom (Robots.bas:2042); robshoot -3 (:1820); Ties inyectar/robar venom (Ties.bas:473,485); takeven conspecifico (Shots.bas:775)",
+     borra: "no; refleja el ultimo evento", rango: "0..32000", cite: "Robots.bas:2042"}
+  - {addr: 826, names: [strpoison, mkpoison], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; storepoison clampa in place", lee: "MakeStuff P5 si <>0: +-100/ciclo de poison",
+     borra: "=0 al consumir (Robots.bas:2081)", rango: "+-32000 (efectivo +-100)", cite: "Robots.bas:1179,2050-2089"}
+  - {addr: 827, names: [poison], const: poison, sentido: sense, in: true, out: false,
+     escribe: "Upkeep P1 = CInt(poison*0.98); storepoison (Robots.bas:2082); rebotes de shots (Shots.bas:363,562,842); ties (Ties.bas:392,598)",
+     borra: "se reescribe cada ciclo (Upkeep)", rango: "0..32000", cite: "Robots.bas:1033-1035"}
+  - {addr: 828, names: [waste], const: null, sentido: sense, in: true, out: false,
+     escribe: "HandleWaste P5 = Waste (tras defacate si >32000 y floor 0)", borra: "se reescribe cada P5", rango: "0..32000", cite: "Robots.bas:1185-1193"}
+  - {addr: 829, names: [pwaste], const: null, sentido: sense, in: true, out: false,
+     escribe: "HandleWaste P5 = Pwaste (clamp 32000)", borra: "se reescribe cada P5", rango: "0..32000", cite: "Robots.bas:1190-1193"}
+  - {addr: 830, names: [sharenrg], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; sharenrg lo normaliza in place (<=0 -> 0; si no Mod 100, 0 -> 100)",
+     lee: "Update_Ties P3 (multibot, ties forward): % del total de nrg que quiero tener",
+     borra: "=0 cada P3 tras el bucle de ties (Ties.bas:178)", rango: "+-32000 (efectivo 1..100)", cite: "Ties.bas:144-146,178; Robots.bas:1955-2007"}
+  - {addr: 831, names: [sharewaste], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; sharewaste clampa 0..99 in place (Robots.bas:1916-1917)", lee: "Update_Ties P3", borra: "=0 cada P3 (Ties.bas:179)", rango: "+-32000 (efectivo 1..99)", cite: "Ties.bas:148-150"}
+  - {addr: 832, names: [shareshell], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; shareshell clampa 0..99 (Robots.bas:1936-1937)", lee: "Update_Ties P3", borra: "=0 cada P3 (Ties.bas:180)", rango: "+-32000 (efectivo 1..99)", cite: "Ties.bas:152-154"}
+  - {addr: 833, names: [shareslime], const: null, sentido: cmd, in: false, out: true,
+     escribe: "ADN; shareslime clampa 0..99 (Robots.bas:1897-1898)", lee: "Update_Ties P3", borra: "=0 cada P3 (Ties.bas:181)", rango: "+-32000 (efectivo 1..99)", cite: "Ties.bas:156-158"}
+  - {addr: 834, names: [ploc], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "al DEVOLVER poison: el atacado usa su mem(834) como direccion a corromper en el agresor ((v-1) Mod 1000+1; 340 -> 0; <=0 -> aleatoria 1..1000 sin 340). Shots de rebote: createshot (Shots.bas:257); ties: Ties.bas:394-401,600-607",
+     borra: "no", rango: "+-32000 (util 1..1000)", cite: "Shots.bas:847-855; Ties.bas:394-403"}
+  - {addr: 835, names: [vloc], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "al disparar venom (-3): newshot copia mem(835) al shot como memloc (Shots.bas:124); ties venom: Ties.bas:462-463. En el golpeado: misma normalizacion con exclusion de 340",
+     borra: "no", rango: "+-32000 (util 1..1000)", cite: "Shots.bas:124,802-809"}
+  - {addr: 836, names: [venval], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "newshot copia mem(836) al shot como Memval -> Vval del golpeado (Shots.bas:127,811); ties: Ties.bas:471",
+     borra: "no", rango: "+-32000", cite: "Shots.bas:127"}
+  - {addr: 837, names: [paralyzed], const: null, sentido: sense, in: true, out: false,
+     escribe: "Poisons P1 = Int(Paracount) cada ciclo", borra: "se reescribe (0 cuando no paralizado)", rango: "0..32000", cite: "Robots.bas:1125"}
+  - {addr: 838, names: [poisoned], const: null, sentido: sense, in: true, out: false,
+     escribe: "Poisons P1 = Int(Poisoncount)", borra: "se reescribe", rango: "0..32000", cite: "Robots.bas:1134"}
+  - {addr: 839, names: [pval], const: null, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "valor que inyectara mi poison al agresor: createshot -5 (Shots.bas:259) y ties (Ties.bas:403,609) -> Pval del envenenado",
+     borra: "no", rango: "+-32000", cite: "Shots.bas:259"}
+
+  # --- 900..924: disparo avanzado y cloroplastos ---
+  - {addr: 900, names: [backshot], const: backshot, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "newshot: <>0 dispara hacia atras (aim-PI)", borra: "=0 al consumir, solo si era <>0 (Shots.bas:132-137)", rango: "+-32000", cite: "Shots.bas:132-137"}
+  - {addr: 901, names: [aimshoot], const: aimshoot, sentido: cmd, in: false, out: true,
+     escribe: "ADN; newshot lo normaliza Mod 1256 in place antes de usarlo", lee: "newshot: desvio del disparo respecto de aim (valor/200 radianes)",
+     borra: "=0 al consumir (Shots.bas:143)", rango: "+-32000 (efectivo +-1255)", cite: "Shots.bas:139-144"}
+  - {addr: 920, names: [chlr], const: chlr, sentido: sense, in: true, out: false,
+     escribe: "ManageChlr P5 = chloroplasts (0..32000), tras el decaimiento del ciclo", borra: "se reescribe cada P5 (bots con NoChlr no pasan por ManageChlr)", rango: "0..32000", cite: "Robots.bas:1217-1233"}
+  - {addr: 921, names: [mkchlr], const: mkchlr, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ManageChlr P5: si mkchlr>0 o rmchlr>0, ChangeChlr suma mkchlr y resta rmchlr (los signos NO se filtran una vez dentro)",
+     borra: "=0 al consumir (Robots.bas:1260)", rango: "+-32000", cite: "Robots.bas:1220,1244,1260"}
+  - {addr: 922, names: [rmchlr], const: rmchlr, sentido: cmd, in: false, out: true,
+     escribe: ADN, lee: "ChangeChlr", borra: "=0 al consumir (:1261)", rango: "+-32000", cite: "Robots.bas:1247,1261"}
+  - {addr: 923, names: [light, availability], const: light, sentido: sense, in: true, out: false,
+     escribe: "ManageChlr P5 = 32000 - LightAval*32000 (LightAval solo se recalcula en ciclos con sol: de noche queda rancio)",
+     borra: "se reescribe cada P5", rango: "0..32000", cite: "Robots.bas:1229; Vegs.bas:185-186"}
+  - {addr: 924, names: [sharechlr], const: sharechlr, sentido: cmd, in: false, out: true,
+     escribe: "ADN; sharechloroplasts clampa 0..99 in place (Robots.bas:1875-1876)", lee: "Update_Ties P3 (multibot, sin NoChlr, con delay)",
+     borra: "=0 cada P3 (Ties.bas:182)", rango: "+-32000 (efectivo 1..99)", cite: "Ties.bas:160-163"}
+
+  # --- 971..990: memoria genetica (sin nombre en la tabla sysvar) ---
+  - {addr: 971, names: [], const: null, sentido: bidi, in: false, out: false,
+     escribe: "ADN (el bot deja datos para su descendencia); al nacer, el hijo recibe COPIA INSTANTANEA de mem(971..975) del padre (Robots.bas:2277-2279; sexual: de la madre, :2734); epireset puede borrarlas en el hijo (:2399-2401)",
+     borra: "no en vida; 0 al nacer si epireset", rango: "+-32000", cite: "Robots.bas:2276-2287"}
+  - {addr: 972, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "memoria genetica instantanea (como 971)", borra: "ver 971", rango: "+-32000", cite: "Robots.bas:2277-2279"}
+  - {addr: 973, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "como 971", borra: "ver 971", rango: "+-32000", cite: "Robots.bas:2277-2279"}
+  - {addr: 974, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "como 971", borra: "ver 971", rango: "+-32000", cite: "Robots.bas:2277-2279"}
+  - {addr: 975, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "como 971", borra: "ver 971", rango: "+-32000", cite: "Robots.bas:2277-2279"}
+  - {addr: 976, names: [], const: null, sentido: bidi, in: false, out: false,
+     escribe: "diferida: al nacer, mem(976..990) del padre pasa a epimem(0..14) del hijo (Robots.bas:2281-2283) y el padre pierde su epimem (:2285-2287). DoGeneticMemory (P3, age<15, con tie de nacimiento viva) copia epimem(age) -> mem(976+age), 1 celda/ciclo, SOLO si la celda del hijo sigue en 0 (:2850-2865)",
+     borra: "no", rango: "+-32000", cite: "Robots.bas:2850-2865"}
+  - {addr: 977, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "memoria genetica diferida, entregada con age=1", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 978, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=2", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 979, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=3", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 980, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=4", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 981, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=5", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 982, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=6", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 983, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=7", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 984, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=8", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 985, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=9", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 986, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=10", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 987, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=11", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 988, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=12", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 989, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=13", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
+  - {addr: 990, names: [], const: null, sentido: bidi, in: false, out: false, escribe: "diferida, age=14", borra: no, rango: "+-32000", cite: "Robots.bas:2858"}
