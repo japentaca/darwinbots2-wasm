@@ -80,7 +80,7 @@ registros:
      rango: "1..32000 (el primer Ageing del bot escribe 1)", cite: "Robots.bas:1197-1205"}
   - {addr: 10, names: [mass], const: masssys, sentido: sense, in: true, out: false,
      escribe: "UpdatePosition P3 = .mass (Single, redondeo banker)", borra: no,
-     rango: "~0..192 (body/1000+shell/200)", cite: "Robots.bas:876"}
+     rango: "1..32000 (CalcMass: body/1000 + shell/200 + chloroplasts/32000*31680, clamp 1..32000; Physics.bas:44-52)", cite: "Robots.bas:876"}
   - {addr: 11, names: [maxvel], const: maxvelsys, sentido: sense, in: true, out: false,
      escribe: "UpdatePosition P3 = SimOpts.MaxVelocity (Single, <=200 tras carga)", borra: no,
      rango: "1..200 tipico", cite: "Robots.bas:877; HDRoutines.bas:1298-1300"}
