@@ -17,24 +17,26 @@ reinicios de contexto.
 | `10-CICLO.md` | ✅ cerrado | **A1.** Iteración secuencial in situ, sin doble búfer. `UpdateBots` = 7 pasadas. Nacimientos antes que muertes en `ReproduceAndKill`. 7 `[PROBABLE BUG]`. Q04 resuelta; Q01 y Q03 parciales. |
 | `20-VM.md` + `opcodes.yaml` | ✅ cerrado | **A2.** Parser y VM completos: 77 opcodes con semántica numérica exacta. Stacks de 101 celdas que nunca fallan (overflow descarta el fondo; underflow: 0 / centinela −5 = "vacío es true"). Stores inmediatos confirmados (`CommandQueue` muerto). **`else` tras `start` es código muerto** (`DNA.bas:1178`). El tokenizador no rechaza nada (desconocido → número 0). Q12 resuelta; Q15-Q17 añadidas. |
 | `21-MEMORIA.md` + `sysvars.yaml` | ✅ cerrado | **A3, cierra el Bloque A.** Mapa completo de `mem(0..1000)`: 247 direcciones con nombre + 971-990 (memoria genética sin nombre) + `mem(0)` como sumidero de venom/poison (exclusión 340). Latencia 1 ciclo para todos los sentidos; comandos consumidos en el mismo ciclo. Q15 resuelta (nada fuera de ±32000 en juego normal). `sysvarIN`/`sysvarOUT` = vocabulario de mutaciones. 10 `[PROBABLE BUG]` (refvelsx siempre 0, trefshell sin borrar, Kills sin clamp…). Q03(mem), Q11, Q14(A3), Q15 cerradas. |
-| `OPEN_QUESTIONS.md` | 🟡 vivo | Q04, Q11, Q12, Q15 resueltas; Q03/Q14 parciales; Q01 ampliada. |
+| `30-FISICA.md` | ✅ cerrado | **B1.** Euler semi-implícito en dos tiempos; fricción/arrastre mutan `vel` directo; librería de vectores con clamps ByRef ocultos; masa incluye cloroplastos (1..32000); `Repel3` con efectos sensoriales inmediatos; bugs de `TieTorque` (Sgn cruzado, escritura en slot fantasma). |
+| `32-VISION.md` | ✅ cerrado | **B2.** 9 ojos apuntables; alcance = f(anchura); **oclusión por formas rota dos veces** (bordes transpuestos + `Or`); `PI\36` división entera; `lastopppos` solo del ojo frontal; fórmulas de anchura distintas bots/formas. |
+| `33-SHOTS.md` | ✅ cerrado | **B3a.** Ciclo de vida, swept-sphere con sesgo por índice, efectos por tipo. **Inmunidad filial rota** (slot vs AbsNum); slot tirador intocable; `.shoot` múltiplo de 1000 = esperma; 2 RNG/disparo (1 muerto). |
+| `35-VIRUS.md` | ✅ cerrado | **B3b.** mkvirus→Vtimer(2×gen)→vshoot; doble cobro en `Vshoot`; potencia ∝ número de gen; slime penetrada amplifica; delgene blindado. |
+| `34-TIES.md` | ✅ cerrado | **B4.** Máx 9 ties; puertos asimétricos; endurecimiento a los 19 ciclos define multibot; sharing destruye recursos en los caps; slot 10 fantasma con `.ang` heredable. Q03(Ties) cerrada. |
+| `36-REPRO.md` | ✅ cerrado | **B6a.** Reproduce/SexReproduce/crossover. **El hijo sexual pierde su primer token** (Outdna desde índice 0); loterías vegetales asimétricas; crossover no determinista con pérdida de tramos. |
+| `40-MUTACIONES.md` | ✅ cerrado | **B6b.** 11 operadores; agenda geométrica vs Bernoulli/token; **suelos anti-freeze reescriben las tasas heredables**; Minor=Major salvo defaults; Q16 resuelta (77 comandos, DNAtoInt max 32767). |
+| `50-MUNDO.md` | ✅ cerrado | **B7.** Repoblación por cloroplastos (no por vegetales); sol en banda móvil; teleporters = E/S de disco en el tick (Q10); capa torneo deslindada; Q05 resuelta (Roborder pre-buckets). |
+| `60-FORMATOS.md` | ✅ cerrado | **B8.** Texto/.dbo/sim binaria; versionado FE×3 + FileContinue; solo 50 vars persistidas; `sint` = Mod 32000; gen epigenético autodestructivo; **SaveSimulation recursivo en error**; Q01 completa, Q06 y Q14 resueltas. |
+| `31-ENERGIA.md` + `constants.yaml` | ✅ cerrado | **B5, cierra el Bloque B.** Libro mayor del nrg/body/waste/cloroplastos por fase del tick; **P4 anti-gigantes muerta con `bodyfix=32100`**; venom 1:1 vs poison 4:1; constants.yaml con 3 capas (compiladas/arranque/preset F1). |
+| `OPEN_QUESTIONS.md` | 🟡 vivo | Resueltas: Q01, Q03, Q04, Q05, Q06, Q10, Q11, Q12, Q14, Q15, Q16. En curso: Q07, Q08. Abiertas: Q02, Q09, Q13, Q17 (las cuatro requieren correr el binario o son teóricas). |
 
 ## Siguiente
 
-**Bloque B.** El Bloque A está cerrado. **No arrancar sin orden explícita.**
-
-Contexto de arranque para B (fijado por A1-A3):
-- El orden del tick y las 7 pasadas: `10-CICLO.md §2, §5`.
-- La VM y el direccionamiento: `20-VM.md`; el mapa de memoria y latencias:
-  `21-MEMORIA.md` + `sysvars.yaml`.
-- Avisos ya conocidos: `DnaOps.bas`/`DoubleWord.cls` son código muerto; el archivo
-  `Darwinbots2/main` (sin extensión) es una copia vieja de `main.frm`, no compilada.
+**Bloque C — `70-CASOS-DORADOS.md`** (revisar antes `UnitTests/DarwinBots2UnitTests.vbp`).
+**No arrancar sin orden explícita.** `constants.yaml` ✅ salió con B5.
 
 ## Pendiente
 
-Bloque B: `30-FISICA.md`, `31-ENERGIA.md`, `32-VISION.md`, `33-SHOTS.md`, `34-TIES.md`,
-`35-VIRUS.md`, `36-REPRO.md`, `40-MUTACIONES.md`, `50-MUNDO.md`, `60-FORMATOS.md`.
-Bloque C: `constants.yaml`, `70-CASOS-DORADOS.md` (`opcodes.yaml` ✅ A2; `sysvars.yaml` ✅ A3).
+Bloque C: `70-CASOS-DORADOS.md`.
 
 ---
 
