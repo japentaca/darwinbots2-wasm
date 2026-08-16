@@ -29,17 +29,25 @@ ejecutables.
 
 Leé en este orden:
 
-- `spec/PROGRESO.md` — estado y punto de entrada
+- `spec/PROGRESO.md` — estado y punto de entrada. **Incluye la corrección de premisa
+  del 2026-08-16** (el EXE compila CON chequeos; flags `=0` = casillas sin marcar):
+  leela antes que nada, invalida cualquier intuición de "wrap silencioso".
 - `spec/PLAN.md` — la decisión de arquitectura C++/WASM y sus 5 salvaguardas de build
   (la salvaguarda 5 define la prioridad de este documento)
-- `spec/OPEN_QUESTIONS.md` — qué NO se puede validar sin correr el binario (Q02, Q09, Q17)
+- `spec/OPEN_QUESTIONS.md` — **las 17 preguntas están cerradas**; ninguna bloquea.
+  Contexto que te afecta: ni el EXE ni el IDE de VB6 corren en esta máquina (Q09),
+  así que no hay validación empírica posible — las preguntas de runtime se cerraron
+  con fuentes secundarias marcadas (Q02: el LCG de VB6, con algoritmo completo;
+  Q07/Q08/Q13/Q17: análisis y decisiones de port).
+- `spec/10-CICLO.md §14` — la semántica de truncamiento de tick (errores 6/9/11)
 - El resto de `spec/` como material de referencia: `10-CICLO.md`, `20-VM.md` +
   `opcodes.yaml`, `21-MEMORIA.md` + `sysvars.yaml`, `30-FISICA.md`, `31-ENERGIA.md` +
   `constants.yaml`, `32-VISION.md`, `33-SHOTS.md`, `34-TIES.md`, `35-VIRUS.md`,
   `36-REPRO.md`, `40-MUTACIONES.md`, `50-MUNDO.md`, `60-FORMATOS.md`
 
 El repo está bajo git. `02b20d7` es la línea base del fuente intacto. El Bloque A cerró
-en `b18d2cc`; el B en `a1d419c`; la decisión de arquitectura en `8cf9864`.
+en `b18d2cc`; el B en `a1d419c`; la decisión de arquitectura en `8cf9864`; la corrección
+de premisa (chequeos activos) y el cierre de todas las preguntas abiertas en `6e3d22c`.
 
 ### Reglas duras
 
@@ -52,7 +60,9 @@ en `b18d2cc`; el B en `a1d419c`; la decisión de arquitectura en `8cf9864`.
 3. **El fuente es la spec; los documentos de `spec/` son su índice.** Si al derivar un
    caso encontrás una contradicción entre un documento y el código, **gana el código**:
    corregí el documento en el mismo commit y anotalo. No consultes el wiki de
-   Darwinbots bajo ningún concepto.
+   Darwinbots bajo ningún concepto. (La excepción de fuentes secundarias del
+   2026-08-16 aplicaba solo a preguntas de *runtime* ya cerradas — para valores
+   esperados de casos dorados no hay excepción: fuente o nada.)
 4. **Los `[PROBABLE BUG]` se testean como comportamiento correcto.** Un caso dorado del
    `else` muerto espera que el else NO ejecute; uno de `refvelsx` espera 0. Los ~35
    catalogados en los documentos son la lista de casos de más valor: son exactamente
@@ -70,9 +80,16 @@ en `b18d2cc`; el B en `a1d419c`; la decisión de arquitectura en `8cf9864`.
 - Código muerto: `DnaOps.bas`, `DoubleWord.cls`, `NodeSpeedThings.bas`, `unixtime.bas`,
   `OptionsRobotPlacement.bas`, `Darwinbots2/main` (copia vieja de `main.frm`).
   `Main.bas` es plomería Win32 del runner de tests, sin `Sub Main` (Q06).
-- El RNG de VB6 (Q02) no está en el fuente: los casos que consuman aleatoriedad se
-  escriben **parametrizados por una secuencia de RNG inyectada**, nunca con valores
-  esperados que dependan del `Rnd` real.
+- El RNG de VB6 (Q02) no está en el fuente pero **está resuelto** con fuente externa
+  (Microsoft, `OPEN_QUESTIONS.md` Q02): LCG de 24 bits, semilla de proceso `&H50000`,
+  `seed = (seed·&H43FD43FD + &HC39EC3) And &HFFFFFF`, retorno `seed/2²⁴`, más la
+  semántica exacta de `Randomize`. El propio LCG merece sus casos dorados (marcados
+  `[FUENTE EXTERNA: MS]`). Aun así, los casos de *subsistemas* que consuman
+  aleatoriedad se escriben **parametrizados por una secuencia de RNG inyectada** —
+  así el test no acopla el subsistema al generador.
+- Errores runtime (corrección 2026-08-16): un literal fuera de ±32767 o un `def`
+  1001+ hacen que el archivo de bot **no cargue** (`20-VM.md §2.4, §8.1`); un bot
+  solo-defs es una "bomba de tick" (`§2.3`). Son casos dorados de carga, no de VM.
 
 ### Tu tarea: `spec/70-CASOS-DORADOS.md`
 
