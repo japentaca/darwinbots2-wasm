@@ -71,8 +71,10 @@ son puro consumo de RNG.
 `nrg = Stnrg` de la especie, cloroplastos = `StartChlr` si vegetal, `aim` aleatorio
 (1 RNG), generation 0, `parent = 0`, flags de especie, `makeoccurrlist`. El timer
 epigenético queda en 0 (a diferencia de los fundadores de `loadrobs`,
-`21-MEMORIA.md`). Total ≈ **10-11 RNG por vegetal repoblado** (2 descartados + especie
-con re-tiradas + 2 posición + 6 preparerob + 1 aim).
+`21-MEMORIA.md`). Total = **12 RNG por vegetal repoblado** con una sola tirada de
+especie (2 descartados + 1 especie [+1 por re-tirada] + 2 posición + 6 preparerob +
+1 aim). *(Corregido en el Bloque C: la cifra "≈10-11" original no sumaba su propia
+enumeración; derivación completa en `70-CASOS-DORADOS.md` R-08.)*
 
 ### 2.2 El sol (paso 21 → `feedvegs`, `Vegs.bas:41-271`)
 

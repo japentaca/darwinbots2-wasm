@@ -11,7 +11,7 @@
 compiladas:
   # geometria y arrays
   RobSize: {v: 120, cite: "Robots.bas:359", nota: "diametro fijo; half=60 (:360)"}
-  CubicTwipPerBody: {v: 905, cite: "Robots.bas:361", nota: "radio(1000 body) = 60"}
+  CubicTwipPerBody: {v: 905, cite: "Robots.bas:361", nota: "el comentario del fuente ('radius of 60 for 1000 body') describe la formula PRE-Log(body) de 2007; con FindRadius actual radio(1000 body) ~ 114.28 (70-CASOS-DORADOS.md F-02)"}
   ROBARRAYMAX: {v: 32000, cite: "Robots.bas:365"}
   MAXTIES: {v: 10, cite: "Ties.bas:42", nota: "maximo real de ties por creacion: 9 (34-TIES.md par.0.1)"}
   MAXOBSTACLES: {v: 1000, cite: "Obstacles.bas:33"}

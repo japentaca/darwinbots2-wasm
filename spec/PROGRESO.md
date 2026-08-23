@@ -27,6 +27,7 @@ reinicios de contexto.
 | `50-MUNDO.md` | ✅ cerrado | **B7.** Repoblación por cloroplastos (no por vegetales); sol en banda móvil; teleporters = E/S de disco en el tick (Q10); capa torneo deslindada; Q05 resuelta (Roborder pre-buckets). |
 | `60-FORMATOS.md` | ✅ cerrado | **B8.** Texto/.dbo/sim binaria; versionado FE×3 + FileContinue; solo 50 vars persistidas; `sint` = Mod 32000; gen epigenético autodestructivo; **SaveSimulation recursivo en error**; Q01 completa, Q06 y Q14 resueltas. |
 | `31-ENERGIA.md` + `constants.yaml` | ✅ cerrado | **B5, cierra el Bloque B.** Libro mayor del nrg/body/waste/cloroplastos por fase del tick; **P4 anti-gigantes muerta con `bodyfix=32100`**; venom 1:1 vs poison 4:1; constants.yaml con 3 capas (compiladas/arranque/preset F1). |
+| `70-CASOS-DORADOS.md` | ✅ cerrado | **Bloque C, cierra la especificación.** ~110 casos en 8 familias (suite de autores minada, numérica base, VM/flujo, memoria/ciclo, física/visión, RNG inyectado, formatos, catálogo completo de `[PROBABLE BUG]` como aserciones + 10 sitios de error con decisión de port). Hallazgo: los tests de `fRnd` de los autores fallaban probabilísticamente (S-02). Correcciones derivadas: conteo RNG de repoblación en `50-MUNDO.md §2.1` (12, no 10-11) y nota de `CubicTwipPerBody` en `constants.yaml`. Sin casos `[PENDIENTE DE BINARIO]` bloqueantes (solo 2 observaciones de confirmación, §10.1). |
 | `OPEN_QUESTIONS.md` | ✅ sin abiertas | **Todas las preguntas cerradas** (2026-08-16): Q01-Q17 resueltas; Q09 = irresoluble en este entorno (ni el EXE ni el IDE de VB6 corren en el Windows 11 del proyecto — validación empírica descartada; se levantó la veda de fuentes secundarias para las preguntas de runtime: Q02 con el runtime VB de dotnet/runtime, Q17 con la corrección de flags, Q07/Q08/Q13 por análisis y decisión de port). |
 
 > ⚠️ **CORRECCIÓN DE PREMISA (2026-08-16)** — Los flags `=0` de `Iersera.vbp:92-101` son
@@ -42,12 +43,15 @@ reinicios de contexto.
 
 ## Siguiente
 
-**Bloque C — `70-CASOS-DORADOS.md`** (revisar antes `UnitTests/DarwinBots2UnitTests.vbp`).
-**No arrancar sin orden explícita.** `constants.yaml` ✅ salió con B5.
+**La especificación está completa** (Fase 0 + Bloques A, B y C cerrados). Lo que
+sigue es el arranque del código C++/WASM (`PLAN.md`, decisión de arquitectura) —
+**proyecto nuevo, no arrancar sin orden explícita**. La salvaguarda 5 manda: los
+casos de `70-CASOS-DORADOS.md §2` (numérica base) se implementan antes que cualquier
+subsistema.
 
 ## Pendiente
 
-Bloque C: `70-CASOS-DORADOS.md`.
+Nada dentro del alcance de la extracción de la especificación.
 
 ---
 
@@ -67,3 +71,9 @@ Bloque C: `70-CASOS-DORADOS.md`.
   leídos al revés: el EXE compila **con** chequeos. Barrido de corrección en 9 archivos
   de `spec/`, nueva `10-CICLO.md §14` (truncamiento de tick), Q07/Q08/Q17 cerradas bajo
   la premisa corregida. **No quedan preguntas abiertas.** Fuentes sin modificar.
+- **2026-08-22** — Bloque C cerrado (`70-CASOS-DORADOS.md`). **Especificación
+  completa.** Suite de los autores minada (`UnitTests/TestCommon.cls`: solo cubre
+  `Common.bas`; hallazgo S-02: los tests de `fRnd` afirmaban un rango que el fuente
+  viola con p ≈ 0.5/rango). Dos correcciones menores a documentos B
+  (`50-MUNDO.md §2.1`, `constants.yaml`). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).
