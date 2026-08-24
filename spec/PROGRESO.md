@@ -47,13 +47,16 @@ reinicios de contexto.
 |---|---|---|
 | M1 · Sustrato numérico | ✅ cerrado | Salvaguarda 5: casos §1 (S-01..S-07), §2 (N-01..N-19) y R-01..R-03 en verde (30 casos, 438 aserciones). Helpers: redondeo bancario, LCG VB6, gasdev, stacks, mod32000, handlers VM, bitwise. Sitios de error con decisión de port + `VmDiag` (N-07 satura a ±2·10⁹; S-05 a 16384). |
 | M2 · VM y cargador | ✅ cerrado | Casos §3 (V-01..V-14) en verde. `ExecuteDNA` completo (bug del `else` canónico replicado, stores inmediatos, `CondStateIsTrue` sin consumo, 14 stores con asimetrías de pops y tie-flags), cargador de texto (Parse + 8 tablas, sombreado de privadas, corrección del cero inicial, 3 sitios de rechazo). Decisión de port V-07: solo-defs = no-op registrado. Total acumulado: 44 casos, 1539 aserciones. |
+| M3 · Memoria y ciclo | ✅ cerrado | Casos §4 (M-01..M-12) en verde. Tabla completa de sysvars (255 entradas extraídas mecánicamente de `LoadSysVars` y verificadas contra `sysvars.yaml`: 247 direcciones, 8 pares de alias). Esqueleto del tick (pasos 10/12/14/15/16/17 + 7 pasadas de `UpdateBots`) y subsistemas de memoria: sentidos (touch/taste/lookoccurr con A3-1, Erase*), ties (maketie/Update_Ties con gates de M-04, trefvars con A3-2, tieportcom, memoria genética), shots (robshoot/newshot/updateshots con remapeo 340→mem(0), bloqueo por poison, esperma), Reproduce completo (epimem, tie de nacimiento, herencia del timer post-Ageing), corpses (M-12). Corrección menor a `70-CASOS-DORADOS.md` M-11: el sysvar `vshoot` es 338, no 836 (el fuente manda, `Robots.bas:59` + `DNATokenizing.bas:1045`). Colisiones bot/shot con detección simplificada y pasadas de otros milestones como stubs registrados en `SimDiag` (decisiones de port hasta F-*). Total acumulado: 56 casos, 1714 aserciones. |
 
 ## Siguiente
 
-**M3 · Memoria y ciclo**: cargar la tabla completa de sysvars desde
-`sysvars.yaml` (hoy el loader recibe una tabla inyectada), y los casos §4
-(memoria/ciclo) de `70-CASOS-DORADOS.md` con el esqueleto del tick de
-`10-CICLO.md`. Después: física (§5), formatos (§7), catálogo §9.
+**M4 · Física y visión**: los casos §5 (F-*) de `70-CASOS-DORADOS.md` —
+Repel3/bordercolls/fuerzas de muelle y torque de ties reales (reemplazan la
+detección simplificada y los stubs de `SimDiag` de M3), el barrido de ojos
+(`BucketsProximity`, oclusión por formas rota) y el swept-sphere de shots.
+Después: formatos ida-y-vuelta (§7, FM-*) y el catálogo de bugs como
+aserciones (§9, B-*).
 
 ## Pendiente
 
@@ -91,3 +94,11 @@ reinicios de contexto.
 - **2026-08-24** — M2 cerrado: VM completa (`ExecuteDNA`, flujo, stores) y
   cargador de texto, casos V-01..V-14 en verde (44 casos / 1539 aserciones
   acumuladas). Fuentes sin modificar.
+- **2026-08-24** — M3 cerrado: tabla completa de sysvars, esqueleto del tick
+  y casos M-01..M-12 en verde (56 casos / 1714 aserciones acumuladas).
+  Hallazgo menor: la tabla de M-11 en `70-CASOS-DORADOS.md` decía `mem(836)`
+  para vshoot; el sysvar es 338 (fuente manda; el test asserta sobre 338).
+  Dos expectativas de test corregidas contra el fuente durante la
+  transcripción: el hijo hereda el timer POST-Ageing del padre (P5 corre
+  antes que P6) y el ADN de M-10 tiene 20 tokens (DnaLen = 21). Fuentes sin
+  modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
