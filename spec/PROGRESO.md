@@ -46,12 +46,14 @@ reinicios de contexto.
 | Milestone | Estado | Nota |
 |---|---|---|
 | M1 · Sustrato numérico | ✅ cerrado | Salvaguarda 5: casos §1 (S-01..S-07), §2 (N-01..N-19) y R-01..R-03 en verde (30 casos, 438 aserciones). Helpers: redondeo bancario, LCG VB6, gasdev, stacks, mod32000, handlers VM, bitwise. Sitios de error con decisión de port + `VmDiag` (N-07 satura a ±2·10⁹; S-05 a 16384). |
+| M2 · VM y cargador | ✅ cerrado | Casos §3 (V-01..V-14) en verde. `ExecuteDNA` completo (bug del `else` canónico replicado, stores inmediatos, `CondStateIsTrue` sin consumo, 14 stores con asimetrías de pops y tie-flags), cargador de texto (Parse + 8 tablas, sombreado de privadas, corrección del cero inicial, 3 sitios de rechazo). Decisión de port V-07: solo-defs = no-op registrado. Total acumulado: 44 casos, 1539 aserciones. |
 
 ## Siguiente
 
-**M2 · VM y flujo**: `ExecuteDNA` + tokenizador contra `20-VM.md`/`opcodes.yaml`
-y los casos §3 (V-01..V-09). Después: mapa de memoria (`21-MEMORIA.md` +
-`sysvars.yaml`), esqueleto del tick (`10-CICLO.md`), física.
+**M3 · Memoria y ciclo**: cargar la tabla completa de sysvars desde
+`sysvars.yaml` (hoy el loader recibe una tabla inyectada), y los casos §4
+(memoria/ciclo) de `70-CASOS-DORADOS.md` con el esqueleto del tick de
+`10-CICLO.md`. Después: física (§5), formatos (§7), catálogo §9.
 
 ## Pendiente
 
@@ -86,3 +88,6 @@ y los casos §3 (V-01..V-09). Después: mapa de memoria (`21-MEMORIA.md` +
   sustrato numérico con casos dorados §1/§2/R-01..R-03 en verde (g++ 14 nativo,
   build estático; clang/emsdk pendientes). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-24** — M2 cerrado: VM completa (`ExecuteDNA`, flujo, stores) y
+  cargador de texto, casos V-01..V-14 en verde (44 casos / 1539 aserciones
+  acumuladas). Fuentes sin modificar.
