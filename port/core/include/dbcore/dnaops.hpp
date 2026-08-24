@@ -17,6 +17,8 @@ namespace db {
 // explícito y registra la divergencia).
 struct VmDiag {
   int q17_saturations = 0;  // add/sub con operando ~2^31 (N-07)
+  int empty_dna_runs = 0;   // ExecuteDNA sobre ADN solo-defs (V-07: el
+                            // original truncaba el tick con error 9)
 };
 
 namespace detail {

@@ -90,4 +90,29 @@ inline vb_single AngDiff(vb_single a1, vb_single a2) {
   return r;
 }
 
+// Physics.bas:607-624 — ángulo de (x1,y1) a (x2,y2) con la Y invertida
+// (dy = y1 - y2), sin normalizar. Todo Single; Atn en Double como VB6.
+inline vb_single vb_angle(vb_single x1, vb_single y1, vb_single x2,
+                          vb_single y2) {
+  const vb_single dx = x2 - x1;
+  const vb_single dy = y1 - y2;
+  vb_single an;
+  if (dx == 0.0f) {
+    an = PI / 2;
+    if (dy < 0.0f) an = PI / 2 * 3;
+  } else {
+    an = static_cast<vb_single>(
+        std::atan(static_cast<double>(dy) / static_cast<double>(dx)));
+    if (dx < 0.0f) an = an + PI;
+  }
+  return an;
+}
+
+// Physics.bas:627-635 — normaliza a [0, 2*PI] por sumas/restas sucesivas.
+inline vb_single angnorm(vb_single an) {
+  while (an < 0.0f) an = an + 2 * PI;
+  while (an > 2 * PI) an = an - 2 * PI;
+  return an;
+}
+
 }  // namespace db
