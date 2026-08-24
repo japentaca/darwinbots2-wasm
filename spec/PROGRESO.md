@@ -41,17 +41,22 @@ reinicios de contexto.
 > `PLAN`, `PROMPT-BLOQUE-C`, `OPEN_QUESTIONS`. Los `PROMPT-BLOQUE-A/A2/A3/B.md` se
 > conservan sin tocar como registro histórico (contienen la premisa vieja).
 
+## Port C++/WASM (`port/`) — arrancado 2026-08-24 por orden del usuario
+
+| Milestone | Estado | Nota |
+|---|---|---|
+| M1 · Sustrato numérico | ✅ cerrado | Salvaguarda 5: casos §1 (S-01..S-07), §2 (N-01..N-19) y R-01..R-03 en verde (30 casos, 438 aserciones). Helpers: redondeo bancario, LCG VB6, gasdev, stacks, mod32000, handlers VM, bitwise. Sitios de error con decisión de port + `VmDiag` (N-07 satura a ±2·10⁹; S-05 a 16384). |
+
 ## Siguiente
 
-**La especificación está completa** (Fase 0 + Bloques A, B y C cerrados). Lo que
-sigue es el arranque del código C++/WASM (`PLAN.md`, decisión de arquitectura) —
-**proyecto nuevo, no arrancar sin orden explícita**. La salvaguarda 5 manda: los
-casos de `70-CASOS-DORADOS.md §2` (numérica base) se implementan antes que cualquier
-subsistema.
+**M2 · VM y flujo**: `ExecuteDNA` + tokenizador contra `20-VM.md`/`opcodes.yaml`
+y los casos §3 (V-01..V-09). Después: mapa de memoria (`21-MEMORIA.md` +
+`sysvars.yaml`), esqueleto del tick (`10-CICLO.md`), física.
 
 ## Pendiente
 
-Nada dentro del alcance de la extracción de la especificación.
+- Instalar clang + emsdk y verificar que el sustrato numérico da verde compilado
+  a WASM (decisión Q07: determinismo del port consigo mismo).
 
 ---
 
@@ -76,4 +81,8 @@ Nada dentro del alcance de la extracción de la especificación.
   `Common.bas`; hallazgo S-02: los tests de `fRnd` afirmaban un rango que el fuente
   viola con p ≈ 0.5/rango). Dos correcciones menores a documentos B
   (`50-MUNDO.md §2.1`, `constants.yaml`). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-24** — Port C++ arrancado (`port/`) por orden del usuario. M1 cerrado:
+  sustrato numérico con casos dorados §1/§2/R-01..R-03 en verde (g++ 14 nativo,
+  build estático; clang/emsdk pendientes). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
