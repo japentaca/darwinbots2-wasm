@@ -10,6 +10,19 @@ Emscripten; presentación web separada.
 - **Milestone 1 (sustrato numérico)**: helpers VB6 (redondeo bancario, LCG,
   gasdev, stacks, mod32000, handlers numéricos/lógicos de la VM, bitwise) con
   los casos dorados §1 (S-01..S-07), §2 (N-01..N-19) y R-01..R-03.
+- **Milestone 2 (VM y cargador)**: `ExecuteDNA` completo y cargador de texto;
+  casos §3 (V-01..V-14).
+- **Milestone 3 (memoria y ciclo)**: tabla completa de sysvars (255 entradas
+  extraídas de `LoadSysVars`, `sysvars.hpp`), esqueleto del tick
+  (`master.hpp`: pasos 10/12/14/15/16/17 de `10-CICLO.md §2`; `robots.hpp`:
+  las 7 pasadas de `UpdateBots`) y los subsistemas que la memoria del bot
+  necesita (`senses/ties/shots/physics.hpp`). Casos §4 (M-01..M-12).
+  Las pasadas de otros milestones (fuerzas de colisión/muelle, barrido real
+  de visión, alimentación por shots, virus, mutaciones, mundo) quedan como
+  stubs **registrados en `SimDiag`**; las colisiones bot-bot y de shots usan
+  una detección simplificada documentada como decisión de port hasta F-*.
+
+Estado verificado: 56 casos / 1714 aserciones en verde.
 
 ## Build (nativo)
 

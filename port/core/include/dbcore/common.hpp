@@ -32,6 +32,53 @@ inline Vector VectorSub(const Vector& v1, const Vector& v2) {
 inline vb_single Max(vb_single x, vb_single y) { return (x > y) ? x : y; }
 inline vb_single Min(vb_single x, vb_single y) { return (x < y) ? x : y; }
 
+// Common.bas:125-131 — ¡parámetros ByRef! VectorScalar CLAMPA los campos del
+// vector del llamador (y el escalar) a ±32000 antes de multiplicar
+// (30-FISICA.md: "clamps ByRef ocultos").
+inline Vector VectorScalar(Vector& v1, vb_single k) {
+  if (std::fabs(k) > 32000.0f) k = static_cast<vb_single>(vb_sgn(k)) * 32000.0f;
+  if (std::fabs(v1.x) > 32000.0f)
+    v1.x = static_cast<vb_single>(vb_sgn(v1.x)) * 32000.0f;
+  if (std::fabs(v1.y) > 32000.0f)
+    v1.y = static_cast<vb_single>(vb_sgn(v1.y)) * 32000.0f;
+  return {v1.x * k, v1.y * k};
+}
+
+// Common.bas:144-157 — magnitud numéricamente estable.
+inline vb_single VectorMagnitude(const Vector& v1) {
+  const vb_single minVal = Min(std::fabs(v1.x), std::fabs(v1.y));
+  const vb_single maxVal = Max(std::fabs(v1.x), std::fabs(v1.y));
+  if (maxVal < 0.00001f) return 0.0f;
+  const vb_single q = minVal / maxVal;
+  return maxVal * static_cast<vb_single>(
+                      std::sqrt(1.0 + std::pow(static_cast<double>(q), 2.0)));
+}
+
+// Common.bas:159-169.
+inline vb_single VectorInvMagnitude(const Vector& v1) {
+  const vb_single mag = VectorMagnitude(v1);
+  if (mag == 0.0f) return -1.0f;
+  return static_cast<vb_single>(1.0 / static_cast<double>(mag));
+}
+
+// Common.bas:134-141.
+inline Vector VectorUnit(const Vector& v1) {
+  const vb_single mag = VectorInvMagnitude(v1);
+  return {v1.x * mag, v1.y * mag};
+}
+
+// Common.bas:171-175 — también clampa ByRef.
+inline vb_single VectorMagnitudeSquare(Vector& v1) {
+  if (std::fabs(v1.x) > 32000.0f)
+    v1.x = static_cast<vb_single>(vb_sgn(v1.x)) * 32000.0f;
+  if (std::fabs(v1.y) > 32000.0f)
+    v1.y = static_cast<vb_single>(vb_sgn(v1.y)) * 32000.0f;
+  return v1.x * v1.x + v1.y * v1.y;
+}
+
+// Common.bas:177-180.
+inline Vector VectorSet(vb_single x, vb_single y) { return {x, y}; }
+
 // Common.bas:29-36. El original opera en Integer y con value >= 16384 el
 // doblado 16384*2 = 32768 desborda (error 6) — S-05, capa torneo. Decisión de
 // port (S-05): resultado saturado 16384.

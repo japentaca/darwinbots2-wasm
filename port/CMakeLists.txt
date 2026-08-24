@@ -27,6 +27,7 @@ add_executable(dbtests
   tests/test_authors_suite.cpp
   tests/test_numeric.cpp
   tests/test_vm.cpp
+  tests/test_memory.cpp
 )
 target_link_libraries(dbtests PRIVATE dbcore)
 target_include_directories(dbtests PRIVATE tests)

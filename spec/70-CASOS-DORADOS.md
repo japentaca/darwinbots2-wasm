@@ -844,10 +844,18 @@ Los consumidores reescriben la celda normalizada antes de usarla
 | `mem(830)` (sharenrg) | 250 | `250 Mod 100 = 50` visible en la celda… y **0 → 100**: `mem(830) = 300` ⇒ celda = 100 | `Robots.bas:1955-2007` |
 | `mem(833)` (shareslime) | 250 | clamp a 0..99 ⇒ 99 | `Robots.bas:1897-1898` |
 | `mem(901)` (aimshoot) | 1500 | `1500 Mod 1256 = 244` al disparar | `Shots.bas:135-142` |
-| `mem(836)`→(vshoot) | −5 | 1 (normalizado en la celda) | `Shots.bas:1093` |
+| `mem(338)` (vshoot) | −5 | 1 (normalizado en la celda) | `Shots.bas:1093` |
 
 (El caso exige que la escritura normalizada sea observable por un `*n` posterior en
 el mismo régimen de borrado.)
+
+*Corrección 2026-08-24 (M3 del port)*: la fila de vshoot decía `mem(836)`
+(venval); el sysvar `vshoot` es **338** (`VshootSys`, `Robots.bas:59`;
+`DNATokenizing.bas:1045`) y `Shots.bas:1093` normaliza esa celda. Nótese
+además que `sharenrg`/`aimshoot`/`vshoot` se consumen (celda → 0) más tarde
+en el mismo tick (`Ties.bas:178-182`, `Shots.bas:143`, `Robots.bas:1094`):
+la escritura normalizada es observable dentro del subsistema, no al cierre
+del ciclo — el caso se asserta al nivel del consumidor.
 
 ### M-12 · Los corpses congelan sus sentidos — [ciclo]
 
