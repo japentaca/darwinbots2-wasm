@@ -110,6 +110,16 @@ struct SimOptsT {
   vb_long TotRunCycle = 0;
   vb_long TotBorn = 0;
   bool Restart = false, F1 = false;
+
+  // --- mutación (SimOptions.bas; defaults de constants.yaml §globales) ---
+  vb_single MutCurrMult = 1;      // OptionsForm.frm:4890: <= 0 se corrige a 1
+  bool DisableMutations = false;
+  bool MutOscill = false;         // paso 4 del tick (Master.bas:203-233)
+  bool MutOscillSine = false;
+  vb_long MutCycMax = 0, MutCycMin = 0;
+  bool EnableAutoSpeciation = false;
+  vb_integer SpeciationGeneticDistance = 0;
+  vb_long SpeciationForkInterval = 0;
 };
 
 // Registro de especies mínimo (SimOpts.Specie): lo que UpdateCounters y
@@ -160,10 +170,13 @@ struct SimDiag {
   int shot_feed_stub = 0;        // M6: releasenrg/takenrg/releasebod y
                                  //   addgene reales; asertado a 0
   int makevirus_stub = 0;        // M6: MakeVirus/copygene reales; asertado a 0
-  int mutate_stub = 0;           // B6b: mutate con mutaciones activas
-  int makestuff_stub = 0;        // B5: storevenom/storepoison/makeshell/makeslime
+  int mutate_stub = 0;           // M7: mutate real (NeoMutations completo);
+                                 //   asertado a 0
+  int makestuff_stub = 0;        // M7: sharechloroplasts real (el resto de
+                                 //   MakeStuff era real desde M6); asertado a 0
   int handlewaste_stub = 0;      // B5/B7: feedveg2/altzheimer/defacate
-  int sexrepro_stub = 0;         // B6a: SexReproduce
+  int sexrepro_stub = 0;         // M7: SexReproduce/crossover reales;
+                                 //   asertado a 0
   int world_stub = 0;            // B7: feedvegs/repoblación/teleporters
   int shapes_vision_stub = 0;    // M6: CompareShapes/lookoccurrShape reales
                                  //   (B-12/B-13/B-14); asertado a 0
@@ -175,6 +188,18 @@ struct SimDiag {
   int err11_gravity_physmoving0 = 0;  // sitio de error 11: GravityForces con
                                       //   PhysMoving = 0 (30-FISICA.md §8;
                                       //   decisión: registrar y no cobrar)
+  int err9_mutation_insert = 0;  // sitio de error 9: el bucle de inserción de
+                                 //   Amplification/Translocation escribe más
+                                 //   allá del array cuando MakeSpace falló
+                                 //   (NeoMutations.bas:286-288,362-364, "still
+                                 //   bugy"; On Error GoTo getout). Decisión:
+                                 //   registrar y saltar a getout como el
+                                 //   original (resto de la pasada perdido).
+  int err9_simplematch = 0;      // sitio de error 9: simplematch relee r1/r2
+                                 //   fuera de rango cuando el reposicionamiento
+                                 //   loopold+laststartmatch rebasa el array
+                                 //   (Robots.bas:492-500 con listas clampadas).
+                                 //   Decisión: registrar y cortar el matching.
 };
 
 struct Sim {
@@ -182,7 +207,27 @@ struct Sim {
   VmContext vm;  // stacks globales + Costs + VmDiag
   SimDiag diag;
   RndSource* rndy = nullptr;
+  Gasdev gasdev;  // caché Static de Gauss (Common.bas:82-100, R-02/R-03)
   const SysvarTable* sysvars = &DefaultSysvarTable();
+
+  // Globales de mutación de Globals.bas (defaults de constants.yaml
+  // §globales; los Boolean de Global.gset — sunbelt/epireset — nacen False).
+  bool reprofix = false;
+  bool epireset = false;
+  vb_single epiresetemp = 1.3f;
+  vb_integer epiresetOP = 17;
+  bool sunbelt = false;
+  bool Delta2 = false;
+  vb_integer DeltaPM = 3000;
+  vb_single DeltaMainExp = 1, DeltaMainLn = 0;
+  vb_single DeltaDevExp = 7, DeltaDevLn = 1;
+  unsigned char DeltaWTC = 15;
+  unsigned char DeltaMainChance = 100, DeltaDevChance = 30;
+  bool NormMut = false;
+  vb_integer valNormMut = 1071, valMaxNormMut = 1071;
+  unsigned char x_restartmode = 0;
+  bool y_normsize = false;
+  vb_integer curr_dna_size = 0;
 
   // rob(): el índice 0 existe y no se puebla (10-CICLO.md §8). Arranca con
   // UBound=500 y crece de a 100 (posto, Robots.bas:2925-2948).
@@ -237,6 +282,12 @@ struct Sim {
 };
 
 // ---- utilidades compartidas del ciclo ----
+
+// Gauss sobre el gasdev global del motor (los operadores de mutación y las
+// derivas Delta2 consumen por aquí; la caché Static vive en sim.gasdev).
+inline vb_single SimGauss(Sim& sim, vb_single stddev, vb_single mean = 0.0f) {
+  return Gauss(sim.gasdev, *sim.rndy, stddev, mean);
+}
 
 // Robots.bas:883-886 — clamp a ±32000 y CInt bancario.
 inline vb_integer iceil(vb_single x) {

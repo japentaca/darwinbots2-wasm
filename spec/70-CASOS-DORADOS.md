@@ -1244,20 +1244,39 @@ Int(11·0.5) = 5 ⇒ **pasa**; sexual Int(10·0.5) = 5 ⇒ **pasa**. Con `rndy =
 asexual Int(5.06) = 5 ⇒ pasa; sexual Int(4.6) = 4 ⇒ **no pasa**. La asimetría 1/11
 vs 1/10 es comportamiento a conservar.
 
-### R-11 · Crossover mínimo: el hijo pierde su primer token — [integración] · [PROBABLE BUG] B6-1
+### R-11 · Crossover mínimo con padres idénticos — [integración]
+
+*(Corregido 2026-08-25 contra el fuente, en dos puntos — ver la nota B6-1 abajo.)*
 
 (`Robots.bas:2488-2607,562-694`.) **Estado**: madre y esperma con ADN **idéntico**:
-`5 100 store end` → tokens (0,5)(0,100)(7,1)(10,1). Distancia genética 0 ≤ 0.6.
-**Esperado**: `simplematch` empareja toda la secuencia (una sola racha); `crossover`
-consume 1 moneda por racha para elegir el lado base (con ambos lados idénticos el
-resultado es el mismo ADN); ninguno de los tokens tiene `|value| > 999` con el mismo
-tipo… (0,100): |100| ≤ 999 ⇒ sin monedas de valor. `Outdna` arranca en el índice
-**0** (`:585-588`) ⇒ el hijo tiene `dna(0) = (0,5)`, que la ejecución (desde
-`a = 1`) **no ve jamás**: el hijo ejecuta `100 store` — un store con dirección 100 y
-pila vacía ⇒ pop de valor = 0 ⇒ `mem(100) = 0`, comportamiento distinto del de la
-madre (`mem(100) = 5`). La única excepción: si `dna(0)` resultara exactamente (0,0),
-el "bug fix remove starting zero" lo recorta (`:2589-2594`). Aserción adicional:
-`DnaLen` del hijo se recalcula sobre el array desplazado.
+`5 100 store end` → arrays (0,0)(0,5)(0,100)(7,1)(10,1) — el fantasma del índice 0
+**entra en el crossover** (`:2493-2503` copian desde 0). Distancia genética 0 ≤ 0.6.
+**Esperado**: `simplematch` empareja toda la secuencia, fantasmas incluidos (una
+sola racha de 5). `crossover` consume **6 extracciones**: 1 moneda de lado por la
+racha **+ 1 moneda de valor POR TOKEN** — el `IIf` de VB6 evalúa todos sus brazos
+(`:651`), así que la moneda interior se consume aunque solo gobierne cuando ambos
+lados traen `|value| > 999` con el mismo tipo. La racha se copia desde
+`UBound(Outdna) + 1` (el `upperbound` se **relee** en `:633`): `Outdna` queda
+[(0,0)inicial, (0,0)fantasma, (0,5), (0,100), (7,1), (10,1)] y el "bug fix remove
+starting zero" (`:2589-2594`) recorta exactamente **un** (0,0). Resultado: el hijo
+es **idéntico a la madre** (fantasma en 0, ejecuta `5 100 store` ⇒ `mem(100) = 5`)
+y `DnaLen = 4`. **No hay corrimiento**.
+
+> **Nota B6-1 (corrección 2026-08-25)** — La versión original de este caso (y de
+> `36-REPRO.md §0.1`) afirmaba que *todo* hijo sexual pierde su primer token porque
+> "`Outdna` arranca en el índice 0 (`:585-588`)". Es un error de lectura: el
+> `upperbound = -1` de la primera iteración solo aplica a la copia de tramos NO
+> emparejados; la búsqueda de iguales relee `upperbound = UBound(Outdna)` en
+> `:633`, y como los `dna(0)` fantasma de ambos lados siempre se emparejan entre
+> sí (mismo nucli −16646, primera coincidencia de `simplematch`), la racha inicial
+> nunca escribe el índice 0. El corrimiento **sí puede ocurrir**, pero solo con
+> padres **asimétricos** en el índice 0 (la corrección del cero inicial de A2-2
+> desplazó a un solo lado, p. ej. esperma de un macho con `def`s): entonces hay
+> tramos iniciales no emparejados, y si el tramo ganador empieza con el fantasma
+> del lado no desplazado, el recorte del (0,0) deja el primer token real de ese
+> tramo en el índice 0 — invisible. Fenómeno real pero condicional y
+> probabilístico, no universal. La segunda corrección es el consumo de RNG: la
+> moneda de valores se consume por token (IIf eager), no solo en pares grandes.
 
 ### R-12 · Orden global de consumo de RNG en el tick — [integración]
 
@@ -1458,7 +1477,7 @@ los documentos A1-B8 a casos; los no cubiertos arriba se definen aquí (B-nn).
 | B5-2 | venom 1:1 vs poison 4:1 | **B-26** |
 | B5-3 | suelo −1000 de MOVECOST (regalo) | **B-28** |
 | B5-4 | `ChangeChlr` cobra solo compras netas y anula si arruina | B-08 |
-| B6-1 | el hijo sexual pierde su primer token | R-11 |
+| B6-1 | ~~el hijo sexual pierde su primer token~~ corregido: solo con padres asimétricos en dna(0) (nota en R-11) | R-11 |
 | B6-2 | loterías vegetales asimétricas | R-10 |
 | B6-3 | crossover pierde tramos / no determinista | **B-29** |
 | B6-4 | `nbody As Integer` (bancario) | **B-30** |
@@ -1716,9 +1735,11 @@ nrg (no puede quedar negativo por moverse).
 emparejado, presente solo en la madre; A B y D emparejados);
 la moneda del tramo no emparejado con `rndy < 0.5` elige el lado de la madre.
 **Esperado**: con `rndy = 0.4` el hijo conserva C; con `rndy = 0.6` **C se pierde**
-(el tramo se descarta: el hijo es más corto que ambos padres). Cada racha emparejada
-consume además 1 moneda de lado. El caso fija la secuencia completa de monedas y el
-ADN resultante token a token (más el corrimiento de R-11).
+(el tramo se descarta: el hijo queda más corto que la madre). Cada racha emparejada
+consume además 1 moneda de lado **y 1 moneda de valor por token** (IIf eager —
+corrección de R-11). El caso fija la secuencia completa de monedas y el ADN
+resultante token a token (sin corrimiento: los fantasmas de ambos lados se
+emparejan, nota B6-1 en R-11).
 
 ### B-30 · `nbody As Integer`: el body del hijo redondea bancario — [ciclo]
 

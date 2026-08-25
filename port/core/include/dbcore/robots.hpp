@@ -5,6 +5,7 @@
 // pertenecen a otros milestones quedan como stubs registrados en SimDiag.
 #pragma once
 
+#include "mutations.hpp"
 #include "physics.hpp"
 #include "senses.hpp"
 #include "shots.hpp"
@@ -265,8 +266,10 @@ inline void makeslime(Sim& sim, int n) {
   b.mem[821] = vb_cint(b.Slime);
 }
 
-// Robots.bas:1174-1182 — MakeStuff (P5): reales desde M6 (B-26); el stub
-// makestuff_stub queda solo para sharechloroplasts (B6, distancia genética).
+// Robots.bas:1174-1182 — MakeStuff (P5): reales desde M6 (B-26).
+// sharechloroplasts cerrado en M7 (ties.hpp): makestuff_stub queda a 0.
+// (El decremento de Chlr_Share_Delay vive en feedveg2, Vegs.bas:219-221 —
+// milestone de mundo.)
 inline void MakeStuff(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.mem[824] != 0) storevenom(sim, n);
@@ -554,14 +557,7 @@ inline bool simplecoll(Sim& sim, vb_long X, vb_long Y, int k) {
   return false;
 }
 
-// mutate (NeoMutations.bas): milestone B6b. Con las mutaciones del harness
-// desactivadas es un no-op; cualquier invocación con mutaciones activas se
-// registra.
-inline void mutate(Sim& sim, int n, bool birth = false) {
-  (void)n;
-  (void)birth;
-  sim.diag.mutate_stub += 0;  // gate: sin regímenes activos no hay consumo
-}
+// mutate: real desde M7 (mutations.hpp — NeoMutations.bas completo).
 
 // Robots.bas:2100-2413 — Reproduce (M-05, M-08): transcrito completo salvo
 // las capas Delta2/PBM/F1 (mutación B6b; con mutaciones off no consumen RNG).
@@ -579,6 +575,7 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   if (sim.totvegsDisplayed == -1) return;
 
   per = static_cast<vb_integer>(per % 100);
+  if (sim.reprofix && per < 3) sim.rob[n].Dead = true;  // greedy robots (⚙ evo)
   if (per <= 0) return;
 
   const vb_long sondist = static_cast<vb_long>(vb_round64(
@@ -615,10 +612,20 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   sim.opts.TotBorn += 1;
   if (p.Veg) sim.totvegs += 1;
 
-  c.dna = p.dna;
+  // ReDim + copia desde el índice 1: dna(0) del hijo queda fantasma (0,0)
+  // (Robots.bas:2156-2159, consistente con A2).
+  c.dna.assign(p.dna.size(), Block{});
+  for (std::size_t t = 1; t < p.dna.size(); ++t) c.dna[t] = p.dna[t];
   c.DnaLen = p.DnaLen;
   c.genenum = p.genenum;
-  // Mutables/Mutations/LastMutDetail: B6b.
+  c.Mutables = p.Mutables;
+  c.Mutations = p.Mutations;
+  c.OldMutations = p.OldMutations;
+  c.LastMut = 0;
+  c.LastMutDetail = p.LastMutDetail;
+  // usedvars/maxusedvars (Robots.bas:2171-2179): contadores de display
+  // abandonados — el port no los modela (decisión de M3).
+  c.Skin = p.Skin;
 
   c.mem.fill(0);   // Erase rob(nuovo).mem
   c.Ties = {};     // Erase rob(nuovo).Ties
@@ -631,6 +638,7 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   UpdateBotBucket(sim, nuovo);
   c.vel = p.vel;
   c.actvel = p.actvel;
+  c.color = p.color;
   c.aim = p.aim + PI;
   if (c.aim > 6.28f) c.aim -= 2.0f * PI;
   c.aimvector = VectorSet(
@@ -674,6 +682,7 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   c.Poisoned = false;
   c.parent = p.AbsNum;
   c.FName = p.FName;
+  c.LastOwner = p.LastOwner;
   c.Veg = p.Veg;
   c.NoChlr = p.NoChlr;
   c.Fixed = p.Fixed;
@@ -683,6 +692,10 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   c.CantReproduce = p.CantReproduce;
   c.VirusImmune = p.VirusImmune;
   if (c.Fixed) c.mem[addr::Fixed] = 1;
+  c.SubSpecies = p.SubSpecies;
+  c.OldGD = p.OldGD;    // variables de distancia genética (Robots.bas:2249)
+  c.GenMut = p.GenMut;
+  c.tag = p.tag;
   c.Bouyancy = p.Bouyancy;
   if (p.multibot_time > 0)
     c.multibot_time = static_cast<unsigned char>(p.multibot_time / 2 + 2);
@@ -697,9 +710,109 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   for (int i = 0; i <= 14; ++i) c.epimem[i] = p.mem[976 + i];
   for (int i = 0; i <= 14; ++i) p.epimem[i] = 0;
 
-  // Régimen Delta2/mrepro de mutación heredable: B6b. Mutación de nacimiento
-  // con mutaciones desactivadas: no-op.
-  mutate(sim, nuovo, true);
+  // Régimen de mutación del hijo (Robots.bas:2289-2372).
+  if (sim.Delta2) {
+    using namespace mut;
+    const vb_long MratesMax =
+        sim.NormMut ? static_cast<vb_long>(c.DnaLen) *
+                          static_cast<vb_long>(sim.valMaxNormMut)
+                    : 2000000000;
+    // dynamic mutation overload correction
+    double dmoc =
+        1.0 + static_cast<double>(c.DnaLen - sim.curr_dna_size) / 500.0;
+    if (dmoc < 0.01) dmoc = 0.01;
+    if (!sim.y_normsize) dmoc = 1;
+    // zerobot stabilization (⚙ evo)
+    if (sim.x_restartmode == 7 || sim.x_restartmode == 8) {
+      if (c.FName == "Mutate.txt") {
+        c.Mutables.mutarray[PointUP] = static_cast<vb_single>(
+            static_cast<double>(c.Mutables.mutarray[PointUP]) * 1.75);
+        if (c.Mutables.mutarray[PointUP] > static_cast<vb_single>(MratesMax))
+          c.Mutables.mutarray[PointUP] = static_cast<vb_single>(MratesMax);
+        c.Mutables.mutarray[P2UP] = static_cast<vb_single>(
+            static_cast<double>(c.Mutables.mutarray[P2UP]) * 1.75);
+        if (c.Mutables.mutarray[P2UP] > static_cast<vb_single>(MratesMax))
+          c.Mutables.mutarray[P2UP] = static_cast<vb_single>(MratesMax);
+      }
+    }
+    // For mrep = 0 To (Int(3*rndy)+1) * -(mem(mrepro) > 0): la extracción
+    // Int(3*rndy) se consume SIEMPRE; con mrepro el parto muta 2-4 veces.
+    const vb_long mrepLimit =
+        (mut_detail::IntS(sim.rnd() * 3.0f) + 1) *
+        ((p.mem[addr::mrepro] > 0) ? 1 : 0);
+    for (vb_long mrep = 0; mrep <= mrepLimit; ++mrep) {
+      for (int t = 1; t <= 10; ++t) {
+        if (t == 9) continue;  // ignore PM2 mutation here
+        if (c.Mutables.mutarray[t] < 1.0f) continue;
+        if (static_cast<double>(sim.rnd()) < sim.DeltaMainChance / 100.0) {
+          if (sim.DeltaMainExp != 0.0f) {
+            if (t == CopyErrorUP || t == TranslocationUP || t == ReversalUP ||
+                t == CE2UP) {
+              c.Mutables.mutarray[t] = static_cast<vb_single>(
+                  static_cast<double>(c.Mutables.mutarray[t]) * (dmoc + 2) / 3);
+            } else if (!(t == MinorDeletionUP || t == MajorDeletionUP)) {
+              c.Mutables.mutarray[t] = static_cast<vb_single>(
+                  static_cast<double>(c.Mutables.mutarray[t]) * dmoc);
+            }
+            c.Mutables.mutarray[t] = static_cast<vb_single>(
+                static_cast<double>(c.Mutables.mutarray[t]) *
+                std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                   sim.DeltaMainExp)));
+          }
+          c.Mutables.mutarray[t] =
+              c.Mutables.mutarray[t] + (sim.rnd() * 2 - 1) * sim.DeltaMainLn;
+          if (c.Mutables.mutarray[t] < 1.0f) c.Mutables.mutarray[t] = 1;
+          if (c.Mutables.mutarray[t] > static_cast<vb_single>(MratesMax))
+            c.Mutables.mutarray[t] = static_cast<vb_single>(MratesMax);
+        }
+        if (static_cast<double>(sim.rnd()) < sim.DeltaDevChance / 100.0) {
+          if (sim.DeltaDevExp != 0.0f)
+            c.Mutables.StdDev[t] = static_cast<vb_single>(
+                static_cast<double>(c.Mutables.StdDev[t]) *
+                std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                   sim.DeltaDevExp)));
+          c.Mutables.StdDev[t] =
+              c.Mutables.StdDev[t] + (sim.rnd() * 2 - 1) * sim.DeltaDevLn;
+          if (sim.DeltaDevExp != 0.0f)
+            c.Mutables.Mean[t] = static_cast<vb_single>(
+                static_cast<double>(c.Mutables.Mean[t]) *
+                std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                   sim.DeltaDevExp)));
+          c.Mutables.Mean[t] =
+              c.Mutables.Mean[t] + (sim.rnd() * 2 - 1) * sim.DeltaDevLn;
+          // Max range is always 0 to 800
+          if (c.Mutables.StdDev[t] < 0.0f) c.Mutables.StdDev[t] = 0;
+          if (c.Mutables.StdDev[t] > 200.0f) c.Mutables.StdDev[t] = 200;
+          if (c.Mutables.Mean[t] < 1.0f) c.Mutables.Mean[t] = 1;
+          if (c.Mutables.Mean[t] > 400.0f) c.Mutables.Mean[t] = 400;
+        }
+      }
+      c.Mutables.CopyErrorWhatToChange = vb_cint(static_cast<double>(
+          static_cast<vb_single>(c.Mutables.CopyErrorWhatToChange) +
+          (sim.rnd() * 2 - 1) * sim.DeltaWTC));
+      if (c.Mutables.CopyErrorWhatToChange < 0)
+        c.Mutables.CopyErrorWhatToChange = 0;
+      if (c.Mutables.CopyErrorWhatToChange > 100)
+        c.Mutables.CopyErrorWhatToChange = 100;
+      mutate(sim, nuovo, true);
+    }
+  } else {
+    if (p.mem[addr::mrepro] > 0) {
+      // mrepro sin Delta2: tasas /10 (0 -> 1000) y Mutations forzado SOLO
+      // para este parto (Robots.bas:2352-2366).
+      const Mutationprobs temp = c.Mutables;
+      c.Mutables.Mutations = true;
+      for (int t = 0; t <= 20; ++t) {
+        c.Mutables.mutarray[t] = static_cast<vb_single>(
+            static_cast<double>(c.Mutables.mutarray[t]) / 10.0);
+        if (c.Mutables.mutarray[t] == 0.0f) c.Mutables.mutarray[t] = 1000;
+      }
+      mutate(sim, nuovo, true);
+      c.Mutables = temp;
+    } else {
+      mutate(sim, nuovo, true);
+    }
+  }
 
   makeoccurrlist(sim, nuovo);
   c.DnaLen = static_cast<vb_integer>(DnaLen(c.dna));
@@ -715,17 +828,590 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   p.mem[addr::Repro] = 0;   // consumo SOLO en éxito (M-04)
   p.mem[addr::mrepro] = 0;
 
-  // epireset: B6b (régimen de mutación acumulada).
+  // Reset epigenético acumulado (Robots.bas:2394-2406).
+  if (sim.epireset) {
+    c.MutEpiReset = p.MutEpiReset + std::pow(static_cast<double>(c.LastMut),
+                                             static_cast<double>(sim.epiresetemp));
+    if (c.MutEpiReset > sim.epiresetOP && p.MutEpiReset > 0) {
+      c.MutEpiReset = 0;
+      for (int i = 0; i <= 4; ++i) c.mem[971 + i] = 0;
+      for (int i = 0; i <= 14; ++i) c.epimem[i] = 0;
+    }
+  }
 
   p.nrg -= p.DnaLen * sim.vm.costs.v[cost::DNACOPYCOST] *
            sim.vm.costs.v[cost::COSTMULTIPLIER];
   if (p.nrg < 0.0f) p.nrg = 0.0f;
 }
 
-// SexReproduce (Robots.bas:2417-2848): milestone B6a — stub registrado.
+// ---------------------------------------------------------------------------
+// Sección de crossover (Robots.bas:385-694) + SexReproduce (:2417-2847).
+
+// Robots.bas:385-394 — Type block2 / block3.
+struct Block2 {
+  vb_integer tipo = 0;
+  vb_integer value = 0;
+  vb_integer match = 0;
+};
+struct Block3 {
+  vb_integer nucli = 0;
+  vb_integer match = 0;
+};
+
+// Robots.bas:397-407 — scanfromn: primer índice desde n cuya capa difiere de
+// `layer`; actualiza layer ByRef. (En crossover, la llamada del lado 1 pasa
+// un literal 0: VB6 crea un temporal y el writeback se pierde — se replica
+// pasando un dummy.)
+inline vb_long scanfromn(const std::vector<Block2>& rb, vb_long n,
+                         vb_integer& layer) {
+  const vb_long ub = static_cast<vb_long>(rb.size()) - 1;
+  for (vb_long a = n; a <= ub; ++a) {
+    if (rb[a].match != layer) {
+      layer = rb[a].match;
+      return a;
+    }
+  }
+  return ub + 1;
+}
+
+// Robots.bas:409-422 — GeneticDistance: no-emparejados / total.
+inline vb_single GeneticDistance(const std::vector<Block3>& rob1,
+                                 const std::vector<Block3>& rob2) {
+  vb_long diffcount = 0;
+  for (const Block3& e : rob1)
+    if (e.match == 0) diffcount += 1;
+  for (const Block3& e : rob2)
+    if (e.match == 0) diffcount += 1;
+  const vb_long ub1 = static_cast<vb_long>(rob1.size()) - 1;
+  const vb_long ub2 = static_cast<vb_long>(rob2.size()) - 1;
+  return static_cast<vb_single>(static_cast<double>(diffcount) /
+                                static_cast<double>(ub1 + ub2 + 2));
+}
+
+// Robots.bas:424-532 — simplematch: emparejador greedy por listas con
+// contador de seguridad patch > 16000^2. Sitio de error 9 (ver SimDiag):
+// el reposicionamiento loopold+laststartmatch puede rebasar el array cuando
+// un lado se clampa en su tope — registrar y cortar el matching.
+inline void simplematch(Sim& sim, std::vector<Block3>& r1,
+                        std::vector<Block3>& r2) {
+  vb_long patch = 0;
+  bool newmatch = false;
+  vb_integer inc = 0;
+
+  const vb_long ei1 = static_cast<vb_long>(r1.size()) - 1;
+  const vb_long ei2 = static_cast<vb_long>(r2.size()) - 1;
+
+  std::vector<vb_integer> matchlist1(1, 0);
+  std::vector<vb_integer> matchlist2(1, 0);
+  vb_long count = 0;
+
+  vb_long loopr1 = 0, loopr2 = 0, loopold = 0;
+  vb_long laststartmatch1 = 0, laststartmatch2 = 0;
+
+  do {
+    // keep building until both sides max out
+    if (loopr1 > ei1) loopr1 = ei1;
+    if (loopr2 > ei2) loopr2 = ei2;
+
+    matchlist1[count] = r1[loopr1].nucli;
+    matchlist2[count] = r2[loopr2].nucli;
+    count += 1;
+    matchlist1.resize(count + 1);  // ReDim Preserve
+    matchlist2.resize(count + 1);
+
+    bool match = false;
+    bool matchr2 = false;
+    for (loopold = 0; loopold <= count - 1; ++loopold) {
+      if (r2[loopr2].nucli == matchlist1[loopold]) {
+        matchr2 = true;
+        match = true;
+        break;
+      }
+      if (r1[loopr1].nucli == matchlist2[loopold]) {
+        matchr2 = false;
+        match = true;
+        break;
+      }
+      patch += 1;
+    }
+
+    if (match) {
+      if (matchr2)
+        loopr1 = loopold + laststartmatch1;
+      else
+        loopr2 = loopold + laststartmatch2;
+
+      if (loopr1 > ei1 || loopr2 > ei2 || loopr1 < 0 || loopr2 < 0) {
+        sim.diag.err9_simplematch += 1;  // error 9 del original
+        return;
+      }
+
+      // start matching
+      do {
+        if (r2[loopr2].nucli == r1[loopr1].nucli) {
+          if (!newmatch) inc += 1;  // increment only in newmatch
+          newmatch = true;
+          r1[loopr1].match = inc;
+          r2[loopr2].match = inc;
+        } else {
+          newmatch = false;
+          laststartmatch1 = loopr1;
+          laststartmatch2 = loopr2;
+          loopr1 -= 1;
+          loopr2 -= 1;
+          break;
+        }
+        loopr1 += 1;
+        loopr2 += 1;
+        patch += 1;
+      } while (!(loopr1 > ei1 || loopr2 > ei2));
+
+      // reset match list so it will not get too long
+      matchlist1.assign(1, 0);
+      matchlist2.assign(1, 0);
+      count = 0;
+    }
+
+    loopr1 += 1;
+    loopr2 += 1;
+    patch += 1;
+  } while (!((loopr1 > ei1 && loopr2 > ei2) || patch > 256000000));
+}
+
+// Robots.bas:534-560 — DoGeneticDistance: el pipeline sin crossover
+// (consumidores: sharechloroplasts con umbral 0.25 y la campaña GenMut).
+inline vb_single DoGeneticDistance(Sim& sim, int r1, int r2) {
+  std::vector<Block3> ndna1(sim.rob[r1].dna.size());
+  std::vector<Block3> ndna2(sim.rob[r2].dna.size());
+  for (std::size_t t = 0; t < ndna1.size(); ++t)
+    ndna1[t].nucli = DNAtoInt(*sim.sysvars, sim.rob[r1].dna[t].tipo,
+                              sim.rob[r1].dna[t].value);
+  for (std::size_t t = 0; t < ndna2.size(); ++t)
+    ndna2[t].nucli = DNAtoInt(*sim.sysvars, sim.rob[r2].dna[t].tipo,
+                              sim.rob[r2].dna[t].value);
+  simplematch(sim, ndna1, ndna2);
+  return GeneticDistance(ndna1, ndna2);
+}
+
+// Robots.bas:562-694 — crossover. Consumo de RNG por el fuente:
+// 1 moneda por par/tramo no emparejado (un tramo presente en un solo lado
+// se PIERDE con p = 1/2, [PROBABLE BUG] B6-3 / B-29), 1 moneda de lado por
+// racha emparejada y — porque el IIf de VB6 evalúa TODOS sus brazos — 1
+// moneda MÁS por CADA token de cada racha emparejada, se use o no (la
+// moneda de valores solo gobierna cuando ambos lados traen |value| > 999 y
+// el mismo tipo). Errata corregida en 70-CASOS-DORADOS.md R-11 (decía "sin
+// monedas de valor"): el fuente manda.
+inline void crossover(Sim& sim, std::vector<Block2>& rob1,
+                      std::vector<Block2>& rob2, std::vector<Block>& Outdna) {
+  using mut_detail::IntS;
+  vb_integer i = 0;
+  vb_long n1 = 0, n2 = 0, nn = 0;
+  vb_long res1 = 0, res2 = 0, resn = 0;
+  vb_long upperbound = 0;
+  bool nfirst = false;
+
+  const vb_long ub2 = static_cast<vb_long>(rob2.size()) - 1;
+
+  for (;;) {
+    // diff search
+    n1 = res1 + resn - nn;
+    n2 = res2 + resn - nn;
+
+    i = 0;
+    if (nfirst) {
+      upperbound = static_cast<vb_long>(Outdna.size()) - 1;
+    } else {
+      nfirst = true;
+      upperbound = -1;
+    }
+
+    vb_integer dummy = 0;  // el literal 0 ByRef del fuente (writeback perdido)
+    res1 = scanfromn(rob1, n1, dummy);
+    res2 = scanfromn(rob2, n2, i);
+
+    // subloop
+    if (res1 - n1 > 0 && res2 - n2 > 0) {  // run both sides
+      if (IntS(sim.rnd() * 2.0f) == 0) {   // which side?
+        Outdna.resize(upperbound + (res1 - n1) + 1);
+        for (vb_long a = n1; a <= res1 - 1; ++a) {
+          Outdna[upperbound + 1 + a - n1].tipo = rob1[a].tipo;
+          Outdna[upperbound + 1 + a - n1].value = rob1[a].value;
+        }
+      } else {
+        Outdna.resize(upperbound + (res2 - n2) + 1);
+        for (vb_long a = n2; a <= res2 - 1; ++a) {
+          Outdna[upperbound + 1 + a - n2].tipo = rob2[a].tipo;
+          Outdna[upperbound + 1 + a - n2].value = rob2[a].value;
+        }
+      }
+    } else if (res1 - n1 > 0) {  // run one side
+      if (IntS(sim.rnd() * 2.0f) == 0) {
+        Outdna.resize(upperbound + (res1 - n1) + 1);
+        for (vb_long a = n1; a <= res1 - 1; ++a) {
+          Outdna[upperbound + 1 + a - n1].tipo = rob1[a].tipo;
+          Outdna[upperbound + 1 + a - n1].value = rob1[a].value;
+        }
+      }  // moneda perdedora: el tramo se descarta (B-29)
+    } else if (res2 - n2 > 0) {  // run other side
+      if (IntS(sim.rnd() * 2.0f) == 0) {
+        Outdna.resize(upperbound + (res2 - n2) + 1);
+        for (vb_long a = n2; a <= res2 - 1; ++a) {
+          Outdna[upperbound + 1 + a - n2].tipo = rob2[a].tipo;
+          Outdna[upperbound + 1 + a - n2].value = rob2[a].value;
+        }
+      }
+    }
+
+    // same search
+    if (i == 0) return;
+    upperbound = static_cast<vb_long>(Outdna.size()) - 1;
+    nn = res1;
+    resn = scanfromn(rob1, nn, i);
+    Outdna.resize(upperbound + (resn - nn) + 1);
+
+    const bool whatside = IntS(sim.rnd() * 2.0f) == 0;
+
+    for (vb_long a = nn; a <= resn - 1; ++a) {
+      if (a - nn + res2 > ub2) {  // error 9 del original (capas desincronizadas)
+        sim.diag.err9_simplematch += 1;
+        return;
+      }
+      const Block2& L = rob1[a];
+      const Block2& R = rob2[a - nn + res2];
+      Outdna[upperbound + 1 + a - nn].tipo = whatside ? L.tipo : R.tipo;
+      // IIf eager: la moneda de valores se consume en cada token.
+      const bool coin = IntS(sim.rnd() * 2.0f) == 0;
+      const bool bigpair = L.tipo == R.tipo && std::abs(L.value) > 999 &&
+                           std::abs(R.value) > 999;
+      const bool takeleft = bigpair ? coin : whatside;
+      Outdna[upperbound + 1 + a - nn].value = takeleft ? L.value : R.value;
+    }
+  }
+}
+
+// Robots.bas:2417-2847 — SexReproduce: el "macho" es un shot -8 ya absorbido
+// (spermDNA en la madre); todos los recursos salen de la madre. El hijo
+// pierde su primer token (Outdna arranca en el índice 0 — [PROBABLE BUG]
+// B6-1 / R-11) salvo que sea exactamente (0,0).
 inline void SexReproduce(Sim& sim, int female) {
-  (void)female;
-  sim.diag.sexrepro_stub += 1;
+  if (sim.rob[female].body < 5.0f) return;
+
+  if (!sim.rob[female].exist) return;         // bot must exist
+  if (sim.rob[female].Corpse) return;         // no sex with corpses
+  if (sim.rob[female].CantReproduce) return;
+  if (sim.rob[female].body <= 2.0f) return;
+  if (sim.rob[female].spermDNA.empty()) return;  // IsRobDNABounded
+
+  vb_single per = static_cast<vb_single>(sim.rob[female].mem[addr::SEXREPRO]);
+
+  if (sim.rob[female].Veg &&
+      (sim.TotalChlr > sim.opts.MaxPopulation || sim.totvegsDisplayed < 0))
+    return;
+  // Lotería vegetal sexual: Random(0, 9) <> 5 — 1/10, no 1/11 como la
+  // asexual ([PROBABLE BUG] B6-2 / R-10).
+  if (sim.rob[female].Veg && (Random(0, 9, *sim.rndy) != 5) &&
+      (sim.TotalChlr > sim.opts.MaxPopulation * 0.9f))
+    return;
+  if (sim.totvegsDisplayed == -1) return;
+
+  per = static_cast<vb_single>(static_cast<vb_long>(per) % 100);  // per Mod 100
+  if (sim.reprofix && per < 3.0f) sim.rob[female].Dead = true;
+  if (per <= 0.0f) return;
+
+  const vb_long sondist = static_cast<vb_long>(vb_round64(static_cast<double>(
+      FindRadius(sim, female, static_cast<vb_single>(per / 100.0)) +
+      FindRadius(sim, female,
+                 static_cast<vb_single>((100.0f - per) / 100.0)))));
+
+  vb_single nnrg = (sim.rob[female].nrg / 100.0f) * per;
+  // nbody As Integer en aritmética Single estricta (B-30, misma decisión que
+  // la asexual).
+  const vb_integer nbody =
+      vb_cint(static_cast<double>((sim.rob[female].body / 100.0f) * per));
+
+  const vb_single tempnrg = sim.rob[female].nrg;
+  if (tempnrg <= 0.0f) return;
+
+  const vb_long nx = static_cast<vb_long>(vb_round64(static_cast<double>(
+      sim.rob[female].pos.x + absx(sim.rob[female].aim,
+                                   static_cast<vb_single>(sondist), 0, 0, 0))));
+  const vb_long ny = static_cast<vb_long>(vb_round64(static_cast<double>(
+      sim.rob[female].pos.y + absy(sim.rob[female].aim,
+                                   static_cast<vb_single>(sondist), 0, 0, 0))));
+  bool tests = simplecoll(sim, nx, ny, female);
+  tests = tests || !sim.rob[female].exist;
+  if (tests) return;
+  // dreason/dq (Disqualify): capa torneo ⚙, fuera del core.
+
+  // Step1: ambos ADN a block2 (el índice 0 INCLUIDO en ambos lados).
+  std::vector<Block2> dna1(sim.rob[female].dna.size());
+  for (std::size_t t = 0; t < dna1.size(); ++t) {
+    dna1[t].tipo = sim.rob[female].dna[t].tipo;
+    dna1[t].value = sim.rob[female].dna[t].value;
+  }
+  std::vector<Block2> dna2(sim.rob[female].spermDNA.size());
+  for (std::size_t t = 0; t < dna2.size(); ++t) {
+    dna2[t].tipo = sim.rob[female].spermDNA[t].tipo;
+    dna2[t].value = sim.rob[female].spermDNA[t].value;
+  }
+
+  // Step2: map nucli.
+  std::vector<Block3> ndna1(dna1.size());
+  std::vector<Block3> ndna2(dna2.size());
+  for (std::size_t t = 0; t < dna1.size(); ++t)
+    ndna1[t].nucli = DNAtoInt(*sim.sysvars, dna1[t].tipo, dna1[t].value);
+  for (std::size_t t = 0; t < dna2.size(); ++t)
+    ndna2[t].nucli = DNAtoInt(*sim.sysvars, dna2[t].tipo, dna2[t].value);
+
+  // Step3: rachas comunes.
+  simplematch(sim, ndna1, ndna2);
+
+  // Umbral 0.6: sin hijo y bloqueo ~8 ciclos; el esperma NO se descarta.
+  if (static_cast<double>(GeneticDistance(ndna1, ndna2)) > 0.6) {
+    sim.rob[female].fertilized = -18;
+    return;
+  }
+
+  // Step4: map back.
+  for (std::size_t t = 0; t < dna1.size(); ++t) dna1[t].match = ndna1[t].match;
+  for (std::size_t t = 0; t < dna2.size(); ++t) dna2[t].match = ndna2[t].match;
+
+  // Step5: crossover.
+  std::vector<Block> Outdna(1);  // ReDim Outdna(0)
+  crossover(sim, dna1, dna2, Outdna);
+
+  // Bug fix remove starting zero (solo si dna(0) es exactamente (0,0)).
+  if (Outdna[0].value == 0 && Outdna[0].tipo == 0) {
+    if (Outdna.size() == 1) {
+      // ReDim Preserve Outdna(-1): error 9 del original (crossover vacío,
+      // solo alcanzable si simplematch se cortó). Registrar y abortar.
+      sim.diag.err9_simplematch += 1;
+      return;
+    }
+    for (std::size_t t = 1; t < Outdna.size(); ++t) Outdna[t - 1] = Outdna[t];
+    Outdna.resize(Outdna.size() - 1);
+  }
+
+  const int nuovo = posto(sim);
+  Bot& p = sim.rob[female];  // refs tras posto (el array pudo crecer)
+  Bot& c = sim.rob[nuovo];
+
+  sim.opts.TotBorn += 1;
+  if (p.Veg) sim.totvegs += 1;
+
+  c.dna = Outdna;
+  c.DnaLen = static_cast<vb_integer>(DnaLen(c.dna));
+  c.dna.resize(static_cast<std::size_t>(c.DnaLen) + 1);  // actual = virtual
+  c.genenum = CountGenes(c.dna);
+  c.Mutables = p.Mutables;
+  c.Mutations = p.Mutations;
+  c.OldMutations = p.OldMutations;
+  c.LastMut = 0;
+  c.LastMutDetail = p.LastMutDetail;
+  // usedvars/maxusedvars: no modelados (decisión M3).
+  c.Skin = p.Skin;
+  c.mem.fill(0);  // Erase rob(nuovo).mem
+  c.Ties = {};    // Erase rob(nuovo).Ties
+
+  c.pos.x = p.pos.x + absx(p.aim, static_cast<vb_single>(sondist), 0, 0, 0);
+  c.pos.y = p.pos.y + absy(p.aim, static_cast<vb_single>(sondist), 0, 0, 0);
+  c.exist = true;
+  c.BucketPos.x = -2;
+  c.BucketPos.y = -2;
+  UpdateBotBucket(sim, nuovo);
+
+  c.vel = p.vel;
+  c.actvel = p.actvel;
+  c.color = p.color;
+  c.aim = p.aim + PI;
+  if (c.aim > 6.28f) c.aim -= 2.0f * PI;
+  c.aimvector = VectorSet(
+      static_cast<vb_single>(std::cos(static_cast<double>(c.aim))),
+      static_cast<vb_single>(std::sin(static_cast<double>(c.aim))));
+  c.mem[addr::SetAim] = vb_cint(static_cast<double>(c.aim) * 200.0);
+  c.mem[468] = 32000;
+  c.Corpse = false;
+  c.Dead = false;
+  c.NewMove = p.NewMove;
+  c.generation = static_cast<vb_integer>(
+      (p.generation + 1 > 32000) ? 32000 : p.generation + 1);
+  c.BirthCycle = sim.opts.TotRunCycle;
+  c.vnum = 1;
+
+  nnrg = (p.nrg / 100.0f) * per;
+  const vb_single nwaste = p.Waste / 100.0f * per;
+  const vb_single npwaste = p.Pwaste / 100.0f * per;
+  const vb_single nchloroplasts = (p.chloroplasts / 100.0f) * per;
+
+  p.nrg = p.nrg - nnrg - (nnrg * 0.001f);  // 0.1% para la madre
+  // El macho pagó el coste del disparo y nada más.
+  p.Waste -= nwaste;
+  p.Pwaste -= npwaste;
+  p.body -= nbody;
+  p.radius = FindRadius(sim, female);
+  p.chloroplasts -= nchloroplasts;
+
+  c.chloroplasts = nchloroplasts;
+  c.body = nbody;
+  c.radius = FindRadius(sim, nuovo);
+  c.Waste = nwaste;
+  c.Pwaste = npwaste;
+  p.mem[addr::Energy] = vb_cint(p.nrg);
+  p.mem[311] = vb_cint(p.body);
+  p.SonNumber = static_cast<vb_integer>(
+      (p.SonNumber + 1 > 32000) ? 32000 : p.SonNumber + 1);
+  // El SonNumber/parent del macho no se actualizan (linaje matrilineal).
+
+  c.nrg = nnrg * 0.999f;  // 1% para el hijo
+  c.onrg = nnrg * 0.999f;
+  c.mem[addr::Energy] = vb_cint(c.nrg);
+  c.Poisoned = false;
+  c.parent = p.AbsNum;
+  c.FName = p.FName;
+  c.LastOwner = p.LastOwner;
+  c.Veg = p.Veg;
+  c.NoChlr = p.NoChlr;
+  c.Fixed = p.Fixed;
+  c.CantSee = p.CantSee;
+  c.DisableDNA = p.DisableDNA;
+  c.DisableMovementSysvars = p.DisableMovementSysvars;
+  c.CantReproduce = p.CantReproduce;
+  c.VirusImmune = p.VirusImmune;
+  if (c.Fixed) c.mem[addr::Fixed] = 1;
+  c.SubSpecies = p.SubSpecies;
+
+  c.OldGD = p.OldGD;
+  c.GenMut = p.GenMut;
+  c.tag = p.tag;
+  c.Bouyancy = p.Bouyancy;
+
+  if (p.multibot_time > 0)
+    c.multibot_time = static_cast<unsigned char>(p.multibot_time / 2 + 2);
+  c.dq = p.dq;
+
+  c.Vtimer = 0;
+  c.virusshot = 0;
+
+  // Memoria genética: 5 instantáneas + 15 diferidas; la madre pierde epimem.
+  for (int i = 0; i <= 4; ++i) c.mem[971 + i] = p.mem[971 + i];
+  for (int i = 0; i <= 14; ++i) c.epimem[i] = p.mem[976 + i];
+  for (int i = 0; i <= 14; ++i) p.epimem[i] = 0;
+
+  logmutation(sim, nuovo,
+              "Female DNA len " + StrVB(p.DnaLen) + " and male DNA len " +
+                  StrVB(static_cast<vb_long>(p.spermDNA.size()) - 1) +
+                  " had offspring DNA len " + StrVB(c.DnaLen) +
+                  " during cycle " + StrVB(sim.opts.TotRunCycle));
+
+  // Régimen Delta2 (una sola pasada — sin el multiplicador x2-4 de mrepro).
+  if (sim.Delta2) {
+    using namespace mut;
+    const vb_long MratesMax =
+        sim.NormMut ? static_cast<vb_long>(c.DnaLen) *
+                          static_cast<vb_long>(sim.valMaxNormMut)
+                    : 2000000000;
+    double dmoc =
+        1.0 + static_cast<double>(c.DnaLen - sim.curr_dna_size) / 500.0;
+    if (dmoc < 0.01) dmoc = 0.01;
+    if (!sim.y_normsize) dmoc = 1;
+    if (sim.x_restartmode == 7 || sim.x_restartmode == 8) {
+      if (c.FName == "Mutate.txt") {
+        c.Mutables.mutarray[PointUP] = static_cast<vb_single>(
+            static_cast<double>(c.Mutables.mutarray[PointUP]) * 1.75);
+        if (c.Mutables.mutarray[PointUP] > static_cast<vb_single>(MratesMax))
+          c.Mutables.mutarray[PointUP] = static_cast<vb_single>(MratesMax);
+        c.Mutables.mutarray[P2UP] = static_cast<vb_single>(
+            static_cast<double>(c.Mutables.mutarray[P2UP]) * 1.75);
+        if (c.Mutables.mutarray[P2UP] > static_cast<vb_single>(MratesMax))
+          c.Mutables.mutarray[P2UP] = static_cast<vb_single>(MratesMax);
+      }
+    }
+    for (int t = 1; t <= 10; ++t) {
+      if (t == 9) continue;  // ignore PM2 mutation here
+      if (c.Mutables.mutarray[t] < 1.0f) continue;
+      if (static_cast<double>(sim.rnd()) < sim.DeltaMainChance / 100.0) {
+        if (sim.DeltaMainExp != 0.0f) {
+          if (t == CopyErrorUP || t == TranslocationUP || t == ReversalUP ||
+              t == CE2UP) {
+            c.Mutables.mutarray[t] = static_cast<vb_single>(
+                static_cast<double>(c.Mutables.mutarray[t]) * (dmoc + 2) / 3);
+          } else if (!(t == MinorDeletionUP || t == MajorDeletionUP)) {
+            c.Mutables.mutarray[t] = static_cast<vb_single>(
+                static_cast<double>(c.Mutables.mutarray[t]) * dmoc);
+          }
+          c.Mutables.mutarray[t] = static_cast<vb_single>(
+              static_cast<double>(c.Mutables.mutarray[t]) *
+              std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                 sim.DeltaMainExp)));
+        }
+        c.Mutables.mutarray[t] =
+            c.Mutables.mutarray[t] + (sim.rnd() * 2 - 1) * sim.DeltaMainLn;
+        if (c.Mutables.mutarray[t] < 1.0f) c.Mutables.mutarray[t] = 1;
+        if (c.Mutables.mutarray[t] > static_cast<vb_single>(MratesMax))
+          c.Mutables.mutarray[t] = static_cast<vb_single>(MratesMax);
+      }
+      if (static_cast<double>(sim.rnd()) < sim.DeltaDevChance / 100.0) {
+        if (sim.DeltaDevExp != 0.0f)
+          c.Mutables.StdDev[t] = static_cast<vb_single>(
+              static_cast<double>(c.Mutables.StdDev[t]) *
+              std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                 sim.DeltaDevExp)));
+        c.Mutables.StdDev[t] =
+            c.Mutables.StdDev[t] + (sim.rnd() * 2 - 1) * sim.DeltaDevLn;
+        if (sim.DeltaDevExp != 0.0f)
+          c.Mutables.Mean[t] = static_cast<vb_single>(
+              static_cast<double>(c.Mutables.Mean[t]) *
+              std::pow(10.0, static_cast<double>((sim.rnd() * 2 - 1) /
+                                                 sim.DeltaDevExp)));
+        c.Mutables.Mean[t] =
+            c.Mutables.Mean[t] + (sim.rnd() * 2 - 1) * sim.DeltaDevLn;
+        if (c.Mutables.StdDev[t] < 0.0f) c.Mutables.StdDev[t] = 0;
+        if (c.Mutables.StdDev[t] > 200.0f) c.Mutables.StdDev[t] = 200;
+        if (c.Mutables.Mean[t] < 1.0f) c.Mutables.Mean[t] = 1;
+        if (c.Mutables.Mean[t] > 400.0f) c.Mutables.Mean[t] = 400;
+      }
+    }
+    c.Mutables.CopyErrorWhatToChange = vb_cint(static_cast<double>(
+        static_cast<vb_single>(c.Mutables.CopyErrorWhatToChange) +
+        (sim.rnd() * 2 - 1) * sim.DeltaWTC));
+    if (c.Mutables.CopyErrorWhatToChange < 0)
+      c.Mutables.CopyErrorWhatToChange = 0;
+    if (c.Mutables.CopyErrorWhatToChange > 100)
+      c.Mutables.CopyErrorWhatToChange = 100;
+    mutate(sim, nuovo, true);
+  } else {
+    mutate(sim, nuovo, true);
+  }
+
+  makeoccurrlist(sim, nuovo);
+  c.DnaLen = static_cast<vb_integer>(DnaLen(c.dna));
+  c.genenum = CountGenes(c.dna);
+  c.mem[addr::DnaLenSys] = c.DnaLen;
+  c.mem[addr::GenesSys] = static_cast<vb_integer>(c.genenum);
+
+  maketie(sim, female, nuovo, sondist, 100, 0);  // birth ties last 100 cycles
+  p.onrg = p.nrg;  // saves mother from dying from shock
+  c.mass = nbody / 1000.0f + c.shell / 200.0f;
+  c.mem[addr::timersys] = p.mem[addr::timersys];  // epigenetic timer
+
+  p.mem[addr::SEXREPRO] = 0;        // sucessfully reproduced
+  p.fertilized = -1;                // spermDNA se recupera el próximo ciclo
+  p.mem[addr::SYSFERTILIZED] = 0;   // el esperma vale para un solo parto
+
+  if (sim.epireset) {
+    c.MutEpiReset =
+        p.MutEpiReset + std::pow(static_cast<double>(c.LastMut),
+                                 static_cast<double>(sim.epiresetemp));
+    if (c.MutEpiReset > sim.epiresetOP && p.MutEpiReset > 0) {
+      c.MutEpiReset = 0;
+      for (int i = 0; i <= 4; ++i) c.mem[971 + i] = 0;
+      for (int i = 0; i <= 14; ++i) c.epimem[i] = 0;
+    }
+  }
+
+  p.nrg -= p.DnaLen * sim.vm.costs.v[cost::DNACOPYCOST] *
+           sim.vm.costs.v[cost::COSTMULTIPLIER];
+  if (p.nrg < 0.0f) p.nrg = 0.0f;
 }
 
 // Robots.bas:1659-1696 — ReproduceAndKill (P6): primero TODOS los

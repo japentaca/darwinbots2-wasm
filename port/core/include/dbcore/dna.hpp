@@ -146,9 +146,15 @@ inline void NmDelete(std::vector<Block>& dna, vb_long beginning,
   dna.resize(DnaLen(dna) + 1);  // ReDim Preserve dna(DnaLen(dna))
 }
 
+// NeoMutations.bas:57-60 — EraseUnit: los huecos/vaciados quedan en
+// (-1,-1), NO en (0,0). Importa para las mutaciones: ChangeDNA sobre un
+// hueco recién insertado ve tipo -1 (cualquier tipo nuevo vale) y value -1
+// (truthy: la siembra Gauss(500,0) de Insertion sí corre).
+inline constexpr Block ErasedUnit{-1, -1};
+
 // NeoMutations.bas:62-89 — MakeSpace: abre `Length` huecos DESPUÉS de
 // `beginning` (beginning no se mueve); False si no cabe (tope 32000) o los
-// límites son inválidos. Los huecos quedan en (0,0) — EraseUnit.
+// límites son inválidos. Los huecos quedan en (-1,-1) — EraseUnit.
 inline bool MakeSpace(std::vector<Block>& dna, vb_long beginning,
                       vb_long Length, vb_long DNALength = -1) {
   if (DNALength < 0) DNALength = DnaLen(dna);
@@ -158,10 +164,10 @@ inline bool MakeSpace(std::vector<Block>& dna, vb_long beginning,
 
   dna.resize(static_cast<std::size_t>(DNALength + Length) + 1);
   for (vb_long t = DNALength + 1; t <= DNALength + Length; ++t)
-    dna[t] = Block{};
+    dna[t] = ErasedUnit;
   for (vb_long t = DNALength; t >= beginning + 1; --t) {
     dna[t + Length] = dna[t];
-    dna[t] = Block{};
+    dna[t] = ErasedUnit;
   }
   return true;
 }

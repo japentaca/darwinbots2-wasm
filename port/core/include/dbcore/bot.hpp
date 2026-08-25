@@ -207,12 +207,16 @@ struct Bot {
   std::string FName;
   vb_integer DnaLen = 0;
 
-  // --- mutación (registro persistido; los operadores reales son B6b) ---
+  // --- mutación (operadores reales en mutations.hpp desde M7) ---
   Mutationprobs Mutables{};
   vb_long Mutations = 0;
   vb_long OldMutations = 0;  // '#mutations del archivo de texto
   vb_long LastMut = 0;
   std::string LastMutDetail;
+  vb_long PointMutCycle = 0;   // agenda geométrica de PointMutation
+  vb_long PointMutBP = 0;      // el bp agendado
+  vb_long Point2MutCycle = 0;  // agenda de PointMutation2
+  vb_double MutEpiReset = 0;   // acumulador del régimen epireset
   vb_single GenMut = 0;  // DnaLen / GeneticSensitivity al cargar
   vb_single OldGD = 0;
 

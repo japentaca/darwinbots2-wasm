@@ -510,8 +510,31 @@ inline void shareshell(Sim& sim, int t, int k) {
   o.mem[823] = vb_cint(o.shell);
 }
 
-// Robots.bas:1727-1863 (sharechloroplasts) requiere DoGeneticDistance — B6;
-// gate transcrito en Update_Ties, cuerpo pendiente (diag).
+// Robots.bas:534-560 — definida en robots.hpp (necesita DNAtoInt de
+// mutations.hpp); declaración adelantada para sharechloroplasts.
+inline vb_single DoGeneticDistance(Sim& sim, int r1, int r2);
+
+// Robots.bas:1866-1892 — sharechloroplasts: distancia genética > 0.25 pone
+// un delay de 8 ciclos y no comparte; si no, reparto con caps 32000
+// (destruye el exceso en silencio, como los demás share*).
+inline void sharechloroplasts(Sim& sim, int t, int k) {
+  Bot& b = sim.rob[t];
+  if (DoGeneticDistance(sim, t, b.Ties[k].pnt) > 0.25f) {
+    b.Chlr_Share_Delay = 8;
+    return;
+  }
+  Bot& o = sim.rob[b.Ties[k].pnt];
+  if (b.mem[addr::sharechlr] > 99) b.mem[addr::sharechlr] = 99;
+  if (b.mem[addr::sharechlr] < 0) b.mem[addr::sharechlr] = 0;
+  const vb_single totchlr = b.chloroplasts + o.chloroplasts;
+  const vb_single mine =
+      totchlr * (static_cast<vb_single>(b.mem[addr::sharechlr]) / 100.0f);
+  b.chloroplasts = (mine < 32000.0f) ? mine : 32000.0f;
+  const vb_single theirs =
+      totchlr *
+      ((100.0f - static_cast<vb_single>(b.mem[addr::sharechlr])) / 100.0f);
+  o.chloroplasts = (theirs < 32000.0f) ? theirs : 32000.0f;
+}
 
 namespace ties_detail {
 
@@ -759,8 +782,7 @@ inline void Update_Ties(Sim& sim, int t) {
         }
         if (b.mem[addr::sharechlr] > 0 && b.Chlr_Share_Delay == 0 &&
             !b.NoChlr) {
-          sim.diag.makestuff_stub += 1;  // sharechloroplasts: B6 (distancia
-                                         // genética) — pendiente
+          sharechloroplasts(sim, t, k);
           b.Ties[k].sharing = true;
         }
       }

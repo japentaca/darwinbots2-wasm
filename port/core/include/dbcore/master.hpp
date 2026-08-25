@@ -72,7 +72,34 @@ inline void UpdateSim(Sim& sim) {
   sim.CurrentEnergyCycle = sim.opts.TotRunCycle % 100;
   sim.TotalSimEnergy[sim.CurrentEnergyCycle] = 0;
 
-  // Pasos 3-4, 6-9: torneo/costes dinámicos/oscilación de mutación — ⚙/B6.
+  // Pasos 3, 6-9: torneo/costes dinámicos — ⚙.
+
+  // Paso 4 (Master.bas:203-233): oscilación de MutCurrMult, senoidal
+  // (20^Sin) o escalón (16 / 1/16). Off por default (MutOscill = False).
+  if (sim.opts.MutOscill) {
+    if (sim.opts.MutCycMax + sim.opts.MutCycMin > 0) {
+      const vb_long fullrange =
+          sim.opts.TotRunCycle % (sim.opts.MutCycMax + sim.opts.MutCycMin);
+      if (sim.opts.MutOscillSine) {
+        // fullrange / MutCycMax es división Double en VB6; PI es el Single
+        // de Common.bas promovido.
+        if (fullrange < sim.opts.MutCycMax)
+          sim.opts.MutCurrMult = static_cast<vb_single>(std::pow(
+              20.0, std::sin(static_cast<double>(fullrange) /
+                             static_cast<double>(sim.opts.MutCycMax) *
+                             static_cast<double>(PI))));
+        else
+          sim.opts.MutCurrMult = static_cast<vb_single>(std::pow(
+              20.0, -std::sin(static_cast<double>(fullrange -
+                                                  sim.opts.MutCycMax) /
+                              static_cast<double>(sim.opts.MutCycMin) *
+                              static_cast<double>(PI))));
+      } else {
+        sim.opts.MutCurrMult =
+            (fullrange < sim.opts.MutCycMax) ? 16.0f : 1.0f / 16.0f;
+      }
+    }
+  }
 
   // Paso 10: el ADN.
   ExecRobs(sim);

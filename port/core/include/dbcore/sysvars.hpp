@@ -8,6 +8,8 @@
 // para el milestone de mutaciones.
 #pragma once
 
+#include <array>
+
 #include "loader.hpp"
 
 namespace db {
@@ -272,6 +274,314 @@ inline const SysvarTable& DefaultSysvarTable() {
         {"availability", 923},  // sysvar(254)
         {"sharechlr", 924},  // sysvar(255)
     };
+    return t;
+  }();
+  return table;
+}
+
+
+// ---------------------------------------------------------------------------
+// M7 (B6): las tablas indexadas por slot que las mutaciones sondean.
+//
+// - sysvar(0..999) (DNA.bas:25): el sondeo `Int(rndy * 1000)` de ChangeDNA2
+//   re-tira hasta caer en un slot con nombre. La tabla del port guarda las
+//   255 entradas en orden de indice original (sysvar(1)..sysvar(255)), asi
+//   que el slot i se resuelve como entries[i-1]; fuera de 1..255 no hay
+//   nombre (los slots 256..999 del original quedaban vacios).
+// - sysvarIN(0..255) / sysvarOUT(0..255) (DNA.bas:27-28): el vocabulario
+//   informacional/funcional de las mutaciones (21-MEMORIA.md par. 8),
+//   extraido mecanicamente de LoadSysVars sobre el commit 02b20d7 (las
+//   entradas comentadas del fuente son huecos con Name = "").
+
+struct IndexedSysvarTable {
+  std::array<Var, 256> e{};  // Name vacio = hueco (como el original)
+};
+
+// sysvar(i) por slot original (ver nota arriba).
+inline const Var* SysvarByIndex(const SysvarTable& t, int i) {
+  if (i < 1 || i > static_cast<int>(t.entries.size())) return nullptr;
+  return &t.entries[static_cast<std::size_t>(i - 1)];
+}
+
+// sysvarIN(0..255) de DNA.bas:27-28, poblada en LoadSysVars
+// (DNATokenizing.bas): 164 entradas activas; los huecos son las
+// lineas comentadas del fuente (Name = "").
+inline const IndexedSysvarTable& DefaultSysvarIN() {
+  static const IndexedSysvarTable table = [] {
+    IndexedSysvarTable t{};
+    t.e[11] = {"robage", 9};
+    t.e[12] = {"mass", 10};
+    t.e[13] = {"maxvel", 11};
+    t.e[14] = {"timer", 12};
+    t.e[15] = {"aim", 18};
+    t.e[17] = {"bodgain", 194};
+    t.e[18] = {"bodloss", 195};
+    t.e[19] = {"velscalar", 196};
+    t.e[20] = {"velsx", 197};
+    t.e[21] = {"veldx", 198};
+    t.e[22] = {"veldn", 199};
+    t.e[23] = {"velup", 200};
+    t.e[24] = {"vel", 200};
+    t.e[25] = {"hit", 201};
+    t.e[26] = {"shflav", 202};
+    t.e[27] = {"pain", 203};
+    t.e[28] = {"pleas", 204};
+    t.e[29] = {"hitup", 205};
+    t.e[30] = {"hitdn", 206};
+    t.e[31] = {"hitdx", 207};
+    t.e[32] = {"hitsx", 208};
+    t.e[33] = {"shang", 209};
+    t.e[34] = {"shup", 210};
+    t.e[35] = {"shdn", 211};
+    t.e[36] = {"shdx", 212};
+    t.e[37] = {"shsx", 213};
+    t.e[38] = {"edge", 214};
+    t.e[39] = {"fixed", 215};
+    t.e[41] = {"depth", 217};
+    t.e[42] = {"ypos", 217};
+    t.e[43] = {"daytime", 218};
+    t.e[44] = {"xpos", 219};
+    t.e[45] = {"kills", 220};
+    t.e[50] = {"nrg", 310};
+    t.e[51] = {"body", 311};
+    t.e[55] = {"rdboy", 315};
+    t.e[59] = {"dnalen", 336};
+    t.e[60] = {"vtimer", 337};
+    t.e[62] = {"genes", 339};
+    t.e[64] = {"thisgene", 341};
+    t.e[65] = {"sun", 400};
+    t.e[66] = {"trefbody", 437};
+    t.e[67] = {"trefxpos", 438};
+    t.e[68] = {"trefypos", 439};
+    t.e[69] = {"trefvelmysx", 440};
+    t.e[70] = {"trefvelmydx", 441};
+    t.e[71] = {"trefvelmydn", 442};
+    t.e[72] = {"trefvelmyup", 443};
+    t.e[73] = {"trefvelscalar", 444};
+    t.e[74] = {"trefvelyoursx", 445};
+    t.e[75] = {"trefvelyourdx", 446};
+    t.e[76] = {"trefvelyourdn", 447};
+    t.e[77] = {"trefvelyourup", 448};
+    t.e[78] = {"trefshell", 449};
+    t.e[79] = {"tieang", 450};
+    t.e[80] = {"tielen", 451};
+    t.e[83] = {"tiepres", 454};
+    t.e[85] = {"trefup", 456};
+    t.e[86] = {"trefdn", 457};
+    t.e[87] = {"trefsx", 458};
+    t.e[88] = {"trefdx", 459};
+    t.e[89] = {"trefaimdx", 460};
+    t.e[90] = {"trefaimsx", 461};
+    t.e[91] = {"trefshoot", 462};
+    t.e[92] = {"trefeye", 463};
+    t.e[93] = {"trefnrg", 464};
+    t.e[94] = {"trefage", 465};
+    t.e[95] = {"numties", 466};
+    t.e[99] = {"multi", 470};
+    t.e[101] = {"fertilized", 303};
+    t.e[102] = {"memval", 473};
+    t.e[104] = {"tmemval", 475};
+    t.e[106] = {"reffixed", 477};
+    t.e[107] = {"treffixed", 478};
+    t.e[108] = {"trefaim", 479};
+    t.e[109] = {"tieang1", 480};
+    t.e[110] = {"tieang2", 481};
+    t.e[111] = {"tieang3", 482};
+    t.e[112] = {"tieang4", 483};
+    t.e[113] = {"tielen1", 484};
+    t.e[114] = {"tielen2", 485};
+    t.e[115] = {"tielen3", 486};
+    t.e[116] = {"tielen4", 487};
+    t.e[117] = {"eye1", 501};
+    t.e[118] = {"eye2", 502};
+    t.e[119] = {"eye3", 503};
+    t.e[120] = {"eye4", 504};
+    t.e[121] = {"eye5", 505};
+    t.e[122] = {"eye6", 506};
+    t.e[123] = {"eye7", 507};
+    t.e[124] = {"eye8", 508};
+    t.e[125] = {"eye9", 509};
+    t.e[126] = {"refmulti", 686};
+    t.e[127] = {"refshell", 687};
+    t.e[128] = {"refbody", 688};
+    t.e[129] = {"refxpos", 689};
+    t.e[130] = {"refypos", 690};
+    t.e[131] = {"refvelscalar", 695};
+    t.e[132] = {"refvelsx", 696};
+    t.e[133] = {"refveldx", 697};
+    t.e[134] = {"refveldn", 698};
+    t.e[135] = {"refvel", 699};
+    t.e[136] = {"refvelup", 699};
+    t.e[137] = {"refup", 701};
+    t.e[138] = {"refdn", 702};
+    t.e[139] = {"refsx", 703};
+    t.e[140] = {"refdx", 704};
+    t.e[141] = {"refaimdx", 705};
+    t.e[142] = {"refaimsx", 706};
+    t.e[143] = {"refshoot", 707};
+    t.e[144] = {"refeye", 708};
+    t.e[145] = {"refnrg", 709};
+    t.e[146] = {"refage", 710};
+    t.e[147] = {"refaim", 711};
+    t.e[148] = {"reftie", 712};
+    t.e[149] = {"refpoison", 713};
+    t.e[150] = {"refvenom", 714};
+    t.e[151] = {"refkills", 715};
+    t.e[152] = {"myup", 721};
+    t.e[153] = {"mydn", 722};
+    t.e[154] = {"mysx", 723};
+    t.e[155] = {"mydx", 724};
+    t.e[156] = {"myaimdx", 725};
+    t.e[157] = {"myaimsx", 726};
+    t.e[158] = {"myshoot", 727};
+    t.e[159] = {"myeye", 728};
+    t.e[160] = {"myties", 729};
+    t.e[161] = {"mypoison", 730};
+    t.e[162] = {"myvenom", 731};
+    t.e[173] = {"in1", 810};
+    t.e[174] = {"in2", 811};
+    t.e[175] = {"in3", 812};
+    t.e[176] = {"in4", 813};
+    t.e[177] = {"in5", 814};
+    t.e[178] = {"in6", 815};
+    t.e[179] = {"in7", 816};
+    t.e[180] = {"in8", 817};
+    t.e[181] = {"in9", 818};
+    t.e[182] = {"in10", 819};
+    t.e[184] = {"slime", 821};
+    t.e[186] = {"shell", 823};
+    t.e[189] = {"venom", 825};
+    t.e[192] = {"poison", 827};
+    t.e[193] = {"waste", 828};
+    t.e[194] = {"pwaste", 829};
+    t.e[202] = {"paralyzed", 837};
+    t.e[203] = {"poisoned", 838};
+    t.e[206] = {"eyef", 510};
+    t.e[226] = {"reftype", 685};
+    t.e[227] = {"totalbots", 401};
+    t.e[228] = {"totalmyspecies", 402};
+    t.e[239] = {"tin1", 420};
+    t.e[240] = {"tin2", 421};
+    t.e[241] = {"tin3", 422};
+    t.e[242] = {"tin4", 423};
+    t.e[243] = {"tin5", 424};
+    t.e[244] = {"tin6", 425};
+    t.e[245] = {"tin7", 426};
+    t.e[246] = {"tin8", 427};
+    t.e[247] = {"tin9", 428};
+    t.e[248] = {"tin10", 429};
+    t.e[250] = {"chlr", 920};
+    t.e[253] = {"light", 923};
+    t.e[254] = {"availability", 923};
+    return t;
+  }();
+  return table;
+}
+
+// sysvarOUT(0..255) de DNA.bas:27-28, poblada en LoadSysVars
+// (DNATokenizing.bas): 98 entradas activas; los huecos son las
+// lineas comentadas del fuente (Name = "").
+inline const IndexedSysvarTable& DefaultSysvarOUT() {
+  static const IndexedSysvarTable table = [] {
+    IndexedSysvarTable t{};
+    t.e[1] = {"up", 1};
+    t.e[2] = {"dn", 2};
+    t.e[3] = {"sx", 3};
+    t.e[4] = {"dx", 4};
+    t.e[5] = {"aimdx", 5};
+    t.e[6] = {"aimright", 5};
+    t.e[7] = {"aimsx", 6};
+    t.e[8] = {"aimleft", 6};
+    t.e[9] = {"shoot", 7};
+    t.e[10] = {"shootval", 8};
+    t.e[16] = {"setaim", 19};
+    t.e[40] = {"fixpos", 216};
+    t.e[47] = {"repro", 300};
+    t.e[48] = {"mrepro", 301};
+    t.e[49] = {"sexrepro", 302};
+    t.e[52] = {"fdbody", 312};
+    t.e[53] = {"strbody", 313};
+    t.e[54] = {"setboy", 314};
+    t.e[56] = {"tie", 330};
+    t.e[57] = {"stifftie", 331};
+    t.e[58] = {"mkvirus", 335};
+    t.e[61] = {"vshoot", 338};
+    t.e[63] = {"delgene", 340};
+    t.e[81] = {"tieloc", 452};
+    t.e[82] = {"tieval", 453};
+    t.e[84] = {"tienum", 455};
+    t.e[96] = {"deltie", 467};
+    t.e[97] = {"fixang", 468};
+    t.e[98] = {"fixlen", 469};
+    t.e[100] = {"readtie", 471};
+    t.e[103] = {"memloc", 474};
+    t.e[105] = {"tmemloc", 476};
+    t.e[109] = {"tieang1", 480};
+    t.e[110] = {"tieang2", 481};
+    t.e[111] = {"tieang3", 482};
+    t.e[112] = {"tieang4", 483};
+    t.e[113] = {"tielen1", 484};
+    t.e[114] = {"tielen2", 485};
+    t.e[115] = {"tielen3", 486};
+    t.e[116] = {"tielen4", 487};
+    t.e[163] = {"out1", 800};
+    t.e[164] = {"out2", 801};
+    t.e[165] = {"out3", 802};
+    t.e[166] = {"out4", 803};
+    t.e[167] = {"out5", 804};
+    t.e[168] = {"out6", 805};
+    t.e[169] = {"out7", 806};
+    t.e[170] = {"out8", 807};
+    t.e[171] = {"out9", 808};
+    t.e[172] = {"out10", 809};
+    t.e[183] = {"mkslime", 820};
+    t.e[185] = {"mkshell", 822};
+    t.e[187] = {"strvenom", 824};
+    t.e[188] = {"mkvenom", 824};
+    t.e[190] = {"strpoison", 826};
+    t.e[191] = {"mkpoison", 826};
+    t.e[195] = {"sharenrg", 830};
+    t.e[196] = {"sharewaste", 831};
+    t.e[197] = {"shareshell", 832};
+    t.e[198] = {"shareslime", 833};
+    t.e[199] = {"ploc", 834};
+    t.e[200] = {"vloc", 835};
+    t.e[201] = {"venval", 836};
+    t.e[204] = {"backshot", 900};
+    t.e[205] = {"aimshoot", 901};
+    t.e[207] = {"focuseye", 511};
+    t.e[208] = {"eye1dir", 521};
+    t.e[209] = {"eye2dir", 522};
+    t.e[210] = {"eye3dir", 523};
+    t.e[211] = {"eye4dir", 524};
+    t.e[212] = {"eye5dir", 525};
+    t.e[213] = {"eye6dir", 526};
+    t.e[214] = {"eye7dir", 527};
+    t.e[215] = {"eye8dir", 528};
+    t.e[216] = {"eye9dir", 529};
+    t.e[217] = {"eye1width", 531};
+    t.e[218] = {"eye2width", 532};
+    t.e[219] = {"eye3width", 533};
+    t.e[220] = {"eye4width", 534};
+    t.e[221] = {"eye5width", 535};
+    t.e[222] = {"eye6width", 536};
+    t.e[223] = {"eye7width", 537};
+    t.e[224] = {"eye8width", 538};
+    t.e[225] = {"eye9width", 539};
+    t.e[229] = {"tout1", 410};
+    t.e[230] = {"tout2", 411};
+    t.e[231] = {"tout3", 412};
+    t.e[232] = {"tout4", 413};
+    t.e[233] = {"tout5", 414};
+    t.e[234] = {"tout6", 415};
+    t.e[235] = {"tout7", 416};
+    t.e[236] = {"tout8", 417};
+    t.e[237] = {"tout9", 418};
+    t.e[238] = {"tout10", 419};
+    t.e[249] = {"pval", 839};
+    t.e[251] = {"mkchlr", 921};
+    t.e[252] = {"rmchlr", 922};
+    t.e[255] = {"sharechlr", 924};
     return t;
   }();
   return table;

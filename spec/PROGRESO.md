@@ -22,7 +22,7 @@ reinicios de contexto.
 | `33-SHOTS.md` | ✅ cerrado | **B3a.** Ciclo de vida, swept-sphere con sesgo por índice, efectos por tipo. **Inmunidad filial rota** (slot vs AbsNum); slot tirador intocable; `.shoot` múltiplo de 1000 = esperma; 2 RNG/disparo (1 muerto). |
 | `35-VIRUS.md` | ✅ cerrado | **B3b.** mkvirus→Vtimer(2×gen)→vshoot; doble cobro en `Vshoot`; potencia ∝ número de gen; slime penetrada amplifica; delgene blindado. |
 | `34-TIES.md` | ✅ cerrado | **B4.** Máx 9 ties; puertos asimétricos; endurecimiento a los 19 ciclos define multibot; sharing destruye recursos en los caps; slot 10 fantasma con `.ang` heredable. Q03(Ties) cerrada. |
-| `36-REPRO.md` | ✅ cerrado | **B6a.** Reproduce/SexReproduce/crossover. **El hijo sexual pierde su primer token** (Outdna desde índice 0); loterías vegetales asimétricas; crossover no determinista con pérdida de tramos. |
+| `36-REPRO.md` | ✅ cerrado | **B6a.** Reproduce/SexReproduce/crossover. ~~El hijo sexual pierde su primer token~~ (corregido en M7: solo con padres asimétricos en dna(0) — ver R-11); loterías vegetales asimétricas; crossover no determinista con pérdida de tramos. |
 | `40-MUTACIONES.md` | ✅ cerrado | **B6b.** 11 operadores; agenda geométrica vs Bernoulli/token; **suelos anti-freeze reescriben las tasas heredables**; Minor=Major salvo defaults; Q16 resuelta (77 comandos, DNAtoInt max 32767). |
 | `50-MUNDO.md` | ✅ cerrado | **B7.** Repoblación por cloroplastos (no por vegetales); sol en banda móvil; teleporters = E/S de disco en el tick (Q10); capa torneo deslindada; Q05 resuelta (Roborder pre-buckets). |
 | `60-FORMATOS.md` | ✅ cerrado | **B8.** Texto/.dbo/sim binaria; versionado FE×3 + FileContinue; solo 50 vars persistidas; `sint` = Mod 32000; gen epigenético autodestructivo; **SaveSimulation recursivo en error**; Q01 completa, Q06 y Q14 resueltas. |
@@ -54,6 +54,8 @@ reinicios de contexto.
 
 | M6 · Catálogo de bugs (§9) | ✅ cerrado | Casos B-01..B-28 + B-30 en verde (quedan B-29/B-31..B-35 para B6 y B-36/B-37 para B7, decisión abajo). Transcripciones que el catálogo arrastró: visión de formas completa (`CompareShapes`/`SegmentSegmentIntersect`/`lookoccurrShape`, B-12/B-13/B-14, stub asertado a 0), matanza por presión de memoria (`MemoryPressureKill`, B-02), alimentación de shots (`releasenrg`/`takenrg`/`releasebod` + `defacate` — cierra B3a; B-18/B-24), `MakeStuff` real (`storevenom`/`storepoison`/`makeshell`/`makeslime`, B-26; `mem(825)` con `Int`, no `CInt`), capa de virus B3b completa (`MakeVirus`/`copygene`/`addgene` + `MakeSpace`/`NewSubSpecies`/`logmutation`, B-19/B-20/B-21) y `bodyfix` configurable (B-25). Fidelidad corregida en el port: `nbody` de `Reproduce` en aritmética Single estricta (B-30). Errata de spec corregida contra el fuente: B-30 (501/100·50 = 250.500015f, sin empate — los empates reales son 525→262 y 475→238). Contadores cerrados y asertados a 0: `shapes_vision_stub`, `shot_feed_stub`, `makevirus_stub`. Total acumulado: 111 casos, 2484 aserciones. |
 
+| M7 · Mutaciones y reproducción sexual (B6) | ✅ cerrado | Casos B-29, B-31..B-35 y R-09..R-11 en verde. `mutations.hpp`: `NeoMutations.bas` completo — dispatcher `mutate` (con auto-especiación, clamps, `mutatecolors`, re-publicación de mem(336/339) SIN `makeoccurrlist` — B-35), los 11 operadores (agendas geométricas de Point/Point2, suelos anti-freeze que reescriben `mutarray` — B-31, Insertion con 2 mutaciones/token — B-33, Amplification desde t=2 — B-34, Minor=Major — B-32, Translocation/Amplification con sus bucles "still bugy" como sitios de error 9 registrados), `ChangeDNA`/`ChangeDNA2` (sondeo de Max con Parse bajo `ismutating`), `DNAtoInt`/`calc_dnamatrix` (Q16: 77 comandos, máximo 32767) y las tablas `sysvarIN`(164)/`sysvarOUT`(98) extraídas mecánicamente de `LoadSysVars`. `Robots.bas`: sección de crossover completa (`simplematch`/`GeneticDistance`/`DoGeneticDistance`/`crossover`) y `SexReproduce` entero; `Reproduce` ganó la herencia que faltaba (Mutables/Mutations/Skin/color/tag/SubSpecies/OldGD/GenMut/LastOwner, ADN desde el índice 1), el régimen Delta2/mrepro y el epireset; `sharechloroplasts` real (umbral 0.25); paso 4 del tick (oscilación `MutCurrMult`); `EraseUnit` = (-1,-1) fiel. Semántica VB6 afinada: `1/Single` y `Byte/100` son Double, `Long+Single` promociona a Double, IIf/And/Choose evalúan todos sus brazos. **Dos erratas de spec corregidas contra el fuente** (R-11/B6-1): (a) el hijo sexual de padres alineados NO pierde su primer token — la racha emparejada copia desde `UBound(Outdna)+1` (`Robots.bas:633`) y el bug fix recorta el (0,0); el corrimiento solo existe con padres asimétricos en dna(0); (b) la moneda de valores del crossover se consume POR TOKEN (IIf eager), no solo en pares |v|>999. Stubs cerrados y asertados a 0: `mutate_stub`, `sexrepro_stub`, `makestuff_stub`. Total acumulado: 124 casos, 2668 aserciones. |
+
 **Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
 caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
 (agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
@@ -63,14 +65,14 @@ el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
 
 ## Siguiente
 
-**M7 · Mutaciones y reproducción sexual (B6)** — los 11 operadores de
-`NeoMutations.bas` (con los suelos anti-freeze que reescriben `mutarray`),
-`SexReproduce`/crossover de `Robots.bas:2417-2848`, y sus casos: B-29,
-B-31..B-35 (diferidos de M6) más R-09..R-12. El stub `mutate_stub`/
-`sexrepro_stub` se reemplaza y aserta a 0 como en M4/M6. Después, **M8 ·
-Mundo (B7)**: repoblación/sol/teleporters (B-36, B-37, R-08), obstacles
-(`DoObstacleCollisions`), y los formatos de nivel sim
-(`SaveSimulation`/`LoadSimulation`, `.dbo`, `.mrate`).
+**M8 · Mundo (B7)** — `50-MUNDO.md`: repoblación por cloroplastos
+(`Vegs.bas`, 12 extracciones por vegetal — R-08), sol/`feedvegs`/`feedveg2`
+(cierra `handlewaste_stub` junto con `altzheimer`), teleporters
+(`Teleport.bas` — B-36) y la primera repoblación con deuda (B-37), obstacles
+(`DoObstacleCollisions`/`DoShotObstacleCollisions`, cierra
+`obstacle_collision_stub` y `world_stub`), y los formatos de nivel sim
+(`SaveSimulation`/`LoadSimulation`, `.dbo`, `.mrate`). R-12 (orden global de
+RNG del tick) como caso de cierre cuando el tick esté completo.
 
 ## Pendiente
 
@@ -158,3 +160,22 @@ Mundo (B7)**: repoblación/sol/teleporters (B-36, B-37, R-08), obstacles
   `RobScriptLoadSim` pelada deja body = 0 y el bot muere al final del
   primer tick — semántica del fuente, no un bug del port. Fuentes sin
   modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-25** — M7 cerrado: mutaciones y reproducción sexual (B-29,
+  B-31..B-35, R-09..R-11; 124 casos / 2668 aserciones acumuladas).
+  `NeoMutations.bas` completo en `mutations.hpp` (11 operadores + agendas +
+  ChangeDNA/ChangeDNA2 + DNAtoInt/matriz + tablas sysvarIN/OUT), crossover y
+  `SexReproduce` completos en `robots.hpp`, `Reproduce` con toda la herencia
+  y los regímenes Delta2/mrepro/epireset, `sharechloroplasts` real, paso 4
+  del tick. Hallazgo mayor de transcripción: **el [PROBABLE BUG] B6-1 estaba
+  mal derivado en la spec** — la racha emparejada del crossover copia desde
+  `UBound(Outdna)+1` (`Robots.bas:633` relee upperbound) y los fantasmas de
+  ambos padres siempre se emparejan, así que el hijo de padres alineados NO
+  pierde su primer token (el corrimiento solo existe con padres asimétricos
+  en dna(0)); además el IIf eager de VB6 consume la moneda de valores en
+  cada token emparejado. R-11 reescrito y 36-REPRO corregido (§0.1, §3.3,
+  §5.1). Sitios de error 9 nuevos con decisión de port:
+  `err9_mutation_insert` (bucles de inserción de Amplification/Translocation
+  con MakeSpace fallido) y `err9_simplematch` (reposicionamiento fuera de
+  rango). Stubs `mutate_stub`/`sexrepro_stub`/`makestuff_stub` cerrados y
+  asertados a 0. Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/`
+  vacío).

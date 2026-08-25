@@ -66,11 +66,41 @@ Emscripten; presentación web separada.
   `MakeSpace`/`NewSubSpecies`/`logmutation`) y `bodyfix` configurable en
   SimOpts. Fidelidad: `nbody` de `Reproduce` en aritmética Single estricta
   (B-30). Contadores de stub cerrados y asertados a 0:
-  `shapes_vision_stub`, `shot_feed_stub`, `makevirus_stub`. Quedan como
-  stubs registrados: `mutate`/`SexReproduce` (B6), `feedveg2`/`altzheimer`
-  (B5/B7), `sharechloroplasts` (B6), obstacles y mundo (B7).
+  `shapes_vision_stub`, `shot_feed_stub`, `makevirus_stub`.
 
-Estado verificado: 111 casos / 2484 aserciones en verde.
+- **Milestone 7 (mutaciones y reproducción sexual, B6)**: `mutations.hpp` —
+  `NeoMutations.bas` completo: dispatcher `mutate` (auto-especiación,
+  clamps, `mutatecolors`, re-publicación de mem(336/339) **sin**
+  `makeoccurrlist` — B-35), los 11 operadores (agendas geométricas de
+  Point/Point2, suelos anti-freeze que reescriben `mutarray` — B-31,
+  `Insertion` con 2 mutaciones/token — B-33, `Amplification` desde t=2 —
+  B-34, Minor = MajorDeletion — B-32, `Translocation`/`Amplification` con
+  sus bucles de inserción "still bugy" como sitios de error 9 registrados en
+  `err9_mutation_insert`), `ChangeDNA`/`ChangeDNA2` (sondeo del Max legal
+  con Parse bajo `ismutating`), `DNAtoInt`/`calc_dnamatrix` (Q16) y las
+  tablas `sysvarIN`(164)/`sysvarOUT`(98) extraídas mecánicamente de
+  `LoadSysVars` (`sysvars.hpp`). En `robots.hpp`: la sección de crossover
+  completa (`simplematch`/`GeneticDistance`/`DoGeneticDistance`/`crossover`
+  con el sitio de error 9 `err9_simplematch`) y `SexReproduce` entero
+  (loterías 1/10 vs 1/11 — R-10, umbral 0.6, esperma de un solo uso);
+  `Reproduce` ganó la herencia restante (Mutables/Skin/color/tag/…, ADN
+  desde el índice 1), el régimen Delta2/mrepro (×2-4 con `mrepro`) y el
+  epireset. `sharechloroplasts` real en `ties.hpp` (umbral 0.25 de
+  `DoGeneticDistance`); paso 4 del tick (oscilación de `MutCurrMult`) en
+  `master.hpp`; `EraseUnit` = (−1,−1) fiel en `MakeSpace`. Semántica VB6
+  replicada con cuidado: `1/Single` y `Byte/100` dividen en Double,
+  `Long + Single` promociona a Double, e `IIf`/`And`/`Choose` evalúan todos
+  sus operandos (la moneda de valores del crossover se consume POR token).
+  Dos erratas de spec corregidas contra el fuente (R-11/B6-1: el hijo de
+  padres alineados NO pierde su primer token — `Robots.bas:633` relee
+  `upperbound`; el consumo de RNG del crossover es por token). Casos B-29,
+  B-31..B-35, R-09..R-11. Contadores cerrados y asertados a 0:
+  `mutate_stub`, `sexrepro_stub`, `makestuff_stub`. Quedan como stubs
+  registrados: `feedveg2`/`altzheimer`/`defacate`-mundo
+  (`handlewaste_stub`), repoblación/sol/teleporters (`world_stub`) y
+  obstacles (`obstacle_collision_stub`) — todos B7.
+
+Estado verificado: 124 casos / 2668 aserciones en verde.
 
 ## Build (nativo)
 

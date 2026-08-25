@@ -11,14 +11,21 @@
 
 ## 0. Respuestas centrales
 
-1. **El hijo sexual pierde su primer token**: `crossover` construye `Outdna` desde el
-   **índice 0** (`Robots.bas:585-588`, primer segmento en `upperbound+1 = 0`) y
-   `rob(nuovo).dna = Outdna` lo adopta tal cual (`:2602`). Como la ejecución empieza en
-   el índice 1 (`20-VM.md §4`), **el primer token de todo hijo sexual es invisible para
-   el intérprete** (visible para mutaciones y `DnaLen`). El "bug fix remove starting
-   zero" (`:2589-2594`) solo actúa si ese token es exactamente `(0,0)`. Es el mismo
-   fenómeno que el corrimiento de `def`s de `20-VM.md §2.3`, ahora para *toda* la
-   descendencia sexual. `[PROBABLE BUG]` mayor.
+1. **El corrimiento del hijo sexual es condicional, no universal** *(corregido
+   2026-08-25 contra el fuente; la versión original de este punto afirmaba que todo
+   hijo sexual pierde su primer token)*: la copia de las rachas emparejadas relee
+   `upperbound = UBound(Outdna)` (`Robots.bas:633`) — solo los tramos **no
+   emparejados** de la primera iteración escriben desde el índice 0
+   (`upperbound = -1`, `:588`). Como los `dna(0)` fantasma de ambos lados siempre se
+   emparejan entre sí (mismo nucli, primera coincidencia de `simplematch`), el caso
+   común deja `Outdna(0) = (0,0)` y el "bug fix remove starting zero"
+   (`:2589-2594`) lo recorta: **el hijo de padres alineados no pierde nada** (padres
+   idénticos ⇒ hijo idéntico). El corrimiento real aparece con padres
+   **asimétricos** en el índice 0 (la corrección del cero inicial de `20-VM.md §2.3`
+   desplazó a un solo lado): los tramos iniciales no emparejados entran por moneda,
+   y si el ganador empieza con el fantasma del lado no desplazado, el recorte deja
+   su primer token real en el índice 0 — invisible para el intérprete (ejecución
+   desde el índice 1). Detalle y aserciones en `70-CASOS-DORADOS.md` R-11.
 2. **La pareja no existe como bot**: el "macho" es un shot −8 (`spermDNA` en la
    estructura de la madre, `33-SHOTS.md §5`); todos los recursos del hijo salen de la
    madre (`Robots.bas:2442-2443`), el macho solo pagó el coste del disparo. El
@@ -104,9 +111,12 @@ menudo que las asexuales (`:2456` vs `:2129`). Sin guarda de `DisableTypArepro`.
 4. `crossover`: alterna segmentos — para cada tramo **no emparejado** de cada lado,
    una moneda (**1 RNG**) decide si el tramo del lado 1 o el del 2 entra en el hijo
    (si solo un lado tiene tramo, la moneda decide si entra o se pierde,
-   `:596-626`); para cada racha **emparejada**, una moneda elige el lado "base" y,
-   token a token, si ambos lados tienen `|value| > 999` y el mismo tipo, otra moneda
-   elige el valor (`:638-653`). Consumo de RNG proporcional al número de segmentos.
+   `:596-626`); para cada racha **emparejada**, una moneda elige el lado "base" y
+   **1 moneda más POR TOKEN de la racha** (`:651` — el `IIf` de VB6 evalúa todos
+   sus brazos: la moneda interior se consume siempre, aunque solo gobierne el valor
+   cuando ambos lados traen `|value| > 999` con el mismo tipo). *(Corregido
+   2026-08-25: la versión original contaba la moneda de valor solo en los pares
+   grandes.)* Consumo de RNG ∝ segmentos + tokens emparejados.
 5. El resultado arranca en el índice 0 (§0.1); `DnaLen` se recalcula y el array se
    recorta a `DnaLen` (`:2604-2607`).
 
@@ -132,10 +142,10 @@ bot se renombra `(k)Nombre`, resetea `Mutations` y funda especie (máx. 49). Cam
 
 ## 5. Resumen de `[PROBABLE BUG]`
 
-1. **El primer token del hijo sexual no se ejecuta** (§0.1) — todo linaje sexual corre
-   con su ADN efectivo desplazado un token; si el token invisible era un `cond`, la
-   estructura del primer gen cambia (los tipo 9 posteriores reactivan el flujo igual,
-   `20-VM.md §5.5`).
+1. **Corrimiento condicional del hijo sexual** (§0.1, corregido 2026-08-25): con
+   padres asimétricos en `dna(0)` (corrección del cero inicial en un solo lado), el
+   hijo puede perder el primer token real del tramo inicial ganador — probabilístico
+   por moneda, no universal. Con padres alineados no hay corrimiento.
 2. **Loterías vegetales asimétricas** (1/11 asexual vs 1/10 sexual, §3.2).
 3. **Pérdida de tramos en el crossover**: un tramo no emparejado presente en un solo
    lado se descarta con probabilidad 1/2 (`Robots.bas:610-626`) — el hijo puede ser más
