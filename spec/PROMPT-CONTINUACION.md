@@ -1,4 +1,4 @@
-# Prompt de continuación del ciclo de desarrollo (generado 2026-08-24, post-M5)
+# Prompt de continuación del ciclo de desarrollo (generado 2026-08-25, post-M6)
 
 > Copiá el bloque de abajo como primer mensaje de una sesión nueva de Claude Code, en
 > el directorio `C:\Users\jntac\Documents\prj\jape\Darwinbots2-master`.
@@ -31,24 +31,29 @@ El port vive en `port/` y ya está arrancado:
   entradas de `LoadSysVars`), esqueleto del tick (`master.hpp`/`robots.hpp`) y los
   subsistemas de memoria: sentidos, ties, shots, Reproduce con memoria genética,
   corpses. Casos §4 (M-01..M-12).
-- **M4 · Física y visión** cerrado (`487c406`): `Physics.bas` completo (`Repel3`,
-  `TieHooke`/`TieTorque` con sus `[PROBABLE BUG]`, `bordercolls` + `ReSpawn`,
-  arrastre/gravedad), buckets de `Quads.bas` (`buckets.hpp`), visión completa
-  (`vision.hpp`: 9 ojos apuntables, oclusión rota B2-1, ojo panorámico B2-2) y
-  swept-sphere de shots con `CompactShots` fiel. Casos §5 (F-01..F-15) y R-05..R-07.
+- **M4 · Física y visión** cerrado (`487c406`): `Physics.bas` completo, buckets de
+  `Quads.bas`, visión completa (9 ojos apuntables, oclusión rota B2-1, ojo
+  panorámico B2-2) y swept-sphere de shots con `CompactShots` fiel. Casos §5
+  (F-01..F-15) y R-05..R-07.
 - **M5 · Formatos ida-y-vuelta** cerrado (`2bc58f8`): `formats.hpp` con E/S sobre
-  búferes en memoria (el core WASM no toca disco; la fidelidad es la del formato de
-  bytes/texto). Registro binario de bot campo a campo (`FileContinue`/centinela
-  254×3, `sint` = Mod 32000 sin clamp, solo 50 vars, `mem()` crudo, escape Int→Long
-  de `LastMutDetail`, tag `String * 50`), bot de texto completo (`SalvarobText` +
-  gen epigenético autodestructivo, `DetokenizeDNA` con `VOID`, `Hash` ByRef que
-  muta el acumulador — fiel al original), `getvals` en el cargador ('#hash resetea
-  generation) y `delgene` real (`GeneEnd`/`genepos`/`DeleteSpecificGene`). Casos §7
-  (FM-01..FM-07). Siguen como stubs registrados: `CompareShapes`/`lookoccurrShape`
-  (visión DE formas), `DoObstacleCollisions` (solo con `numObstacles > 0`) y las
-  capas B3b/B5/B6/B7; los formatos de nivel sim (`SaveSimulation`/`.dbo`/`.mrate`)
-  quedan para los milestones de mundo.
-- **Estado verificado**: 82 casos / 2018 aserciones en verde
+  búferes en memoria — registro binario de bot campo a campo, bot de texto completo
+  (gen epigenético autodestructivo, `Hash` ByRef), `getvals` y `delgene` real.
+  Casos §7 (FM-01..FM-07). Los formatos de nivel sim
+  (`SaveSimulation`/`.dbo`/`.mrate`) quedan para el milestone de mundo.
+- **M6 · Catálogo de bugs (§9)** cerrado (`fe740a8`, `e88a65f`, `0121bd4`): los
+  `[PROBABLE BUG]` como aserciones — **B-01..B-28 + B-30** en verde.
+  Transcripciones arrastradas: visión de formas completa
+  (`CompareShapes`/`lookoccurrShape`, B-12/13/14), matanza por presión de memoria
+  (`MemoryPressureKill`, B-02), alimentación de shots
+  (`releasenrg`/`takenrg`/`releasebod`/`defacate` — **B3a cerrada**; B-18/B-24),
+  `MakeStuff` real (venom 1:1 / poison 4:1, B-26), **capa de virus B3b completa**
+  (`MakeVirus`/`copygene`/`addgene`, B-19/20/21) y `bodyfix` configurable (B-25).
+  Fidelidad: `nbody` de `Reproduce` en aritmética Single estricta (B-30; errata de
+  spec corregida — los empates bancarios reales son 525→262 y 475→238).
+  Contadores de stub cerrados y asertados a 0: `shapes_vision_stub`,
+  `shot_feed_stub`, `makevirus_stub`. **Decisión registrada**: B-29/B-31..B-35
+  quedaron para el milestone de mutaciones (B6); B-36/B-37 para el de mundo (B7).
+- **Estado verificado**: 111 casos / 2484 aserciones en verde
   (`port/build/dbtests.exe`).
 - **Toolchain**: g++ 14 (MSYS2 ucrt64) + CMake + Ninja, binario de tests estático.
   Pendiente: instalar clang + emsdk y verificar que la suite da verde compilada a
@@ -62,12 +67,10 @@ El port vive en `port/` y ya está arrancado:
    los flags `=0` del `.vbp` son casillas sin marcar): invalida cualquier intuición de
    "wrap silencioso".
 2. `port/README.md` — build, reglas del port, pendientes.
-3. `spec/70-CASOS-DORADOS.md §9` — la tabla completa del catálogo de `[PROBABLE
-   BUG]` (el milestone que sigue) y las definiciones B-01..B-37; **§0** para las
-   convenciones del harness.
-4. `spec/32-VISION.md §3` (visión de formas: `CompareShapes`/`lookoccurrShape`) y
-   los documentos que cada caso B-* cite en su definición (`10-CICLO.md §11.1` para
-   Shock, `33-SHOTS.md`, `34-TIES.md`, etc.).
+3. `spec/40-MUTACIONES.md` (B6b: los 11 operadores, agenda, suelos anti-freeze) y
+   `spec/36-REPRO.md` (B6a: `SexReproduce`/crossover, loterías vegetales).
+4. `spec/70-CASOS-DORADOS.md` — **§9** para B-29 y B-31..B-35 (definiciones y la
+   tabla de mapeo), **§6** para R-09..R-11; **§0** para las convenciones del harness.
 
 **Reglas duras**
 
@@ -82,7 +85,8 @@ El port vive en `port/` y ya está arrancado:
    (`10-CICLO.md §14`).
 4. Salvaguardas numéricas (`PLAN.md`): toda conversión float→int marcada por la
    spec pasa por `vb_round64`/`vb_clng`/`vb_cint` (bancario centralizado); `Single` =
-   `float` estricto con casts explícitos en las fórmulas sensibles; nada de
+   `float` estricto con casts explícitos en las fórmulas sensibles (lección de M6:
+   `nbody` en double redondeaba distinto que el Single del original); nada de
    `-ffast-math`; sin FMA implícita (`-ffp-contract=off`); `-fwrapv` solo como red.
 5. Al cerrar el milestone: actualizar `spec/PROGRESO.md` (tabla del port + sección
    "Siguiente" + registro con fecha) y commitear. Regenerar
@@ -98,31 +102,33 @@ port/build/dbtests.exe
 
 (El exe linkea estático; no necesita las DLL de MSYS2 en el PATH.)
 
-**Tu tarea: M6 · El catálogo de bugs como aserciones (§9, B-*)**
+**Tu tarea: M7 · Mutaciones y reproducción sexual (B6)**
 
 Según `spec/PROGRESO.md` ("Siguiente"):
 
-1. Leé la tabla de mapeo de `70-CASOS-DORADOS.md §9` completa antes de escribir
-   nada: muchos bugs ya quedaron asertados en milestones anteriores (V-01, N-16..19,
-   M-04..M-09, F-11..F-14, R-05/R-06, FM-01/FM-02/FM-05); el milestone son los casos
-   **B-01..B-37** definidos en §9.
-2. Primer bloque natural: la **visión de formas** — `CompareShapes`/
-   `lookoccurrShape` (`32-VISION.md §3`), hoy stub registrado
-   (`SimDiag.shapes_vision_stub`), que habilita **B-12** (EYEF dentro de forma),
-   **B-13** (`lastopppos` solo frontal) y **B-14** (fórmula de anchura distinta para
-   formas). Al reemplazar el stub, asertá su contador a 0 como se hizo en M4.
-3. Después, los B-* alcanzables con las capas ya portadas: Shock (**B-01**,
-   `10-CICLO.md §11.1`), `KillRobot(0)` (**B-02**), ties (**B-03**, **B-22**,
-   **B-23**, **B-27**), muertes/reproducción (**B-04**), sentidos (**B-05**,
-   **B-06**, **B-07**, **B-08**), `ReSpawn` toroidal (**B-09**), corpses que
-   colisionan (**B-10**), bucket-clamp (**B-11**), shots (**B-15**..**B-18**,
-   **B-24**).
-4. Los B-* que exigen capas aún no transcritas (B3b virus: B-19..B-21; B5 energía:
-   B-25, B-26, B-28; B6 mutaciones/crossover: B-29..B-35; B7 mundo: B-36, B-37)
-   pueden (a) arrastrar la transcripción de esa capa si es acotada, o (b) quedar
-   explícitamente para el milestone de su capa — decidilo caso a caso al leer §9 y
-   dejalo registrado en `PROGRESO.md`. Los R-08..R-12 siguen siendo de los
-   milestones de mundo/reproducción.
+1. Leé `40-MUTACIONES.md` completo antes de escribir nada: los 11 operadores de
+   `NeoMutations.bas`, la agenda geométrica vs Bernoulli/token, los suelos
+   anti-freeze que **reescriben las tasas heredables** (`mutarray`), y el detalle
+   Minor = MajorDeletion. `mutate` es hoy stub registrado (`mutate_stub`): al
+   reemplazarlo, asertá el contador a 0 como se hizo en M4/M6.
+2. Primer bloque natural: los **operadores de mutación** — habilita **B-31** (suelos
+   anti-freeze reescriben `mutarray`), **B-32** (Minor = MajorDeletion salvo
+   defaults), **B-33** (`Insertion` cuenta 2 mutaciones/token), **B-34**
+   (`Amplification` nunca centra en el token 1) y **B-35** (mutaciones en vida no
+   refrescan `makeoccurrlist`; ojo: `mem(336)/mem(339)` sí se re-publican).
+3. Después, la **reproducción sexual** (`36-REPRO.md`): `SexReproduce`
+   (`Robots.bas:2417-2848`), `simplematch`/`crossover` (`Robots.bas:562-694`) —
+   hoy stub `sexrepro_stub` (asertar a 0 al reemplazar). Habilita **B-29**
+   (el crossover pierde tramos; RNG-parametrizado con la secuencia de monedas
+   fijada), **R-11** (el hijo sexual pierde su primer token — `Outdna` desde el
+   índice 0) y **R-10** (loterías vegetales asimétricas 1/11 vs 1/10; la mitad
+   asexual ya está portada en `Reproduce`). **R-09** (moneda del doble encolado
+   repro/mrepro) ya tiene la rama portada en `ReproduceAndKill` — el caso fija las
+   extracciones exactas de RNG con replays.
+4. Los casos B-* y R-* que exigen mundo (B-36, B-37, R-08, R-12 — teleporters,
+   repoblación, sol, orden global de RNG) son del milestone M8; si algo de B6
+   resulta depender de ellos, decidilo caso a caso y dejalo registrado en
+   `PROGRESO.md` como se hizo en M6.
 5. Verde total → commit(s) → actualizar `PROGRESO.md`.
 
 ---
