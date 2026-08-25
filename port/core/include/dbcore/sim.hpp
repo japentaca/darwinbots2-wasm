@@ -118,6 +118,7 @@ struct Specie {
   std::string Name;
   vb_long population = 0;
   bool Native = true;
+  vb_integer SubSpeciesCounter = 0;  // NeoMutations.bas:108-116
 };
 
 // Obstacles.bas — el subconjunto de Type Obstacle que la física/visión toca
@@ -156,9 +157,9 @@ struct SimDiag {
   int shot_collision_simplified = 0;  // M4: NewShotCollision swept-sphere
   int bot_collision_simplified = 0;   // M4: BucketsCollision/Repel3 reales
 
-  int shot_feed_stub = 0;        // B3b: addgene (releasenrg/takenrg/
-                                 //   releasebod reales desde M6)
-  int makevirus_stub = 0;        // B3b: MakeVirus/copygene
+  int shot_feed_stub = 0;        // M6: releasenrg/takenrg/releasebod y
+                                 //   addgene reales; asertado a 0
+  int makevirus_stub = 0;        // M6: MakeVirus/copygene reales; asertado a 0
   int mutate_stub = 0;           // B6b: mutate con mutaciones activas
   int makestuff_stub = 0;        // B5: storevenom/storepoison/makeshell/makeslime
   int handlewaste_stub = 0;      // B5/B7: feedveg2/altzheimer/defacate
@@ -327,7 +328,38 @@ inline std::size_t SpeciesFromBot(Sim& sim, int n) {
 }
 
 inline void AddSpecie(Sim& sim, int n) {
-  sim.Specie.push_back({sim.rob[n].FName, 1, false});
+  sim.Specie.push_back({sim.rob[n].FName, 1, false, 0});
+}
+
+// NeoMutations.bas:108-116 — NewSubSpecies: contador por especie con wrap
+// manual +32000 -> -32000. Especie no registrada: el original indexaria
+// Specie(SpeciesNum) (el ultimo slot); aqui 0 con el mismo patron defensivo
+// de WriteSenses.
+inline vb_integer NewSubSpecies(Sim& sim, int n) {
+  const std::size_t i = SpeciesFromBot(sim, n);
+  if (i >= sim.Specie.size()) return 0;
+  vb_long c = static_cast<vb_long>(sim.Specie[i].SubSpeciesCounter) + 1;
+  if (c > 32000) c = -32000;
+  sim.Specie[i].SubSpeciesCounter = static_cast<vb_integer>(c);
+  return sim.Specie[i].SubSpeciesCounter;
+}
+
+// Str() de VB6: espacio inicial para no negativos (duplicado local de
+// formats_detail::vb_str para no invertir el orden de includes).
+inline std::string StrVB(vb_long v) {
+  return (v < 0) ? std::to_string(v) : " " + std::to_string(v);
+}
+
+// NeoMutations.bas:21-27 — logmutation: prepende con vbCrLf. El guard de
+// longitud divide por TotalRobotsDisplayed: con 0, el original lanzaba
+// error 11; aqui la division flotante da inf y el reset simplemente no
+// ocurre (decision de port, sitio inalcanzable con TotRunCycle > 0 normal).
+inline void logmutation(Sim& sim, int n, const std::string& strmut) {
+  if (sim.opts.TotRunCycle == 0) return;
+  Bot& b = sim.rob[n];
+  const double cap = 100000000.0 / static_cast<double>(sim.TotalRobotsDisplayed);
+  if (static_cast<double>(b.LastMutDetail.size()) > cap) b.LastMutDetail.clear();
+  b.LastMutDetail = strmut + "\r\n" + b.LastMutDetail;
 }
 
 }  // namespace db

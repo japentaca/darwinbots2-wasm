@@ -146,6 +146,26 @@ inline void NmDelete(std::vector<Block>& dna, vb_long beginning,
   dna.resize(DnaLen(dna) + 1);  // ReDim Preserve dna(DnaLen(dna))
 }
 
+// NeoMutations.bas:62-89 — MakeSpace: abre `Length` huecos DESPUÉS de
+// `beginning` (beginning no se mueve); False si no cabe (tope 32000) o los
+// límites son inválidos. Los huecos quedan en (0,0) — EraseUnit.
+inline bool MakeSpace(std::vector<Block>& dna, vb_long beginning,
+                      vb_long Length, vb_long DNALength = -1) {
+  if (DNALength < 0) DNALength = DnaLen(dna);
+  if (Length < 1 || beginning < 0 || beginning > DNALength - 1 ||
+      DNALength + Length > 32000)
+    return false;
+
+  dna.resize(static_cast<std::size_t>(DNALength + Length) + 1);
+  for (vb_long t = DNALength + 1; t <= DNALength + Length; ++t)
+    dna[t] = Block{};
+  for (vb_long t = DNALength; t >= beginning + 1; --t) {
+    dna[t + Length] = dna[t];
+    dna[t] = Block{};
+  }
+  return true;
+}
+
 // NeoMutations.bas:1062-1070 — DeleteSpecificGene. Si genepos devuelve 0,
 // Delete no-opea (beginning < 1), como el original.
 inline void DeleteSpecificGene(std::vector<Block>& dna, vb_long k) {

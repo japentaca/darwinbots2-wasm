@@ -358,3 +358,191 @@ TEST_CASE("B-28 MOVECOST negativo regala nrg con suelo -1000 [PROBABLE BUG] B5-3
   VoluntaryForces(w.sim, n);
   CHECK(b.nrg == 0.0f);
 }
+
+// ===========================================================================
+// Capa de virus B3b (transcrita en M6): B-19, B-20, B-21.
+// ===========================================================================
+
+namespace {
+
+// Alta con ADN (patrón de test_memory.cpp) para los casos de virus.
+int vspawn(Sim& sim, const std::string& dnatext, const std::string& fname,
+           float x, float y) {
+  const int n = posto(sim);
+  Bot& b = sim.rob[n];
+  b.exist = true;
+  b.FName = fname;
+  b.nrg = 20000.0f;
+  b.body = 1000.0f;
+  REQUIRE(LoadDNAText(dnatext, b, *sim.sysvars));
+  makeoccurrlist(sim, n);
+  b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
+  b.genenum = CountGenes(b.dna);
+  b.mem[addr::DnaLenSys] = b.DnaLen;
+  b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
+  b.pos = {x, y};
+  b.aim = 0.0f;
+  b.aimvector = {1.0f, 0.0f};
+  b.radius = FindRadius(sim, n);
+  b.BucketPos = {-2.0f, -2.0f};
+  UpdateBotBucket(sim, n);
+  return n;
+}
+
+}  // namespace
+
+// ---------------------------------------------------------------------------
+// B-19 · La slime penetrada amplifica power (Shots.bas:1183-1191) [ciclo]
+TEST_CASE("B-19 slime penetrada: queda negativa y AMPLIFICA antes del reset [PROBABLE BUG] B3b-2") {
+  ShotWorld w;
+  w.sim.opts.TotRunCycle = 5;
+  w.sim.TotalRobotsDisplayed = 1;
+
+  SUBCASE("power 10 >= umbral 5: penetra, slime final 0, infección ocurre") {
+    const int v = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
+    w.sim.Specie.push_back({"V.txt", 1, false, 0});
+    Bot& b = w.sim.rob[v];
+    b.Slime = 100.0f;
+    const vb_integer olddna = b.DnaLen;
+
+    Shot& s = w.sim.Shots[1];
+    s.exist = true;
+    s.shottype = -7;
+    s.nrg = 400.0f;
+    s.Range = 1.0f;
+    s.value = 1;  // power = 400/(1*40)*1 = 10
+    s.dna.assign(4, Block{0, 1});
+    s.DnaLen = 3;
+
+    addgene(w.sim, v, 1);
+
+    // slime = 100 - 10*20 = -100 -> power = 10 - (-100)*0.05 = 15 (mayor
+    // que el original; hoy sin reuso) -> slime normalizada a 0.
+    CHECK(b.Slime == 0.0f);
+    CHECK(b.DnaLen == olddna + 3);  // la infección SÍ ocurre
+    CHECK(b.Mutations == 1);
+    CHECK(b.LastMut == 1);
+    CHECK(b.SubSpecies == 1);
+    CHECK(b.LastMutDetail.find("Infected with virus of length  3") !=
+          std::string::npos);
+  }
+
+  SUBCASE("contra-caso: power 4 < umbral 5: absorbido, slime 20, sin infección") {
+    const int v = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
+    Bot& b = w.sim.rob[v];
+    b.Slime = 100.0f;
+    const vb_integer olddna = b.DnaLen;
+
+    Shot& s = w.sim.Shots[1];
+    s.exist = true;
+    s.shottype = -7;
+    s.nrg = 160.0f;
+    s.Range = 1.0f;
+    s.value = 1;  // power = 4
+    s.dna.assign(4, Block{0, 1});
+    s.DnaLen = 3;
+
+    addgene(w.sim, v, 1);
+
+    CHECK(b.Slime == doctest::Approx(20.0));  // 100 - 4*20
+    CHECK(b.DnaLen == olddna);
+    CHECK(b.Mutations == 0);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// B-20 · Potencia del virus proporcional al número de gen
+// (Shots.bas:1124,1183) [ciclo]
+TEST_CASE("B-20 el virus del gen 7 lleva 7x la potencia contra la slime [PROBABLE BUG] B3b-3") {
+  ShotWorld w;
+  w.sim.opts.TotRunCycle = 5;
+  w.sim.TotalRobotsDisplayed = 1;
+  const std::string genes7 =
+      "start 1 900 store stop start 1 900 store stop start 1 900 store stop "
+      "start 1 900 store stop start 1 900 store stop start 1 900 store stop "
+      "start 1 900 store stop";
+
+  const int m1 = vspawn(w.sim, genes7, "M.txt", 5000, 5000);
+  const int m2 = vspawn(w.sim, genes7, "M.txt", 6000, 6000);
+  REQUIRE(w.sim.rob[m1].genenum == 7);
+
+  // Bots idénticos fabrican virus del gen 1 y del gen 7: Shots().value = el
+  // número de gen (geometría del código).
+  REQUIRE(MakeVirus(w.sim, m1, 1));
+  REQUIRE(MakeVirus(w.sim, m2, 7));
+  const vb_long s1 = w.sim.rob[m1].virusshot;
+  const vb_long s2 = w.sim.rob[m2].virusshot;
+  CHECK(w.sim.Shots[s1].value == 1);
+  CHECK(w.sim.Shots[s2].value == 7);
+  // Con vbody = 0, nrg/Range = 40 => power = value exacto al golpear.
+
+  // Misma slime 100 (umbral de absorción 5): el gen-1 (power 1) es
+  // absorbido; el gen-7 (power 7) penetra e infecta.
+  const int v1 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
+  const int v2 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 11000, 10000);
+  w.sim.Specie.push_back({"V.txt", 2, false, 0});
+  w.sim.rob[v1].Slime = 100.0f;
+  w.sim.rob[v2].Slime = 100.0f;
+  const vb_integer dna1 = w.sim.rob[v1].DnaLen;
+  const vb_integer dna2 = w.sim.rob[v2].DnaLen;
+
+  addgene(w.sim, v1, s1);
+  CHECK(w.sim.rob[v1].Slime == doctest::Approx(80.0));  // absorbido
+  CHECK(w.sim.rob[v1].DnaLen == dna1);
+
+  addgene(w.sim, v2, s2);
+  CHECK(w.sim.rob[v2].Slime == 0.0f);  // penetrada (y amplificada, B-19)
+  CHECK(w.sim.rob[v2].DnaLen > dna2);  // infectado
+
+  CHECK(w.sim.diag.makevirus_stub == 0);  // la capa B3b ya es real
+  CHECK(w.sim.diag.shot_feed_stub == 0);
+}
+
+// ---------------------------------------------------------------------------
+// B-21 · mem(mkvirus) persistente refabrica (Robots.bas:1049-1112) [ciclo]
+TEST_CASE("B-21 un write de mkvirus: un virus incubado indefinidamente, un solo cobro [PROBABLE BUG] B3b-4") {
+  ShotWorld w;
+  w.sim.vm.costs.v[cost::DNACOPYCOST] = 1.0f;
+  w.sim.vm.costs.v[cost::COSTMULTIPLIER] = 1.0f;
+
+  const int n = vspawn(w.sim, "start 1 900 store stop start 2 901 store stop",
+                       "M.txt", 10000, 10000);
+  Bot& b = w.sim.rob[n];
+  REQUIRE(b.genenum == 2);
+  REQUIRE(b.chloroplasts == 0.0f);
+  const vb_long glen = genelength(w.sim, n, 2);
+
+  // Un solo write de mkvirus; nunca vshoot.
+  b.mem[addr::mkvirus] = 2;
+  BotDNAManipulation(w.sim, n);
+
+  // Fabricó: Vtimer = 2*genelength, cobro genelength*DNACOPYCOST una vez.
+  CHECK(b.virusshot == 1);
+  CHECK(w.sim.Shots[1].stored);
+  CHECK(w.sim.Shots[1].value == 2);
+  CHECK(b.Vtimer == 2 * glen);
+  CHECK(b.nrg == 20000.0f - static_cast<float>(glen));
+  CHECK(b.mem[addr::mkvirus] == 2);  // NO se consume hasta el disparo
+
+  // Vtimer baja hasta 1 y ESPERA; sin refabricación ni nuevos cobros.
+  for (int i = 0; i < 30; ++i) BotDNAManipulation(w.sim, n);
+  CHECK(b.Vtimer == 1);
+  CHECK(b.mem[addr::Vtimer] == 1);
+  CHECK(b.mem[addr::mkvirus] == 2);
+  CHECK(b.nrg == 20000.0f - static_cast<float>(glen));
+
+  // El disparo resetea mkvirus; una re-escritura refabrica (nuevo cobro).
+  b.mem[addr::VshootSys] = 1;
+  BotDNAManipulation(w.sim, n);
+  CHECK(b.mem[addr::mkvirus] == 0);
+  CHECK(b.virusshot == 0);
+  CHECK(b.Vtimer == 0);
+  CHECK(w.sim.Shots[1].exist);
+  CHECK(!w.sim.Shots[1].stored);  // volando
+
+  const float after_shot = b.nrg;
+  b.mem[addr::mkvirus] = 2;
+  BotDNAManipulation(w.sim, n);
+  CHECK(b.nrg == after_shot - static_cast<float>(glen));  // segundo cobro
+  CHECK(b.Vtimer == 2 * glen);
+}

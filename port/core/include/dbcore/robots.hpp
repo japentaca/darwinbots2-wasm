@@ -801,8 +801,14 @@ inline bool delgene(Sim& sim, int n, vb_long g) {
   return false;
 }
 
-// Robots.bas:1052-1112 — BotDNAManipulation (P3): virus timer, delgene y las
-// publicaciones de DnaLen/genes. MakeVirus real: B3b.
+// Robots.bas:1040-1047 — genelength: longitud del gen p del bot n.
+inline vb_long genelength(Sim& sim, int n, vb_integer p) {
+  const vb_long pos = genepos(sim.rob[n].dna, p);
+  return GeneEnd(sim.rob[n].dna, pos) - pos + 1;
+}
+
+// Robots.bas:1052-1112 — BotDNAManipulation (P3): virus timer, MakeVirus
+// (real desde M6, B-21), Vshoot, delgene y las publicaciones de DnaLen/genes.
 inline void BotDNAManipulation(Sim& sim, int n) {
   Bot& b = sim.rob[n];
 
@@ -811,11 +817,21 @@ inline void BotDNAManipulation(Sim& sim, int n) {
 
   if (b.mem[addr::mkvirus] > 0 && b.Vtimer == 0) {
     if (b.chloroplasts == 0.0f) {
-      // MakeVirus/copygene — B3b pendiente: el gate se registra y el intento
-      // falla como el original cuando no puede copiar el gen.
-      sim.diag.makevirus_stub += 1;
-      b.Vtimer = 0;
-      b.virusshot = 0;
+      // Fabricación real (M6, B-21): un solo cobro (gate Vtimer = 0) y
+      // Vtimer = 2 x longitud del gen; mem(mkvirus) NO se consume aquí.
+      if (MakeVirus(sim, n, b.mem[addr::mkvirus])) {
+        const vb_long length = genelength(sim, n, b.mem[addr::mkvirus]) * 2;
+        b.nrg -= static_cast<vb_single>(length) / 2.0f *
+                 sim.vm.costs.v[cost::DNACOPYCOST] *
+                 sim.vm.costs.v[cost::COSTMULTIPLIER];
+        if (length < 32000)
+          b.Vtimer = length;
+        else
+          b.Vtimer = 32000;
+      } else {
+        b.Vtimer = 0;
+        b.virusshot = 0;
+      }
     } else {
       b.chloroplasts = 0.0f;
       b.radius = FindRadius(sim, n);

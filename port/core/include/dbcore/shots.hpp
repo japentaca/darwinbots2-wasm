@@ -3,7 +3,8 @@
 // bloqueo por poison, venom -3, poison -5, esperma -8, waste -4), Vshoot,
 // robshoot (Robots.bas:1716-1864) y los efectos de alimentación
 // releasenrg/takenrg/releasebod (M6: cierran B3a; el Kills sin clamp de la
-// cola de releasenrg/releasebod es B-24). addgene sigue en B3b (stub).
+// cola de releasenrg/releasebod es B-24) y la capa de virus B3b
+// (MakeVirus/copygene/addgene — B-19/B-20/B-21).
 // NewShotCollision es el swept-sphere exacto de Shots.bas:960-1082.
 #pragma once
 
@@ -15,6 +16,7 @@ namespace db {
 inline constexpr int shotdecay = 40;            // Shots.bas:45
 inline constexpr int ShellEffectiveness = 20;   // :46
 inline constexpr int VenumEffectivenessVSShell = 25;  // :48
+inline constexpr vb_single SlimeEffectiveness = 1.0f / 20.0f;  // :46 (virus)
 
 // Shots.bas:271-291 — FirstSlot.
 inline vb_long FirstSlot(Sim& sim) {
@@ -28,6 +30,9 @@ inline vb_long FirstSlot(Sim& sim) {
   if (counter > sim.maxshotarray) return counter;
   return sim.shotpointer;
 }
+
+inline bool copygene(Sim& sim, vb_long n, vb_integer p);  // adelantada
+inline void addgene(Sim& sim, int n, vb_long p);          // adelantada
 
 // Shots.bas:90-202 — newshot. Consume 2 RNG (Random(-2,2) y Random(-20,20),
 // uno de ellos muerto: `ran` no se usa — 33-SHOTS.md). Normaliza aimshoot
@@ -109,11 +114,14 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
 
   vb_long result = a;
 
-  if (shottype == -7) {  // virus (MakeVirus): copygene — B3b pendiente
-    sim.diag.makevirus_stub += 1;
-    s.exist = false;
-    s.stored = false;
-    result = -1;
+  if (shottype == -7) {  // virus: se almacena con el gen copiado a bordo
+    s.genenum = s.value;
+    s.stored = true;
+    if (!copygene(sim, a, s.genenum)) {
+      s.exist = false;
+      s.stored = false;
+      result = -1;
+    }
   } else {
     s.stored = false;
   }
@@ -672,9 +680,7 @@ inline void updateshots(Sim& sim) {
           case -1: releasenrg(sim, h, t); break;
           case -2: takenrg(sim, h, t); break;
           case -6: releasebod(sim, h, t); break;
-          case -7:  // addgene — B3b (virus); stub registrado
-            sim.diag.shot_feed_stub += 1;
-            break;
+          case -7: addgene(sim, h, t); break;
           case -3: takeven(sim, h, t); break;
           case -4: takewaste(sim, h, t); break;
           case -5: takepoison(sim, h, t); break;
@@ -741,6 +747,88 @@ inline void updateshots(Sim& sim) {
     sim.shotpointer = sim.numshots > 0 ? sim.numshots : 1;
   }
   sim.ShotsThisCycle = sim.numshots;
+}
+
+// Shots.bas:1133-1171 — copygene: copia el gen p del TIRADOR del shot n al
+// ADN del shot (virus). False si p esta fuera de los genes del padre.
+inline bool copygene(Sim& sim, vb_long n, vb_integer p) {
+  Shot& s = sim.Shots[n];
+  const int parent = s.parent;
+
+  if (p > sim.rob[parent].genenum || p < 1) return false;
+
+  const vb_long GeneStart = genepos(sim.rob[parent].dna, p);
+  const vb_long GeneEnding = GeneEnd(sim.rob[parent].dna, GeneStart);
+  const vb_long genelen = GeneEnding - GeneStart + 1;
+  if (genelen < 1) return false;
+
+  s.dna.assign(static_cast<std::size_t>(genelen) + 1, Block{});
+  for (vb_long t = 0; t <= genelen - 1; ++t)
+    s.dna[t] = sim.rob[parent].dna[GeneStart + t];
+  s.DnaLen = static_cast<vb_integer>(genelen);
+  return true;
+}
+
+// Shots.bas:1124-1131 — MakeVirus: fabrica el shot -7 almacenado.
+inline bool MakeVirus(Sim& sim, int robn, vb_integer gene) {
+  sim.rob[robn].virusshot = newshot(sim, robn, -7,
+                                    static_cast<vb_single>(gene), 1.0f);
+  return sim.rob[robn].virusshot > 0;
+}
+
+// Shots.bas:1174-1230 — addgene: infeccion del bot n por el shot -7 p.
+// [PROBABLE BUG] B3b-2 (B-19): si el virus penetra, la slime queda NEGATIVA
+// antes de descontarse de power — el power resultante es MAYOR que el
+// original (hoy sin reuso: la infeccion procede igual). [PROBABLE BUG]
+// B3b-3 (B-20): power es proporcional a Shots().value = numero de gen.
+// Consume 1 RNG (Random(0, genenum)).
+inline void addgene(Sim& sim, int n, vb_long p) {
+  Bot& b = sim.rob[n];
+  Shot& s = sim.Shots[p];
+
+  if (b.Corpse || b.VirusImmune) return;
+
+  vb_single power = s.nrg / (s.Range * RobSize / 3.0f) * s.value;
+
+  if (power < b.Slime * SlimeEffectiveness) {
+    b.Slime = b.Slime - power / SlimeEffectiveness;  // absorbido
+    return;
+  } else {
+    b.Slime = b.Slime - power / SlimeEffectiveness;  // puede quedar < 0
+    power = power - b.Slime * SlimeEffectiveness;    // slime negativa AMPLIFICA
+    if (b.Slime < 0.5f) b.Slime = 0.0f;
+  }
+
+  const vb_integer Position =
+      static_cast<vb_integer>(Random(0, b.genenum, *sim.rndy));
+  vb_long Insert;
+  if (Position == 0) {
+    Insert = 0;
+  } else {
+    Insert = GeneEnd(b.dna, genepos(b.dna, Position));
+    if (Insert == b.DnaLen) Insert = b.DnaLen;  // literal del fuente (no-op)
+  }
+
+  const vb_long vlen = s.DnaLen;
+
+  if (MakeSpace(b.dna, Insert, vlen)) {
+    for (vb_long t = Insert; t <= Insert + vlen - 1; ++t)
+      b.dna[t + 1] = s.dna[t - Insert];
+  }
+
+  makeoccurrlist(sim, n);
+  b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
+  b.genenum = CountGenes(b.dna);
+  b.mem[addr::DnaLenSys] = b.DnaLen;
+  b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
+
+  b.SubSpecies = NewSubSpecies(sim, n);
+  logmutation(sim, n,
+              "Infected with virus of length " + StrVB(vlen) +
+                  " during cycle " + StrVB(sim.opts.TotRunCycle) + " at pos " +
+                  StrVB(Insert));
+  b.Mutations += 1;
+  b.LastMut += 1;
 }
 
 // Shots.bas:1084-1122 — Vshoot: normaliza mem(338) EN LA CELDA (M-11, con la
