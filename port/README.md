@@ -54,7 +54,23 @@ Emscripten; presentación web separada.
   `SaveOrganism`/`LoadOrganism` quedan para milestones posteriores (ningún
   caso dorado §7 los exige).
 
-Estado verificado: 82 casos / 2018 aserciones en verde.
+- **Milestone 6 (catálogo de bugs §9)**: los `[PROBABLE BUG]` como
+  aserciones — B-01..B-28 + B-30 (B-29/B-31..B-35 quedan para el milestone
+  de mutaciones; B-36/B-37 para el de mundo). Transcripciones arrastradas:
+  visión de formas completa (`CompareShapes`/`SegmentSegmentIntersect`/
+  `lookoccurrShape` en `vision.hpp`/`senses.hpp`), matanza por presión de
+  memoria (`MemoryPressureKill` en `master.hpp`), alimentación de shots
+  (`releasenrg`/`takenrg`/`releasebod`/`defacate` — cierra B3a),
+  `MakeStuff` real (`storevenom`/`storepoison`/`makeshell`/`makeslime`),
+  capa de virus B3b completa (`MakeVirus`/`copygene`/`addgene` +
+  `MakeSpace`/`NewSubSpecies`/`logmutation`) y `bodyfix` configurable en
+  SimOpts. Fidelidad: `nbody` de `Reproduce` en aritmética Single estricta
+  (B-30). Contadores de stub cerrados y asertados a 0:
+  `shapes_vision_stub`, `shot_feed_stub`, `makevirus_stub`. Quedan como
+  stubs registrados: `mutate`/`SexReproduce` (B6), `feedveg2`/`altzheimer`
+  (B5/B7), `sharechloroplasts` (B6), obstacles y mundo (B7).
+
+Estado verificado: 111 casos / 2484 aserciones en verde.
 
 ## Build (nativo)
 

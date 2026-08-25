@@ -52,14 +52,25 @@ reinicios de contexto.
 
 | M5 · Formatos ida-y-vuelta | ✅ cerrado | Casos §7 (FM-01..FM-07) en verde. `formats.hpp`: E/S sobre búferes en memoria (decisión de M5: el core WASM no toca disco; la fidelidad es la del formato de bytes/texto). Bot de texto completo (`SalvarobText` + gen epigenético autodestructivo, `DetokenizeDNA` literal con comentarios de gen/`VOID`, `Hash` ByRef que muta el acumulador del llamador — fiel al original, clave para que el hash cuadre en la ida-y-vuelta —, `SaveRobHeader` con cap 2e9) y registro binario de bot campo a campo (`FileContinue`/centinela 254×3, `sint` Mod 32000 sin clamp B8-2, solo 50 vars B8-5, `mem()` crudo con −32768, campos muertos de ties, escape Int→Long de `LastMutDetail`, relleno de ancestros 501×3, tag `String * 50`, guardias anti-corrupción y clamps del cargador). El cargador de texto ganó `getvals` ('#generation/'#mutations/'#tag/'#hash con reset anti-manipulación) y `delgene` es real (`GeneEnd`/`genepos`/`DeleteSpecificGene`/`NmDelete` transcritos; P3 ejecuta y borra el gen epigenético — FM-03 verifica el ciclo completo guardar→cargar→autodestruir). `GiveAbsNum` ganó su guardia `AbsNum = 0` del fuente (FM-05: los bots cargados conservan AbsNum). Errata de spec corregida contra el fuente: FM-07 (la suma 1.5e9+1e9 desbordaba el `Long` del original antes del cap; caso ajustado a 2.1e9 + decisión de port para el desborde). Decisión B8-1 documentada (SaveSimulation recursivo → sin reintento en el port). `SaveSimulation`/`LoadSimulation`, `.dbo` y `.mrate` quedan para los milestones de mundo (ningún caso §7 los exige). Total acumulado: 82 casos, 2018 aserciones. |
 
+| M6 · Catálogo de bugs (§9) | ✅ cerrado | Casos B-01..B-28 + B-30 en verde (quedan B-29/B-31..B-35 para B6 y B-36/B-37 para B7, decisión abajo). Transcripciones que el catálogo arrastró: visión de formas completa (`CompareShapes`/`SegmentSegmentIntersect`/`lookoccurrShape`, B-12/B-13/B-14, stub asertado a 0), matanza por presión de memoria (`MemoryPressureKill`, B-02), alimentación de shots (`releasenrg`/`takenrg`/`releasebod` + `defacate` — cierra B3a; B-18/B-24), `MakeStuff` real (`storevenom`/`storepoison`/`makeshell`/`makeslime`, B-26; `mem(825)` con `Int`, no `CInt`), capa de virus B3b completa (`MakeVirus`/`copygene`/`addgene` + `MakeSpace`/`NewSubSpecies`/`logmutation`, B-19/B-20/B-21) y `bodyfix` configurable (B-25). Fidelidad corregida en el port: `nbody` de `Reproduce` en aritmética Single estricta (B-30). Errata de spec corregida contra el fuente: B-30 (501/100·50 = 250.500015f, sin empate — los empates reales son 525→262 y 475→238). Contadores cerrados y asertados a 0: `shapes_vision_stub`, `shot_feed_stub`, `makevirus_stub`. Total acumulado: 111 casos, 2484 aserciones. |
+
+**Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
+caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
+(agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
+de mutaciones (B6) junto con `SexReproduce`/crossover (R-09..R-12). B-36 y
+B-37 exigen teleporters y repoblación (`Teleport.bas`/`Vegs.bas`) — van con
+el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
+
 ## Siguiente
 
-**El catálogo de bugs como aserciones (§9, B-*)** — con B2-3/B2-4 (EYEF
-dentro de forma, `lastopppos` solo frontal) llegará
-`CompareShapes`/`lookoccurrShape`, hoy stub registrado. Los R-08..R-12
-(repoblación, crossover, orden global de RNG) son de los milestones de
-mundo/reproducción, igual que los formatos de nivel sim
-(`SaveSimulation`/`LoadSimulation`, `.dbo`).
+**M7 · Mutaciones y reproducción sexual (B6)** — los 11 operadores de
+`NeoMutations.bas` (con los suelos anti-freeze que reescriben `mutarray`),
+`SexReproduce`/crossover de `Robots.bas:2417-2848`, y sus casos: B-29,
+B-31..B-35 (diferidos de M6) más R-09..R-12. El stub `mutate_stub`/
+`sexrepro_stub` se reemplaza y aserta a 0 como en M4/M6. Después, **M8 ·
+Mundo (B7)**: repoblación/sol/teleporters (B-36, B-37, R-08), obstacles
+(`DoObstacleCollisions`), y los formatos de nivel sim
+(`SaveSimulation`/`LoadSimulation`, `.dbo`, `.mrate`).
 
 ## Pendiente
 
@@ -118,6 +129,18 @@ mundo/reproducción, igual que los formatos de nivel sim
   `CompactShots` de M3 no re-apuntaba `virusshot` (corregido con la
   transcripción literal, R-06 lo cubre). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-25** — M6 cerrado: el catálogo de `[PROBABLE BUG]` como
+  aserciones (B-01..B-28 + B-30; 111 casos / 2484 aserciones acumuladas).
+  Bloques: visión de formas (B-12/13/14), bugs de ciclo/ties/shots/física
+  sobre capas ya portadas (B-01..B-11, B-15..B-18, B-22..B-28) y capa de
+  virus B3b completa (B-19/20/21). B3a quedó cerrada (alimentación de
+  shots) y `MakeStuff` es real. Hallazgo de fidelidad: `nbody` de
+  `Reproduce` debe calcularse en Single estricto (el double del port
+  redondeaba 250.4999 donde el original produce 250.500015f); errata de
+  B-30 corregida en la spec (los empates bancarios reales son 525→262 y
+  475→238). B-29/B-31..B-35 diferidos a B6 y B-36/B-37 a B7 (registrado
+  en la tabla). Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/`
+  vacío).
 - **2026-08-24** — M5 cerrado: formatos ida-y-vuelta (FM-01..FM-07; 82
   casos / 2018 aserciones acumuladas). `formats.hpp` con la E/S sobre
   búferes en memoria, el registro binario de bot campo a campo y el bot de
