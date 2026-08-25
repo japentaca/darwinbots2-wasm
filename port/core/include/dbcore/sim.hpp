@@ -113,12 +113,13 @@ struct Specie {
 };
 
 // Obstacles.bas — el subconjunto de Type Obstacle que la física/visión toca
-// (AABB en pos/Width/Height). Con numObstacles = 0 (default del harness)
-// ninguna rutina de formas se ejecuta.
+// (AABB en pos/Width/Height; vel para los refvars de lookoccurrShape). Con
+// numObstacles = 0 (default del harness) ninguna rutina de formas se ejecuta.
 struct Obstacle {
   bool exist = false;
   Vector pos{};
   vb_single Width = 0, Height = 0;
+  Vector vel{};
 };
 
 // Quads.bas:12-18 — Type BucketType: array empaquetado terminado en -1
@@ -154,8 +155,8 @@ struct SimDiag {
   int handlewaste_stub = 0;      // B5/B7: feedveg2/altzheimer/defacate
   int sexrepro_stub = 0;         // B6a: SexReproduce
   int world_stub = 0;            // B7: feedvegs/repoblación/teleporters
-  int shapes_vision_stub = 0;    // B2 §3: CompareShapes (visión DE formas;
-                                 //   solo con shapesAreVisable)
+  int shapes_vision_stub = 0;    // M6: CompareShapes/lookoccurrShape reales
+                                 //   (B-12/B-13/B-14); asertado a 0
   int obstacle_collision_stub = 0;  // B7: DoObstacleCollisions /
                                     //   DoShotObstacleCollisions (numObstacles>0)
   int err9_ties_slot11 = 0;      // sitio de error 9: TieTorque con j > 10

@@ -180,6 +180,75 @@ inline void lookoccurr(Sim& sim, int n, int o) {
   vn.mem[477] = vo.Fixed ? 1 : 0;  // reffixed
 }
 
+// Senses.bas:395-458 — lookoccurrShape: refvars cuando el ojo con foco ve
+// una forma (lastopptype = 1). Casi todo se pone a 0 (las formas no tienen
+// firma); la posición sale de lastopppos — capturado SOLO por el ojo frontal
+// (B-13) — y las velocidades relativas de Obstacles(o).vel.
+// [PROBABLE BUG] A3-1 otra vez: refvelsx se niega a sí misma.
+inline void lookoccurrShape(Sim& sim, int n, int o) {
+  if (sim.rob[n].Corpse) return;
+  Bot& vn = sim.rob[n];
+  const Obstacle& ob = sim.Obstacles[o];
+
+  vn.mem[addr::REFTYPE] = 1;
+
+  for (int t = 1; t <= 8; ++t) vn.mem[addr::occurrstart + t] = 0;
+  vn.mem[addr::occurrstart + 9] = 0;   // refnrg
+  vn.mem[addr::occurrstart + 10] = 0;  // refage
+
+  for (int t = 0; t < 10; ++t) vn.mem[addr::in1 + t] = 0;
+
+  vn.mem[711] = 0;  // refaim
+  vn.mem[712] = 0;  // reftie
+  vn.mem[addr::refshell] = 0;
+  vn.mem[addr::refbody] = 0;
+
+  // CInt((lastopppos / Divisor) Mod 32000): el Mod de VB6 redondea el
+  // operando Single a Long (bancario) antes de la división entera.
+  vn.mem[addr::refxpos] = static_cast<vb_integer>(
+      vb_round64(static_cast<double>(vn.lastopppos.x) /
+                 static_cast<double>(sim.opts.xDivisor)) %
+      32000);
+  vn.mem[addr::refypos] = static_cast<vb_integer>(
+      vb_round64(static_cast<double>(vn.lastopppos.y) /
+                 static_cast<double>(sim.opts.yDivisor)) %
+      32000);
+
+  // Velocidades relativas en el marco del vidente (sin clamp previo, a
+  // diferencia de lookoccurr: las velocidades de forma son pequeñas).
+  vn.mem[addr::refvelup] = vb_cint(
+      static_cast<double>(
+          ob.vel.x * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
+          ob.vel.y * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim))) *
+              -1.0f) -
+      static_cast<double>(vn.mem[addr::velup]));
+  vn.mem[addr::refveldn] = static_cast<vb_integer>(-vn.mem[addr::refvelup]);
+  vn.mem[addr::refveldx] = vb_cint(
+      static_cast<double>(
+          ob.vel.y * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
+          ob.vel.x * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim)))) -
+      static_cast<double>(vn.mem[addr::veldx]));
+  vn.mem[addr::refvelsx] =
+      static_cast<vb_integer>(-vn.mem[addr::refvelsx]);  // [PROBABLE BUG] A3-1
+
+  vb_single temp = static_cast<vb_single>(std::sqrt(
+      static_cast<double>(
+          static_cast<vb_long>(std::pow(
+              static_cast<double>(vn.mem[addr::refvelup]), 2.0))) +
+      static_cast<double>(static_cast<vb_long>(std::pow(
+          static_cast<double>(vn.mem[addr::refveldx]), 2.0)))));
+  if (temp > 32000.0f) temp = 32000.0f;
+  vn.mem[addr::refvelscalar] = vb_cint(temp);
+
+  vn.mem[713] = 0;  // refpoison
+  vn.mem[714] = 0;  // refvenom
+  vn.mem[715] = 0;  // refkills
+  vn.mem[addr::refmulti] = 0;
+  vn.mem[473] = 0;  // readmem
+
+  vn.mem[477] = (ob.vel.x == 0.0f && ob.vel.y == 0.0f) ? 1 : 0;  // reffixed
+}
+
 // Senses.bas:462-517 — makeoccurrlist: la firma occurr(1..12) desde el ADN,
 // y las publicaciones 721-731 (myup..myvenom).
 inline void makeoccurrlist(Sim& sim, int n) {
@@ -228,8 +297,8 @@ inline void WriteSenses(Sim& sim, int n) {
   if (!b.CantSee && !b.Corpse) {
     if (BucketsProximity(sim, n) > 0) {
       if (b.lastopptype == 0) lookoccurr(sim, n, static_cast<int>(b.lastopp));
-      // lastopptype == 1 (formas): lookoccurrShape — llega con CompareShapes
-      // (catálogo §9, B2-3/B2-4); inalcanzable con el stub de CompareShapes.
+      if (b.lastopptype == 1)
+        lookoccurrShape(sim, n, static_cast<int>(b.lastopp));
     }
   }
 

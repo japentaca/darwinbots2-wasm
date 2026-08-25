@@ -1,9 +1,9 @@
 // dbcore/vision.hpp — Quads.bas (porción de visión): los 9 ojos apuntables y
 // ensanchables (CompareRobots3), el barrido (BucketsProximity) y la oclusión
 // por formas rota dos veces (ShapeBlocksBot, [PROBABLE BUG] B2-1).
-// Contratos: 32-VISION.md; casos F-08..F-11, F-14.
-// CompareShapes (visión DE formas, Quads.bas:597-943) queda como stub
-// registrado: solo corre con shapesAreVisable (default false del harness).
+// Contratos: 32-VISION.md; casos F-08..F-11, F-14, B-12..B-14.
+// CompareShapes (visión DE formas, Quads.bas:597-943) transcrita en M6 con
+// SegmentSegmentIntersect (la versión correcta, Quads.bas:947-963).
 #pragma once
 
 #include "buckets.hpp"
@@ -254,12 +254,252 @@ inline void CompareRobots3(Sim& sim, int n1, int n2) {
   }
 }
 
-// Quads.bas:597-943 — CompareShapes: visión DE formas. Stub registrado
-// (decisión de port M4): solo corre con shapesAreVisable, default false del
-// harness; su transcripción llega con los casos B2-3/B2-4 del catálogo §9.
+// Quads.bas:947-963 — SegmentSegmentIntersect: la versión CORRECTA (s y t
+// ambos en [0,1]; compárese con ShapeBlocksBot). Devuelve s o 0.
+inline vb_single SegmentSegmentIntersect(const Vector& P0, const Vector& D0,
+                                         const Vector& P1, const Vector& D1) {
+  const vb_single dotPerp = D0.x * D1.y - D1.x * D0.y;
+  if (dotPerp != 0.0f) {
+    const Vector Delta = VectorSub(P1, P0);
+    const vb_single s =
+        Dot(Delta, VectorSet(D1.y, -D1.x)) / dotPerp;
+    const vb_single t =
+        Dot(Delta, VectorSet(D0.y, -D0.x)) / dotPerp;
+    if (s >= 0.0f && s <= 1.0f && t >= 0.0f && t <= 1.0f) return s;
+  }
+  return 0.0f;
+}
+
+// Quads.bas:597-943 — CompareShapes: visión DE formas (solo con
+// shapesAreVisable). Transcripción literal, con sus [PROBABLE BUG]:
+//  - B2-3 (B-12): "bot dentro de la forma" sale con GoTo getout sin tocar
+//    EYEF (los 9 ojos a 32000, lastopp/lastopptype sí).
+//  - B2-4 (B-13): lastopppos solo se captura cuando a = 4 (ojo frontal); con
+//    focuseye != 0 los refvars de posición salen de (0,0) u obsoletos.
+//  - B2-5 (B-14): halfeyewidth = (eyeXwidth + 35)/400 normalizado a [0, PI]
+//    con PI enteros — fórmula DISTINTA a la de bots (Mod 1256 + PI/36).
+//  - distleft/distright/dist NO se resetean entre los hasta 2 lados que un
+//    bot en esquina evalúa (solo por ojo) — fiel al fuente.
+// robfocus/eyeDistance (UI de depuración) quedan fuera del core.
 inline void CompareShapes(Sim& sim, int n, int /*field*/) {
-  (void)n;
-  sim.diag.shapes_vision_stub += 1;
+  Bot& b = sim.rob[n];
+
+  // Local del fuente, UNO por llamada: arranca en (0,0) y persiste entre
+  // formas y ojos; solo el bucle con a = 4 lo escribe (B-13).
+  Vector lastopppos{};
+
+  const vb_single sightdist =
+      EyeSightDistance(sim, NarrowestEye(sim, n), n) + b.radius;
+
+  for (int o = 1; o <= sim.numObstacles; ++o) {
+    if (!sim.Obstacles[o].exist) continue;
+    const Obstacle& ob = sim.Obstacles[o];
+
+    // Weed-out barato: la forma entera fuera del alcance del ojo más ancho.
+    if (ob.pos.x > b.pos.x + sightdist ||
+        ob.pos.x + ob.Width < b.pos.x - sightdist ||
+        ob.pos.y > b.pos.y + sightdist ||
+        ob.pos.y + ob.Height < b.pos.y - sightdist) {
+      // demasiado lejos; siguiente forma
+    } else if (ob.pos.x < b.pos.x && ob.pos.x + ob.Width > b.pos.x &&
+               ob.pos.y < b.pos.y && ob.pos.y + ob.Height > b.pos.y) {
+      // ¡Bot dentro de la forma! GoTo getout: EYEF queda rancio (B-12).
+      for (int i = 0; i <= 8; ++i) b.mem[addr::EyeStart + 1 + i] = 32000;
+      b.lastopp = o;
+      b.lastopptype = 1;
+      return;  // getout
+    } else {
+      // Los cuatro lados (esta vez SIN transponer, a diferencia de
+      // ShapeBlocksBot) y las cuatro esquinas.
+      Vector D1[5];
+      Vector p[5];
+      D1[1] = VectorSet(ob.Width, 0);   // top
+      D1[2] = VectorSet(0, ob.Height);  // left side
+      D1[3] = D1[1];                    // bottom
+      D1[4] = D1[2];                    // right side
+
+      p[1] = ob.pos;                       // NW
+      p[2] = p[1];
+      p[2].y = p[1].y + ob.Height;         // SW
+      p[3] = VectorAdd(p[1], D1[1]);       // NE
+      p[4] = VectorAdd(p[2], D1[1]);       // SE
+
+      const Vector P0 = b.pos;
+
+      // Clasificación en 8 sectores (N/E/S/O y diagonales). nearestCorner
+      // del fuente es una asignación muerta (nunca se lee); no se replica.
+      int botLocation;
+      if (P0.x < p[1].x) {
+        botLocation = 4;  // West
+        if (P0.y < p[1].y)
+          botLocation = 8;  // NW
+        else if (P0.y > p[2].y)
+          botLocation = 7;  // SW
+      } else if (P0.x > p[3].x) {
+        botLocation = 2;  // East
+        if (P0.y < p[1].y)
+          botLocation = 5;  // NE
+        else if (P0.y > p[2].y)
+          botLocation = 6;  // SE
+      } else if (P0.y < p[1].y) {
+        botLocation = 1;  // North
+      } else {
+        botLocation = 3;  // South
+      }
+
+      for (int a = 0; a <= 8; ++a) {
+        const vb_single eyedist = EyeSightDistance(
+            sim, AbsoluteEyeWidth(b.mem[addr::EYE1WIDTH + a]), n);
+
+        // Weed-out por ojo.
+        if (ob.pos.x > b.pos.x + eyedist ||
+            ob.pos.x + ob.Width < b.pos.x - eyedist ||
+            ob.pos.y > b.pos.y + eyedist ||
+            ob.pos.y + ob.Height < b.pos.y - eyedist)
+          continue;
+
+        vb_single eyeaim = static_cast<vb_single>(
+            static_cast<double>(b.mem[addr::EYE1DIR + a] % 1256) / 200.0 -
+            (static_cast<double>(PI) / 18.0) * a +
+            (static_cast<double>(PI) / 18.0) * 4.0 +
+            static_cast<double>(b.aim));
+        while (eyeaim > 2 * PI) eyeaim = eyeaim - 2 * PI;
+        while (eyeaim < 0.0f) eyeaim = eyeaim + 2 * PI;
+
+        // B-14: fórmula de semiancho DISTINTA a la de bots.
+        vb_single halfeyewidth = static_cast<vb_single>(
+            (static_cast<double>(b.mem[addr::EYE1WIDTH + a]) + 35.0) / 400.0);
+        while (halfeyewidth > PI) halfeyewidth = halfeyewidth - PI;
+        while (halfeyewidth < 0.0f) halfeyewidth = halfeyewidth + PI;
+        vb_single eyeaimleft = eyeaim + halfeyewidth;
+        vb_single eyeaimright = eyeaim - halfeyewidth;
+
+        if (eyeaimright < 0.0f) eyeaimright = 2 * PI + eyeaimright;
+        if (eyeaimleft > 2 * PI) eyeaimleft = eyeaimleft - 2 * PI;
+        const bool eyespanszero = (eyeaimleft < eyeaimright);
+
+        // Bordes del ojo como vectores escalados al alcance (Y invertida:
+        // cuadrante 4).
+        Vector eyeaimleftvector = VectorSet(
+            static_cast<vb_single>(std::cos(static_cast<double>(eyeaimleft))),
+            static_cast<vb_single>(std::sin(static_cast<double>(eyeaimleft))));
+        {
+          Vector u = VectorUnit(eyeaimleftvector);
+          eyeaimleftvector = VectorScalar(u, eyedist);
+        }
+        Vector eyeaimrightvector = VectorSet(
+            static_cast<vb_single>(std::cos(static_cast<double>(eyeaimright))),
+            static_cast<vb_single>(std::sin(static_cast<double>(eyeaimright))));
+        {
+          Vector u = VectorUnit(eyeaimrightvector);
+          eyeaimrightvector = VectorScalar(u, eyedist);
+        }
+        eyeaimleftvector.y = -eyeaimleftvector.y;
+        eyeaimrightvector.y = -eyeaimrightvector.y;
+
+        vb_single distleft = 0.0f;
+        vb_single distright = 0.0f;
+        vb_single dist = 32000.0f;
+        vb_single lowestDist = 32000.0f;
+
+        // Punto más cercano de la forma (esquina o pie de perpendicular).
+        Vector closestPoint{};
+        switch (botLocation) {
+          case 1: closestPoint = P0; closestPoint.y = p[1].y; break;  // N
+          case 2: closestPoint = P0; closestPoint.x = p[4].x; break;  // E
+          case 3: closestPoint = P0; closestPoint.y = p[4].y; break;  // S
+          case 4: closestPoint = P0; closestPoint.x = p[1].x; break;  // W
+          case 5: closestPoint = p[3]; break;  // NE
+          case 6: closestPoint = p[4]; break;  // SE
+          case 7: closestPoint = p[2]; break;  // SW
+          case 8: closestPoint = p[1]; break;  // NW
+        }
+
+        Vector ab = VectorSub(closestPoint, P0);
+        ab.y = -ab.y;
+
+        vb_single theta;
+        if (ab.x == 0.0f) {
+          theta = (ab.y > 0.0f) ? PI / 2 : 3 * PI / 2;
+        } else {
+          theta = static_cast<vb_single>(std::atan(
+              static_cast<double>(ab.y) / static_cast<double>(ab.x)));
+          if (ab.x <= 0.0f) theta = theta + PI;
+        }
+        theta = angnorm(theta);
+
+        if ((eyeaimleft >= theta && theta >= eyeaimright && !eyespanszero) ||
+            (eyeaimleft >= theta && eyespanszero) ||
+            (eyeaimright <= theta && eyespanszero)) {
+          lowestDist = VectorMagnitude(ab);
+          if (a == 4) lastopppos = closestPoint;  // B-13: solo a = 4
+        }
+
+        if (lowestDist == 32000.0f) {
+          // El ojo no abarca el punto más cercano: intersectar los bordes
+          // del ojo con los (1 o 2) lados visibles de la forma.
+          auto check_side = [&](const Vector& pc, const Vector& dc) {
+            const vb_single s =
+                SegmentSegmentIntersect(P0, eyeaimleftvector, pc, dc);
+            if (s > 0.0f) distleft = s * VectorMagnitude(eyeaimleftvector);
+            const vb_single t =
+                SegmentSegmentIntersect(P0, eyeaimrightvector, pc, dc);
+            if (t > 0.0f) distright = t * VectorMagnitude(eyeaimrightvector);
+            if (distleft > 0.0f && distright > 0.0f)
+              dist = Min(distleft, distright);
+            else if (distleft > 0.0f)
+              dist = distleft;
+            else if (distright > 0.0f)
+              dist = distright;
+            if (dist > 0.0f && dist < lowestDist) {
+              lowestDist = dist;
+              if (a == 4) {
+                if (distleft < distright && distleft > 0.0f) {
+                  Vector u = VectorUnit(eyeaimleftvector);
+                  Vector sc = VectorScalar(u, dist);
+                  lastopppos = VectorAdd(b.pos, sc);
+                } else {
+                  Vector u = VectorUnit(eyeaimrightvector);
+                  Vector sc = VectorScalar(u, dist);
+                  lastopppos = VectorAdd(b.pos, sc);
+                }
+              }
+            }
+          };
+
+          if (botLocation == 1 || botLocation == 5 || botLocation == 8)
+            check_side(p[1], D1[1]);  // North: top
+          if (botLocation == 2 || botLocation == 5 || botLocation == 6)
+            check_side(p[3], D1[4]);  // East: right side
+          if (botLocation == 3 || botLocation == 6 || botLocation == 7)
+            check_side(p[2], D1[3]);  // South: bottom
+          if (botLocation == 4 || botLocation == 7 || botLocation == 8)
+            check_side(p[1], D1[2]);  // West: left side
+        }
+
+        if (lowestDist < 32000.0f) {
+          const vb_single percentdist =
+              (lowestDist - b.radius + 10.0f) / eyedist;
+          vb_single eyevalue;
+          if (percentdist <= 0.0f)
+            eyevalue = 32000.0f;
+          else
+            eyevalue = 1.0f / (percentdist * percentdist);
+          if (eyevalue > 32000.0f) eyevalue = 32000.0f;
+
+          if (b.mem[addr::EyeStart + 1 + a] < eyevalue) {
+            if (a == FocusEyeIndex(b.mem[addr::FOCUSEYE])) {
+              b.lastopp = o;
+              b.lastopptype = 1;
+              b.mem[addr::EYEF] = vb_cint(eyevalue);
+              b.lastopppos = lastopppos;
+            }
+            b.mem[addr::EyeStart + 1 + a] = vb_cint(eyevalue);
+          }
+        }
+      }
+    }
+  }
 }
 
 // Quads.bas:207-221 — CheckBotBucketForVision.
