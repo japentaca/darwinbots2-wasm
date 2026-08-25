@@ -17,12 +17,23 @@ Emscripten; presentación web separada.
   (`master.hpp`: pasos 10/12/14/15/16/17 de `10-CICLO.md §2`; `robots.hpp`:
   las 7 pasadas de `UpdateBots`) y los subsistemas que la memoria del bot
   necesita (`senses/ties/shots/physics.hpp`). Casos §4 (M-01..M-12).
-  Las pasadas de otros milestones (fuerzas de colisión/muelle, barrido real
-  de visión, alimentación por shots, virus, mutaciones, mundo) quedan como
-  stubs **registrados en `SimDiag`**; las colisiones bot-bot y de shots usan
-  una detección simplificada documentada como decisión de port hasta F-*.
+- **Milestone 4 (física y visión)**: `Physics.bas` completo (`Repel3` con su
+  respuesta de impulso, `TieHooke`/`TieTorque` con sus `[PROBABLE BUG]`,
+  `bordercolls` + `ReSpawn`/`ListCells`, arrastre/gravedad de pondmode), la
+  rejilla de buckets de `Quads.bas` (`buckets.hpp`), la visión completa
+  (`vision.hpp`: 9 ojos apuntables, oclusión por formas rota, ojo panorámico
+  por anchura negativa) y el swept-sphere de shots con compactación fiel
+  (re-apuntado de `virusshot`). Casos §5 (F-01..F-15) y R-05..R-07.
+  Los stubs de M3 reemplazados dejaron sus contadores de `SimDiag` a 0
+  (asertado en tests); quedan como stubs registrados: `CompareShapes`
+  (visión DE formas, solo con `shapesAreVisable`), `DoObstacleCollisions` y
+  `DoShotObstacleCollisions` (solo con `numObstacles > 0`), y las capas
+  B3b/B5/B6/B7 ya registradas.
+  Dos sitios de error con decisión de port: `TieTorque` con `j > 10`
+  (error 9, registra y no escribe) y `GravityForces` con `PhysMoving = 0`
+  (error 11, registra y no cobra).
 
-Estado verificado: 56 casos / 1714 aserciones en verde.
+Estado verificado: 75 casos / 1931 aserciones en verde.
 
 ## Build (nativo)
 

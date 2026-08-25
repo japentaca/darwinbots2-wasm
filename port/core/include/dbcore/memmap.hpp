@@ -103,6 +103,8 @@ inline constexpr int multi = 470;
 inline constexpr int readtiesys = 471;
 
 // Robots.bas:102-135
+inline constexpr int EYE1DIR = 521;    // Robots.bas:106 (eye1dir..eye9dir)
+inline constexpr int EYE1WIDTH = 531;  // Robots.bas:115 (eye1width..eye9width)
 inline constexpr int EyeStart = 500;
 inline constexpr int EyeEnd = 510;
 inline constexpr int EYEF = 510;

@@ -79,6 +79,14 @@ inline vb_single VectorMagnitudeSquare(Vector& v1) {
 // Common.bas:177-180.
 inline Vector VectorSet(vb_single x, vb_single y) { return {x, y}; }
 
+// Common.bas:182-190 — máximo/mínimo por componente (sin clamps laterales).
+inline Vector VectorMax(const Vector& x, const Vector& y) {
+  return {Max(x.x, y.x), Max(x.y, y.y)};
+}
+inline Vector VectorMin(const Vector& x, const Vector& y) {
+  return {Min(x.x, y.x), Min(x.y, y.y)};
+}
+
 // Common.bas:29-36. El original opera en Integer y con value >= 16384 el
 // doblado 16384*2 = 32768 desborda (error 6) — S-05, capa torneo. Decisión de
 // port (S-05): resultado saturado 16384.

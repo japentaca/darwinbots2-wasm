@@ -994,7 +994,7 @@ mitad sin masas (`:882-887`).
 | `angle(0,0, 0,10)` | 3·π/2 = 4.712389 | dx=0, dy=−10 < 0 |
 | `angle(0,0, 0,−10)` | π/2 | dx=0, dy=10 |
 | `angle(0,0, 10,10)` | Atn(−1) = −0.785398 (sin normalizar; `angnorm` ⇒ 5.497787) | dy = y1−y2 = −10 |
-| `angle(0,0, −10,10)` | −0.785398 + π = 2.356194 | dx < 0 ⇒ +π |
+| `angle(0,0, −10,10)` | Atn(+1) + π = 3.926991 | dy = y1−y2 = −10, dx = −10 ⇒ Atn(+1); dx < 0 ⇒ +π (corregido 2026-08-24 en M4: la tabla arrastraba el Atn(−1) de la fila anterior) |
 | `angnorm(−0.5)` | 5.783185 | +2π |
 | `angnorm(7.0)` | 0.716815 | −2π |
 | `AngDiff(0.5, 6.0)` | 0.783185 | r = −5.5 < −π ⇒ +2π |
@@ -1040,7 +1040,7 @@ mitad sin masas (`:882-887`).
 |---|---|---|
 | 350 | 1440 | 16 |
 | 110 | 1440 | 144 |
-| 0 | 1440 | 20736 |
+| 0 | 1440 | 32000 (corregido 2026-08-24 en M4: el test del fuente es `edgetoedgedist <= 0`, `Quads.bas:566` — el 0 exacto cae en la rama de solape, no en la fórmula) |
 | −5 (solape) | — | 32000 |
 
 Y el mapeo del ojo con foco: `a = Abs(mem(FOCUSEYE) + 4) Mod 9` (`:578`):
@@ -1049,12 +1049,14 @@ el `Abs` pliega los negativos lejanos de forma no monótona: −5 y −3 dan 1.
 
 ### F-11 · Anchura de ojo negativa ⇒ ojo panorámico — [unit] · [PROBABLE BUG] B2-2
 
-**Estado**: `eyeXwidth = −400` para el ojo en cuestión. **Esperado**: semiancho
-efectivo `hw = (−400 Mod 1256)/400 + π/36 = −1 + 0.0872665 = −0.9127335`; la
-normalización `While hw < 0: hw += π` (los bucles reales tras el `PI \ 36 = 0` de la
-división entera, `Quads.bas:533-537`) ⇒ `hw = 2.2288592` rad ≈ 127.7° de semiancho —
-un ojo de 255° frente a los 10° por defecto. La aserción práctica: un bot detrás del
-observador (fuera de todo ojo normal) es visible por ese ojo.
+**Estado**: `eyeXwidth = −400` para el ojo en cuestión. **Esperado**:
+`hw = (−400 Mod 1256)/400 = −1`; la normalización `While hw < −π/36: hw += π`
+(`Quads.bas:533-537`; corregido 2026-08-24 en M4: división real `π/36`, no entera —
+ver `32-VISION.md §2.4`) ⇒ `hw = 2.1415927`, y el semiancho efectivo
+`hw + π/36 = 2.2288592` rad ≈ 127.7° — un ojo de 255° frente a los 10° por defecto.
+La aserción práctica: un bot muy fuera del campo de todo ojo normal (p. ej. a 110°
+del aim) es visible por ese ojo. Ojo: la anchura absoluta de ese ojo es
+`−400 + 35 ≤ 0 ⇒ 891` ⇒ alcance ≈ 275 twips — panorámico pero corto.
 
 ### F-12 · `TieTorque`: clamp de `nay` con el signo de `nax` — [unit] · [PROBABLE BUG] B1-1
 
@@ -1428,7 +1430,7 @@ los documentos A1-B8 a casos; los no cubiertos arriba se definen aquí (B-nn).
 | B1-5 | corpses colisionan y reciben touch/lookoccurr | **B-10** |
 | B1-6 | bucket-clamp fuera del campo | **B-11** |
 | B2-1 | oclusión transpuesta con `Or` | F-14 |
-| B2-2 | `PI \ 36` división entera / ojos panorámicos | F-11 |
+| B2-2 | anchura de ojo negativa ⇒ ojo panorámico (normalización `+π` del semiancho) | F-11 |
 | B2-3 | `EYEF` no actualizado dentro de forma | **B-12** |
 | B2-4 | `lastopppos` solo del ojo frontal | **B-13** |
 | B2-5 | anchura de ojo distinta bots/formas | **B-14** |

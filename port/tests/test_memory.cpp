@@ -42,6 +42,8 @@ struct World {
     b.aim = 0.0f;
     b.aimvector = {1.0f, 0.0f};
     b.radius = FindRadius(sim, n);
+    b.BucketPos = {-2.0f, -2.0f};  // como preparerob (Module1.bas:37-39)
+    UpdateBotBucket(sim, n);
     return n;
   }
 
@@ -229,14 +231,14 @@ TEST_CASE("M-05 memoria genetica: instantanea y diferida") {
 // ---------------------------------------------------------------------------
 TEST_CASE("M-06 refvelsx vale 0 siempre [PROBABLE BUG] A3-1") {
   World w;
+  // B delante de A (aim 0, ojo frontal con foco), sin solape (radios ~114,
+  // separacion 300): el barrido real de M4 puebla lastopp.
   const int a = w.spawn("stop", "A.txt", 1000, 1000);
-  const int b = w.spawn("stop", "B.txt", 5000, 5000);
+  const int b = w.spawn("stop", "B.txt", 1300, 1000);
   w.sim.rob[b].vel = {0.0f, 20.0f};  // velocidad lateral respecto de A (aim 0)
-  // Barrido de vision: stub con lastopp inyectado (el barrido real es F-*).
-  w.sim.rob[a].lastopp = b;
-  w.sim.rob[a].lastopptype = 0;
 
   w.tick();
+  REQUIRE(w.sim.rob[a].lastopp == b);  // visto por el ojo con foco (eye5)
 
   CHECK(w.sim.rob[a].mem[addr::refveldx] == 20);  // funcional
   CHECK(w.sim.rob[a].mem[addr::refvelsx] == 0);   // muerta: se niega a si misma
@@ -483,6 +485,11 @@ TEST_CASE("M-12 los corpses congelan sus sentidos") {
 
   w.tick();  // contacto en P1; age 1
   REQUIRE(w.sim.rob[a].mem[addr::hitup] == 1);
+
+  // Repel3 (M4) ya separo los bots en el tick 1: se re-solapan para que el
+  // tick del corpse tenga contacto en P1 (la premisa del caso).
+  w.sim.rob[a].pos = {1000.0f, 1000.0f};
+  w.sim.rob[b].pos = {1060.0f, 1000.0f};
 
   // El bot cae a corpse en el tick siguiente (nrg < 15, age > 0).
   w.sim.rob[a].nrg = 10.0f;

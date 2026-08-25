@@ -1,14 +1,19 @@
-// dbcore/physics.hpp — la porción de Physics.bas que M3 necesita: NetForces
-// con VoluntaryForces completa (M-02), UpdatePosition (Robots.bas:826-879) y
-// la cola sensorial de Repel3 (touch/lasttch/lookoccurr, M-01). La respuesta
-// de impulso de colisión, bordercolls y las fuerzas de muelle/torque de ties
-// son del milestone de física (F-*): stubs registrados en SimDiag.
+// dbcore/physics.hpp — Physics.bas completo para el ciclo: NetForces
+// (fricción/arrastre/brownianas/gravedad/VoluntaryForces), Repel3 con su
+// respuesta de impulso y efectos sensoriales inmediatos (F-06),
+// bordercolls + ReSpawn/ListCells (Multibots.bas), la detección por buckets
+// (Quads.bas:223-271), UpdatePosition (Robots.bas:826-879) y SetAimFunc.
+// Contratos: 30-FISICA.md; casos F-01..F-07, F-13.
 #pragma once
 
+#include "buckets.hpp"
 #include "senses.hpp"
 #include "sim.hpp"
 
 namespace db {
+
+// Physics.bas:18 — smudgefactor.
+inline constexpr vb_single smudgefactor = 50.0f;
 
 // Physics.bas:44-52 — CalcMass: masa 1..32000, incluye cloroplastos.
 inline void CalcMass(Sim& sim, int n) {
@@ -51,16 +56,82 @@ inline void BrownianForces(Sim& sim, int n) {
   sim.rob[n].ma += (Impulse / 100.0f) * (sim.rnd() - 0.5f);
 }
 
-// Physics.bas:121-156 — SphereDragForces (Density = 0 => sin efecto).
+// Physics.bas:54-70 — AddedMass (P0b, solo si Density != 0): masa de fluido
+// desplazado; suma a la inercia, no a la gravedad.
+inline void AddedMass(Sim& sim, int n) {
+  constexpr vb_single fourthirdspi = 4.18879f;
+  constexpr vb_single AddedMassCoefficientForASphere = 0.5f;
+  Bot& b = sim.rob[n];
+  if (sim.opts.Density == 0.0f)
+    b.AddedMass = 0.0f;
+  else
+    b.AddedMass = AddedMassCoefficientForASphere * sim.opts.Density *
+                  fourthirdspi * b.radius * b.radius * b.radius;
+}
+
+// Physics.bas:306-341 — SphereCd: coeficiente de arrastre por tramos de
+// Reynolds, constantes literales.
+inline vb_single SphereCd(Sim& sim, vb_single velocitymagnitude,
+                          vb_single radius) {
+  if (sim.opts.Viscosity == 0.0f) return 0.0f;
+  if (velocitymagnitude < 0.00001f) velocitymagnitude = 0.00001f;
+  const vb_single Reynolds =
+      radius * 2 * velocitymagnitude * sim.opts.Density / sim.opts.Viscosity;
+
+  const vb_single y11 = static_cast<vb_single>(24.0 / (3.0 * 100000.0));
+  const vb_single y12 =
+      static_cast<vb_single>(6.0 / (1.0 + std::sqrt(3.0 * 100000.0)));
+  const vb_single y13 = 0.4f;
+  const vb_single y1 = y11 + y12 + y13;
+  const vb_single y2 = 0.09f;
+  const vb_single alpha = static_cast<vb_single>(
+      (static_cast<double>(y2) - y1) * std::pow(50000.0, -2.0));
+
+  if (Reynolds == 0.0f) return 0.0f;
+  if (Reynolds < 3.0f * 100000.0f)
+    return static_cast<vb_single>(
+        24.0 / Reynolds + 6.0 / (1.0 + std::sqrt(static_cast<double>(Reynolds))) +
+        0.4);
+  if (Reynolds < 3.5f * 100000.0f)
+    return static_cast<vb_single>(
+        alpha * std::pow(static_cast<double>(Reynolds) - 3.0 * 100000.0, 2.0) +
+        y1);
+  if (Reynolds < 6.0f * 100000.0f) return 0.09f;
+  if (Reynolds < 4.0f * 1000000.0f)
+    return static_cast<vb_single>(
+        std::pow(static_cast<double>(Reynolds) / (6.0 * 100000.0), 0.55) * y2);
+  return 0.255f;
+}
+
+// Physics.bas:121-156 — SphereDragForces: muta vel directamente y drena ma.
 inline void SphereDragForces(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if ((b.vel.x == 0.0f && b.vel.y == 0.0f) || sim.opts.Density == 0.0f) return;
-  // El cuerpo (SphereCd/Reynolds) llega con la física (F-*); con los defaults
-  // del harness (Density = 0) este camino no se ejecuta.
-  sim.diag.bordercolls_stub += 1;
+
+  if (std::fabs(b.ma) > 0.0f) {
+    if (sim.opts.Density < 0.000001f)
+      b.ma = b.ma * (1.0f - (sim.opts.Density * 1000000.0f));
+    else
+      b.ma = 0.0f;
+    if (std::fabs(b.ma) < 0.0000001f) b.ma = 0.0f;
+  }
+
+  const vb_single mag = VectorMagnitude(b.vel);
+  if (mag < 0.0000001f) return;
+
+  vb_single Impulse = static_cast<vb_single>(
+      0.5 * SphereCd(sim, mag, b.radius) * sim.opts.Density * mag * mag *
+      (static_cast<double>(PI) *
+       std::pow(static_cast<double>(b.radius), 2.0)));
+  if (Impulse > mag) Impulse = mag * 0.99f;
+  Vector u = VectorUnit(b.vel);
+  Vector ImpulseVector = VectorScalar(u, Impulse);
+  b.vel = VectorSub(b.vel, ImpulseVector);
 }
 
-// Physics.bas:385-407 — GravityForces (sin pondmode: impulso (0, Ygravity*masa)).
+// Physics.bas:385-407 — GravityForces: rama normal, y en pondmode no-toroidal
+// la flotabilidad cobra energía y el signo depende de la profundidad relativa
+// a 1/BouyancyScaling (mareas).
 inline void GravityForces(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (sim.opts.Ygravity == 0.0f || !sim.opts.Pondmode ||
@@ -68,8 +139,27 @@ inline void GravityForces(Sim& sim, int n) {
     b.ImpulseInd =
         VectorAdd(b.ImpulseInd, VectorSet(0.0f, sim.opts.Ygravity * b.mass));
   } else {
-    // Rama de flotación con coste (pondmode) — B1/F-*.
-    sim.diag.bordercolls_stub += 1;
+    if (b.Bouyancy > 0.0f) {
+      // División por PhysMoving: con PhysMoving = 0 el original lanza error
+      // 11 (30-FISICA.md §8). Decisión de port: la carga de opciones no
+      // admite PhysMoving = 0; si ocurriera, se registra y no se cobra.
+      if (sim.opts.PhysMoving != 0.0f) {
+        b.nrg -= (sim.opts.Ygravity / sim.opts.PhysMoving *
+                  ((b.mass > 192.0f) ? 192.0f : b.mass) *
+                  sim.vm.costs.v[cost::MOVECOST] *
+                  sim.vm.costs.v[cost::COSTMULTIPLIER]) *
+                 b.Bouyancy;
+      } else {
+        sim.diag.err11_gravity_physmoving0 += 1;
+      }
+    }
+    if ((1.0f / sim.BouyancyScaling - b.pos.y / sim.opts.FieldHeight) >
+        b.Bouyancy)
+      b.ImpulseInd =
+          VectorAdd(b.ImpulseInd, VectorSet(0.0f, sim.opts.Ygravity * b.mass));
+    else
+      b.ImpulseInd = VectorAdd(b.ImpulseInd,
+                               VectorSet(0.0f, -sim.opts.Ygravity * b.mass));
   }
 }
 
@@ -140,7 +230,7 @@ inline void UpdatePosition(Sim& sim, int n) {
       vt = sim.opts.MaxVelocity * sim.opts.MaxVelocity;
     }
     b.pos = VectorAdd(b.pos, b.vel);
-    // UpdateBotBucket n — los buckets llegan con la visión/colisiones reales.
+    UpdateBotBucket(sim, n);
   } else {
     b.vel = VectorSet(0.0f, 0.0f);
   }
@@ -237,34 +327,249 @@ inline void SetAimFunc(Sim& sim, int t) {
   b.mem[addr::SetAim] = b.mem[addr::AimSys];
 }
 
-// La cola sensorial de Repel3 (Physics.bas:955-973): touch en ambos,
-// lasttch cruzado, lookoccurr cruzado. La respuesta de impulso (V1f/V2f)
-// es del milestone de física; aquí solo los efectos de memoria (M-01).
-inline void Repel3Senses(Sim& sim, int rob1, int rob2) {
-  touch(sim, rob1, sim.rob[rob2].pos.x, sim.rob[rob2].pos.y);
-  touch(sim, rob2, sim.rob[rob1].pos.x, sim.rob[rob1].pos.y);
-  sim.rob[rob1].lasttch = rob2;
-  sim.rob[rob2].lasttch = rob1;
-  lookoccurr(sim, rob1, rob2);
-  lookoccurr(sim, rob2, rob1);
+// Physics.bas:845-976 — Repel3: separación posicional directa, impulso
+// elástico 1-D sobre la línea de centros (fijo = masa 32000) y efectos
+// sensoriales inmediatos en ambos bots (F-06, M-01).
+inline void Repel3(Sim& sim, int rob1, int rob2) {
+  Bot& r1 = sim.rob[rob1];
+  Bot& r2 = sim.rob[rob2];
+  const vb_single e = sim.opts.CoefficientElasticity;
+
+  Vector normal = VectorSub(r2.pos, r1.pos);
+  const vb_single currdist = VectorMagnitude(normal);
+
+  if ((r1.Fixed && r2.Fixed) ||
+      (VectorMagnitude(r1.vel) < 0.0001f &&
+       VectorMagnitude(r2.vel) < 0.0001f)) {
+    // Ambos fijos o ambos quietos: mitad y mitad, sin masas.
+    const vb_single fixedSep = ((r1.radius + r2.radius) - currdist) / 2.0f;
+    Vector u = VectorUnit(normal);
+    Vector fixedSepVector = VectorScalar(u, fixedSep);
+    r1.pos = VectorSub(r1.pos, fixedSepVector);
+    r2.pos = VectorAdd(r2.pos, fixedSepVector);
+  } else {
+    // Retroceso suavizado repartido por masas INVERTIDAS (el ligero se mueve
+    // más).
+    const vb_single TotalMass = r1.mass + r2.mass;
+    const vb_single fixedSep = (r1.radius + r2.radius) - currdist;
+    Vector u = VectorUnit(normal);
+    Vector fixedSepVector = VectorScalar(
+        u, static_cast<vb_single>(
+               fixedSep /
+               (1.0 + std::pow(55.0, 0.3 - static_cast<double>(e)))));
+    r1.pos = VectorSub(r1.pos,
+                       VectorScalar(fixedSepVector, r2.mass / TotalMass));
+    r2.pos = VectorAdd(r2.pos,
+                       VectorScalar(fixedSepVector, r1.mass / TotalMass));
+  }
+
+  if (VectorInvMagnitude(normal) != -1.0f) {
+    vb_single M1 = r1.mass;
+    vb_single M2 = r2.mass;
+    if (r1.Fixed) M1 = 32000.0f;
+    if (r2.Fixed) M2 = 32000.0f;
+
+    Vector unit = VectorUnit(normal);
+    Vector vel1 = r1.vel;
+    Vector vel2 = r2.vel;
+
+    vb_single projection = Dot(vel1, unit) * 0.99f;
+    if (projection <= 0.0f) projection = 0.000001f;  // ya se alejan
+    Vector V1 = VectorScalar(unit, projection);
+
+    projection = Dot(vel2, unit) * 0.99f;
+    if (projection >= 0.0f) projection = -0.000001f;
+    Vector V2 = VectorScalar(unit, projection);
+
+    Vector t1 = VectorScalar(V2, (e + 1.0f) * M2);
+    Vector t2 = VectorScalar(V1, M1 - e * M2);
+    Vector sum1 = VectorAdd(t1, t2);
+    Vector V1f = VectorScalar(sum1, 1.0f / (M1 + M2));
+
+    Vector t3 = VectorScalar(V1, (e + 1.0f) * M1);
+    Vector t4 = VectorScalar(V2, M2 - e * M1);
+    Vector sum2 = VectorAdd(t3, t4);
+    Vector V2f = VectorScalar(sum2, 1.0f / (M1 + M2));
+
+    if (!r1.Fixed) r1.vel = VectorAdd(VectorSub(r1.vel, V1), V1f);
+    if (!r2.Fixed) r2.vel = VectorAdd(VectorSub(r2.vel, V2), V2f);
+
+    touch(sim, rob1, r2.pos.x, r2.pos.y);
+    touch(sim, rob2, r1.pos.x, r1.pos.y);
+    r1.lasttch = rob2;
+    r2.lasttch = rob1;
+    lookoccurr(sim, rob1, rob2);
+    lookoccurr(sim, rob2, rob1);
+  }
 }
 
-// Pasada de colisiones bot-bot simplificada (el original es BucketsCollision,
-// Quads.bas:239-270: cada par una vez, con el bucle en el índice MENOR).
-// Decisión de port (M3): solape de círculos por fuerza bruta manteniendo la
-// regla del par único y el orden por índice; buckets y Repel3 completo con
-// la física (F-*).
-inline void BucketsCollisionSimple(Sim& sim, int t) {
-  if (!sim.rob[t].exist) return;
-  for (int j = t + 1; j <= sim.MaxRobs; ++j) {
-    if (!sim.rob[j].exist) continue;
-    const vb_single dx = sim.rob[t].pos.x - sim.rob[j].pos.x;
-    const vb_single dy = sim.rob[t].pos.y - sim.rob[j].pos.y;
-    const vb_single rr = sim.rob[t].radius + sim.rob[j].radius;
-    if (dx * dx + dy * dy < rr * rr) {
-      sim.diag.bot_collision_simplified += 1;
-      Repel3Senses(sim, t, j);
+// Multibots.bas:78-114 — ListCells: lista las células del organismo desde
+// lst[0]. Los topes literales (50) y la escritura en lst(50) se replican.
+inline void ListCells(Sim& sim, std::array<vb_integer, 51>& lst) {
+  int w = 0;
+  vb_long n = lst[0];
+  while (n > 0) {
+    Bot& b = sim.rob[n];
+    if (b.Multibot) {
+      int k = 1;
+      // El While del fuente no acota k: con 10 ties leería Ties(11) (error
+      // 9); inalcanzable con el máximo real de 9 ties de maketie.
+      while (k <= MAXTIES && b.Ties[k].pnt > 0) {
+        bool pres = false;
+        int j = 0;
+        while (lst[j] > 0) {
+          if (lst[j] == b.Ties[k].pnt) pres = true;
+          j += 1;
+          if (j == 50) lst[j] = 0;
+        }
+        if (!pres) lst[j] = b.Ties[k].pnt;
+        k += 1;
+      }
     }
+    w += 1;
+    if (w > 50) {
+      w = 50;
+      lst[w] = 0;
+      return;
+    }
+    n = lst[w];
+  }
+}
+
+// Multibots.bas:9-49 — ReSpawn: traslada el organismo ENTERO (hasta 50
+// células) y sincroniza opos = pos de cada célula para que actvel no
+// registre el salto (30-FISICA.md §5).
+inline void ReSpawn(Sim& sim, int n, vb_single X, vb_single Y) {
+  std::array<vb_integer, 51> clist{};
+  clist[0] = static_cast<vb_integer>(n);
+  ListCells(sim, clist);
+  double Minv = 999999999999.0;
+  int nmin = 0;
+  int t = 0;
+  while (clist[t] > 0) {
+    const double d =
+        std::pow(static_cast<double>(sim.rob[clist[t]].pos.x) - X, 2.0) +
+        std::pow(static_cast<double>(sim.rob[clist[t]].pos.y) - Y, 2.0);
+    if (d <= Minv) {
+      Minv = d;
+      nmin = clist[t];
+    }
+    t += 1;
+    if (t > 50) return;
+  }
+  vb_single dx = X - sim.rob[nmin].pos.x;
+  vb_single dy = Y - sim.rob[nmin].pos.y;
+
+  const vb_single radiidif = sim.rob[n].radius - sim.rob[nmin].radius;
+  dx = dx - 1 * static_cast<vb_single>(vb_sgn(dx)) +
+       static_cast<vb_single>(vb_sgn(dx)) * radiidif;
+  dy = dy - 1 * static_cast<vb_single>(vb_sgn(dy)) +
+       static_cast<vb_single>(vb_sgn(dy)) * radiidif;
+
+  t = 0;
+  while (clist[t] > 0) {
+    sim.rob[clist[t]].pos.x = sim.rob[clist[t]].pos.x + dx;
+    sim.rob[clist[t]].pos.y = sim.rob[clist[t]].pos.y + dy;
+    sim.rob[clist[t]].opos.x = sim.rob[clist[t]].pos.x;
+    sim.rob[clist[t]].opos.y = sim.rob[clist[t]].pos.y;
+    UpdateBotBucket(sim, clist[t]);
+    t += 1;
+    if (t > 50) return;  // el While del fuente indexaría clist(51): error 9
+  }
+}
+
+// Physics.bas:774-841 — bordercolls: toroidal => ReSpawn al borde opuesto;
+// rígido => mem(214) = 1, clamp de posición y amortiguador vel*0.05 en
+// ImpulseRes (el término de muelle k = 0.4 está comentado en el fuente).
+inline void bordercolls(Sim& sim, int t) {
+  constexpr vb_single b = 0.05f;
+  Bot& r = sim.rob[t];
+
+  if (r.pos.x > r.radius && r.pos.x < sim.opts.FieldWidth - r.radius &&
+      r.pos.y > r.radius && r.pos.y < sim.opts.FieldHeight - r.radius)
+    return;
+
+  r.mem[214] = 0;
+
+  const vb_single smudge = r.radius + smudgefactor;
+
+  Vector lo = VectorSet(smudge, smudge);
+  Vector hi = VectorSet(sim.opts.FieldWidth - smudge,
+                        sim.opts.FieldHeight - smudge);
+  Vector dif = VectorMin(VectorMax(r.pos, lo), hi);
+  Vector dist = VectorSub(dif, r.pos);
+
+  if (dist.x != 0.0f) {
+    if (sim.opts.Dxsxconnected) {
+      if (dist.x < 0.0f)
+        ReSpawn(sim, t, smudge, r.pos.y);
+      else
+        ReSpawn(sim, t, sim.opts.FieldWidth - smudge, r.pos.y);
+    } else {
+      r.mem[214] = 1;
+      if (r.pos.x - r.radius < 0.0f) r.pos.x = r.radius;
+      if (r.pos.x + r.radius > sim.opts.FieldWidth)
+        r.pos.x = sim.opts.FieldWidth - r.radius;
+      r.ImpulseRes.x = r.ImpulseRes.x + r.vel.x * b;
+    }
+  }
+
+  if (dist.y != 0.0f) {
+    if (sim.opts.Updnconnected) {
+      if (dist.y < 0.0f)
+        ReSpawn(sim, t, r.pos.x, smudge);
+      else
+        ReSpawn(sim, t, r.pos.x, sim.opts.FieldHeight - smudge);
+    } else {
+      r.mem[214] = 1;
+      if (r.pos.y - r.radius < 0.0f) r.pos.y = r.radius;
+      if (r.pos.y + r.radius > sim.opts.FieldHeight)
+        r.pos.y = sim.opts.FieldHeight - r.radius;
+      r.ImpulseRes.y = r.ImpulseRes.y + r.vel.y * b;
+    }
+  }
+}
+
+// Quads.bas:245-271 — CheckBotBucketForCollision: solo pares robnumber > n
+// (cada par una vez, índice menor manda), solape con
+// VectorMagnitudeSquare sobre una copia local (el clamp ByRef es inofensivo).
+// hidepred: capa torneo ⚙, fuera.
+inline void CheckBotBucketForCollision(Sim& sim, int n, const Vector& pos) {
+  BucketType& bk = BucketAt(sim, static_cast<int>(pos.x),
+                            static_cast<int>(pos.y));
+  if (bk.size == 0) return;
+  int a = 1;
+  while (bk.arr[a] != -1) {
+    const int robnumber = bk.arr[a];
+    if (robnumber > n) {
+      Vector distvector = VectorSub(sim.rob[n].pos, sim.rob[robnumber].pos);
+      const vb_single dist = sim.rob[n].radius + sim.rob[robnumber].radius;
+      if (VectorMagnitudeSquare(distvector) < dist * dist)
+        Repel3(sim, n, robnumber);
+    }
+    if (a == bk.size) return;
+    a += 1;
+  }
+}
+
+// Quads.bas:223-243 — BucketsCollision: celda propia + hasta 8 adyacentes.
+inline void BucketsCollision(Sim& sim, int n) {
+  EnsureBuckets(sim);
+  if (sim.rob[n].BucketPos.x < 0 || sim.rob[n].BucketPos.y < 0)
+    UpdateBotBucket(sim, n);  // defensivo (ver BucketsProximity)
+  const Vector BucketPos = sim.rob[n].BucketPos;
+
+  CheckBotBucketForCollision(sim, n, BucketPos);
+
+  for (int x = 1; x <= 8; ++x) {
+    const Vector adjBucket =
+        BucketAt(sim, static_cast<int>(BucketPos.x),
+                 static_cast<int>(BucketPos.y))
+            .adjBucket[x];
+    if (adjBucket.x != -1.0f)
+      CheckBotBucketForCollision(sim, n, adjBucket);
+    else
+      break;
   }
 }
 

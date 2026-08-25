@@ -81,6 +81,11 @@ struct SimOptsT {
   vb_single Density = 0, Viscosity = 0;
   vb_single Zgravity = 0, Ygravity = 0, PhysBrown = 0;
   vb_single CoefficientStatic = 0, CoefficientKinetic = 0;
+  vb_single CoefficientElasticity = 0;  // OptionsForm.frm:2651 default
+  vb_single Gradient = 1.02f;           // MDIForm1.frm:2486 default
+  bool Daytime = true;                  // §0.2 del harness
+  bool shapesAreVisable = false;
+  bool shapesAreSeeThrough = false;
   bool ZeroMomentum = false;
   bool Pondmode = false, Updnconnected = false, Dxsxconnected = false;
   bool CorpseEnabled = true;
@@ -106,23 +111,58 @@ struct Specie {
   bool Native = true;
 };
 
+// Obstacles.bas — el subconjunto de Type Obstacle que la física/visión toca
+// (AABB en pos/Width/Height). Con numObstacles = 0 (default del harness)
+// ninguna rutina de formas se ejecuta.
+struct Obstacle {
+  bool exist = false;
+  Vector pos{};
+  vb_single Width = 0, Height = 0;
+};
+
+// Quads.bas:12-18 — Type BucketType: array empaquetado terminado en -1
+// (crece de a 5, se encoge de a 50) + lista precalculada de adyacentes
+// (adjBucket(1..8), .x = -1 = sin más adyacentes).
+struct BucketType {
+  std::vector<vb_integer> arr = std::vector<vb_integer>(1, 0);  // arr(0) sin uso
+  vb_integer size = 0;
+  std::array<Vector, 9> adjBucket{};
+};
+
+// Quads.bas:6 — celdas de 4000x4000 twips (la visión máxima 3348 + 2 radios
+// cabe en una celda).
+inline constexpr vb_long BucketSize = 4000;
+
 // Contadores de stubs documentados: cada camino del fuente aún no transcrito
 // que un caso dorado futuro cubrirá registra su paso por aquí (misma política
 // que VmDiag, 10-CICLO.md §14).
 struct SimDiag {
-  int bordercolls_stub = 0;      // B1/F-*: colisiones con el borde
-  int tie_force_stub = 0;        // B4/F-*: fuerzas de muelle de TieHooke
-  int tietorque_stub = 0;        // B4/F-*
+  // Cerrados en M4 (física y visión): estos contadores ya no se incrementan
+  // en ningún camino — un test los asserta a 0 como señal del reemplazo.
+  int bordercolls_stub = 0;      // M4: bordercolls/SphereDrag/Gravity reales
+  int tie_force_stub = 0;        // M4: TieHooke real
+  int tietorque_stub = 0;        // M4: TieTorque real
+  int vision_sweep_stub = 0;     // M4: BucketsProximity real
+  int shot_collision_simplified = 0;  // M4: NewShotCollision swept-sphere
+  int bot_collision_simplified = 0;   // M4: BucketsCollision/Repel3 reales
+
   int shot_feed_stub = 0;        // B3a: releasenrg/takenrg/releasebod/addgene
   int makevirus_stub = 0;        // B3b: MakeVirus/copygene
   int mutate_stub = 0;           // B6b: mutate con mutaciones activas
   int makestuff_stub = 0;        // B5: storevenom/storepoison/makeshell/makeslime
   int handlewaste_stub = 0;      // B5/B7: feedveg2/altzheimer/defacate
   int sexrepro_stub = 0;         // B6a: SexReproduce
-  int vision_sweep_stub = 0;     // B2/F-*: BucketsProximity (barrido real)
   int world_stub = 0;            // B7: feedvegs/repoblación/teleporters
-  int shot_collision_simplified = 0;  // F-*: NewShotCollision punto-en-círculo
-  int bot_collision_simplified = 0;   // F-*: BucketsCollision por fuerza bruta
+  int shapes_vision_stub = 0;    // B2 §3: CompareShapes (visión DE formas;
+                                 //   solo con shapesAreVisable)
+  int obstacle_collision_stub = 0;  // B7: DoObstacleCollisions /
+                                    //   DoShotObstacleCollisions (numObstacles>0)
+  int err9_ties_slot11 = 0;      // sitio de error 9: TieTorque con j > 10
+                                 //   (inalcanzable con el máximo de 9 ties;
+                                 //   decisión de port: registrar y no escribir)
+  int err11_gravity_physmoving0 = 0;  // sitio de error 11: GravityForces con
+                                      //   PhysMoving = 0 (30-FISICA.md §8;
+                                      //   decisión: registrar y no cobrar)
 };
 
 struct Sim {
@@ -164,6 +204,20 @@ struct Sim {
   vb_long maxshotarray = 300;
   vb_long numshots = 0;
   vb_long ShotsThisCycle = 0;
+  // main.frm:1291 — prefiltro por caja del swept-sphere; se calcula en
+  // InitBuckets (mismo camino de arranque que en main.frm).
+  vb_single MaxBotShotSeperation = 0;
+
+  // Obstacles.bas — índice 0 sin uso, como los demás arrays.
+  std::vector<Obstacle> Obstacles = std::vector<Obstacle>(1);
+  int numObstacles = 0;
+
+  // Quads.bas — la rejilla de buckets (fila mayor: índice x + y*NumXBuckets).
+  std::vector<BucketType> Buckets;
+  int NumXBuckets = 0, NumYBuckets = 0;
+
+  // Physics.bas:21 — global de mareas; 1 sin Tides (capa ⚙).
+  vb_single BouyancyScaling = 1.0f;
 
   Sim() { vm.xDivisor = 1.0f; vm.yDivisor = 1.0f; }
 

@@ -222,26 +222,152 @@ inline void regang(Sim& sim, int t, int j) {
   b.Ties[j].NaturalLength = dist;
 }
 
-// La porción temporal de TieHooke (Physics.bas:512-531): borrado por longitud
-// >1000, countdown a destrucción, countup a endurecimiento. Las fuerzas de
-// muelle (-kx - bv) quedan para F-* (stub registrado).
-inline void TieTiming(Sim& sim, int n) {
+// Physics.bas:558-573 — CheckRobot: True si el bot apuntado NO existe
+// (fuera del array o exist = False); CheckRobot(0) = False.
+inline bool CheckRobot(Sim& sim, int n) {
+  if (n > static_cast<int>(sim.rob.size()) - 1) return true;
+  if (n == 0) return false;
+  return !sim.rob[n].exist;
+}
+
+// Physics.bas:465-555 — TieHooke (P1, gate solo numties = 0): purga de ties
+// inválidas, rotura por longitud > 1000, reloj de la tie (countdown a
+// destrucción / countup a endurecimiento) y el muelle amortiguado -kx - bv
+// con zona muerta de 20 (F-05). Solo actúa sobre el extremo n: las fuerzas
+// de una tie se aplican en dos momentos distintos de la pasada.
+inline void TieHooke(Sim& sim, int n) {
+  if (sim.rob[n].numties == 0.0f) return;
+
+  const vb_single deformation = 20.0f;  // zona muerta
   Bot& b = sim.rob[n];
-  if (b.numties <= 0.0f) return;
-  sim.diag.tie_force_stub += 1;
-  for (int k = 1; k <= MAXTIES; ++k) {
-    if (b.Ties[k].pnt <= 0) continue;
+
+  int k = 1;
+  while (k <= MAXTIES && b.Ties[k].pnt != 0) {
+    // Purga in situ de ties a bots inexistentes (Physics.bas:492-510).
+    if (CheckRobot(sim, b.Ties[k].pnt)) {
+      do {
+        if (k > 1)
+          b.mem[addr::TIEPRES] = b.Ties[k - 1].Port;
+        else
+          b.mem[addr::TIEPRES] = 0;
+        for (int t = k; t <= MAXTIES - 1; ++t) b.Ties[t] = b.Ties[t + 1];
+        b.Ties[MAXTIES].pnt = 0;
+      } while (CheckRobot(sim, b.Ties[k].pnt));
+    }
+
+    // Nota: tras la purga, Ties(k).pnt puede ser 0 (CheckRobot(0) = False
+    // corta el Do): el fuente sigue con rob(0) — se replica.
     Vector uv = VectorSub(b.pos, sim.rob[b.Ties[k].pnt].pos);
     const vb_single Length = VectorMagnitude(uv);
+
     if (Length - b.radius - sim.rob[b.Ties[k].pnt].radius > 1000.0f) {
       DeleteTie(sim, n, b.Ties[k].pnt);
     } else {
-      if (b.Ties[k].last > 1) b.Ties[k].last -= 1;
-      if (b.Ties[k].last < 0) b.Ties[k].last += 1;
+      if (b.Ties[k].last > 1) b.Ties[k].last -= 1;  // countdown a borrado
+      if (b.Ties[k].last < 0) b.Ties[k].last += 1;  // countup a endurecer
+
       if (b.Ties[k].last == 1) {
         DeleteTie(sim, n, b.Ties[k].pnt);
       } else {
         if (b.Ties[k].last == -1) regang(sim, n, k);
+
+        if (Length != 0.0f) {
+          uv = VectorScalar(uv, 1.0f / Length);
+
+          // -kx con zona muerta.
+          vb_single displacement = b.Ties[k].NaturalLength - Length;
+          if (std::fabs(displacement) > deformation) {
+            displacement = static_cast<vb_single>(vb_sgn(displacement)) *
+                           (std::fabs(displacement) - deformation);
+            vb_single Impulse = b.Ties[k].k * displacement;
+            b.ImpulseInd = VectorAdd(b.ImpulseInd, VectorScalar(uv, Impulse));
+
+            // -bv.
+            Vector vy = VectorSub(b.vel, sim.rob[b.Ties[k].pnt].vel);
+            Impulse = Dot(vy, uv) * -b.Ties[k].b;
+            b.ImpulseInd = VectorAdd(b.ImpulseInd, VectorScalar(uv, Impulse));
+          }
+        }
+      }
+    }
+    k += 1;
+  }
+}
+
+// Physics.bas:651-729 — TieTorque (P1, gate: no corpse, no DisableDNA en el
+// llamador): par sobre las ties con ángulo fijado (angreg). [PROBABLE BUG]
+// B1-1: el clamp de nay usa Sgn(nax) (F-12). [PROBABLE BUG] B1-2: con
+// |mt| > 2*PI escribe Ties(j).ang en el slot SIGUIENTE al último (slot de
+// tie vacío; con 10 ties sería Ties(11) — error 9, registrado).
+inline void TieTorque(Sim& sim, int t) {
+  const vb_single angleslack =
+      5.0f * 2.0f * PI / 360.0f;  // 5 grados de holgura
+
+  int j = 1;
+  vb_single mt = 0.0f;
+  vb_single anl = 0.0f, dlo = 0.0f;
+  int n = 0;
+  Bot& b = sim.rob[t];
+
+  if (b.numties > 0.0f) {
+    if (b.Ties[1].pnt > 0) {
+      while (j <= MAXTIES && b.Ties[j].pnt > 0) {
+        if (b.Ties[j].angreg) {
+          n = b.Ties[j].pnt;
+          anl = vb_angle(b.pos.x, b.pos.y, sim.rob[n].pos.x,
+                         sim.rob[n].pos.y);
+          dlo = AngDiff(anl, b.aim);
+          vb_single mm = AngDiff(dlo, b.Ties[j].ang + b.Ties[j].bend);
+
+          b.Ties[j].bend = 0.0f;  // consume .tieang
+          if (std::fabs(mm) > angleslack) {
+            mm = (std::fabs(mm) - angleslack) *
+                 static_cast<vb_single>(vb_sgn(mm));
+            const vb_single m = mm * 0.1f;
+            const vb_single dx = sim.rob[n].pos.x - b.pos.x;
+            const vb_single dy = b.pos.y - sim.rob[n].pos.y;
+            const vb_single dist = static_cast<vb_single>(std::sqrt(
+                std::pow(static_cast<double>(dx), 2.0) +
+                std::pow(static_cast<double>(dy), 2.0)));
+            vb_single nax =
+                -static_cast<vb_single>(
+                    std::sin(static_cast<double>(anl))) *
+                m * dist / 10.0f;
+            vb_single nay =
+                -static_cast<vb_single>(
+                    std::cos(static_cast<double>(anl))) *
+                m * dist / 10.0f;
+            if (std::fabs(nax) > 100.0f)
+              nax = 100.0f * static_cast<vb_single>(vb_sgn(nax));
+            if (std::fabs(nay) > 100.0f)
+              nay = 100.0f * static_cast<vb_single>(
+                                 vb_sgn(nax));  // [PROBABLE BUG] B1-1 (F-12)
+
+            const Vector TorqueVector = VectorSet(nax, nay);
+            sim.rob[n].ImpulseInd =
+                VectorSub(sim.rob[n].ImpulseInd, TorqueVector);
+            b.ImpulseInd = VectorAdd(b.ImpulseInd, TorqueVector);
+            mt = mt + mm;
+          }
+        }
+        j += 1;
+      }
+
+      if (mt != 0.0f) {
+        if (std::fabs(mt) > 2.0f * PI) {
+          // Escritura en el slot fantasma (j = una posición después de la
+          // última tie). Con j > MAXTIES el original indexa Ties(11):
+          // error 9 — decisión de port: registrar y no escribir.
+          if (j <= MAXTIES)
+            b.Ties[j].ang = dlo;
+          else
+            sim.diag.err9_ties_slot11 += 1;
+        } else {
+          if (std::fabs(mt) < PI / 4.0f)
+            b.ma = mt;
+          else
+            b.ma = PI / 4.0f * static_cast<vb_single>(vb_sgn(mt));
+        }
       }
     }
   }

@@ -262,22 +262,128 @@ inline void takesperm(Sim& sim, int n, vb_long t) {
   b.spermDNAlen = s.DnaLen;
 }
 
-// Colisión de shots simplificada (decisión de port M3, registrada en diag):
-// punto-en-círculo sobre la posición previa al movimiento, primer slot
-// golpeado gana (sesgo por índice del original conservado), y el slot del
-// tirador es intocable (33-SHOTS.md). El swept-sphere exacto con fracción de
-// ciclo (Shots.bas:960-1082) llega con los casos F-*.
-inline int NewShotCollisionSimple(Sim& sim, vb_long t) {
-  sim.diag.shot_collision_simplified += 1;
-  const Shot& s = sim.Shots[t];
-  for (int h = 1; h <= sim.MaxRobs; ++h) {
-    if (!sim.rob[h].exist) continue;
-    if (h == s.parent) continue;  // slot tirador intocable
-    const vb_single dx = s.pos.x - sim.rob[h].pos.x;
-    const vb_single dy = s.pos.y - sim.rob[h].pos.y;
-    if (dx * dx + dy * dy < sim.rob[h].radius * sim.rob[h].radius) return h;
+// Shots.bas:48-51 — MinBotRadius: si el golpe ocurre en esta fracción
+// inicial del ciclo, se deja de buscar (sesgo por índice adicional, §4.4).
+inline constexpr vb_single MinBotRadius = 0.2f;
+
+// Shots.bas:921-1081 — NewShotCollision: bordes primero (toroidal envuelve;
+// rígido clampa y refleja con ±Abs), búsqueda lineal sobre TODOS los bots con
+// prefiltro por caja (MaxBotShotSeperation), swept-sphere con la posición del
+// bot corregida a pos - vel + actvel, y recolocación del shot en el punto de
+// impacto. Nota del fuente: el valor devuelto es el ÚLTIMO bot con raíces
+// válidas, no el del t menor (earliestCollision solo gobierna el early-exit
+// y la recolocación). El slot tirador es intocable aunque cambie de dueño.
+inline int NewShotCollision(Sim& sim, vb_long shotnum) {
+  Shot& sh = sim.Shots[shotnum];
+
+  // Colisiones con los bordes del campo.
+  if (sim.opts.Updnconnected) {
+    if (sh.pos.y > sim.opts.FieldHeight)
+      sh.pos.y = sh.pos.y - sim.opts.FieldHeight;
+    else if (sh.pos.y < 0.0f)
+      sh.pos.y = sh.pos.y + sim.opts.FieldHeight;
+  } else {
+    if (sh.pos.y > sim.opts.FieldHeight) {
+      sh.pos.y = sim.opts.FieldHeight;
+      sh.velocity.y = -1.0f * std::fabs(sh.velocity.y);
+    } else if (sh.pos.y < 0.0f) {
+      sh.pos.y = 0.0f;
+      sh.velocity.y = std::fabs(sh.velocity.y);
+    }
   }
-  return 0;
+  if (sim.opts.Dxsxconnected) {
+    if (sh.pos.x > sim.opts.FieldWidth)
+      sh.pos.x = sh.pos.x - sim.opts.FieldWidth;
+    else if (sh.pos.x < 0.0f)
+      sh.pos.x = sh.pos.x + sim.opts.FieldWidth;
+  } else {
+    if (sh.pos.x > sim.opts.FieldWidth) {
+      sh.pos.x = sim.opts.FieldWidth;
+      sh.velocity.x = -1.0f * std::fabs(sh.velocity.x);
+    } else if (sh.pos.x < 0.0f) {
+      sh.pos.x = 0.0f;
+      sh.velocity.x = std::fabs(sh.velocity.x);
+    }
+  }
+
+  int result = 0;
+  vb_single earliestCollision = 100.0f;  // 100 = sin colisión
+  vb_single hitTime = 0.0f;
+
+  const Vector S0 = sh.pos;
+  const Vector vs = sh.velocity;
+
+  for (int robnum = 1; robnum <= sim.MaxRobs; ++robnum) {
+    // hidepred: capa torneo ⚙, fuera.
+    if (sim.rob[robnum].exist && sh.parent != robnum &&
+        std::fabs(sh.opos.x - sim.rob[robnum].pos.x) <
+            sim.MaxBotShotSeperation &&
+        std::fabs(sh.opos.y - sim.rob[robnum].pos.y) <
+            sim.MaxBotShotSeperation) {
+      const vb_single r = sim.rob[robnum].radius;
+
+      Vector B0 = sim.rob[robnum].pos;
+      B0 = VectorSub(B0, sim.rob[robnum].vel);
+      B0 = VectorAdd(B0, sim.rob[robnum].actvel);
+
+      Vector p = VectorSub(S0, B0);
+
+      if (VectorMagnitude(p) < r) {
+        // El shot ya está dentro del bot en t = 0: golpe inmediato.
+        hitTime = 0.0f;
+        earliestCollision = 0.0f;
+        result = robnum;
+        break;
+      }
+
+      const Vector vbv = sim.rob[robnum].actvel;
+      Vector d = VectorSub(vs, vbv);
+      const vb_single P2 = VectorMagnitudeSquare(p);
+      const vb_single D2 = VectorMagnitudeSquare(d);
+      if (D2 == 0.0f) continue;
+      const vb_single DdotP = Dot(d, p);
+      const vb_single X = -DdotP;
+      vb_single Y = static_cast<vb_single>(
+          std::pow(static_cast<double>(DdotP), 2.0) -
+          static_cast<double>(D2) *
+              (static_cast<double>(P2) -
+               std::pow(static_cast<double>(r), 2.0)));
+
+      if (Y < 0.0f) continue;  // sin colisión
+
+      Y = static_cast<vb_single>(std::sqrt(static_cast<double>(Y)));
+
+      const vb_single time0 = (X - Y) / D2;
+      const vb_single time1 = (X + Y) / D2;
+
+      const bool usetime0 = !(time0 <= 0.0f || time0 >= 1.0f);
+      const bool usetime1 = !(time1 <= 0.0f || time1 >= 1.0f);
+      if (!usetime0 && !usetime1) {
+        continue;
+      } else if (usetime0 && usetime1) {
+        hitTime = Min(time0, time1);
+        result = robnum;
+      } else if (usetime0) {
+        hitTime = time0;
+        result = robnum;
+      } else {
+        hitTime = time1;
+        result = robnum;
+      }
+
+      if (hitTime < earliestCollision) earliestCollision = hitTime;
+
+      if (earliestCollision <= MinBotRadius) break;  // early-exit sesgado
+    }
+  }
+
+  if (earliestCollision <= 1.0f) {
+    // Recoloca el shot en el punto del impacto más temprano (los rebotes
+    // salen de ahí).
+    Vector vscopy = vs;
+    sh.pos = VectorAdd(VectorScalar(vscopy, earliestCollision), S0);
+  }
+  return result;
 }
 
 // Shots.bas:288-425 — updateshots (tick paso 14).
@@ -304,7 +410,7 @@ inline void updateshots(Sim& sim) {
     if (s.shottype == -100 || s.stored)
       h = 0;
     else
-      h = NewShotCollisionSimple(sim, t);
+      h = NewShotCollision(sim, t);
 
     // Inmunidad filial ROTA: compara el SLOT tirador con el AbsNum del padre
     // del golpeado (Shots.bas:330; [PROBABLE BUG], catálogo §9).
@@ -360,6 +466,10 @@ inline void updateshots(Sim& sim) {
       s.flash = true;
     }
 
+    // DoShotObstacleCollisions (Obstacles.bas:411-432): B7 — solo puede
+    // actuar con formas en el campo; stub registrado.
+    if (sim.numObstacles > 0) sim.diag.obstacle_collision_stub += 1;
+
     s.opos = s.pos;
     s.pos = VectorAdd(s.pos, s.velocity);
 
@@ -378,16 +488,36 @@ inline void updateshots(Sim& sim) {
   }
 
   // Compactación (<70%): renumera los shots — los índices NO son estables.
+  // CompactShots (Shots.bas:426-456): re-apunta rob().virusshot de los shots
+  // almacenados con dueño vivo; los huérfanos se destruyen aquí (y el hueco
+  // muerto se copia igualmente — quirk del fuente, replicado).
   if (sim.numshots < sim.maxshotarray * 0.7 && sim.maxshotarray > 100) {
-    std::vector<Shot> packed(1);
-    for (vb_long i = 1; i <= sim.maxshotarray; ++i)
-      if (sim.Shots[i].exist) packed.push_back(sim.Shots[i]);
+    vb_long j = 1;
+    for (vb_long i = 1; i <= sim.maxshotarray; ++i) {
+      if (sim.Shots[i].exist) {
+        if (sim.Shots[i].stored) {
+          if (sim.rob[sim.Shots[i].parent].exist) {  // hidepred: capa ⚙
+            sim.rob[sim.Shots[i].parent].virusshot = j;
+          } else {
+            sim.Shots[i].exist = false;
+            sim.Shots[i].stored = false;
+            sim.Shots[i].DnaLen = 0;
+          }
+        }
+        if (i != j) {
+          sim.Shots[j] = sim.Shots[i];
+          sim.Shots[i].exist = false;
+          sim.Shots[i].stored = false;
+          sim.Shots[i].DnaLen = 0;
+        }
+        j += 1;
+      }
+    }
     if (sim.numshots < 90)
       sim.maxshotarray = 100;
     else
       sim.maxshotarray = static_cast<vb_long>(sim.numshots * 1.2);
-    packed.resize(sim.maxshotarray + 1);
-    sim.Shots = std::move(packed);
+    sim.Shots.resize(sim.maxshotarray + 1);
     sim.shotpointer = sim.numshots > 0 ? sim.numshots : 1;
   }
   sim.ShotsThisCycle = sim.numshots;

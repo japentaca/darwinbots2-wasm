@@ -26,6 +26,10 @@ inline void ExecRobs(Sim& sim) {
 // Master.bas:23-554 — UpdateSim, núcleo. La numeración de pasos es la de
 // 10-CICLO.md §2.
 inline void UpdateSim(Sim& sim) {
+  // Rejilla de buckets al día (Init_Buckets corre al (re)crear el mundo en
+  // el original, main.frm:1302; decisión de port en buckets.hpp).
+  EnsureBuckets(sim);
+
   // Paso 2: contadores de ciclo.
   sim.opts.TotRunCycle += 1;
 
@@ -98,6 +102,9 @@ inline void preparerob(Sim& sim, int t, const std::string& fname) {
       static_cast<vb_single>(std::cos(static_cast<double>(b.aim))),
       static_cast<vb_single>(std::sin(static_cast<double>(b.aim))));
   b.exist = true;
+  b.BucketPos.x = -2;  // Module1.bas:37-39
+  b.BucketPos.y = -2;
+  UpdateBotBucket(sim, t);
   Random(50, 255, *sim.rndy);  // col1
   Random(50, 255, *sim.rndy);  // col2
   Random(50, 255, *sim.rndy);  // col3
@@ -125,6 +132,7 @@ inline int RobScriptLoadSim(Sim& sim, const std::string& text,
     return n;
   }
   sim.rob[n].exist = false;
+  UpdateBotBucket(sim, n);  // Module1.bas:23
   return -1;
 }
 

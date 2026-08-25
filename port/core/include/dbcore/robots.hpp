@@ -492,6 +492,9 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   c.pos.x = p.pos.x + absx(p.aim, static_cast<vb_single>(sondist), 0, 0, 0);
   c.pos.y = p.pos.y + absy(p.aim, static_cast<vb_single>(sondist), 0, 0, 0);
   c.exist = true;
+  c.BucketPos.x = -2;  // Robots.bas:2186-2188
+  c.BucketPos.y = -2;
+  UpdateBotBucket(sim, nuovo);
   c.vel = p.vel;
   c.actvel = p.actvel;
   c.aim = p.aim + PI;
@@ -631,7 +634,8 @@ inline void ReproduceAndKill(Sim& sim) {
 inline void KillRobot(Sim& sim, int n) {
   if (n < 0 || n > static_cast<int>(sim.rob.size()) - 1) return;
   delallties(sim, n);
-  sim.rob[n].exist = false;
+  sim.rob[n].exist = false;  // después de borrar las ties (Robots.bas:3006)
+  UpdateBotBucket(sim, n);   // Robots.bas:3007 — lo saca del bucket
   // makepoff: ornamental (render) — fuera del core.
   if (sim.rob[n].virusshot > 0 &&
       sim.rob[n].virusshot <= sim.maxshotarray) {
@@ -700,8 +704,14 @@ inline void UpdateBots(Sim& sim) {
   sim.totvegsDisplayed = sim.totvegs;
   sim.totvegs = 0;
 
-  // P0a (teleporters) y P0b (AddedMass con Density) — B7/F-*: sin efecto con
-  // los defaults del harness. Mareas (Tides): ⚙ opcional, fuera.
+  // P0a (teleporters) — B7: sin teleporters no hay llamada. Mareas (Tides):
+  // ⚙ opcional, fuera (BouyancyScaling queda en 1).
+
+  // P0b — AddedMass, solo si el medio tiene densidad (Robots.bas:1516-1520).
+  if (sim.opts.Density != 0.0f) {
+    for (int t = 1; t <= sim.MaxRobs; ++t)
+      if (sim.rob[t].exist) AddedMass(sim, t);
+  }
 
   // P1 — pre update.
   for (int t = 1; t <= sim.MaxRobs; ++t) {
@@ -710,12 +720,14 @@ inline void UpdateBots(Sim& sim) {
     if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) Poisons(sim, t);
     if (!sim.opts.DisableFixing) ManageFixed(sim, t);
     CalcMass(sim, t);
-    // DoObstacleCollisions/bordercolls: B7/F-* (campo sin bordes activos en
-    // los casos M; el sentido edge (214) llega con F-*).
-    TieTiming(sim, t);  // la porción temporal de TieHooke
-    // TieTorque: F-*.
+    // DoObstacleCollisions (Obstacles.bas:434-553): B7 — solo con formas;
+    // stub registrado.
+    if (sim.numObstacles > 0) sim.diag.obstacle_collision_stub += 1;
+    bordercolls(sim, t);
+    TieHooke(sim, t);
+    if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) TieTorque(sim, t);
     if (!sim.rob[t].Fixed) NetForces(sim, t);
-    BucketsCollisionSimple(sim, t);
+    BucketsCollision(sim, t);
     if (sim.rob[t].ImpulseStatic > 0.0f &&
         (sim.rob[t].ImpulseInd.x != 0.0f || sim.rob[t].ImpulseInd.y != 0.0f)) {
       vb_single staticV;

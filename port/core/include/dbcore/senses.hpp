@@ -1,11 +1,11 @@
 // dbcore/senses.hpp — Senses.bas: touch/taste, EraseSenses, lookoccurr y su
-// borrado, WriteSenses, makeoccurrlist. Contratos: 21-MEMORIA.md §3 (régimen
-// A: latencia 1 ciclo), casos M-01, M-06, M-12.
-// El barrido real de ojos (BucketsProximity, Quads.bas) es del milestone de
-// visión (B2/F-*): aquí un stub documentado usa .lastopp si está poblado.
+// borrado, WriteSenses (con el barrido real de BucketsProximity, vision.hpp)
+// y makeoccurrlist. Contratos: 21-MEMORIA.md §3 (régimen A: latencia 1
+// ciclo), 32-VISION.md; casos M-01, M-06, M-12, F-08..F-11, F-15.
 #pragma once
 
 #include "sim.hpp"
+#include "vision.hpp"
 
 namespace db {
 
@@ -180,17 +180,6 @@ inline void lookoccurr(Sim& sim, int n, int o) {
   vn.mem[477] = vo.Fixed ? 1 : 0;  // reffixed
 }
 
-// Barrido de visión: stub documentado (B2/F-*). El original llama
-// BucketsProximity (Quads.bas) que puebla .lastopp/.lastopptype y los ojos;
-// aquí devolvemos >0 si .lastopp ya apunta a un bot vivo (los tests [M] lo
-// inyectan). El barrido real llega con los casos F-*.
-inline int VisionSweepStub(Sim& sim, int n) {
-  sim.diag.vision_sweep_stub += 1;
-  const vb_long o = sim.rob[n].lastopp;
-  if (o > 0 && o <= sim.MaxRobs && sim.rob[o].exist) return 1;
-  return 0;
-}
-
 // Senses.bas:462-517 — makeoccurrlist: la firma occurr(1..12) desde el ADN,
 // y las publicaciones 721-731 (myup..myvenom).
 inline void makeoccurrlist(Sim& sim, int n) {
@@ -237,9 +226,10 @@ inline void WriteSenses(Sim& sim, int n) {
   }
 
   if (!b.CantSee && !b.Corpse) {
-    if (VisionSweepStub(sim, n) > 0) {
+    if (BucketsProximity(sim, n) > 0) {
       if (b.lastopptype == 0) lookoccurr(sim, n, static_cast<int>(b.lastopp));
-      // lastopptype == 1 (formas): lookoccurrShape — B2/F-*.
+      // lastopptype == 1 (formas): lookoccurrShape — llega con CompareShapes
+      // (catálogo §9, B2-3/B2-4); inalcanzable con el stub de CompareShapes.
     }
   }
 

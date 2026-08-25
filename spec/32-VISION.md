@@ -71,12 +71,15 @@ Por bot observado `n2`:
    (perpendiculares al vector de centros escaladas por `r2`, Y invertida,
    `:451-508`), y `botspanszero` si el bot cruza el ángulo 0.
 4. Por ojo `a = 0..8` con alcance suficiente: dirección y semiancho según §0.2, con
-   normalizaciones. Ojo: en las normalizaciones del semiancho, `PI \ 36` usa
-   **división entera** — `CInt(π)\36 = 0` — así que los bucles reales son
-   `While hw > π: hw −= π` / `While hw < 0: hw += π` (`:534-535`): la intención
-   aparente era `π/36` pero el efecto es normalizar a [0, π). Consecuencia observable:
-   una **anchura negativa** (`eyeXwidth` < 0, `Mod 1256` conserva el signo) produce
-   `hw` negativo → +π → un ojo casi panorámico. `[PROBABLE BUG]` heredable.
+   normalizaciones. **(Corregido 2026-08-24 en M4 contra el fuente)**: los bucles de
+   normalización del semiancho son `While hw > π − π/36: hw −= π` /
+   `While hw < −π/36: hw += π` (`:534-535`, división **real** `PI / 36` — la nota
+   anterior sobre `PI \ 36` entera era incorrecta: no hay `\` en `Quads.bas`);
+   después se suma `± π/36` al construir `eyeaimleft/right` (`:536-537`), de modo que
+   el semiancho efectivo es `hw + π/36` y el rango normalizado
+   `(−π/36, π − π/36]` deja el campo total en (0, π]. Consecuencia observable
+   intacta: una **anchura negativa** (`eyeXwidth` < 0, `Mod 1256` conserva el signo)
+   produce `hw` negativo → +π → un ojo casi panorámico. `[PROBABLE BUG]` heredable.
 5. El test de visibilidad es la disyunción de 10 cláusulas (`:553-562`) que cubre:
    borde izquierdo o derecho del bot dentro del campo del ojo, el bot abarcando el ojo
    entero, y las variantes con el ojo o el bot cruzando 0. Se especifica **por
@@ -165,8 +168,9 @@ arriba" en la convención de pantalla; cada P5.
 
 1. **Oclusión transpuesta y con `Or`** (`ShapeBlocksBot`, §0.5) — el más gordo del
    documento: la sombra de las formas no coincide con las formas.
-2. **`PI \ 36` división entera** en la normalización del semiancho de ojo para bots
-   (`Quads.bas:534-535`): anchuras negativas producen ojos panorámicos.
+2. **Anchuras negativas producen ojos panorámicos** en la normalización del semiancho
+   de ojo para bots (`Quads.bas:534-535`: `hw` negativo sube por `+π`; corregido
+   2026-08-24: la división es la real `π/36`, no entera — ver §2.4).
 3. **Dentro de una forma no se actualiza `EYEF`** (§3.2).
 4. **`lastopppos` solo se captura para el ojo frontal** (§3.5): refvars de posición de
    formas incorrectos con `focuseye ≠ 0`.
