@@ -137,17 +137,147 @@ inline void UpdateCounters(Sim& sim, int n) {
   }
 }
 
-// Robots.bas:1174-1182 — MakeStuff (P5): los cuerpos de make*/store* son de
-// B5 (31-ENERGIA, catálogo §9); los gates se transcriben para registrar el
-// consumo pendiente.
-inline void MakeStuff(Sim& sim, int n) {
+// Robots.bas:2010-2048 — storevenom: 1 venom por 1 nrg (tasa 1). Publica
+// mem(825) con Int() = FLOOR, no CInt ([PROBABLE BUG] B5-2 / B-26: venom 1:1
+// vs poison 4:1 — geometría del código). Disqualify: capa torneo ⚙, fuera.
+inline void storevenom(Sim& sim, int n) {
   Bot& b = sim.rob[n];
-  if (b.mem[824] != 0 || b.mem[826] != 0 || b.mem[822] != 0 || b.mem[820] != 0)
-    sim.diag.makestuff_stub += 1;
+  constexpr vb_single venomNrgConvRate = 1.0f;
+  if (b.nrg <= 0.0f) return;
+
+  if (b.mem[824] > 32000) b.mem[824] = 32000;
+  if (b.mem[824] < -32000) b.mem[824] = -32000;
+
+  vb_single Delta = static_cast<vb_single>(b.mem[824]);
+  if (std::fabs(Delta) > b.nrg / venomNrgConvRate)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / venomNrgConvRate;
+  if (std::fabs(Delta) > 100.0f)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
+  if (b.venom + Delta > 32000.0f) Delta = 32000.0f - b.venom;
+  if (b.venom + Delta < 0.0f) Delta = -b.venom;
+
+  b.venom = b.venom + Delta;
+  b.nrg = b.nrg - (std::fabs(Delta) * venomNrgConvRate);
+
+  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::VENOMCOST] *
+                         sim.vm.costs.v[cost::COSTMULTIPLIER];
+  b.nrg = b.nrg - Cost;
+  b.Waste = b.Waste + Cost;
+
+  b.mem[824] = 0;
+  b.mem[825] = static_cast<vb_integer>(
+      std::floor(static_cast<double>(b.venom)));  // Int(), no CInt
 }
 
-// Robots.bas:1184-1196 — HandleWaste (P5): publicaciones y gates; feedveg2/
-// altzheimer/defacate son de B5/B7 (altzheimer consume RNG).
+// Robots.bas:2050-2089 — storepoison: 4 poison por 1 nrg (tasa 0.25; B-26).
+inline void storepoison(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  constexpr vb_single poisonNrgConvRate = 0.25f;
+  if (b.nrg <= 0.0f) return;
+
+  if (b.mem[826] > 32000) b.mem[826] = 32000;
+  if (b.mem[826] < -32000) b.mem[826] = -32000;
+
+  vb_single Delta = static_cast<vb_single>(b.mem[826]);
+  if (std::fabs(Delta) > b.nrg / poisonNrgConvRate)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / poisonNrgConvRate;
+  if (std::fabs(Delta) > 100.0f)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
+  if (b.poison + Delta > 32000.0f) Delta = 32000.0f - b.poison;
+  if (b.poison + Delta < 0.0f) Delta = -b.poison;
+
+  b.poison = b.poison + Delta;
+  b.nrg = b.nrg - (std::fabs(Delta) * poisonNrgConvRate);
+
+  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::POISONCOST] *
+                         sim.vm.costs.v[cost::COSTMULTIPLIER];
+  b.nrg = b.nrg - Cost;
+  b.Waste = b.Waste + Cost;
+
+  b.mem[826] = 0;
+  b.mem[827] = vb_cint(b.poison);
+}
+
+// Robots.bas:886-931 — makeshell: 10 shell por 1 nrg (tasa 0.1); coste de
+// transacción rebajado para multibots, pero el Waste sube por el coste
+// COMPLETO (literal del fuente).
+inline void makeshell(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  constexpr vb_single shellNrgConvRate = 0.1f;
+  if (b.nrg <= 0.0f) return;
+
+  if (b.mem[822] > 32000) b.mem[822] = 32000;
+  if (b.mem[822] < -32000) b.mem[822] = -32000;
+
+  vb_single Delta = static_cast<vb_single>(b.mem[822]);
+  if (std::fabs(Delta) > b.nrg / shellNrgConvRate)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / shellNrgConvRate;
+  if (std::fabs(Delta) > 100.0f)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
+  if (b.shell + Delta > 32000.0f) Delta = 32000.0f - b.shell;
+  if (b.shell + Delta < 0.0f) Delta = -b.shell;
+
+  b.shell = b.shell + Delta;
+  b.nrg = b.nrg - (std::fabs(Delta) * shellNrgConvRate);
+
+  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SHELLCOST] *
+                         sim.vm.costs.v[cost::COSTMULTIPLIER];
+  if (b.Multibot)
+    b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
+  else
+    b.nrg = b.nrg - Cost;
+  b.Waste = b.Waste + Cost;
+
+  b.mem[822] = 0;
+  b.mem[823] = vb_cint(b.shell);
+}
+
+// Robots.bas:933-980 — makeslime: 10 slime por 1 nrg; tope 200/ciclo (los
+// demás topan en 100).
+inline void makeslime(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  constexpr vb_single slimeNrgConvRate = 0.1f;
+  if (b.nrg <= 0.0f) return;
+
+  if (b.mem[820] > 32000) b.mem[820] = 32000;
+  if (b.mem[820] < -32000) b.mem[820] = -32000;
+
+  vb_single Delta = static_cast<vb_single>(b.mem[820]);
+  if (std::fabs(Delta) > b.nrg / slimeNrgConvRate)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / slimeNrgConvRate;
+  if (std::fabs(Delta) > 200.0f)
+    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 200.0f;
+  if (b.Slime + Delta > 32000.0f) Delta = 32000.0f - b.Slime;
+  if (b.Slime + Delta < 0.0f) Delta = -b.Slime;
+
+  b.Slime = b.Slime + Delta;
+  b.nrg = b.nrg - (std::fabs(Delta) * slimeNrgConvRate);
+
+  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SLIMECOST] *
+                         sim.vm.costs.v[cost::COSTMULTIPLIER];
+  if (b.Multibot)
+    b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
+  else
+    b.nrg = b.nrg - Cost;
+  b.Waste = b.Waste + Cost;
+
+  b.mem[820] = 0;
+  b.mem[821] = vb_cint(b.Slime);
+}
+
+// Robots.bas:1174-1182 — MakeStuff (P5): reales desde M6 (B-26); el stub
+// makestuff_stub queda solo para sharechloroplasts (B6, distancia genética).
+inline void MakeStuff(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  if (b.mem[824] != 0) storevenom(sim, n);
+  if (b.mem[826] != 0) storepoison(sim, n);
+  if (b.mem[822] != 0) makeshell(sim, n);
+  if (b.mem[820] != 0) makeslime(sim, n);
+}
+
+// Robots.bas:1184-1196 — HandleWaste (P5): publicaciones y gates; defacate
+// real desde M6 (B-18); feedveg2/altzheimer siguen en B5/B7 (altzheimer
+// consume RNG).
 inline void HandleWaste(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.Waste > 0.0f && b.chloroplasts > 0.0f) sim.diag.handlewaste_stub += 1;
@@ -155,7 +285,7 @@ inline void HandleWaste(Sim& sim, int n) {
   if (sim.opts.BadWastelevel > 0 &&
       b.Pwaste + b.Waste > static_cast<vb_single>(sim.opts.BadWastelevel))
     sim.diag.handlewaste_stub += 1;  // altzheimer
-  if (b.Waste > 32000.0f) sim.diag.handlewaste_stub += 1;  // defacate
+  if (b.Waste > 32000.0f) defacate(sim, n);
   if (b.Pwaste > 32000.0f) b.Pwaste = 32000.0f;
   if (b.Waste < 0.0f) b.Waste = 0.0f;
   b.mem[828] = vb_cint(b.Waste);
@@ -456,8 +586,12 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
                           FindRadius(sim, n, (100 - per) / 100.0f))));
 
   vb_single nnrg = (sim.rob[n].nrg / 100.0f) * static_cast<vb_single>(per);
-  const vb_integer nbody =
-      vb_cint((static_cast<double>(sim.rob[n].body) / 100.0) * per);
+  // nbody As Integer: la expresión es aritmética SINGLE en VB6 y el redondeo
+  // bancario muerde el .5 exacto del float ([PROBABLE BUG] B6-4, B-30;
+  // 501/100*50 -> 250.5f -> 250, 503/100*50 -> 251.5f -> 252). En double la
+  // cuenta daría 251.4999... -> 251: la precisión Single es la spec.
+  const vb_integer nbody = vb_cint(static_cast<double>(
+      (sim.rob[n].body / 100.0f) * static_cast<vb_single>(per)));
 
   const vb_single tempnrg = sim.rob[n].nrg;
   if (tempnrg <= 0.0f) return;
@@ -794,7 +928,8 @@ inline void UpdateBots(Sim& sim) {
   for (int t = 1; t <= sim.MaxRobs; ++t) {
     if (sim.rob[t].chloroplasts < sim.rob[t].body / 2.0f ||
         sim.rob[t].Kills > 5) {
-      if (sim.rob[t].exist && sim.rob[t].body > kBodyFix) KillRobot(sim, t);
+      if (sim.rob[t].exist && sim.rob[t].body > sim.opts.bodyfix)
+        KillRobot(sim, t);
     }
   }
 

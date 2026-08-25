@@ -1723,9 +1723,15 @@ ADN resultante token a token (más el corrimiento de R-11).
 ### B-30 · `nbody As Integer`: el body del hijo redondea bancario — [ciclo]
 
 (`Robots.bas:2108,2140` — `Dim nbody As Integer`.) **Estado**: padre con
-`body = 501`, `per = 50`. **Esperado**: `nbody = (501/100)·50 = 250.5` → asignación
-a Integer **bancaria** → **250** (par); el padre pierde 250, el hijo recibe 250.
-Con `body = 503`: 251.5 → 252. Todo lo demás del reparto es Single.
+`body = 501`, `per = 50`. **Esperado**: `nbody = (501/100)·50` en aritmética
+**Single estricta** (Q07/premisa del EXE) = `250.500015` (un ULP **sobre** .5:
+`501/100` redondea a `5.0100002f`) → **251**; con `body = 503`: `251.500015` →
+**252**. El empate exacto que dispara el redondeo bancario existe cuando
+`body/100` es representable: `body = 525` → `262.5` exacto → **262** (par,
+baja); `body = 475` → `237.5` exacto → **238** (par, sube). El padre pierde
+exactamente `nbody`; todo lo demás del reparto es Single.
+*(Corregido 2026-08-25 contra el fuente: la tabla original decía 250.5 → 250
+para 501 — ese producto no es un empate en Single.)*
 
 ### B-31 · Los suelos anti-freeze reescriben las tasas heredables — [ciclo]
 

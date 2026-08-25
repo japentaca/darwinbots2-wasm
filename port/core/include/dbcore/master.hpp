@@ -25,6 +25,41 @@ inline void ExecRobs(Sim& sim) {
 
 // Master.bas:23-554 — UpdateSim, núcleo. La numeración de pasos es la de
 // 10-CICLO.md §2.
+// Master.bas:429-465 — "Kill some robots to prevent out of memory": con
+// totlen > 4e6 mata maxdel+1 veces al vivo más pobre en nrg + body*10 bajo
+// 320000. selectrobot es un local que ARRANCA EN 0 y no se resetea entre
+// iteraciones: sin candidato bajo el umbral, KillRobot(0) "mata" el slot 0
+// fantasma y ningún vivo muere ([PROBABLE BUG] A1-3, B-02). Con
+// totlen > 3e6 borra LastMutDetail de TODOS los slots (exist o no).
+inline void MemoryPressureKill(Sim& sim) {
+  vb_long totlen = 0;
+  for (int t = 1; t <= sim.MaxRobs; ++t)
+    if (sim.rob[t].exist) totlen += sim.rob[t].DnaLen;
+
+  if (totlen > 4000000) {
+    vb_integer selectrobot = 0;  // Dim local: 0 hasta la primera asignación
+    const vb_long maxdel = static_cast<vb_long>(vb_round64(
+        1500.0 * (static_cast<double>(sim.TotalRobotsDisplayed) * 425.0 /
+                  static_cast<double>(totlen))));
+
+    for (vb_long i = 0; i <= maxdel; ++i) {
+      vb_single calcminenergy = 320000.0f;
+      for (int t = 1; t <= sim.MaxRobs; ++t) {
+        if (sim.rob[t].exist) {
+          if (sim.rob[t].nrg + sim.rob[t].body * 10.0f < calcminenergy) {
+            calcminenergy = sim.rob[t].nrg + sim.rob[t].body * 10.0f;
+            selectrobot = static_cast<vb_integer>(t);
+          }
+        }
+      }
+      KillRobot(sim, selectrobot);
+    }
+  }
+  if (totlen > 3000000) {
+    for (int t = 1; t <= sim.MaxRobs; ++t) sim.rob[t].LastMutDetail.clear();
+  }
+}
+
 inline void UpdateSim(Sim& sim) {
   // Rejilla de buckets al día (Init_Buckets corre al (re)crear el mundo en
   // el original, main.frm:1302; decisión de port en buckets.hpp).
@@ -83,8 +118,10 @@ inline void UpdateSim(Sim& sim) {
   if (sim.TotalChlr < sim.opts.MinVegs && sim.totvegsDisplayed != -1)
     sim.diag.world_stub += 1;
 
-  // Pasos 22-26: torneo/UI/autosave/matanza por presión de memoria — ⚙ y
-  // §8 de 10-CICLO.md (la matanza llega con los casos de integración larga).
+  // Pasos 22-25: torneo/UI/autosave — ⚙, fuera del core.
+
+  // Master.bas:429-465 — matanza por presión de memoria (paso 26).
+  MemoryPressureKill(sim);
 }
 
 // Module1.bas:29-55 — preparerob: 6 extracciones de RNG (pos x/y, aim,

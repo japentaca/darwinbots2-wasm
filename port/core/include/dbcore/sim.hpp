@@ -27,14 +27,15 @@ inline constexpr int half = 60;
 inline constexpr vb_long CubicTwipPerBody = 905;
 inline constexpr int ROBARRAYMAX = 32000;
 inline constexpr int GeneticSensitivity = 75;  // Robots.bas:377
-inline constexpr vb_integer kBodyFix = 32100;  // bodyfix (HDRoutines.bas:854):
-                                               // P4 anti-gigantes muerta
-                                               // (31-ENERGIA.md)
 
 // Índices de SimOpts.Costs (SimOptions.bas:2-38). Los de la VM ya están en
 // Costs (vm.hpp); aquí los del ciclo.
 namespace cost {
 inline constexpr int CHLRCOST = 8;
+inline constexpr int VENOMCOST = 26;
+inline constexpr int POISONCOST = 27;
+inline constexpr int SLIMECOST = 28;
+inline constexpr int SHELLCOST = 29;
 inline constexpr int MOVECOST = 20;
 inline constexpr int TURNCOST = 21;
 inline constexpr int TIECOST = 22;
@@ -94,6 +95,13 @@ struct SimOptsT {
   vb_long BadWastelevel = 400;  // Robots.bas:1186: 0 se corrige a 400
   vb_single Decay = 0;
   vb_long Decaydelay = 100;
+  // bodyfix (HDRoutines.bas:854, registro de Windows): umbral de la P4
+  // anti-gigantes. Default 32100 > 32000 = la pasada está MUERTA (B-25).
+  vb_integer bodyfix = 32100;
+  // Intercambio de energía de los shots -1/-6 (MDIForm1.frm:2501-2503).
+  bool EnergyExType = true;
+  vb_integer EnergyFix = 200;
+  vb_single EnergyProp = 1;
   int DecayType = 0;  // 0/1 sin shot, 2 waste, 3 nrg
   bool NoShotDecay = false, NoWShotDecay = false;
   bool FixedBotRadii = false;
@@ -148,7 +156,8 @@ struct SimDiag {
   int shot_collision_simplified = 0;  // M4: NewShotCollision swept-sphere
   int bot_collision_simplified = 0;   // M4: BucketsCollision/Repel3 reales
 
-  int shot_feed_stub = 0;        // B3a: releasenrg/takenrg/releasebod/addgene
+  int shot_feed_stub = 0;        // B3b: addgene (releasenrg/takenrg/
+                                 //   releasebod reales desde M6)
   int makevirus_stub = 0;        // B3b: MakeVirus/copygene
   int mutate_stub = 0;           // B6b: mutate con mutaciones activas
   int makestuff_stub = 0;        // B5: storevenom/storepoison/makeshell/makeslime

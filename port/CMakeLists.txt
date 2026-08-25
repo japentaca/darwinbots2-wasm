@@ -31,6 +31,8 @@ add_executable(dbtests
   tests/test_physics.cpp
   tests/test_formats.cpp
   tests/test_bugs.cpp
+  tests/test_bugs2.cpp
+  tests/test_bugs3.cpp
 )
 target_link_libraries(dbtests PRIVATE dbcore)
 target_include_directories(dbtests PRIVATE tests)

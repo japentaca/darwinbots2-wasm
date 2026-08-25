@@ -1,10 +1,10 @@
 // dbcore/shots.hpp — Shots.bas: newshot/createshot, updateshots con los
 // efectos por tipo que M3 ejercita (shots de memoria con salto de 340 y
-// bloqueo por poison, venom -3, poison -5, esperma -8, waste -4), Vshoot y
-// robshoot (Robots.bas:1716-1864). Los efectos de alimentación
-// (releasenrg/takenrg/releasebod) y addgene son de B3a/B3b: stubs registrados.
-// La colisión swept-sphere exacta (NewShotCollision, Shots.bas:960-1082) es
-// de F-*: aquí punto-en-círculo con la regla "slot del tirador intocable".
+// bloqueo por poison, venom -3, poison -5, esperma -8, waste -4), Vshoot,
+// robshoot (Robots.bas:1716-1864) y los efectos de alimentación
+// releasenrg/takenrg/releasebod (M6: cierran B3a; el Kills sin clamp de la
+// cola de releasenrg/releasebod es B-24). addgene sigue en B3b (stub).
+// NewShotCollision es el swept-sphere exacto de Shots.bas:960-1082.
 #pragma once
 
 #include "senses.hpp"
@@ -213,6 +213,226 @@ inline void takeven(Sim& sim, int n, vb_long t) {
     }
     b.Vval = s.Memval;
   }
+}
+
+// Shots.bas:487-503 — defacate: expulsa waste como shot -4 (200/ciclo; con
+// Waste > 32000, reset a 31500 y descarga 500 — el "clamp" de P5 que cierra
+// B-18). Cobra SHOTCOST rebajado por ties y consume 2 RNG (newshot).
+inline void defacate(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  const vb_integer SH = -4;
+  vb_single va = 200.0f;
+
+  if (va > b.Waste) va = b.Waste;
+  if (b.Waste > 32000.0f) {
+    b.Waste = 31500.0f;
+    va = 500.0f;
+  }
+
+  b.Waste = b.Waste - va;
+  b.nrg -= (sim.vm.costs.v[cost::SHOTCOST] *
+            sim.vm.costs.v[cost::COSTMULTIPLIER]) /
+           ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
+  newshot(sim, n, SH, va, 1.0f, true);
+  b.Pwaste = b.Pwaste + va / 1000.0f;
+}
+
+// Shots.bas:505-597 — releasenrg: el bot n golpeado por un shot -1 devuelve
+// un shot -2 de energía (o -5 si su poison supera la potencia). La llamada a
+// FirstSlot del arranque es del fuente (avanza shotpointer sin usar el
+// resultado — R-05). La cola mata y acredita Kills al SLOT tirador SIN
+// clamp: mem(220) puede superar 32000 ([PROBABLE BUG] A3-5, B-24; con
+// Kills = 32767 el original lanzaba error 6, §8).
+inline void releasenrg(Sim& sim, int n, vb_long t) {
+  Bot& b = sim.rob[n];
+  Shot& s = sim.Shots[t];
+
+  (void)FirstSlot(sim);  // a = FirstSlot (resultado sin uso, fiel al fuente)
+
+  if (b.nrg <= 0.5f) return;
+
+  Vector vel = VectorSub(b.actvel, s.velocity);
+  vel = VectorAdd(vel, VectorScalar(b.actvel, 0.5f));
+
+  vb_single power;
+  if (sim.opts.EnergyExType) {
+    if (s.Range == 0.0f)
+      power = 0.0f;
+    else
+      power = static_cast<vb_single>(s.value) * s.nrg /
+              (s.Range * (RobSize / 3.0f)) * sim.opts.EnergyProp;
+    if (s.nrg < 0.0f) return;
+  } else {
+    power = static_cast<vb_single>(sim.opts.EnergyFix);
+  }
+
+  if (b.Corpse) power = power * 0.5f;
+
+  const vb_single Range = s.Range * 2.0f;
+
+  if (b.poison > power) {
+    // Rebote de poison.
+    createshot(sim, s.pos.x, s.pos.y, vel.x, vel.y, -5, n, power,
+               Range * (RobSize / 3.0f), 0);
+    b.poison = b.poison - (power * 0.9f);
+    if (b.poison < 0.0f) b.poison = 0.0f;
+    b.mem[addr::poison] = vb_cint(b.poison);
+  } else {
+    // Shot de energía: 90% de nrg, 1% de body.
+    vb_single EnergyLost = power * 0.9f;
+    if (EnergyLost > b.nrg) {
+      power = b.nrg;
+      b.nrg = 0.0f;
+    } else {
+      b.nrg = b.nrg - EnergyLost;
+    }
+
+    EnergyLost = power * 0.01f;
+    if (EnergyLost > b.body)
+      b.body = 0.0f;
+    else
+      b.body = b.body - EnergyLost;
+
+    createshot(sim, s.pos.x, s.pos.y, vel.x, vel.y, -2, n, power,
+               Range * (RobSize / 3.0f), 0);
+    b.radius = FindRadius(sim, n);
+  }
+
+  if (b.body <= 0.5f || b.nrg <= 0.5f) {
+    b.Dead = true;
+    sim.rob[s.parent].Kills += 1;  // sin clamp (la vía de ties sí clampa)
+    sim.rob[s.parent].mem[220] =
+        static_cast<vb_integer>(sim.rob[s.parent].Kills);
+  }
+}
+
+// Shots.bas:599-719 — releasebod: shot -6, energía directa del body (x4
+// contra corpses). La shell absorbe a razón ShellEffectiveness; el shot -2
+// de retorno se crea DESPUÉS del chequeo de muerte (a diferencia de -1).
+inline void releasebod(Sim& sim, int n, vb_long t) {
+  Bot& b = sim.rob[n];
+  Shot& s = sim.Shots[t];
+
+  if (b.body <= 0.0f) return;
+
+  Vector vel = VectorSub(b.actvel, s.velocity);
+  vel = VectorAdd(vel, VectorScalar(b.actvel, 0.5f));
+
+  vb_single power;
+  if (sim.opts.EnergyExType) {
+    if (s.Range == 0.0f)
+      power = 0.0f;
+    else
+      power = static_cast<vb_single>(s.value) * s.nrg /
+              (s.Range * (RobSize / 3.0f)) * sim.opts.EnergyProp;
+  } else {
+    power = static_cast<vb_single>(sim.opts.EnergyFix);
+  }
+
+  if (power > 32000.0f) power = 32000.0f;
+
+  const vb_single shell = b.shell * static_cast<vb_single>(ShellEffectiveness);
+
+  if (power > (b.body * 10.0f) / 0.8f + shell)
+    power = (b.body * 10.0f) / 0.8f + shell;
+
+  if (power < shell) {
+    b.shell = b.shell - power / ShellEffectiveness;
+    if (b.shell < 0.0f) b.shell = 0.0f;
+    b.mem[823] = vb_cint(b.shell);
+    return;
+  } else {
+    b.shell = b.shell - power / ShellEffectiveness;
+    if (b.shell < 0.0f) b.shell = 0.0f;
+    b.mem[823] = vb_cint(b.shell);
+    power = power - shell;
+  }
+
+  if (power <= 0.0f) return;
+
+  const vb_single Range = s.Range * 2.0f;
+
+  if (b.Corpse) {
+    power = power * 4.0f;
+    if (power > b.body * 10.0f) power = b.body * 10.0f;
+    b.body = b.body - power / 10.0f;
+    b.radius = FindRadius(sim, n);
+  } else {
+    vb_single leftover = 0.0f;
+    vb_single EnergyLost = power * 0.2f;
+    if (EnergyLost > b.nrg) {
+      leftover = EnergyLost - b.nrg;
+      b.nrg = 0.0f;
+    } else {
+      b.nrg = b.nrg - EnergyLost;
+    }
+
+    EnergyLost = power * 0.08f;
+    if (EnergyLost > b.body) {
+      leftover = leftover + EnergyLost - b.body * 10.0f;  // literal: -body*10
+      b.body = 0.0f;
+    } else {
+      b.body = b.body - EnergyLost;
+    }
+
+    if (leftover > 0.0f) {
+      if (b.nrg > 0.0f && b.nrg > leftover) {
+        b.nrg = b.nrg - leftover;
+        leftover = 0.0f;
+      } else if (b.nrg > 0.0f && b.nrg < leftover) {
+        leftover = leftover - b.nrg;
+        b.nrg = 0.0f;
+      }
+      if (b.body > 0.0f && b.body * 10.0f > leftover) {
+        b.body = b.body - leftover * 0.1f;
+        leftover = 0.0f;
+      } else if (b.body > 0.0f && b.body * 10.0f < leftover) {
+        b.body = 0.0f;
+      }
+    }
+    b.radius = FindRadius(sim, n);
+  }
+
+  if (b.body <= 0.5f || b.nrg <= 0.5f) {
+    b.Dead = true;
+    sim.rob[s.parent].Kills += 1;  // sin clamp (B-24)
+    sim.rob[s.parent].mem[220] =
+        static_cast<vb_integer>(sim.rob[s.parent].Kills);
+  }
+
+  createshot(sim, s.pos.x, s.pos.y, vel.x, vel.y, -2, n, power,
+             Range * (RobSize / 3.0f), 0);
+}
+
+// Shots.bas:721-756 — takenrg: el bot absorbe un shot -2 (95% nrg con
+// desborde al body, 4% body, 1% waste). Ignora corpses.
+inline void takenrg(Sim& sim, int n, vb_long t) {
+  Bot& b = sim.rob[n];
+  Shot& s = sim.Shots[t];
+  if (b.Corpse) return;
+
+  vb_single partial;
+  vb_single overflow = 0.0f;
+  if (s.Range < 0.00001f)
+    partial = 0.0f;
+  else
+    partial = s.nrg;
+
+  if (b.nrg + partial * 0.95f > 32000.0f) {
+    overflow = b.nrg + (partial * 0.95f) - 32000.0f;
+    b.nrg = 32000.0f;
+  } else {
+    b.nrg = b.nrg + partial * 0.95f;
+  }
+
+  if ((b.body + partial * 0.004f) + (overflow * 0.1f) > 32000.0f)
+    b.body = 32000.0f;
+  else
+    b.body = b.body + (partial * 0.004f) + (overflow * 0.1f);
+
+  b.Waste = b.Waste + partial * 0.01f;
+
+  b.radius = FindRadius(sim, n);
 }
 
 // Shots.bas:816-826 — takewaste.
@@ -449,10 +669,10 @@ inline void updateshots(Sim& sim) {
         }
       } else {
         switch (s.shottype) {
-          case -1:  // releasenrg — B3a (31-ENERGIA)
-          case -2:  // takenrg
-          case -6:  // releasebod
-          case -7:  // addgene — B3b
+          case -1: releasenrg(sim, h, t); break;
+          case -2: takenrg(sim, h, t); break;
+          case -6: releasebod(sim, h, t); break;
+          case -7:  // addgene — B3b (virus); stub registrado
             sim.diag.shot_feed_stub += 1;
             break;
           case -3: takeven(sim, h, t); break;
