@@ -648,8 +648,27 @@ inline void KillRobot(Sim& sim, int n) {
   }
 }
 
+// NeoMutations.bas:1007-1022 — delgene: borra el gen g, recalcula
+// DnaLen/genenum con publicación inmediata y rehace la firma occurr.
+// Las ramas de descalificación (Disqualify = 2, F1/x_restartmode) son de la
+// capa torneo ⚙ y no entran al core (Disqualify nace en 0).
+inline bool delgene(Sim& sim, int n, vb_long g) {
+  Bot& b = sim.rob[n];
+  const vb_long k = b.genenum;
+  if (g > 0 && g <= k) {
+    DeleteSpecificGene(b.dna, g);
+    b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
+    b.genenum = CountGenes(b.dna);
+    b.mem[addr::DnaLenSys] = b.DnaLen;
+    b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
+    makeoccurrlist(sim, n);
+    return true;
+  }
+  return false;
+}
+
 // Robots.bas:1052-1112 — BotDNAManipulation (P3): virus timer, delgene y las
-// publicaciones de DnaLen/genes. MakeVirus/delgene reales: B3b.
+// publicaciones de DnaLen/genes. MakeVirus real: B3b.
 inline void BotDNAManipulation(Sim& sim, int n) {
   Bot& b = sim.rob[n];
 
@@ -680,7 +699,7 @@ inline void BotDNAManipulation(Sim& sim, int n) {
   }
 
   if (b.mem[addr::DelgeneSys] > 0) {
-    sim.diag.makevirus_stub += 1;  // delgene — B3b
+    delgene(sim, n, b.mem[addr::DelgeneSys]);
     b.mem[addr::DelgeneSys] = 0;
   }
 

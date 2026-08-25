@@ -36,6 +36,23 @@ inline std::string lcase(std::string s) {
   return s;
 }
 
+// Trim de VB6: solo espacios (no tabs ni CrLf), ambos extremos.
+inline std::string vb_trim(const std::string& s) {
+  const std::size_t b0 = s.find_first_not_of(' ');
+  if (b0 == std::string::npos) return "";
+  const std::size_t b1 = s.find_last_not_of(' ');
+  return s.substr(b0, b1 - b0 + 1);
+}
+
+// stringops.bas:74-83 — replacechars: caracteres de control y altos -> '?'.
+inline std::string replacechars(std::string s) {
+  for (char& ch : s) {
+    const unsigned char u = static_cast<unsigned char>(ch);
+    if (u <= 31 || (u >= 127 && u <= 254)) ch = '?';
+  }
+  return s;
+}
+
 // Val() de VB6: parsea el prefijo numerico (signo, digitos, punto decimal,
 // exponente); cualquier otra cosa -> 0. Sin soporte &H/&O (no aparece en
 // ADN). A diferencia de strtod, no reconoce "inf"/"nan".
@@ -211,6 +228,70 @@ inline Block MasterFlowTok(const std::string& s) {
 
 }  // namespace loader_detail
 
+// DNATokenizing.bas:822-846 — Hash: suma rodante por posición Mod f con
+// acarreo del vecino, Mod 100, emitida como Chr(33..125). OJO: `s` va ByRef
+// en el original — Hash TRIMEA y recorta los CrLf finales DEL LLAMADOR
+// (salvarob imprime el `hold` ya mutado; getvals sigue acumulando sobre el
+// `hold` mutado). La firma del port replica esa mutación.
+inline std::string Hash(std::string& s, int f) {
+  s = loader_detail::vb_trim(s);
+  while (s.size() >= 2 && s.compare(s.size() - 2, 2, "\r\n") == 0)
+    s.resize(s.size() - 2);
+  std::vector<vb_long> buf(101, 0);  // Dim buf(100)
+  for (std::size_t k = 1; k <= s.size(); ++k) {
+    const std::size_t i = k % static_cast<std::size_t>(f);
+    buf[i] += static_cast<unsigned char>(s[k - 1]);           // Asc
+    buf[i] += buf[(k - 1) % static_cast<std::size_t>(f)];
+    buf[i] %= 100;
+  }
+  std::string h;
+  for (int k = 0; k < f; ++k)
+    h += static_cast<char>(buf[k] % 93 + 33);
+  return h;
+}
+
+namespace loader_detail {
+
+// DNATokenizing.bas:767-817 — getvals: metadatos '#/'#. El `On Error GoTo
+// skip` del original convierte cualquier línea malformada en un no-op (el
+// archivo NO se rechaza). El hash que no cuadra resetea generation y
+// OldMutations (anti-manipulación, FM-04).
+inline void getvals(Bot& bot, const std::string& a_in, std::string& hold) {
+  const std::size_t colon = a_in.find(':');
+  if (colon == std::string::npos) return;  // Left(a, -1) -> error 5 -> skip
+  std::string name = vb_trim(a_in.substr(0, colon));
+  const std::string value = vb_trim(a_in.substr(colon + 1));
+  name = (name.size() >= 2) ? name.substr(2) : "";  // Mid$(Name, 3)
+
+  if (name == "generation") {
+    const std::int64_t g = vb_round64(vb_val(value));
+    if (g < -32768 || g > 32767) return;  // error 6 -> skip
+    bot.generation = static_cast<vb_integer>(g);
+  }
+  if (name == "mutations") {
+    const std::int64_t m = vb_round64(vb_val(value));
+    if (m < -2147483648LL || m > 2147483647LL) return;  // error 6 -> skip
+    bot.OldMutations = static_cast<vb_long>(m);
+  }
+  if (name == "tag") {
+    // rob(n).tag = Left(replacechars(value), 45): asignación a String * 50
+    // rellena con espacios a la derecha.
+    std::string t = replacechars(value);
+    if (t.size() > 45) t.resize(45);
+    t.resize(50, ' ');
+    bot.tag = t;
+  }
+  if (name == "hash") {
+    const std::string value2 = Hash(hold, 20);  // muta hold (ByRef)
+    if (value2 != value) {
+      bot.generation = 0;
+      bot.OldMutations = 0;
+    }
+  }
+}
+
+}  // namespace loader_detail
+
 // Parse en modo tokenizar (DNATokenizing.bas:241-294): los comandos se
 // comparan en minusculas; lo no reconocido acaba en SysvarTok — el
 // tokenizador no rechaza nada (V-08); solo el literal fuera de +-32767
@@ -266,6 +347,7 @@ inline bool LoadDNAText(const std::string& text, Bot& bot,
   bot.vars.assign(1, Var{});
   bot.vnum = 1;
   bool useref = false;
+  std::string hold;  // acumulador para la verificación de '#hash (FM-04)
 
   try {
     std::size_t line_start = 0;
@@ -275,6 +357,7 @@ inline bool LoadDNAText(const std::string& text, Bot& bot,
       std::string a = text.substr(line_start, nl - line_start);
       line_start = nl + 1;
       if (!a.empty() && a.back() == '\r') a.pop_back();
+      const std::string clonea = a;  // la línea cruda, para hold (:87,150)
 
       // Comentario ' : corta solo si NO esta en la columna 1 (:92-93).
       const std::size_t qpos = a.find('\'');
@@ -304,8 +387,11 @@ inline bool LoadDNAText(const std::string& text, Bot& bot,
               bot.dna.push_back(ParseToken(word, bot, sysvars, ismutating));
           }
         }
+      } else if (a.compare(0, 2, "'#") == 0 || a.compare(0, 2, "/#") == 0) {
+        // Metadatos: generation/mutations/tag/hash (:144-149, getvals).
+        getvals(bot, a, hold);
       }
-      // Lineas comentario y metadatos '#/'#: sin tokens (getvals pendiente).
+      hold += clonea + "\r\n";  // here: hold = hold & clonea & vbCrLf (:150)
       if (nl == text.size()) break;
     }
   } catch (const loader_detail::VbError&) {

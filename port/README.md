@@ -32,8 +32,29 @@ Emscripten; presentación web separada.
   Dos sitios de error con decisión de port: `TieTorque` con `j > 10`
   (error 9, registra y no escribe) y `GravityForces` con `PhysMoving = 0`
   (error 11, registra y no cobra).
+- **Milestone 5 (formatos ida-y-vuelta)**: `formats.hpp` — E/S sobre búferes
+  en memoria (el core WASM no toca disco; la fidelidad es la del formato de
+  bytes/texto). Bot de texto completo (`SalvarobText` con el gen epigenético
+  autodestructivo, `DetokenizeDNA` literal con comentarios de gen y `VOID`,
+  `Hash` ByRef que muta el acumulador como el original, `SaveRobHeader` con
+  cap 2e9) y registro binario de bot campo a campo
+  (`SaveRobotBody`/`LoadRobotBody` con `FileContinue`/centinela 254×3,
+  `sint` = Mod 32000 sin clamp, solo 50 vars, `mem()` crudo, campos muertos
+  de ties, escape Int→Long de `LastMutDetail`, relleno de ancestros,
+  `String * 50` del tag). El cargador de texto ganó los metadatos
+  `'#`/`/#` (`getvals`: generation/mutations/tag/hash con reset
+  anti-manipulación) y `delgene` es real (P3 ejecuta el gen epigenético
+  autodestructivo; `GeneEnd`/`genepos`/`DeleteSpecificGene` en `dna.hpp`).
+  Casos §7 (FM-01..FM-07). Decisiones de port documentadas en la cabecera de
+  `formats.hpp`: B8-1 (SaveSimulation recursivo → sin reintento; formato de
+  sim completo pendiente para los milestones de mundo), suma de
+  `SaveRobHeader` en 64 bits (el Long del original desbordaba antes del
+  cap), umbral de skip de `LastMutDetail` con contador 0 (error 11 →
+  infinito). El sidecar `.mrate`, `SaveSimulation`/`LoadSimulation` y
+  `SaveOrganism`/`LoadOrganism` quedan para milestones posteriores (ningún
+  caso dorado §7 los exige).
 
-Estado verificado: 75 casos / 1931 aserciones en verde.
+Estado verificado: 82 casos / 2018 aserciones en verde.
 
 ## Build (nativo)
 

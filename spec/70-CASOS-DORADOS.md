@@ -1364,9 +1364,16 @@ canónico. El caso fija ambas mitades (emisión y re-carga).
 ### FM-07 · `SaveRobHeader`: cap del contador — [unit]
 
 (`DNATokenizing.bas:850-859`.) `generation = 7`, `Mutations = 1.5e9`,
-`OldMutations = 1e9` ⇒ el header emite `'#mutations: 2000000000` (cap explícito
+`OldMutations = 6e8` ⇒ el header emite `'#mutations: 2000000000` (cap explícito
 `totmut > 2e9 → 2e9`, `:854-855`). Nótese el contraste con la vía binaria (FM-02):
 el texto capa, el binario envuelve.
+
+> Errata corregida (2026-08-24, transcripción M5): el estado original decía
+> `OldMutations = 1e9`, pero con esa suma (2.5e9) el `totmut As Long` del
+> original desbordaba con error 6 (EXE con chequeos) ANTES de llegar al cap —
+> el cap solo alcanza sumas en (2e9, 2^31−1]. Decisión de port: la suma se
+> hace en 64 bits y el cap absorbe también los desbordes (misma salida
+> `2000000000` para el estado original de la spec; asertado en el test).
 
 ---
 

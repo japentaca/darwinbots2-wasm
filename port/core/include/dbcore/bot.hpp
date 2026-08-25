@@ -44,6 +44,72 @@ struct Tie {
 
 inline constexpr int MAXTIES = 10;  // Ties.bas:42
 
+// NeoMutations.bas:7-17 — índices de los operadores de mutación (mutarray).
+namespace mut {
+inline constexpr int PointUP = 0;
+inline constexpr int MinorDeletionUP = 1;
+inline constexpr int ReversalUP = 2;
+inline constexpr int InsertionUP = 3;
+inline constexpr int AmplificationUP = 4;
+inline constexpr int MajorDeletionUP = 5;
+inline constexpr int CopyErrorUP = 6;
+inline constexpr int DeltaUP = 7;
+inline constexpr int TranslocationUP = 8;
+inline constexpr int P2UP = 9;
+inline constexpr int CE2UP = 10;
+}  // namespace mut
+
+// Type mutationprobs (varspecie.bas:2-13). La agenda/operadores reales son
+// B6b; aquí el struct completo porque el registro binario del bot lo
+// persiste campo a campo (60-FORMATOS.md §2).
+struct Mutationprobs {
+  bool Mutations = false;
+  std::array<vb_single, 21> mutarray{};
+  std::array<vb_single, 21> Mean{};
+  std::array<vb_single, 21> StdDev{};
+  vb_integer PointWhatToChange = 0;
+  vb_integer CopyErrorWhatToChange = 0;
+};
+
+// NeoMutations.bas — SetDefaultLengths (medias/desvíos por operador).
+inline void SetDefaultLengths(Mutationprobs& changeme) {
+  using namespace mut;
+  changeme.Mean[PointUP] = 3;
+  changeme.StdDev[PointUP] = 1;
+  changeme.Mean[DeltaUP] = 500;
+  changeme.StdDev[DeltaUP] = 150;
+  changeme.Mean[MinorDeletionUP] = 1;
+  changeme.StdDev[MinorDeletionUP] = 0;
+  changeme.Mean[InsertionUP] = 1;
+  changeme.StdDev[InsertionUP] = 0;
+  changeme.Mean[CopyErrorUP] = 1;
+  changeme.StdDev[CopyErrorUP] = 0;
+  changeme.Mean[MajorDeletionUP] = 3;
+  changeme.StdDev[MajorDeletionUP] = 1;
+  changeme.Mean[ReversalUP] = 3;
+  changeme.StdDev[ReversalUP] = 1;
+  changeme.CopyErrorWhatToChange = 80;
+  changeme.PointWhatToChange = 80;
+  changeme.Mean[AmplificationUP] = 250;
+  changeme.StdDev[AmplificationUP] = 75;
+  changeme.Mean[TranslocationUP] = 250;
+  changeme.StdDev[TranslocationUP] = 75;
+}
+
+// NeoMutations.bas:1072-1102 — SetDefaultMutationRates con skipNorm = True
+// (la rama del cargador binario; la rama NormMut lee el ADN de la especie y
+// es de B6b): mutarray = 5000, Mean = 1, StdDev = 0, P2UP a 0 y
+// SetDefaultLengths encima.
+inline void SetDefaultMutationRatesSkipNorm(Mutationprobs& changeme) {
+  for (int a = 0; a <= 20; ++a) {
+    changeme.mutarray[a] = 5000;
+    changeme.Mean[a] = 1;
+    changeme.StdDev[a] = 0;
+  }
+  changeme.mutarray[mut::P2UP] = 0;
+  SetDefaultLengths(changeme);
+}
+
 // Type robot (Robots.bas:179-357). Subconjunto que el ciclo M3 necesita;
 // crece con los milestones (mutación/virus/skin quedan fuera).
 struct Bot {
@@ -140,6 +206,24 @@ struct Bot {
   vb_integer generation = 0;
   std::string FName;
   vb_integer DnaLen = 0;
+
+  // --- mutación (registro persistido; los operadores reales son B6b) ---
+  Mutationprobs Mutables{};
+  vb_long Mutations = 0;
+  vb_long OldMutations = 0;  // '#mutations del archivo de texto
+  vb_long LastMut = 0;
+  std::string LastMutDetail;
+  vb_single GenMut = 0;  // DnaLen / GeneticSensitivity al cargar
+  vb_single OldGD = 0;
+
+  // --- identidad persistida (60-FORMATOS.md §2) ---
+  std::string LastOwner;                     // "" -> "Local" al cargar
+  std::string tag = std::string(50, '\0');   // String * 50: nace en Chr(0)
+  std::array<vb_integer, 14> Skin{};         // Skin(13)
+  vb_long color = 0;
+  vb_integer oldBotNum = 0;  // slot al guardar; remapeo de ties al cargar
+  vb_long sim = 0;           // GUID de la sim de nacimiento
+  vb_integer SubSpecies = 0;
 
   // --- movimiento voluntario (display + M-02) ---
   vb_integer lastup = 0, lastdown = 0, lastleft = 0, lastright = 0;

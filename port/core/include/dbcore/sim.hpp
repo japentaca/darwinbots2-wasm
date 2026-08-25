@@ -26,6 +26,7 @@ inline constexpr int RobSize = 120;
 inline constexpr int half = 60;
 inline constexpr vb_long CubicTwipPerBody = 905;
 inline constexpr int ROBARRAYMAX = 32000;
+inline constexpr int GeneticSensitivity = 75;  // Robots.bas:377
 inline constexpr vb_integer kBodyFix = 32100;  // bodyfix (HDRoutines.bas:854):
                                                // P4 anti-gigantes muerta
                                                // (31-ENERGIA.md)
@@ -278,9 +279,13 @@ inline vb_single absy(vb_single aim, vb_single up, vb_single dn, vb_single sx,
 }
 
 // HDRoutines.bas:1587-1599 — GiveAbsNum (Q14: no se publica en memoria).
+// La guardia AbsNum = 0 es del original (:1595): un bot cargado de archivo
+// conserva su AbsNum (FM-05; AbsNum importados sin deduplicar, B8-6).
 inline void GiveAbsNum(Sim& sim, int n) {
-  sim.MaxAbsNum += 1;
-  sim.rob[n].AbsNum = sim.MaxAbsNum;
+  if (sim.rob[n].AbsNum == 0) {
+    sim.MaxAbsNum += 1;
+    sim.rob[n].AbsNum = sim.MaxAbsNum;
+  }
 }
 
 // Robots.bas:2908-2967 — posto: primer slot libre desde 1; crece de a 100.

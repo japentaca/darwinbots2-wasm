@@ -50,13 +50,16 @@ reinicios de contexto.
 | M3 · Memoria y ciclo | ✅ cerrado | Casos §4 (M-01..M-12) en verde. Tabla completa de sysvars (255 entradas extraídas mecánicamente de `LoadSysVars` y verificadas contra `sysvars.yaml`: 247 direcciones, 8 pares de alias). Esqueleto del tick (pasos 10/12/14/15/16/17 + 7 pasadas de `UpdateBots`) y subsistemas de memoria: sentidos (touch/taste/lookoccurr con A3-1, Erase*), ties (maketie/Update_Ties con gates de M-04, trefvars con A3-2, tieportcom, memoria genética), shots (robshoot/newshot/updateshots con remapeo 340→mem(0), bloqueo por poison, esperma), Reproduce completo (epimem, tie de nacimiento, herencia del timer post-Ageing), corpses (M-12). Corrección menor a `70-CASOS-DORADOS.md` M-11: el sysvar `vshoot` es 338, no 836 (el fuente manda, `Robots.bas:59` + `DNATokenizing.bas:1045`). Colisiones bot/shot con detección simplificada y pasadas de otros milestones como stubs registrados en `SimDiag` (decisiones de port hasta F-*). Total acumulado: 56 casos, 1714 aserciones. |
 | M4 · Física y visión | ✅ cerrado | Casos §5 (F-01..F-15) + R-05..R-07 en verde. `Physics.bas` completo: `Repel3` (masas invertidas en la separación, impulso 1-D, fijo = 32000, efectos sensoriales inmediatos), `TieHooke` (purga in situ, reloj, muelle con zona muerta 20), `TieTorque` (B1-1 replicado; slot fantasma con guardia de error 9), `bordercolls` + `ReSpawn`/`ListCells`, `SphereCd`/arrastre, gravedad pondmode (PhysMoving = 0 = sitio de error 11 registrado). Buckets de `Quads.bas` (`buckets.hpp`, rejilla 4000×4000 con arrays empaquetados) y visión completa (`vision.hpp`: 9 ojos apuntables, disyunción literal de 10 cláusulas, `ShapeBlocksBot` rota B2-1, ojo panorámico B2-2, `eyestrength`). `NewShotCollision` swept-sphere (sesgo `MinBotRadius`, el retorno es el ÚLTIMO robnum con raíces — documentado) y `CompactShots` fiel (re-apunta `virusshot`, destruye huérfanos, copia el hueco muerto). Stubs de M3 reemplazados (contadores `SimDiag` asertados a 0); quedan registrados: `CompareShapes` (visión DE formas), obstáculos (`numObstacles > 0`) y capas B3b/B5/B6/B7. Tres erratas de spec corregidas contra el fuente: F-07 (`angle(0,0,−10,10) = 3.926991`), F-10 (edge 0 ⇒ 32000, test `<= 0`), 32-VISION §2.4 (la división del semiancho es real, no entera; efecto panorámico intacto). Total acumulado: 75 casos, 1931 aserciones. |
 
+| M5 · Formatos ida-y-vuelta | ✅ cerrado | Casos §7 (FM-01..FM-07) en verde. `formats.hpp`: E/S sobre búferes en memoria (decisión de M5: el core WASM no toca disco; la fidelidad es la del formato de bytes/texto). Bot de texto completo (`SalvarobText` + gen epigenético autodestructivo, `DetokenizeDNA` literal con comentarios de gen/`VOID`, `Hash` ByRef que muta el acumulador del llamador — fiel al original, clave para que el hash cuadre en la ida-y-vuelta —, `SaveRobHeader` con cap 2e9) y registro binario de bot campo a campo (`FileContinue`/centinela 254×3, `sint` Mod 32000 sin clamp B8-2, solo 50 vars B8-5, `mem()` crudo con −32768, campos muertos de ties, escape Int→Long de `LastMutDetail`, relleno de ancestros 501×3, tag `String * 50`, guardias anti-corrupción y clamps del cargador). El cargador de texto ganó `getvals` ('#generation/'#mutations/'#tag/'#hash con reset anti-manipulación) y `delgene` es real (`GeneEnd`/`genepos`/`DeleteSpecificGene`/`NmDelete` transcritos; P3 ejecuta y borra el gen epigenético — FM-03 verifica el ciclo completo guardar→cargar→autodestruir). `GiveAbsNum` ganó su guardia `AbsNum = 0` del fuente (FM-05: los bots cargados conservan AbsNum). Errata de spec corregida contra el fuente: FM-07 (la suma 1.5e9+1e9 desbordaba el `Long` del original antes del cap; caso ajustado a 2.1e9 + decisión de port para el desborde). Decisión B8-1 documentada (SaveSimulation recursivo → sin reintento en el port). `SaveSimulation`/`LoadSimulation`, `.dbo` y `.mrate` quedan para los milestones de mundo (ningún caso §7 los exige). Total acumulado: 82 casos, 2018 aserciones. |
+
 ## Siguiente
 
-**M5 · Formatos ida-y-vuelta (§7, FM-*)** y después **el catálogo de bugs
-como aserciones (§9, B-*)** — con B2-3/B2-4 (EYEF dentro de forma,
-`lastopppos` solo frontal) llegará `CompareShapes`/`lookoccurrShape`, hoy
-stub registrado. Los R-08..R-12 (repoblación, crossover, orden global de RNG)
-son de los milestones de mundo/reproducción.
+**El catálogo de bugs como aserciones (§9, B-*)** — con B2-3/B2-4 (EYEF
+dentro de forma, `lastopppos` solo frontal) llegará
+`CompareShapes`/`lookoccurrShape`, hoy stub registrado. Los R-08..R-12
+(repoblación, crossover, orden global de RNG) son de los milestones de
+mundo/reproducción, igual que los formatos de nivel sim
+(`SaveSimulation`/`LoadSimulation`, `.dbo`).
 
 ## Pendiente
 
@@ -115,3 +118,20 @@ son de los milestones de mundo/reproducción.
   `CompactShots` de M3 no re-apuntaba `virusshot` (corregido con la
   transcripción literal, R-06 lo cubre). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-24** — M5 cerrado: formatos ida-y-vuelta (FM-01..FM-07; 82
+  casos / 2018 aserciones acumuladas). `formats.hpp` con la E/S sobre
+  búferes en memoria, el registro binario de bot campo a campo y el bot de
+  texto completo (gen epigenético incluido, verificado guardar→cargar→
+  autodestruirse en un ciclo). Hallazgos de transcripción: `Hash` recibe el
+  acumulador ByRef y lo TRIMEA en el llamador (salvarob imprime el `hold` ya
+  mutado — sin replicar esa mutación el hash de la ida-y-vuelta no cuadra);
+  el placeholder del contador de ancestros es el `t` sobrante del For de
+  spermDNA (= spermDNAlen + 1); la guardia `AbsNum = 0` vive dentro de
+  `GiveAbsNum` en el fuente (el port la tenía fuera). Errata de spec
+  corregida: FM-07 (`OldMutations = 1e9` hacía desbordar el `totmut As
+  Long` del original antes del cap; el caso del cap real usa 2.1e9 y la
+  suma desbordada queda como decisión de port asertada). La recarga de
+  FM-03 usa la vía de siembra (`InsertFounder`, body = 1000): la vía
+  `RobScriptLoadSim` pelada deja body = 0 y el bot muere al final del
+  primer tick — semántica del fuente, no un bug del port. Fuentes sin
+  modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).

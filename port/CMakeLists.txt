@@ -29,6 +29,7 @@ add_executable(dbtests
   tests/test_vm.cpp
   tests/test_memory.cpp
   tests/test_physics.cpp
+  tests/test_formats.cpp
 )
 target_link_libraries(dbtests PRIVATE dbcore)
 target_include_directories(dbtests PRIVATE tests)

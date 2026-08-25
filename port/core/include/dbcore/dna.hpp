@@ -73,4 +73,86 @@ inline vb_long CountGenes(const std::vector<Block>& dna) {
   return genes;
 }
 
+// Module1.bas:334-356 — GeneEnd: última posición del gen que empieza en
+// `position`. Un `stop` se incluye en el gen; un gen con `cond` absorbe el
+// primer start/else que le sigue. Guarda del port: el original accede a
+// dna(GeneEnd+1) y confiaba en el centinela `end`; aquí el límite ub entra
+// en la condición del bucle.
+inline vb_long GeneEnd(const std::vector<Block>& dna, vb_long position) {
+  const vb_long ub = static_cast<vb_long>(dna.size()) - 1;
+  bool condgene = false;
+  vb_long ge = position;
+  if (position >= 0 && position <= ub && dna[position].tipo == tok::FLOW &&
+      dna[position].value == 1)
+    condgene = true;
+  while (ge + 1 <= 32000 && ge + 1 <= ub) {
+    const Block& nx = dna[ge + 1];
+    if (nx.tipo == tok::MASTER) break;  // fin de genoma
+    if (nx.tipo == tok::FLOW && (nx.value == 1 || nx.value == 4)) {
+      if (nx.value == 4) ge += 1;  // el stop es parte del gen
+      break;
+    }
+    if (nx.tipo == tok::FLOW && (nx.value == 2 || nx.value == 3)) {
+      if (!condgene) break;  // start/else: gen nuevo
+      condgene = false;      // primer start/else tras el cond
+    }
+    ge += 1;
+  }
+  return ge;
+}
+
+// Module1.bas:366-410 — genepos: posición del gen n (0 = no encontrado).
+// Misma numeración que CountGenes/currgene.
+inline vb_long genepos(const std::vector<Block>& dna, vb_long n) {
+  const vb_long ub = static_cast<vb_long>(dna.size()) - 1;
+  bool ingene = false;
+  vb_long genenum = 0;
+  vb_long k = 1;
+  if (n == 0) return 0;
+  while (k > 0 && k <= 32000 && k <= ub) {
+    const Block& b = dna[k];
+    if (b.tipo == tok::FLOW && (b.value == 2 || b.value == 3)) {
+      if (!ingene) {
+        genenum += 1;
+        if (genenum == n) return k;
+      } else {
+        ingene = false;
+      }
+    }
+    if (b.tipo == tok::FLOW && b.value == 1) {
+      ingene = true;
+      genenum += 1;
+      if (genenum == n) return k;
+    }
+    if (b.tipo == tok::FLOW && b.value == 4) ingene = false;
+    k += 1;
+    if (k <= ub && is_end(dna[k])) k = -1;
+  }
+  return 0;
+}
+
+// NeoMutations.bas:90-106 — Delete: corre los tokens a la izquierda y
+// recorta el array a DnaLen. El `On Error GoTo step2` del original (índice
+// fuera de rango al copiar) se replica cortando el bucle en ub.
+inline void NmDelete(std::vector<Block>& dna, vb_long beginning,
+                     vb_long elements, vb_long DNALength = -1) {
+  const vb_long ub = static_cast<vb_long>(dna.size()) - 1;
+  if (DNALength < 0) DNALength = DnaLen(dna);
+  if (elements < 1 || beginning < 1 || beginning > DNALength - 1) return;
+  for (vb_long t = beginning + elements; t <= DNALength; ++t) {
+    if (t > ub || t - elements > ub) break;  // On Error GoTo step2
+    dna[t - elements] = dna[t];
+  }
+  dna.resize(DnaLen(dna) + 1);  // ReDim Preserve dna(DnaLen(dna))
+}
+
+// NeoMutations.bas:1062-1070 — DeleteSpecificGene. Si genepos devuelve 0,
+// Delete no-opea (beginning < 1), como el original.
+inline void DeleteSpecificGene(std::vector<Block>& dna, vb_long k) {
+  const vb_long i = genepos(dna, k);
+  if (i < 0) return;
+  const vb_long f = GeneEnd(dna, i);
+  NmDelete(dna, i, f - i + 1);
+}
+
 }  // namespace db
