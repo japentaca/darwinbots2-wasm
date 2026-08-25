@@ -48,15 +48,15 @@ reinicios de contexto.
 | M1 · Sustrato numérico | ✅ cerrado | Salvaguarda 5: casos §1 (S-01..S-07), §2 (N-01..N-19) y R-01..R-03 en verde (30 casos, 438 aserciones). Helpers: redondeo bancario, LCG VB6, gasdev, stacks, mod32000, handlers VM, bitwise. Sitios de error con decisión de port + `VmDiag` (N-07 satura a ±2·10⁹; S-05 a 16384). |
 | M2 · VM y cargador | ✅ cerrado | Casos §3 (V-01..V-14) en verde. `ExecuteDNA` completo (bug del `else` canónico replicado, stores inmediatos, `CondStateIsTrue` sin consumo, 14 stores con asimetrías de pops y tie-flags), cargador de texto (Parse + 8 tablas, sombreado de privadas, corrección del cero inicial, 3 sitios de rechazo). Decisión de port V-07: solo-defs = no-op registrado. Total acumulado: 44 casos, 1539 aserciones. |
 | M3 · Memoria y ciclo | ✅ cerrado | Casos §4 (M-01..M-12) en verde. Tabla completa de sysvars (255 entradas extraídas mecánicamente de `LoadSysVars` y verificadas contra `sysvars.yaml`: 247 direcciones, 8 pares de alias). Esqueleto del tick (pasos 10/12/14/15/16/17 + 7 pasadas de `UpdateBots`) y subsistemas de memoria: sentidos (touch/taste/lookoccurr con A3-1, Erase*), ties (maketie/Update_Ties con gates de M-04, trefvars con A3-2, tieportcom, memoria genética), shots (robshoot/newshot/updateshots con remapeo 340→mem(0), bloqueo por poison, esperma), Reproduce completo (epimem, tie de nacimiento, herencia del timer post-Ageing), corpses (M-12). Corrección menor a `70-CASOS-DORADOS.md` M-11: el sysvar `vshoot` es 338, no 836 (el fuente manda, `Robots.bas:59` + `DNATokenizing.bas:1045`). Colisiones bot/shot con detección simplificada y pasadas de otros milestones como stubs registrados en `SimDiag` (decisiones de port hasta F-*). Total acumulado: 56 casos, 1714 aserciones. |
+| M4 · Física y visión | ✅ cerrado | Casos §5 (F-01..F-15) + R-05..R-07 en verde. `Physics.bas` completo: `Repel3` (masas invertidas en la separación, impulso 1-D, fijo = 32000, efectos sensoriales inmediatos), `TieHooke` (purga in situ, reloj, muelle con zona muerta 20), `TieTorque` (B1-1 replicado; slot fantasma con guardia de error 9), `bordercolls` + `ReSpawn`/`ListCells`, `SphereCd`/arrastre, gravedad pondmode (PhysMoving = 0 = sitio de error 11 registrado). Buckets de `Quads.bas` (`buckets.hpp`, rejilla 4000×4000 con arrays empaquetados) y visión completa (`vision.hpp`: 9 ojos apuntables, disyunción literal de 10 cláusulas, `ShapeBlocksBot` rota B2-1, ojo panorámico B2-2, `eyestrength`). `NewShotCollision` swept-sphere (sesgo `MinBotRadius`, el retorno es el ÚLTIMO robnum con raíces — documentado) y `CompactShots` fiel (re-apunta `virusshot`, destruye huérfanos, copia el hueco muerto). Stubs de M3 reemplazados (contadores `SimDiag` asertados a 0); quedan registrados: `CompareShapes` (visión DE formas), obstáculos (`numObstacles > 0`) y capas B3b/B5/B6/B7. Tres erratas de spec corregidas contra el fuente: F-07 (`angle(0,0,−10,10) = 3.926991`), F-10 (edge 0 ⇒ 32000, test `<= 0`), 32-VISION §2.4 (la división del semiancho es real, no entera; efecto panorámico intacto). Total acumulado: 75 casos, 1931 aserciones. |
 
 ## Siguiente
 
-**M4 · Física y visión**: los casos §5 (F-*) de `70-CASOS-DORADOS.md` —
-Repel3/bordercolls/fuerzas de muelle y torque de ties reales (reemplazan la
-detección simplificada y los stubs de `SimDiag` de M3), el barrido de ojos
-(`BucketsProximity`, oclusión por formas rota) y el swept-sphere de shots.
-Después: formatos ida-y-vuelta (§7, FM-*) y el catálogo de bugs como
-aserciones (§9, B-*).
+**M5 · Formatos ida-y-vuelta (§7, FM-*)** y después **el catálogo de bugs
+como aserciones (§9, B-*)** — con B2-3/B2-4 (EYEF dentro de forma,
+`lastopppos` solo frontal) llegará `CompareShapes`/`lookoccurrShape`, hoy
+stub registrado. Los R-08..R-12 (repoblación, crossover, orden global de RNG)
+son de los milestones de mundo/reproducción.
 
 ## Pendiente
 
@@ -102,3 +102,16 @@ aserciones (§9, B-*).
   transcripción: el hijo hereda el timer POST-Ageing del padre (P5 corre
   antes que P6) y el ADN de M-10 tiene 20 tokens (DnaLen = 21). Fuentes sin
   modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-24** — M4 cerrado: física y visión completas (F-01..F-15 +
+  R-05..R-07; 75 casos / 1931 aserciones acumuladas), stubs de M3
+  reemplazados con sus contadores `SimDiag` asertados a 0. Tres erratas de
+  spec corregidas contra el fuente (F-07, F-10, 32-VISION §2.4 — la
+  supuesta división entera `PI \ 36` no existe en `Quads.bas`; los bucles
+  reales son `> π − π/36` / `< −π/36` con división real, mismo efecto
+  panorámico). Hallazgos de transcripción: el clamp ByRef de `VectorScalar`
+  muerde el intermedio `V2·(e+1)·32000` de `Repel3` con bot fijo (V1f
+  −0.99997, no −4.95 — semántica del fuente, asertada en F-06); `regang`
+  dispara entrando con `last = −2` (el incremento corre antes del chequeo);
+  `CompactShots` de M3 no re-apuntaba `virusshot` (corregido con la
+  transcripción literal, R-06 lo cubre). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).
