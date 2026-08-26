@@ -1027,6 +1027,111 @@ TEST_CASE("Sidecar .mrate: solo los operadores 0..10 viajan") {
 }
 
 // ---------------------------------------------------------------------------
+// R-12 · Orden global de consumo de RNG en el tick — la red de seguridad de
+// la salvaguarda 4 de PLAN.md. Sim determinista con TODOS los consumidores
+// de mundo vivos a la vez; la secuencia inyectada obliga a que cada
+// extracción caiga en el consumidor correcto y en el orden del tick:
+//   paso 10 (intérprete rnd) -> P5 (feedveg2) -> paso 18 (drift de formas,
+//   drift de teleporter) -> paso 20 (repoblación, 12) -> paso 21 (sol, 2).
+// Cualquier extracción extra o faltante rompe la secuencia (InjectedRnd
+// lanza si se agota; exhausted() falla si sobran).
+TEST_CASE("R-12 orden global de consumo de RNG en un tick completo") {
+  std::vector<vb_single> seq;
+  // Setup: RobScriptLoadSim del protagonista (6 de preparerob).
+  for (int i = 0; i < 6; ++i) seq.push_back(0.5f);
+  auto push_tick = [&](vb_single vm_rnd, vb_single veg2_coin,
+                       vb_single veg_aim) {
+    seq.push_back(vm_rnd);     // 1. intérprete: 10 rnd
+    seq.push_back(veg2_coin);  // 2. feedveg2: moneda de orden
+    seq.push_back(0.9f);       // 3. DriftObstacles: Random(-20,20) = 16
+    seq.push_back(0.5f);       // 4. DriftObstacles: factor Rndy
+    seq.push_back(1.0f);       // 5. DriftTeleporter eje X (+0.5)
+    seq.push_back(1.0f);       // 6. DriftTeleporter eje Y (+0.5)
+    seq.push_back(0.1f);       // 7. repop: coord X descartada
+    seq.push_back(0.1f);       // 8. repop: coord Y descartada
+    seq.push_back(0.0f);       // 9. repop: especie 0 — nótese que P2 ya
+                               //    auto-registró "R.txt" (SpeciesNum = 2)
+    seq.push_back(0.5f);       // 10. repop: fRnd x -> 15970
+    seq.push_back(0.5f);       // 11. repop: fRnd y -> 15970
+    for (int i = 0; i < 6; ++i) seq.push_back(0.5f);  // 12-17. preparerob
+    seq.push_back(veg_aim);    // 18. repop: aim definitivo
+    seq.push_back(0.9f);       // 19. sol: moneda de rango (falla)
+    seq.push_back(0.9f);       // 20. sol: moneda de posición (falla)
+  };
+  push_tick(0.5f, 0.4f, 0.25f);    // tick 1
+  push_tick(0.999f, 0.6f, 0.75f);  // tick 2
+
+  InjectedRnd rng(seq);
+  World w(rng);
+  Sim& s = w.sim;
+
+  // Mundo: sol variable, una forma con deriva horizontal, un teleporter con
+  // ambos ejes (sin puertos: solo drift), repoblación disparando cada tick.
+  s.opts.SunOnRnd = true;
+  s.opts.MinVegs = 100;
+  s.opts.RepopCooldown = 1;
+  s.opts.RepopAmount = 1;
+  s.StartChlr = 16000;
+  w.addVegSpecies("Veg.txt");
+
+  NewObstacle(s, 25000.0f, 25000.0f, 500.0f, 500.0f);
+  s.opts.allowHorizontalShapeDrift = true;
+  s.opts.shapeDriftRate = 20;
+
+  s.numTeleporters = 1;
+  s.Teleporters[1].exist = true;
+  s.Teleporters[1].pos = {28000.0f, 2000.0f};
+  s.Teleporters[1].Width = 500.0f;
+  s.Teleporters[1].Height = 500.0f;
+  s.Teleporters[1].driftHorizontal = true;
+  s.Teleporters[1].driftVertical = true;
+
+  // Protagonista: ejecuta `rnd` (1 RNG/tick) y digiere waste (1 RNG/tick).
+  // body = 1000 a mano: la vía RobScriptLoadSim pelada deja body = 0 y el
+  // bot moriría al final del primer tick (semántica del fuente, nota M5).
+  const int n = RobScriptLoadSim(s, "start 10 rnd 900 store stop", "R.txt");
+  REQUIRE(n == 1);
+  s.rob[n].pos = {2000.0f, 2000.0f};
+  s.rob[n].chloroplasts = 16000.0f;
+  s.rob[n].Waste = 100.0f;  // < BadWastelevel: sin altzheimer
+  s.rob[n].body = 1000.0f;
+  s.rob[n].radius = FindRadius(s, n);
+
+  UpdateSim(s);  // tick 1
+
+  CHECK(s.rob[n].mem[900] == 5);  // Random(0,10) con 0.5
+  REQUIRE(s.rob[2].exist);        // el vegetal repoblado
+  CHECK(s.rob[2].Veg);
+  CHECK(s.rob[2].pos.x == 15970.0f);
+  CHECK(s.rob[2].aim == doctest::Approx(0.25f * 2.0f * 3.14159265f));
+  CHECK(s.Obstacles[1].vel.x == doctest::Approx(0.08f));
+  CHECK(s.Teleporters[1].vel.x == doctest::Approx(0.5f));
+  CHECK(s.Teleporters[1].vel.y == doctest::Approx(0.5f));
+  CHECK(s.SunChange == 12);
+  CHECK(rng.consumed() == 26);  // 6 setup + 20 del tick
+
+  UpdateSim(s);  // tick 2
+
+  CHECK(s.rob[n].mem[900] == 10);  // Random(0,10) con 0.999
+  REQUIRE(s.rob[3].exist);
+  CHECK(s.rob[3].aim == doctest::Approx(0.75f * 2.0f * 3.14159265f));
+  CHECK(s.Obstacles[1].vel.x == doctest::Approx(0.16f));
+  CHECK(s.Teleporters[1].vel.x == doctest::Approx(1.0f));
+  CHECK(s.SunChange == 12);
+
+  // Ninguna extracción fuera del inventario: la secuencia se consumió
+  // exacta y completa.
+  CHECK(rng.consumed() == 46);
+  CHECK(rng.exhausted());
+
+  // Los stubs de B7 quedaron cerrados: ningún camino los incrementa.
+  CHECK(s.diag.world_stub == 0);
+  CHECK(s.diag.handlewaste_stub == 0);
+  CHECK(s.diag.obstacle_collision_stub == 0);
+  CHECK(s.diag.err9_load_organism == 0);
+}
+
+// ---------------------------------------------------------------------------
 TEST_CASE("checkvegstatus: nick de subespecie y regla de campo vacio") {
   InjectedRnd rng({});
   World w(rng);

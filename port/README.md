@@ -95,12 +95,42 @@ Emscripten; presentación web separada.
   padres alineados NO pierde su primer token — `Robots.bas:633` relee
   `upperbound`; el consumo de RNG del crossover es por token). Casos B-29,
   B-31..B-35, R-09..R-11. Contadores cerrados y asertados a 0:
-  `mutate_stub`, `sexrepro_stub`, `makestuff_stub`. Quedan como stubs
-  registrados: `feedveg2`/`altzheimer`/`defacate`-mundo
-  (`handlewaste_stub`), repoblación/sol/teleporters (`world_stub`) y
-  obstacles (`obstacle_collision_stub`) — todos B7.
+  `mutate_stub`, `sexrepro_stub`, `makestuff_stub`.
 
-Estado verificado: 124 casos / 2668 aserciones en verde.
+- **Milestone 8 (mundo, B7 + formatos de sim, B8)**: cierra todos los stubs
+  restantes. `vegs.hpp` — economía vegetal completa (`feedvegs` con el sol
+  en banda móvil, deriva `SunOnRnd` 2 RNG/ciclo + 1 condicional, umbrales
+  de energía con los 3 modos, reloj día/noche, impuesto por edad también
+  fuera de banda; `feedveg2` con su moneda de orden; `checkvegstatus` con
+  el nick de subespecie). `aggiungirob`/`VegsRepopulate` en `master.hpp`
+  (coordenadas del llamador descartadas — B7-1; 12 extracciones por vegetal
+  — R-08; `cooldown` con deuda — B-37); `altzheimer` real y `HandleWaste`
+  completo en `robots.hpp` (cierra `handlewaste_stub`). Sección
+  `Teleport.bas` en `robots.hpp`: `CheckTeleporters` en P0a
+  (Out/Internet serializan el organismo al `outbox` en memoria y lo matan;
+  B7-2: el puerto Internet solo expulsa con `PollCountDown <= 0`; local =
+  2 RNG + `ReSpawn`), `DriftTeleporter`/`MoveTeleporter` (B-36: un solo
+  eje de drift acumula velocidad que nunca aplica), `TeleportInBots`
+  (sondeo del `inbox`, gate de 45 especies) y el paso 18 del tick.
+  `Obstacles.bas` completo en `physics.hpp`/`shots.hpp`:
+  `DoObstacleCollisions` (P1) y `DoShotObstacleCollisions` (cierra
+  `obstacle_collision_stub`), `MoveObstacles`/`DriftObstacles` (el "tope"
+  invertido del fuente que AMPLIFICA se replica tal cual). Formatos de
+  nivel sim en `formats.hpp`: `SaveOrganism`/`LoadOrganism` (`.dbo`, con
+  `AddSpecieFromFile`, `PlaceOrganism` y el remapeo de ties por
+  `oldBotNum`), `SaveSimulation`/`LoadSimulation` campo a campo (capas
+  históricas, presets de carga, `RemapAllTies`/`RemapAllShots`; quirks:
+  los teleporters Internet se borran al cargar, `DisableMutations` nunca
+  sobrevive una carga, `BadWastelevel` 0→400) y el sidecar `.mrate`
+  (`Save_mrates`/`Load_mrates`: solo los operadores 0..10 viajan). Sitio
+  de error 9 nuevo con decisión de port: `err9_load_organism` (cnum > 51).
+  Casos R-08, B-36, B-37 y **R-12** (el meta-caso del orden global de RNG
+  del tick: intérprete → feedveg2 → drift de formas → drift de teleporter
+  → repoblación → sol, con secuencia inyectada exacta y stubs asertados a
+  0). Ya no queda ningún stub abierto: los contadores de `SimDiag` que
+  sobreviven son los sitios de error 9/11 con decisión de port.
+
+Estado verificado: 143 casos / 2962 aserciones en verde.
 
 ## Build (nativo)
 

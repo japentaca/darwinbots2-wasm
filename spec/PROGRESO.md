@@ -56,6 +56,8 @@ reinicios de contexto.
 
 | M7 · Mutaciones y reproducción sexual (B6) | ✅ cerrado | Casos B-29, B-31..B-35 y R-09..R-11 en verde. `mutations.hpp`: `NeoMutations.bas` completo — dispatcher `mutate` (con auto-especiación, clamps, `mutatecolors`, re-publicación de mem(336/339) SIN `makeoccurrlist` — B-35), los 11 operadores (agendas geométricas de Point/Point2, suelos anti-freeze que reescriben `mutarray` — B-31, Insertion con 2 mutaciones/token — B-33, Amplification desde t=2 — B-34, Minor=Major — B-32, Translocation/Amplification con sus bucles "still bugy" como sitios de error 9 registrados), `ChangeDNA`/`ChangeDNA2` (sondeo de Max con Parse bajo `ismutating`), `DNAtoInt`/`calc_dnamatrix` (Q16: 77 comandos, máximo 32767) y las tablas `sysvarIN`(164)/`sysvarOUT`(98) extraídas mecánicamente de `LoadSysVars`. `Robots.bas`: sección de crossover completa (`simplematch`/`GeneticDistance`/`DoGeneticDistance`/`crossover`) y `SexReproduce` entero; `Reproduce` ganó la herencia que faltaba (Mutables/Mutations/Skin/color/tag/SubSpecies/OldGD/GenMut/LastOwner, ADN desde el índice 1), el régimen Delta2/mrepro y el epireset; `sharechloroplasts` real (umbral 0.25); paso 4 del tick (oscilación `MutCurrMult`); `EraseUnit` = (-1,-1) fiel. Semántica VB6 afinada: `1/Single` y `Byte/100` son Double, `Long+Single` promociona a Double, IIf/And/Choose evalúan todos sus brazos. **Dos erratas de spec corregidas contra el fuente** (R-11/B6-1): (a) el hijo sexual de padres alineados NO pierde su primer token — la racha emparejada copia desde `UBound(Outdna)+1` (`Robots.bas:633`) y el bug fix recorta el (0,0); el corrimiento solo existe con padres asimétricos en dna(0); (b) la moneda de valores del crossover se consume POR TOKEN (IIf eager), no solo en pares |v|>999. Stubs cerrados y asertados a 0: `mutate_stub`, `sexrepro_stub`, `makestuff_stub`. Total acumulado: 124 casos, 2668 aserciones. |
 
+| M8 · Mundo (B7) + formatos de sim (B8) | ✅ cerrado | Casos R-08, B-36, B-37 y R-12 en verde. **Cierra todos los stubs** (`handlewaste_stub`, `world_stub`, `obstacle_collision_stub` asertados a 0). `vegs.hpp`: `feedvegs` (sol en banda móvil con envoltura, deriva `SunOnRnd` 2 RNG/ciclo + 1 condicional, umbrales con los 3 modos, reloj día/noche, impuesto por edad también fuera de banda, la publicación de mem(218) saltada por el GoTo para el bot con cloroplastos fuera de banda), `feedveg2` (moneda de orden nrg/body; la segunda conversión ve el waste reducido) y `checkvegstatus`. `aggiungirob`/`VegsRepopulate` en `master.hpp` (B7-1: coordenadas descartadas; R-08: 12 extracciones exactas, +1 por re-tirada; B-37: `cooldown` arranca en −RepopCooldown, primera tanda al ciclo 50 vía `UpdateSim`); `altzheimer` real. Paso 5 con `TotalSimEnergyDisplayed` (lee la celda vieja) y paso 19 con la suma `Long + Single` redondeada POR iteración. Teleporters completos en `robots.hpp` (P0a + paso 18; B-36: un eje de drift no traslada; B7-2: salida Internet acoplada al sondeo; E/S de disco sustituida por `outbox`/`inbox` en memoria). `Obstacles.bas` completo (`DoObstacleCollisions`/`DoShotObstacleCollisions`/`MoveObstacles`; hallazgo: el "tope" de `DriftObstacles` está invertido y AMPLIFICA — replicado y asertado). Formatos: `.dbo` con remapeo de ties, `SaveSimulation`/`LoadSimulation` campo a campo con sus quirks (Internet borrados al cargar con tope de For cacheado; `CInt(True) = −1 < 0` ⇒ `DisableMutations` nunca sobrevive una carga; `BadWastelevel` 0→400; SimGUID ausente = capa host, era `Rnd` crudo) y `.mrate` (solo operadores 0..10). Sitio de error 9 nuevo: `err9_load_organism` (cnum > 51). Notas de transcripción: el decremento de `Chlr_Share_Delay` vive en `feedvegs` (no en `feedveg2` como anotó M7); el original lee `TmpOpts.Tides` (quirk de UI); `ReSpawn` corrige `dx − Sgn(dx)` (el respawn local cae en 7999, no 8000). R-12 cerrado: orden global intérprete → feedveg2 → formas → teleporter → repoblación → sol con secuencia inyectada exacta. Total acumulado: 143 casos, 2962 aserciones. |
+
 **Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
 caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
 (agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
@@ -65,19 +67,26 @@ el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
 
 ## Siguiente
 
-**M8 · Mundo (B7)** — `50-MUNDO.md`: repoblación por cloroplastos
-(`Vegs.bas`, 12 extracciones por vegetal — R-08), sol/`feedvegs`/`feedveg2`
-(cierra `handlewaste_stub` junto con `altzheimer`), teleporters
-(`Teleport.bas` — B-36) y la primera repoblación con deuda (B-37), obstacles
-(`DoObstacleCollisions`/`DoShotObstacleCollisions`, cierra
-`obstacle_collision_stub` y `world_stub`), y los formatos de nivel sim
-(`SaveSimulation`/`LoadSimulation`, `.dbo`, `.mrate`). R-12 (orden global de
-RNG del tick) como caso de cierre cuando el tick esté completo.
+**El core está completo**: los 143 casos dorados de `70-CASOS-DORADOS.md`
+aplicables al motor están en verde y no queda ningún stub abierto (los
+contadores de `SimDiag`/`VmDiag` que sobreviven son sitios de error 6/9/11
+con decisión de port documentada). Próximos pasos, por orden:
+
+1. **M9 · Build WASM** — instalar clang + emsdk, compilar la suite con
+   Emscripten y verificar verde bit a bit contra el build nativo (decisión
+   Q07: determinismo del port consigo mismo; misma familia de compilador
+   minimiza divergencias). Salvaguardas de `PLAN.md`: sin `-ffast-math`,
+   `-ffp-contract=off`.
+2. **M10 · Capa de presentación web** — API del core hacia JS (crear sim,
+   tick, volcado de estado para render, E/S de búferes para
+   guardar/cargar), render 2D. Fuera del contrato de fidelidad: la capa
+   host también decide el reemplazo de la E/S de disco de teleporters
+   (`outbox`/`inbox`), el `SimGUID` ausente y los colores con `Rnd` crudo.
 
 ## Pendiente
 
-- Instalar clang + emsdk y verificar que el sustrato numérico da verde compilado
-  a WASM (decisión Q07: determinismo del port consigo mismo).
+- (absorbido por M9) Instalar clang + emsdk y verificar la suite compilada
+  a WASM.
 
 ---
 
@@ -179,3 +188,21 @@ RNG del tick) como caso de cierre cuando el tick esté completo.
   rango). Stubs `mutate_stub`/`sexrepro_stub`/`makestuff_stub` cerrados y
   asertados a 0. Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/`
   vacío).
+- **2026-08-26** — M8 cerrado: mundo (B7) + formatos de nivel sim (B8) en
+  cuatro bloques — economía vegetal (R-08, B-37), teleporters y `.dbo`
+  (B-36, B7-2), obstacles y `SaveSimulation`/`LoadSimulation`/`.mrate` —
+  más R-12 como meta-caso de cierre (143 casos / 2962 aserciones
+  acumuladas). **No queda ningún stub abierto**; el ciclo `UpdateSim` está
+  completo de punta a punta. Hallazgos de transcripción: el decremento de
+  `Chlr_Share_Delay` vive en `feedvegs` (Vegs.bas:219-221), no en
+  `feedveg2` como anotó M7; `feedvegs` lee `TmpOpts.Tides` (la copia de la
+  UI); el "tope" de `DriftObstacles` está invertido y AMPLIFICA la
+  velocidad (replicado como comportamiento correcto); `ReSpawn` descuenta
+  `Sgn(dx)` (el teleport local a 8000 deja el bot en 7999);
+  `CInt(True) = −1 < 0` hace que `DisableMutations` nunca sobreviva una
+  carga de sim; `LoadTeleporter` no repone `.exist` (solo la UI lo
+  consulta). Sitio de error 9 nuevo con decisión de port:
+  `err9_load_organism` (cnum > 51 desbordaba `clist(50)`). Decisiones de
+  port E/S: teleporters sobre búferes `outbox`/`inbox` en memoria (la capa
+  host mueve archivos); `SimGUID` ausente queda en 0 (era `Rnd` crudo,
+  Q01). Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
