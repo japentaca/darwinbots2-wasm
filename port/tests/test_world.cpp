@@ -407,6 +407,279 @@ TEST_CASE("altzheimer: waste alto escribe basura en memoria (via HandleWaste)") 
 }
 
 // ---------------------------------------------------------------------------
+TEST_CASE("B-36 teleporter con un solo eje de drift no se mueve") {
+  SUBCASE("solo drift X: acumula velocidad que nunca aplica") {
+    InjectedRnd rng(std::vector<vb_single>(5, 0.9f));  // 1 RNG/ciclo (solo X)
+    World w(rng);
+    w.sim.numTeleporters = 1;
+    Teleporter& tp = w.sim.Teleporters[1];
+    tp.exist = true;
+    tp.pos = {1000.0f, 1000.0f};
+    tp.Width = 500.0f;
+    tp.Height = 500.0f;
+    tp.driftHorizontal = true;
+    tp.driftVertical = false;
+
+    for (int c = 0; c < 5; ++c) {
+      DriftTeleporter(w.sim, 1);
+      MoveTeleporter(w.sim, 1);
+    }
+
+    CHECK(rng.consumed() == 5);
+    CHECK(tp.pos.x == 1000.0f);  // nunca traslada
+    CHECK(tp.pos.y == 1000.0f);
+    CHECK(tp.vel.x == doctest::Approx(5.0f * 0.4f));  // la deriva acumulada
+    // center se recalcula igualmente: (x + W/2, y + H*0.3).
+    CHECK(tp.center.x == doctest::Approx(1250.0f));
+    CHECK(tp.center.y == doctest::Approx(1150.0f));
+  }
+
+  SUBCASE("ambos ejes: traslada con tope MaxVelocity/4") {
+    InjectedRnd rng(std::vector<vb_single>(80, 1.0f));  // +0.5/eje/ciclo
+    World w(rng);
+    w.sim.numTeleporters = 1;
+    Teleporter& tp = w.sim.Teleporters[1];
+    tp.exist = true;
+    tp.pos = {1000.0f, 1000.0f};
+    tp.Width = 500.0f;
+    tp.Height = 500.0f;
+    tp.driftHorizontal = true;
+    tp.driftVertical = true;
+
+    for (int c = 0; c < 40; ++c) {
+      DriftTeleporter(w.sim, 1);
+      MoveTeleporter(w.sim, 1);
+    }
+
+    CHECK(tp.pos.x > 1000.0f);  // sí traslada
+    // |vel| <= MaxVelocity/4 = 10 (con margen de un paso de re-escala).
+    CHECK(VectorMagnitude(tp.vel) <= 10.001f);
+  }
+
+  SUBCASE("rebote en el borde derecho: vel.x = -10% MaxVelocity") {
+    InjectedRnd rng({});
+    World w(rng);
+    w.sim.numTeleporters = 1;
+    Teleporter& tp = w.sim.Teleporters[1];
+    tp.exist = true;
+    tp.pos = {31900.0f, 1000.0f};  // 31900 + 500 > 32000
+    tp.Width = 500.0f;
+    tp.Height = 500.0f;
+
+    MoveTeleporter(w.sim, 1);
+
+    CHECK(tp.pos.x == 31900.0f);  // pos.x <= FieldWidth: sin clamp
+    CHECK(tp.vel.x == doctest::Approx(-4.0f));  // -40 * 0.1
+  }
+
+  SUBCASE("envoltura toroidal con Dxsxconnected") {
+    InjectedRnd rng({});
+    World w(rng);
+    w.sim.opts.Dxsxconnected = true;
+    w.sim.numTeleporters = 1;
+    Teleporter& tp = w.sim.Teleporters[1];
+    tp.exist = true;
+    tp.pos = {-10.0f, 1000.0f};
+    tp.Width = 500.0f;
+    tp.Height = 500.0f;
+
+    MoveTeleporter(w.sim, 1);
+
+    // pos.x = -10 + 32000 - 500 = 31490.
+    CHECK(tp.pos.x == doctest::Approx(31490.0f));
+  }
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("CheckTeleporters: local respawnea (2 RNG) y los filtros filtran") {
+  // 6 RNG del spawn + 2 del respawn local.
+  InjectedRnd rng({0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.25f, 0.75f});
+  World w(rng);
+  const int n = RobScriptLoadSim(w.sim, "stop", "T.txt");
+  REQUIRE(n == 1);
+  Bot& b = w.sim.rob[n];
+  b.pos = {5000.0f, 5000.0f};
+  b.radius = 60.0f;
+
+  w.sim.numTeleporters = 1;
+  Teleporter& tp = w.sim.Teleporters[1];
+  tp.exist = true;
+  tp.local = true;
+  tp.teleportHeterotrophs = true;
+  tp.pos = {4800.0f, 4800.0f};
+  tp.Width = 600.0f;
+  tp.Height = 600.0f;
+  MoveTeleporter(w.sim, 1);  // publica center = (5100, 4980)
+
+  SUBCASE("respawn a un punto uniforme del campo") {
+    CheckTeleporters(w.sim, n);
+    CHECK(rng.consumed() == 8);
+    // (CLng(32000*0.25), CLng(32000*0.75)) = (8000, 24000), menos el
+    // Sgn(dx) del ajuste por radios de ReSpawn (radiidif = 0 con una sola
+    // célula): 7999/23999 (Multibots.bas:30-33).
+    CHECK(b.pos.x == 7999.0f);
+    CHECK(b.pos.y == 23999.0f);
+    CHECK(b.exist);
+    CHECK(tp.NumTeleported == 1);
+  }
+
+  SUBCASE("filtro: sin teleportHeterotrophs el no-vegetal no viaja") {
+    tp.teleportHeterotrophs = false;
+    CheckTeleporters(w.sim, n);
+    CHECK(rng.consumed() == 6);  // solo el spawn; 0 RNG del teleporter
+    CHECK(b.pos.x == 5000.0f);
+    CHECK(tp.NumTeleported == 0);
+  }
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("CheckTeleporters Out + TeleportInBots: el organismo viaja por el bufer") {
+  VbRng rng;
+  World w(rng);
+
+  // Organismo de dos células atadas (multibot) para ejercitar el remapeo.
+  const int a = RobScriptLoadSim(w.sim, "stop", "T.txt");
+  const int c = RobScriptLoadSim(w.sim, "stop", "T.txt");
+  REQUIRE(a == 1);
+  REQUIRE(c == 2);
+  w.sim.rob[a].pos = {5000.0f, 5000.0f};
+  w.sim.rob[c].pos = {5100.0f, 5000.0f};
+  w.sim.rob[a].radius = 60.0f;
+  w.sim.rob[c].radius = 60.0f;
+  w.sim.rob[a].Multibot = true;
+  w.sim.rob[c].Multibot = true;
+  w.sim.rob[a].Ties[1].pnt = static_cast<vb_integer>(c);
+  w.sim.rob[c].Ties[1].pnt = static_cast<vb_integer>(a);
+  w.sim.rob[a].mem[500] = 1234;  // marca observable
+
+  w.sim.numTeleporters = 2;
+  Teleporter& out = w.sim.Teleporters[1];
+  out.exist = true;
+  out.Out = true;
+  out.teleportHeterotrophs = true;
+  out.pos = {4800.0f, 4800.0f};
+  out.Width = 600.0f;
+  out.Height = 600.0f;
+  MoveTeleporter(w.sim, 1);
+
+  Teleporter& in = w.sim.Teleporters[2];
+  in.exist = true;
+  in.In = true;
+  in.pos = {20000.0f, 20000.0f};
+  in.Width = 600.0f;
+  in.Height = 600.0f;
+  in.InboundPollCycles = 5;
+  in.BotsPerPoll = 10;
+  in.PollCountDown = 0;
+
+  // Salida: célula a toca el Out -> el organismo ENTERO se serializa y muere.
+  CheckTeleporters(w.sim, a);
+  CHECK(out.NumTeleported == 1);
+  REQUIRE(out.outbox.size() == 1);
+  CHECK(!w.sim.rob[a].exist);
+  CHECK(!w.sim.rob[c].exist);
+
+  // El registro empieza con cnum = 2 (Integer).
+  CHECK(out.outbox[0][0] == 2);
+  CHECK(out.outbox[0][1] == 0);
+
+  // Entrada: el búfer viaja al inbox del In y entra en el próximo sondeo.
+  in.inbox.push_back(out.outbox[0]);
+  TeleportInBots(w.sim);
+
+  CHECK(in.NumTeleportedIn == 1);
+  CHECK(in.PollCountDown == 5);  // re-armado a InboundPollCycles
+  CHECK(in.inbox.empty());
+
+  int loaded = 0;
+  for (int t = 1; t <= w.sim.MaxRobs; ++t)
+    if (w.sim.rob[t].exist) loaded += 1;
+  CHECK(loaded == 2);
+
+  // Célula 0 recolocada al punto de entrada (x + W/2, y + H/3) y la otra
+  // conserva el desplazamiento relativo (+100, 0).
+  REQUIRE(w.sim.rob[1].exist);
+  REQUIRE(w.sim.rob[2].exist);
+  CHECK(w.sim.rob[1].pos.x == doctest::Approx(20300.0f));
+  CHECK(w.sim.rob[1].pos.y == doctest::Approx(20200.0f));
+  CHECK(w.sim.rob[2].pos.x == doctest::Approx(20400.0f));
+  CHECK(w.sim.rob[1].mem[500] == 1234);  // la memoria viajó
+
+  // Ties remapeadas a los slots nuevos por oldBotNum.
+  CHECK(w.sim.rob[1].Ties[1].pnt == 2);
+  CHECK(w.sim.rob[2].Ties[1].pnt == 1);
+
+  // La especie desconocida se auto-registró con los defaults de red.
+  REQUIRE(w.sim.Specie.size() == 1);
+  CHECK(w.sim.Specie[0].Name == "T.txt");
+  CHECK(w.sim.Specie[0].qty == 5);
+  CHECK(w.sim.Specie[0].Stnrg == 3000);
+  CHECK(!w.sim.Specie[0].Native);
+
+  // Ciclos siguientes sin nada que sondear: el contador baja de a 1.
+  TeleportInBots(w.sim);
+  CHECK(in.PollCountDown == 4);
+  CHECK(w.sim.diag.err9_load_organism == 0);
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("B7-2 salida a internet acoplada al contador de entrada") {
+  VbRng rng;
+  World w(rng);
+  const int n = RobScriptLoadSim(w.sim, "stop", "T.txt");
+  w.sim.rob[n].pos = {5000.0f, 5000.0f};
+  w.sim.rob[n].radius = 60.0f;
+
+  w.sim.numTeleporters = 1;
+  Teleporter& tp = w.sim.Teleporters[1];
+  tp.exist = true;
+  tp.Internet = true;
+  tp.teleportHeterotrophs = true;
+  tp.pos = {4800.0f, 4800.0f};
+  tp.Width = 600.0f;
+  tp.Height = 600.0f;
+  tp.InboundPollCycles = 5;
+  tp.BotsPerPoll = 10;
+  MoveTeleporter(w.sim, 1);
+
+  // Con PollCountDown > 0 el puerto NO expulsa aunque el bot lo pise.
+  tp.PollCountDown = 3;
+  CheckTeleporters(w.sim, n);
+  CHECK(w.sim.rob[n].exist);
+  CHECK(tp.outbox.empty());
+
+  // Con el contador vencido, expulsa.
+  tp.PollCountDown = 0;
+  CheckTeleporters(w.sim, n);
+  CHECK(!w.sim.rob[n].exist);
+  CHECK(tp.outbox.size() == 1);
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("TeleportInBots: gate global de especies (SpeciesNum > 45)") {
+  VbRng rng;
+  World w(rng);
+  for (int i = 0; i < 46; ++i) {
+    Specie sp;
+    sp.Name = "S" + std::to_string(i) + ".txt";
+    w.sim.Specie.push_back(sp);
+  }
+  w.sim.numTeleporters = 1;
+  Teleporter& tp = w.sim.Teleporters[1];
+  tp.exist = true;
+  tp.In = true;
+  tp.InboundPollCycles = 5;
+  tp.PollCountDown = 0;
+  tp.BotsPerPoll = 10;
+  tp.inbox.push_back({2, 0});  // registro ficticio: no debe ni tocarse
+
+  TeleportInBots(w.sim);
+
+  CHECK(tp.inbox.size() == 1);   // suspendida toda entrada
+  CHECK(tp.PollCountDown == 0);  // ni siquiera decrementa
+}
+
+// ---------------------------------------------------------------------------
 TEST_CASE("checkvegstatus: nick de subespecie y regla de campo vacio") {
   InjectedRnd rng({});
   World w(rng);

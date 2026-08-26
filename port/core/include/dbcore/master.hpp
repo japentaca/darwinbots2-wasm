@@ -136,7 +136,8 @@ inline void UpdateSim(Sim& sim) {
     }
   }
 
-  // Paso 18: obstáculos/teleporters (Master.bas:382-383) — bloques 2/3 de M8.
+  // Paso 18 (Master.bas:382-383): obstáculos (bloque 3 de M8) y teleporters.
+  if (sim.numTeleporters > 0) UpdateTeleporters(sim);
 
   // Paso 19 (Master.bas:384-390): suma de cloroplastos. AllChlr es Long y
   // la suma Long + Single se redondea bancario EN CADA iteración (la

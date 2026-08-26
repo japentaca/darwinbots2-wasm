@@ -27,6 +27,7 @@ inline constexpr int half = 60;
 inline constexpr vb_long CubicTwipPerBody = 905;
 inline constexpr int ROBARRAYMAX = 32000;
 inline constexpr int GeneticSensitivity = 75;  // Robots.bas:377
+inline constexpr int MAXNATIVESPECIES = 76;    // SimOptions.bas:47
 
 // Índices de SimOpts.Costs (SimOptions.bas:2-38). Los de la VM ya están en
 // Costs (vm.hpp); aquí los del ciclo.
@@ -205,6 +206,41 @@ struct Specie {
   bool dq_kill = false;
 };
 
+// Type Teleporter (Teleport.bas:23-51). La E/S de disco del original
+// (path/intInPath/intOutPath + archivos .dbo) se sustituye por búferes en
+// memoria: `outbox` acumula los organismos serializados que salen y `inbox`
+// es la cola de registros .dbo pendientes de entrar (decisión de M5: el
+// core no toca disco; la capa host mueve los búferes). El [PROBABLE BUG]
+// B7-4 (MsgBox modal ante un archivo no-dbo) queda en la capa host: el
+// inbox solo contiene registros dbo por construcción.
+struct Teleporter {
+  bool exist = false;
+  Vector pos{};
+  vb_single Width = 0, Height = 0;
+  vb_long color = 0;
+  Vector vel{};
+  std::string path;  // persistido por el formato de sim
+  bool In = false, Out = false, local = false, Internet = false;
+  bool driftHorizontal = false, driftVertical = false;
+  bool highlight = false;
+  bool teleportVeggies = false, teleportCorpses = false;
+  bool RespectShapes = false;
+  vb_long NumTeleported = 0;
+  vb_long NumTeleportedIn = 0;
+  Vector center{};
+  bool teleportHeterotrophs = false;
+  vb_integer InboundPollCycles = 0;
+  vb_integer BotsPerPoll = 0;
+  vb_integer PollCountDown = 0;
+  vb_integer BackFlowLimit = 0;  // sin consumidores vivos
+
+  // Port: sustitutos en memoria del directorio de disco.
+  std::vector<std::vector<unsigned char>> outbox;  // .dbo salientes
+  std::vector<std::vector<unsigned char>> inbox;   // .dbo pendientes de entrar
+};
+
+inline constexpr int MAXTELEPORTERS = 10;
+
 // Obstacles.bas — el subconjunto de Type Obstacle que la física/visión toca
 // (AABB en pos/Width/Height; vel para los refvars de lookoccurrShape). Con
 // numObstacles = 0 (default del harness) ninguna rutina de formas se ejecuta.
@@ -269,6 +305,12 @@ struct SimDiag {
                                  //   bugy"; On Error GoTo getout). Decisión:
                                  //   registrar y saltar a getout como el
                                  //   original (resto de la pasada perdido).
+  int err9_load_organism = 0;    // sitio de error 9: LoadOrganism con
+                                 //   cnum > 51 desbordaría clist(50)
+                                 //   (HDRoutines.bas:296-346; el On Error
+                                 //   deshacía el bot a medias). Decisión:
+                                 //   registrar, deshacer el último bot y
+                                 //   devolver -1, como el handler original.
   int err9_simplematch = 0;      // sitio de error 9: simplematch relee r1/r2
                                  //   fuera de rango cuando el reposicionamiento
                                  //   loopold+laststartmatch rebasa el array
@@ -360,6 +402,10 @@ struct Sim {
   // Obstacles.bas — índice 0 sin uso, como los demás arrays.
   std::vector<Obstacle> Obstacles = std::vector<Obstacle>(1);
   int numObstacles = 0;
+
+  // Teleport.bas:53-58 — Teleporters(10), índice 0 sin uso.
+  std::array<Teleporter, MAXTELEPORTERS + 1> Teleporters{};
+  int numTeleporters = 0;
 
   // Quads.bas — la rejilla de buckets (fila mayor: índice x + y*NumXBuckets).
   std::vector<BucketType> Buckets;

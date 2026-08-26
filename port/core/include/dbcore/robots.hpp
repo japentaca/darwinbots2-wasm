@@ -1565,6 +1565,212 @@ inline void BotDNAManipulation(Sim& sim, int n) {
   b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
 }
 
+// ---------------------------------------------------------------------------
+// Teleport.bas (50-MUNDO.md §3, Q10). La E/S de disco del original se
+// sustituye por los búferes outbox/inbox del Teleporter (sim.hpp); el
+// nombre de archivo <fecha><hora><FName>… es infra y no se replica.
+// NewTeleporter (:60-105) es creación de UI (2 RNG de setup); los tests
+// construyen los teleporters directamente.
+
+// Multibots.bas:52-65 — KillOrganism: mata todas las células. El juego de
+// nopoff (suprime los poffs ornamentales) es render, fuera del core.
+inline void KillOrganism(Sim& sim, int n) {
+  std::array<vb_integer, 51> clist{};
+  clist[0] = static_cast<vb_integer>(n);
+  ListCells(sim, clist);
+  int t = 0;
+  while (clist[t] > 0) {
+    KillRobot(sim, clist[t]);
+    t += 1;
+  }
+}
+
+// Teleport.bas:198-210 — TeleportCollision: círculo Width/2 + radius sobre
+// el CENTRO del teleporter (center se calcula en MoveTeleporter con el
+// desplazamiento 0.3·Height del sprite).
+inline bool TeleportCollision(Sim& sim, int n, int t) {
+  return VectorMagnitude(VectorSub(sim.rob[n].pos,
+                                   sim.Teleporters[t].center)) <
+         sim.Teleporters[t].Width / 2.0f + sim.rob[n].radius;
+}
+
+// Teleport.bas:162-195 — CheckTeleporters (P0a de UpdateBots): salida.
+// [PROBABLE BUG] B7-2: los puertos Internet solo expulsan cuando
+// PollCountDown <= 0 (la tasa de salida queda ligada al sondeo de entrada).
+// dq > 1 fuerza el teleport (capa torneo) saltando los filtros.
+inline void CheckTeleporters(Sim& sim, int n, const FormatGlobals& g = {}) {
+  for (int i = 1; i <= sim.numTeleporters; ++i) {
+    Teleporter& tp = sim.Teleporters[i];
+    if (!(tp.Out || tp.local || (tp.Internet && tp.PollCountDown <= 0)))
+      continue;
+    if (!((TeleportCollision(sim, n, i) || sim.rob[n].dq > 1) &&
+          sim.rob[n].exist))
+      continue;
+
+    if (tp.Out || tp.Internet) {
+      const bool force = sim.rob[n].dq > 1;  // GoTo forceteleport
+      const bool filtered =
+          (sim.rob[n].Veg && !tp.teleportVeggies) ||
+          (sim.rob[n].Corpse && !tp.teleportCorpses) ||
+          (!sim.rob[n].Veg && !tp.teleportHeterotrophs);
+      if (force || !filtered) {
+        tp.NumTeleported += 1;
+        // If Out Then SaveOrganism path…; If Internet Then SaveOrganism
+        // intOutPath…: un puerto con ambos flags serializa DOS archivos.
+        if (tp.Out) {
+          VbBinFile f;
+          SaveOrganism(sim, f, n, g);
+          tp.outbox.push_back(std::move(f.data));
+        }
+        if (tp.Internet) {
+          VbBinFile f;
+          SaveOrganism(sim, f, n, g);
+          tp.outbox.push_back(std::move(f.data));
+        }
+        KillOrganism(sim, n);
+      }
+    } else if (tp.local) {
+      const bool filtered =
+          (sim.rob[n].Veg && !tp.teleportVeggies) ||
+          (sim.rob[n].Corpse && !tp.teleportCorpses) ||
+          (!sim.rob[n].Veg && !tp.teleportHeterotrophs);
+      if (!filtered) {
+        if (tp.local) tp.NumTeleported += 1;
+        // 2 RNG (x, y); la línea de visualize es render.
+        const vb_single rx = static_cast<vb_single>(
+            static_cast<double>(sim.opts.FieldWidth) * sim.rnd());
+        const vb_single ry = static_cast<vb_single>(
+            static_cast<double>(sim.opts.FieldHeight) * sim.rnd());
+        ReSpawn(sim, n, static_cast<vb_single>(vb_clng(rx)),
+                static_cast<vb_single>(vb_clng(ry)));
+      }
+    }
+  }
+}
+
+// Teleport.bas:299-313 — DriftTeleporter: 1 RNG por eje con drift activo;
+// tope MaxVelocity/4 re-escalando el vector (VectorScalar con su clamp).
+inline void DriftTeleporter(Sim& sim, int i) {
+  Teleporter& tp = sim.Teleporters[i];
+  const vb_single vel =
+      static_cast<vb_single>(static_cast<double>(sim.opts.MaxVelocity) / 4.0);
+  if (tp.driftHorizontal)
+    tp.vel.x = static_cast<vb_single>(static_cast<double>(tp.vel.x) +
+                                      (static_cast<double>(sim.rnd()) - 0.5));
+  if (tp.driftVertical)
+    tp.vel.y = static_cast<vb_single>(static_cast<double>(tp.vel.y) +
+                                      (static_cast<double>(sim.rnd()) - 0.5));
+  if (VectorMagnitude(tp.vel) > vel)
+    tp.vel = VectorScalar(tp.vel, vel / VectorMagnitude(tp.vel));
+}
+
+// Teleport.bas:315-368 — MoveTeleporter. [PROBABLE BUG] B7-3 / B-36: SOLO
+// traslada si AMBOS flags de drift están activos, aunque DriftTeleporter
+// haya acumulado velocidad con uno solo. El center usado para la colisión
+// vive en (x + W/2, y + H·0.3) — el 0.3 responde al dibujo del sprite.
+// Bordes: envoltura si el eje está conectado, si no rebote ±10% MaxVelocity.
+inline void MoveTeleporter(Sim& sim, int i) {
+  Teleporter& tp = sim.Teleporters[i];
+
+  if (tp.driftHorizontal && tp.driftVertical)
+    tp.pos = VectorAdd(tp.pos, tp.vel);
+  tp.center = VectorSet(tp.pos.x + tp.Width * 0.5f,
+                        tp.pos.y + tp.Height * 0.3f);
+
+  if (tp.pos.x < 0.0f) {
+    if (tp.pos.x + tp.Width < 0.0f) tp.pos.x = 0.0f;
+    if (sim.opts.Dxsxconnected)
+      tp.pos.x = tp.pos.x + sim.opts.FieldWidth - tp.Width;
+    else
+      tp.vel.x = sim.opts.MaxVelocity * 0.1f;
+  }
+  if (tp.pos.y < 0.0f) {
+    if (tp.pos.y + tp.Height < 0.0f) tp.pos.y = 0.0f;
+    if (sim.opts.Updnconnected)
+      tp.pos.y = tp.pos.y + sim.opts.FieldHeight - tp.Height;
+    else
+      tp.vel.y = sim.opts.MaxVelocity * 0.1f;
+  }
+  if (tp.pos.x + tp.Width > sim.opts.FieldWidth) {
+    if (tp.pos.x > sim.opts.FieldWidth)
+      tp.pos.x = sim.opts.FieldWidth - tp.Width;
+    if (sim.opts.Dxsxconnected)
+      tp.pos.x = tp.pos.x - (sim.opts.FieldWidth - tp.Width);
+    else
+      tp.vel.x = -sim.opts.MaxVelocity * 0.1f;
+  }
+  if (tp.pos.y + tp.Height > sim.opts.FieldHeight) {
+    if (tp.pos.y > sim.opts.FieldHeight)
+      tp.pos.y = sim.opts.FieldHeight - tp.Height;
+    if (sim.opts.Updnconnected)
+      tp.pos.y = tp.pos.y - (sim.opts.FieldHeight - tp.Height);
+    else
+      tp.vel.y = -sim.opts.MaxVelocity * 0.1f;
+  }
+}
+
+// Teleport.bas:371-455 — TeleportInBots (paso 18): cada InboundPollCycles
+// ciclos carga hasta BotsPerPoll organismos del inbox (borrándolos); los
+// Internet entran en posición aleatoria (2 RNG/organismo). Gate global:
+// SpeciesNum > 45 suspende toda entrada. El MsgBox del archivo no-dbo y el
+// On Error GoTo abandonthiscycle son E/S de disco: en el port el inbox solo
+// contiene registros dbo y la lectura de búfer no falla.
+inline void TeleportInBots(Sim& sim, const FormatGlobals& g = {}) {
+  if (static_cast<vb_integer>(sim.Specie.size()) > 45) return;
+
+  for (int i = 1; i <= sim.numTeleporters; ++i) {
+    Teleporter& tp = sim.Teleporters[i];
+    if (tp.In) {
+      if (tp.PollCountDown <= 0) {
+        tp.PollCountDown = tp.InboundPollCycles;
+        vb_integer maxbots = tp.BotsPerPoll;
+        while (!tp.inbox.empty() && maxbots > 0) {
+          VbBinFile f;
+          f.data = std::move(tp.inbox.front());
+          tp.inbox.erase(tp.inbox.begin());
+          LoadOrganism(sim, f, tp.pos.x + tp.Width / 2.0f,
+                       tp.pos.y + tp.Height / 3.0f, g);
+          tp.NumTeleportedIn += 1;
+          maxbots -= 1;
+        }
+      } else {
+        tp.PollCountDown -= 1;
+      }
+    }
+    if (tp.Internet) {
+      if (tp.PollCountDown <= 0) {
+        tp.PollCountDown = tp.InboundPollCycles;
+        vb_integer maxbots = tp.BotsPerPoll;
+        while (!tp.inbox.empty() && maxbots > 0) {
+          const vb_single rx = static_cast<vb_single>(
+              static_cast<double>(sim.opts.FieldWidth) * sim.rnd());
+          const vb_single ry = static_cast<vb_single>(
+              static_cast<double>(sim.opts.FieldHeight) * sim.rnd());
+          VbBinFile f;
+          f.data = std::move(tp.inbox.front());
+          tp.inbox.erase(tp.inbox.begin());
+          LoadOrganism(sim, f, rx, ry, g);
+          tp.NumTeleportedIn += 1;
+          maxbots -= 1;
+        }
+      } else {
+        tp.PollCountDown -= 1;
+      }
+    }
+  }
+}
+
+// Teleport.bas:458-468 — UpdateTeleporters (paso 18 del tick).
+inline void UpdateTeleporters(Sim& sim, const FormatGlobals& g = {}) {
+  for (int i = 1; i <= sim.numTeleporters; ++i) {
+    if (sim.opts.TotRunCycle >= 0) {
+      DriftTeleporter(sim, i);
+      MoveTeleporter(sim, i);
+    }
+  }
+  TeleportInBots(sim, g);
+}
+
 // Robots.bas:1476-1656 — UpdateBots: 7 pasadas en orden (10-CICLO.md §5).
 inline void UpdateBots(Sim& sim) {
   sim.rp = 1;
@@ -1581,8 +1787,14 @@ inline void UpdateBots(Sim& sim) {
   sim.totvegsDisplayed = sim.totvegs;
   sim.totvegs = 0;
 
-  // P0a (teleporters) — B7: sin teleporters no hay llamada. Mareas (Tides):
-  // ⚙ opcional, fuera (BouyancyScaling queda en 1).
+  // P0a — teleporters (Robots.bas:1505-1512): la salida corre ANTES que
+  // ninguna otra pasada (NetForces puede tocar bots más adelante). Mareas
+  // (Tides): ⚙ opcional, fuera (BouyancyScaling queda en 1).
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    if (sim.rob[t].exist) {
+      if (sim.numTeleporters > 0) CheckTeleporters(sim, t);
+    }
+  }
 
   // P0b — AddedMass, solo si el medio tiene densidad (Robots.bas:1516-1520).
   if (sim.opts.Density != 0.0f) {

@@ -40,6 +40,8 @@ struct FormatGlobals {
   int y_eco_im = 0;                 // modo eco-IM (⚙): reescribe el tag
   bool sunbelt = false;             // global de mutaciones sunbelt
   bool lblSaving_visible = false;   // Form1.lblSaving (pantalla de autosave)
+  std::string IName;                // IntOpts.IName (LastOwner al guardar
+                                    // organismos; "" -> "Local" en el campo)
 };
 
 // ---------------------------------------------------------------------------
@@ -921,6 +923,210 @@ inline void LoadRobot(Sim& sim, int n, VbBinFile& f,
     sim.rob[n].mem[addr::DnaLenSys] = sim.rob[n].DnaLen;
     sim.rob[n].mem[addr::GenesSys] =
         static_cast<vb_integer>(sim.rob[n].genenum);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Organismo (.dbo) — 60-FORMATOS.md §3. ListCells vive en physics.hpp; con
+// funciones inline basta la declaración (la definición entra en el mismo TU
+// vía robots.hpp/master.hpp).
+inline void ListCells(Sim& sim, std::array<vb_integer, 51>& lst);
+
+// HDRoutines.bas:217-240 — SaveOrganism: cnum + cnum registros de bot, con
+// LastOwner estampado (IntOpts.IName) antes de cada registro.
+inline void SaveOrganism(Sim& sim, VbBinFile& f, int r,
+                         const FormatGlobals& g = {}) {
+  std::array<vb_integer, 51> clist{};
+  vb_integer cnum = 0;
+  clist[0] = static_cast<vb_integer>(r);
+  ListCells(sim, clist);
+  while (clist[cnum] > 0) cnum += 1;
+
+  f.put_i16(cnum);
+  for (vb_integer k = 0; k <= cnum - 1; ++k) {
+    sim.rob[clist[k]].LastOwner = g.IName;
+    SaveRobotBody(sim, clist[k], f, g);
+  }
+}
+
+// HDRoutines.bas:243-297 — AddSpecie: registra la especie de un bot
+// cargado/teleportado. Defaults "Species arrived from the Internet":
+// qty = 5, Stnrg = 3000, tasas por defecto (la rama NormMut de
+// SetDefaultMutationRates está acoplada a la UI y NormMut nace False;
+// nótese que SIN skipNorm el P2UP NO se pone a 0, a diferencia del
+// cargador binario). El original con el registro lleno (k = 75) escribe
+// igualmente sobre el último slot sin incrementar SpeciesNum; aquí se
+// replica sobrescribiendo el último elemento del vector.
+inline vb_integer AddSpecieFromFile(Sim& sim, int n, bool IsNative) {
+  Bot& b = sim.rob[n];
+  if (b.Corpse || b.FName == "Corpse" || !b.exist) return 0;
+
+  const vb_integer k = static_cast<vb_integer>(sim.Specie.size());
+  Specie* spp;
+  if (k < MAXNATIVESPECIES) {
+    sim.Specie.emplace_back();
+    spp = &sim.Specie.back();
+  } else {
+    spp = &sim.Specie.back();  // Specie(k) con SpeciesNum sin crecer
+  }
+  Specie& sp = *spp;
+
+  sp.Name = b.FName;
+  sp.Veg = b.Veg;
+  sp.CantSee = b.CantSee;
+  sp.DisableMovementSysvars = b.DisableMovementSysvars;
+  sp.DisableDNA = b.DisableDNA;
+  sp.CantReproduce = b.CantReproduce;
+  sp.VirusImmune = b.VirusImmune;
+  sp.population = 1;
+  sp.SubSpeciesCounter = 0;
+  sp.color = b.color;
+  sp.Comment = "Species arrived from the Internet";
+  sp.Posrg = 1;
+  sp.Posdn = 1;
+  sp.Poslf = 0;
+  sp.Postp = 0;
+
+  // SetDefaultMutationRates SIN skipNorm y NormMut = False: mutarray = 5000
+  // en las 21 celdas (P2UP incluido) + SetDefaultLengths.
+  for (int a = 0; a <= 20; ++a) {
+    sp.Mutables.mutarray[a] = 5000;
+    sp.Mutables.Mean[a] = 1;
+    sp.Mutables.StdDev[a] = 0;
+  }
+  SetDefaultLengths(sp.Mutables);
+  sp.Mutables.Mutations = b.Mutables.Mutations;
+
+  sp.qty = 5;
+  sp.Stnrg = 3000;
+  sp.Native = IsNative;
+  sp.path = "";  // MainDir + "\robots" del original: ruta de disco, infra
+
+  return k;
+}
+
+// HDRoutines.bas:349-368 — PlaceOrganism: traslada el organismo entero
+// relativo a la célula 0 y lo re-registra en los buckets.
+inline void PlaceOrganism(Sim& sim, std::array<vb_integer, 51>& clist,
+                          vb_single X, vb_single Y) {
+  int k = 0;
+  const vb_single dx = X - sim.rob[clist[0]].pos.x;
+  const vb_single dy = Y - sim.rob[clist[0]].pos.y;
+  while (clist[k] > 0) {
+    sim.rob[clist[k]].pos.x = sim.rob[clist[k]].pos.x + dx;
+    sim.rob[clist[k]].pos.y = sim.rob[clist[k]].pos.y + dy;
+    sim.rob[clist[k]].BucketPos.x = -2;
+    sim.rob[clist[k]].BucketPos.y = -2;
+    UpdateBotBucket(sim, clist[k]);
+    k += 1;
+  }
+}
+
+// HDRoutines.bas:372-400 — RemapTies: re-apunta las ties de las células
+// cargadas de oldBotNum a los slots nuevos y poda las que apuntan fuera
+// del archivo.
+inline void RemapTies(Sim& sim, std::array<vb_integer, 51>& clist,
+                      vb_integer cnum) {
+  for (vb_integer t = 0; t <= cnum - 1; ++t) {
+    const vb_integer ind = sim.rob[clist[t]].oldBotNum;
+    for (vb_integer k = 0; k <= cnum - 1; ++k) {
+      int j = 1;
+      while (j <= MAXTIES && sim.rob[clist[k]].Ties[j].pnt > 0) {
+        if (sim.rob[clist[k]].Ties[j].pnt == ind)
+          sim.rob[clist[k]].Ties[j].pnt = clist[t];
+        j += 1;
+      }
+    }
+  }
+
+  for (vb_integer k = 0; k <= cnum - 1; ++k) {
+    int j = 1;
+    while (j <= MAXTIES && sim.rob[clist[k]].Ties[j].pnt > 0) {
+      bool TiePointsToNode = false;
+      for (vb_integer t = 0; t <= cnum - 1; ++t) {
+        if (sim.rob[clist[k]].Ties[j].pnt == clist[t]) TiePointsToNode = true;
+      }
+      if (!TiePointsToNode) sim.rob[clist[k]].Ties[j].pnt = 0;
+      j += 1;
+    }
+  }
+}
+
+// HDRoutines.bas:296-346 — LoadOrganism: cnum registros a slots frescos
+// (posto), especies desconocidas auto-registradas, recolocación relativa y
+// remapeo de ties. Devuelve el slot de la ÚLTIMA célula cargada (como el
+// original) o -1. Sitio de error 9 con cnum > 51 (ver SimDiag).
+inline int LoadOrganism(Sim& sim, VbBinFile& f, vb_single X, vb_single Y,
+                        const FormatGlobals& g = {}) {
+  std::array<vb_integer, 51> clist{};
+  int result = -1;
+  int nuovo = 0;
+
+  const vb_integer cnum = f.get_i16();
+  for (vb_integer k = 0; k <= cnum - 1; ++k) {
+    nuovo = posto(sim);
+    if (k > 50) {
+      // clist(51) desbordaba en el original (error 9 -> handler `problem`:
+      // deshace el bot a medias y devuelve -1).
+      sim.diag.err9_load_organism += 1;
+      sim.rob[nuovo].exist = false;
+      UpdateBotBucket(sim, nuovo);
+      return -1;
+    }
+    clist[k] = static_cast<vb_integer>(nuovo);
+    LoadRobot(sim, nuovo, f, g);
+    result = nuovo;
+
+    bool foundSpecies = false;
+    for (std::size_t i = sim.Specie.size(); i > 0; --i) {
+      if (sim.rob[nuovo].FName == sim.Specie[i - 1].Name) {
+        foundSpecies = true;
+        break;
+      }
+    }
+    if (!foundSpecies) AddSpecieFromFile(sim, nuovo, false);
+  }
+
+  if (X > -1.0f && Y > -1.0f) PlaceOrganism(sim, clist, X, Y);
+  RemapTies(sim, clist, cnum);
+  return result;
+}
+
+// HDRoutines.bas:402-421 — RemapAllTies: tras cargar una sim densa, cada
+// tie se re-apunta buscando el oldBotNum entre TODOS los bots.
+inline void RemapAllTies(Sim& sim, int numOfBots) {
+  for (int i = 1; i <= numOfBots; ++i) {
+    int j = 1;
+    while (j <= MAXTIES && sim.rob[i].Ties[j].pnt > 0) {
+      for (int k = 1; k <= numOfBots; ++k) {
+        if (sim.rob[i].Ties[j].pnt == sim.rob[k].oldBotNum) {
+          sim.rob[i].Ties[j].pnt = static_cast<vb_integer>(k);
+          break;  // GoTo nexttie
+        }
+      }
+      j += 1;
+    }
+  }
+}
+
+// HDRoutines.bas:423-441 — RemapAllShots: re-apunta parent por oldBotNum,
+// re-engancha virusshot (stored) y libera los huérfanos.
+inline void RemapAllShots(Sim& sim, vb_long numOfShots) {
+  for (vb_long i = 1; i <= numOfShots; ++i) {
+    if (sim.Shots[i].exist) {
+      bool found = false;
+      for (int j = 1; j <= sim.MaxRobs; ++j) {
+        if (sim.rob[j].exist) {
+          if (sim.Shots[i].parent == sim.rob[j].oldBotNum) {
+            sim.Shots[i].parent = static_cast<vb_integer>(j);
+            if (sim.Shots[i].stored) sim.rob[j].virusshot = i;
+            found = true;
+            break;  // GoTo nextshot
+          }
+        }
+      }
+      if (!found) sim.Shots[i].stored = false;  // libera el huérfano
+    }
   }
 }
 
