@@ -108,7 +108,7 @@ TEST_CASE("B-13 lastopppos solo del ojo frontal [ciclo]") {
     // eye7 (a = 6): eyeaim = aim - 2*(PI/18); lo apuntamos al pie.
     w.sim.rob[n].aim = k3PI2 + 2.0f * (3.14159265f / 18.0f);
     w.sim.rob[n].mem[addr::FOCUSEYE] = 2;  // Abs(2+4) Mod 9 = 6 -> eye7
-    w.sim.Specie.push_back({"T.txt", 1, false});
+    w.sim.Specie.push_back([]{ Specie sp; sp.Name = "T.txt"; sp.population = 1; sp.Native = false; return sp; }());
 
     WriteSenses(w.sim, n);
 
@@ -133,7 +133,7 @@ TEST_CASE("B-13 lastopppos solo del ojo frontal [ciclo]") {
     w.addshape(9999.8f, 10500.0f, 0.4f, 200.0f);
     w.sim.rob[n].aim = k3PI2;  // eye5 al pie
     w.sim.rob[n].mem[addr::FOCUSEYE] = 0;
-    w.sim.Specie.push_back({"T.txt", 1, false});
+    w.sim.Specie.push_back([]{ Specie sp; sp.Name = "T.txt"; sp.population = 1; sp.Native = false; return sp; }());
 
     WriteSenses(w.sim, n);
 

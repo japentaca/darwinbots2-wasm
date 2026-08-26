@@ -11,8 +11,11 @@
 #include "loader.hpp"
 #include "robots.hpp"
 #include "sim.hpp"
+#include "vegs.hpp"
 
 namespace db {
+
+inline void VegsRepopulate(Sim& sim);  // definida tras RobScriptLoadSim
 
 // DNA.bas:1245-1262 — ExecRobs (paso 10): ADN de todos los bots en orden de
 // índice. Gate: exist, no corpse, no DisableDNA (hidepred: capa torneo ⚙).
@@ -68,7 +71,10 @@ inline void UpdateSim(Sim& sim) {
   // Paso 2: contadores de ciclo.
   sim.opts.TotRunCycle += 1;
 
-  // Paso 5 (contabilidad de energía): rotación de la celda del ciclo.
+  // Paso 5 (contabilidad de energía, Master.bas:236-238): el display toma
+  // la celda del ciclo ANTERIOR (el índice aún no rotó) y después rota y
+  // pone a cero la celda nueva. feedvegs decide día/noche con este display.
+  sim.TotalSimEnergyDisplayed = sim.TotalSimEnergy[sim.CurrentEnergyCycle];
   sim.CurrentEnergyCycle = sim.opts.TotRunCycle % 100;
   sim.TotalSimEnergy[sim.CurrentEnergyCycle] = 0;
 
@@ -130,20 +136,29 @@ inline void UpdateSim(Sim& sim) {
     }
   }
 
-  // Paso 18: obstáculos/teleporters — B7.
+  // Paso 18: obstáculos/teleporters (Master.bas:382-383) — bloques 2/3 de M8.
 
-  // Paso 19: suma de cloroplastos (división real -> Long: bancario).
+  // Paso 19 (Master.bas:384-390): suma de cloroplastos. AllChlr es Long y
+  // la suma Long + Single se redondea bancario EN CADA iteración (la
+  // asignación a Long ocurre por vuelta del For).
   sim.AllChlr = 0;
   for (int t = 1; t <= sim.MaxRobs; ++t)
     if (sim.rob[t].exist)
-      sim.AllChlr += static_cast<vb_long>(
-          vb_round64(static_cast<double>(sim.rob[t].chloroplasts)));
+      sim.AllChlr = static_cast<vb_long>(vb_round64(
+          static_cast<double>(sim.AllChlr) +
+          static_cast<double>(sim.rob[t].chloroplasts)));
   sim.TotalChlr =
       static_cast<vb_long>(vb_round64(sim.AllChlr / 16000.0));
 
-  // Pasos 20-21: VegsRepopulate/feedvegs — B7 (consumen RNG y E/S).
-  if (sim.TotalChlr < sim.opts.MinVegs && sim.totvegsDisplayed != -1)
-    sim.diag.world_stub += 1;
+  // Paso 20 (Master.bas:392-394): repoblación, gateada por cloroplastos
+  // (no por vegetales) y por el primer ciclo tras cargar (totvegsDisplayed
+  // = -1 evita el pico).
+  if (sim.TotalChlr < sim.opts.MinVegs) {
+    if (sim.totvegsDisplayed != -1) VegsRepopulate(sim);
+  }
+
+  // Paso 21 (Master.bas:396): el sol.
+  feedvegs(sim, sim.opts.MaxEnergy);
 
   // Pasos 22-25: torneo/UI/autosave — ⚙, fuera del core.
 
@@ -198,6 +213,132 @@ inline int RobScriptLoadSim(Sim& sim, const std::string& text,
   sim.rob[n].exist = false;
   UpdateBotBucket(sim, n);  // Module1.bas:23
   return -1;
+}
+
+// Globals.bas:395-505 — aggiungirob: añade un robot cargando el script de
+// la especie r; con r = -1 (repoblación) re-sortea especie vegetal y
+// posición, DESCARTANDO las coordenadas del llamador ([PROBABLE BUG] B7-1:
+// los dos Random de VegsRepopulate son puro consumo de RNG). Después PISA
+// lo que el cargador sembró: Erase mem, body = 1000, nrg = Stnrg, aim
+// aleatorio, generation 0… El timer epigenético queda en 0 (a diferencia de
+// los fundadores de loadrobs). Consumo con r = -1 y una sola tirada de
+// especie: 1 especie [+1 por re-tirada] + 2 posición (fRnd) + 6 preparerob
+// + 1 aim = 10 (12 con los 2 descartados del llamador; R-08).
+inline void aggiungirob(Sim& sim, vb_integer r, vb_single x, vb_single y) {
+  if (r == -1) {
+    // Primera pasada: ¿hay alguna especie vegetal elegible?
+    bool anyvegy = false;
+    for (std::size_t i = 0; i < sim.Specie.size(); ++i) {
+      if (checkvegstatus(sim, static_cast<int>(i))) {
+        anyvegy = true;
+        break;
+      }
+    }
+    if (!anyvegy) return;
+
+    do {
+      r = static_cast<vb_integer>(Random(
+          0, static_cast<double>(sim.Specie.size()) - 1.0, *sim.rndy));
+    } while (!checkvegstatus(sim, r));
+
+    // fRnd toma Long ByVal: los productos Single se redondean bancario en
+    // la llamada. La posición real la decide el área de la especie (la fuga
+    // up+1 de fRnd puede salirse 1 twip, S-02).
+    const Specie& sp = sim.Specie[static_cast<std::size_t>(r)];
+    x = static_cast<vb_single>(
+        fRnd(vb_clng(static_cast<double>(
+                 sp.Poslf * (sim.opts.FieldWidth - 60.0f))),
+             vb_clng(static_cast<double>(
+                 sp.Posrg * (sim.opts.FieldWidth - 60.0f))),
+             *sim.rndy));
+    y = static_cast<vb_single>(
+        fRnd(vb_clng(static_cast<double>(
+                 sp.Postp * (sim.opts.FieldHeight - 60.0f))),
+             vb_clng(static_cast<double>(
+                 sp.Posdn * (sim.opts.FieldHeight - 60.0f))),
+             *sim.rndy));
+  }
+
+  Specie& sp = sim.Specie[static_cast<std::size_t>(r)];
+  if (sp.Name.empty() || sp.path == "Invalid Path") return;
+
+  const int a = RobScriptLoadSim(sim, sp.dnatext, sp.Name);
+  if (a < 0) {
+    sp.Native = false;  // Globals.bas:421-424
+    return;
+  }
+  // El chequeo `Not rob(a).exist` -> path = "Invalid Path" del original
+  // (:428-433) es inalcanzable aquí: RobScriptLoadSim devuelve -1 en ese
+  // caso. Se documenta y no se replica.
+
+  Bot& b = sim.rob[a];
+  b.Veg = sp.Veg;
+  if (b.Veg) b.chloroplasts = static_cast<vb_single>(sim.StartChlr);
+  b.Fixed = sp.Fixed;
+  b.CantSee = sp.CantSee;
+  b.DisableDNA = sp.DisableDNA;
+  b.DisableMovementSysvars = sp.DisableMovementSysvars;
+  b.CantReproduce = sp.CantReproduce;
+  b.VirusImmune = sp.VirusImmune;
+  b.Corpse = false;
+  b.Dead = false;
+  b.body = 1000.0f;
+  b.radius = FindRadius(sim, a);
+  b.Mutations = 0;
+  b.OldMutations = 0;
+  b.LastMut = 0;
+  b.generation = 0;
+  b.SonNumber = 0;
+  b.parent = 0;
+  b.mem.fill(0);  // Erase rob(a).mem (borra mem(336)/mem(339) incluidos)
+  if (b.Fixed) b.mem[216] = 1;
+  b.pos.x = x;
+  b.pos.y = y;
+
+  b.aim = sim.rnd() * static_cast<vb_single>(PI) * 2.0f;  // pisa preparerob
+  b.mem[addr::SetAim] = vb_cint(static_cast<double>(b.aim * 200.0f));
+
+  UpdateBotBucket(sim, a);
+  b.nrg = static_cast<vb_single>(sp.Stnrg);
+  b.Mutables = sp.Mutables;
+
+  b.Vtimer = 0;
+  b.virusshot = 0;
+  b.genenum = CountGenes(b.dna);
+
+  b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
+  b.GenMut = static_cast<vb_single>(static_cast<double>(b.DnaLen) /
+                                    GeneticSensitivity);
+
+  b.mem[addr::DnaLenSys] = b.DnaLen;
+  b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
+
+  b.multibot_time = sp.kill_mb ? 210 : 0;
+  b.dq = sp.dq_kill ? 1 : 0;
+  b.NoChlr = sp.NoChlr;
+
+  for (int i = 0; i <= 7; ++i) b.Skin[i] = sp.Skin[i];
+  b.color = sp.color;
+  makeoccurrlist(sim, a);
+}
+
+// Vegs.bas:23-38 — VegsRepopulate (paso 20): acumulador con deuda. Las dos
+// coordenadas del llamador se sortean y se descartan (B7-1); totvegs cuenta
+// el intento aunque aggiungirob falle en silencio.
+inline void VegsRepopulate(Sim& sim) {
+  sim.cooldown += 1;
+  if (sim.cooldown >= sim.opts.RepopCooldown) {
+    for (vb_integer t = 1; t <= sim.opts.RepopAmount; ++t) {
+      // VB6 evalúa los argumentos de izquierda a derecha: x antes que y.
+      const vb_single Rx = static_cast<vb_single>(Random(
+          60, static_cast<double>(sim.opts.FieldWidth) - 60.0, *sim.rndy));
+      const vb_single Ry = static_cast<vb_single>(Random(
+          60, static_cast<double>(sim.opts.FieldHeight) - 60.0, *sim.rndy));
+      aggiungirob(sim, -1, Rx, Ry);
+      sim.totvegs += 1;
+    }
+    sim.cooldown -= sim.opts.RepopCooldown;
+  }
 }
 
 // Configuración de especie para la siembra de fundadores (subconjunto de

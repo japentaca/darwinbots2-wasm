@@ -400,7 +400,7 @@ TEST_CASE("B-19 slime penetrada: queda negativa y AMPLIFICA antes del reset [PRO
 
   SUBCASE("power 10 >= umbral 5: penetra, slime final 0, infección ocurre") {
     const int v = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
-    w.sim.Specie.push_back({"V.txt", 1, false, 0});
+    w.sim.Specie.push_back([]{ Specie sp; sp.Name = "V.txt"; sp.population = 1; sp.Native = false; return sp; }());
     Bot& b = w.sim.rob[v];
     b.Slime = 100.0f;
     const vb_integer olddna = b.DnaLen;
@@ -480,7 +480,7 @@ TEST_CASE("B-20 el virus del gen 7 lleva 7x la potencia contra la slime [PROBABL
   // absorbido; el gen-7 (power 7) penetra e infecta.
   const int v1 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
   const int v2 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 11000, 10000);
-  w.sim.Specie.push_back({"V.txt", 2, false, 0});
+  w.sim.Specie.push_back([]{ Specie sp; sp.Name = "V.txt"; sp.population = 2; sp.Native = false; return sp; }());
   w.sim.rob[v1].Slime = 100.0f;
   w.sim.rob[v2].Slime = 100.0f;
   const vb_integer dna1 = w.sim.rob[v1].DnaLen;

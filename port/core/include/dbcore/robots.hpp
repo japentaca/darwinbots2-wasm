@@ -11,6 +11,7 @@
 #include "shots.hpp"
 #include "sim.hpp"
 #include "ties.hpp"
+#include "vegs.hpp"
 
 namespace db {
 
@@ -278,16 +279,37 @@ inline void MakeStuff(Sim& sim, int n) {
   if (b.mem[820] != 0) makeslime(sim, n);
 }
 
-// Robots.bas:1184-1196 — HandleWaste (P5): publicaciones y gates; defacate
-// real desde M6 (B-18); feedveg2/altzheimer siguen en B5/B7 (altzheimer
-// consume RNG).
+// Robots.bas:983-997 — altzheimer: el waste alto escribe basura en la
+// memoria. loops es Integer: (Pwaste + Waste - BadWastelevel)/4 redondea
+// bancario. Por escritura: re-sortea loc hasta esquivar mkchlr/rmchlr
+// (1 RNG + 1 por re-tirada) y consume 1 RNG para el valor.
+inline void altzheimer(Sim& sim, int n) {
+  Bot& b = sim.rob[n];
+  // La resta corre en Single (Pwaste + Waste - BadWastelevel); la división
+  // /4 promociona a Double y la asignación a Integer redondea bancario.
+  const vb_single excess =
+      b.Pwaste + b.Waste - static_cast<vb_single>(sim.opts.BadWastelevel);
+  const vb_integer loops = vb_cint(static_cast<double>(excess) / 4.0);
+  for (vb_integer t = 1; t <= loops; ++t) {
+    vb_integer loc;
+    do {
+      loc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+    } while (!(loc != addr::mkchlr && loc != addr::rmchlr));
+    const vb_integer val =
+        static_cast<vb_integer>(Random(-32000, 32000, *sim.rndy));
+    b.mem[loc] = val;
+  }
+}
+
+// Robots.bas:1184-1196 — HandleWaste (P5): feedveg2 (digestión de waste,
+// 1 RNG), altzheimer (RNG por escritura), defacate y publicaciones.
 inline void HandleWaste(Sim& sim, int n) {
   Bot& b = sim.rob[n];
-  if (b.Waste > 0.0f && b.chloroplasts > 0.0f) sim.diag.handlewaste_stub += 1;
+  if (b.Waste > 0.0f && b.chloroplasts > 0.0f) feedveg2(sim, n);
   if (sim.opts.BadWastelevel == 0) sim.opts.BadWastelevel = 400;
   if (sim.opts.BadWastelevel > 0 &&
       b.Pwaste + b.Waste > static_cast<vb_single>(sim.opts.BadWastelevel))
-    sim.diag.handlewaste_stub += 1;  // altzheimer
+    altzheimer(sim, n);
   if (b.Waste > 32000.0f) defacate(sim, n);
   if (b.Pwaste > 32000.0f) b.Pwaste = 32000.0f;
   if (b.Waste < 0.0f) b.Waste = 0.0f;

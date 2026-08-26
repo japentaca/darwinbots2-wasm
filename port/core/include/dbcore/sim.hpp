@@ -120,15 +120,89 @@ struct SimOptsT {
   bool EnableAutoSpeciation = false;
   vb_integer SpeciationGeneticDistance = 0;
   vb_long SpeciationForkInterval = 0;
+
+  // --- mundo B7 (50-MUNDO.md; defaults de constants.yaml §mdiform salvo
+  // los que el harness fija en otro valor) ---
+  vb_integer RepopAmount = 10;      // MDIForm defaults
+  vb_integer RepopCooldown = 10;
+  vb_long MaxEnergy = 100;
+  vb_integer LightIntensity = 0;    // pondmode
+  bool DayNight = false;
+  vb_integer CycleLength = 0;
+  vb_long DayNightCycleCounter = 0;
+  bool SunUp = false, SunDown = false;
+  vb_long SunUpThreshold = 500000;
+  vb_long SunDownThreshold = 1000000;
+  vb_integer SunThresholdMode = 0;
+  bool SunOnRnd = false;
+  vb_single VegFeedingToBody = 0.75f;
+  vb_integer Tides = 0, TidesOf = 0;
+
+  // Formas (SimOptions.bas:171-179).
+  bool allowVerticalShapeDrift = false;
+  bool allowHorizontalShapeDrift = false;
+  bool shapesAbsorbShots = false;
+  vb_integer shapeDriftRate = 0;
+  bool makeAllShapesTransparent = false;
+  bool makeAllShapesBlack = false;
+
+  // Campos persistidos por SaveSimulation sin consumidor en el core (el
+  // formato binario de sim los serializa; 60-FORMATOS.md §4).
+  std::string SimName;
+  vb_integer FieldSize = 0;
+  vb_long TotRunTime = 0;
+  vb_long UserSeedNumber = 0;
+  bool Toroidal = false;
+  bool KillDistVegs = false, BlockedVegs = false;
+  bool DeadRobotSnp = false, SnpExcludeVegs = false;
+  vb_single CostExecCond = 0;
+  vb_integer PopLimMethod = 0;
+  vb_single PhysSwim = 0;
+  bool PlanetEaters = false;
+  vb_single PlanetEatersG = 0;
+  vb_integer chartingInterval = 200;
+  vb_integer FluidSolidCustom = 2;
+  vb_integer CostRadioSetting = 2;
+  vb_single oldCostX = 0;
+  vb_integer EGridWidth = 0;
+  bool EGridEnabled = false;
+  vb_long SimGUID = 0;
+  vb_integer SpeciationGenerationalDistance = 0;
+  vb_integer SpeciationMinimumPopulation = 0;
 };
 
-// Registro de especies mínimo (SimOpts.Specie): lo que UpdateCounters y
-// WriteSenses necesitan (población por FName).
+// Type datispecie (varspecie.bas:15-58) sin la capa de UI (DisplayImage).
+// Los cuatro primeros campos conservan el orden del registro mínimo de M3
+// (los tests inicializan {Name, population, Native, SubSpeciesCounter}).
+// `dnatext` es del port: el contenido del archivo de robot en memoria (el
+// original guarda `path` y relee del disco en RobScriptLoad; decisión M5:
+// el core no toca disco). `path` se conserva como dato persistido y por el
+// centinela "Invalid Path" de aggiungirob (Globals.bas:428-433).
 struct Specie {
   std::string Name;
-  vb_long population = 0;
+  vb_long population = 0;            // Integer en el fuente; Long desde M3
   bool Native = true;
   vb_integer SubSpeciesCounter = 0;  // NeoMutations.bas:108-116
+  std::array<vb_integer, 14> Skin{};
+  std::string path;
+  std::string dnatext;               // port: sustituto en memoria del disco
+  vb_integer Stnrg = 3000;
+  bool Veg = false;
+  bool NoChlr = false;
+  bool Fixed = false;
+  vb_long color = 0;
+  vb_integer Colind = 0;
+  vb_single Postp = 0, Poslf = 0, Posdn = 1, Posrg = 1;
+  vb_integer qty = 5;
+  std::string Comment;
+  Mutationprobs Mutables{};
+  bool CantSee = false;
+  bool DisableDNA = false;
+  bool DisableMovementSysvars = false;
+  bool CantReproduce = false;
+  bool VirusImmune = false;
+  bool kill_mb = false;
+  bool dq_kill = false;
 };
 
 // Obstacles.bas — el subconjunto de Type Obstacle que la física/visión toca
@@ -248,8 +322,26 @@ struct Sim {
   vb_long TotalEnergy = 0;
   std::array<vb_long, 101> TotalSimEnergy{};  // Vegs.bas:11
   int CurrentEnergyCycle = 0;
-  vb_single LightAval = 0;  // Vegs.bas:15 (el cálculo real es B7)
+  vb_long TotalSimEnergyDisplayed = 0;  // Vegs.bas:13 (paso 5 del tick)
+  double LightAval = 0;  // Vegs.bas:15 (Double; lo calcula feedvegs)
   vb_long AllChlr = 0;
+
+  // Vegs.bas:9 — acumulador de la repoblación. Al iniciar una sim arranca
+  // en -RepopCooldown (main.frm:1507): la primera tanda tarda el doble
+  // (B-37). El default 0 es el estado VB6 recién cargado; el arranque de
+  // sim lo fija el harness/StartNewSimCounters.
+  vb_long cooldown = 0;
+
+  // Vegs.bas:17-20 — sol variable (SunOnRnd). SunChange codifica posición
+  // (0/1/2) + rango*10 (0/10) en un byte.
+  double SunPosition = 0, SunRange = 0;
+  unsigned char SunChange = 0;
+
+  // Globals.bas:94 — StartChlr: cloroplastos iniciales de los vegetales
+  // repoblados. Sin Global.gset el original arranca en 0 (default de
+  // Integer); el default de la UI de gset es 16000 (constants.yaml §ui,
+  // [SIN VERIFICAR] el .gset distribuido). Aquí 0 = fiel al sin-archivo.
+  vb_integer StartChlr = 0;
   vb_long TotalChlr = 0;
   bool StartAnotherRound = false;
 
@@ -379,7 +471,11 @@ inline std::size_t SpeciesFromBot(Sim& sim, int n) {
 }
 
 inline void AddSpecie(Sim& sim, int n) {
-  sim.Specie.push_back({sim.rob[n].FName, 1, false, 0});
+  Specie sp;
+  sp.Name = sim.rob[n].FName;
+  sp.population = 1;
+  sp.Native = false;
+  sim.Specie.push_back(sp);
 }
 
 // NeoMutations.bas:108-116 — NewSubSpecies: contador por especie con wrap
