@@ -815,6 +815,218 @@ TEST_CASE("MoveObstacles/DriftObstacles: deriva, clamps y el tope invertido") {
 }
 
 // ---------------------------------------------------------------------------
+TEST_CASE("SaveSimulation/LoadSimulation: ida-y-vuelta completa") {
+  VbRng rng;
+  World w(rng);
+  Sim& A = w.sim;
+
+  // Tres bots con un hueco en el slot 2: el archivo guarda DENSO y los
+  // remapeos por oldBotNum reconstruyen ties y shots.
+  const int b1 = RobScriptLoadSim(A, "stop", "Alpha.txt");
+  const int b2 = RobScriptLoadSim(A, "stop", "Alpha.txt");
+  const int b3 = RobScriptLoadSim(A, "stop", "Alpha.txt");
+  REQUIRE(b1 == 1);
+  REQUIRE(b2 == 2);
+  REQUIRE(b3 == 3);
+  A.rob[2].exist = false;  // hueco
+  A.rob[1].pos = {5000.0f, 6000.0f};
+  A.rob[3].pos = {5200.0f, 6000.0f};
+  A.rob[1].mem[500] = 4321;
+  A.rob[1].Ties[1].pnt = 3;
+  A.rob[3].Ties[1].pnt = 1;
+  A.rob[1].nrg = 12345.0f;
+
+  // Un virus almacenado apuntando al bot 3.
+  A.Shots[5].exist = true;
+  A.Shots[5].parent = 3;
+  A.Shots[5].stored = true;
+  A.Shots[5].shottype = -7;
+  A.Shots[5].DnaLen = 2;
+  A.Shots[5].dna.assign(3, Block{});
+  A.Shots[5].dna[1] = {0, 7};
+  A.Shots[5].dna[2] = {10, 1};
+  A.Shots[5].FromSpecie = "Alpha.txt";
+
+  // SimOpts distintivos.
+  A.opts.SimName = "MiSim";
+  A.opts.FieldWidth = 16000.0f;
+  A.opts.FieldHeight = 12000.0f;
+  A.opts.MaxVelocity = 60.0f;
+  A.opts.RepopCooldown = 25;
+  A.opts.RepopAmount = 3;
+  A.opts.MinVegs = 7;
+  A.opts.MaxEnergy = 150;
+  A.opts.Pondmode = true;
+  A.opts.LightIntensity = 14000;
+  A.opts.Daytime = false;
+  A.opts.SunOnRnd = true;
+  A.opts.DisableMutations = true;  // el quirk lo borrará al cargar
+  A.opts.BadWastelevel = 0;        // 0 se corrige a 400 al cargar
+  A.vm.costs.v[cost::SHOTCOST] = 1.5f;
+  A.vm.costs.v[40] = 2.25f;
+  A.SunPosition = 0.625;
+  A.SunRange = 0.25;
+  A.SunChange = 12;
+  A.evo.stagnent = true;
+  A.evo.strGraphQuery1 = "nrg>100";
+  A.MaxAbsNum = 99;
+
+  // Una especie con rasgos reconocibles.
+  {
+    Specie sp;
+    sp.Name = "Alpha.txt";
+    sp.Veg = true;
+    sp.Stnrg = 4000;
+    sp.qty = 9;
+    sp.population = 12;
+    sp.Native = false;
+    sp.Mutables.mutarray[3] = 777.0f;
+    sp.Mutables.Mean[2] = 5.0f;
+    sp.Poslf = 0.25f;
+    A.Specie.push_back(sp);
+  }
+
+  // Un teleporter normal y uno Internet (que la carga borra) + una forma.
+  A.numTeleporters = 2;
+  A.Teleporters[1].exist = true;
+  A.Teleporters[1].local = true;
+  A.Teleporters[1].pos = {100.0f, 200.0f};
+  A.Teleporters[1].Width = 640.0f;
+  A.Teleporters[1].Height = 480.0f;
+  A.Teleporters[1].InboundPollCycles = 7;
+  A.Teleporters[1].BotsPerPoll = 4;
+  A.Teleporters[1].PollCountDown = 2;
+  A.Teleporters[1].teleportHeterotrophs = true;
+  A.Teleporters[2].exist = true;
+  A.Teleporters[2].Internet = true;
+  A.Teleporters[2].pos = {900.0f, 900.0f};
+
+  NewObstacle(A, 4000.0f, 4500.0f, 800.0f, 600.0f, 12345);
+  A.Obstacles[1].vel = {1.5f, -2.5f};
+
+  VbBinFile f;
+  SaveSimulation(A, f);
+
+  // Carga en una sim virgen.
+  VbRng rng2;
+  World w2(rng2);
+  Sim& B = w2.sim;
+  f.pos = 0;
+  LoadSimulation(B, f);
+
+  // Bots: densos, con ties remapeadas 1<->2 (oldBotNum 1 y 3).
+  CHECK(B.MaxRobs == 2);
+  REQUIRE(B.rob[1].exist);
+  REQUIRE(B.rob[2].exist);
+  CHECK(B.rob[1].mem[500] == 4321);
+  CHECK(B.rob[1].nrg == 12345.0f);
+  CHECK(B.rob[1].oldBotNum == 1);
+  CHECK(B.rob[2].oldBotNum == 3);
+  CHECK(B.rob[1].Ties[1].pnt == 2);
+  CHECK(B.rob[2].Ties[1].pnt == 1);
+
+  // Shots: el array entero viaja (vivos y muertos) y el virus almacenado
+  // se re-engancha al slot nuevo del dueño.
+  CHECK(B.maxshotarray == A.maxshotarray);
+  REQUIRE(B.Shots[5].exist);
+  CHECK(B.Shots[5].parent == 2);
+  CHECK(B.Shots[5].stored);
+  CHECK(B.rob[2].virusshot == 5);
+  CHECK(B.Shots[5].DnaLen == 2);
+  CHECK(B.Shots[5].dna[1].value == 7);
+  CHECK(B.Shots[5].FromSpecie == "Alpha.txt");
+
+  // SimOpts.
+  CHECK(B.opts.SimName == "MiSim");
+  CHECK(B.opts.FieldWidth == 16000.0f);
+  CHECK(B.opts.FieldHeight == 12000.0f);
+  CHECK(B.opts.MaxVelocity == 60.0f);
+  CHECK(B.opts.RepopCooldown == 25);
+  CHECK(B.opts.RepopAmount == 3);
+  CHECK(B.opts.MinVegs == 7);
+  CHECK(B.opts.MaxEnergy == 150);
+  CHECK(B.opts.Pondmode);
+  CHECK(B.opts.LightIntensity == 14000);
+  CHECK(!B.opts.Daytime);
+  CHECK(B.opts.SunOnRnd);
+  CHECK(B.vm.costs.v[cost::SHOTCOST] == 1.5f);
+  CHECK(B.vm.costs.v[40] == 2.25f);
+  CHECK(B.MaxAbsNum == 99);
+
+  // Quirks de carga replicados.
+  CHECK(!B.opts.DisableMutations);       // CInt(True) = -1 < 0: reset
+  CHECK(B.opts.BadWastelevel == 400);    // 0 -> 400
+  CHECK(B.vm.costs.v[55] == 500.0f);     // DYNAMICCOSTSENSITIVITY 0 -> 500
+
+  // Sol y evo.
+  CHECK(B.SunPosition == 0.625);
+  CHECK(B.SunRange == 0.25);
+  CHECK(B.SunChange == 12);
+  CHECK(B.evo.stagnent);
+  CHECK(B.evo.strGraphQuery1 == "nrg>100");
+
+  // Especie.
+  REQUIRE(B.Specie.size() == 1);
+  CHECK(B.Specie[0].Name == "Alpha.txt");
+  CHECK(B.Specie[0].Veg);
+  CHECK(B.Specie[0].Stnrg == 4000);
+  CHECK(B.Specie[0].qty == 9);
+  CHECK(B.Specie[0].population == 12);
+  CHECK(!B.Specie[0].Native);
+  CHECK(B.Specie[0].Mutables.mutarray[3] == 777.0f);
+  CHECK(B.Specie[0].Mutables.Mean[2] == 5.0f);
+  CHECK(B.Specie[0].Poslf == 0.25f);
+
+  // Teleporters: el Internet se borra al cargar; el local sobrevive con su
+  // sondeo.
+  CHECK(B.numTeleporters == 1);
+  CHECK(B.Teleporters[1].local);
+  CHECK(B.Teleporters[1].pos.x == 100.0f);
+  CHECK(B.Teleporters[1].Width == 640.0f);
+  CHECK(B.Teleporters[1].InboundPollCycles == 7);
+  CHECK(B.Teleporters[1].BotsPerPoll == 4);
+  CHECK(B.Teleporters[1].PollCountDown == 2);
+
+  // Obstáculo.
+  CHECK(B.numObstacles == 1);
+  CHECK(B.Obstacles[1].exist);
+  CHECK(B.Obstacles[1].pos.x == 4000.0f);
+  CHECK(B.Obstacles[1].Width == 800.0f);
+  CHECK(B.Obstacles[1].color == 12345);
+  CHECK(B.Obstacles[1].vel.y == -2.5f);
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("Sidecar .mrate: solo los operadores 0..10 viajan") {
+  Mutationprobs mut{};
+  mut.PointWhatToChange = 80;
+  mut.CopyErrorWhatToChange = 90;
+  for (int m = 0; m <= 20; ++m) {
+    mut.mutarray[m] = static_cast<vb_single>(1000 + m);
+    mut.Mean[m] = static_cast<vb_single>(m);
+    mut.StdDev[m] = 0.5f;
+  }
+  mut.Mutations = true;  // no se persiste
+
+  const std::string text = Save_mrates(mut);
+  // Formato Write # de VB6: un valor por línea, ".5" sin cero inicial.
+  CHECK(text.rfind("80\r\n90\r\n1000\r\n0\r\n.5\r\n", 0) == 0);
+
+  const Mutationprobs back = Load_mrates(text);
+  CHECK(back.PointWhatToChange == 80);
+  CHECK(back.CopyErrorWhatToChange == 90);
+  for (int m = 0; m <= 10; ++m) {
+    CHECK(back.mutarray[m] == static_cast<vb_single>(1000 + m));
+    CHECK(back.Mean[m] == static_cast<vb_single>(m));
+    CHECK(back.StdDev[m] == 0.5f);
+  }
+  // 11..20 se pierden (compat con archivos viejos) y Mutations no viaja.
+  CHECK(back.mutarray[15] == 0.0f);
+  CHECK(back.Mean[15] == 0.0f);
+  CHECK(!back.Mutations);
+}
+
+// ---------------------------------------------------------------------------
 TEST_CASE("checkvegstatus: nick de subespecie y regla de campo vacio") {
   InjectedRnd rng({});
   World w(rng);

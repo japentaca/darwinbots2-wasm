@@ -383,6 +383,26 @@ struct Sim {
   double SunPosition = 0, SunRange = 0;
   unsigned char SunChange = 0;
 
+  // Globales evo/torneo/gráficas que el FORMATO de sim persiste
+  // (HDRoutines.bas:794-841; Master.bas:9-21, Globals.bas:96-156). Sus
+  // mecánicas son capa ⚙ (50-MUNDO.md §5): en el core solo viajan por el
+  // archivo. hidepred siempre-False anula los filtros del torneo.
+  struct EvoGlobals {
+    double energydif = 0, energydifX = 0, energydifXP = 0;
+    vb_long ModeChangeCycles = 0;
+    vb_integer hidePredOffset = 0;
+    bool hidepred = false;
+    double energydif2 = 0, energydifX2 = 0, energydifXP2 = 0;
+    bool stagnent = false;
+    std::string strGraphQuery1, strGraphQuery2, strGraphQuery3;
+    std::string strSimStart;
+    std::array<vb_long, 19> graphfilecounter{};   // NUMGRAPHS = 18, 1-based
+    std::array<bool, 19> graphvisible{};
+    std::array<vb_long, 19> graphleft{};
+    std::array<vb_long, 19> graphtop{};
+    std::array<bool, 19> graphsave{};
+  } evo;
+
   // Globals.bas:94 — StartChlr: cloroplastos iniciales de los vegetales
   // repoblados. Sin Global.gset el original arranca en 0 (default de
   // Integer); el default de la UI de gset es 16000 (constants.yaml §ui,

@@ -66,6 +66,7 @@ struct VbBinFile {
   void put_i16(vb_integer v) { put_bytes(&v, 2); }
   void put_i32(vb_long v) { put_bytes(&v, 4); }
   void put_f32(vb_single v) { put_bytes(&v, 4); }
+  void put_f64(vb_double v) { put_bytes(&v, 8); }
   void put_bool(bool v) { put_i16(v ? -1 : 0); }
   void put_str(const std::string& s) { put_bytes(s.data(), s.size()); }
 
@@ -78,6 +79,7 @@ struct VbBinFile {
   vb_integer get_i16() { vb_integer v; get_bytes(&v, 2); return v; }
   vb_long get_i32() { vb_long v; get_bytes(&v, 4); return v; }
   vb_single get_f32() { vb_single v; get_bytes(&v, 4); return v; }
+  vb_double get_f64() { vb_double v; get_bytes(&v, 8); return v; }
   vb_integer get_bool_raw() { return get_i16(); }  // el crudo, para guardias
   bool get_bool() { return get_bool_raw() != 0; }
   std::string get_str(std::size_t n) {
@@ -1107,6 +1109,907 @@ inline void RemapAllTies(Sim& sim, int numOfBots) {
       j += 1;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Formato de simulación (60-FORMATOS.md §4). La secuencia de Put/Get del
+// fuente ES la spec; se transcribe campo a campo con sus capas históricas
+// ("new stuff" … "even even newer newer stuff") y los presets de
+// compatibilidad del lado de carga.
+
+inline void RemapAllShots(Sim& sim, vb_long numOfShots);  // definida abajo
+
+namespace formats_detail {
+inline void put_vec(VbBinFile& f, const Vector& v) {
+  f.put_f32(v.x);
+  f.put_f32(v.y);
+}
+inline Vector get_vec(VbBinFile& f) {
+  Vector v;
+  v.x = f.get_f32();
+  v.y = f.get_f32();
+  return v;
+}
+inline void put_lstr32(VbBinFile& f, const std::string& s) {
+  f.put_i32(static_cast<vb_long>(s.size()));
+  f.put_str(s);
+}
+}  // namespace formats_detail
+
+// HDRoutines.bas:2313-2349 — SaveTeleporter.
+inline void SaveTeleporter(Sim& sim, VbBinFile& f, int t) {
+  using formats_detail::put_vec;
+  const Teleporter& tp = sim.Teleporters[t];
+  put_vec(f, tp.pos);
+  f.put_f32(tp.Width);
+  f.put_f32(tp.Height);
+  f.put_i32(tp.color);
+  put_vec(f, tp.vel);
+  f.put_i16(static_cast<vb_integer>(tp.path.size()));  // CInt(Len(.path))
+  f.put_str(tp.path);
+  f.put_bool(tp.In);
+  f.put_bool(tp.Out);
+  f.put_bool(tp.local);
+  f.put_bool(tp.driftHorizontal);
+  f.put_bool(tp.driftVertical);
+  f.put_bool(tp.highlight);
+  f.put_bool(tp.teleportVeggies);
+  f.put_bool(tp.teleportCorpses);
+  f.put_bool(tp.RespectShapes);
+  f.put_i32(tp.NumTeleported);
+  f.put_bool(tp.teleportHeterotrophs);
+  f.put_i16(tp.InboundPollCycles);
+  f.put_i16(tp.BotsPerPoll);
+  f.put_i16(tp.PollCountDown);
+  f.put_bool(tp.Internet);
+  f.put_byte(254);
+  f.put_byte(254);
+  f.put_byte(254);
+}
+
+// HDRoutines.bas:2352-2399 — LoadTeleporter: campos fijos + apéndices
+// FileContinue con sus defaults (heterótrofos sí, sondeo 10/10/10).
+inline void LoadTeleporter(Sim& sim, VbBinFile& f, int t) {
+  using formats_detail::get_vec;
+  Teleporter& tp = sim.Teleporters[t];
+  tp.pos = get_vec(f);
+  tp.Width = f.get_f32();
+  tp.Height = f.get_f32();
+  tp.color = f.get_i32();
+  tp.vel = get_vec(f);
+  const vb_integer k = f.get_i16();
+  tp.path = f.get_str(static_cast<std::size_t>(k < 0 ? 0 : k));
+  tp.In = f.get_bool();
+  tp.Out = f.get_bool();
+  tp.local = f.get_bool();
+  tp.driftHorizontal = f.get_bool();
+  tp.driftVertical = f.get_bool();
+  tp.highlight = f.get_bool();
+  tp.teleportVeggies = f.get_bool();
+  tp.teleportCorpses = f.get_bool();
+  tp.RespectShapes = f.get_bool();
+  tp.NumTeleported = f.get_i32();
+
+  tp.teleportHeterotrophs = true;
+  tp.InboundPollCycles = 10;
+  tp.BotsPerPoll = 10;
+  tp.PollCountDown = 10;
+
+  if (FileContinue(f)) tp.teleportHeterotrophs = f.get_bool();
+  if (FileContinue(f)) tp.InboundPollCycles = f.get_i16();
+  if (FileContinue(f)) tp.BotsPerPoll = f.get_i16();
+  if (FileContinue(f)) tp.PollCountDown = f.get_i16();
+  if (FileContinue(f)) tp.Internet = f.get_bool();
+
+  while (FileContinue(f)) f.get_byte();
+  f.get_byte();
+  f.get_byte();
+  f.get_byte();
+  // Nótese que .exist NO se persiste ni se repone: un teleporter cargado
+  // queda con exist = False, como en el original (solo la UI lo consulta;
+  // CheckTeleporters/UpdateTeleporters no filtran por exist).
+}
+
+// Teleport.bas:152-161 — DeleteTeleporter: compacta hacia la izquierda.
+inline void DeleteTeleporter(Sim& sim, int i) {
+  if (sim.numTeleporters <= 0) return;
+  for (int x = i + 1; x <= sim.numTeleporters; ++x)
+    sim.Teleporters[x - 1] = sim.Teleporters[x];
+  sim.Teleporters[sim.numTeleporters].exist = false;
+  sim.numTeleporters -= 1;
+}
+
+// HDRoutines.bas:2402-2422 — SaveObstacle.
+inline void SaveObstacle(Sim& sim, VbBinFile& f, int t) {
+  using formats_detail::put_vec;
+  const Obstacle& o = sim.Obstacles[t];
+  f.put_bool(o.exist);
+  put_vec(f, o.pos);
+  f.put_f32(o.Width);
+  f.put_f32(o.Height);
+  f.put_i32(o.color);
+  put_vec(f, o.vel);
+  f.put_byte(254);
+  f.put_byte(254);
+  f.put_byte(254);
+}
+
+// HDRoutines.bas:2425-2450 — LoadObstacle.
+inline void LoadObstacle(Sim& sim, VbBinFile& f, int t) {
+  using formats_detail::get_vec;
+  Obstacle& o = sim.Obstacles[t];
+  o.exist = f.get_bool();
+  o.pos = get_vec(f);
+  o.Width = f.get_f32();
+  o.Height = f.get_f32();
+  o.color = f.get_i32();
+  o.vel = get_vec(f);
+  while (FileContinue(f)) f.get_byte();
+  f.get_byte();
+  f.get_byte();
+  f.get_byte();
+}
+
+// HDRoutines.bas:2453-2501 — SaveShot: el ADN viaja solo para virus (-7) y
+// esperma (-8) vivos con DnaLen > 0; si no, un 0.
+inline void SaveShot(Sim& sim, VbBinFile& f, vb_long t) {
+  using formats_detail::put_vec;
+  const Shot& s = sim.Shots[t];
+  f.put_bool(s.exist);
+  put_vec(f, s.pos);
+  put_vec(f, s.opos);
+  put_vec(f, s.velocity);
+  f.put_i16(s.parent);
+  f.put_i16(s.age);
+  f.put_f32(s.nrg);
+  f.put_f32(s.Range);
+  f.put_i16(s.value);
+  f.put_i32(s.color);
+  f.put_i16(s.shottype);
+  f.put_bool(s.fromveg);
+  f.put_i16(static_cast<vb_integer>(s.FromSpecie.size()));
+  f.put_str(s.FromSpecie);
+  f.put_i16(s.memloc);
+  f.put_i16(s.Memval);
+
+  if ((s.shottype == -7 || s.shottype == -8) && s.exist && s.DnaLen > 0) {
+    f.put_i16(s.DnaLen);
+    for (vb_integer x = 1; x <= s.DnaLen; ++x) {
+      f.put_i16(static_cast<vb_integer>(s.dna[x].tipo));
+      f.put_i16(static_cast<vb_integer>(s.dna[x].value));
+    }
+  } else {
+    f.put_i16(0);
+  }
+
+  f.put_i16(s.genenum);
+  f.put_bool(s.stored);
+  f.put_byte(254);
+  f.put_byte(254);
+  f.put_byte(254);
+}
+
+// HDRoutines.bas:2504-2559 — LoadShot.
+inline void LoadShot(Sim& sim, VbBinFile& f, vb_long t) {
+  using formats_detail::get_vec;
+  Shot& s = sim.Shots[t];
+  s.exist = f.get_bool();
+  s.pos = get_vec(f);
+  s.opos = get_vec(f);
+  s.velocity = get_vec(f);
+  s.parent = f.get_i16();
+  s.age = f.get_i16();
+  s.nrg = f.get_f32();
+  s.Range = f.get_f32();
+  s.value = f.get_i16();
+  s.color = f.get_i32();
+  s.shottype = f.get_i16();
+  s.fromveg = f.get_bool();
+  vb_integer k = f.get_i16();
+  s.FromSpecie = f.get_str(static_cast<std::size_t>(k < 0 ? 0 : k));
+  s.memloc = f.get_i16();
+  s.Memval = f.get_i16();
+
+  k = f.get_i16();
+  if (k > 0) {
+    s.dna.assign(static_cast<std::size_t>(k) + 1, Block{});
+    for (vb_integer x = 1; x <= k; ++x) {
+      s.dna[x].tipo = f.get_i16();
+      s.dna[x].value = f.get_i16();
+    }
+  }
+  s.DnaLen = k;
+
+  s.genenum = f.get_i16();
+  s.stored = f.get_bool();
+  while (FileContinue(f)) f.get_byte();
+  f.get_byte();
+  f.get_byte();
+  f.get_byte();
+}
+
+// HDRoutines.bas:513-849 — SaveSimulation: numOfExistingBots + registros
+// DENSOS (solo existentes; por eso los remapeos por oldBotNum al cargar) +
+// placeholders "null" + SimOpts por capas + 5 pasadas por especies + Costs
+// + teleporters + obstáculos + TODOS los shots (vivos y muertos) +
+// MaxAbsNum + gráficas + evo ⚙ + sol + mareas + stagnent.
+// [PROBABLE BUG] B8-1: el manejador de errores del original se llama a sí
+// mismo (recursión infinita con ruta no escribible); en el port la
+// escritura a búfer no falla y la capa host NO reintenta (decisión M5).
+inline void SaveSimulation(Sim& sim, VbBinFile& f,
+                           const FormatGlobals& g = {}) {
+  using formats_detail::put_lstr32;
+
+  vb_integer numOfExistingBots = 0;
+  for (int x = 1; x <= sim.MaxRobs; ++x)
+    if (sim.rob[x].exist) numOfExistingBots += 1;
+
+  f.put_i16(numOfExistingBots);
+  for (int t = 1; t <= sim.MaxRobs; ++t)
+    if (sim.rob[t].exist) SaveRobotBody(sim, t, f, g);
+
+  const vb_integer SpeciesNum = static_cast<vb_integer>(sim.Specie.size());
+  auto& C = sim.vm.costs.v;
+
+  put_lstr32(f, "null");
+  f.put_i16(0);
+  put_lstr32(f, "null");
+  f.put_i16(0);
+  f.put_bool(sim.opts.BlockedVegs);
+  f.put_f32(C[cost::SHOTCOST]);
+  f.put_f32(sim.opts.CostExecCond);
+  f.put_f32(C[Costs::COSTSTORE]);
+  f.put_bool(sim.opts.DeadRobotSnp);
+  f.put_bool(sim.opts.SnpExcludeVegs);
+  put_lstr32(f, "null");
+  f.put_bool(false);
+  f.put_bool(sim.opts.DisableTies);
+  f.put_bool(sim.opts.EnergyExType);
+  f.put_i16(sim.opts.EnergyFix);
+  f.put_f32(sim.opts.EnergyProp);
+  f.put_i32(vb_clng(static_cast<double>(sim.opts.FieldHeight)));
+  f.put_i16(sim.opts.FieldSize);
+  f.put_i32(vb_clng(static_cast<double>(sim.opts.FieldWidth)));
+  f.put_bool(sim.opts.KillDistVegs);
+  f.put_i32(sim.opts.MaxEnergy);
+  f.put_i16(static_cast<vb_integer>(sim.opts.MaxPopulation));
+  f.put_i16(static_cast<vb_integer>(sim.opts.MinVegs));
+  f.put_f32(sim.opts.MutCurrMult);
+  f.put_i32(sim.opts.MutCycMax);
+  f.put_i32(sim.opts.MutCycMin);
+  f.put_bool(sim.opts.MutOscill);
+  f.put_f32(sim.opts.PhysBrown);
+  f.put_f32(sim.opts.Ygravity);
+  f.put_f32(sim.opts.Zgravity);
+  f.put_f32(sim.opts.PhysMoving);
+  f.put_f32(sim.opts.PhysSwim);
+  f.put_i16(sim.opts.PopLimMethod);
+  put_lstr32(f, sim.opts.SimName);
+  f.put_i16(SpeciesNum);
+  f.put_bool(sim.opts.Toroidal);
+  f.put_i32(sim.opts.TotBorn);
+  f.put_i32(sim.opts.TotRunCycle);
+  f.put_i32(sim.opts.TotRunTime);
+
+  // new stuff
+  f.put_bool(sim.opts.Pondmode);
+  f.put_bool(false);  // KineticEnergy, abandonado
+  f.put_i16(sim.opts.LightIntensity);
+  f.put_bool(sim.opts.CorpseEnabled);
+  f.put_f32(sim.opts.Decay);
+  f.put_f32(sim.opts.Gradient);
+  f.put_bool(sim.opts.DayNight);
+  f.put_i16(sim.opts.CycleLength);
+
+  // new new stuff
+  f.put_i16(static_cast<vb_integer>(sim.opts.Decaydelay));
+  f.put_i16(static_cast<vb_integer>(sim.opts.DecayType));
+
+  // obsolete
+  f.put_f32(C[cost::MOVECOST]);
+
+  f.put_bool(sim.opts.F1);
+  f.put_bool(sim.opts.Restart);
+
+  // even even newer newer stuff
+  f.put_bool(sim.opts.Dxsxconnected);
+  f.put_bool(sim.opts.Updnconnected);
+  f.put_i16(sim.opts.RepopAmount);
+  f.put_i16(sim.opts.RepopCooldown);
+  f.put_bool(sim.opts.ZeroMomentum);
+  f.put_i32(sim.opts.UserSeedNumber);
+  f.put_bool(true);
+
+  f.put_i16(SpeciesNum);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    const Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    f.put_i16(sp.Colind);
+    f.put_i32(sp.color);
+    f.put_bool(sp.Fixed);
+    for (int h = 0; h <= 20; ++h) f.put_f32(sp.Mutables.mutarray[h]);
+    f.put_bool(sp.Mutables.Mutations);
+    put_lstr32(f, sp.Name);
+    f.put_i16(8);  // omnifeed obsoleto
+    put_lstr32(f, sp.path);
+    f.put_i32(vb_clng(static_cast<double>(sim.opts.FieldHeight)));
+    f.put_i32(0);
+    f.put_i32(vb_clng(static_cast<double>(sim.opts.FieldWidth)));
+    f.put_i32(0);
+    f.put_i16(sp.qty);
+    for (int h = 0; h <= 13; ++h) f.put_i16(sp.Skin[h]);
+    f.put_i16(sp.Stnrg);
+    f.put_bool(sp.Veg);
+  }
+
+  f.put_i16(0);  // CInt(0)
+  f.put_f32(sim.opts.VegFeedingToBody);
+  f.put_f32(sim.opts.CoefficientStatic);
+  f.put_f32(sim.opts.CoefficientKinetic);
+  f.put_bool(sim.opts.PlanetEaters);
+  f.put_f32(sim.opts.PlanetEatersG);
+  f.put_f64(static_cast<vb_double>(sim.opts.Viscosity));
+  f.put_f64(static_cast<vb_double>(sim.opts.Density));
+
+  // New for 2.4
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    const Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    f.put_i16(sp.Mutables.CopyErrorWhatToChange);
+    f.put_i16(sp.Mutables.PointWhatToChange);
+    for (int h = 0; h <= 20; ++h) {
+      f.put_f32(sp.Mutables.Mean[h]);
+      f.put_f32(sp.Mutables.StdDev[h]);
+    }
+  }
+
+  for (int k = 0; k <= 70; ++k) f.put_f32(C[k]);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    const Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    f.put_f32(sp.Poslf);
+    f.put_f32(sp.Posrg);
+    f.put_f32(sp.Postp);
+    f.put_f32(sp.Posdn);
+  }
+
+  f.put_i16(static_cast<vb_integer>(sim.opts.BadWastelevel));
+  f.put_i16(sim.opts.chartingInterval);
+  f.put_f32(sim.opts.CoefficientElasticity);
+  f.put_i16(sim.opts.FluidSolidCustom);
+  f.put_i16(sim.opts.CostRadioSetting);
+  f.put_f32(sim.opts.MaxVelocity);
+  f.put_bool(sim.opts.NoShotDecay);
+  f.put_i32(sim.opts.SunUpThreshold);
+  f.put_bool(sim.opts.SunUp);
+  f.put_i32(sim.opts.SunDownThreshold);
+  f.put_bool(sim.opts.SunDown);
+  f.put_bool(false);
+  f.put_bool(false);
+  f.put_bool(sim.opts.FixedBotRadii);
+  f.put_i32(sim.opts.DayNightCycleCounter);
+  f.put_bool(sim.opts.Daytime);
+  f.put_i16(sim.opts.SunThresholdMode);
+
+  f.put_i16(static_cast<vb_integer>(sim.numTeleporters));
+  for (int x = 1; x <= sim.numTeleporters; ++x) SaveTeleporter(sim, f, x);
+
+  f.put_i16(static_cast<vb_integer>(sim.numObstacles));
+  for (int x = 1; x <= sim.numObstacles; ++x) SaveObstacle(sim, f, x);
+
+  f.put_bool(false);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    const Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    f.put_bool(sp.CantSee);
+    f.put_bool(sp.DisableDNA);
+    f.put_bool(sp.DisableMovementSysvars);
+  }
+
+  f.put_bool(sim.opts.shapesAreVisable);
+  f.put_bool(sim.opts.allowVerticalShapeDrift);
+  f.put_bool(sim.opts.allowHorizontalShapeDrift);
+  f.put_bool(sim.opts.shapesAreSeeThrough);
+  f.put_bool(sim.opts.shapesAbsorbShots);
+  f.put_i16(sim.opts.shapeDriftRate);
+  f.put_bool(sim.opts.makeAllShapesTransparent);
+  f.put_bool(sim.opts.makeAllShapesBlack);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k)
+    f.put_bool(sim.Specie[static_cast<std::size_t>(k)].CantReproduce);
+
+  f.put_i32(sim.maxshotarray);
+  for (vb_long j = 1; j <= sim.maxshotarray; ++j) SaveShot(sim, f, j);
+
+  f.put_i32(sim.MaxAbsNum);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k)
+    f.put_bool(sim.Specie[static_cast<std::size_t>(k)].VirusImmune);
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    f.put_i16(static_cast<vb_integer>(
+        sim.Specie[static_cast<std::size_t>(k)].population));
+    f.put_i16(sim.Specie[static_cast<std::size_t>(k)].SubSpeciesCounter);
+  }
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k)
+    f.put_bool(sim.Specie[static_cast<std::size_t>(k)].Native);
+
+  f.put_i16(sim.opts.EGridWidth);
+  f.put_bool(sim.opts.EGridEnabled);
+  f.put_f32(sim.opts.oldCostX);
+  f.put_bool(sim.opts.DisableMutations);
+  f.put_i32(sim.opts.SimGUID);
+  f.put_i16(sim.opts.SpeciationGenerationalDistance);
+  f.put_i16(sim.opts.SpeciationGeneticDistance);
+  f.put_bool(sim.opts.EnableAutoSpeciation);
+  f.put_i16(sim.opts.SpeciationMinimumPopulation);
+  f.put_i32(sim.opts.SpeciationForkInterval);
+
+  f.put_bool(sim.opts.DisableTypArepro);
+
+  put_lstr32(f, sim.evo.strGraphQuery1);
+  put_lstr32(f, sim.evo.strGraphQuery2);
+  put_lstr32(f, sim.evo.strGraphQuery3);
+  put_lstr32(f, sim.evo.strSimStart);
+
+  for (int k = 1; k <= 18; ++k) {  // NUMGRAPHS
+    f.put_i32(sim.evo.graphfilecounter[k]);
+    f.put_bool(sim.evo.graphvisible[k]);
+    f.put_i32(sim.evo.graphleft[k]);
+    f.put_i32(sim.evo.graphtop[k]);
+    f.put_bool(sim.evo.graphsave[k]);
+  }
+
+  f.put_bool(sim.opts.NoWShotDecay);
+
+  f.put_f64(sim.evo.energydif);
+  f.put_f64(sim.evo.energydifX);
+  f.put_f64(sim.evo.energydifXP);
+  f.put_i32(sim.evo.ModeChangeCycles);
+  f.put_i16(sim.evo.hidePredOffset);
+  f.put_bool(sim.evo.hidepred);
+  f.put_f64(sim.evo.energydif2);
+  f.put_f64(sim.evo.energydifX2);
+  f.put_f64(sim.evo.energydifXP2);
+
+  f.put_bool(sim.opts.SunOnRnd);
+  f.put_bool(sim.opts.DisableFixing);
+  f.put_f64(sim.SunPosition);
+  f.put_f64(sim.SunRange);
+  f.put_byte(sim.SunChange);
+  f.put_i16(sim.opts.Tides);
+  f.put_i16(sim.opts.TidesOf);
+  f.put_bool(sim.opts.MutOscillSine);
+  f.put_bool(sim.evo.stagnent);
+}
+
+// HDRoutines.bas:1073-1568 — LoadSimulation: espejo de la secuencia con los
+// gates `If Not EOF` y los presets de compatibilidad para archivos cortos.
+// Quirks replicados: los teleporters Internet se borran tras cargar (bucle
+// con el tope CACHEADO, como el For de VB6); `CInt(DisableMutations) < 0`
+// es cierto para True (-1), así que DisableMutations NUNCA sobrevive una
+// carga; el SimGUID ausente se regeneraba con Rnd CRUDO (fuera del flujo
+// rndy) — aquí queda en 0 y la capa host decide (documentado, Q01).
+inline void LoadSimulation(Sim& sim, VbBinFile& f,
+                           const FormatGlobals& g = {}) {
+  auto& C = sim.vm.costs.v;
+  auto get_str32 = [&f]() {
+    const vb_long k = f.get_i32();
+    return f.get_str(static_cast<std::size_t>(k < 0 ? -k : k));  // Abs
+  };
+
+  const vb_integer nbots = f.get_i16();
+  sim.MaxRobs = nbots;
+  sim.rob.assign(
+      static_cast<std::size_t>(sim.MaxRobs + (500 - (sim.MaxRobs % 500))) + 1,
+      Bot{});
+
+  for (int k = 1; k <= sim.MaxRobs; ++k) LoadRobot(sim, k, f, g);
+
+  RemapAllTies(sim, sim.MaxRobs);
+
+  get_str32();      // "null"
+  f.get_i16();      // 0
+  get_str32();      // "null"
+  f.get_i16();      // 0
+  sim.opts.BlockedVegs = f.get_bool();
+  C[cost::SHOTCOST] = f.get_f32();
+  sim.opts.CostExecCond = f.get_f32();
+  C[Costs::COSTSTORE] = f.get_f32();
+  sim.opts.DeadRobotSnp = f.get_bool();
+  sim.opts.SnpExcludeVegs = f.get_bool();
+  get_str32();      // "null"
+  f.get_bool();     // tempbool
+  sim.opts.DisableTies = f.get_bool();
+  sim.opts.EnergyExType = f.get_bool();
+  sim.opts.EnergyFix = f.get_i16();
+  sim.opts.EnergyProp = f.get_f32();
+  sim.opts.FieldHeight = static_cast<vb_single>(f.get_i32());
+  sim.opts.FieldSize = f.get_i16();
+  sim.opts.FieldWidth = static_cast<vb_single>(f.get_i32());
+  sim.opts.KillDistVegs = f.get_bool();
+  sim.opts.MaxEnergy = f.get_i32();
+  sim.opts.MaxPopulation = static_cast<vb_single>(f.get_i16());
+  sim.opts.MinVegs = f.get_i16();
+  sim.opts.MutCurrMult = f.get_f32();
+  sim.opts.MutCycMax = f.get_i32();
+  sim.opts.MutCycMin = f.get_i32();
+  sim.opts.MutOscill = f.get_bool();
+  sim.opts.PhysBrown = f.get_f32();
+  sim.opts.Ygravity = f.get_f32();
+  sim.opts.Zgravity = f.get_f32();
+  sim.opts.PhysMoving = f.get_f32();
+  sim.opts.PhysSwim = f.get_f32();
+  sim.opts.PopLimMethod = f.get_i16();
+  sim.opts.SimName = get_str32();
+  vb_integer SpeciesNum = f.get_i16();
+  sim.opts.Toroidal = f.get_bool();
+  sim.opts.TotBorn = f.get_i32();
+  sim.opts.TotRunCycle = f.get_i32();
+  sim.opts.TotRunTime = f.get_i32();
+  sim.opts.Pondmode = f.get_bool();
+  sim.opts.CorpseEnabled = f.get_bool();  // dummy (KineticEnergy)
+  sim.opts.LightIntensity = f.get_i16();
+  sim.opts.CorpseEnabled = f.get_bool();
+  sim.opts.Decay = f.get_f32();
+  sim.opts.Gradient = f.get_f32();
+  sim.opts.DayNight = f.get_bool();
+  sim.opts.CycleLength = f.get_i16();
+  sim.opts.Decaydelay = f.get_i16();
+  sim.opts.DecayType = f.get_i16();
+
+  C[cost::MOVECOST] = f.get_f32();  // obsoleto
+
+  sim.opts.F1 = f.get_bool();
+  sim.opts.Restart = f.get_bool();
+
+  // newer stuff
+  if (!f.eof()) sim.opts.Dxsxconnected = f.get_bool();
+  if (!f.eof()) sim.opts.Updnconnected = f.get_bool();
+  if (!f.eof()) sim.opts.RepopAmount = f.get_i16();
+  if (!f.eof()) sim.opts.RepopCooldown = f.get_i16();
+  if (!f.eof()) sim.opts.ZeroMomentum = f.get_bool();
+  if (!f.eof()) sim.opts.UserSeedNumber = f.get_i32();
+  if (!f.eof()) f.get_bool();
+
+  if (!f.eof()) SpeciesNum = f.get_i16();
+  sim.Specie.assign(static_cast<std::size_t>(SpeciesNum < 0 ? 0 : SpeciesNum),
+                    Specie{});
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    if (!f.eof()) sp.Colind = f.get_i16();
+    if (!f.eof()) sp.color = f.get_i32();
+    if (!f.eof()) sp.Fixed = f.get_bool();
+    if (!f.eof())
+      for (int h = 0; h <= 20; ++h) sp.Mutables.mutarray[h] = f.get_f32();
+    if (!f.eof()) sp.Mutables.Mutations = f.get_bool();
+    if (!f.eof()) sp.Name = get_str32();
+    if (!f.eof()) f.get_bool();  // omnifeed obsoleto
+    if (!f.eof()) sp.path = get_str32();
+    if (!f.eof()) f.get_f32();  // Posdn viejo (descartado)
+    if (!f.eof()) f.get_f32();  // Poslf viejo
+    if (!f.eof()) f.get_f32();  // Posrg viejo
+    if (!f.eof()) f.get_f32();  // Postp viejo
+    sp.Posdn = 1;
+    sp.Posrg = 1;
+    sp.Poslf = 0;
+    sp.Postp = 0;
+    if (!f.eof()) sp.qty = f.get_i16();
+    if (!f.eof())
+      for (int h = 0; h <= 13; ++h) sp.Skin[h] = f.get_i16();
+    if (!f.eof()) sp.Stnrg = f.get_i16();
+    if (!f.eof()) sp.Veg = f.get_bool();
+  }
+
+  if (!f.eof()) f.get_i16();
+  if (!f.eof()) sim.opts.VegFeedingToBody = f.get_f32();
+  if (!f.eof()) sim.opts.CoefficientStatic = f.get_f32();
+  if (!f.eof()) sim.opts.CoefficientKinetic = f.get_f32();
+  if (!f.eof()) sim.opts.PlanetEaters = f.get_bool();
+  if (!f.eof()) sim.opts.PlanetEatersG = f.get_f32();
+  if (!f.eof()) sim.opts.Viscosity = static_cast<vb_single>(f.get_f64());
+  if (!f.eof()) sim.opts.Density = static_cast<vb_single>(f.get_f64());
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    if (!f.eof()) sp.Mutables.CopyErrorWhatToChange = f.get_i16();
+    if (!f.eof()) sp.Mutables.PointWhatToChange = f.get_i16();
+    for (int j = 0; j <= 20; ++j) {
+      if (!f.eof()) sp.Mutables.Mean[j] = f.get_f32();
+      if (!f.eof()) sp.Mutables.StdDev[j] = f.get_f32();
+    }
+  }
+
+  for (int k = 0; k <= 70; ++k)
+    if (!f.eof()) C[k] = f.get_f32();
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    if (!f.eof()) sp.Poslf = f.get_f32();
+    if (!f.eof()) sp.Posrg = f.get_f32();
+    if (!f.eof()) sp.Postp = f.get_f32();
+    if (!f.eof()) sp.Posdn = f.get_f32();
+  }
+
+  if (!f.eof()) sim.opts.BadWastelevel = f.get_i16();
+  if (sim.opts.BadWastelevel == 0) sim.opts.BadWastelevel = 400;
+
+  if (!f.eof()) sim.opts.chartingInterval = f.get_i16();
+  if (sim.opts.chartingInterval <= 0 || sim.opts.chartingInterval > 32000)
+    sim.opts.chartingInterval = 200;
+
+  sim.opts.CoefficientElasticity = 0;
+  if (!f.eof()) sim.opts.CoefficientElasticity = f.get_f32();
+
+  sim.opts.FluidSolidCustom = 2;
+  if (!f.eof()) sim.opts.FluidSolidCustom = f.get_i16();
+  if (sim.opts.FluidSolidCustom < 0 || sim.opts.FluidSolidCustom > 2)
+    sim.opts.FluidSolidCustom = 2;
+
+  sim.opts.CostRadioSetting = 2;
+  if (!f.eof()) sim.opts.CostRadioSetting = f.get_i16();
+  if (sim.opts.CostRadioSetting < 0 || sim.opts.CostRadioSetting > 2)
+    sim.opts.CostRadioSetting = 2;
+
+  sim.opts.MaxVelocity = 40;
+  if (!f.eof()) sim.opts.MaxVelocity = f.get_f32();
+  if (sim.opts.MaxVelocity <= 0.0f || sim.opts.MaxVelocity > 200.0f)
+    sim.opts.MaxVelocity = 40;
+
+  sim.opts.NoShotDecay = false;
+  if (!f.eof()) sim.opts.NoShotDecay = f.get_bool();
+
+  sim.opts.SunUpThreshold = 500000;
+  if (!f.eof()) sim.opts.SunUpThreshold = f.get_i32();
+
+  sim.opts.SunUp = false;
+  if (!f.eof()) sim.opts.SunUp = f.get_bool();
+
+  sim.opts.SunDownThreshold = 1000000;
+  if (!f.eof()) sim.opts.SunDownThreshold = f.get_i32();
+
+  sim.opts.SunDown = false;
+  if (!f.eof()) sim.opts.SunDown = f.get_bool();
+
+  if (!f.eof()) f.get_bool();
+  if (!f.eof()) f.get_bool();
+
+  sim.opts.FixedBotRadii = false;
+  if (!f.eof()) sim.opts.FixedBotRadii = f.get_bool();
+
+  sim.opts.DayNightCycleCounter = 0;
+  if (!f.eof()) sim.opts.DayNightCycleCounter = f.get_i32();
+
+  sim.opts.Daytime = true;
+  if (!f.eof()) sim.opts.Daytime = f.get_bool();
+
+  sim.opts.SunThresholdMode = 0;
+  if (!f.eof()) sim.opts.SunThresholdMode = f.get_i16();
+
+  sim.numTeleporters = 0;
+  if (!f.eof()) sim.numTeleporters = f.get_i16();
+
+  for (int x = 1; x <= sim.numTeleporters; ++x) LoadTeleporter(sim, f, x);
+
+  {
+    // For X = 1 To numTeleporters con el TOPE CACHEADO (semántica del For
+    // de VB6): sigue iterando índices aunque DeleteTeleporter encoja.
+    const int bound = sim.numTeleporters;
+    for (int x = 1; x <= bound; ++x)
+      if (sim.Teleporters[x].Internet) DeleteTeleporter(sim, x);
+  }
+
+  sim.numObstacles = 0;
+  if (!f.eof()) sim.numObstacles = f.get_i16();
+  if (static_cast<int>(sim.Obstacles.size()) <= sim.numObstacles)
+    sim.Obstacles.resize(static_cast<std::size_t>(sim.numObstacles) + 1);
+
+  for (int x = 1; x <= sim.numObstacles; ++x) LoadObstacle(sim, f, x);
+
+  if (!f.eof()) f.get_bool();
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    sp.CantSee = false;
+    sp.DisableDNA = false;
+    sp.DisableMovementSysvars = false;
+    if (!f.eof()) sp.CantSee = f.get_bool();
+    if (!f.eof()) sp.DisableDNA = f.get_bool();
+    if (!f.eof()) sp.DisableMovementSysvars = f.get_bool();
+  }
+
+  sim.opts.shapesAreVisable = false;
+  if (!f.eof()) sim.opts.shapesAreVisable = f.get_bool();
+  sim.opts.allowVerticalShapeDrift = false;
+  if (!f.eof()) sim.opts.allowVerticalShapeDrift = f.get_bool();
+  sim.opts.allowHorizontalShapeDrift = false;
+  if (!f.eof()) sim.opts.allowHorizontalShapeDrift = f.get_bool();
+  sim.opts.shapesAreSeeThrough = false;
+  if (!f.eof()) sim.opts.shapesAreSeeThrough = f.get_bool();
+  sim.opts.shapesAbsorbShots = false;
+  if (!f.eof()) sim.opts.shapesAbsorbShots = f.get_bool();
+  sim.opts.shapeDriftRate = 0;
+  if (!f.eof()) sim.opts.shapeDriftRate = f.get_i16();
+  sim.opts.makeAllShapesTransparent = false;
+  if (!f.eof()) sim.opts.makeAllShapesTransparent = f.get_bool();
+  sim.opts.makeAllShapesBlack = false;
+  if (!f.eof()) sim.opts.makeAllShapesBlack = f.get_bool();
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    sp.CantReproduce = false;
+    if (!f.eof()) sp.CantReproduce = f.get_bool();
+  }
+
+  sim.maxshotarray = 0;
+  if (!f.eof()) sim.maxshotarray = f.get_i32();
+
+  if (sim.maxshotarray != 0 && sim.maxshotarray > 0 &&
+      sim.maxshotarray < 1000000) {
+    sim.Shots.assign(static_cast<std::size_t>(sim.maxshotarray) + 1, Shot{});
+    for (vb_long j = 1; j <= sim.maxshotarray; ++j) LoadShot(sim, f, j);
+    RemapAllShots(sim, sim.maxshotarray);
+  } else {
+    // Sim vieja sin shots: re-inicialización (StartLoaded).
+    sim.maxshotarray = 100;
+    sim.Shots.assign(static_cast<std::size_t>(sim.maxshotarray) + 1, Shot{});
+  }
+
+  sim.MaxAbsNum = sim.MaxRobs;
+  if (!f.eof()) sim.MaxAbsNum = f.get_i32();
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    sp.VirusImmune = false;
+    if (!f.eof()) sp.VirusImmune = f.get_bool();
+  }
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    sp.population = 0;
+    if (!f.eof()) sp.population = f.get_i16();
+    sp.SubSpeciesCounter = 0;
+    if (!f.eof()) sp.SubSpeciesCounter = f.get_i16();
+  }
+
+  for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
+    Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    sp.Native = true;
+    if (!f.eof()) sp.Native = f.get_bool();
+  }
+
+  if (!f.eof()) sim.opts.EGridWidth = f.get_i16();
+  sim.opts.EGridEnabled = false;
+  if (!f.eof()) sim.opts.EGridEnabled = f.get_bool();
+  if (!f.eof()) sim.opts.oldCostX = f.get_f32();
+
+  sim.opts.DisableMutations = false;
+  if (!f.eof()) sim.opts.DisableMutations = f.get_bool();
+  // CInt(True) = -1 < 0: el flag cargado en True se RESETEA siempre.
+  if (sim.opts.DisableMutations) sim.opts.DisableMutations = false;
+
+  sim.opts.SimGUID = 0;  // CLng(Rnd) crudo del original: capa host (Q01)
+  if (!f.eof()) sim.opts.SimGUID = f.get_i32();
+  if (!f.eof()) sim.opts.SpeciationGenerationalDistance = f.get_i16();
+  if (!f.eof()) sim.opts.SpeciationGeneticDistance = f.get_i16();
+  if (!f.eof()) sim.opts.EnableAutoSpeciation = f.get_bool();
+  if (!f.eof()) sim.opts.SpeciationMinimumPopulation = f.get_i16();
+
+  sim.opts.SpeciationForkInterval = 5000;
+  if (!f.eof()) sim.opts.SpeciationForkInterval = f.get_i32();
+
+  sim.opts.DisableTypArepro = false;
+  if (!f.eof()) sim.opts.DisableTypArepro = f.get_bool();
+
+  if (!f.eof()) sim.evo.strGraphQuery1 = get_str32();
+  if (!f.eof()) sim.evo.strGraphQuery2 = get_str32();
+  if (!f.eof()) sim.evo.strGraphQuery3 = get_str32();
+  if (!f.eof()) sim.evo.strSimStart = get_str32();
+
+  for (int k = 1; k <= 18; ++k) {
+    if (!f.eof()) sim.evo.graphfilecounter[k] = f.get_i32();
+    if (!f.eof()) sim.evo.graphvisible[k] = f.get_bool();
+    if (!f.eof()) sim.evo.graphleft[k] = f.get_i32();
+    if (!f.eof()) sim.evo.graphtop[k] = f.get_i32();
+    if (!f.eof()) sim.evo.graphsave[k] = f.get_bool();
+    // Form1.NewGraph …: display ⚙.
+  }
+
+  sim.opts.NoWShotDecay = false;
+  if (!f.eof()) sim.opts.NoWShotDecay = f.get_bool();
+
+  if (!f.eof()) sim.evo.energydif = f.get_f64();
+  if (!f.eof()) sim.evo.energydifX = f.get_f64();
+  if (!f.eof()) sim.evo.energydifXP = f.get_f64();
+  if (!f.eof()) sim.evo.ModeChangeCycles = f.get_i32();
+  if (!f.eof()) sim.evo.hidePredOffset = f.get_i16();
+  if (!f.eof()) sim.evo.hidepred = f.get_bool();
+  if (!f.eof()) sim.evo.energydif2 = f.get_f64();
+  if (!f.eof()) sim.evo.energydifX2 = f.get_f64();
+  if (!f.eof()) sim.evo.energydifXP2 = f.get_f64();
+
+  if (!f.eof()) sim.opts.SunOnRnd = f.get_bool();
+
+  sim.opts.DisableFixing = false;
+  if (!f.eof()) sim.opts.DisableFixing = f.get_bool();
+
+  if (!f.eof()) sim.SunPosition = f.get_f64();
+  if (!f.eof()) sim.SunRange = f.get_f64();
+  if (!f.eof()) sim.SunChange = f.get_byte();
+
+  if (!f.eof()) sim.opts.Tides = f.get_i16();
+  if (!f.eof()) sim.opts.TidesOf = f.get_i16();
+  if (!f.eof()) sim.opts.MutOscillSine = f.get_bool();
+  if (!f.eof()) sim.evo.stagnent = f.get_bool();
+
+  if (C[55] == 0.0f) C[55] = 500;  // DYNAMICCOSTSENSITIVITY
+
+  // TmpOpts = SimOpts: espejo de UI, fuera del core.
+}
+
+// ---------------------------------------------------------------------------
+// Sidecar .mrate (60-FORMATOS.md §1) — HDRoutines.bas:2562-2592. Formato de
+// texto de VB6 (Write # / Input #): un valor por línea. Solo persiste los
+// operadores 0..10 ("keeping some backword compatability"): las celdas
+// 11..20 de mutarray/Mean/StdDev NO viajan. Los Singles del dominio real
+// son enteros; el formateo VB6 de fraccionarios (".5" sin cero inicial) se
+// replica por si acaso.
+
+namespace formats_detail {
+inline std::string vb_write_single(vb_single v) {
+  const double d = static_cast<double>(v);
+  if (d == std::floor(d) && std::fabs(d) < 1e15) {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%.0f", d);
+    return buf;
+  }
+  char buf[48];
+  std::snprintf(buf, sizeof(buf), "%.7g", d);
+  std::string s = buf;
+  if (s.rfind("0.", 0) == 0) s.erase(0, 1);          // 0.5 -> .5
+  else if (s.rfind("-0.", 0) == 0) s.erase(1, 1);    // -0.5 -> -.5
+  return s;
+}
+}  // namespace formats_detail
+
+// Save_mrates: genera el contenido del archivo (un Write # por línea).
+inline std::string Save_mrates(const Mutationprobs& mut) {
+  using formats_detail::vb_write_single;
+  std::string out;
+  out += std::to_string(mut.PointWhatToChange) + "\r\n";
+  out += std::to_string(mut.CopyErrorWhatToChange) + "\r\n";
+  for (int m = 0; m <= 10; ++m) {
+    out += vb_write_single(mut.mutarray[m]) + "\r\n";
+    out += vb_write_single(mut.Mean[m]) + "\r\n";
+    out += vb_write_single(mut.StdDev[m]) + "\r\n";
+  }
+  return out;
+}
+
+// Load_mrates: parsea el contenido (Input # tolera CRLF y espacios).
+inline Mutationprobs Load_mrates(const std::string& text) {
+  Mutationprobs mut{};
+  std::size_t pos = 0;
+  auto next = [&]() -> double {
+    while (pos < text.size() &&
+           (text[pos] == '\r' || text[pos] == '\n' || text[pos] == ' ' ||
+            text[pos] == ','))
+      ++pos;
+    std::size_t start = pos;
+    while (pos < text.size() && text[pos] != '\r' && text[pos] != '\n' &&
+           text[pos] != ',')
+      ++pos;
+    return std::atof(text.substr(start, pos - start).c_str());
+  };
+  mut.PointWhatToChange = static_cast<vb_integer>(next());
+  mut.CopyErrorWhatToChange = static_cast<vb_integer>(next());
+  for (int m = 0; m <= 10; ++m) {
+    mut.mutarray[m] = static_cast<vb_single>(next());
+    mut.Mean[m] = static_cast<vb_single>(next());
+    mut.StdDev[m] = static_cast<vb_single>(next());
+  }
+  return mut;
 }
 
 // HDRoutines.bas:423-441 — RemapAllShots: re-apunta parent por oldBotNum,
