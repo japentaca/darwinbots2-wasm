@@ -2,13 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>DarwinBots — port WASM (M10)</title>
+<title>DarwinBots — port WASM</title>
 <!--
-  M10 — Capa de presentación web sobre dbcore.wasm (spec/PROGRESO.md).
-  Regla 4 del brief del port: esta capa NUNCA recalcula física ni RNG;
-  solo llama a db_sim_* y dibuja lo que el core vuelca.
+  Capa de presentación web sobre dbcore.wasm (M10 + extensión Rendimiento,
+  spec/PROGRESO.md). Regla 4 del brief del port: esta capa NUNCA recalcula
+  física ni RNG; solo presenta lo que el core vuelca.
 
-  Servir desde port/ (el script carga ../build-wasm/dbcore.js):
+  Extensión Rendimiento: la sim entera (dbcore.wasm + ticks + volcados) corre
+  en web/worker.js — un Web Worker — y esta página queda solo con UI y render.
+  El worker publica cada frame como UN ArrayBuffer transferible (zero-copy)
+  que la página devuelve al terminar de dibujar (ping-pong de búferes, sin
+  basura por frame y nunca más de un frame en vuelo). Velocidad "máx" = el
+  worker corre a fondo en rebanadas ~12ms sin bloquear jamás esta página.
+
+  Servir desde port/ (el worker carga ../build-wasm/dbcore.js):
       cd port && python -m http.server 8000
       → http://localhost:8000/web/
 
@@ -91,6 +98,7 @@
       <option value="8">8</option>
       <option value="16">16</option>
       <option value="32">32</option>
+      <option value="0">máx</option>
     </select>
   </div>
   <div class="sep"></div>
@@ -136,11 +144,10 @@
 </main>
 
 <footer>
-  DarwinBots 2.48.32 · core C++→WASM (143 casos dorados en verde) · la página solo
-  presenta el estado que vuelca el core — física y RNG viven en dbcore.wasm
+  DarwinBots 2.48.32 · core C++→WASM (143 casos dorados en verde) · la sim corre
+  en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
 </footer>
 
-<script src="../build-wasm/dbcore.js"></script>
 <script>
 'use strict';
 
@@ -203,50 +210,6 @@ end
 `}
 };
 
-// ---- Puentes C ------------------------------------------------------------
-let M = null;   // Module de Emscripten
-let api = {};   // cwraps
-let sim = 0;    // handle
-
-const C = (name, ret, args) => M.cwrap(name, ret, args);
-
-function bindApi() {
-  api = {
-    create:        C('db_sim_create', 'number', []),
-    destroy:       C('db_sim_destroy', null, ['number']),
-    start:         C('db_sim_start', null, ['number', 'number']),
-    tick:          C('db_sim_tick', null, ['number']),
-    setField:      C('db_sim_set_field', null, ['number', 'number', 'number']),
-    fieldW:        C('db_sim_field_width', 'number', ['number']),
-    fieldH:        C('db_sim_field_height', 'number', ['number']),
-    setMinVegs:    C('db_sim_set_minvegs', null, ['number', 'number']),
-    setRepop:      C('db_sim_set_repop', null, ['number', 'number', 'number']),
-    setMaxEnergy:  C('db_sim_set_max_energy', null, ['number', 'number']),
-    setMutations:  C('db_sim_set_mutations', null, ['number', 'number']),
-    setStartChlr:  C('db_sim_set_start_chlr', null, ['number', 'number']),
-    addSpecies:    C('db_sim_add_species', 'number',
-                     ['number', 'string', 'string', 'number', 'number', 'number', 'number', 'number']),
-    seedSpecies:   C('db_sim_seed_species', 'number', ['number', 'number', 'number']),
-    cycle:         C('db_sim_cycle', 'number', ['number']),
-    totalRobots:   C('db_sim_total_robots', 'number', ['number']),
-    maxRobs:       C('db_sim_max_robs', 'number', ['number']),
-    totvegs:       C('db_sim_totvegs', 'number', ['number']),
-    shotsCap:      C('db_sim_shots_capacity', 'number', ['number']),
-    numObstacles:  C('db_sim_num_obstacles', 'number', ['number']),
-    numTeleporters:C('db_sim_num_teleporters', 'number', ['number']),
-    dumpBots:      C('db_sim_dump_bots', 'number', ['number', 'number', 'number']),
-    dumpShots:     C('db_sim_dump_shots', 'number', ['number', 'number', 'number']),
-    dumpTies:      C('db_sim_dump_ties', 'number', ['number', 'number', 'number']),
-    dumpObstacles: C('db_sim_dump_obstacles', 'number', ['number', 'number', 'number']),
-    dumpTeleporters:C('db_sim_dump_teleporters', 'number', ['number', 'number', 'number']),
-    addTeleporter: C('db_sim_add_teleporter', 'number',
-                     ['number','number','number','number','number','number','number','number','number','number']),
-    save:          C('db_sim_save', 'number', ['number', 'number']),
-    load:          C('db_sim_load', null, ['number', 'number', 'number']),
-    free:          C('db_free', null, ['number']),
-  };
-}
-
 // Color CSS "#rrggbb" → Long BGR de VB6 (RGB() = r + g*256 + b*65536).
 function cssToVbColor(css) {
   const r = parseInt(css.slice(1, 3), 16);
@@ -261,21 +224,11 @@ function vbColorToCss(c) {
   return `rgb(${r},${g},${b})`;
 }
 
-// ---- Búferes de volcado (crecen bajo demanda) -----------------------------
-const buf = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
-              obs: {p:0, cap:0}, tps: {p:0, cap:0} };
+// ---- Worker de sim --------------------------------------------------------
+// La sim corre entera en worker.js (protocolo documentado allí); esta página
+// solo manda comandos y dibuja el último frame recibido.
+const worker = new Worker('worker.js');
 
-function ensure(b, floatsNeeded) {
-  if (b.cap >= floatsNeeded) return;
-  if (b.p) M._free(b.p);
-  b.cap = Math.ceil(floatsNeeded * 1.5) + 64;
-  b.p = M._malloc(b.cap * 4);
-}
-function view(b, floats) {
-  return new Float32Array(M.HEAPF32.buffer, b.p, floats);
-}
-
-// ---- Render ---------------------------------------------------------------
 const canvas = document.getElementById('field');
 const ctx = canvas.getContext('2d');
 const logEl = document.getElementById('log');
@@ -285,181 +238,197 @@ function log(msg) {
   logEl.textContent = msg + '\n' + logEl.textContent;
 }
 
-function draw() {
-  const W = api.fieldW(sim), Hh = api.fieldH(sim);
-  const s = Math.min(canvas.width / W, canvas.height / Hh);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // obstáculos
-  {
-    const n = api.numObstacles(sim);
-    if (n > 0) {
-      ensure(buf.obs, n * 5);
-      const w = api.dumpObstacles(sim, buf.obs.p, n);
-      const v = view(buf.obs, w * 5);
-      for (let i = 0; i < w; i++) {
-        const o = i * 5;
-        ctx.fillStyle = vbColorToCss(v[o + 4]);
-        ctx.globalAlpha = 0.6;
-        ctx.fillRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
-        ctx.globalAlpha = 1;
-      }
-    }
-  }
-
-  // teleporters
-  {
-    const n = api.numTeleporters(sim);
-    if (n > 0) {
-      ensure(buf.tps, n * 7);
-      const w = api.dumpTeleporters(sim, buf.tps.p, n);
-      const v = view(buf.tps, w * 7);
-      for (let i = 0; i < w; i++) {
-        const o = i * 7;
-        ctx.strokeStyle = vbColorToCss(v[o + 4]);
-        ctx.setLineDash([4, 3]);
-        ctx.strokeRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
-        ctx.setLineDash([]);
-      }
-    }
-  }
-
-  // ties (debajo de los bots)
-  {
-    const cap = api.maxRobs(sim) * 9;
-    if (cap > 0) {
-      ensure(buf.ties, cap * 5);
-      const w = api.dumpTies(sim, buf.ties.p, cap);
-      const v = view(buf.ties, w * 5);
-      for (let i = 0; i < w; i++) {
-        const o = i * 5;
-        ctx.strokeStyle = v[o + 4] === 3 ? '#c8b060' : '#4a5a78';
-        ctx.lineWidth = v[o + 4] === 3 ? 1.5 : 1;
-        ctx.beginPath();
-        ctx.moveTo(v[o] * s, v[o + 1] * s);
-        ctx.lineTo(v[o + 2] * s, v[o + 3] * s);
-        ctx.stroke();
-      }
-      ctx.lineWidth = 1;
-    }
-  }
-
-  // shots
-  {
-    const cap = api.shotsCap(sim);
-    ensure(buf.shots, cap * 6);
-    const w = api.dumpShots(sim, buf.shots.p, cap);
-    const v = view(buf.shots, w * 6);
-    for (let i = 0; i < w; i++) {
-      const o = i * 6;
-      ctx.strokeStyle = vbColorToCss(v[o + 4]);
-      ctx.beginPath();
-      ctx.moveTo(v[o] * s, v[o + 1] * s);
-      ctx.lineTo((v[o] - v[o + 2] * 0.6) * s, (v[o + 1] - v[o + 3] * 0.6) * s);
-      ctx.stroke();
-    }
-  }
-
-  // bots
-  {
-    const cap = api.maxRobs(sim);
-    if (cap > 0) {
-      ensure(buf.bots, cap * 8);
-      const w = api.dumpBots(sim, buf.bots.p, cap);
-      const v = view(buf.bots, w * 8);
-      for (let i = 0; i < w; i++) {
-        const o = i * 8;
-        const x = v[o + 1] * s, y = v[o + 2] * s, r = Math.max(v[o + 3] * s, 1.2);
-        const flags = v[o + 7];
-        const corpse = flags & 4;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = corpse ? '#555' : vbColorToCss(v[o + 6]);
-        ctx.fill();
-        ctx.strokeStyle = corpse ? '#777' : 'rgba(255,255,255,0.55)';
-        ctx.stroke();
-        // marcador de rumbo: y de mundo crece hacia abajo, aim antihorario
-        const aim = v[o + 4];
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + Math.cos(aim) * r, y - Math.sin(aim) * r);
-        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-        ctx.stroke();
-      }
-    }
-  }
-}
-
-// ---- Loop -----------------------------------------------------------------
-let running = false;
+let latest = null;       // último frame recibido, pendiente de dibujar
+let rafPending = false;
+let stats = { cycle: 0, bots: 0, vegs: 0, tps: 0 };
 let frames = 0, lastFpsT = performance.now(), fps = 0;
+let drawMs = 0;          // media móvil del costo de draw() (¿hace falta WebGL?)
 
-function updateStats() {
-  statsEl.textContent =
-    `ciclo ${api.cycle(sim)} · bots ${api.totalRobots(sim)}` +
-    ` · vegs ${Math.max(api.totvegs(sim), 0)} · ${fps} fps`;
-}
+worker.onerror = (e) =>
+  log(`Error en worker: ${e.message} (${e.filename}:${e.lineno})`);
 
-function frame() {
-  if (running) {
-    const n = parseInt(document.getElementById('speed').value, 10);
-    for (let i = 0; i < n; i++) api.tick(sim);
+worker.onmessage = (e) => {
+  const msg = e.data;
+  switch (msg.t) {
+    case 'ready':
+      onReady();
+      break;
+    case 'frame':
+      latest = msg;
+      if (!rafPending) { rafPending = true; requestAnimationFrame(renderFrame); }
+      break;
+    case 'log':
+      log(msg.msg);
+      updateStats();
+      break;
+    case 'saved': {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([msg.bytes]));
+      a.download = `darwinbots-ciclo${msg.cycle}.dbsim`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      log(`sim guardada (${msg.bytes.byteLength} bytes, formato binario de VB6)`);
+      break;
+    }
+    case 'error':
+      statsEl.textContent = 'error cargando dbcore.wasm';
+      log('Error: ' + msg.msg + '\n¿Está compilado el preset wasm? ' +
+          '(cmake --preset wasm && cmake --build --preset wasm)');
+      break;
   }
-  draw();
-  updateStats();
+};
+
+function renderFrame() {
+  rafPending = false;
+  if (!latest) return;
+  const { buf, stats: st } = latest;
+  latest = null;
+  stats = st;
+  const t0 = performance.now();
+  draw(new Float32Array(buf));
+  drawMs = drawMs * 0.9 + (performance.now() - t0) * 0.1;
+  worker.postMessage({ t: 'ack', buf }, [buf]);  // ping-pong: devolver el búfer
   frames++;
   const now = performance.now();
   if (now - lastFpsT >= 1000) {
     fps = frames; frames = 0; lastFpsT = now;
   }
-  requestAnimationFrame(frame);
+  updateStats();
+}
+
+function updateStats() {
+  statsEl.textContent =
+    `ciclo ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
+    ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms`;
+}
+
+// ---- Render (layout del frame: ver cabecera de worker.js) -----------------
+function draw(v) {
+  const W = v[0], Hh = v[1];
+  const nB = v[2], nS = v[3], nT = v[4], nO = v[5], nP = v[6];
+  const oBots = 8;
+  const oShots = oBots + nB * 8;
+  const oTies = oShots + nS * 6;
+  const oObs = oTies + nT * 5;
+  const oTps = oObs + nO * 5;
+  const s = Math.min(canvas.width / W, canvas.height / Hh);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // obstáculos
+  for (let i = 0; i < nO; i++) {
+    const o = oObs + i * 5;
+    ctx.fillStyle = vbColorToCss(v[o + 4]);
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
+    ctx.globalAlpha = 1;
+  }
+
+  // teleporters
+  for (let i = 0; i < nP; i++) {
+    const o = oTps + i * 7;
+    ctx.strokeStyle = vbColorToCss(v[o + 4]);
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
+    ctx.setLineDash([]);
+  }
+
+  // ties (debajo de los bots)
+  for (let i = 0; i < nT; i++) {
+    const o = oTies + i * 5;
+    ctx.strokeStyle = v[o + 4] === 3 ? '#c8b060' : '#4a5a78';
+    ctx.lineWidth = v[o + 4] === 3 ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(v[o] * s, v[o + 1] * s);
+    ctx.lineTo(v[o + 2] * s, v[o + 3] * s);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 1;
+
+  // shots
+  for (let i = 0; i < nS; i++) {
+    const o = oShots + i * 6;
+    ctx.strokeStyle = vbColorToCss(v[o + 4]);
+    ctx.beginPath();
+    ctx.moveTo(v[o] * s, v[o + 1] * s);
+    ctx.lineTo((v[o] - v[o + 2] * 0.6) * s, (v[o + 1] - v[o + 3] * 0.6) * s);
+    ctx.stroke();
+  }
+
+  // bots
+  for (let i = 0; i < nB; i++) {
+    const o = oBots + i * 8;
+    const x = v[o + 1] * s, y = v[o + 2] * s, r = Math.max(v[o + 3] * s, 1.2);
+    const flags = v[o + 7];
+    const corpse = flags & 4;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = corpse ? '#555' : vbColorToCss(v[o + 6]);
+    ctx.fill();
+    ctx.strokeStyle = corpse ? '#777' : 'rgba(255,255,255,0.55)';
+    ctx.stroke();
+    // marcador de rumbo: y de mundo crece hacia abajo, aim antihorario
+    const aim = v[o + 4];
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(aim) * r, y - Math.sin(aim) * r);
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.stroke();
+  }
 }
 
 // ---- Montaje de la sim ----------------------------------------------------
 function newSim() {
-  if (sim) api.destroy(sim);
-  sim = api.create();
-  // Opciones de la demo (capa host): campo 32000², economía vegetal viva.
-  api.setField(sim, 32000, 32000);
-  api.setMinVegs(sim, 15);
-  api.setRepop(sim, 10, 10);
-  api.setMaxEnergy(sim, 10);       // reparto de nrg por ciclo (feedvegs)
-  api.setStartChlr(sim, 16000);    // default de la UI original (.gset)
-  api.setMutations(sim, 1);
   const seed = parseFloat(document.getElementById('seed').value) || 0;
-  api.start(sim, seed);            // Rnd -1 + Randomize seed/100 + buckets
-  // Alga de arranque para que la repoblación tenga especie elegible.
   const alga = PRESETS.alga;
-  const idx = api.addSpecies(sim, alga.dna, alga.name, 1, 0, alga.nrg,
-                             cssToVbColor(alga.color), alga.qty);
-  const n = api.seedSpecies(sim, idx, 0);
-  log(`sim nueva (seed ${seed}): ${n} × ${alga.name}`);
+  worker.postMessage({
+    t: 'reset', seed,
+    // Opciones de la demo (capa host): campo 32000², economía vegetal viva.
+    options: { fieldW: 32000, fieldH: 32000, minVegs: 15,
+               repopAmount: 10, repopCooldown: 10,
+               maxEnergy: 10,       // reparto de nrg por ciclo (feedvegs)
+               startChlr: 16000,    // default de la UI original (.gset)
+               mutations: true },
+    // Alga de arranque para que la repoblación tenga especie elegible.
+    species: [{ dna: alga.dna, name: alga.name, veg: true, qty: alga.qty,
+                nrg: alga.nrg, color: cssToVbColor(alga.color) }],
+  });
 }
 
 function seedFromForm() {
-  const dna = document.getElementById('dna').value;
-  const name = document.getElementById('sp-name').value || 'bot.txt';
-  const veg = document.getElementById('sp-veg').checked ? 1 : 0;
-  const qty = parseInt(document.getElementById('sp-qty').value, 10) || 1;
-  const nrg = parseFloat(document.getElementById('sp-nrg').value) || 3000;
-  const color = cssToVbColor(document.getElementById('sp-color').value);
-  const idx = api.addSpecies(sim, dna, name, veg, 0, nrg, color, qty);
-  const n = api.seedSpecies(sim, idx, 0);
-  log(n > 0 ? `sembrados ${n} × ${name}`
-            : `ADN rechazado por el cargador (${name})`);
+  worker.postMessage({
+    t: 'seed-species',
+    sp: {
+      dna: document.getElementById('dna').value,
+      name: document.getElementById('sp-name').value || 'bot.txt',
+      veg: document.getElementById('sp-veg').checked,
+      qty: parseInt(document.getElementById('sp-qty').value, 10) || 1,
+      nrg: parseFloat(document.getElementById('sp-nrg').value) || 3000,
+      color: cssToVbColor(document.getElementById('sp-color').value),
+    },
+  });
 }
 
 // ---- Controles ------------------------------------------------------------
+let running = false;
 const btnRun = document.getElementById('btn-run');
-btnRun.onclick = () => {
-  running = !running;
+
+function setRunning(r) {
+  running = r;
   btnRun.textContent = running ? '⏸ Pausar' : '▶ Iniciar';
-};
-document.getElementById('btn-step').onclick = () => { api.tick(sim); };
+  worker.postMessage({ t: 'run', running });
+}
+
+btnRun.onclick = () => setRunning(!running);
+document.getElementById('btn-step').onclick = () =>
+  worker.postMessage({ t: 'step' });
 document.getElementById('btn-reset').onclick = () => {
-  running = false; btnRun.textContent = '▶ Iniciar'; newSim();
+  setRunning(false);
+  newSim();
 };
 document.getElementById('btn-seed').onclick = seedFromForm;
+
+document.getElementById('speed').onchange = (e) =>
+  worker.postMessage({ t: 'speed', n: parseInt(e.target.value, 10) });
 
 document.getElementById('preset').onchange = (e) => {
   const p = PRESETS[e.target.value];
@@ -472,60 +441,33 @@ document.getElementById('preset').onchange = (e) => {
   document.getElementById('sp-color').value = p.color;
 };
 
-document.getElementById('btn-save').onclick = () => {
-  const lenP = M._malloc(4);
-  const p = api.save(sim, lenP);
-  const len = M.HEAP32[lenP >> 2];
-  M._free(lenP);
-  if (!p || len <= 0) { log('guardado vacío'); return; }
-  const bytes = new Uint8Array(M.HEAPU8.buffer, p, len).slice();
-  api.free(p);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([bytes]));
-  a.download = `darwinbots-ciclo${api.cycle(sim)}.dbsim`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  log(`sim guardada (${len} bytes, formato binario de VB6)`);
-};
+document.getElementById('btn-save').onclick = () =>
+  worker.postMessage({ t: 'save' });
 
 document.getElementById('btn-load').onclick = () =>
   document.getElementById('file-load').click();
 document.getElementById('file-load').onchange = async (e) => {
   const f = e.target.files[0];
   if (!f) return;
-  const bytes = new Uint8Array(await f.arrayBuffer());
-  const p = M._malloc(bytes.length);
-  M.HEAPU8.set(bytes, p);
-  api.load(sim, p, bytes.length);
-  M._free(p);
-  running = false; btnRun.textContent = '▶ Iniciar';
-  log(`sim cargada: ${f.name} (${bytes.length} bytes), ` +
-      `ciclo ${api.cycle(sim)}, ${api.totalRobots(sim)} bots`);
+  const bytes = await f.arrayBuffer();
+  setRunning(false);
+  worker.postMessage({ t: 'load', bytes, name: f.name }, [bytes]);
+  log(`cargando ${f.name}…`);
   e.target.value = '';
 };
 
-document.getElementById('btn-teleporter').onclick = () => {
-  // local: entra y sale en esta sim (2 RNG + ReSpawn); alto 3000 twips
-  const i = api.addTeleporter(sim, 0, 0, 3000, 0, 1, 0, 0, 1, 100);
-  log(i > 0 ? `teleporter local #${i} creado`
-            : 'tope de teleporters (10) alcanzado');
-};
+document.getElementById('btn-teleporter').onclick = () =>
+  worker.postMessage({ t: 'teleporter' });
 
 // ---- Arranque -------------------------------------------------------------
-createDbCore().then((Module) => {
-  M = Module;
-  bindApi();
+function onReady() {
   const p = PRESETS.animal;
   document.getElementById('dna').value = p.dna;
+  worker.postMessage({ t: 'speed', n: parseInt(document.getElementById('speed').value, 10) });
   newSim();
+  log('dbcore.wasm cargado (en worker)');
   updateStats();
-  requestAnimationFrame(frame);
-  log('dbcore.wasm cargado');
-}).catch((err) => {
-  statsEl.textContent = 'error cargando dbcore.wasm';
-  log('Error: ' + err + '\n¿Está compilado el preset wasm? ' +
-      '(cmake --preset wasm && cmake --build --preset wasm)');
-});
+}
 </script>
 </body>
 </html>

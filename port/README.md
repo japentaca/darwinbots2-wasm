@@ -211,16 +211,32 @@ node como emulador).
 El preset `wasm` produce además `build-wasm/dbcore.js` + `dbcore.wasm`: el
 core como biblioteca WASM con la API de `wasm/dbcore_api.cpp` (M10).
 
-### Página web (M10)
+### Página web (M10 + extensión Rendimiento)
 
-`web/index.html` carga `../build-wasm/dbcore.js`, siembra especies desde
-texto de ADN y corre el tick en un loop de `requestAnimationFrame`,
-dibujando bots/shots/ties/obstáculos/teleporters en Canvas 2D. Controles:
-iniciar/pausar, paso, velocidad (ticks/frame), seed, sembrar especie
-(presets Animal/Alga Minimalis o ADN propio, con color a elección),
-guardar/cargar sim (formato binario de VB6 como archivo `.dbsim`) y crear
-un teleporter local. Servir desde `port/` (el navegador no carga WASM
-desde `file://`):
+La sim corre entera en un **Web Worker** (`web/worker.js`): el worker carga
+`../build-wasm/dbcore.js`, posee el handle de sim, ejecuta los ticks y
+empaqueta cada frame como **un solo `ArrayBuffer` transferible** (header de
+contadores + registros de bots 8f / shots 6f / ties 5f / obstáculos 5f /
+teleporters 7f, mismo layout que `db_sim_dump_*`). `web/index.html` queda
+solo con UI y render Canvas 2D: dibuja el frame recibido y devuelve el búfer
+con un `ack` (ping-pong: cero basura por frame y nunca más de un frame en
+vuelo, así el backpressure sale solo). El protocolo de mensajes está
+documentado en la cabecera de `worker.js`. La página nunca se bloquea
+aunque el tick sea pesado.
+
+Controles: iniciar/pausar, paso, velocidad (ticks/frame **o "máx"**: el
+worker corre a fondo en rebanadas de ~12 ms y publica frames cuando la
+página puede), seed, sembrar especie (presets Animal/Alga Minimalis o ADN
+propio, con color a elección), guardar/cargar sim (formato binario de VB6
+como archivo `.dbsim`) y crear un teleporter local. La barra de stats
+muestra ticks/s, fps y el costo de `draw()`.
+
+Medido en esta máquina (Chrome, campo 32000², velocidad máx): con ~2000
+bots el `draw()` de Canvas 2D cuesta ~4 ms/frame mientras el tick del core
+cuesta ~160 ms — el cuello es la sim, no el render, así que **WebGL no
+hace falta** (queda como opción futura si alguna vez el render domina).
+
+Servir desde `port/` (el navegador no carga WASM desde `file://`):
 
 ```
 cd port && python -m http.server 8000

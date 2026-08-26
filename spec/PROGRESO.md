@@ -62,6 +62,8 @@ reinicios de contexto.
 
 | M10 · Capa de presentación web | ✅ cerrado | **El port está completo y usable**: `wasm/dbcore_api.cpp` ampliado con la API entera hacia JS y `port/web/index.html` como render 2D en Canvas. Todo capa host, **cero cambios en `port/core/`** (la suite quedó intacta por construcción y verificada en verde en los tres modos). API: `db_sim_start` (arranque del form transcrito de `main.frm`: divisores, `Init_Buckets`, `cooldown = -RepopCooldown` de B-37, `totvegs = -1`, y `Rnd -1 : Randomize seed/100` de `startloaded`), opciones (campo, Costs 0..70, MinVegs/repoblación, MaxEnergy, mutaciones on/off, StartChlr), especies con siembra fiel a `loadrobs` (`main.frm:1517-1573`: color/Mutables/Skin/NoChlr/StartChlr/GenMut sobre `InsertFounder`), volcados para render (bots 8f, shots 6f, ties 5f, obstáculos 5f, teleporters 7f), formatos sobre búferes (`db_sim_save/load` con post-carga de `startloaded`, `.dbo` organismo, `SalvarobText`; `.mrate` no se exporta — conveniencia de UI), altas de obstáculo/teleporter (`NewTeleporter` transcrito de `Teleport.bas:60-105`, mismo RNG) y E/S de teleporters (`outbox_take`/`inbox_push`: el host mueve los "archivos" `.dbo`). Decisiones de capa host documentadas en la cabecera del `.cpp`: búferes en vez de disco, `SimGUID = 0`, colores de especie decididos por la página (Q01). Verificación: suite 143/2962 en verde en los tres modos, smoke test node de la API (19 checks: siembra 15+5, 300 ticks con ecosistema vivo, volcados, save→load con reanudación, outbox→inbox entre dos sims) y página probada en Chrome (algas reproduciéndose + animales cazando a 60 fps, teleporter local dibujado, consola limpia). Servir: `cd port && python -m http.server 8000` → `http://localhost:8000/web/`. |
 
+| Ext · Rendimiento | ✅ cerrada | **Extensión opcional de capa host (solo JS/HTML; cero cambios en `port/core/`, `wasm/` o CMake).** La sim corre entera en un Web Worker (`port/web/worker.js`: módulo WASM + handle + ticks + volcados) y `index.html` queda solo con UI y render. Cada frame viaja como UN `ArrayBuffer` transferible (header + secciones bots/shots/ties/obstáculos/teleporters) con ping-pong de búferes: cero basura por frame, nunca más de un frame en vuelo, backpressure natural. Velocidad nueva "máx" (rebanadas de ~12 ms a fondo, de a 1 tick por vuelta para que las sims pesadas publiquen frames igual de seguido); stats con ticks/s, fps y costo de `draw()`; los errores del worker salen al registro de la página. Verificado en Chrome: velocidad 4 = 240 ticks/s exactos a 60 fps; máx ≈ 1440 ticks/s con la demo; estrés con ~2000 bots → `draw()` ≈ 4 ms vs tick ≈ 160 ms ⇒ **WebGL no hace falta** (el cuello es la sim, no el render; documentado en `port/README.md`). Guardar→cargar y teleporter verificados vía protocolo de mensajes. |
+
 **Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
 caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
 (agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
@@ -81,13 +83,13 @@ opcionales, si el usuario las pide:
 - **UI de sim**: inspector de bot (la API ya da `db_sim_bot_text`),
   zoom/cámara, editor de opciones completo (la UI actual expone las
   esenciales; la API llega hasta Costs 0..70), gráficas de población.
-- **Rendimiento**: correr el tick en un Web Worker (hoy va en el hilo de
-  la página), volcados incrementales, WebGL si el Canvas queda corto con
-  poblaciones grandes.
 - **Modo Internet/torneo**: la E/S de teleporters entre sims ya funciona
   por búferes (`outbox`/`inbox`); faltaría solo el transporte que mueva
   los registros entre navegadores (la capa ⚙ de 50-MUNDO.md §5 quedó
   deliberadamente fuera del contrato).
+- ~~**Rendimiento**~~: **cerrada 2026-08-26** (Web Worker + frame único
+  transferible; WebGL medido y descartado por innecesario — ver la fila
+  "Ext · Rendimiento" y el registro).
 
 ## Pendiente
 
@@ -251,3 +253,31 @@ opcionales, si el usuario las pide:
   `python -m http.server` (algas reproduciéndose, animales cazando,
   teleporter dibujado, consola sin errores). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
+
+- **2026-08-26** — Extensión Rendimiento cerrada (capa host pura: solo
+  `port/web/`; cero cambios en `port/core/`, `port/wasm/` o CMake — la
+  suite 143/2962 sigue en verde por construcción). La sim corre entera en
+  un Web Worker nuevo (`port/web/worker.js`): el worker carga
+  `dbcore.js`, posee el handle, ejecuta los ticks y publica cada frame
+  como UN `ArrayBuffer` transferible (header de contadores + secciones
+  bots 8f / shots 6f / ties 5f / obstáculos 5f / teleporters 7f, el mismo
+  layout que `db_sim_dump_*`); `index.html` quedó solo con UI y render
+  Canvas 2D y devuelve el búfer con un `ack` (ping-pong: cero basura por
+  frame, nunca más de un frame en vuelo, el rAF de la página marca el
+  ritmo con velocidad N ticks/frame). Velocidad nueva "máx": el worker
+  corre a fondo en rebanadas de ~12 ms (de a 1 tick por vuelta, para que
+  las sims pesadas publiquen frames igual de seguido) sin bloquear jamás
+  la página. Bug propio encontrado y corregido durante la verificación:
+  el pool de frames asignaba `ceil(bytes·1.5)+1024` sin alinear a 4 →
+  `RangeError` en `new Float32Array(buf)` con conteos de floats impares
+  (aparecía al entrar el primer teleporter, +7 floats); ahora alineado y
+  los errores de runtime del worker salen al registro de la página
+  (`worker.onerror`). Verificado en Chrome: velocidad 4 = 240 ticks/s
+  exactos a 60 fps (draw 0.1 ms); máx ≈ 1440 ticks/s con la demo;
+  guardar→cargar por mensajes (1.3 MB, reanuda con los 138 bots) y
+  teleporter local dibujado; consola sin errores. Medición para la
+  decisión WebGL: estrés con ~2000 bots → `draw()` ≈ 4 ms/frame vs tick
+  del core ≈ 160 ms ⇒ el cuello es la sim, no el render: **WebGL
+  descartado por innecesario** (documentado en `port/README.md`
+  §"Página web"; queda como opción futura si el render dominara alguna
+  vez). Fuentes sin modificar.

@@ -1,0 +1,305 @@
+'use strict';
+// Extensión Rendimiento (spec/PROGRESO.md §"Siguiente") — Web Worker de sim.
+//
+// La sim entera (dbcore.wasm, el handle, los ticks y los volcados) vive en
+// este worker; el hilo de la página queda solo con UI y render. Regla 4 del
+// brief intacta: este worker NUNCA recalcula física ni RNG — solo llama a
+// db_sim_* y empaqueta lo que el core vuelca.
+//
+// Protocolo (página → worker):
+//   {t:'reset', seed, options, species[]}  nueva sim + siembra inicial
+//   {t:'run', running}                     arrancar/pausar el loop de ticks
+//   {t:'speed', n}                         n ticks por frame; 0 = máx
+//                                          (corre a fondo en rebanadas ~12ms)
+//   {t:'step'}                             un tick suelto
+//   {t:'seed-species', sp}                 sembrar especie del formulario
+//   {t:'save'}                             → {t:'saved', bytes, cycle}
+//   {t:'load', bytes}                      cargar sim binaria (transferido)
+//   {t:'teleporter'}                       alta de teleporter local
+//   {t:'ack', buf}                         devuelve el búfer del último frame
+//
+// Protocolo (worker → página):
+//   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
+//   {t:'frame', buf, stats:{cycle,bots,vegs,tps}}
+//
+// El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
+// la página lo devuelve con 'ack' al terminar de dibujar y el worker lo
+// reutiliza — sin basura por frame y nunca más de un frame en vuelo (el
+// backpressure sale solo: con speed>0 el ritmo lo marca el rAF de la
+// página; con speed=0 el worker corre a fondo y publica cuando puede).
+//
+// Layout del frame (Float32Array):
+//   [0..7]  header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, 0
+//   después: bots nBots×8, shots nShots×6, ties nTies×5,
+//            obstáculos nObs×5, teleporters nTps×7
+//   (mismos registros que db_sim_dump_* — ver wasm/dbcore_api.cpp)
+
+importScripts('../build-wasm/dbcore.js');
+
+let M = null;   // Module de Emscripten
+let api = {};   // cwraps
+let sim = 0;    // handle
+
+let running = false;
+let speed = 4;          // ticks por frame; 0 = máx
+let canPost = true;     // el frame anterior ya fue devuelto con 'ack'
+let wantFrame = false;  // hay estado nuevo pendiente de publicar
+
+// ticks/segundo medidos (va en stats de cada frame)
+let tickCount = 0, tpsT = 0, tps = 0;
+
+const C = (name, ret, args) => M.cwrap(name, ret, args);
+
+function bindApi() {
+  api = {
+    create:        C('db_sim_create', 'number', []),
+    destroy:       C('db_sim_destroy', null, ['number']),
+    start:         C('db_sim_start', null, ['number', 'number']),
+    tick:          C('db_sim_tick', null, ['number']),
+    setField:      C('db_sim_set_field', null, ['number', 'number', 'number']),
+    fieldW:        C('db_sim_field_width', 'number', ['number']),
+    fieldH:        C('db_sim_field_height', 'number', ['number']),
+    setMinVegs:    C('db_sim_set_minvegs', null, ['number', 'number']),
+    setRepop:      C('db_sim_set_repop', null, ['number', 'number', 'number']),
+    setMaxEnergy:  C('db_sim_set_max_energy', null, ['number', 'number']),
+    setMutations:  C('db_sim_set_mutations', null, ['number', 'number']),
+    setStartChlr:  C('db_sim_set_start_chlr', null, ['number', 'number']),
+    addSpecies:    C('db_sim_add_species', 'number',
+                     ['number', 'string', 'string', 'number', 'number', 'number', 'number', 'number']),
+    seedSpecies:   C('db_sim_seed_species', 'number', ['number', 'number', 'number']),
+    cycle:         C('db_sim_cycle', 'number', ['number']),
+    totalRobots:   C('db_sim_total_robots', 'number', ['number']),
+    maxRobs:       C('db_sim_max_robs', 'number', ['number']),
+    totvegs:       C('db_sim_totvegs', 'number', ['number']),
+    shotsCap:      C('db_sim_shots_capacity', 'number', ['number']),
+    numObstacles:  C('db_sim_num_obstacles', 'number', ['number']),
+    numTeleporters:C('db_sim_num_teleporters', 'number', ['number']),
+    dumpBots:      C('db_sim_dump_bots', 'number', ['number', 'number', 'number']),
+    dumpShots:     C('db_sim_dump_shots', 'number', ['number', 'number', 'number']),
+    dumpTies:      C('db_sim_dump_ties', 'number', ['number', 'number', 'number']),
+    dumpObstacles: C('db_sim_dump_obstacles', 'number', ['number', 'number', 'number']),
+    dumpTeleporters:C('db_sim_dump_teleporters', 'number', ['number', 'number', 'number']),
+    addTeleporter: C('db_sim_add_teleporter', 'number',
+                     ['number','number','number','number','number','number','number','number','number','number']),
+    save:          C('db_sim_save', 'number', ['number', 'number']),
+    load:          C('db_sim_load', null, ['number', 'number', 'number']),
+    free:          C('db_free', null, ['number']),
+  };
+}
+
+function log(msg) { self.postMessage({ t: 'log', msg }); }
+
+// ---- Búferes de volcado en el heap C (crecen bajo demanda) ----------------
+const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
+                  obs: {p:0, cap:0}, tps: {p:0, cap:0} };
+
+function ensure(b, floatsNeeded) {
+  if (b.cap >= floatsNeeded || floatsNeeded === 0) return;
+  if (b.p) M._free(b.p);
+  b.cap = Math.ceil(floatsNeeded * 1.5) + 64;
+  b.p = M._malloc(b.cap * 4);
+}
+// Vista fresca en cada uso: HEAPF32.buffer puede reubicarse (MEMORY_GROWTH).
+function heapView(p, floats) {
+  return new Float32Array(M.HEAPF32.buffer, p, floats);
+}
+
+// ---- Pool de frames (ping-pong con la página) -----------------------------
+const framePool = [];
+
+function takeFrameBuffer(floats) {
+  const bytes = floats * 4;
+  for (let i = 0; i < framePool.length; i++) {
+    if (framePool[i].byteLength >= bytes) return framePool.splice(i, 1)[0];
+  }
+  // Alineado a 4: new Float32Array(buf) exige byteLength múltiplo de 4.
+  return new ArrayBuffer((Math.ceil(bytes * 1.5) + 1024 + 3) & ~3);
+}
+function recycleFrameBuffer(buf) {
+  if (buf instanceof ArrayBuffer && framePool.length < 2) framePool.push(buf);
+}
+
+// ---- Snapshot: 5 volcados del core → un solo búfer transferible -----------
+function buildFrame() {
+  const maxB = api.maxRobs(sim);
+  const shotCap = api.shotsCap(sim);
+  const tieCap = maxB * 9;
+  const obsCap = api.numObstacles(sim);
+  const tpCap = api.numTeleporters(sim);
+
+  ensure(scratch.bots, maxB * 8);
+  ensure(scratch.shots, shotCap * 6);
+  ensure(scratch.ties, tieCap * 5);
+  ensure(scratch.obs, obsCap * 5);
+  ensure(scratch.tps, tpCap * 7);
+
+  const nB = maxB > 0 ? api.dumpBots(sim, scratch.bots.p, maxB) : 0;
+  const nS = shotCap > 0 ? api.dumpShots(sim, scratch.shots.p, shotCap) : 0;
+  const nT = tieCap > 0 ? api.dumpTies(sim, scratch.ties.p, tieCap) : 0;
+  const nO = obsCap > 0 ? api.dumpObstacles(sim, scratch.obs.p, obsCap) : 0;
+  const nP = tpCap > 0 ? api.dumpTeleporters(sim, scratch.tps.p, tpCap) : 0;
+
+  const total = 8 + nB * 8 + nS * 6 + nT * 5 + nO * 5 + nP * 7;
+  const buf = takeFrameBuffer(total);
+  const v = new Float32Array(buf);
+  v[0] = api.fieldW(sim);
+  v[1] = api.fieldH(sim);
+  v[2] = nB; v[3] = nS; v[4] = nT; v[5] = nO; v[6] = nP;
+  v[7] = 0;
+
+  let off = 8;
+  if (nB) { v.set(heapView(scratch.bots.p, nB * 8), off); off += nB * 8; }
+  if (nS) { v.set(heapView(scratch.shots.p, nS * 6), off); off += nS * 6; }
+  if (nT) { v.set(heapView(scratch.ties.p, nT * 5), off); off += nT * 5; }
+  if (nO) { v.set(heapView(scratch.obs.p, nO * 5), off); off += nO * 5; }
+  if (nP) { v.set(heapView(scratch.tps.p, nP * 7), off); off += nP * 7; }
+  return buf;
+}
+
+function postFrame() {
+  if (!sim) return;
+  if (!canPost) { wantFrame = true; return; }
+  const buf = buildFrame();
+  canPost = false;
+  wantFrame = false;
+  self.postMessage({
+    t: 'frame', buf,
+    stats: { cycle: api.cycle(sim), bots: api.totalRobots(sim),
+             vegs: Math.max(api.totvegs(sim), 0), tps },
+  }, [buf]);
+}
+
+// ---- Loop de ticks --------------------------------------------------------
+function runTicks(n) {
+  for (let i = 0; i < n; i++) api.tick(sim);
+  tickCount += n;
+  const now = performance.now();
+  if (now - tpsT >= 1000) {
+    tps = Math.round(tickCount * 1000 / (now - tpsT));
+    tickCount = 0;
+    tpsT = now;
+  }
+}
+
+function loop() {
+  if (!running || !sim) return;
+  if (speed > 0) {
+    // El ack del frame anterior reanuda el loop: N ticks por frame dibujado.
+    if (!canPost) return;
+    runTicks(speed);
+    postFrame();
+  } else {
+    // Máx: rebanadas de ~12ms a fondo; publica frame cuando la página puede.
+    // De a 1 tick por vuelta: con sims pesadas (ticks de >100ms) la rebanada
+    // termina en el primer tick y el frame sale igual de seguido.
+    const t0 = performance.now();
+    do { runTicks(1); } while (performance.now() - t0 < 12);
+    if (canPost) postFrame();
+    setTimeout(loop, 0);
+  }
+}
+
+// ---- Comandos -------------------------------------------------------------
+function seedSpecies(sp) {
+  const idx = api.addSpecies(sim, sp.dna, sp.name, sp.veg ? 1 : 0, 0,
+                             sp.nrg, sp.color, sp.qty);
+  const n = api.seedSpecies(sim, idx, 0);
+  log(n > 0 ? `sembrados ${n} × ${sp.name}`
+            : `ADN rechazado por el cargador (${sp.name})`);
+  return n;
+}
+
+function resetSim(msg) {
+  if (sim) api.destroy(sim);
+  sim = api.create();
+  const o = msg.options;
+  api.setField(sim, o.fieldW, o.fieldH);
+  api.setMinVegs(sim, o.minVegs);
+  api.setRepop(sim, o.repopAmount, o.repopCooldown);
+  api.setMaxEnergy(sim, o.maxEnergy);
+  api.setStartChlr(sim, o.startChlr);
+  api.setMutations(sim, o.mutations ? 1 : 0);
+  api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
+  log(`sim nueva (seed ${msg.seed})`);
+  for (const sp of msg.species) seedSpecies(sp);
+  postFrame();
+}
+
+function saveSim() {
+  const lenP = M._malloc(4);
+  const p = api.save(sim, lenP);
+  const len = M.HEAP32[lenP >> 2];
+  M._free(lenP);
+  if (!p || len <= 0) { log('guardado vacío'); return; }
+  const bytes = new Uint8Array(M.HEAPU8.buffer, p, len).slice();
+  api.free(p);
+  self.postMessage({ t: 'saved', bytes: bytes.buffer, cycle: api.cycle(sim) },
+                   [bytes.buffer]);
+}
+
+function loadSim(msg) {
+  const bytes = new Uint8Array(msg.bytes);
+  const p = M._malloc(bytes.length);
+  M.HEAPU8.set(bytes, p);
+  api.load(sim, p, bytes.length);
+  M._free(p);
+  running = false;
+  log(`sim cargada (${bytes.length} bytes), ciclo ${api.cycle(sim)}, ` +
+      `${api.totalRobots(sim)} bots`);
+  postFrame();
+}
+
+self.onmessage = (e) => {
+  const msg = e.data;
+  switch (msg.t) {
+    case 'reset':
+      running = false;
+      resetSim(msg);
+      break;
+    case 'run':
+      running = !!msg.running;
+      if (running) { tickCount = 0; tpsT = performance.now(); loop(); }
+      break;
+    case 'speed':
+      speed = msg.n | 0;
+      if (running && speed === 0) loop();  // el modo máx se auto-agenda
+      break;
+    case 'step':
+      runTicks(1);
+      postFrame();
+      break;
+    case 'seed-species':
+      seedSpecies(msg.sp);
+      postFrame();
+      break;
+    case 'save':
+      saveSim();
+      break;
+    case 'load':
+      loadSim(msg);
+      break;
+    case 'teleporter': {
+      // local: entra y sale en esta sim (2 RNG + ReSpawn); alto 3000 twips
+      const i = api.addTeleporter(sim, 0, 0, 3000, 0, 1, 0, 0, 1, 100);
+      log(i > 0 ? `teleporter local #${i} creado`
+                : 'tope de teleporters (10) alcanzado');
+      postFrame();
+      break;
+    }
+    case 'ack':
+      recycleFrameBuffer(msg.buf);
+      canPost = true;
+      if (wantFrame) postFrame();
+      else if (running && speed > 0) loop();
+      break;
+  }
+};
+
+// ---- Arranque -------------------------------------------------------------
+createDbCore({ locateFile: (f) => '../build-wasm/' + f }).then((Module) => {
+  M = Module;
+  bindApi();
+  self.postMessage({ t: 'ready' });
+}).catch((err) => {
+  self.postMessage({ t: 'error', msg: String(err) });
+});
