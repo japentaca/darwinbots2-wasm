@@ -1,4 +1,4 @@
-# Prompt de continuación del port (post-M8)
+# Prompt de continuación del port (post-M9)
 
 Prompt de arranque para la **próxima sesión** de Claude Code. Pegalo como primer
 mensaje con el directorio de trabajo en la raíz del repo
@@ -17,8 +17,9 @@ La especificación en `spec/` está **completa** (Fase 0 + Bloques A, B y C cerr
 el contrato del port; `spec/70-CASOS-DORADOS.md` es la suite de verdad. Cuando haya que
 desambiguar algo, **el fuente VB6 es la spec** y los documentos de `spec/` son su índice.
 
-El port vive en `port/` y **el core está completo**: los 8 milestones del motor
-están cerrados y no queda ningún stub abierto.
+El port vive en `port/`. **El core está completo y verificado en WASM**: los 9
+milestones del motor están cerrados, no queda ningún stub abierto y la decisión Q07
+quedó verificada empíricamente.
 
 - **M1 · Sustrato numérico** (`9182e8e`): redondeo bancario, LCG de VB6, gasdev,
   stacks, mod32000, handlers de la VM. Casos §1, §2, R-01..R-03.
@@ -34,19 +35,26 @@ están cerrados y no queda ningún stub abierto.
   aserciones; visión de formas, alimentación de shots, virus B3b, `MakeStuff`.
 - **M7 · Mutaciones y reproducción sexual** (`de80e6c`): `NeoMutations.bas`
   completo, crossover/`SexReproduce`, herencia de `Reproduce`. B-29, B-31..B-35,
-  R-09..R-11 (con la corrección B6-1 a la spec: el hijo de padres alineados NO
-  pierde su primer token).
-- **M8 · Mundo + formatos de sim** (`0037d27`..`c4fb772`): economía vegetal
-  (`feedvegs`/`feedveg2`/repoblación — R-08, B-37), teleporters con E/S sobre
-  búferes en memoria (B-36, B7-2), obstacles (`DoObstacleCollisions`,
-  `MoveObstacles` con su tope invertido que AMPLIFICA), `SaveOrganism`/
-  `LoadOrganism` (`.dbo`), `SaveSimulation`/`LoadSimulation` campo a campo,
-  sidecar `.mrate`, y **R-12** (el meta-caso del orden global de RNG del tick).
-  El ciclo `UpdateSim` corre de punta a punta.
-- **Estado verificado**: 143 casos / 2962 aserciones en verde
-  (`port/build/dbtests.exe`).
-- **Toolchain**: g++ 14 (MSYS2 ucrt64) + CMake + Ninja, binario de tests
-  estático. **Pendiente: clang + emsdk** (la tarea de esta sesión).
+  R-09..R-11.
+- **M8 · Mundo + formatos de sim** (`0037d27`..`c4fb772`): economía vegetal,
+  teleporters (E/S sobre búferes `outbox`/`inbox` en memoria), obstacles,
+  `.dbo`, `SaveSimulation`/`LoadSimulation`, `.mrate`, y **R-12** (orden global
+  de RNG del tick). El ciclo `UpdateSim` corre de punta a punta.
+- **M9 · Build WASM, Q07 verificada** (`ef9b63d`): la suite entera da **verde
+  idéntico en tres modos** — g++ 14.2 nativo, clang 19.1.7 nativo y WASM vía
+  Emscripten 6.0.8 corriendo bajo node — sin una sola divergencia numérica
+  (tampoco en los casos [FP·Q07] de §10.1). Presets reproducibles en
+  `port/CMakePresets.json` (`native-gcc`/`native-clang`/`wasm`). **Semilla de
+  M10**: `port/wasm/dbcore_api.cpp` compila a `dbcore.js`/`dbcore.wasm`
+  (MODULARIZE, export `createDbCore`) con la API mínima: crear/destruir sim,
+  `Randomize`, sembrar fundador desde texto de ADN, tick y volcado de estado
+  para render (8 floats/bot), verificada con smoke test bajo node.
+- **Estado verificado**: 143 casos / 2962 aserciones en verde en los tres
+  modos de build.
+- **Toolchain** (todo instalado y documentado en `port/README.md`): g++ 14.2 y
+  clang 19.1.7 (MSYS2 ucrt64), CMake 4.0.1 + Ninja, emsdk en `~/emsdk`
+  (Emscripten 6.0.8; el preset `wasm` necesita la variable de entorno
+  `EMSDK=C:/Users/<usuario>/emsdk`), node 24.
 - Línea base de los fuentes VB6: `02b20d7`.
 
 **Antes de nada, leé en este orden**
@@ -54,14 +62,14 @@ están cerrados y no queda ningún stub abierto.
 1. `spec/PROGRESO.md` — estado autoritativo, tabla de milestones y registro.
    Incluye la corrección de premisa del 2026-08-16 (**el EXE compila CON
    chequeos**; los flags `=0` del `.vbp` son casillas sin marcar): invalida
-   cualquier intuición de "wrap silencioso". Su sección "Siguiente" define M9/M10.
-2. `port/README.md` — build, reglas del port y el detalle de qué cubre cada
-   milestone.
+   cualquier intuición de "wrap silencioso". Su sección "Siguiente" define M10.
+2. `port/README.md` — los tres modos de build, el toolchain verificado y qué
+   cubre cada milestone (incluida la API actual de `wasm/dbcore_api.cpp`).
 3. `spec/PLAN.md` §"Decisión de arquitectura del port" — las 5 salvaguardas de
-   build (obligatorias también para el build WASM).
-4. `spec/70-CASOS-DORADOS.md` §0 (convenciones del harness) y §10.1 (los casos
-   [FP·Q07] cuya tolerancia es relativa 1e-6, no bit a bit contra el original —
-   pero el port SÍ se promete determinista consigo mismo).
+   build (obligatorias también para todo lo que se recompile a WASM).
+4. Para la capa host: `spec/50-MUNDO.md` (teleporters/E-S), `spec/60-FORMATOS.md`
+   (qué mueve la UI vs qué mueve el core) y `spec/10-CICLO.md §1` (qué hacía el
+   form de VB6 alrededor del tick: el contrato core/presentación del original).
 
 **Reglas duras**
 
@@ -69,9 +77,10 @@ están cerrados y no queda ningún stub abierto.
    `git diff 02b20d7 -- Darwinbots2/`, que debe salir vacío.
 2. El ciclo es siempre: caso dorado transcrito como test **en rojo** →
    implementación **transcrita del fuente VB6 citado** línea a línea (no de
-   memoria, no del wiki) → verde → commit citando la sección de la spec. (Para
-   M9 no hay casos nuevos: la suite entera ES el caso; para M10, todo lo que
-   toque el core sigue esta regla.)
+   memoria, no del wiki) → verde → commit citando la sección de la spec.
+   (M10 es capa host: no tiene casos dorados propios, pero **todo lo que toque
+   `port/core/` sigue esta regla** y la suite entera debe seguir en verde en
+   los tres modos tras cada cambio.)
 3. Los `[PROBABLE BUG]` se replican tal cual (regla 4 del brief); los sitios de
    error 6/9/11 del original llevan decisión de port documentada por sitio +
    registro en `VmDiag`/`SimDiag` (`10-CICLO.md §14`).
@@ -81,49 +90,53 @@ están cerrados y no queda ningún stub abierto.
    `1/Single` y `Byte/100` dividen en Double, `Long + Single` promociona a
    Double, `IIf`/`And`/`Choose` evalúan todos sus brazos (consumen RNG aunque el
    brazo no gobierne); nada de `-ffast-math`; sin FMA implícita
-   (`-ffp-contract=off`); `-fwrapv` solo como red.
+   (`-ffp-contract=off`); `-fwrapv` solo como red. La capa JS/render nunca
+   recalcula física ni RNG: solo presenta lo que el core vuelca.
 5. Al cerrar el milestone: actualizar `spec/PROGRESO.md` (tabla del port +
    sección "Siguiente" + registro con fecha) y commitear. Regenerar
    `spec/PROMPT-CONTINUACION.md` con `/prompt-continuacion`.
 
-**Compilar y correr los tests (build nativo actual)**
+**Compilar y correr los tests (presets de CMake; correr desde `port/`)**
 
 ```
-cmake -S port -B port/build -G Ninja
-cmake --build port/build
-port/build/dbtests.exe
+cmake --preset native-gcc   && cmake --build --preset native-gcc   && build/dbtests
+cmake --preset native-clang && cmake --build --preset native-clang && build-clang/dbtests
+cmake --preset wasm         && cmake --build --preset wasm         && node build-wasm/dbtests.js
 ```
 
-(El exe linkea estático; no necesita las DLL de MSYS2 en el PATH.)
+(El preset `wasm` requiere `EMSDK` en el entorno y produce además
+`build-wasm/dbcore.js` + `dbcore.wasm`. Los exe nativos linkean estático; no
+necesitan las DLL de MSYS2 en el PATH.)
 
-**Tu tarea: M9 · Build WASM (decisión Q07)**
+**Tu tarea: M10 · Capa de presentación web**
 
-Según `spec/PROGRESO.md` ("Siguiente"):
+Según `spec/PROGRESO.md` ("Siguiente"), sobre la semilla de M9
+(`port/wasm/dbcore_api.cpp`):
 
-1. **Instalar el toolchain**: clang (idealmente vía MSYS2, `mingw-w64-ucrt-…` o
-   el paquete clang64) y **emsdk** (Emscripten). Documentar versiones exactas en
-   `port/README.md`. Si la instalación requiere pasos interactivos del usuario,
-   dejarlos indicados con comandos concretos.
-2. **Verificar la suite con clang nativo** primero: mismo CMake,
-   `-DCMAKE_CXX_COMPILER=clang++`, mismas salvaguardas (`-fno-fast-math`,
-   `-ffp-contract=off`, `-fwrapv`). Los 143 casos / 2962 aserciones deben dar
-   verde idéntico. Cualquier divergencia numérica es un hallazgo: investigar
-   antes de seguir (los sospechosos son los casos [FP·Q07] de §10.1).
-3. **Compilar la suite a WASM** con emcmake/emcc (target node o standalone WASI,
-   lo que menos fricción dé para correr doctest) y correrla (node). Verde total
-   = la decisión Q07 queda verificada: determinismo del port consigo mismo,
-   IEEE 754 estricto por operación.
-4. Añadir al build los dos modos (nativo y WASM) de forma reproducible
-   (presets de CMake o instrucciones en `port/README.md`), y si es razonable un
-   target `dbcore` compilable a biblioteca WASM con exports mínimos (crear sim,
-   tick, volcado de estado) como semilla de M10.
-5. Cierre: actualizar `spec/PROGRESO.md` (tabla, "Siguiente" → M10 · capa de
-   presentación web, registro con fecha), `port/README.md` (toolchain al día,
-   pendiente de clang/emsdk saldado) y commitear.
+1. **Ampliar la API del core hacia JS** donde el render y el control lo
+   necesiten: exponer opciones de sim (SimOpts esenciales: campo, costes,
+   MinVegs/repoblación, mutaciones on/off), E/S de búferes para guardar/cargar
+   (`SaveSimulation`/`LoadSimulation`, `.dbo` — ya operan sobre memoria en
+   `formats.hpp`) y los búferes `outbox`/`inbox` de teleporters (la capa host
+   mueve los "archivos"; el core nunca toca disco). Volcado de estado
+   suficiente para render: bots (pos/radio/aim/color/flags — ya existe),
+   shots, ties, obstacles y teleporters.
+2. **Render 2D en web** (Canvas 2D es suficiente para arrancar; WebGL si hace
+   falta): página que carga `dbcore.js`/`dbcore.wasm`, siembra especies desde
+   texto de ADN, corre el tick en un loop (requestAnimationFrame o worker) y
+   dibuja el estado. Controles mínimos: iniciar/pausar, velocidad, sembrar.
+3. **Decisiones de capa host** (fuera del contrato de fidelidad, documentarlas
+   donde vivan): el movimiento de archivos de teleporters entre sims, el
+   `SimGUID` ausente (queda en 0) y los colores con `Rnd` crudo (Q01).
+4. La suite de 143 casos debe seguir en verde en los tres modos tras cualquier
+   cambio en `port/core/` o en el CMake. Si un export nuevo necesita tocar el
+   core, la regla 2 aplica entera.
+5. Cierre: actualizar `spec/PROGRESO.md` (tabla, "Siguiente", registro con
+   fecha), `port/README.md` (API y cómo servir/abrir la página) y commitear.
 
-Si algo del entorno bloquea la instalación (permisos, red), registrá el estado
-exacto en `PROGRESO.md` como pendiente y pasá a preparar lo que no dependa de
-ella (presets de CMake, API de exports para M10).
+Si algo del entorno bloquea (p. ej. servir la página con MIME de wasm),
+registrá el estado exacto en `PROGRESO.md` y dejá indicados los comandos
+concretos para el usuario.
 
 ## ↑ COPIAR HASTA AQUÍ ↑
 
