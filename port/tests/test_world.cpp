@@ -680,6 +680,141 @@ TEST_CASE("TeleportInBots: gate global de especies (SpeciesNum > 45)") {
 }
 
 // ---------------------------------------------------------------------------
+TEST_CASE("DoObstacleCollisions: empuje por el borde mas cercano") {
+  InjectedRnd rng({});
+  World w(rng);
+
+  SUBCASE("solapamiento parcial: clamp al borde, touch y reftype") {
+    const int o = NewObstacle(w.sim, 10000.0f, 10000.0f, 1000.0f, 1000.0f);
+    REQUIRE(o == 1);
+    const int n = w.addbot(9990.0f, 10500.0f);
+    w.sim.rob[n].radius = 60.0f;
+
+    DoObstacleCollisions(w.sim, n);
+
+    Bot& b = w.sim.rob[n];
+    // distleft = 50 gana: pos.x = ob.x - radius; el borde toca por la
+    // derecha (pos.x - radius < ob.x) => touch + ImpulseRes por velocidad.
+    CHECK(b.pos.x == doctest::Approx(9940.0f));
+    CHECK(b.pos.y == 10500.0f);
+    CHECK(b.mem[addr::REFTYPE] == 1);  // EYEF = 0 y hubo empuje
+    CHECK(w.sim.diag.obstacle_collision_stub == 0);
+  }
+
+  SUBCASE("bot hundido: ImpulseRes proporcional a la penetracion (k=0.5)") {
+    NewObstacle(w.sim, 10000.0f, 10000.0f, 1000.0f, 1000.0f);
+    const int n = w.addbot(10100.0f, 10500.0f);
+    w.sim.rob[n].radius = 60.0f;
+
+    DoObstacleCollisions(w.sim, n);
+
+    Bot& b = w.sim.rob[n];
+    // distleft = 160; pos.x - radius = 10040 >= ob.x: rama sin touch.
+    CHECK(b.pos.x == doctest::Approx(9940.0f));
+    CHECK(b.ImpulseRes.x == doctest::Approx(80.0f));  // 160 * 0.5
+  }
+
+  SUBCASE("anti-atrapamiento: 3 colisiones = salto por Sgn del ciclo") {
+    // Tres formas encadenadas: el empuje de cada una mete al bot en la
+    // siguiente (LastPush alterna el eje).
+    NewObstacle(w.sim, 15900.0f, 5000.0f, 5000.0f, 10000.0f);
+    NewObstacle(w.sim, 10000.0f, 9900.0f, 5900.0f, 8000.0f);
+    NewObstacle(w.sim, 15000.0f, 9000.0f, 2000.0f, 2000.0f);
+    const int n = w.addbot(16000.0f, 10000.0f);
+    w.sim.rob[n].radius = 60.0f;
+
+    DoObstacleCollisions(w.sim, n);
+
+    Bot& b = w.sim.rob[n];
+    // Empujes 1 (x: 15840) y 2 (y: 9840) y salto: TotRunCycle = 0 =>
+    // Sgn(0 Mod 40 - 20) = -1, Sgn(0 Mod 50 - 25) = -1: -200 en ambos.
+    CHECK(b.pos.x == doctest::Approx(15640.0f));
+    CHECK(b.pos.y == doctest::Approx(9640.0f));
+    CHECK(b.ImpulseRes.x == doctest::Approx(80.0f));
+    CHECK(b.ImpulseRes.y == doctest::Approx(80.0f));
+  }
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("DoShotObstacleCollisions: rebote por el eje de entrada") {
+  InjectedRnd rng({});
+  World w(rng);
+  NewObstacle(w.sim, 10000.0f, 10000.0f, 1000.0f, 1000.0f);
+
+  w.sim.Shots[1].exist = true;
+  w.sim.Shots[1].pos = {10050.0f, 10500.0f};
+  w.sim.Shots[1].opos = {9950.0f, 10500.0f};  // entró por la izquierda
+  w.sim.Shots[1].velocity = {100.0f, 25.0f};
+
+  SUBCASE("rebota invirtiendo solo el eje por el que entro") {
+    DoShotObstacleCollisions(w.sim, 1);
+    CHECK(w.sim.Shots[1].exist);
+    CHECK(w.sim.Shots[1].velocity.x == -100.0f);
+    CHECK(w.sim.Shots[1].velocity.y == 25.0f);  // opos.y dentro del rango
+  }
+
+  SUBCASE("shapesAbsorbShots: la forma absorbe el shot") {
+    w.sim.opts.shapesAbsorbShots = true;
+    DoShotObstacleCollisions(w.sim, 1);
+    CHECK(!w.sim.Shots[1].exist);
+  }
+
+  SUBCASE("shot nacido dentro: opos dentro no invierte nada") {
+    w.sim.Shots[1].opos = {10500.0f, 10500.0f};
+    DoShotObstacleCollisions(w.sim, 1);
+    CHECK(w.sim.Shots[1].velocity.x == 100.0f);
+    CHECK(w.sim.Shots[1].velocity.y == 25.0f);
+  }
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("MoveObstacles/DriftObstacles: deriva, clamps y el tope invertido") {
+  SUBCASE("drift horizontal: 2 RNG por forma y por eje activo") {
+    InjectedRnd rng({0.9f, 0.5f});
+    World w(rng);
+    w.sim.opts.allowHorizontalShapeDrift = true;
+    w.sim.opts.shapeDriftRate = 20;
+    NewObstacle(w.sim, 10000.0f, 10000.0f, 1000.0f, 1000.0f);
+
+    MoveObstacles(w.sim);
+
+    CHECK(rng.consumed() == 2);
+    // Random(-20,20) con 0.9 = Int(36.9)-20 = 16; *0.5*0.01 = 0.08.
+    CHECK(w.sim.Obstacles[1].vel.x == doctest::Approx(0.08f));
+    CHECK(w.sim.Obstacles[1].pos.x == doctest::Approx(10000.08f));
+  }
+
+  SUBCASE("clamp al campo re-arma la velocidad hacia adentro") {
+    InjectedRnd rng({});
+    World w(rng);
+    w.sim.opts.shapeDriftRate = 20;
+    NewObstacle(w.sim, 31990.0f, 10000.0f, 1000.0f, 1000.0f);
+    w.sim.Obstacles[1].vel.x = 50.0f;  // 31990 + 50 = 32040 > 32000
+
+    MoveObstacles(w.sim);
+
+    CHECK(w.sim.Obstacles[1].pos.x == 32000.0f);
+    CHECK(w.sim.Obstacles[1].vel.x == doctest::Approx(-0.2f));  // -rate*0.01
+  }
+
+  SUBCASE("el 'tope' de DriftObstacles AMPLIFICA (re-escala invertida)") {
+    // Fuente: vel = VectorScalar(vel, Magnitud/MaxVelocity) cuando
+    // Magnitud > MaxVelocity — multiplica por >1 en vez de acotar.
+    InjectedRnd rng({0.5f, 0.5f});  // Random(-20,20) = 0: la deriva no toca
+    World w(rng);
+    w.sim.opts.allowHorizontalShapeDrift = true;
+    w.sim.opts.shapeDriftRate = 20;
+    w.sim.opts.MaxVelocity = 40.0f;
+    NewObstacle(w.sim, 10000.0f, 10000.0f, 1000.0f, 1000.0f);
+    w.sim.Obstacles[1].vel.x = 100.0f;
+
+    DriftObstacles(w.sim);
+
+    CHECK(w.sim.Obstacles[1].vel.x == doctest::Approx(250.0f));  // ×2.5
+  }
+}
+
+// ---------------------------------------------------------------------------
 TEST_CASE("checkvegstatus: nick de subespecie y regla de campo vacio") {
   InjectedRnd rng({});
   World w(rng);

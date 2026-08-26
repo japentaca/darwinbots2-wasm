@@ -1809,9 +1809,7 @@ inline void UpdateBots(Sim& sim) {
     if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) Poisons(sim, t);
     if (!sim.opts.DisableFixing) ManageFixed(sim, t);
     CalcMass(sim, t);
-    // DoObstacleCollisions (Obstacles.bas:434-553): B7 — solo con formas;
-    // stub registrado.
-    if (sim.numObstacles > 0) sim.diag.obstacle_collision_stub += 1;
+    if (sim.numObstacles > 0) DoObstacleCollisions(sim, t);
     bordercolls(sim, t);
     TieHooke(sim, t);
     if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) TieTorque(sim, t);

@@ -614,6 +614,26 @@ inline int NewShotCollision(Sim& sim, vb_long shotnum) {
   return result;
 }
 
+// Obstacles.bas:411-432 — DoShotObstacleCollisions: shot dentro de una
+// forma. Con shapesAbsorbShots muere; si no, rebota invirtiendo el eje por
+// el que ENTRÓ (opos fuera del rango del eje). Un shot nacido dentro de la
+// forma no invierte nada (opos también dentro).
+inline void DoShotObstacleCollisions(Sim& sim, vb_long n) {
+  Shot& s = sim.Shots[n];
+  for (int i = 1; i <= sim.numObstacles; ++i) {
+    const Obstacle& ob = sim.Obstacles[i];
+    if (!ob.exist) continue;
+    if (s.pos.x >= ob.pos.x && s.pos.x <= ob.pos.x + ob.Width &&
+        s.pos.y >= ob.pos.y && s.pos.y <= ob.pos.y + ob.Height) {
+      if (sim.opts.shapesAbsorbShots) s.exist = false;
+      if (s.opos.x < ob.pos.x || s.opos.x > (ob.pos.x + ob.Width))
+        s.velocity.x = -s.velocity.x;
+      if (s.opos.y < ob.pos.y || s.opos.y > (ob.pos.y + ob.Height))
+        s.velocity.y = -s.velocity.y;
+    }
+  }
+}
+
 // Shots.bas:288-425 — updateshots (tick paso 14).
 inline void updateshots(Sim& sim) {
   sim.numshots = 0;
@@ -692,9 +712,7 @@ inline void updateshots(Sim& sim) {
       s.flash = true;
     }
 
-    // DoShotObstacleCollisions (Obstacles.bas:411-432): B7 — solo puede
-    // actuar con formas en el campo; stub registrado.
-    if (sim.numObstacles > 0) sim.diag.obstacle_collision_stub += 1;
+    if (sim.numObstacles > 0) DoShotObstacleCollisions(sim, t);
 
     s.opos = s.pos;
     s.pos = VectorAdd(s.pos, s.velocity);

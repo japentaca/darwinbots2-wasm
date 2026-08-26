@@ -248,6 +248,7 @@ struct Obstacle {
   bool exist = false;
   Vector pos{};
   vb_single Width = 0, Height = 0;
+  vb_long color = 0;  // el original lo sortea con Rnd CRUDO (setup, B7-5)
   Vector vel{};
 };
 
@@ -284,14 +285,17 @@ struct SimDiag {
                                  //   asertado a 0
   int makestuff_stub = 0;        // M7: sharechloroplasts real (el resto de
                                  //   MakeStuff era real desde M6); asertado a 0
-  int handlewaste_stub = 0;      // B5/B7: feedveg2/altzheimer/defacate
+  int handlewaste_stub = 0;      // M8: feedveg2/altzheimer reales;
+                                 //   asertado a 0
   int sexrepro_stub = 0;         // M7: SexReproduce/crossover reales;
                                  //   asertado a 0
-  int world_stub = 0;            // B7: feedvegs/repoblación/teleporters
+  int world_stub = 0;            // M8: repoblación/feedvegs/teleporters
+                                 //   reales; asertado a 0
   int shapes_vision_stub = 0;    // M6: CompareShapes/lookoccurrShape reales
                                  //   (B-12/B-13/B-14); asertado a 0
-  int obstacle_collision_stub = 0;  // B7: DoObstacleCollisions /
-                                    //   DoShotObstacleCollisions (numObstacles>0)
+  int obstacle_collision_stub = 0;  // M8: DoObstacleCollisions /
+                                    //   DoShotObstacleCollisions reales;
+                                    //   asertado a 0
   int err9_ties_slot11 = 0;      // sitio de error 9: TieTorque con j > 10
                                  //   (inalcanzable con el máximo de 9 ties;
                                  //   decisión de port: registrar y no escribir)
@@ -402,6 +406,8 @@ struct Sim {
   // Obstacles.bas — índice 0 sin uso, como los demás arrays.
   std::vector<Obstacle> Obstacles = std::vector<Obstacle>(1);
   int numObstacles = 0;
+  // Obstacles.bas:42-43 — índices del compactador (0 = sin compactador).
+  int leftCompactor = 0, rightCompactor = 0;
 
   // Teleport.bas:53-58 — Teleporters(10), índice 0 sin uso.
   std::array<Teleporter, MAXTELEPORTERS + 1> Teleporters{};

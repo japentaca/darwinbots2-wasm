@@ -573,4 +573,211 @@ inline void BucketsCollision(Sim& sim, int n) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Obstacles.bas (50-MUNDO.md §4): formas del mundo. La creación con Rnd
+// CRUDO (AddRandomObstacles, colores — B7-5) es capa de setup/UI: fuera del
+// flujo rndy y del core; NewObstacle recibe el color ya decidido (0 si
+// makeAllShapesBlack, que en VB6 es vbBlack = 0).
+
+// Obstacles.bas:190-212 — NewObstacle: alta secuencial con tope 1000.
+inline int NewObstacle(Sim& sim, vb_single x, vb_single y, vb_single Width,
+                       vb_single Height, vb_long color = 0) {
+  if (sim.numObstacles + 1 > 1000) return -1;  // MAXOBSTACLES
+  sim.numObstacles += 1;
+  if (static_cast<int>(sim.Obstacles.size()) <= sim.numObstacles)
+    sim.Obstacles.resize(sim.numObstacles + 1);
+  Obstacle& o = sim.Obstacles[sim.numObstacles];
+  o.exist = true;
+  o.pos.x = x;
+  o.pos.y = y;
+  o.Width = Width;
+  o.Height = Height;
+  o.vel = {0.0f, 0.0f};
+  o.color = sim.opts.makeAllShapesBlack ? 0 : color;
+  return sim.numObstacles;
+}
+
+// Obstacles.bas:152-163 — TrashCompactorMove: los dos muros del compactador
+// invierten rumbo al cruzarse (+400) y re-arman al salir por la izquierda.
+inline void TrashCompactorMove(Sim& sim) {
+  Obstacle& L = sim.Obstacles[sim.leftCompactor];
+  Obstacle& R = sim.Obstacles[sim.rightCompactor];
+  if (L.pos.x > R.pos.x + 400.0f) {
+    L.vel.x = -L.vel.x;
+    R.vel.x = -R.vel.x;
+  }
+  if (L.pos.x <= -L.Width) {
+    L.vel.x = sim.opts.shapeDriftRate * 0.1f;
+    R.vel.x = -sim.opts.shapeDriftRate * 0.1f;
+  }
+}
+
+// Obstacles.bas:355-372 — DriftObstacles: 2 RNG por eje activo y por forma
+// (Random(-rate, rate) y el factor Rndy*0.01). OJO: el "tope" está invertido
+// en el fuente — re-escala por Magnitud/MaxVelocity (> 1), AMPLIFICANDO la
+// velocidad que lo supere; se replica tal cual (los clamps ByRef de
+// VectorScalar acotan a ±32000).
+inline void DriftObstacles(Sim& sim) {
+  for (int i = 1; i <= sim.numObstacles; ++i) {
+    Obstacle& o = sim.Obstacles[i];
+    if (o.exist && (i != sim.leftCompactor && i != sim.rightCompactor)) {
+      if (sim.opts.allowHorizontalShapeDrift) {
+        const vb_long r = Random(-sim.opts.shapeDriftRate,
+                                 sim.opts.shapeDriftRate, *sim.rndy);
+        o.vel.x = static_cast<vb_single>(
+            static_cast<double>(o.vel.x) +
+            static_cast<double>(r) * static_cast<double>(sim.rnd()) * 0.01);
+      }
+      if (sim.opts.allowVerticalShapeDrift) {
+        const vb_long r = Random(-sim.opts.shapeDriftRate,
+                                 sim.opts.shapeDriftRate, *sim.rndy);
+        o.vel.y = static_cast<vb_single>(
+            static_cast<double>(o.vel.y) +
+            static_cast<double>(r) * static_cast<double>(sim.rnd()) * 0.01);
+      }
+      if (VectorMagnitude(o.vel) > sim.opts.MaxVelocity)
+        o.vel = VectorScalar(o.vel, VectorMagnitude(o.vel) /
+                                        sim.opts.MaxVelocity);
+    }
+  }
+}
+
+// Obstacles.bas:322-350 — MoveObstacles (paso 18): integra y acota al campo
+// re-armando la velocidad hacia adentro (±shapeDriftRate*0.01).
+inline void MoveObstacles(Sim& sim) {
+  if (sim.opts.allowHorizontalShapeDrift || sim.opts.allowVerticalShapeDrift)
+    DriftObstacles(sim);
+  if (sim.leftCompactor > 0 || sim.rightCompactor > 0)
+    TrashCompactorMove(sim);
+
+  for (int i = 1; i <= sim.numObstacles; ++i) {
+    Obstacle& o = sim.Obstacles[i];
+    if (!o.exist) continue;
+    o.pos = VectorAdd(o.pos, o.vel);
+    if (o.pos.x < -o.Width) {
+      o.pos.x = -o.Width;
+      o.vel.x = sim.opts.shapeDriftRate * 0.01f;
+    }
+    if (o.pos.y < -o.Height) {
+      o.pos.y = -o.Height;
+      o.vel.y = sim.opts.shapeDriftRate * 0.01f;
+    }
+    if (o.pos.x > sim.opts.FieldWidth) {
+      o.pos.x = sim.opts.FieldWidth;
+      o.vel.x = -sim.opts.shapeDriftRate * 0.01f;
+    }
+    if (o.pos.y > sim.opts.FieldHeight) {
+      o.pos.y = sim.opts.FieldHeight;
+      o.vel.y = -sim.opts.shapeDriftRate * 0.01f;
+    }
+  }
+}
+
+// Obstacles.bas:376-397 — ObstacleCollision: AABB del bot (por radio)
+// contra el rectángulo de la forma.
+inline bool ObstacleCollision(Sim& sim, int n, int o) {
+  const vb_single botrightedge = sim.rob[n].pos.x + sim.rob[n].radius;
+  const vb_single botleftedge = sim.rob[n].pos.x - sim.rob[n].radius;
+  const vb_single bottopedge = sim.rob[n].pos.y - sim.rob[n].radius;
+  const vb_single botbottomedge = sim.rob[n].pos.y + sim.rob[n].radius;
+  const Obstacle& ob = sim.Obstacles[o];
+  return (botrightedge > ob.pos.x) && (botleftedge < ob.pos.x + ob.Width) &&
+         (botbottomedge > ob.pos.y) && (bottopedge < ob.pos.y + ob.Height);
+}
+
+// Obstacles.bas:434-553 — DoObstacleCollisions (P1 de UpdateBots): empuja
+// al bot por el borde más cercano (k = b = 0.5), alterna ejes vía LastPush,
+// levanta touch en el lado del golpe y publica reftype = 1 si el bot no ve
+// nada. Con 3+ colisiones en la pasada: salto anti-atrapamiento función del
+// ciclo (Sgn de TotRunCycle Mod 40/50) y GoTo getout.
+inline void DoObstacleCollisions(Sim& sim, int n) {
+  int numofcollisions = 0;
+  int LastPush = 0;
+  const vb_single k = 0.5f;
+  const vb_single bb = 0.5f;
+
+  Bot& b = sim.rob[n];
+  for (int i = 1; i <= sim.numObstacles; ++i) {
+    if (!sim.Obstacles[i].exist) continue;
+    if (!ObstacleCollision(sim, n, i)) continue;
+    const Obstacle& ob = sim.Obstacles[i];
+
+    numofcollisions += 1;
+    if (numofcollisions >= 3) {
+      // Prevents getting trapped
+      b.pos.x = b.pos.x +
+                200.0f * static_cast<vb_single>(vb_sgn(
+                             sim.opts.TotRunCycle % 40 - 20));
+      b.pos.y = b.pos.y +
+                200.0f * static_cast<vb_single>(vb_sgn(
+                             sim.opts.TotRunCycle % 50 - 25));
+      return;  // GoTo getout
+    }
+
+    const vb_single distup = (b.pos.y + b.radius) - ob.pos.y;
+    const vb_single distdown = ob.pos.y + ob.Height - (b.pos.y - b.radius);
+    const vb_single distleft = (b.pos.x + b.radius) - ob.pos.x;
+    const vb_single distright = ob.pos.x + ob.Width - (b.pos.x - b.radius);
+
+    if ((Min(distleft, distright) < Min(distup, distdown) &&
+         (LastPush != 1 && LastPush != 2)) ||
+        (LastPush == 3 || LastPush == 4)) {
+      // Push out left or right
+      if (((distleft <= distright) ||
+           (ob.pos.x + ob.Width) >= sim.opts.FieldWidth) &&
+          (ob.pos.x > 0.0f)) {
+        if (b.pos.x - b.radius < ob.pos.x) {
+          b.pos.x = ob.pos.x - b.radius;
+          b.ImpulseRes.x = b.ImpulseRes.x + b.vel.x * bb;
+          touch(sim, n, b.pos.x + b.radius, b.pos.y);  // lado derecho
+        } else {
+          b.ImpulseRes.x = b.ImpulseRes.x + distleft * k;
+          b.pos.x = ob.pos.x - b.radius;
+        }
+        LastPush = 1;
+      } else {
+        if (b.pos.x + b.radius > ob.pos.x + ob.Width) {
+          b.pos.x = ob.pos.x + ob.Width + b.radius;
+          b.ImpulseRes.x = b.ImpulseRes.x + b.vel.x * bb;
+          touch(sim, n, b.pos.x - b.radius, b.pos.y);  // lado izquierdo
+        } else {
+          b.ImpulseRes.x = b.ImpulseRes.x - distright * k;
+          b.pos.x = ob.pos.x + ob.Width + b.radius;
+        }
+        LastPush = 2;
+      }
+    } else {
+      // Push out up or down
+      if (((distup <= distdown) ||
+           (ob.pos.y + ob.Height) >= sim.opts.FieldHeight) &&
+          (ob.pos.y > 0.0f)) {
+        if (b.pos.y - b.radius < ob.pos.y) {
+          b.pos.y = ob.pos.y - b.radius;
+          b.ImpulseRes.y = b.ImpulseRes.y + b.vel.y * bb;
+          touch(sim, n, b.pos.x, b.pos.y + b.radius);  // abajo
+        } else {
+          b.ImpulseRes.y = b.ImpulseRes.y + distup * k;
+          b.pos.y = ob.pos.y - b.radius;
+        }
+        LastPush = 3;
+      } else {
+        if (b.pos.y + b.radius > ob.pos.y + ob.Height) {
+          b.pos.y = ob.pos.y + ob.Height + b.radius;
+          b.ImpulseRes.y = b.ImpulseRes.y + b.vel.y * bb;
+          touch(sim, n, b.pos.x, b.pos.y - b.radius);  // arriba ("bottom"
+                                                       // en el comentario
+                                                       // original, errado)
+        } else {
+          b.ImpulseRes.y = b.ImpulseRes.y - distdown * k;
+          b.pos.y = ob.pos.y + ob.Height + b.radius;
+        }
+        LastPush = 4;
+      }
+    }
+
+    // Si el bot no ve nada y tocó una forma, reftype = 1.
+    if (LastPush > 0 && b.mem[addr::EYEF] == 0) b.mem[addr::REFTYPE] = 1;
+  }
+}
+
 }  // namespace db
