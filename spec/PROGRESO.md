@@ -60,6 +60,8 @@ reinicios de contexto.
 
 | M9 · Build WASM (Q07) | ✅ cerrado | La suite entera en verde idéntico en **tres modos**: g++ 14.2 nativo, clang 19.1.7 nativo (MSYS2 ucrt64) y **WASM vía Emscripten 6.0.8 bajo node** — 143 casos / 2962 aserciones, cero divergencias numéricas (incluidos los [FP·Q07] de §10.1). **Q07 verificada**: determinismo del port consigo mismo, IEEE 754 estricto por operación. Presets de CMake reproducibles (`port/CMakePresets.json`: `native-gcc`/`native-clang`/`wasm`; el `wasm` toma el toolchain de `$EMSDK`) y `ctest` funcional en los tres. Bajo Emscripten: `-fexceptions` (el default de emcc las desactiva y el core las usa), `-sSTACK_SIZE=8MB`, `-sALLOW_MEMORY_GROWTH`, `-sEXIT_RUNTIME=1`. Semilla de M10: `port/wasm/dbcore_api.cpp` → `dbcore.js`/`dbcore.wasm` (MODULARIZE/`createDbCore`) con exports mínimos (crear/destruir sim, `Randomize`, sembrar fundador, tick, volcado de 8 floats/bot para render) verificados con smoke test bajo node (radio de body 1000 = 114.28, coherente con F-02). Toolchain documentado en `port/README.md`. |
 
+| M10 · Capa de presentación web | ✅ cerrado | **El port está completo y usable**: `wasm/dbcore_api.cpp` ampliado con la API entera hacia JS y `port/web/index.html` como render 2D en Canvas. Todo capa host, **cero cambios en `port/core/`** (la suite quedó intacta por construcción y verificada en verde en los tres modos). API: `db_sim_start` (arranque del form transcrito de `main.frm`: divisores, `Init_Buckets`, `cooldown = -RepopCooldown` de B-37, `totvegs = -1`, y `Rnd -1 : Randomize seed/100` de `startloaded`), opciones (campo, Costs 0..70, MinVegs/repoblación, MaxEnergy, mutaciones on/off, StartChlr), especies con siembra fiel a `loadrobs` (`main.frm:1517-1573`: color/Mutables/Skin/NoChlr/StartChlr/GenMut sobre `InsertFounder`), volcados para render (bots 8f, shots 6f, ties 5f, obstáculos 5f, teleporters 7f), formatos sobre búferes (`db_sim_save/load` con post-carga de `startloaded`, `.dbo` organismo, `SalvarobText`; `.mrate` no se exporta — conveniencia de UI), altas de obstáculo/teleporter (`NewTeleporter` transcrito de `Teleport.bas:60-105`, mismo RNG) y E/S de teleporters (`outbox_take`/`inbox_push`: el host mueve los "archivos" `.dbo`). Decisiones de capa host documentadas en la cabecera del `.cpp`: búferes en vez de disco, `SimGUID = 0`, colores de especie decididos por la página (Q01). Verificación: suite 143/2962 en verde en los tres modos, smoke test node de la API (19 checks: siembra 15+5, 300 ticks con ecosistema vivo, volcados, save→load con reanudación, outbox→inbox entre dos sims) y página probada en Chrome (algas reproduciéndose + animales cazando a 60 fps, teleporter local dibujado, consola limpia). Servir: `cd port && python -m http.server 8000` → `http://localhost:8000/web/`. |
+
 **Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
 caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
 (agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
@@ -69,21 +71,23 @@ el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
 
 ## Siguiente
 
-**El core está completo y verificado en WASM**: los 143 casos dorados de
-`70-CASOS-DORADOS.md` aplicables al motor están en verde en los tres modos
-de build (g++/clang nativos y Emscripten bajo node — Q07 verificada) y no
-queda ningún stub abierto (los contadores de `SimDiag`/`VmDiag` que
-sobreviven son sitios de error 6/9/11 con decisión de port documentada).
-Próximo paso:
+**El port está completo**: el core entero verificado en WASM (143 casos /
+2962 aserciones en verde en los tres modos, Q07 verificada, ningún stub
+abierto) y la capa de presentación web funcionando (M10: API completa en
+`port/wasm/dbcore_api.cpp` + render 2D en `port/web/index.html`). No hay
+milestone obligatorio pendiente. Posibles extensiones, todas capa host y
+opcionales, si el usuario las pide:
 
-1. **M10 · Capa de presentación web** — sobre la semilla de M9
-   (`port/wasm/dbcore_api.cpp` → `dbcore.js`/`dbcore.wasm`): ampliar la API
-   del core hacia JS (opciones de sim, E/S de búferes para guardar/cargar
-   — `SaveSimulation`/`LoadSimulation`/`.dbo` ya operan sobre memoria — y
-   los búferes `outbox`/`inbox` de teleporters) y construir el render 2D
-   (Canvas/WebGL). Fuera del contrato de fidelidad: la capa host decide el
-   movimiento de archivos de teleporters, el `SimGUID` ausente y los
-   colores con `Rnd` crudo.
+- **UI de sim**: inspector de bot (la API ya da `db_sim_bot_text`),
+  zoom/cámara, editor de opciones completo (la UI actual expone las
+  esenciales; la API llega hasta Costs 0..70), gráficas de población.
+- **Rendimiento**: correr el tick en un Web Worker (hoy va en el hilo de
+  la página), volcados incrementales, WebGL si el Canvas queda corto con
+  poblaciones grandes.
+- **Modo Internet/torneo**: la E/S de teleporters entre sims ya funciona
+  por búferes (`outbox`/`inbox`); faltaría solo el transporte que mueva
+  los registros entre navegadores (la capa ⚙ de 50-MUNDO.md §5 quedó
+  deliberadamente fuera del contrato).
 
 ## Pendiente
 
@@ -225,4 +229,25 @@ Próximo paso:
   (`UpdateSim` completo) y volcado de estado para render (8 floats/bot) —
   verificada con un smoke test bajo node (2 fundadores, 10 ticks, radio
   de body 1000 = 114.28 ≡ F-02). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-26** — M10 cerrado: capa de presentación web. **El port está
+  completo y usable.** `port/wasm/dbcore_api.cpp` ampliado con la API
+  entera hacia JS (arranque del form, opciones esenciales, especies con la
+  siembra de `loadrobs` completa, volcados de bots/shots/ties/obstáculos/
+  teleporters, save/load de sim y `.dbo` sobre búferes, `SalvarobText`,
+  altas de obstáculo/teleporter y la E/S `outbox`/`inbox` de teleporters)
+  y `port/web/index.html` como render 2D en Canvas (loop de
+  `requestAnimationFrame`, iniciar/pausar/paso/velocidad/seed, siembra
+  con presets Animal/Alga Minimalis o ADN propio, guardar/cargar `.dbsim`,
+  teleporter local). Cero cambios en `port/core/`: la suite siguió en
+  verde en los tres modos sin re-tocar nada (143/2962). Decisiones de capa
+  host documentadas en la cabecera del `.cpp`: teleporters por búferes en
+  memoria (el host mueve los "archivos" `.dbo`), `SimGUID = 0` (ningún
+  sistema del core lo lee) y colores de especie decididos por la página
+  (Q01); `.mrate` no se exporta (conveniencia de la UI original).
+  Verificación: smoke test node de la API (19 checks, incl. ecosistema
+  vivo a 300 ticks, save→load con reanudación y el ciclo
+  outbox→inbox entre dos sims) y página verificada en Chrome servida con
+  `python -m http.server` (algas reproduciéndose, animales cazando,
+  teleporter dibujado, consola sin errores). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).

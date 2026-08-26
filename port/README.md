@@ -146,6 +146,49 @@ Emscripten; presentación web separada.
   `-sALLOW_MEMORY_GROWTH` y `-sEXIT_RUNTIME=1` (código de salida real para
   CTest/CI).
 
+- **Milestone 10 (capa de presentación web)**: `wasm/dbcore_api.cpp`
+  ampliado con la API completa hacia JS y `web/index.html` como render 2D
+  en Canvas. Todo capa host: llama a funciones ya existentes del core (no
+  hubo ningún cambio en `core/`; la suite quedó intacta). La API expone:
+
+  - *Ciclo de vida*: `db_sim_create/destroy/randomize/tick` y
+    `db_sim_start(seed)` — el arranque del form transcrito de `main.frm`
+    (divisores de campo, `Init_Buckets`, `shotpointer = 1`, la deuda
+    `cooldown = -RepopCooldown` de B-37, `totvegs = -1` del primer ciclo y,
+    con seed ≠ 0, el `Rnd -1 : Randomize seed/100` de `startloaded`).
+  - *Opciones*: `db_sim_set_field` (con `xDivisor`/`yDivisor` de
+    `main.frm:1432-1435`), `db_sim_set_cost/get_cost` (Costs 0..70),
+    `db_sim_set_minvegs/set_repop/set_maxpop/set_max_energy/
+    set_mutations/set_start_chlr`.
+  - *Especies y siembra*: `db_sim_add_species` (ADN en memoria + color BGR
+    decidido por el host, Q01) y `db_sim_seed_species` — la siembra de
+    `loadrobs` (`main.frm:1517-1573`) completa: `InsertFounder` + NoChlr,
+    `chloroplasts = StartChlr`, Mutables, Skin, color y
+    `GenMut = DnaLen/GeneticSensitivity`. `db_sim_insert_founder` se
+    conserva (compat M9).
+  - *Volcados para render* (el JS solo presenta): bots (8 floats), shots
+    (6), ties (5), obstáculos (5) y teleporters (7), más contadores
+    (`cycle/total_robots/totvegs/…`).
+  - *Formatos sobre búferes*: `db_sim_save/load` (formato binario de sim,
+    con el post-carga de `startloaded`), `db_sim_save_organism/
+    load_organism` (`.dbo`) y `db_sim_bot_text` (`SalvarobText`); los
+    búferes malloc'd se liberan con `db_free`. El sidecar `.mrate` no se
+    exporta (archivo de conveniencia de la UI original).
+  - *Teleporters*: `db_sim_add_teleporter` (transcripción de
+    `NewTeleporter`, `Teleport.bas:60-105`, mismo consumo de RNG y color
+    `vbWhite`) y la E/S de "archivos" en memoria:
+    `db_sim_tp_outbox_count/outbox_take/inbox_push` — la capa host mueve
+    los registros `.dbo` entre sims (decisión M10; el core nunca toca
+    disco). `db_sim_add_obstacle` completa las altas.
+
+  Decisiones de capa host documentadas en la cabecera de
+  `wasm/dbcore_api.cpp`: teleporters por búferes, `SimGUID = 0` (nadie lo
+  lee en el core) y colores decididos por la página (Q01). Verificación:
+  suite en verde en los tres modos + smoke test node de la API (siembra,
+  300 ticks, volcados, save→load, outbox→inbox entre dos sims) + página
+  probada en Chrome (ecosistema alga/animal vivo, teleporter local,
+  sin errores de consola).
+
 Estado verificado: 143 casos / 2962 aserciones en verde (en los tres modos).
 
 ## Build
@@ -166,8 +209,27 @@ Equivalente sin presets: `emcmake cmake -S port -B port/build-wasm -G Ninja`.
 node como emulador).
 
 El preset `wasm` produce además `build-wasm/dbcore.js` + `dbcore.wasm`: el
-core como biblioteca WASM con los exports mínimos de `wasm/dbcore_api.cpp`
-(semilla de la capa de presentación de M10).
+core como biblioteca WASM con la API de `wasm/dbcore_api.cpp` (M10).
+
+### Página web (M10)
+
+`web/index.html` carga `../build-wasm/dbcore.js`, siembra especies desde
+texto de ADN y corre el tick en un loop de `requestAnimationFrame`,
+dibujando bots/shots/ties/obstáculos/teleporters en Canvas 2D. Controles:
+iniciar/pausar, paso, velocidad (ticks/frame), seed, sembrar especie
+(presets Animal/Alga Minimalis o ADN propio, con color a elección),
+guardar/cargar sim (formato binario de VB6 como archivo `.dbsim`) y crear
+un teleporter local. Servir desde `port/` (el navegador no carga WASM
+desde `file://`):
+
+```
+cd port && python -m http.server 8000
+# → http://localhost:8000/web/
+```
+
+Cualquier servidor estático sirve (`npx http-server`, etc.); el MIME
+`application/wasm` es opcional (Emscripten degrada a instanciación por
+ArrayBuffer si falta).
 
 ### Toolchain verificado (Windows 11, 2026-08-26)
 
