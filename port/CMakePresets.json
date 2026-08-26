@@ -1,0 +1,36 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "native-gcc",
+      "displayName": "Nativo g++ (MSYS2 ucrt64)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "g++" }
+    },
+    {
+      "name": "native-clang",
+      "displayName": "Nativo clang++ (MSYS2 ucrt64)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-clang",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "wasm",
+      "displayName": "WASM (Emscripten; requiere EMSDK en el entorno)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-wasm",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+    }
+  ],
+  "buildPresets": [
+    { "name": "native-gcc", "configurePreset": "native-gcc" },
+    { "name": "native-clang", "configurePreset": "native-clang" },
+    { "name": "wasm", "configurePreset": "wasm" }
+  ],
+  "testPresets": [
+    { "name": "native-gcc", "configurePreset": "native-gcc" },
+    { "name": "native-clang", "configurePreset": "native-clang" },
+    { "name": "wasm", "configurePreset": "wasm" }
+  ]
+}

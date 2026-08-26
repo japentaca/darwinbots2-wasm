@@ -58,6 +58,8 @@ reinicios de contexto.
 
 | M8 · Mundo (B7) + formatos de sim (B8) | ✅ cerrado | Casos R-08, B-36, B-37 y R-12 en verde. **Cierra todos los stubs** (`handlewaste_stub`, `world_stub`, `obstacle_collision_stub` asertados a 0). `vegs.hpp`: `feedvegs` (sol en banda móvil con envoltura, deriva `SunOnRnd` 2 RNG/ciclo + 1 condicional, umbrales con los 3 modos, reloj día/noche, impuesto por edad también fuera de banda, la publicación de mem(218) saltada por el GoTo para el bot con cloroplastos fuera de banda), `feedveg2` (moneda de orden nrg/body; la segunda conversión ve el waste reducido) y `checkvegstatus`. `aggiungirob`/`VegsRepopulate` en `master.hpp` (B7-1: coordenadas descartadas; R-08: 12 extracciones exactas, +1 por re-tirada; B-37: `cooldown` arranca en −RepopCooldown, primera tanda al ciclo 50 vía `UpdateSim`); `altzheimer` real. Paso 5 con `TotalSimEnergyDisplayed` (lee la celda vieja) y paso 19 con la suma `Long + Single` redondeada POR iteración. Teleporters completos en `robots.hpp` (P0a + paso 18; B-36: un eje de drift no traslada; B7-2: salida Internet acoplada al sondeo; E/S de disco sustituida por `outbox`/`inbox` en memoria). `Obstacles.bas` completo (`DoObstacleCollisions`/`DoShotObstacleCollisions`/`MoveObstacles`; hallazgo: el "tope" de `DriftObstacles` está invertido y AMPLIFICA — replicado y asertado). Formatos: `.dbo` con remapeo de ties, `SaveSimulation`/`LoadSimulation` campo a campo con sus quirks (Internet borrados al cargar con tope de For cacheado; `CInt(True) = −1 < 0` ⇒ `DisableMutations` nunca sobrevive una carga; `BadWastelevel` 0→400; SimGUID ausente = capa host, era `Rnd` crudo) y `.mrate` (solo operadores 0..10). Sitio de error 9 nuevo: `err9_load_organism` (cnum > 51). Notas de transcripción: el decremento de `Chlr_Share_Delay` vive en `feedvegs` (no en `feedveg2` como anotó M7); el original lee `TmpOpts.Tides` (quirk de UI); `ReSpawn` corrige `dx − Sgn(dx)` (el respawn local cae en 7999, no 8000). R-12 cerrado: orden global intérprete → feedveg2 → formas → teleporter → repoblación → sol con secuencia inyectada exacta. Total acumulado: 143 casos, 2962 aserciones. |
 
+| M9 · Build WASM (Q07) | ✅ cerrado | La suite entera en verde idéntico en **tres modos**: g++ 14.2 nativo, clang 19.1.7 nativo (MSYS2 ucrt64) y **WASM vía Emscripten 6.0.8 bajo node** — 143 casos / 2962 aserciones, cero divergencias numéricas (incluidos los [FP·Q07] de §10.1). **Q07 verificada**: determinismo del port consigo mismo, IEEE 754 estricto por operación. Presets de CMake reproducibles (`port/CMakePresets.json`: `native-gcc`/`native-clang`/`wasm`; el `wasm` toma el toolchain de `$EMSDK`) y `ctest` funcional en los tres. Bajo Emscripten: `-fexceptions` (el default de emcc las desactiva y el core las usa), `-sSTACK_SIZE=8MB`, `-sALLOW_MEMORY_GROWTH`, `-sEXIT_RUNTIME=1`. Semilla de M10: `port/wasm/dbcore_api.cpp` → `dbcore.js`/`dbcore.wasm` (MODULARIZE/`createDbCore`) con exports mínimos (crear/destruir sim, `Randomize`, sembrar fundador, tick, volcado de 8 floats/bot para render) verificados con smoke test bajo node (radio de body 1000 = 114.28, coherente con F-02). Toolchain documentado en `port/README.md`. |
+
 **Decisión M6 sobre los B-* de capas no transcritas** (opción (b) del prompt,
 caso a caso): B-29 y B-31..B-35 exigen los operadores de `NeoMutations.bas`
 (agenda, suelos anti-freeze, Insertion/Amplification) — van con el milestone
@@ -67,26 +69,25 @@ el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
 
 ## Siguiente
 
-**El core está completo**: los 143 casos dorados de `70-CASOS-DORADOS.md`
-aplicables al motor están en verde y no queda ningún stub abierto (los
-contadores de `SimDiag`/`VmDiag` que sobreviven son sitios de error 6/9/11
-con decisión de port documentada). Próximos pasos, por orden:
+**El core está completo y verificado en WASM**: los 143 casos dorados de
+`70-CASOS-DORADOS.md` aplicables al motor están en verde en los tres modos
+de build (g++/clang nativos y Emscripten bajo node — Q07 verificada) y no
+queda ningún stub abierto (los contadores de `SimDiag`/`VmDiag` que
+sobreviven son sitios de error 6/9/11 con decisión de port documentada).
+Próximo paso:
 
-1. **M9 · Build WASM** — instalar clang + emsdk, compilar la suite con
-   Emscripten y verificar verde bit a bit contra el build nativo (decisión
-   Q07: determinismo del port consigo mismo; misma familia de compilador
-   minimiza divergencias). Salvaguardas de `PLAN.md`: sin `-ffast-math`,
-   `-ffp-contract=off`.
-2. **M10 · Capa de presentación web** — API del core hacia JS (crear sim,
-   tick, volcado de estado para render, E/S de búferes para
-   guardar/cargar), render 2D. Fuera del contrato de fidelidad: la capa
-   host también decide el reemplazo de la E/S de disco de teleporters
-   (`outbox`/`inbox`), el `SimGUID` ausente y los colores con `Rnd` crudo.
+1. **M10 · Capa de presentación web** — sobre la semilla de M9
+   (`port/wasm/dbcore_api.cpp` → `dbcore.js`/`dbcore.wasm`): ampliar la API
+   del core hacia JS (opciones de sim, E/S de búferes para guardar/cargar
+   — `SaveSimulation`/`LoadSimulation`/`.dbo` ya operan sobre memoria — y
+   los búferes `outbox`/`inbox` de teleporters) y construir el render 2D
+   (Canvas/WebGL). Fuera del contrato de fidelidad: la capa host decide el
+   movimiento de archivos de teleporters, el `SimGUID` ausente y los
+   colores con `Rnd` crudo.
 
 ## Pendiente
 
-- (absorbido por M9) Instalar clang + emsdk y verificar la suite compilada
-  a WASM.
+- (nada)
 
 ---
 
@@ -206,3 +207,22 @@ con decisión de port documentada). Próximos pasos, por orden:
   port E/S: teleporters sobre búferes `outbox`/`inbox` en memoria (la capa
   host mueve archivos); `SimGUID` ausente queda en 0 (era `Rnd` crudo,
   Q01). Fuentes sin modificar (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-08-26** — M9 cerrado: build WASM (decisión Q07). Instalados clang
+  19.1.7 (MSYS2 ucrt64, `pacman -S mingw-w64-ucrt-x86_64-clang`) y emsdk
+  `latest` (Emscripten 6.0.8, clonado en `~/emsdk`). La suite entera da
+  **verde idéntico en los tres modos** — g++ 14.2 nativo, clang nativo y
+  WASM bajo node (143 casos / 2962 aserciones) — sin una sola divergencia
+  numérica, tampoco en los casos [FP·Q07]: Q07 verificada (determinismo
+  del port consigo mismo, IEEE 754 estricto por operación). Presets
+  reproducibles en `port/CMakePresets.json` (`native-gcc`/`native-clang`/
+  `wasm`) con `ctest` funcional; bajo Emscripten se activan excepciones
+  (`-fexceptions`, el default de emcc las desactiva y el core las usa en
+  sitios de error) y la suite linkea con pila de 8 MB, memoria elástica y
+  `EXIT_RUNTIME` para código de salida real. Semilla de M10:
+  `port/wasm/dbcore_api.cpp` compila a `dbcore.js`/`dbcore.wasm`
+  (MODULARIZE, export `createDbCore`) con la API mínima — crear/destruir
+  sim, `Randomize`, sembrar fundador desde texto de ADN, tick
+  (`UpdateSim` completo) y volcado de estado para render (8 floats/bot) —
+  verificada con un smoke test bajo node (2 fundadores, 10 ticks, radio
+  de body 1000 = 114.28 ≡ F-02). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).

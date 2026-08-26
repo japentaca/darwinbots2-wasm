@@ -130,20 +130,58 @@ Emscripten; presentación web separada.
   0). Ya no queda ningún stub abierto: los contadores de `SimDiag` que
   sobreviven son los sitios de error 9/11 con decisión de port.
 
-Estado verificado: 143 casos / 2962 aserciones en verde.
+- **Milestone 9 (build WASM, decisión Q07)**: la suite completa compilada y
+  verificada en **tres modos**: g++ nativo, clang nativo y **WASM vía
+  Emscripten corriendo bajo node** — 143 casos / 2962 aserciones en verde
+  idéntico en los tres (ninguna divergencia numérica, tampoco en los casos
+  [FP·Q07] de §10.1). Q07 queda verificada: determinismo del port consigo
+  mismo con IEEE 754 estricto por operación. Presets de CMake
+  (`CMakePresets.json`: `native-gcc` / `native-clang` / `wasm`) y semilla de
+  M10: `wasm/dbcore_api.cpp` → `dbcore.js`/`dbcore.wasm` (MODULARIZE,
+  `createDbCore`) con exports mínimos `db_sim_create/destroy/randomize`,
+  `db_sim_insert_founder`, `db_sim_tick` y `db_sim_dump_bots` (8 floats por
+  bot para render), verificados con un smoke test bajo node. Bajo Emscripten
+  se compila con `-fexceptions` (el default de emcc desactiva excepciones y
+  el core las usa) y la suite linkea con `-sSTACK_SIZE=8MB`,
+  `-sALLOW_MEMORY_GROWTH` y `-sEXIT_RUNTIME=1` (código de salida real para
+  CTest/CI).
 
-## Build (nativo)
+Estado verificado: 143 casos / 2962 aserciones en verde (en los tres modos).
+
+## Build
+
+Con presets (CMake ≥ 3.25; correr desde `port/`):
 
 ```
-cmake -S port -B port/build -G Ninja
-cmake --build port/build
-port/build/dbtests
+cmake --preset native-gcc   && cmake --build --preset native-gcc   && build/dbtests
+cmake --preset native-clang && cmake --build --preset native-clang && build-clang/dbtests
+cmake --preset wasm         && cmake --build --preset wasm         && node build-wasm/dbtests.js
 ```
 
-Toolchain actual: g++ (MSYS2 ucrt64). Pendiente: instalar clang y emsdk para
-verificar el build WASM (misma familia de compilador que Emscripten minimiza
-divergencias; decisión Q07: IEEE 754 estricto por operación, determinismo bit a
-bit del port consigo mismo).
+El preset `wasm` requiere la variable de entorno `EMSDK` apuntando a la raíz
+del emsdk (p. ej. `EMSDK=C:/Users/<usuario>/emsdk`); toma el toolchain de
+`$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake`.
+Equivalente sin presets: `emcmake cmake -S port -B port/build-wasm -G Ninja`.
+`ctest --test-dir port/build-wasm` también funciona (el toolchain registra
+node como emulador).
+
+El preset `wasm` produce además `build-wasm/dbcore.js` + `dbcore.wasm`: el
+core como biblioteca WASM con los exports mínimos de `wasm/dbcore_api.cpp`
+(semilla de la capa de presentación de M10).
+
+### Toolchain verificado (Windows 11, 2026-08-26)
+
+| Herramienta | Versión | Origen |
+|---|---|---|
+| g++ | 14.2.0 | MSYS2 ucrt64 (`mingw-w64-ucrt-x86_64-gcc`) |
+| clang++ | 19.1.7 | MSYS2 ucrt64 (`mingw-w64-ucrt-x86_64-clang`) |
+| Emscripten (emcc) | 6.0.8 | emsdk `latest` (clonado en `~/emsdk`, `emsdk install latest && emsdk activate latest`) |
+| node | 24.x | sistema (el emsdk trae su propio 24.19.0) |
+| CMake / Ninja | 4.0.1 / 1.13.2 | sistema |
+
+Los tres compiladores son de la misma familia de flags GNU/Clang, así que las
+salvaguardas del `CMakeLists.txt` (`-fno-fast-math`, `-ffp-contract=off`,
+`-fwrapv`) aplican idénticas en los tres modos.
 
 ## Reglas
 

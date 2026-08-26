@@ -16,6 +16,14 @@ add_compile_options(
   $<$<CXX_COMPILER_ID:GNU,Clang>:-Wextra>
 )
 
+# Build WASM (M9, decision Q07): emcc compila con excepciones desactivadas por
+# defecto, pero el core las usa (InjectedRnd agotada, doctest). Se activan
+# explicitamente; el resto de salvaguardas ya aplican (emcc es Clang).
+if(EMSCRIPTEN)
+  add_compile_options(-fexceptions)
+  add_link_options(-fexceptions)
+endif()
+
 add_library(dbcore INTERFACE)
 target_include_directories(dbcore INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/core/include)
 
@@ -44,4 +52,30 @@ add_test(NAME golden COMMAND dbtests)
 # Runtime estatico en MinGW: el exe corre sin las DLL de MSYS2 en el PATH.
 if(MINGW)
   target_link_options(dbtests PRIVATE -static)
+endif()
+
+if(EMSCRIPTEN)
+  # La suite entera corre bajo node: pila holgada (Sim en pila del harness),
+  # memoria elastica y codigo de salida real (EXIT_RUNTIME) para CTest/CI.
+  target_link_options(dbtests PRIVATE
+    -sALLOW_MEMORY_GROWTH=1
+    -sSTACK_SIZE=8388608
+    -sEXIT_RUNTIME=1
+  )
+
+  # Semilla de M10: el core como biblioteca WASM con exports minimos
+  # (crear sim, sembrar, tick, volcado de estado). MODULARIZE produce
+  # dbcore.js + dbcore.wasm consumibles desde la capa de presentacion.
+  add_executable(dbcore_wasm wasm/dbcore_api.cpp)
+  set_target_properties(dbcore_wasm PROPERTIES OUTPUT_NAME dbcore)
+  target_link_libraries(dbcore_wasm PRIVATE dbcore)
+  target_link_options(dbcore_wasm PRIVATE
+    --no-entry
+    -sMODULARIZE=1
+    -sEXPORT_NAME=createDbCore
+    -sALLOW_MEMORY_GROWTH=1
+    -sSTACK_SIZE=8388608
+    -sEXPORTED_FUNCTIONS=_malloc,_free
+    -sEXPORTED_RUNTIME_METHODS=cwrap,ccall,HEAPF32,UTF8ToString,stringToNewUTF8
+  )
 endif()
