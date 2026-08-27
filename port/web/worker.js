@@ -328,6 +328,7 @@ function newRound() {
 // Tras cada tanda de ticks: eventos E5 del core + gate de rondas.
 function checkGameState() {
   if (!sim) return;
+  let stopped = false;
   const ev = api.events(sim);
   if (ev) {
     if (ev & (1 << 13))
@@ -346,10 +347,10 @@ function checkGameState() {
     if (ev & (1 << 8)) log('zerobot: test superado');
     if (ev & (1 << 9)) log('zerobot: test fallido');
     const winner = (ev & (1 << 10)) ? takeStr(api.eventsWinner(sim)) : '';
-    const stop = !!(ev & 1);
+    stopped = !!(ev & 1);
     api.eventsClear(sim);
     if (ev & (1 << 10)) self.postMessage({ t: 'f1-over', winner });
-    if (stop) {
+    if (stopped) {
       // Form1.Active = False del original: la sim queda pausada.
       running = false;
       self.postMessage({ t: 'stopped' });
@@ -358,7 +359,10 @@ function checkGameState() {
   }
   if (api.startAnother(sim)) {
     api.clearAnother(sim);
-    newRound();
+    // Con parada del core en este mismo chequeo (ganador declarado con
+    // StartAnotherRound colgado del mismo Countpop, F1Mode.bas:364+380) el
+    // original queda detenido en el mundo final: no se abre otra ronda.
+    if (!stopped) newRound();
   }
 }
 

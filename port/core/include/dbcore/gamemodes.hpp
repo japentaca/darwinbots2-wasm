@@ -104,8 +104,12 @@ inline int Fittest(Sim& sim) {
     if (b.exist && !b.Veg && b.FName != "Corpse" && !BaseHidden(sim, b)) {
       vb_long TotalOffspring = 1;
       bool Cancer = false;
+      // s = score(...) + .nrg + .body*10 — el primer operando es Double:
+      // la cadena propaga en doble termino a termino (solo body*10 es
+      // producto Single), a diferencia de InvestedEnergy (suma Single).
       double s = score0(sim, t, 1, 10, TotalOffspring, Cancer) +
-                 static_cast<double>(b.nrg + b.body * 10.0f);
+                 static_cast<double>(b.nrg) +
+                 static_cast<double>(b.body * 10.0f);
       if (s < 0) s = 0;
       s = std::pow(static_cast<double>(TotalOffspring), sPopulation) *
           std::pow(s, sEnergy);
