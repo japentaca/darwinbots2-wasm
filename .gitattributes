@@ -2,3 +2,19 @@
 # Sin conversion de finales de linea: cada archivo se guarda y se
 # recupera byte a byte igual al original. Anula el core.autocrlf global.
 * -text
+
+# Para la barra de lenguajes de GitHub (linguist): el fuente VB6 original y
+# sus herramientas companion son material heredado, no el código del proyecto
+# — que la portada muestre el C++ del port y los docs de spec/.
+Darwinbots2/** linguist-vendored
+DBLaunch/** linguist-vendored
+GraphJoin/** linguist-vendored
+Installer/** linguist-vendored
+LocalDBIM/** linguist-vendored
+ManualSexRepro/** linguist-vendored
+PeterIM/** linguist-vendored
+Restarter/** linguist-vendored
+SafeModeBackup/** linguist-vendored
+"Snapshot Search/**" linguist-vendored
+UnitTests/** linguist-vendored
+port/web/bots/** linguist-generated

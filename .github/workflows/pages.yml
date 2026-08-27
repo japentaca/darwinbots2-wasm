@@ -1,0 +1,60 @@
+# Demo viva en GitHub Pages: compila el preset wasm y publica port/web/ +
+# los artefactos dbcore.js/dbcore.wasm conservando el layout relativo que la
+# página espera (web/worker.js carga ../build-wasm/dbcore.js).
+# Requiere habilitar Pages en el repo con Source = "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Instalar emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+      - name: Compilar dbcore.js + dbcore.wasm
+        working-directory: port
+        run: |
+          cmake --preset wasm
+          cmake --build --preset wasm --target dbcore_wasm
+      - name: Armar el sitio (web/ + build-wasm/, mismo layout que en el repo)
+        run: |
+          mkdir -p site/build-wasm
+          cp -r port/web site/web
+          cp port/build-wasm/dbcore.js port/build-wasm/dbcore.wasm site/build-wasm/
+          cat > site/index.html <<'EOF'
+          <!DOCTYPE html><meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=web/">
+          <a href="web/">DarwinBots — port WASM</a>
+          EOF
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,69 @@
+# CI del port: las reglas duras del proyecto como checks automáticos.
+#  - fuentes-intactos: Darwinbots2/ debe ser idéntico a la línea base 02b20d7.
+#  - nativo (gcc y clang) + wasm: la suite entera (143 casos dorados / 2962
+#    aserciones) debe dar verde en los tres modos de build.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  fuentes-intactos:
+    name: Fuentes VB6 intactos (línea base 02b20d7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: git diff contra la línea base debe salir vacío
+        run: git diff --exit-code 02b20d7 -- Darwinbots2/
+
+  nativo:
+    name: Suite nativa (${{ matrix.preset }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [native-gcc, native-clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Configurar y compilar
+        working-directory: port
+        run: |
+          cmake --preset ${{ matrix.preset }}
+          cmake --build --preset ${{ matrix.preset }}
+      - name: Correr la suite de casos dorados
+        working-directory: port
+        run: |
+          case "${{ matrix.preset }}" in
+            native-gcc)   ./build/dbtests ;;
+            native-clang) ./build-clang/dbtests ;;
+          esac
+
+  wasm:
+    name: Suite WASM (Emscripten + node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Instalar emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+      - name: Configurar y compilar (preset wasm)
+        working-directory: port
+        run: |
+          cmake --preset wasm
+          cmake --build --preset wasm
+      - name: Correr la suite bajo node
+        working-directory: port
+        run: node build-wasm/dbtests.js
