@@ -1,12 +1,11 @@
-# Prompt de continuación (post-M10)
+# Prompt de continuación del port C++/WASM
 
-Prompt de arranque para continuar el desarrollo del port en una **sesión nueva** de
-Claude Code, pegándolo como primer mensaje con el directorio de trabajo en la raíz
-del repo (`Darwinbots2-master/`). Se regenera con `/prompt-continuacion` al cerrar
-cada milestone; este refleja el estado tras **M10** (2026-08-26): **el port está
-completo** — core verificado en WASM y capa de presentación web funcionando. No hay
-milestone obligatorio pendiente: la tarea de la próxima sesión es la extensión que
-el usuario elija.
+Prompt de arranque autocontenido para continuar el desarrollo en una **sesión
+nueva** de Claude Code. Pegalo como primer mensaje, con el directorio de trabajo
+en la raíz del repo (`Darwinbots2-master/`). Se regenera con
+`/prompt-continuacion` al cerrar cada milestone o extensión; este refleja el
+estado **post-extensión Rendimiento** (2026-08-26): el port está completo, la
+capa web corre la sim en un Web Worker, y solo quedan extensiones opcionales.
 
 ## ↓ COPIAR DESDE AQUÍ ↓
 
@@ -19,8 +18,9 @@ el contrato del port; spec/70-CASOS-DORADOS.md es la suite de verdad. Cuando hay
 desambiguar algo, el fuente VB6 es la spec y los documentos de spec/ son su índice.
 
 El port vive en port/ y **está completo y usable**: los 10 milestones están
-cerrados. El core entero está verificado en WASM (ningún stub abierto, Q07
-verificada) y la capa de presentación web corre sobre él.
+cerrados (core entero verificado en WASM, ningún stub abierto, Q07 verificada,
+capa de presentación web corriendo sobre él) y además la extensión opcional
+**Rendimiento** está cerrada: la sim corre en un Web Worker.
 
 - M1 · Sustrato numérico (9182e8e): redondeo bancario, LCG de VB6, gasdev,
 stacks, mod32000, handlers de la VM. Casos §1, §2, R-01..R-03.
@@ -46,22 +46,30 @@ idéntico en tres modos — g++ 14.2 nativo, clang 19.1.7 nativo y WASM vía
 Emscripten 6.0.8 bajo node — sin una sola divergencia numérica. Presets
 reproducibles en port/CMakePresets.json (native-gcc/native-clang/wasm).
 - M10 · Capa de presentación web (6e753ec): port/wasm/dbcore_api.cpp con
-la API completa hacia JS — arranque del form transcrito de main.frm
-(divisores, Init_Buckets, cooldown = -RepopCooldown, Rnd -1 + Randomize
-seed/100), opciones esenciales (campo, Costs 0..70, MinVegs/repoblación,
-mutaciones on/off, StartChlr), especies con la siembra de loadrobs
-completa, volcados para render (bots 8f / shots 6f / ties 5f /
-obstáculos 5f / teleporters 7f), save/load de sim y .dbo sobre búferes,
-SalvarobText, NewTeleporter transcrito y la E/S outbox/inbox de
-teleporters (el host mueve los "archivos" .dbo entre sims) — y
-port/web/index.html: render 2D en Canvas con loop rAF, controles
-iniciar/pausar/paso/velocidad/seed, siembra con presets (Animal/Alga
-Minimalis) o ADN propio, guardar/cargar .dbsim y teleporter local.
-Cero cambios en port/core/. Decisiones de capa host documentadas en la
+la API completa hacia JS — arranque del form transcrito de main.frm,
+opciones esenciales (campo, Costs 0..70, MinVegs/repoblación, mutaciones
+on/off, StartChlr), especies con la siembra de loadrobs completa,
+volcados para render (bots 8f / shots 6f / ties 5f / obstáculos 5f /
+teleporters 7f), save/load de sim y .dbo sobre búferes, SalvarobText,
+NewTeleporter transcrito y la E/S outbox/inbox de teleporters (el host
+mueve los "archivos" .dbo entre sims). Decisiones de capa host en la
 cabecera del .cpp: búferes en vez de disco, SimGUID = 0, colores de
 especie del lado de la página (Q01); .mrate no se exporta.
+- Ext · Rendimiento (e935f78): la sim corre entera en un Web Worker
+(port/web/worker.js: dbcore.wasm + handle + ticks + volcados);
+port/web/index.html queda solo con UI y render Canvas 2D. Cada frame
+viaja como UN ArrayBuffer transferible (header + secciones bots/shots/
+ties/obstáculos/teleporters) con ping-pong de búferes: cero basura por
+frame, nunca más de un frame en vuelo. Velocidad "máx" (rebanadas ~12ms
+a fondo, 1 tick por vuelta); stats con ticks/s, fps y costo de draw();
+worker.onerror al registro de la página. WebGL medido y descartado por
+innecesario: con ~2000 bots, draw() ≈ 4 ms vs tick del core ≈ 160 ms —
+el cuello es la sim, no el render (port/README.md §"Página web").
+Protocolo de mensajes documentado en la cabecera de worker.js. Cero
+cambios en port/core/, port/wasm/ y CMake.
 - Estado verificado: 143 casos / 2962 aserciones en verde en los tres
-modos de build (corrido en esta máquina).
+modos de build (nativo gcc re-corrido en esta máquina al regenerar este
+prompt).
 - Toolchain (todo instalado y documentado en port/README.md): g++ 14.2 y
 clang 19.1.7 (MSYS2 ucrt64), CMake 4.0.1 + Ninja, emsdk en ~/emsdk
 (Emscripten 6.0.8; el preset wasm necesita la variable de entorno
@@ -76,7 +84,8 @@ chequeos; los flags =0 del .vbp son casillas sin marcar): invalida
 cualquier intuición de "wrap silencioso". Su sección "Siguiente" lista
 las extensiones opcionales.
 2. port/README.md — los tres modos de build, el toolchain verificado, la
-API completa de wasm/dbcore_api.cpp y cómo servir/abrir la página web.
+API completa de wasm/dbcore_api.cpp, la arquitectura Worker de la página
+web y cómo servirla/abrirla.
 3. spec/PLAN.md §"Decisión de arquitectura del port" — las 5 salvaguardas de
 build (obligatorias también para todo lo que se recompile a WASM).
 4. Los documentos de spec/ que toque la extensión elegida (p. ej.
@@ -90,9 +99,10 @@ git diff 02b20d7 -- Darwinbots2/, que debe salir vacío.
 2. El ciclo es siempre: caso dorado transcrito como test en rojo →
 implementación transcrita del fuente VB6 citado línea a línea (no de
 memoria, no del wiki) → verde → commit citando la sección de la spec.
-(El trabajo de capa host — API WASM, página web — no tiene casos dorados
-propios, pero TODO lo que toque port/core/ sigue esta regla entera y la
-suite debe seguir en verde en los tres modos tras cada cambio.)
+(El trabajo de capa host — API WASM, página web, worker — no tiene casos
+dorados propios, pero TODO lo que toque port/core/ sigue esta regla
+entera y la suite debe seguir en verde en los tres modos tras cada
+cambio.)
 3. Los [PROBABLE BUG] se replican tal cual (regla 4 del brief); los sitios de
 error 6/9/11 del original llevan decisión de port documentada por sitio +
 registro en VmDiag/SimDiag (10-CICLO.md §14).
@@ -103,7 +113,8 @@ Single = float estricto con casts explícitos; semántica VB6 ya replicada:
 Double, IIf/And/Choose evalúan todos sus brazos (consumen RNG aunque el
 brazo no gobierne); nada de -ffast-math; sin FMA implícita
 (-ffp-contract=off); -fwrapv solo como red. La capa JS/render nunca
-recalcula física ni RNG: solo presenta lo que el core vuelca.
+recalcula física ni RNG: solo presenta lo que el core vuelca (el worker
+incluido: solo llama a db_sim_* y empaqueta).
 5. Al cerrar un milestone o extensión: actualizar spec/PROGRESO.md (tabla
 del port + sección "Siguiente" + registro con fecha) y commitear.
 Regenerar spec/PROMPT-CONTINUACION.md con /prompt-continuacion.
@@ -115,39 +126,44 @@ cmake --preset native-clang && cmake --build --preset native-clang && build-clan
 cmake --preset wasm         && cmake --build --preset wasm         && node build-wasm/dbtests.js
 
 (El preset wasm requiere EMSDK en el entorno y produce además
-build-wasm/dbcore.js + dbcore.wasm — la biblioteca que consume la página.
-Los exe nativos linkean estático; no necesitan las DLL de MSYS2 en el PATH.)
+build-wasm/dbcore.js + dbcore.wasm — la biblioteca que consumen el worker
+y la página. Los exe nativos linkean estático; no necesitan las DLL de
+MSYS2 en el PATH.)
 
-Correr la página web (la sim completa en el navegador)
+Correr la página web (la sim completa en el navegador, sobre un Web Worker)
 
 cd port && python -m http.server 8000
 # → http://localhost:8000/web/
 
 Tu tarea
 
-**El port está completo: no hay milestone obligatorio pendiente.** Preguntale
-al usuario qué extensión quiere encarar (o encarala si ya te la indicó en
-este mensaje). Las candidatas registradas en spec/PROGRESO.md §"Siguiente",
-todas capa host y opcionales:
+**El port está completo y la extensión Rendimiento está cerrada: no hay nada
+obligatorio pendiente.** Preguntale al usuario qué extensión quiere encarar
+(o encarala si ya te la indicó en este mensaje). Las candidatas registradas
+en spec/PROGRESO.md §"Siguiente", todas capa host y opcionales:
 
 1. **UI de sim** — inspector de bot al click (la API ya expone
    db_sim_bot_text), zoom/cámara sobre el Canvas, editor de opciones
    completo (la API llega hasta Costs 0..70; la página hoy expone las
    esenciales), gráficas de población.
-2. **Rendimiento** — mover el tick a un Web Worker (hoy corre en el hilo
-   de la página), volcados incrementales, WebGL si el Canvas queda corto
-   con poblaciones grandes.
-3. **Modo Internet/torneo** — la E/S de teleporters entre sims ya funciona
+2. **Modo Internet/torneo** — la E/S de teleporters entre sims ya funciona
    por búferes (db_sim_tp_outbox_take / db_sim_tp_inbox_push, verificada
    entre dos sims bajo node); faltaría el transporte que mueva los
    registros .dbo entre navegadores. La capa ⚙ de torneo (50-MUNDO.md §5)
    quedó deliberadamente fuera del contrato de fidelidad.
 
-Cualquiera de las tres es pura capa host (JS/HTML o dbcore_api.cpp): la
+(La tercera candidata, Rendimiento, ya está cerrada: Web Worker + frame
+único transferible; WebGL descartado por medición.)
+
+Cualquiera de las dos es pura capa host (JS/HTML o dbcore_api.cpp): la
 regla 2 solo se activa si algo exige tocar port/core/. Tras cualquier
 cambio en port/core/ o en el CMake, la suite entera (143 casos / 2962
-aserciones) debe seguir en verde en los tres modos.
+aserciones) debe seguir en verde en los tres modos. Si la extensión toca
+la página web, respetá la arquitectura Worker: la página no llama a la API
+WASM directamente — todo pasa por el protocolo de mensajes de worker.js
+(documentado en su cabecera).
 
----
+## ↑ COPIAR HASTA AQUÍ ↑
 
-*Regenerar este archivo con `/prompt-continuacion` al cerrar cada milestone.*
+Recordatorio: regenerar este archivo con `/prompt-continuacion` al cerrar cada
+milestone o extensión.
