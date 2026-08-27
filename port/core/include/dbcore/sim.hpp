@@ -48,8 +48,17 @@ inline constexpr int AGECOST = 31;
 inline constexpr int AGECOSTSTART = 32;
 inline constexpr int AGECOSTLINEARFRACTION = 33;
 inline constexpr int AGECOSTMAKELOG = 51;
+inline constexpr int BOTNOCOSTLEVEL = 52;
+inline constexpr int DYNAMICCOSTTARGET = 53;
 inline constexpr int COSTMULTIPLIER = 54;
+inline constexpr int DYNAMICCOSTSENSITIVITY = 55;
+inline constexpr int USEDYNAMICCOSTS = 56;
+inline constexpr int DYNAMICCOSTTARGETUPPERRANGE = 57;
+inline constexpr int DYNAMICCOSTTARGETLOWERRANGE = 58;
+inline constexpr int COSTXREINSTATEMENTLEVEL = 59;
 inline constexpr int AGECOSTMAKELINEAR = 60;
+inline constexpr int DYNAMICCOSTINCLUDEPLANTS = 61;
+inline constexpr int ALLOWNEGATIVECOSTX = 62;
 }  // namespace cost
 
 // Type shot (Shots.bas:5-37).
@@ -369,6 +378,16 @@ struct Sim {
   std::array<vb_long, 101> TotalSimEnergy{};  // Vegs.bas:11
   int CurrentEnergyCycle = 0;
   vb_long TotalSimEnergyDisplayed = 0;  // Vegs.bas:13 (paso 5 del tick)
+
+  // E4 (Master.bas:3-5) — estado de los costes dinámicos (pasos 6-7 del
+  // tick). Globales de módulo en el original: arrancan en cero con el
+  // proceso, SaveSimulation no los persiste y LoadSimulation no los resetea
+  // (HDRoutines.bas solo guarda SimOpts.oldCostX, :776/:1443). Decisión de
+  // port (70-CASOS-DORADOS.md §11): viven en Sim; una carga en el port
+  // arranca con este estado limpio.
+  vb_integer DynamicCountdown = 0;
+  bool CostsWereZeroed = false;
+  std::array<vb_integer, 11> PopulationLast10Cycles{};  // (10): 0 sin uso
   double LightAval = 0;  // Vegs.bas:15 (Double; lo calcula feedvegs)
   vb_long AllChlr = 0;
 

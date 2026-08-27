@@ -15,6 +15,9 @@
 //   {t:'seed-species', sp}                 sembrar especie del formulario
 //   {t:'setopt', id, v}                    opción E1 en vivo (tabla de ids
 //                                          en wasm/dbcore_api.cpp)
+//   {t:'setcost', i, v}                    E4: Costs(i) en vivo (índices de
+//                                          SimOptions.bas:2-39; 51..62 =
+//                                          costes dinámicos)
 //   {t:'save'}                             → {t:'saved', bytes, cycle}
 //   {t:'load', bytes}                      cargar sim binaria (transferido)
 //   {t:'teleporter'}                       alta de teleporter local
@@ -40,7 +43,7 @@
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
 //                                          la página actualiza su panel
-//   {t:'frame', buf, stats:{cycle,bots,vegs,tps}}
+//   {t:'frame', buf, stats:{cycle,bots,vegs,tps,costx}}
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
 // la página lo devuelve con 'ack' al terminar de dibujar y el worker lo
@@ -90,6 +93,8 @@ function bindApi() {
     setStartChlr:  C('db_sim_set_start_chlr', null, ['number', 'number']),
     setOpt:        C('db_sim_set_opt', null, ['number', 'number', 'number']),
     getOpt:        C('db_sim_get_opt', 'number', ['number', 'number']),
+    setCost:       C('db_sim_set_cost', null, ['number', 'number', 'number']),
+    getCost:       C('db_sim_get_cost', 'number', ['number', 'number']),
     addSpecies:    C('db_sim_add_species', 'number',
                      ['number', 'string', 'string', 'number', 'number', 'number', 'number', 'number']),
     seedSpecies:   C('db_sim_seed_species', 'number', ['number', 'number', 'number']),
@@ -223,7 +228,8 @@ function postFrame() {
   self.postMessage({
     t: 'frame', buf,
     stats: { cycle: api.cycle(sim), bots: api.totalRobots(sim),
-             vegs: Math.max(api.totvegs(sim), 0), tps },
+             vegs: Math.max(api.totvegs(sim), 0), tps,
+             costx: api.getCost(sim, 54) },  // panel "CostX" (MDIForm1:3051)
   }, [buf]);
 }
 
@@ -279,6 +285,9 @@ function resetSim(msg) {
   api.setMutations(sim, o.mutations ? 1 : 0);
   // Opciones E1 por id (tabla en wasm/dbcore_api.cpp): {id: valor, ...}
   if (o.opts) for (const id in o.opts) api.setOpt(sim, id | 0, +o.opts[id]);
+  // Costes por índice VB6 (E4): {i: valor, ...} — Costs(54) default 1 viene
+  // del panel (MDIForm1.frm:2484).
+  if (o.costs) for (const i in o.costs) api.setCost(sim, i | 0, +o.costs[i]);
   api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
   log(`sim nueva (seed ${msg.seed})`);
   for (const sp of msg.species) seedSpecies(sp);
@@ -350,6 +359,10 @@ self.onmessage = (e) => {
       // Cambio en vivo (el core lee las opciones cada tick; mismo efecto
       // que el diálogo de opciones del original sobre una sim corriendo).
       if (sim) api.setOpt(sim, msg.id | 0, +msg.v);
+      break;
+    case 'setcost':
+      // E4: Costs(i) en vivo, como el CostsForm del original.
+      if (sim) api.setCost(sim, msg.i | 0, +msg.v);
       break;
     case 'save':
       saveSim();

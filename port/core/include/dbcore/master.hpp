@@ -1,9 +1,10 @@
 // dbcore/master.hpp — el tick (Master.bas:23 UpdateSim) reducido al núcleo
-// ecológico de 10-CICLO.md §2: pasos 2, 10 (ExecRobs), 12 (EraseSenses),
-// 14 (updateshots), 15 (opos), 16 (UpdateBots), 17 (actvel) y la contabilidad
-// de cloroplastos del paso 19. Los pasos ⚙ (UI/torneo/evo/autosave) y los de
-// mundo (repoblación, feedvegs, teleporters, obstáculos — B7) quedan fuera o
-// como stub registrado. También: la carga de bots a la simulación
+// de 10-CICLO.md §2: pasos 2, 4-5, 6-7 (costes dinámicos, E4), 10
+// (ExecRobs), 12 (EraseSenses), 14 (updateshots), 15 (opos), 16
+// (UpdateBots), 17 (actvel), 18-21 (obstáculos/teleporters/repoblación/
+// sol) y la matanza por presión de memoria (paso 24). Los pasos ⚙
+// (UI/torneo/evo/autosave — 3, 8-9, 11, 13, 22-23, 25-26) quedan fuera con
+// decisión documentada. También: la carga de bots a la simulación
 // (RobScriptLoad, Module1.bas:8-26; preparerob :29-55) y la siembra de
 // fundadores de loadrobs (main.frm:1516-1570) que M-08 ejercita.
 #pragma once
@@ -63,6 +64,105 @@ inline void MemoryPressureKill(Sim& sim) {
   }
 }
 
+// Master.bas:240-300 — pasos 6-7 del tick (E4, 70-CASOS-DORADOS.md §11):
+// población para costes dinámicos + ajuste de COSTMULTIPLIER. Sin consumo
+// de RNG. Notas de transcripción:
+//  - CurrentPopulation es Integer en el fuente; la suma con vegetales no
+//    puede exceder 32767 (total de bots <= ROBARRAYMAX = 32000): sitio de
+//    error 6 inalcanzable, sin registro.
+//  - UpperRange/LowerRange leen TmpOpts.Costs(57/58) en el original
+//    (Master.bas:262-263, quirk de UI como el de Tides en vegs.hpp). En el
+//    port no hay TmpOpts: se leen de los mismos Costs (decisión E4-D1).
+//  - El bloque de cero-costes/reinstauración (:293-300) corre SIEMPRE,
+//    fuera del gate USEDYNAMICCOSTS.
+inline void DynamicCostsStep(Sim& sim) {
+  auto& C = sim.vm.costs.v;
+
+  // Paso 6 (:240-252): población del ciclo ANTERIOR (contadores
+  // *Displayed, publicados al COMIENZO de cada UpdateBots con el conteo de
+  // las pasadas del tick previo, Robots.bas:1497-1500 — este paso ve el
+  // conteo de hace 2 ticks) e historial desplazado cada 10 ciclos.
+  // PopulationLast10Cycles(0) existe sin uso.
+  vb_integer CurrentPopulation =
+      static_cast<vb_integer>(sim.totnvegsDisplayed);
+  if (C[cost::DYNAMICCOSTINCLUDEPLANTS] != 0.0f)
+    CurrentPopulation =
+        static_cast<vb_integer>(CurrentPopulation + sim.totvegsDisplayed);
+
+  if (sim.opts.TotRunCycle % 10 == 0) {
+    for (int i = 10; i >= 2; --i)
+      sim.PopulationLast10Cycles[i] = sim.PopulationLast10Cycles[i - 1];
+    sim.PopulationLast10Cycles[1] = CurrentPopulation;
+  }
+
+  // Paso 7 (:254-291): bajo USEDYNAMICCOSTS (la UI escribe -1,
+  // CostsForm.frm:1142; el If de VB6 acepta cualquier valor <> 0).
+  if (C[cost::USEDYNAMICCOSTS] != 0.0f) {
+    // AmountOff/UpperRange/LowerRange son Single; los productos con el
+    // literal Double 0.01 pasan por doble y la asignación redondea.
+    const vb_single AmountOff =
+        static_cast<vb_single>(CurrentPopulation) -
+        C[cost::DYNAMICCOSTTARGET];
+    const vb_single UpperRange = static_cast<vb_single>(
+        static_cast<double>(C[cost::DYNAMICCOSTTARGETUPPERRANGE]) * 0.01 *
+        static_cast<double>(C[cost::DYNAMICCOSTTARGET]));
+    const vb_single LowerRange = static_cast<vb_single>(
+        static_cast<double>(C[cost::DYNAMICCOSTTARGETLOWERRANGE]) * 0.01 *
+        static_cast<double>(C[cost::DYNAMICCOSTTARGET]));
+
+    if (CurrentPopulation == sim.PopulationLast10Cycles[10]) {
+      sim.DynamicCountdown =
+          static_cast<vb_integer>(sim.DynamicCountdown - 1);
+      if (sim.DynamicCountdown < -10) sim.DynamicCountdown = -10;
+    } else {
+      sim.DynamicCountdown = 10;
+    }
+
+    if ((AmountOff > UpperRange &&
+         (sim.PopulationLast10Cycles[10] < CurrentPopulation ||
+          sim.DynamicCountdown <= 0)) ||
+        (AmountOff < -LowerRange &&
+         (sim.PopulationLast10Cycles[10] > CurrentPopulation ||
+          sim.DynamicCountdown <= 0))) {
+      vb_single CorrectionAmount;
+      if (AmountOff > UpperRange)
+        CorrectionAmount = AmountOff - UpperRange;
+      else
+        CorrectionAmount = std::fabs(AmountOff) - LowerRange;
+
+      // :283 — el literal 0.0000001 es Double: la cadena entera va en
+      // doble con el orden de factores del fuente; la asignación a
+      // Costs(54) redondea a Single. Sgn devuelve Integer.
+      C[cost::COSTMULTIPLIER] = static_cast<vb_single>(
+          static_cast<double>(C[cost::COSTMULTIPLIER]) +
+          (0.0000001 * static_cast<double>(CorrectionAmount) *
+           vb_sgn(static_cast<double>(AmountOff)) *
+           static_cast<double>(C[cost::DYNAMICCOSTSENSITIVITY])));
+
+      // :286-289 — suelo en 0 salvo ALLOWNEGATIVECOSTX = 1 EXACTO (el
+      // checkbox de CostsForm.frm:1081 escribe 0/1).
+      if (C[cost::ALLOWNEGATIVECOSTX] != 1.0f) {
+        if (C[cost::COSTMULTIPLIER] < 0.0f) C[cost::COSTMULTIPLIER] = 0.0f;
+      }
+      sim.DynamicCountdown = 10;
+    }
+  }
+
+  // :293-300 — cero-costes de emergencia y reinstauración (estricta).
+  // Comparación Integer vs Single del fuente (promoción; exacta aquí).
+  if (static_cast<vb_single>(CurrentPopulation) < C[cost::BOTNOCOSTLEVEL] &&
+      C[cost::COSTMULTIPLIER] != 0.0f) {
+    sim.CostsWereZeroed = true;
+    sim.opts.oldCostX = C[cost::COSTMULTIPLIER];
+    C[cost::COSTMULTIPLIER] = 0.0f;
+  } else if (static_cast<vb_single>(CurrentPopulation) >
+                 C[cost::COSTXREINSTATEMENTLEVEL] &&
+             sim.CostsWereZeroed) {
+    sim.CostsWereZeroed = false;
+    C[cost::COSTMULTIPLIER] = sim.opts.oldCostX;
+  }
+}
+
 inline void UpdateSim(Sim& sim) {
   // Rejilla de buckets al día (Init_Buckets corre al (re)crear el mundo en
   // el original, main.frm:1302; decisión de port en buckets.hpp).
@@ -78,7 +178,12 @@ inline void UpdateSim(Sim& sim) {
   sim.CurrentEnergyCycle = sim.opts.TotRunCycle % 100;
   sim.TotalSimEnergy[sim.CurrentEnergyCycle] = 0;
 
-  // Pasos 3, 6-9: torneo/costes dinámicos — ⚙.
+  // Pasos 3, 8, 9 (y 22): hidepred/evo, handicap, avrnrg — ⚙ torneo.
+  // Único consumidor: el modo evo (usehidepred = x_restartmode = 4 Or 5,
+  // Master.bas:53-54); con hidepred = False (su valor fuera de ese modo)
+  // todos son no-op, incluidas las exclusiones "Base.txt And hidepred" de
+  // los pasos 15/17/19. Van con E5 (modos de juego) — decisión E4,
+  // 70-CASOS-DORADOS.md §11.
 
   // Paso 4 (Master.bas:203-233): oscilación de MutCurrMult, senoidal
   // (20^Sin) o escalón (16 / 1/16). Off por default (MutOscill = False).
@@ -106,6 +211,11 @@ inline void UpdateSim(Sim& sim) {
       }
     }
   }
+
+  // Pasos 6-7 (E4, Master.bas:240-300): costes dinámicos — ANTES de
+  // ExecRobs, así el cargo de ADN de este mismo tick ya escala por el
+  // multiplicador recién ajustado.
+  DynamicCostsStep(sim);
 
   // Paso 10: el ADN.
   ExecRobs(sim);

@@ -397,6 +397,24 @@ const OPT_GROUPS = [
     { id: 63, label: 'Comer veg: fracción a body', def: 0.75 },
     { id: 64, label: 'Mareas (ciclos; 0 = off)', def: 0 },
   ]},
+  // E4: costes dinámicos (CostsForm.frm, tab "Dynamic Costs"; índices de
+  // SimOptions.bas:28-39). Los items con `cost:` viajan por db_sim_set_cost
+  // (índice VB6 crudo). Defaults = MDIForm1.frm:2482-2484 (sensibilidad 50,
+  // nivel cero-costes -1, CostX 1) y 0 el resto. El checkbox maestro
+  // escribe -1 como la UI original (DynamicCosts.value * True,
+  // CostsForm.frm:1142); "permitir negativos" escribe 0/1 (:1081).
+  { name: 'Costes dinámicos', items: [
+    { cost: 56, label: 'Ajuste dinámico de costes', bool: true, def: false, on: -1 },
+    { cost: 53, label: 'Población objetivo', def: 0 },
+    { cost: 55, label: 'Sensibilidad', def: 50 },
+    { cost: 57, label: 'Rango superior (% del objetivo)', def: 0 },
+    { cost: 58, label: 'Rango inferior (% del objetivo)', def: 0 },
+    { cost: 61, label: 'Contar también vegetales', bool: true, def: false },
+    { cost: 54, label: 'Multiplicador de costes (CostX)', def: 1 },
+    { cost: 62, label: 'Permitir CostX negativo', bool: true, def: false },
+    { cost: 52, label: 'Cero costes bajo población', def: -1 },
+    { cost: 59, label: 'Reinstaurar sobre población', def: 0 },
+  ]},
   { name: 'Restricciones', items: [
     { id: 70, label: 'Deshabilitar ties', bool: true, def: false },
     { id: 71, label: 'Sin repro asexual (no repob.)', bool: true, def: false },
@@ -468,8 +486,12 @@ function buildOptsPanel() {
         </select>`;
     }
     for (const it of g.items) {
-      const at = it.id !== undefined ? `data-id="${it.id}"` : `data-key="${it.key}"`;
-      const idn = 'o-' + (it.id !== undefined ? it.id : it.key);
+      const at = it.id !== undefined ? `data-id="${it.id}"`
+               : it.cost !== undefined
+                 ? `data-cost="${it.cost}"${it.on !== undefined ? ` data-on="${it.on}"` : ''}`
+                 : `data-key="${it.key}"`;
+      const idn = 'o-' + (it.id !== undefined ? it.id
+                          : it.cost !== undefined ? 'c' + it.cost : it.key);
       html += `<label for="${idn}">${it.label}</label>`;
       if (it.bool) {
         html += `<input type="checkbox" id="${idn}" ${at} ${it.def ? 'checked' : ''}>`;
@@ -516,6 +538,19 @@ function buildOptsPanel() {
     el.addEventListener('change', () =>
       worker.postMessage({ t: 'setopt', id: +el.dataset.id, v: optValue(el) }));
   });
+  // Cambios con cost (E4): en vivo, como el CostsForm del original.
+  panel.querySelectorAll('[data-cost]').forEach((el) => {
+    el.addEventListener('change', () =>
+      worker.postMessage({ t: 'setcost', i: +el.dataset.cost, v: costValue(el) }));
+  });
+}
+
+// Un checkbox de coste puede declarar su valor "on" (data-on: el maestro
+// USEDYNAMICCOSTS escribe -1 como la UI original); default 1.
+function costValue(el) {
+  if (el.type === 'checkbox')
+    return el.checked ? parseFloat(el.dataset.on ?? '1') : 0;
+  return parseFloat(el.value) || 0;
 }
 
 function optValue(el) {
@@ -541,9 +576,14 @@ function collectOptions() {
   const [updn, dxsx] = shapeToOpts();
   opts[2] = updn;
   opts[3] = dxsx;
+  const costs = {};
+  document.querySelectorAll('#opts-panel [data-cost]').forEach((el) => {
+    costs[+el.dataset.cost] = costValue(el);
+  });
   named.fieldW = parseFloat(document.getElementById('o-fw').value) || 32000;
   named.fieldH = parseFloat(document.getElementById('o-fh').value) || 32000;
   named.opts = opts;
+  named.costs = costs;
   return named;
 }
 
@@ -666,9 +706,13 @@ function renderFrame() {
 }
 
 function updateStats() {
+  // CostX redondeado a 5 como el panel de la barra de estado del original
+  // (MDIForm1.frm:3051); solo sale si difiere de 1 para no ensuciar.
+  const cx = stats.costx !== undefined && Math.round(stats.costx * 1e5) / 1e5;
   statsEl.textContent =
     `ciclo ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
-    ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms`;
+    ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms` +
+    (cx !== false && cx !== 1 ? ` · CostX ${cx}` : '');
 }
 
 // ---- Render (layout del frame: ver cabecera de worker.js) -----------------
