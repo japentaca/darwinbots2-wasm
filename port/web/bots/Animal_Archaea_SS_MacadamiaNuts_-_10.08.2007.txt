@@ -1,0 +1,74 @@
+'Animal_Archaea 1.0
+ 'Author: MacadamiaNuts, 10.08.2007
+ 'Description: 1S bot for ecosims -it doesn't kill veggies-. It calculates first the value, any else genes are false once the first one true is found. Then it uses the same 1G conditions to drop the proper sysvar into the stack. It consumes 0.10-0.05 energy per cycle with F1 costs.
+ 
+ start
+ 
+ 'VALUE BLOCK
+ 
+ 0
+ 
+ dup sgn abs 1 sub abs
+ 600 600 *.eye5width sub sgn mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 50 *.nrg 1000 sub sgn 0 floor mult 50 *.eye5 sub sgn 0 floor mult *.body 250 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ *.tiepres *.numties sgn mult 500 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 95 *.numties sgn mult *.multi mult *.trefnrg 500 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 1 *.numties sgn 1 sub abs mult *.eye5 50 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 750 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 100 *.eye5 sub 2 div abs 1 add 10 *.velup sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 10 260 *.body sub sgn 0 floor mult *.nrg 1000 sub sgn 0 floor mult
+ mult add
+ 
+ 'SYSVAR BLOCK
+ 
+ 0
+ 
+ dup sgn abs 1 sub abs
+ .eye5width 600 *.eye5width sub sgn mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .repro *.nrg 1000 sub sgn 0 floor mult 50 *.eye5 sub sgn 0 floor mult *.body 250 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .deltie *.numties sgn mult 500 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .sharenrg *.numties sgn mult *.multi mult *.trefnrg 500 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .tie *.numties sgn ~ abs mult *.eye5 50 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 750 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .up 10 *.velup sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .strbody 260 *.body sub sgn 0 floor mult *.nrg 1000 sub sgn 0 floor mult
+ mult add
+ 
+ 'STORE
+ 
+ store
+ stop

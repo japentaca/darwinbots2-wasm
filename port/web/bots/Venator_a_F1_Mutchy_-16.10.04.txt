@@ -1,0 +1,124 @@
+'Topic: Bot Tuning
+'Mutchy
+'
+'Venator!
+' Engage tie to enemy
+cond
+*.eye5 33 >
+*.refeye *.myeye !=
+start
+31 .tie store
+stop
+
+' Feed through tie
+cond 
+*.numties 0 >
+start
+31 .tienum store 
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.slime 90 <
+start
+100 .mkslime store
+stop
+
+'gene fire!
+cond
+*.eye5 40 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+'gene
+cond
+*.tienum 31 !=
+*.numties 0 >
+start
+*.tienum .deltie store
+stop
+
+'gene2
+cond
+*.eye5 34 <
+start
+26 .aimdx store
+stop
+
+
+'gene run away from friends
+cond
+*.refeye *.myeye =
+*.eye5 0 >
+start
+27 .aimdx store
+1 .dn store
+stop
+
+'gene makin babies
+cond
+*.nrg 3000 >
+start
+50 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'gene no tie
+'cond
+'*.numties 0 !=
+'*.robage 1 =
+'start
+'1 .deltie store
+'stop
+
+'gene
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye5 34 <
+start
+5 *.vel sub .up store
+stop
+
+cond
+*.shdn 0 <
+*.pleas -10 <
+start
+620 .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+start
+620 .aimsx store
+stop
+
+' Anti tie gene
+' Evil anti-tie gene. 
+cond
+*.tiepres 1 !=
+*.tiepres 2 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.body 2000 <
+*.nrg 1000 >
+start
+200 .strbody store
+stop
+
+
+end

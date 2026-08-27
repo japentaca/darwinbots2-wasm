@@ -1,0 +1,161 @@
+'Blinder Sp.
+'A Bot with Blinding Act.
+'
+'The main power of the bot is the ability to make enemy bots "blinded".
+'It uses eye manipulation gene.
+'
+'Version 2.0 : More More accurate at attacking target.
+'
+'Death
+
+'Born
+cond
+10 *.robage =
+start
+0 .fixpos store
+.deltie inc
+stop
+
+cond
+start
+100 991 store
+991 .memloc store
+stop
+
+'walking
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+314 rnd .aimsx store
+314 rnd .aimdx store
+stop
+
+cond
+*.eye1 *.eye9 !=
+*.eye1 *.eye5 >
+*.eye9 *.eye5 >
+*.memval 100 !=
+start
+*.eye1 *.eye9 sub sgn 140 mult .aimsx store
+stop
+
+cond
+*.eye2 *.eye8 !=
+*.eye2 *.eye5 >
+*.eye8 *.eye5 >
+*.memval 100 !=
+start
+*.eye2 *.eye8 sub sgn 63 mult .aimsx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.memval 100 !=
+start
+*.eye4 *.eye6 sub sgn 32 mult .aimsx store
+stop
+
+cond
+*.shsx -1 =
+*.eye5 50 <
+start
+157 .aimsx store
+stop
+
+cond
+*.shdx -1 =
+*.eye5 50 <
+start
+157 .aimdx store
+stop
+
+cond
+*.shup -1 =
+*.eye5 50 <
+start
+628 .aimsx store
+stop
+
+cond
+*.vel 60 !=
+start
+60 *.vel sub .up store
+stop
+
+cond
+*.venom 100 <
+*.nrg 500 >
+start
+100 *.venom sub .strvenom store
+stop
+
+cond
+*.poison 100 <
+*.nrg 500 >
+start
+100 *.poison sub .strpoison store
+7 .ploc store
+stop
+
+cond
+*.eye5 0 =
+*.waste 1 >
+start
+1 .backshot store
+100 .shootval store
+-4 .shoot store
+stop
+
+cond
+*.eye5 30 >
+*.memval 100 !=
+start
+525 .vloc store
+628 .venval store
+0 .backshot store
+250 .shootval store
+-3 1000 rnd 500 sub sgn -- sgn ++ mult 3 sub .shoot store
+*.refvelup .up store
+*.refvelsx .sx store
+*.refveldx .dx store
+stop
+
+cond
+*.nrg *.body 3 mult !=
+*.nrg 7500 <
+start
+*.nrg 3 div *.body sub .strbody store
+*.body 3 mult *.nrg sub .fdbody store
+stop
+
+cond
+*.nrg *.body 6 mult !=
+*.nrg 7500 >
+*.nrg 15000 <
+start
+*.nrg 6 div *.body sub .strbody store
+*.body 6 mult *.nrg sub .fdbody store
+stop
+
+'Reproduce
+cond
+*.nrg 10000 >
+start
+30 .repro store
+stop
+
+cond
+*.memval 100 =
+start
+0 .memval store
+stop
+
+end

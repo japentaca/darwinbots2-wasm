@@ -1,0 +1,47 @@
+'Topic: Formula 2 bots!
+'Jez
+
+'*Ambrosia Hederiger *
+'* poison ivy *
+
+cond
+*.eye5 0 >
+*.refeye 3 =
+start
+140 .aimdx store
+stop
+
+cond
+*.eye5 30 >
+*.refeye 3 !=
+start
+-1 .shoot store
+stop
+
+cond
+*.eye5 31 <
+start
+26 .aimdx store
+stop
+
+cond
+*.waste 1 >
+*.poison 10000 <
+start
+*.waste .strpoison store
+stop
+
+cond
+*.nrg 2000 >
+start
+50 .repro store
+120 .aimsx store
+0 .shoot store
+stop
+
+cond
+*.slime 90 <
+start
+100 *.slime sub .mkslime store
+stop
+end

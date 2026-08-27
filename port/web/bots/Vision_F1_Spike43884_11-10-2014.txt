@@ -1,0 +1,200 @@
+'Vision : 1221
+'The original description above* This is litterally a vision
+'test, and it got powerful...and I started making it bigger.
+'Btw, has anyone else noticed all my bots have really short
+'genes to them, litterally...non have more than 20 genes...
+'that chain will be broken with my next bot idea though.
+'Minitask Gene Scheduling (MtGS)
+
+'Vars
+def attack 50
+
+
+'********************
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+'********************
+
+'********************
+'Gene 1 Food Sighted 
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+start
+550 .aimdx
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+start
+405 .aimdx
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+start
+260 .aimdx
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+start
+115 .aimdx
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+start
+115 .aimsx
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+start
+260 .aimsx
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+start
+405 .aimsx
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+start
+550 .aimsx
+stop
+'********************
+
+
+' Gene 1 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+'Gene 3 Tie to food
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.numties 3 <
+*.robage 1 >
+start
+1 .tie store
+ *.refvelup .up store
+stop
+
+
+' Gene 2 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+
+
+
+'Gene 4 Feeding through tie
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store 
+*.tiepres .tienum store
+stop
+
+
+' Gene 5 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 313 rnd .aimdx store
+stop
+
+
+
+' Gene 6 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+' Gene 7 Reproduce
+cond
+ *.nrg 15000 >
+start
+ 10 .repro store
+stop
+
+
+'*-*-*-*-*-*-*-*-*-*-*-*
+
+? Gene 8 tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+? Gene 9 sever tie to parent
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+
+end

@@ -1,0 +1,187 @@
+'Topic: On biodiversity again  
+'Jerry
+
+' Ursus_herbivoris
+' special features:
+' * eats vegs and can eat corpses
+' * flees from aggressive bots (and conspecs)
+
+'***** recognize food
+cond
+*50 1 <
+*.eye5 20 >
+*.refup 0 =
+*.refage 800 >
+start
+50 inc
+stop
+
+'* stacking speed values *
+'***** init stack
+'(speed up if hit by shot)
+cond
+start
+mult 0 *.shdn add *.shdx add *shsx add -30 mult 
+stop
+
+'***** sustain min speed
+cond
+*.depth 15000 <
+*.eye5 40 <
+*.vel 20 <
+*.vel -10 >
+start
+mult 20 *.vel sub 2 div 
+stop
+
+'***** sustain min speed
+cond
+*.nrg 1000 >
+*.eye5 30 <
+*.depth 15000 >
+*.vel 15 <
+start
+mult 10 *.vel sub 2 div 
+stop
+
+'***** shrinking distance - brake!
+cond
+*.eye5 70 >
+*.eye5 77 <
+*.vel 15 >
+*.vel -10 >
+start
+mult *.vel 10 sub sub 
+stop
+
+'* apply speed *
+'*****
+cond
+start
+.up store
+stop
+
+'* stacking turning values *
+'***** init stack
+cond
+*.depth 15000 <
+start
+mult 1
+stop
+
+'***** stay away from edges
+cond
+*.edge 1 =
+*.eye5 0 =
+*.depth 1000 <
+start
+mult -6
+stop
+
+'***** nearly blind hope to find food
+cond
+*.edge 1 =
+*.eye5 0 =
+*.aim 628 >
+*.depth 10000 >
+start
+mult 2
+stop
+
+'***** moving backwards - turn around!
+cond
+*.vel -10 <
+start
+mult 628
+stop
+
+'***** follow bots you've seen
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+'***** follow bots you've seen
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+'***** avoid what's not a veg
+cond
+*50 0 =
+*.eye5 50 >
+start
+mult -400
+stop
+
+'***** give birth when mature
+'***** for a max of 50 children 
+'***** then descent to the bottom
+'(able to dive deeper with increasing age)
+cond
+*.nrg 6000 >
+*.body 10000 >
+start
+50 .repro store
+mult 628
+*.rdboy 10 sub .setboy store
+stop
+
+'***** take that navel cord
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+'***** sever that navel cord
+cond
+*.robage 1 =
+start
+.deltie inc
+500 .setboy store
+mult 314
+stop
+
+'***** get food
+'***** eat corpses 
+cond
+*.eye5 35 >
+*.refnrg 100 <
+start
+-6 .shoot store
+50 dec
+stop
+
+'***** eat vegs
+cond
+*.eye5 50 >
+*.refnrg 100 >
+*50 1 =
+start
+-1 .shoot store
+50 dec
+stop
+
+'***** fertilize vegs
+cond
+*.eye5 35 >
+*.waste 50 >
+*50 1 =
+start
+*.waste .shootval store
+-4 .shoot store
+50 dec
+stop
+
+'* apply steering *
+'*****
+cond
+start
+.aimdx store
+stop
+
+end

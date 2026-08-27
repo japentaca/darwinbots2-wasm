@@ -1,0 +1,339 @@
+'Popper (Latin Name: Explodicus Birthius)
+'New little bot by me, all because I watched saber in its little explosive reproduction.
+'Good lord, I added the hunt gene from All_hunter (one of my previous bots) and its scary. Before it was a very low increase in population. Now it jumped up about...80 per 100 cycles. It anhilated anything that came to its group.
+'Test 2 and it struggles alone. Need to improve defences, taking stuff from dizzy and learning viruses.
+'Test 3 Noticed 1 line I just removed. onto test 4.
+'Test 4 Now with work on the hunting system. It moved so fast, it was scary.
+'Hoping test5 will stop it firing at the edge quite so much...Using reftype.
+'This will help mazes though :D
+
+
+def attack 50
+def hunt 51
+
+
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 134 .eye3width store
+ 136 .eye4width store
+ 15 .eye5width store
+ 136 .eye6width store
+ 134 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+
+
+'INITIALISATION Gene 1 No food = Hunt
+cond
+*.eye1 0 = and
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.reftype 1 = or 
+*.refeye *.myeye = or or
+*.hunt 0 = and
+start
+157 rnd .aimdx store
+1 .hunt store
+stop
+
+
+'Gene 2 No food & Turned = Move
+cond
+*.eye1 0 =
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.reftype 1 = or 
+*.refeye *.myeye = or or
+*.hunt 1 = and
+start
+15 .up store
+2 .hunt store
+stop
+
+cond
+*.eye1 0 = and
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.reftype 1 = or
+*.refeye *.myeye = or or
+*.hunt 2 = and
+start
+10 .up store
+3 .hunt store
+stop
+
+cond
+*.eye1 0 = and
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.reftype 1 = or 
+*.refeye *.myeye = or or
+*.hunt 3 = and
+start
+10 .up store
+0 .hunt store
+stop
+
+
+'INITIALISATION Gene 12 Food Finder (waiting)
+cond
+*.eye1 sgn
+ *.eye2 sgn add
+ *.eye3 sgn add
+ *.eye4 sgn add
+ *.eye5 sgn add
+ *.eye6 sgn add
+ *.eye7 sgn add
+ *.eye8 sgn add
+ *.eye9 sgn add 0 =
+*.refeye *.myeye = or or
+start
+10 rnd .aimdx store
+stop
+
+
+'INITIALISATION Gene 3 Food Sighted 
+'*********************
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+550 .aimdx store
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+405 .aimdx store
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+260 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+115 .aimdx store
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+115 .aimsx store
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+260 .aimsx store
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+405 .aimsx store
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+*.reftype 0 =
+start
+550 .aimsx store
+stop
+'*********************
+
+
+
+'Gene 1 Food Finder
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.reftype 0 =
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+'Gene 2 Torture sequence (actually taking multiple genes >:D
+cond
+*.eye5 43 >
+*.reftype 0 =
+start
+1 .shootval store
+.fixpos .shoot store
+stop
+
+cond
+*.eye5 44 >
+*.reftype 0 =
+start
+1 .shooval store
+.backshot .shoot store
+stop
+
+cond
+*.eye5 45 >
+*.refeye *.myeye !=
+*.reftype 0 =
+start
+216 .shootval store
+.aimdx .shoot store
+stop
+
+
+'Gene 3 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+*.reftype 0 =
+start
+4 .shootval store
+-1 .shoot store
+-6 .shoot store
+*.refvelup .up store
+stop
+
+
+'Gene 4 Avoiding Family
+cond
+*.refeye *.myeye =
+*.robage 0 ! = and
+start
+314 rnd .aimdx store
+5 .up store
+stop
+
+
+'Gene 5 Reproduce
+cond
+*.nrg 25000 >
+start
+10 .repro store
+300 .aimdx store
+10 .repro store
+300 .aimdx store
+10 .repro store
+300 .aimdx store
+10 .repro store
+10 .up store
+stop
+
+
+'Gene 6 Birth tie creation
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+
+'Gene 7,8,9 Birth tie destruction & runaway sequence
+cond
+*.robage 1 =
+start
+1 .deltie store
+600 .aimdx store
+15 .up store
+stop
+
+cond
+*.robage 2 =
+start
+15 .up store
+stop
+
+cond
+*.robage 3 =
+start
+5 .up store
+stop
+
+
+'Gene 10 Tie destruction
+cond
+*.numties 0 !=
+start
+*.tiepres .deltie store
+stop
+
+
+'Gene 11 shape-side reversing.
+'cond
+'*.reftype 1 =
+'start
+'-5 .up store
+'628 .aimdx store
+'5 .up store
+'stop
+
+
+end

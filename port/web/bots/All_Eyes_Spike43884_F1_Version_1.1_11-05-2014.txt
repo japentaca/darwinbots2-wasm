@@ -1,0 +1,129 @@
+'All Eyes(F1)
+'By Spike43884
+'Waits for his prey, all eyes ready then pounces!
+'Refer to Sentry-Rule
+
+
+'Gene 0 Eye settings
+cond
+*.robage 5 <
+start
+-571 .eye2dir store
+571 .eye8dir store
+-126 .eye1dir store
+126 .eye9dir store
+-287 .eye3dir store
+287 .eye7dir store
+-96 .eye4dir store
+96 .eye6dir store
+149 .eye2width store
+149 .eye8width store
+-30 .eye1width store
+-30 .eye9width store
+149 .eye3width store
+149 .eye7width store
+93 .eye4width store
+93 .eye6width store
+-30 .eye5width store
+stop
+
+
+' Gene 1 Food Finder (waiting)
+cond
+*.eye1 0 = *.eye2 0 = *.eye3 0 = *.eye4 0 = *.eye5 0 = *.eye6 0 = *.eye7 0 = *.eye8 0 = *.eye9 0 = or or or or or or or
+*.refeye *.myeye !=
+start
+157 rnd .aimdx store
+stop
+
+
+'Gene 2 Food Sighted 
+'*********************
+cond
+*.eye1 0 >
+*.refeye *.myeye !=
+start
+140 .aimdx
+stop
+
+*.eye2 0 >
+*.refeye *.myeye !=
+start
+105 .aimdx
+stop
+
+*.eye3 0 >
+*.refeye *.myeye !=
+start
+70 .aimdx
+stop
+
+*.eye4 0 >
+*.refeye *.myeye !=
+start
+35 .aimdx
+stop
+
+cond
+*.eye6 0 >
+*.refeye *.myeye !=
+start
+35 .aimsx
+stop
+
+cond
+*.eye7 0 >
+*.refeye *.myeye !=
+start
+70 .aimsx
+stop
+
+cond
+*.eye8 0 >
+*.refeye *.myeye !=
+start
+105 .aimsx
+stop
+
+cond
+*.eye9 0 >
+*.refeye *.myeye !=
+start
+140 .aimsx
+stop
+'*********************
+
+
+' Gene 3 Chase Food
+cond
+*.eye5 0 > *.eye5 50 < and
+*.refeye *.myeye =
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 4 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+
+' Gene 5 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 6 Reproduce
+cond
+ *.nrg 20000 > *.robage 3 > and 
+start
+ 10 .repro store

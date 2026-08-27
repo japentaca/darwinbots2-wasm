@@ -1,0 +1,125 @@
+'Topic: New Bots
+'Firegem9
+'anubis_canis 2.0
+'***************
+
+cond
+*.aimdx *.aimdx !=
+start
+*.aimdx .aimdx store
+stop
+
+cond
+*.nrg 2000 >
+start
+50 .repro store
+stop
+
+cond
+*.body 200 >
+start
+100 .fdbody
+stop
+
+cond
+*.robage 0 =
+start
+2 .tie store
+stop
+
+cond
+*.refaimdx *.myaimdx !=
+start
+*.maxvel *.vel sub 2 div .up store
+stop
+
+'Brakes
+'************
+cond
+*.eye5 45 >
+*.refaimdx *.myaimdx !=
+*.refaimdx 1 =
+start
+*.vel 2 div -1 mult .up store
+stop
+'*************
+cond
+*.eye5 40 >
+*.refaimdx *.myaimdx !=
+start
+-6 .shoot store
+stop
+
+cond
+*.eye2 0 >
+start
+100 .aimsx store
+stop
+
+cond
+*.eye8 0 >
+start
+100 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+start
+50 .aimsx store
+stop
+
+cond
+*.eye6 0 >
+start
+50 .aimdx store
+stop
+
+cond
+*.refaimdx *.myaimdx =
+start
+239 .aimdx store
+stop
+
+cond
+*.robage 1 =
+start
+2 .deltie store
+stop
+
+cond
+*.waste 500 >
+start
+500 .shootval store
+1 .backshot store
+-4 .shoot store
+stop
+
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+'venomous
+'************
+cond
+*.nrg 1000 >
+*.venom 150 <
+start
+5 .strvenom store
+stop
+
+cond
+*.eye5 50 >
+*.refaimdx 1 !=
+*.refaimdx *.myaimdx !=
+*.venom 50 >
+start
+50 .shootval store
+-3 .shoot store
+.refeye .vloc store
+*.refeye .venval store
+stop
+
+
+end

@@ -1,0 +1,72 @@
+'Artemis Minimalis
+'By Gaiacarra October 2007
+'Has basic but fairly efficient hunting instincts.
+'Will not kill its own young.
+
+'''''''''''''''''''''''''''''''''''''
+'Wander if there's nothing to eat
+'''''''''''''''''''''''''''''''''''''
+cond
+ *.eye5 0 =
+start
+ 314 rnd .aimdx store
+ 60 .dn store
+stop
+
+
+'''''''''''''''''''''''''''''''''''''
+'Don't eat young conspecifics
+'''''''''''''''''''''''''''''''''''''
+cond
+ *.refeye *.myeye =
+ 500 *.robage > and
+start
+ 314 rnd .aimdx store
+stop
+
+
+'''''''''''''''''''''''''''''''''''''
+'Lock-On to targets
+'''''''''''''''''''''''''''''''''''''
+cond
+ *.eye3 *.eye5 >
+ *.eye3 *.eye7 <
+start
+ -25 .aimdx store
+stop
+
+cond
+ *.eye7 *.eye5 >
+ *.eye7 *.eye3 >
+start
+ 25 .aimdx store
+stop
+
+cond
+ *.eye5 0 >
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+'''''''''''''''''''''''''''''''''''''
+'Open fire
+'''''''''''''''''''''''''''''''''''''
+cond
+ *.eye5 50 > 
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+'''''''''''''''''''''''''''''''''''''
+'Reproduce
+'''''''''''''''''''''''''''''''''''''
+cond
+ *.nrg 20000 >
+start
+ 20 .repro store
+stop
+
+end

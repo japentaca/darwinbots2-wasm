@@ -1,0 +1,68 @@
+'Topic: Short-bots thread
+'Joan
+
+'D_Blinder_Light 
+'This robot shoots .aimdx value when is atacked
+
+
+'Mar.2004 Joan
+
+'-----Direction change
+
+cond
+*.in1 -1 =
+
+start
+630 .aimdx store
+
+stop
+
+'-----Reproduction
+
+cond
+*.hitdx 0 !=
+*.nrg 5000 >
+
+start
+50 .repro store
+150 .aimsx store
+
+stop
+
+'-----Rotation
+
+cond
+*.eye5 0 =
+
+start
+60 .aimdx store
+-1 .out1 store
+
+stop
+
+'-----Feed
+
+cond
+*.eye5 0 !=
+*.in1 -1 !=
+
+start
+-1 .shoot store
+*.up 12 add .up store
+
+stop
+
+'-----Chemical shoot
+
+cond
+*.shup 0 !=
+*.pain 500 > 
+
+start
+.aimdx .shoot store
+400 .shootval store
+
+stop
+'-----
+
+end

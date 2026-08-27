@@ -1,0 +1,65 @@
+'This virus will pown alot  
+'It's my third try at viruses and I think ive created a monster
+'The virus in time will turn any other bot into a empty shell waiting to be eaten
+'The virus itself prvents tie, shots, and reproduction
+
+
+' Gene 1 wasteing away
+cond
+ *.thisgene 1 >
+start
+*.tiepres .deltie store
+0 .repro store
+0 .shoot store
+2 .mkvirus store
+500 .vshoot store
+1 .delgene store
+stop
+
+' Gene 2 virus
+cond
+ *.refeye *.myeye !=
+ *.nrg 2000 >
+start
+1 .mkvirus store
+100 .vshoot store
+stop
+
+' Gene 3 Food Finder
+cond
+ *.eye5 0 >
+ *.eye5 30 <
+ *.refeye *.myeye !=
+start
+*.tiepres .deltie store
+ *.refveldx .dx store
+ *.refvelup 50 add .up store
+stop
+
+' Gene 4 spining
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+*.tiepres .deltie store
+ 50 rnd .up store
+45 .aimdx store
+stop
+
+' Gene 5 feeding
+cond
+ *.eye5 30 >
+ *.refeye *.myeye !=
+start
+*.tiepres .deltie store
+-1 .shoot store
+stop
+
+' Gene 6 reproducing
+cond
+ *.nrg 1000 >
+ *.body 1000 >
+start
+50 .repro store
+
+end

@@ -1,0 +1,167 @@
+'This'n'That 1.01 (F2) (Peksa) 12.09.08
+'By Peksa
+'Designed for 2.43.1k
+'This'n'That does little, but does it quite well. It's a very simple bot that has nothing fancy in it.
+'Conspec recognition idea is from Aura by abyaly, otherwise DNA should be as original as a bot of this kind can be.
+'A very slight modification, fares better against venom-using bots.
+
+
+def friend 81
+def shottype 82
+
+start
+
+'Cautions
+ *.delgene 0 !=
+ *.genes 1 = and
+  0 .delgene store
+ 
+ *.thisgene 1 !=
+  *.thisgene 1 sub .delgene store
+ *.thisgene *.genes !=
+  *.thisgene 1 add .delgene store
+ 
+ *.sexrepro 0 !=
+ *.fertilized 0 != or
+  0 .sexrepro store
+  
+ *.fixed 0 !=
+  0 .fixpos store 
+  
+ *.focuseye 0 !=
+  0 .focuseye store
+  
+ *.backshot 0 !=
+  0 .backshot store
+
+'Ties
+ *.robage 0 =
+  .tie inc
+
+ *.robage 1 =
+  .deltie inc
+   
+ *.numties 0 >
+  *.tiepres .deltie store
+  
+'Conspec recognition
+ true
+  *.dnalen *.robage *.dnalen mod sub dup .out7 store .tieval store
+   
+ *.in7 *.refage *.dnalen mod add *.dnalen sub abs 10 <
+  1 .friend store
+
+ not
+ *.eye5 0 = or
+  0 .friend store
+
+'Waste
+ *.waste 1000 >
+ *.waste .shootval store
+  -4 .shoot store
+ 
+'Targeting and shooting
+ true
+  11 rnd .shottype store
+
+ *.eye5 0 >
+ *.friend 1 != and dupbool dupbool dupbool
+  *.refxpos *.refypos angle .setaim store
+  *.refxpos *.refypos dist 10 div 50 sub 50 ceil 0 floor .refvelup add .up store
+  *.refveldx .dx store
+  -16 .shootval store
+ *.refpoison 0 >
+ *.refshell 0 = or and
+  -6 .shoot store dropbool
+ *.refpoison 0 = and
+ *.refshell 0 > and
+  -1 .shoot store dropbool
+ *.shottype 3 <= and
+ *.refeye 0 > and
+  *.venom .shootval store
+  -3 .shoot store dropbool
+
+ *.eye5 50 >
+ *.friend 1 != and
+  *.refvelup .up store
+ *.shootval *.venom != and
+  32 .shootval store
+  
+ *.eye5 0 =
+ *.friend 1 = or
+ *.shflav 0 =
+ *.shflav -2 = or and
+  *.aim 418 rnd add .setaim store
+ 4 rnd 1  = and
+  *.maxvel .dn store
+   
+ *.eye5 0 =
+ *.friend 1 = or
+ *.shflav 0 != and
+ *.shflav -2 != and
+  *.aim *.shang sub .setaim store
+  16 .shootval store
+  -6 .shoot store 
+  0 .shflav store
+  
+ *.paralyzed 0 != or
+  0 .shootval store
+
+ *.eye1 *.eye9 !=
+ *.eye5 0 = and
+  140 *.eye1 *.eye9 sub sgn mult *.aim add .setaim store
+  
+ *.eye2 *.eye8 !=
+ *.eye5 0 = and
+  105 *.eye2 *.eye8 sub sgn mult *.aim add .setaim store
+ 
+ *.eye3 *.eye7 !=
+ *.eye5 0 = and
+  75 *.eye3 *.eye7 sub sgn mult *.aim add .setaim store
+  
+ *.eye4 *.eye6 !=
+ *.eye5 0 = and
+  30 *.eye4 *.eye6 sub sgn mult *.aim add .setaim store
+ 
+'Body/nrg management
+ *.nrg *.body !%= dupbool
+ *.nrg *.body > and
+  *.nrg *.body sub 100 ceil .strbody store dropbool
+ *.body *.nrg > and
+  *.body *.nrg sub 100 ceil .fdbody store
+
+'Repro
+ *.body 1000 >
+ *.nrg 1000 > and
+ *.totalbots 2 div 15 floor 30 ceil *.totalmyspecies < and
+ *.eye5 0 = and
+  50 .repro store
+   
+ *.body 500 >
+ *.nrg 500 > and
+ *.totalbots 2 div 15 floor 30 ceil *.totalmyspecies >= and
+ *.eye5 0 = and
+  50 .repro store
+  
+'Defences
+ *.ploc .shoot !=
+  .shoot .ploc store
+ 
+ *.vloc .shoot !=
+  .shoot .vloc store
+  
+ *.venval -2 !=
+  -2 .venval store
+  
+ *.nrg 150 > dupbool dupbool
+ *.poison 1000 < and
+  50 .strpoison store dropbool
+  
+ *.shell 500 < and
+  75 .mkshell store dropbool
+    
+ *.venom 15 < and
+  15 *.venom sub 0 floor .strvenom store
+
+stop
+end

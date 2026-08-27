@@ -1,0 +1,191 @@
+'All Eyes(F1) V1.4
+'By Spike43884
+'Waits for his prey, all eyes ready then pounces!
+'Refer to Sentry-Rule
+'Gene 1 changes
+
+
+def attack 50
+
+
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+
+
+
+' Gene 1 Food Finder (waiting)
+cond
+*.eye1 0 =
+ *.eye2 0 = and
+ *.eye3 0 = and
+ *.eye4 0 = and
+ *.eye5 0 = and
+ *.eye6 0 = and
+ *.eye7 0 = and
+ *.eye8 0 = and
+ *.eye9 0 = and
+*.refeye *.myeye = and
+start
+10 rnd .aimdx store
+stop
+
+
+'Gene 2 Food Sighted 
+'*********************
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+start
+550 .aimdx
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+start
+405 .aimdx
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+start
+260 .aimdx
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+start
+115 .aimdx
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+start
+115 .aimsx
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+start
+260 .aimsx
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+start
+405 .aimsx
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+start
+550 .aimsx
+stop
+'*********************
+
+
+' Gene 3 Chase Food
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 4 Long Range Food Handling
+cond
+ *.eye5 45 >
+ *.refeye *.myeye !=
+start
+.aimdx .shoot store
+216 .shootval store
+stop
+
+
+' Gene 5 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+
+' Gene 6 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 7 Reproduce
+cond
+ *.nrg 20000 >
+ *.robage 3 > and 
+start
+ 10 .repro store
+stop
+
+'*-*-*-*-*-*-*-*-*-*-*-*
+
+? Gene 8 tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+? Gene 9 sever tie to parent
+cond
+*.robage 1 =
+start
+.delti inc
+stop
+
+
+end

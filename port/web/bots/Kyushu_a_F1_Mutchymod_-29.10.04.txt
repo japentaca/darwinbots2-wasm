@@ -1,0 +1,220 @@
+'Topic: Bot Tuning
+'Mutchy
+'
+'Patched by PY for V2.3
+' Kyushu Bot modified to run in V2.3
+' Tie bot
+' Combat Bot
+' By Henk
+
+' ********** General Genes **********
+
+' Get waste out of the way.
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' ********** nonsense genes to identify **********
+
+cond
+*.nrg 0 =
+start
+-1 .shoot store
+-1 .shoot store
+-1 .shoot store
+-1 .shoot store
+stop
+
+' ********** TIE Genes **********
+
+' Engage tie
+cond
+*.eye5 30 >
+*.refshoot *.myshoot !=
+start
+*55 .tie store
+-6 .shoot store
+stop
+
+cond
+*.robage 1 =
+*.numties 0 >
+start
+99 .readtie store
+stop
+
+' Feed through tie when it's a non-veg
+cond 
+*.numties 0 >
+*.trefshoot *.myshoot !=
+*.trefeye 0 >
+start
+100 .sharenrg store
+.fixang .tieloc store
+628 .tieval store
+stop
+
+' feed when it's a veg
+' Fixed a problem here. He was looking for 
+' trefeye <> 0. Veggies have ONE eye not zero
+' PY
+
+cond
+*.robage 0 =
+start
+99 .readtie store
+stop
+
+cond 
+*.trefshoot *.myshoot !=
+*.trefeye 1 =
+start
+*55 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+
+' ********** Move genes **********
+cond
+*.numties 0 =
+start
+40 *.vel sub .up store
+stop
+
+' ********** Follow Genes **********
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+start
+-102 .aimdx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+start
+102 .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+' ********** Species genes **********
+
+' turn away from other Kyushu.
+cond
+*.refshoot *.myshoot =
+*.eye5 20 >
+start
+314 .aimdx store
+stop
+
+' delete tie to fellow Kyushu
+cond
+*.trefshoot *.myshoot =
+*.numties 0 >
+start
+*55 .deltie store
+stop
+
+' ********** Initiating genes **********
+
+' Tie to father. Or is it a mother?
+cond
+*.robage 0 =
+start
+.tie inc
+900 rnd 1 add 55 store
+stop
+
+‘ delete tie again and store tie phase in .readtie
+cond
+*.robage 1 =
+start
+.deltie inc
+*55 .readtie store
+stop
+
+' make shell
+cond
+*.shell 50 <
+start
+50 *.shell sub .mkshell store
+stop
+
+' ********** Repro Genes **********
+
+' Turn back to food. I hope.
+cond
+*41 0 >
+start
+628 .aimdx store
+41 dec
+stop
+
+' Reproduce
+cond
+*.nrg 4500 >
+*.robage 50 >
+start
+50 .repro store
+628 .aimdx store
+41 inc
+stop
+
+' Evil anti-tie gene. 
+cond
+*.tiepres *55 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.eye5 40 >
+*.refshoot *.myshoot !=
+start
+-6 .shoot store
+stop
+
+cond
+*.body 2000 <
+*.nrg 2000 >
+start
+200 .strbody store
+stop
+
+cond
+*.robage 0 =
+start
+1 .readtie store
+stop
+
+cond
+*.numties 0 >
+*.trefshoot *.myshoot !=
+start
+0 .fixang store
+stop
+
+end

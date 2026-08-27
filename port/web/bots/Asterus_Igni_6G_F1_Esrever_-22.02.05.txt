@@ -1,0 +1,72 @@
+'Asterus Igni
+'By Esrever
+'~~~~~~~~~~~~
+'Bot Designed for SB League
+'Two minor bugs fixed by Henk
+'topic 'Hello., Plus a shortbot.
+
+' Gene 1 Catch and
+' Fight Prep
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.numties 0 =
+start
+*.refveldx .dx store
+*.refvelup 20 add .up store
+200 *.poison sub .strpoison store
+75 *.slime sub .mkslime store
+10 *.body sub 10 mult .strbody store
+stop
+
+' Gene 2 Tie Up 
+cond
+' *,numties 0 = and (this as the original condition with a bug)
+*.numties 0 = and ' fixed
+*.eye5 40 > and
+*.refeye *.myeye != and
+*.eye5 77 != and
+*.robage 0 = or
+start
+1 .tie store
+1 .readtie store
+stop
+
+' Gene 3 Eat Enemies
+cond
+*.trefeye *.myeye !=
+start
+1 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+' Gene 4 Anti-Cannibalism
+' and Birth Setup
+cond
+*.trefeye *.myeye =
+*.robage 1 = or
+start
+1 .deltie store
+200 *.poison sub .strpoison store
+75 *.slime sub .mkslime store
+10 *.body sub 10 mult .strbody store
+stop
+
+' Gene 5 Avoid/Search
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+471 rnd .aimdx store
+stop
+
+' Gene 6 Reproduce
+cond
+*.nrg 4000 >
+start 
+60 .repro store
+stop
+
+' added an end command
+end

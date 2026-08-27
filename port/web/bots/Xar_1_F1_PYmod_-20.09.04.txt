@@ -1,0 +1,168 @@
+'Topic: Leagues?
+'K0zm0
+'PY's fixed version of K0zm0's Xar.
+'
+'Xar
+'Made by k0zm0
+'30.aug.2004
+'version 3
+cond
+*.robage 0 =
+start
+999 rnd 70 store
+60 inc
+stop
+
+cond
+*.slime 100 <
+start
+100 *.slime sub .mkslime store
+stop
+
+cond
+*.numties 0 !=
+start
+*70 .readtie store
+stop
+
+cond
+*.trefeye *.myeye =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.body 200 <
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 400 >
+start
+100 .fdbody store
+stop
+
+cond
+*.eye5 25 >
+*.numties 3 !=
+*.refeye *.myeye !=
+start
+*70 .tienum store
+*70 .tie store
+stop
+
+cond
+*.nrg 6000 >
+start
+mult
+628 
+50 .repro store
+stop
+
+cond
+*.numties 0 =
+*.eye5 0 =
+start
+mult
+0 
+stop
+
+cond
+*.numties 0 =
+*.eye5 26 <
+*.eye9 0 =
+start
+mult
+100 
+stop
+
+cond
+*.numties 0 =
+*.eye5 26 <
+*.eye9 0 >
+start
+mult
+*.eye9 *.eye1 sub 
+stop
+
+cond
+*.numties 0 =
+*.eye5 24 <
+start
+mult
+*.eye6 *.eye4 sub 
+stop
+
+
+cond
+*.numties 0 =
+*.eye5 0 =
+*.vel 20 <
+start
+mult
+0 
+20 *.vel sub .up store
+stop
+
+cond
+*.numties 0 =
+start
+.aimdx store
+stop
+
+cond
+*.eye5 25 >
+*.refeye 0 =
+start
+-1 .shoot store
+stop
+
+cond
+*.ref
+*.refnrg *.nrg <
+*.eye5 25 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+start
+-1 .shoot store
+stop
+
+cond
+*.refnrg *.nrg >
+*.eye5 25 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+cond
+*50 2 !=
+start
+50 inc
+stop
+
+cond
+*50 2 =
+start
+0 50 store
+stop
+
+cond
+*50 1 =
+start
+*70 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+*50 0 =
+*.numties 0 >
+start
+*70 .tienum store
+*.aim .tieval store
+.setaim .tieloc store
+stop
+end

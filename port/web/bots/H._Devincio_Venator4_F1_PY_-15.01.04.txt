@@ -1,0 +1,157 @@
+'Topic: Formula one bots!
+'PY
+
+'H_Devincio_Venator 4
+' *** Tie Hunter ***
+'The next generation for V2.13
+'***********************
+
+
+
+'reproduce 
+'***********
+cond
+*.nrg 5000 > 
+*.eye5 0 =
+start
+20 .repro store
+2 50 store
+150 .aimdx store
+stop
+
+'initialize
+'*********
+cond
+*.robage 0 =
+start
+8 rnd 2 add 51 store
+25 55 store
+stop
+
+' move forward 
+'****************
+cond
+*50 10 >
+*.vel 20 <
+start
+5 .up store
+stop
+
+cond
+*.eye5 0 >
+start
+20 .up store
+stop
+
+cond
+*50 100 <
+start
+50 inc
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye9 !=
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+stop
+
+cond
+*.eye2 *.eye8 !=
+start
+*.eye8 *.eye2 sub 3 mult .aimdx store
+stop
+
+cond
+*.eye3 *.eye7 !=
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye *55 =
+*.eye5 20 >
+start
+180 .aimsx store
+stop
+
+' sever ties to conspecifics
+' *****************************
+cond
+*.trefeye *55 =
+start
+*55 .deltie store
+stop
+
+'Spin when attacked
+'*************************
+cond
+*.shdn 0 <
+*.pleas -10 <
+start
+620 .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+start
+620 .aimsx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+start
+200 rnd 100 sub .aimsx store
+stop
+
+'Tie to an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye5 *.eye4 =
+*.eye5 *.eye6 =
+*.refeye *55 !=
+*50 5 > 
+start
+*51 .tie store
+0 .aimdx store
+stop
+
+'Feed
+'******
+cond 
+*.numties 0 >
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+*51 .readtie store
+stop
+
+cond
+*.slime 100 <
+start
+50 .mkslime store
+stop
+
+cond
+*.refeye *55 !=
+*.eye5 50 >
+start
+-1 .shoot store
+stop
+
+
+end

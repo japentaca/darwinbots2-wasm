@@ -1,0 +1,31 @@
+' Diatomea
+
+cond
+*.robage 1 =
+*971 0 =
+start
+100 rnd 971 store
+60 rnd 30 sub 972 store
+1000 rnd 973 store
+32000 rnd 974 store
+99 rnd 975 store
+stop
+
+cond
+*.chlr rnd 1 =
+start
+*971 .mkchlr store
+stop
+
+start
+*972 .aimdx store
+*.totalmyspecies rnd .setboy store
+*.nrg *973 div .mkshell store
+stop
+
+cond
+*.nrg *974 >
+start
+*975 .mrepro store
+stop
+end

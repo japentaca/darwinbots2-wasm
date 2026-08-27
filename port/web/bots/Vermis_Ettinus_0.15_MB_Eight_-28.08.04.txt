@@ -1,0 +1,197 @@
+'Topic: New Bots
+'Eight
+' Vermis Ettinus 0.15 (rebuild3) by Eight
+' (Ettin Worm) "two heads are better than one"
+'
+' - this version is a simplified example of VE, which eats
+' plants with ties and fixes enemy bots in place to shoot
+' them normally. 
+' - basic, no slime or bodybuilding. just serves as an example
+' of a quick, simple multibot.
+' - once active, each head has a different number (45)
+' which is either 0 or 2.
+
+
+' idle
+cond
+*45 2 =
+*.vel 0 =
+start
+5 .dx store
+5 .tieval store
+.sx .tieloc store
+1 .tienum store
+stop
+
+' sun
+cond
+*.sun 1 =
+*.vel 0 =
+start
+30 .up store
+30 .tieval store
+.dn .tieloc store
+1 .tienum store
+stop
+
+' share
+cond
+*.numties 1 =
+*.multi 1 =
+*.trefnrg *.nrg !%=
+start
+50 .sharenrg store
+stop
+
+' single
+cond
+*.numties 0 =
+start
+0 45 store
+stop
+
+' grow head
+cond
+*45 0 =
+*.multi 0 =
+*.nrg 500 >
+start
+45 inc
+50 .repro store
+stop
+
+' parent ties to its own child
+cond
+*45 1 =
+*.eye5 70 >
+*.refeye *.myeye =
+start
+1 .tie store
+1 .readtie store
+45 inc
+stop
+
+' angle - this gene stays active until the tie hardens so it's
+' the first thing that kicks in. this -ensures- perfect angles.
+cond
+*.multi 0 =
+*.numties 1 =
+start
+628 .fixang store
+stop
+
+' turn
+cond
+*.eye1 *.eye5 >
+*.refeye *.myeye !=
+start
+5 .sx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.refeye *.myeye !=
+start
+5 .dx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.refeye *.myeye !=
+start
+2 .sx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.refeye *.myeye !=
+start
+2 .dx store
+stop
+
+' tiefeed on vegs
+cond
+*.multi 1 =
+*.numties 1 =
+*.eye5 30 >
+*.refeye *.myeye !=
+*.refshoot 0 =
+start
+3 .tie store
+stop
+
+' tiefeed/sabotage tiefeeders
+cond
+*.numties 1 >
+*.tiepres 1 !=
+start
+*.tiepres .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+' freeze gun
+cond
+*.reffixed 0 =
+*.multi 1 =
+*.numties 1 =
+*.eye5 30 >
+*.refeye *.myeye !=
+*.refup 0 >
+start
+1 .shootval store
+216 .shoot store
+stop
+
+' shoot
+cond
+*.reffixed 1 =
+*.multi 1 =
+*.numties 1 =
+*.eye5 30 >
+*.refeye *.myeye !=
+*.refup 0 >
+start
+-1 .shoot store
+stop
+
+' unfix
+cond
+*.fixpos 1 =
+start
+0 .fixpos store
+stop
+
+' what's closest
+cond
+*.multi 1 =
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+.eye5 .tmemloc store
+stop
+
+' move
+cond
+*.multi 1 =
+*.eye5 *.tmemval >
+*.refeye *.myeye !=
+*.eye5 60 <
+start
+100 *.eye5 sub 5 div .up store
+100 *.eye5 sub 5 div .tieval store
+.dn .tieloc store
+1 .tienum store
+stop
+
+' make sure you've only got one tie when you split
+cond
+*.numties 1 =
+*.eye5 30 <
+*.nrg 10000 >
+start
+0 45 store
+1 .deltie store
+stop
+
+end

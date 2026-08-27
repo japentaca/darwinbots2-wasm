@@ -1,0 +1,188 @@
+'A bot for DB 2.3
+'Henk
+
+' Hojo bot
+' for DB 2.3
+' By Henk
+
+' repro
+cond
+*.nrg 6000 >
+*.robage 40 >
+start
+50 .repro store
+stop
+
+' move
+cond
+*.vel *.maxvel <
+start
+15 .up store
+stop
+
+' edge
+cond
+*.edge 0 !=
+*.eye5 0 =
+start
+314 .aimdx store
+stop
+
+' follow
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+start
+-128 .aimdx store
+4 .sx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+start
+128 .aimdx store
+4 .dx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+*.numties 0 =
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+' avoid friends
+cond
+*.eye5 35 >
+*.memval 230 =
+*.robage 1 >
+start
+314 .aimsx store
+stop
+
+' I want 2 c
+cond
+*.eye5 20 >
+start
+41 .memloc store
+stop
+
+' eat body points
+cond
+*.eye5 20 >
+*.memval 230 !=
+*.vel 0 >
+start
+0 .backshot store
+-6 .shoot store
+stop
+
+
+' convert body points to energy
+cond
+*.body 3500 >
+*.nrg 3100 <
+start
+10 .fdbody store
+stop
+
+' activate aft shooting when some-one is behind me somehow
+cond
+*.hitdn 0 !=
+*.eye5 20 <
+start
+.backshot inc
+-1 .shoot store
+stop
+
+cond
+*.shdn 0 !=
+*.eye5 20 <
+start
+.backshot inc
+-1 .shoot store
+stop
+
+' initiative genes
+cond
+*.robage 0 =
+start
+.tie inc
+41 .memloc store
+230 41 store
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+' make slime
+cond
+*.slime 90 <
+start
+100 *.slime sub .mkslime store
+stop
+
+' waste management
+cond
+*.waste 75 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Tie stuff
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+' using bouyancy for speed
+cond
+*.aim 157 >
+*.aim 471 <
+*.rdboy -2000 !=
+start
+-2000 .setboy store
+stop 
+
+cond
+*.aim 785 <
+*.aim 471 >
+*.rdboy 0 !=
+start
+0 .setboy store
+stop 
+
+cond
+*.aim 785 >
+*.aim 1099 <
+*.rdboy 2000 !=
+start
+2000 .setboy store
+stop
+
+cond
+*.aim 1250 %=
+*.rdboy 0 !=
+start
+0 .setboy store
+stop
+end

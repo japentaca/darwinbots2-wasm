@@ -1,0 +1,156 @@
+'NAME        : SexBot
+'BY        : d-EVO
+'CLASS        : IB
+
+'Males compete for females
+'Females run away from males so only the strongest males can mate
+'Unmutated they will not inbreed
+'Dont handle mutations well
+'Make sure you start of with at least two females and 1 male,
+'Females will grow bigger than males
+'Males don't feed
+
+
+def x 50
+def y 51
+def mom 971
+
+'Universal comandes
+
+cond
+ *.eye5 0 =
+start
+ *.eye1 *eye2 add *.eye3 add *.eye4 add *.eye6 *.eye7 add *.eye8 add *.eye9 add sub sgn 40 mult .aimsx store
+ *.vel 20 <
+ 10 .up store
+ dropbool
+stop
+
+cond
+ *.mom 0 =
+start
+ 1000 rnd .mom store
+stop
+
+cond
+ *.x 0 =
+start
+ 1 rnd 1 add .x store 
+stop
+
+start
+ *.x .out1 store
+ *.mom .out2 store
+stop
+
+'FEMALE
+
+cond
+ *.x 2 =
+ *.body 3000 < 
+ *.nrg 3000 >
+start
+ 100 .strbody store
+stop
+
+cond
+ *.x 2 =
+ *.fertilized 9 = 
+start
+ 10 .sexrepro store
+stop
+
+cond
+ *.x 2 =
+ *.eye5 0 >
+ *.in1 0 !=
+start
+ *.maxvel .dn store
+ 624 .aimdx store
+stop
+
+cond
+ *.x 2 =
+ *.eye5 0 >
+ *.in1 0 =
+start
+ *.refveldx .dx store
+ *.eye5 50 =>
+ *.refvelup .up store
+ -6 .shoot store
+ dropbool
+ *.eye5 50 <
+ *.refvelup 30 add .up store
+ dropbool
+stop
+
+cond
+ *.x 2 =
+ *.eye5 0 >
+ *.in1 2 =
+start
+ 300 rnd .aimdx store
+stop
+ 
+'MALE
+
+cond
+ *.x 1 =
+start
+ *.body 1000 >
+ 100 .fdbody store
+ dropbool
+ *.nrg 32000 =
+ 16000 .shootval store
+stop
+
+cond
+ *.x 1 =
+ *.eye5 0 > 
+ *.in1 1 =
+start
+ *.refveldx .dx store
+ *.eye5 50 =>
+ *.refvelup .up store
+ -6 .shoot store
+ dropbool
+ *.eye5 50 <
+ *.refvelup 30 add .up store
+ dropbool
+stop
+
+cond
+ *.x 1 =
+ *.eye5 0 >
+ *.in1 2 =
+ *.mom *.in2 !=
+ *.refbody 3000 >
+start
+ *.refveldx .dx store
+ *.eye5 50 =>
+ *.refvelup .up store
+ -8 .shoot store
+ dropbool
+ *.eye5 50 <
+ *.refvelup 30 add .up store
+ dropbool
+stop
+
+cond
+ *.x 1 =
+ *.eye5 0 >
+ *.in1 0 =
+ *.in1 2 = 
+ *.mom *.in2 = and
+ *.refbody 3000 > and or and and
+start
+ 300 rnd 600 add .aimdx store
+stop
+
+cond
+*.waste 100 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop

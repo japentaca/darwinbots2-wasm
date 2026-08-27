@@ -1,0 +1,117 @@
+'Topic: Anybody found any bugs in 2.14 yet?
+'PY
+
+'Cheatbot mk1
+'Unscrupulously exploits a cheat loophole
+'to reproduce at alarming rates
+
+'Simple search pattern.
+
+cond
+*.eye3 *.eye5 >
+*.numties 0 =
+start
+-25 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.numties 0 =
+start
+25 .aimdx store
+stop
+
+cond
+*.numties 0 =
+*.vel 30 <
+start
+5 .up store
+stop
+
+cond
+*.refeye 7 =
+'*.eye5 0 >
+*.numties 0 =
+start
+180 .aimdx store
+stop
+
+cond
+*.numties 0 =
+*50 0 >
+start
+0 50 store
+stop
+
+cond
+*50 2 =
+start
+6 .tie store
+3 50 store
+stop
+
+cond
+*50 3 =
+*.multi 1 =
+start
+6 .tienum store
+0 .fixang store
+stop
+
+cond
+*.robage 2 =
+start
+6 .tienum store
+628 .fixang store
+6 .readtie store
+stop
+
+cond
+*50 1 =
+start
+628 .aimdx store
+5 .tienum store
+628 .fixang .store
+50 .repro store
+2 50 store
+stop
+
+cond
+*.eye5 30 >
+*.eye4 *.eye6 %=
+*.refeye 0 =
+*.50 0 =
+*.robage 3 >
+*.numties 0 =
+start
+5 .tie store
+1 50 store
+stop
+
+cond
+*.numties 0 >
+start
+1 .sharewaste store
+80 .sharenrg store
+6 .tienum store
+500 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.numties 0 >
+*.nrg 5000 >
+*50 0 =
+start
+50 .repro store
+stop
+
+cond
+*.numties 1 =
+*.trefeye 0 =
+*.multi 1 =
+start
+5 .deltie store
+stop
+
+end

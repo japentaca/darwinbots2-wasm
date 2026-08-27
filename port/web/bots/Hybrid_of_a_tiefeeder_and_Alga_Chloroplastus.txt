@@ -1,0 +1,135 @@
+ cond
+ *.chlr 16000 <
+ *.nrg 32 >
+ *.daytime 1 =
+ *.refxpos 0 =
+ start
+ .aimleft inc
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  18  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  19  '''''''''''''''''''''''
+ cond
+ *.eye5 0 !=
+ start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.eye5 20 <
+ *.refxpos *.refypos dist 1 .mkchlr store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  41  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  42  '''''''''''''''''''''''
+ cond
+ *.myeye *.refeye !=
+ start
+ .tie inc
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  49  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  50  '''''''''''''''''''''''
+ cond
+ *.myeye *.trefeye =
+ start
+ .deltie inc
+ 314 .aimleft store
+ 30 .up store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  63  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  64  '''''''''''''''''''''''
+ cond
+ *.myeye *.trefeye !=
+ *.numties 0 !=
+ start
+ *.tiepres .tienum store
+ -1000 .tieval store
+ -1 .tieloc store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  81  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  82  '''''''''''''''''''''''
+ cond
+ *.pleas 0 >
+ *.nrg 1000 >=
+ start
+ *.poison 50 <
+ .mkpoison inc
+ *.venom 50 <
+ .strvenom inc
+ *.shell 1000 <
+ .mkshell inc
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  105  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  106  '''''''''''''''''''''''
+ cond
+ *.robage 10 <=
+ start
+ 505 .ploc store
+ 820 .vloc store
+ -100 .venval store
+ 32000 .dn store
+ 314 .aimleft store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  126  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  127  '''''''''''''''''''''''
+ cond
+ *.myeye *.refeye !=
+ *.venom 0 !=
+ *.eye5 20 >=
+ *0 0 !=
+ start
+ -3 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  144  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  145  '''''''''''''''''''''''
+ cond
+ *.waste 40 >
+ start
+ 0 inc
+ -4 .shoot store
+ *.waste .shootval store
+ 0 dec
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  160  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  161  '''''''''''''''''''''''
+ start
+ *.nrg 20000 >=
+ *.pleas .strbody store
+ *.nrg 1000 <=
+ *.body 4000 <
+ *.nrg 1000 >
+
+''''''''''''''''''''''''  Gene:  10 Ends at position  176  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  11 Begins at position  177  '''''''''''''''''''''''
+ start
+ *.myeye *.refeye =
+ *.refxpos *.refypos angle .setaim store
+ *.eye5 14 <
+ *.refxpos *.refypos dist .up store
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  194  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  195  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ *.body 1000 >
+ *.myeye *.refeye =
+ start
+ -8 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  209  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  210  '''''''''''''''''''''''
+ cond
+ *.daytime 0 =
+ *.chlr 500 >
+ start
+ 1 .rmchlr store
+ 100 .dn store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  224  '''''''''''''''''''''''

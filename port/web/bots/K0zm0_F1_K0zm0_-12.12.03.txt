@@ -1,0 +1,204 @@
+'12.12.03
+'Topic: Bot for DB v 2.12  
+'K0zm0 unnamed bot
+
+'identification
+'
+cond
+*50 0 =
+start
+1 50 store
+58 .out1 store
+59 .out2 store
+stop
+
+
+'If I meet veg
+cond
+*.eye5 30 >
+*.eye5 *.eye6 =
+*.eye5 *.eye4 =
+*.eye5 70 <
+*.refshoot 0 =
+*.in1 58 !=
+start
+1 .tienum store
+1 .tie store
+stop
+
+'If I meet enemy
+cond
+*.eye5 0 >
+*.refshoot 4 !=
+*.in1 58 !=
+start
+1 .tienum store
+1 .tie store
+stop
+
+'If I meet friend
+cond
+*.eye5 30 >
+*.eye5 *.eye6 =
+*.eye5 *.eye4 =
+*.eye5 70 <
+*.refshoot 4 =
+*.eye5 0 >
+*.in1 58 =
+start
+3 .tienum store
+3 .tie store
+stop
+
+'
+'movement ("gene sliced" from Xenomimus Homognosis)
+'
+cond
+*.eye5 0 =
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add 2 div .aimsx store
+3 .up store
+stop
+
+cond
+*.eye1 *.eye3 *.eye5 *.eye7 *.eye9 0 = = = = =
+start
+0 *.nrg sub
+2 div
+5 div
+3 div
+2 div
+5 div
+3 div
+4 div
+.aimsx store
+store
+stop
+
+
+'
+'Feeding ("gene sliced" from H_Devincio_Gemini)
+'
+
+cond 
+*.eye5 0 >
+*.refshoot 0 =
+*.in1 58 !=
+start
+1 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+cond 
+*.eye5 0 >
+*.refshoot 4 !=
+*.refeye 0 >
+*.in1 58 !=
+start
+500 .shootval store
+-3 .shoot store
+-1 .shoot store
+1 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'Paralize!
+cond
+*.eye5 0 >
+*.refshoot 4 !=
+*.pain 0 >
+start
+500 .shootval store
+-3 .shoot store
+stop
+
+
+'
+'"Bio-clock"
+'
+cond
+*60 60 !=
+*.nrg 10000 >
+start
+60 60 store
+60 .out2 store
+stop
+
+cond
+*60 59 !=
+*.nrg 10000 <
+start
+59 60 store
+59 .out2 store
+stop
+
+
+'
+'Reproduction, (Sexual reproduction only if conditions are O.K.)
+'
+cond
+*.nrg 20000 > 
+start
+70 .mrepro store
+stop
+
+cond
+*.nrg 10000 >
+*.nrg 20000 <
+*.eye5 0 >
+*.in2 *60 =
+start
+70 .sexrepro store
+59 60 store
+stop
+
+
+'
+'Various waste
+'
+
+'waste
+cond
+*.waste 1000 >
+start
+-4 .shoot store
+stop
+
+'Poison
+cond
+*.waste 120 >
+*.poison < 31999
+start
+50 .strpoison store
+stop
+
+'Venom
+cond
+*.waste 120 >
+*.venom < 31999
+start
+50 .strvenom store
+stop
+
+'No more then 2 ties
+cond
+*.numties 3 =
+start
+3 .deltie store
+stop
+
+'Sharing 
+cond
+*.trefshoot 4 =
+*.multi 1 =
+start
+1 .sharenrg store
+1 .sharewaste store
+stop
+end

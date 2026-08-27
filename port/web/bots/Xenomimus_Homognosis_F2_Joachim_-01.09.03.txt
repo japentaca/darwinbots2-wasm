@@ -1,0 +1,147 @@
+'01.09.03
+' Topic: Xenomimus Homognosis  
+
+'Joachim
+
+' Xenomimus Homognosis
+'
+' this creature is a peaceful being
+' it only eats thing that don't shoot
+' it mimics opponents to avoid conflicts
+' this fellow is GROUPMINDED however 
+' if being shot at, it marks the enemy
+' marked enemies are shot by all mates
+
+
+'-------------
+' be attracted by things if nothing in front
+'-------------
+cond
+*.eye5 0 =
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add 2 div .aimsx store
+3 .up store
+stop
+
+'-------------
+' however, if not seeing anything,
+' then turn somewhat, based on the energylevel
+'-------------
+cond
+*.eye1 *.eye3 *.eye5 *.eye7 *.eye9 0 = = = = =
+start
+0 *.nrg sub
+2 div
+5 div
+3 div
+2 div
+5 div
+3 div
+4 div
+.aimsx store
+store
+stop
+
+'-------------
+' turn away from thing that are too close
+' and that I can't eat
+'-------------
+cond
+*.eye5 70 >
+*.refshoot 0 >
+start
+300 .aimsx store
+stop
+
+'-------------
+' move toward vegetables
+' slowdown when coming closer
+'-------------
+cond
+*.eye5 0 >
+*.refshoot 0 =
+start
+7 *.eye5 20 div sub .up store
+stop
+
+'-------------
+' stay away from shooters
+'-------------
+cond
+*.eye5 0 >
+*.refshoot 0 !=
+start
+4 *.eye5 20 div sub .up store
+stop
+
+
+'-------------
+' shoot vegetables
+'-------------
+cond
+*.eye5 25 >
+*.refshoot 0 =
+start
+-1 .shoot store
+stop
+
+'-------------
+' mark opponents that shoot me
+'-------------
+cond
+*.shup -1 =
+*.eye5 70 >
+*.refshoot 0 !=
+*.in1 666 !=
+start
+666 .shootval store
+.out1 .shoot store
+stop
+
+'-------------
+' unmark myself if needed
+'-------------
+cond
+*.out1 666 =
+start
+0 .out1 store
+stop
+
+'-------------
+' shoot marked enemies
+'-------------
+cond
+*.refshoot 0 !=
+*.in1 666 =
+start
+-1 .shoot store
+stop
+
+'-------------
+' mimic opponents
+'-------------
+cond
+*.eye5 0 !=
+*.in1 0 !=
+*.in2 0 !=
+*.refshoot 0 !=
+start
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+'-------------
+' reproduce
+'-------------
+cond
+*.nrg 20000 >
+start
+300 .aimsx store
+50 .repro store
+600 .aimdx store
+stop
+end

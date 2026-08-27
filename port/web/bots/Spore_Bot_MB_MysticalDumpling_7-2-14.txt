@@ -1,0 +1,225 @@
+'mem
+def reproduced 40
+def type 41
+def fling 42
+
+'Do to certain difficulties, vars are not defined
+'reprodced: 1- did, 0-did not
+'type- 0 is core, 1 is spore
+'Fling- spore is preparing for launch
+
+
+'Set things.
+cond
+*.robage 0 =
+start
+1235 .out1 store
+stop
+
+'******************************************************
+   'Basic Mechagnisms
+      'Repro, spore formation, structure, ect. 
+'******************************************************
+
+'Form bibot
+cond
+*.reproduced 0 =  
+*.robage 200 >=
+*.type 0 =
+*.nrg 2000 >=
+*.body 671 >=
+start
+1 .timer store
+10 .repro store
+1 .tie store
+1 .reproduced store
+stop
+
+'After some time, reset .reproduced
+cond
+*.timer 500 =
+*.type 0 =
+*.numties 0 =
+start
+0 .reproduced store
+0 .timer store
+stop
+
+'Smaller ones are spores
+cond
+*.robage 1 =
+*.body *.trefbody <
+start 
+1 .type store
+stop
+
+'Im a baby, so ill make a tie
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'If I have no ties and am a spore, mature to a core.
+cond
+*.type 1 =
+*.timer 1500 >=
+*.numties 0 =
+start
+0 .type store
+stop 
+
+'Fling spores.
+cond
+*.type 1 =
+*.numties 1 >=
+start
+1 .tout1 store
+1 .fling store 
+1 .tienum store
+32000 .fixlen store
+100 .stifftie store
+stop
+
+'Im the core- Ill fix myself if my spore is gunna fling.
+cond
+*.type 0 =
+*.tin1 0 !=
+start
+1 .fixpos store
+stop
+
+'If I have no fligin' spores, ill defixpos myself
+cond
+*.type 0 =
+*.fixpos 1 =
+*.numties 0 =
+*.eyef 0 =
+start
+0 .fixpos store
+stop
+
+'Follow the core if im a spore...
+cond
+*.type 1 =
+*.multi 0 !=
+start
+*.tiepres .readtie store
+*.trefxpos *.trefypos *.setaim store
+stop
+
+'If I have 2 or more ties, simplify it to one tie
+cond
+*.numties 2 >=
+start
+*.tiepres tienum store
+.deltie store
+stop
+
+
+'******************************************************
+   'Hunting Mech.
+'******************************************************
+'OCULUS III
+'Thanks, bacillus!
+start
+-4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0 floor mult *.eye1 *.eye6 sub sgn 0 floor
+ mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor
+ mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9 *.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 
+*.eye6 sub sgn 0 floor mult *.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 
+floor mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub sgn ++ sgn mult 
+*.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6 sub sgn 0 floor mult *.eye2 *.eye5 
+sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2 *.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn 
+mult add 3 *.eye8 *.eye9 sub sgn ++ sgn mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 
+*.eye5 sub sgn 0 floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub sgn 
+++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3 *.eye8 sub sgn ++ sgn mult 
+*.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult *.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub 
+sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn mult *.eye3
+ *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub sgn ++ sgn mult *.eye7 *.eye7 sub 
+sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5 sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult
+ *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7 *.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 
+*.eye8 sub sgn ++ sgn mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0 
+floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn mult add 1 
+*.eye6 *.eye9 sub sgn ++ sgn mult *.eye6 *.eye8 sub sgn ++ sgn mult *.eye6 *.eye7 sub sgn ++ sgn mult *.eye6 *.eye6 sub 
+sgn ++ sgn mult *.eye6 *.eye5 sub sgn 0 floor mult *.eye6 *.eye3 sub sgn ++ sgn mult *.eye6 *.eye2 sub sgn ++ sgn mult 
+*.eye6 *.eye1 sub sgn ++ sgn mult add 4 add *.focuseye 4 add sub dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn 
+++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn 
+++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup 
+sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- 9 
+add - dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult 
+dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult 
+dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec --
+stop
+
+'Core turn mech.
+cond
+'Eyes
+*.eyef 0 !=
+'Conspec
+*.out1 *.in1 !=
+*.myeye *.refeye !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'Approach prey
+cond
+*.eyef 0 !=
+*.out1 *.in1 !=
+*.myeye *.refeye !=
+start
+ *.eyef 10 =<
+*.refveldx .dx store
+*.refvelup 31 add .up store
+stop
+
+'I see prey- Let's eat it!
+'It will choose shots based on defense
+'shell- use -1
+'poison- use -6
+'none- use -6
+cond
+*.eyef 10 >
+and
+*.out1 *.in1 !=
+*.myeye *.refeye !=
+or
+start
+1 .fixpos store
+*.refpoison 0 !=
+*.refshell 0 =
+and
+-6 .shoot store
+*.refshell 0 !=
+*.refpoison 0 =
+and
+-1 .shoot store
+*.refpoison 0 =
+*.refshell 0 =
+and
+-6 .shoot store
+*.refpoison 0 !=
+*.refshell 0 !=
+and
+0 .fixpos store
+100 .dx store
+clearbool
+0 .fixpos store
+stop
+
+'If I see nothing but my spore, rotate.
+cond
+*.eyef 0 =
+*.refeye *.myeye =
+or
+start
+14 .aimdx store
+stop
+
+'Stop weird rotations around prey.
+cond 
+*.myeye *.refeye !=
+*.eyef 30000 >=
+start 
+1 .fixpos store
+stop

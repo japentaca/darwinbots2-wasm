@@ -1,0 +1,102 @@
+'Evolved from zerobot in about a week to test my new mutation algorithms
+'Works best if you cap body at 2.5K in global setting cheating prevention and 
+'Enable delta2 mutations in global settings, then disable mutations species tab. (Alternatively you can select disable all mutations via the mutations tab.)
+
+'#generation: 41
+'#mutations: 2235
+ *.fixang <
+ *430 *.eye1width *.trefvelyourdx not
+ 1 -16 *.aimleft ^ *.refbody .reftie store
+ store
+ *.shoot *.eye3 add floorstore
+ <
+ *.focuseye and
+ and
+ xor
+ angle -5 *.dn pyth *.dx *.tin2 0 *.setboy * -5 stop
+
+ cond
+ *.in7 -3 *.tmemval 11 angle dec
+ store
+ *.tin4 *.tin7 *.mydx dupbool
+ logx *.ypos *.paralyzed *.tielen1 ~ *.memloc -12 add 1 and
+ start
+ clearbool
+ substore
+ *.vel .shoot dec
+ *.ypos store
+ *.refage ^ *.genes .in3 store
+ *.in8 *.shup *.dx *.vel *31 add *.tie *.trefvelmysx *.memval
+''''''''''''''''''''''''  Gene:  1 Ends at position  78  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  79  '''''''''''''''''''''''
+ cond
+ store
+ >
+ *.timer <
+ *.refup *391 *.refveldn dist *33 addstore
+ *.myeye *.tout4 *.myvenom *.tin5 .aimleft store
+ store
+ 837 *.venom rnd *.fixlen .aimleft store
+ *.refsx 2 3 *.repro 5 *.eye8 *.eye1 *.focuseye -- -9 store
+ *0 *.vtimer clearbool
+ !~=
+ *.tielen2 pow 24 !=
+ swapbool
+ *.trefage *.refvelup add .slime store
+ %=
+ *.refveldx drop *.shareshell *.sexrepro *.refpoison 7 *.ypos 1 27 27 * *.mkvenom *.trefsx ~ not
+ >> substore
+ ++ *.refbody *.repro *.eye7width -16 *.shareslime
+''''''''''''''''''''''''  Gene:  2 Ends at position  151  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  152  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  3 Ends at position  152  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  153  '''''''''''''''''''''''
+ cond
+ div angle *.mrepro <=
+ *.poisoned div *.aimright 0 angle angle *.hitang pyth *.refup .velsx multstore
+ *.tout4 store
+ *.availability 301 *.setboy *.eye5
+''''''''''''''''''''''''  Gene:  4 Ends at position  174  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  175  '''''''''''''''''''''''
+ cond
+ 699 | -17 0 ~ .tin8 store
+ *.mkshell *.refveldx *.eye7width -22 *.eye4width *.myup *.tin2 *.out9 or
+ store
+ *.eye3dir *.shell 768 store
+ -11 0 add and
+ 29 *.aimright 41 store
+ 9 *.eye7width 2 !=
+ 7 9 else
+ .dn store
+ mod *.mkvirus *.tin5 11
+''''''''''''''''''''''''  Gene:  5 Ends at position  217  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  218  '''''''''''''''''''''''
+ start
+ *.aimleft store
+ sub store
+ %=
+ !=
+ 1 *.trefaim %=
+ xor
+ *.mkvirus *.up *.chlr 12 *.dx -6 dup *.in2 store
+ rndstore
+ 0 !=
+ .venom store
+ .up store
+ divstore
+ --
+''''''''''''''''''''''''  Gene:  6 Ends at position  246  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  247  '''''''''''''''''''''''
+ start
+ cos 8 add <
+ *.tout6 -- *.tout3 -10 mod angle >=
+ *.out1''''''''''''''''''''''''  Gene:  7 Ends at position  259  '''''''''''''''''''''''
+
+'#hash: Go%}Jum'p7.3^(6y;!Zj
+'#tag:zbstage386.txt                               

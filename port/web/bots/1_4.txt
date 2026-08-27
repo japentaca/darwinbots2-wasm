@@ -1,0 +1,161 @@
+'NAME         :BETA-AA
+'LEAGUE        :F2, SB
+'CREATOR    :d-EVO
+
+'BEHAVIOR
+'    If this bot sees a frienly that is tracking an enemy, The bot will aim at that enemy
+'    Unfoolable recognition system (well almost, cant think of a way to beat it(well I have but it wont be easy))
+'    It will reproduce out the back while feeding, offspring will help the mother if no enemys are behind
+
+'FACTS
+'    3 genes with 2 states (setting the bot, attacking and finding something to attack)
+'    most of the actions are controled through ratios. some of them are listed below
+'                    poison /shell is retio between body size and the current amount of poison /shell
+'                    How close it must be to feed from a target is determined by refveldx
+
+cond
+  *.robage 0 =
+start
+  -436 .eye9dir store
+  -327 .eye8dir store
+  -218 .eye7dir store
+  -109 .eye6dir store
+  109 .eye4dir store
+  218 .eye3dir store
+  327 .eye2dir store
+  436 .eye1dir store
+  109 .eye1width store
+  109 .eye2width store
+  109 .eye3width store
+  109 .eye4width store
+  109 .eye5width store
+  109 .eye6width store
+  109 .eye7width store
+  109 .eye8width store
+  109 .eye9width store
+  .shoot .ploc store
+  .tie inc
+  0 .timer store
+  0 .out1 store
+  100 rnd dup .out8 store 10 add .out9 store
+stop
+
+cond
+ *.eyef 0 =
+ *.eyef 0 > 
+ *.in8 *.in9 10 sub = 
+ *.in8 *.out8 != and and or
+start
+  100 rnd dup .out8 store 10 add .out9 store
+  0 .out1 store
+  *.maxvel .up store
+  -4 *.eye1 sgn mult *.eye2 sgn -- abs mult *.eye3 sgn -- abs mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult
+  *.eye6 sgn -- abs mult *.eye7 sgn -- abs mult *.eye8 sgn -- abs mult *.eye9 sgn -- abs mult 4 *.eye9 sgn mult *.eye2 sgn
+  -- abs mult *.eye3 sgn -- abs mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult *.eye7 sgn --
+  abs mult *.eye8 sgn -- abs mult add -3 *.eye2 sgn mult *.eye3 sgn -- abs mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs
+  mult *.eye6 sgn -- abs mult *.eye7 sgn -- abs mult *.eye8 sgn -- abs mult add 3 *.eye8 sgn mult *.eye3 sgn -- abs mult
+  *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult *.eye7 sgn -- abs mult add -2 *.eye3 sgn mult
+  *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult *.eye7 sgn -- abs mult add 2 *.eye7 sgn mult
+  *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult add -1 *.eye4 sgn mult *.eye5 sgn -- abs mult
+  *.eye6 sgn -- abs mult add 1 *.eye6 sgn mult *.eye5 sgn -- abs mult add 0 *.eye5 sgn mult add .focuseye store
+ *.eye5 0 > *.in1 0 = and *.timer 1001 = and
+  20 .dx store
+  dropbool
+ *.eye5 0 > *.in1 1 = and 
+  *.in2 *.in3 angle .setaim store
+  *.maxvel .up store
+  1000 .timer store
+  dropbool
+ *.nrg 2 mult *.body  >
+  *.nrg 10 div 10 sub 99 ceil .strbody store
+  dropbool
+ *.nrg 2 mult *.body <
+  99 .fdbody store
+  dropbool
+ *.body 900 >
+  628 .aimdx store
+  40 .repro store
+  0 .timer store
+  dropbool
+ *.timer 1 =
+  628 .aimdx store 
+  dropbool
+ *.shell 6 mult *.body <
+  100 .mkshell store
+  dropbool
+ *.poison 8 mult *.body <
+  100 .strpoison store
+  dropbool
+ *.waste 100 >
+  .backshoot inc
+ *.waste .shootval store
+  -4 .shoot store
+  dropbool
+ *.robage 1 =
+  .deltie inc
+  dropbool
+ *.poisoned 0 != *.paralyzed  0 != or
+  99 .repro store
+  dropbool
+stop
+
+cond
+  *.eyef 0 >
+  *.in9 10 sub *.in8 != 
+  *.in8 *.out8 = or and
+start
+  0 .focuseye store
+  100 rnd dup .out8 store 10 add .out9 store
+  1 .out1 store
+  *.refxpos .out2 store
+  *.refypos .out3 store
+  *.refxpos *.refypos angle .setaim store
+  0 .focuseye store
+  *.refveldx .dx store 
+  32 .shootval store
+ *.eye5 *.refveldx abs 10 add < 
+  *.refvelup 40 .up store
+  dropbool
+ *.eye5 *.refveldx abs 10 add > 
+  *.refvelup 10 sub .up store
+  dropbool
+ *.refpoison *.refshell => and *.eye5 7 > and
+  -6 .shoot store
+  dropbool
+ *.refpoison *.refshell < *.eye5 7 > and
+  -1 .shoot store
+  dropbool
+ *.nrg 2 mult *.body  >
+  *.nrg 10 div 10 sub 99 ceil .strbody store
+  dropbool
+ *.nrg 3 mult *.body 2 mult <
+  100 .fdbody store
+  dropbool
+ *.body 900 >
+  628 .aimdx store
+  40 .repro store
+  0 .timer store
+  dropbool
+ *.timer 1 =
+  628 .aimdx store 
+  dropbool
+  *.shell 3 mult *.body <
+  100 .mkshell store
+  dropbool
+ *.poison 4 mult *.body <
+  100 .strpoison store
+  dropbool
+ *.waste 100 >
+  .backshoot inc
+  *.waste .shootval store
+  -4 .shoot store
+  dropbool
+ *.robage 1 =
+  .deltie inc
+  dropbool
+ *.poisoned 0 != *.paralyzed  0 != or
+  99 .repro store
+  dropbool
+stop
+
+end

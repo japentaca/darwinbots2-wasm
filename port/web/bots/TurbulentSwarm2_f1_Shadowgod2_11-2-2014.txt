@@ -1,0 +1,369 @@
+'an unstable_swarming bot which does scatter easly with very diffirent eyes
+'now geared up
+'by Shadowgod2
+'11/2/2014
+'f1
+
+def robage1 50
+def attack 52
+def trig 55
+def eyet1 56
+def eyet2 57
+def eyetimer1 58
+def eyetimer2 59
+def eyecheck 60
+
+'eyepos
+
+cond
+*.robage 5 <
+start
+-575 .eye2dir store
+575 .eye8dir store
+-130 .eye1dir store
+130 .eye9dir store
+-291 .eye3dir store
+291 .eye7dir store
+-100 .eye4dir store
+100 .eye6dir store
+280 .eye2width store
+280 .eye8width store
+-34 .eye1width store
+-34 .eye9width store
+149 .eye3width store
+149 .eye7width store
+93 .eye4width store
+93 .eye6width store
+-34 .eye5width store
+2 rnd 518 mult 511 sub 1 floor .ploc store
+ 314 *.ploc .eye5dir sub sgn 1 add mult
+ -50 *.ploc .up sub sgn -1 mult 1 add mult add
+ -2 *.ploc .shoot sub sgn abs -1 mult 1 add mult add
+ .pval store
+stop
+
+
+'reconization
+
+cond
+*.refeye *.myeye !=
+*.eyef 0 != and
+*.refbody 500 > and
+start
+1 .attack store
+*.refxpos *.refypos angle .setaim store
+0 .eye5dir store
+0 .focuseye store
+1 .out1 store
+stop
+
+'comunization
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+0 .out1 store
+stop
+
+cond
+*.in1 1 =
+*.attack 0 =
+start
+*.refxpos *.refypos angle 50 *.focuseye sgn -1 mult mult add .setaim store
+*.refvelup *.refxpos *.refypos dist debugint 900 sub 10 ceil -10 floor add 10 floor .up store
+stop
+
+
+'swarm
+
+cond
+*.attack 0 =
+*.refeye *.myeye = and
+*.focuseye -3 > and
+*.focuseye 3 < and
+*.in1 0 = and
+start
+*.refxpos *.refypos angle 70 *.focuseye sgn -1 mult mult add .setaim store
+*.refvelup *.refxpos *.refypos dist debugint 900 sub 10 ceil -10 floor add 10 floor .up store
+stop
+
+'lonehunt
+
+cond
+*.attack 0 =
+*.eyef 0 =
+start
+10 .up store
+stop
+
+'feed
+
+cond
+*.shflav -2 !=
+*.attack 0 =
+start
+*.shang .setaim store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 0 > and
+*.attack 1 = and
+start
+*.refvelup *.refxpos *.refypos dist debugint 500 sub 30 ceil -30 floor add .up store
+1 rnd 5 mult 6 sub .shoot *.eye5 20 sub sgn 0 floor mult store
+*.nrg 40 div 500 sub 10 floor *.shoot 2 add 0 floor mult .shootval store
+stop
+
+'eyescanning
+
+start
+.robage1 inc
+stop
+
+cond
+*.robage1 32000 =
+start
+0 .robage1 store
+stop
+
+cond
+*.attack 0 =
+*.eyet1 0 >= and
+*.eyet2 0 >= and
+start
+*.robage1 
+*.eye2 sgn 
+*.eye3 sgn add 
+*.eye4 sgn add 
+*.eye5 sgn add 
+*.eye6 sgn add 
+*.eye7 sgn add 
+*.eye8 sgn add 
+mod 1 add .eyecheck store
+stop
+
+start
+0 .fixpos store
+stop
+
+'eyeslecting
+
+cond
+*.attack 0 =
+start
+*.eye2 sgn 61 store
+*.eye2 sgn *.eye3 sgn add 62 store
+*.eye2 sgn *.eye3 sgn add *.eye4 sgn add 63 store
+*.eye2 sgn *.eye3 sgn add *.eye4 sgn add *.eye5 sgn add 64 store
+*.eye2 sgn *.eye3 sgn add *.eye4 sgn add *.eye5 sgn add *.eye6 sgn add 65 store
+*.eye2 sgn *.eye3 sgn add *.eye4 sgn add *.eye5 sgn add *.eye6 sgn add *.eye7 sgn add 66 store
+*.eye2 sgn *.eye3 sgn add *.eye4 sgn add *.eye5 sgn add *.eye6 sgn add *.eye7 sgn add *.eye8 sgn add 67 store
+stop
+
+cond
+*.attack 0 =
+*.eyecheck *61 =
+start
+-3 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *62 = and
+*62 *61 != and
+start
+-2 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *63 = and
+*63 *62 != and
+start
+-1 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *64 = and
+*64 *63 != and
+start
+0 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *65 = and
+*65 *64 != and
+start
+1 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *66 = and
+*66 *65 != and
+start
+2 .focuseye store
+stop
+cond
+*.attack 0 =
+*.eyecheck *67 = and
+*67 *66 != and
+start
+3 .focuseye store
+stop
+
+cond
+*.attack 0 =
+*.eye9dir 130 >=
+start
+1 .trig store
+stop
+
+cond
+*.attack 0 =
+*.eye9dir -480 <=
+start
+0 .trig store
+stop
+
+'wisker scanning
+
+cond
+*.attack 0 =
+*.trig 1 =
+start
+*.eye1dir 10 add .eye1dir store
+*.eye9dir 10 sub .eye9dir store
+stop
+
+cond
+*.attack 0 =
+*.trig 0 =
+start
+*.eye9dir 10 add .eye9dir store
+*.eye1dir 10 sub .eye1dir store
+stop
+
+'eye1
+
+cond
+*.focuseye -4 =
+*.refeye *.myeye =
+start
+5 .eyetimer1 store
+stop
+
+cond
+*.eye1 0 >
+*.eyet1 0 = and
+*.eyetimer1 0 = and
+*.attack 0 = and
+start
+-4 .focuseye store
+-1 .eyet1 store
+stop
+
+cond
+*.eyetimer1 0 >
+start
+.eyetimer1 dec
+stop
+
+cond
+*.eye1 0 >
+*.eyet1 -1 = and
+*.refeye *.myeye = and
+start
+3 .eyet1 store
+stop
+
+cond
+*.eye1 0 =
+*.eyet1 -1 =
+start
+0 .eyet1 store
+stop
+
+cond
+*.eyet1 0 >
+start
+.eyet1 dec
+stop
+
+'eye9
+
+cond
+*.focuseye 4 =
+*.refeye *.myeye =
+start
+5 .eyetimer2 store
+stop
+
+cond
+*.eye9 0 >
+*.eyet2 0 = and
+*.eyetimer2 0 = and
+*.attack 0 = and
+start
+4 .focuseye store
+-1 .eyet2 store
+stop
+
+cond
+*.eyetimer2 0 >
+start
+.eyetimer2 dec
+stop
+
+cond
+*.eye9 0 >
+*.eyet2 -1 = and
+*.refeye *.myeye = and
+start
+3 .eyet2 store
+stop
+
+cond
+*.eye9 0 =
+*.eyet2 -1 =
+start
+0 .eyet2 store
+stop
+
+cond
+*.eyet2 0 >
+start
+.eyet2 dec
+stop
+
+'shell/poison
+
+cond
+*.nrg 1000 >
+*.poison 100 <
+start
+100 .strpoison store
+stop
+
+cond
+*.nrg 1000 >
+*.shell 500 <
+start
+100 .mkshell store
+stop
+
+cond
+*.slime 1000 <
+*.nrg 1000 >
+start
+100 .mkslime store
+stop
+
+'repro
+
+cond
+*.nrg 20000 >
+start
+50 .repro store
+314 rnd .aimsx store
+stop

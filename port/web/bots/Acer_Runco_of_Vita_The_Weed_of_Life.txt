@@ -1,0 +1,206 @@
+'Acer Runco of Vita - Sharp Weed of Life:
+
+cond
+start
+1000 998 store
+*.thsigene .delgene store
+stop
+
+cond
+*.robage 0 =
+*.numties 0 = and
+start
+*998 .out4 store
+*.out4 .tout4 store
+*998 1 sub 998 store
+1 40 store
+stop
+
+'overwrite 40
+cond
+*.in4 *.out4 >
+*.tin4 *.tout4 >
+*.refeye *.myeye =
+*51 0 = or
+start
+11 40 store
+1 rnd 10 .tie store
+stop
+
+'Set timer1
+cond
+*41 0 >
+start
+*41 1 sub 41 store
+stop
+
+cond
+'egg formation, slowest possible behavior, default
+*40 1 =
+*.robage 20 <
+start
+*.nrg 10 div .mkpoison store
+1 50 store
+stop
+
+cond
+*40 1 =
+*.robage 20 >
+*41 2 <
+*.nrg 2000 > and
+*51 4 < or
+start
+0 50 store
+*.nrg *.eyef div 10 sub .repro store
+1 rnd 10 .tie store
+1 *51 add 51 store
+60 *.aim add .setaim store
+10 *.eyef 10 div sub abs 41 store
+stop
+
+cond
+*40 11 =
+*.robage 20 >
+*.eyef 0 =
+*.refeye *.myeye = xor
+start
+40 *.aim add .setaim store
+*.refeye *.myeye div 1 rnd 20 mult int .tie store
+stop
+
+'Read Ties
+
+cond
+*60 0 =
+start
+*.numties *.tiepres add rnd timer mod 10 .tienum store
+*.tienum .readtie store
+50 .stiftie store
+*.mass 2 mult .setlen store
+stop
+
+cond
+*.trefage *.robage >
+*60 0 =
+start
+*.tienum 60 store
+30 .setlen store
+*.aim -1 mult sgn .fixang store
+45 *.multi mult .sharenrg store
+stop
+
+cond
+*.timer 2 mod 1 =
+start
+*60 .readtie store
+stop
+
+cond
+*.trefeye *.myeye !=
+start
+*.readtie .tienum store
+*.tienum .deltie store
+stop
+
+'Eyes: Phase 1
+
+cond
+*40 1 =
+*50 0 =
+*.myeye *.refeye =
+*51 0 =
+*.numties 0 >
+start
+5 *eyef mult .setaim store
+stop
+
+'Phase 2
+
+cond
+*40 11 =
+*.tieang *.refxpos *.refypos angle =
+*.myeye *.refeye =
+start
+2 *.eyef mult .setaim store
+*.aim *.tieang sub .fixang store
+stop
+
+cond
+*40 11 =
+*.refey *.myeye =
+*.out4 *.in4 %=
+start
+*.refxpos *.refypos angle .setaim store
+*.numeties rnd 10 .tie store
+50 *.aim add .setaim store
+stop
+
+'Movement Controls Multibot
+
+cond
+*.multi 0 >
+*40 1 =
+*.numties 0 >
+*.tout4 *.tin4 <
+start
+*.trefvelscalar *.vel add .dn store
+*.trefvelscalar *.vel sub .dx store
+*.trefvelscalar *.vel sub .ds store
+*.trefvelscalar *.vel mult .up store
+stop
+
+'Combat Controls
+
+cond
+*.eyef 0 >=
+*.refeye *.myeye != or
+*.shflav 0 !=
+*.shflav -2 !=
+*.in2 *.out2 != or
+*.botname *.in1 =
+*50 0 =
+start
+942 *.shang sub .setaim store
+0 .shflav store
+100 .mkshell store
+26 .strvenom
+.shoot .ploc store
+*60 .tienum store
+*.aim -1 mult sgn .fixang store
+stop
+
+cond
+*.out4 *.in4 !=
+*.refey *.myeye !=
+*50 0 =
+*.body 500 <
+start
+*.refxpos *.refypos angle *.refvelscalar mult *.eyef div .setaim store
+*.eyef .tout1 store
+*.aim *40 mod 1 mult .tout2 store
+*.nrg 4 div .shootval store
+-1 .shoot store
+stop
+
+cond
+*.tin1 *.eyef >
+*.tin2 *.aim !=
+start
+3 50 store
+*.tin2 *.aim sub abs .setaim store
+*.tin1 *.eyef sub *.vel sub .up store
+stop
+
+cond
+*.out4 *.in4 !=
+*.refeye *.myeye !=
+*50 0 =
+*40 1 =
+*.body 500 >
+start
+*.refxpos *.refypos angle .setaim store
+*.nrg 4 div .shootval store
+-6 .shoot store
+stop
+
+end

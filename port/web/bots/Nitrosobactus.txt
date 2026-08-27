@@ -1,0 +1,85 @@
+'*******************************************
+'*   Nitrosobactus, an imagined hybrid     *
+'*  between Nitrosomonas and Nitrobacter.  *
+'*  Made by Testlund in the autumn 2013.   *
+'*         Updated in July 2014.           *
+'*                                         *
+'* This bot thrives best in a sim of non-  *
+'*  decaying waste shots, waste treshold   *
+'*set to at least 4000 and a lot of shapes *
+'*in the sim. You also need to have corpse *
+'*   enabled and set to decay as waste.    *
+'*******************************************
+
+cond
+ *.nrg 100 <
+start
+ 0 .fixpos store
+stop
+
+cond
+ *.hit
+ *.reftype 1 =
+ *.nrg 250 >
+ *.fixpos 1 <
+start
+ 1 .fixpos store
+stop
+
+cond
+ *.fixpos 0 >
+ *.chlr
+ *.waste <
+ *.nrg
+ *.chlr >
+start
+ 1 .mkchlr store
+stop
+
+cond
+ *.fixpos 0 >
+ *.waste
+ *.chlr <
+ *.nrg
+ *.waste >
+ *.nrg 100 >
+start
+ 1 .rmchlr store
+stop
+
+cond
+ *.waste 3000 >
+start
+ 628 .aimshoot store
+ -4 .shoot store
+ 100 .shootval store
+stop
+
+cond
+ *.fixpos 0 >
+ *.nrg 500 >
+start
+ 10 .strbody store
+stop
+
+cond
+ *.fixpos 0 >
+ *.shflav -1 =
+start
+ 2000 .mkslime store
+stop
+
+cond
+ *.refxpos 0 >
+ *.reftie 0 >
+start
+ 2000 .mkslime store
+stop
+
+cond
+ *.body 1999 >
+ *.nrg 499 >
+start
+ 314 rnd .aimdx store
+ 50 .repro store
+stop

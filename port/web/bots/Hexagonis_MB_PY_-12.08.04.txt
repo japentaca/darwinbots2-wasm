@@ -1,0 +1,143 @@
+'Topic: 3 cell bot  
+'PY
+'Hexagonis
+'
+' first robot stores value in 50 to identify itself
+' then reproduces
+cond
+*.numties 0 =
+*.robage 0 !=
+start
+3 50 store
+50 .repro store
+stop
+
+' first robot rotates to face away from the circle
+cond
+*50 3 =
+*.robage 10 >
+start
+419 .aimsx store
+4 50 store
+stop
+
+'cond
+'*50 1 =
+'*.numties 2 =
+'start
+'419 .aimsx store
+'2 50 store
+'stop
+
+' new baby ties to parent
+cond
+*.robage 0 =
+start
+1 .tie store
+1 .readtie store
+40 .stifftie store
+stop
+
+cond
+*.robage 1 =
+*50 1 !=
+start
+419 .aimsx store
+stop
+
+cond 
+*.robage 2 =
+start
+50 .memloc store
+stop
+
+' last robot ties to original parent.
+cond
+*.memval 4 =
+*.eye5 30 >
+*.numties 1 =
+start
+1 .tie store
+stop
+
+cond
+*.robage 2 =
+*.eye5 30 <
+*50 0 =
+start
+50 .repro store
+stop
+
+cond
+*.robage 2 >
+*.robage 10 <
+*.numties 2 =
+*50 1 !=
+start
+415 .aimsx store
+1 50 store
+stop
+
+' Use some body reserves to stay alive
+cond
+*.nrg 500 <
+*.body 100 >
+start
+100 .fdbody store
+stop
+
+' Store body away in times of plenty
+cond
+*.nrg 5000 >
+*.body 100 <
+start
+100 .strbody store
+stop
+
+' Store body away when even more stuffed with energy
+cond
+*.nrg 10000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg *.trefnrg >
+*.multi 1 =
+*.robage 30 >
+start
+50 .sharenrg store
+stop
+
+
+' set tie angles to zero
+' set tie length too
+cond
+*.multi 1 =
+*.robage 30 =
+start
+1 .tienum store
+628 .fixang store
+100 .fixlen store
+50 inc
+stop
+
+cond 
+*.multi 1 =
+*.eye5 40 >
+*.refaimsx *.myaimsx !=
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*50 2 >
+*.eye5 40 <
+*.multi 1 =
+*.robage 30 >
+start
+5 .up store
+stop
+
+end

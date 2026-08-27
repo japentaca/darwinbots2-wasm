@@ -1,0 +1,22 @@
+'Insulsus
+'Randomly selects a list of sysvars and addstores
+
+'Sysvars- tie repro up sharenrg (4)
+'Range of 1 to 830
+'1, 300, 330, 830 
+start
+50
+
+'Up
+5 rnd sgn
+'Tie
+329 10 rnd sgn mult add
+'Feed
+830 1 rnd mult add
+'Repro
+'Need condition!
+*.nrg 1000 sub sgn 0 floor 300 mult 1 rnd mult add 
+
+1 floor 830 ceil addstore
+
+stop

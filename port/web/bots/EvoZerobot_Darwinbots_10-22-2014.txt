@@ -1,0 +1,353 @@
+'#generation: 0
+'#mutations: 219
+ *.trefvelmyup *588 -3 -18 3 *.pval 5 *947 0 -19 *182 multstore
+ -7 *.tieang *.reftype 0 *.trefdn -11 0 *.aimright <
+ -17 7 *.trefvelmydx angle 21 -5 *292 *.tieval *492 *225 *.tout9 19 -2 4 29 -4 *732 *741 sqrstore
+ *377 -27 %=
+ 30 addstore
+ *.tmemval dup *580 13 *.aimleft *627 -18 *.in5 -11 -13
+ start
+ sub *.sun *674 -11 1 *.eye2 ceil 5 2
+''''''''''''''''''''''''  Gene:  1 Ends at position  65  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  66  '''''''''''''''''''''''
+ start
+ *893 *.trefvelmydn 8 *1291 dec
+ sgnstore
+ 2 ~ *.shoot *551
+''''''''''''''''''''''''  Gene:  2 Ends at position  76  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  77  '''''''''''''''''''''''
+ start
+ -19 ceil *.hitdn add inc
+ 48 >
+ *926 addstore
+ *366 *363 &
+''''''''''''''''''''''''  Gene:  3 Ends at position  89  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  90  '''''''''''''''''''''''
+ start
+ *.sx -22 42 -1 *540 654 *274 -22 ++ overbool
+ 560 *0 dist substore
+ *.myeye -1 *20 <
+ sub * dupbool
+ *855 <=
+ *140 anglecmp *32 -16
+''''''''''''''''''''''''  Gene:  4 Ends at position  117  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  118  '''''''''''''''''''''''
+ else
+ -5 -4 cos ceilstore
+ -12 -10 angle ^ *259 12 16 * *.out4 *856
+''''''''''''''''''''''''  Gene:  5 Ends at position  132  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  133  '''''''''''''''''''''''
+ start
+ and
+ 12 -43 & 12 .sx absstore
+ *.mkshell -4 -11 *.out6 5 580 - 13 <=
+ - *26 *.tin7 *489 *368 %=
+ 3 *.memval -10 22 *.mass *.hitup -15 5 .sx sgnstore
+ 16 *.refpoison .dn absstore
+ -14 -6 0 0 *.trefaimsx *.velscalar *.deltie *279 <
+ -15 422 16 floorstore
+ *385
+''''''''''''''''''''''''  Gene:  6 Ends at position  183  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  184  '''''''''''''''''''''''
+ else
+ 2 .aimleft store
+ *365 addstore
+ 10 *13 *0 *915 multstore
+ floorstore
+ ~ - -7 ~ -13 *491 -16 *144 -2 -33 -2 dup 20 2 .dn store
+ floor 151 *.refshoot * ^ *31 ~=
+ sin <=
+ -9 *.eye8dir rndstore
+ .up ceilstore
+ *769 .robage substore
+ *512 7 *.ploc ~=
+ -27 ~ -11 dropbool
+ .dn inc
+ 14 *16 4 *592 *356 *285 -4 29 *359 -38 ^ & <
+ *.eye8 13 17 -13 !~=
+ -- 0 *292 ++ >> add floorstore
+ rnd inc
+ floor ~ 764 xor
+ not
+ clear -2 32 *.rdboy .mass inc
+ angle *30 <
+ 0 and
+ - clear angle absstore
+ -9 *.refveldx <
+ dec
+ 39 dec
+ .sx floorstore
+ *.tie *.trefup swap -5 0 stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  299  '''''''''''''''''''''''
+ 242 mod false
+ *895 477 -3 ~ *182 9
+''''''''''''''''''''''''  Gene:  8 Begins at position  309  '''''''''''''''''''''''
+ cond
+ *.setaim 348 *.aimright ceilstore
+ .tout4 multstore
+ floorstore
+ 3 8 *579 7 !%=
+ angle *495 0 0 0 14 *322 14 *279 13 2 *.eye6dir >
+ else
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  335  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  336  '''''''''''''''''''''''
+ cond
+ ~=
+ else
+ 14 *.mkvenom <
+
+''''''''''''''''''''''''  Gene:  9 Ends at position  341  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  342  '''''''''''''''''''''''
+ cond
+ -12 -- -12 *778 3 <
+ *856 27 -7 -7 3 -7 *.out10 *.bodgain 5 -1 *.eye4 -11 15 *.trefvelmysx *.aimleft 8 *.out4 *.memval 14 *.dn 25 -20 -8 27 -10 11 9 24 rndstore
+ <
+ <=
+ drop store
+ 699 *778 -18 12 *850 rndstore
+ true
+ 12 *.deltie *181 *.hitang 4 *597 !~=
+ over *.shootval 16 <
+ *520 -27 true
+ mult -30 start
+ *373 dist dec
+ store
+ 933 *37
+''''''''''''''''''''''''  Gene:  10 Ends at position  411  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  11 Begins at position  412  '''''''''''''''''''''''
+ else
+ absstore
+ 6 *.pleas *.up and
+ -7 *.delgene *157 store
+ *893 %=
+ >=
+ -7 16 8 22
+''''''''''''''''''''''''  Gene:  11 Ends at position  428  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  429  '''''''''''''''''''''''
+ cond
+ 13 *472 *.tiepres dupbool
+ <
+ *751 *24 dropbool
+ 39 -68 *.eye9 =
+ else
+ drop store
+ 3 .tout4 ceilstore
+ *.myup angle 4 17 2 -18 -28 dup
+''''''''''''''''''''''''  Gene:  12 Ends at position  455  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  13 Begins at position  456  '''''''''''''''''''''''
+ else
+ 6
+''''''''''''''''''''''''  Gene:  13 Ends at position  457  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  458  '''''''''''''''''''''''
+ cond
+ *598 *17 -10 -36 or
+ *.tin2 25 *.refveldx *356 1 *.out8 0 *.dx <
+ *333 *226 21 or
+ *799 *386 *573 root *1020 9 ~ *542 store
+ *716 -7 | and
+ 2 *.shflav *.mkpoison 0 *.fertilized 19 *.tin5 *.mkvirus *655 22 *.focuseye *894 ~ *733 -12 *.trefvelmyup -11 -27 *.shoot 487 -13 angle add * rndstore
+ anglecmp *.aimleft *.eye9dir *277 -16 *145 *754 *.multi *.eye6dir store
+ *493 %=
+ -3 -9 .shootval inc
+ 0 *.treffixed 0 *.tin9 *.tieang2 0 *.refveldn *.eye1width 9 *.tin2 7 *.tieang2 *.treffixed *.eye6 angle 5 -3 over and
+ 9 ceil 0 *378 *.vtimer *.up *397 logx >
+ -20 .aimleft negstore
+ -11 *.shootval *.out8 *.treffixed swapbool
+ -23 *515 *.aimright 2 *.fixed *.tienum store
+ 0 0 *.sharenrg *.eye9 *.hitsx *.shell -8 25 div <
+ *907 *773 -38 *611 *640 * *48 2 pow 13 49 !=
+ 18 39 -12 *847 sin
+''''''''''''''''''''''''  Gene:  14 Ends at position  600  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  601  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  602  '''''''''''''''''''''''
+ *347 34 658 ^ multstore
+ sub 4 *786 sqrstore
+ 7 -16 -21 substore
+ *29 angle 9 -5 38 6 193 31 *620 anglecmp -13 *592 44 substore
+ 798 >
+ *693 negstore
+ substore
+ -4 6 *.myup *164 *.numties mult -15 add dist *519 40 -20 856 floorstore
+ -10 -8 3 *408 16 multstore
+ *.eye1dir sqrstore
+ 2 6 *.tin9 *.eye4width sin *284 *387 floor -29 33 *.out4 *793 6 -15 .mass negstore
+ angle over 31 *.eye1 -- -1 <=
+ add -30 23 -23 24 *.tieang *329 -21 -9 2 -13 -4 -11 -13 -4 -7 *.maxvel -15 clearbool
+ 14 sqr 20 1 -6 244 *.body 13 10 clearbool
+ *231 8 *393 24 *.eye9width *.tout5 423 >
+ *.dn *382 289 24 <=
+ -1 -1 and
+ | *.tieval -4 ~ -7 -5 9 *0 *.reftype -2 19 -4 -6 15 0 *.trefvelmydx ^ dist *617 dec
+ -11 *.refage *472 *720 5 *.vel negstore
+ ~ 14 -21 *1021 12 *.trefxpos -6 11 2 3 *847 *.refkills -12 *334 *388 5 *353 -16 *788 & 9 *399
+''''''''''''''''''''''''  Gene:  16 Begins at position  774  '''''''''''''''''''''''
+ cond
+ -1 -3 -9 .aimleft sqrstore
+ 16 *943 <
+ 12 2 0 -2 *.shdn *.tout8 -10 *791 *562 *27 *915 -14 *.shoot <
+ -7 *717 -10 *278 *1053 *.waste -9 -4 *229 *267 *754 -17 13 dist 33 dropbool
+ 4 cos start
+ -3 angle *382 dupbool
+ 627 *24 logx
+''''''''''''''''''''''''  Gene:  16 Ends at position  822  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  823  '''''''''''''''''''''''
+ cond
+ sgn sgnstore
+ %=
+ *749 12 -8 sgn
+''''''''''''''''''''''''  Gene:  17 Ends at position  830  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  831  '''''''''''''''''''''''
+ cond
+ -4 .timer absstore
+ -15 11 *652 -17
+''''''''''''''''''''''''  Gene:  18 Ends at position  838  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  19 Begins at position  839  '''''''''''''''''''''''
+ cond
+ 18 start
+ *747 *.shsx 10 10 *.tieang4 1 pow -7 2 stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  851  '''''''''''''''''''''''
+ sub *500 7 =
+ - -1 *.setaim 3 -11 0 -8 7 552 ~=
+ *186 48 -19 *518 13 sqrstore
+ root floor *.shootval *-26 16 true
+ =
+ 7 14
+''''''''''''''''''''''''  Gene:  20 Begins at position  881  '''''''''''''''''''''''
+ else
+ *.in8 | -13 >> ~ -49 angle 8 -18 *.mkpoison -2 12 >=
+ | %=
+ *157 2 & 22 -23 %=
+ dec
+ *181 46 *222 *674 10 clearbool
+ 15 add *189 5 & *320 !~=
+ 3 -- 4 !=
+ *322 *1021 overbool
+ *.robage 19 -6 21 0 ~ *.bodgain *.tiepres rnd *.trefaim *492 *496 29
+''''''''''''''''''''''''  Gene:  20 Ends at position  936  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  21 Begins at position  937  '''''''''''''''''''''''
+ cond
+ 246 %=
+ 186 *733 -7 16 11 *.trefxpos 12 dist *.eye3dir -11 *732 *843 4 -30 | -5 *.refaim *.shootval -14 2 *553 ++ store
+ 13 .sx dec
+ 4 - logx *.out9 -5 !=
+ 26 clear -10 -8 18 *405 -10 *856 *.trefnrg *1020 30 >=
+ *582 .dx inc
+ .shoot dec
+ *355 *380 else
+ *172 -6 *700 12 -1 *.memval *285 *655 0 *999 *962 5 stop
+''''''''''''''''''''''''  Gene:  21 Ends at position  1004  '''''''''''''''''''''''
+ add -3 2 -2 0 -13 *.aimleft -25 *742 *763 *.shoot addstore
+ *234 not
+ =
+ 31 -6 clearbool
+ *628 5 *774 xor
+ *518 *.trefypos 9 ~ *25 -3 8 true
+ *284 470 35 add >
+ -17 *353
+''''''''''''''''''''''''  Gene:  22 Begins at position  1042  '''''''''''''''''''''''
+ cond
+ *.trefxpos -7 start
+ floorstore
+ -12 -3 *552 *434 30 .shoot dec
+ sgnstore
+ *353 *.dn *.refveldn 0 -7 3 *660 *.aimright -7 & .trefbody ceilstore
+ ^ cos *1039 -10 *946 5 *.eye5 16 2 6 *.myeye 11 -8 -19 *270 *867 << 3 -4 ~ negstore
+ *.myties clearbool
+ 4 12 529 *436 *778 *.trefvelmydx 0 *.shareshell *.trefvelyourup .out4 store
+ *.velscalar *735 -4 *.hitdn store
+ 22 *850 -14 26 *353 *749 5 -27 1 | *.kills substore
+ ceil
+''''''''''''''''''''''''  Gene:  22 Ends at position  1118  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  23 Begins at position  1119  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  1119  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  24 Begins at position  1120  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  24 Ends at position  1120  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  25 Begins at position  1121  '''''''''''''''''''''''
+ start
+ << <
+ <
+ *380 27 149 !~=
+ *261 *.bodloss 5 *559 overbool
+ -12 *500
+''''''''''''''''''''''''  Gene:  25 Ends at position  1135  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  26 Begins at position  1136  '''''''''''''''''''''''
+ start
+ *635 -20 *.refkills -11 5 *948 441 *.trefvelmydn 0 *.pwaste *.pain *620 *0 inc
+ 12 mod *-32 21 -- cos addstore
+ xor
+ *325 10 -4 *554 *356 ceil 11 -16 *.waste *.eye6 *.dn -6 -12 -14 *346 *.trefaim 6 *717 7 *378 34 pyth 9 18 -3 -3 *.fertilized *.eye8dir *236 -22 6 -4 *433 -5 *353 -9 0 -5 4 16 add -13 11 0 *326
+''''''''''''''''''''''''  Gene:  26 Ends at position  1203  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  27 Begins at position  1204  '''''''''''''''''''''''
+ cond
+ angle 8 -15 -11 add *580 ++ else
+ overbool
+ root clearbool
+ >> 5 8 14 -8 *495 add 24 inc
+ 26 1 9 8 *.eye3 *.in10 0 0 -14 *.in6 -2 -6 1 -4 *.sx 43 ceilstore
+
+''''''''''''''''''''''''  Gene:  27 Ends at position  1241  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  28 Begins at position  1242  '''''''''''''''''''''''
+ cond
+ ceil over -29 -19 -11 -5 swapbool
+ >> *267 -2 *.maxvel 24 rnd not
+ *.refaimsx 18 15 sub 10 -15 *.refbody *.up 8 | !~=
+ - -16 *766 or
+ -52 *1036 *.fixpos 19 28 *41 1
+''''''''''''''''''''''''  Gene:  28 Ends at position  1278  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  29 Begins at position  1279  '''''''''''''''''''''''
+ cond
+ 31 26 43 .sx store
+ -35 *280 1 -11 *.mass -29 2 6 *41 *333 *185 stop
+''''''''''''''''''''''''  Gene:  29 Ends at position  1296  '''''''''''''''''''''''
+ 41
+''''''''''''''''''''''''  Gene:  30 Begins at position  1298  '''''''''''''''''''''''
+ start
+ 405 27 sin *745 10 -28 stop
+''''''''''''''''''''''''  Gene:  30 Ends at position  1305  '''''''''''''''''''''''
+ 5 *.shoot 30 *747 %=
+ rnd 19 17 pow <
+ 29 *884 *891 *0 *849 *.memloc -7 *627 *.mypoison -1 dist -3 -20 36 -18 *.tout4 .timer absstore
+ *.trefvelmysx true
+ addstore
+ *374 pow -20 *.tieang4 and
+ 9 0 0 *.numties .shootval rndstore
+ 11 *332 10 *.trefvelmyup store
+ 0 0 *622 -3 -22 15 -1 0 *.edge -13 -14 addstore
+ *562 ~ store
+ *.robage *.myvenom *641 11 *190 16 *253 clearbool
+ *.aimleft dec
+ mod -9 *.refvelup 0 16 *680 -10 5 *182 455 16 1 -28 *167 -6 *224 17 -31 19 1 9 2 .aim multstore
+ 13 -6 *436 2 3 -2 dupbool
+ cos sgnstore
+ -10 logx *940 -9 -19 12 *.eye4width -5 7 *280 store
+ 0 *.tieval 13 3 19 1 *.out3 30 add -16 5 *.dn multstore
+ dup .shoot store
+ 11 14 -9 *.tieloc and
+ *785 *.trefvelmydn *435 *.tin5 9 -25 2 -2 >
+ -33 * *673 negstore
+ *577 *1071 substore
+ *.refeye !%=
+ ++ *735 %=
+ -5 <
+ 19 5 -3 root *.nrg !=
+ *585 -16 over drop %=
+ -28 *-15 *.treffixed 11

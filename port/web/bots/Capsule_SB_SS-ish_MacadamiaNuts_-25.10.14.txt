@@ -1,0 +1,32 @@
+'name: Capsule
+'class: Hatching Single Store
+'author: Capsule Corp. (MN)
+'description: It's magic!
+
+start
+9 rnd dup dup dup 10 div swap 12 div add sub 971 add * * swap dup 6 div sub 979 add * store
+stop
+
+start
+987 971 store
+988 972 store
+990 973 store
+.eye1 974 store
+.eye2 975 store
+989 976 store
+.eye8 977 store
+.eye9 978 store
+.mkchlr 979 store
+.strbody 980 store
+.shoot 981 store
+.aimsx 982 store
+.sharenrg 983 store
+.up 984 store
+.sexrepro 985 store
+.aimdx 986 store
+2 987 store
+1 988 store
+90 989 store
+-8 990 store
+*.thisgene .delgene store
+stop

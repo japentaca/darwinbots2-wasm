@@ -1,0 +1,250 @@
+'Neural Net Bot by Shadowgod2
+'a new type of neuron that enables chanales
+'11-22-2014 11:43pm
+
+'neuron setup
+'*ni1 * *nw1 mult *np1 * *npm1 sub sgn 0 floor mult
+'*ni2 * *nw2 mult *np2 * *npm2 sub sgn 0 floor mult add
+'*ni3 * *nw3 mult *np3 * *npm3 sub sgn 0 floor mult add n store
+'*px1 * *npm1 sub sgn 0 floor
+'*px2 * *npm2 sub sgn 0 floor add
+'*px3 * *npm3 sub sgn 0 floor add np store
+
+def reproing 181
+def muttype 182
+def nimut 183
+def mut 184
+def mutage 185
+
+start
+10 .mut store
+100 .mutage store
+*.thisgene .delgene store
+stop
+
+'mutations
+
+'type
+cond
+*.robage *.mutage >
+*.reproing 0 =
+start
+6 rnd *.mut rnd -1 mult 1 add 0 floor mult .muttype store
+stop
+
+'muataion chance
+
+cond
+*.muttype 1 =
+start
+10 5 sub *.mut add 32000 ceil 10 floor .mut store
+0 .muttype store
+stop
+
+'nnet mut
+
+cond
+*.muttype 2 =
+start
+29 rnd 20 add add .nimut store
+13 rnd 140 add *.nimut store
+*.nimut * 14 add *.nimut 30 add store
+0 .muttype store
+stop
+
+cond
+*.muttype 3 =
+start
+29 rnd 80 add .nimut store
+10 rnd 5 sub *.nimut * add 32000 ceil -32000 floor *.nimut store
+0 .muttype store
+stop
+
+cond
+*.muttype 4 =
+start
+29 rnd 110 add .nimut store
+2 rnd *.nimut store
+0 .muttype store
+stop
+
+'output mut
+
+cond
+*.muttype 5 =
+start
+4 rnd 168 add .nimut store
+13 rnd 154 add *.nimut store
+*.nimut * 14 add *.nimut 8 add store
+0 .muttype store
+stop
+
+cond
+*.muttype 6 =
+start
+3 rnd 172 add .nimut store
+2 rnd *.nimut store
+0 .muttype store
+stop
+
+'input
+cond
+*.reproing 0 =
+start
+*.eye5 140 store
+3 154 store
+*.refeye 141 store
+3 155 store
+*.nrg 142 store
+3 156 store
+*.refvelup 143 store
+3 157 store
+'nnet
+*20 * *80 mult *50 * *110 sub sgn 0 floor mult
+*21 * *81 mult *51 * *111 sub sgn 0 floor mult add
+*22 * *82 mult *52 * *112 sub sgn 0 floor mult add 144 store
+*50 * *110 sub sgn 0 floor
+*51 * *111 sub sgn 0 floor add
+*52 * *112 sub sgn 0 floor add 158 store
+                                   
+*23 * *83 mult *53 * *113 sub sgn 0 floor mult
+*24 * *84 mult *54 * *114 sub sgn 0 floor mult add
+*25 * *85 mult *55 * *115 sub sgn 0 floor mult add 145 store
+*53 * *113 sub sgn 0 floor
+*54 * *114 sub sgn 0 floor add
+*55 * *115 sub sgn 0 floor add 159 store
+                                     
+*26 * *86 mult *56 * *116 sub sgn 0 floor mult
+*27 * *87 mult *57 * *117 sub sgn 0 floor mult add
+*28 * *88 mult *58 * *118 sub sgn 0 floor mult add 146 store
+*56 * *116 sub sgn 0 floor
+*57 * *117 sub sgn 0 floor add
+*58 * *118 sub sgn 0 floor add 160 store
+                                         
+*29 * *89 mult *59 * *119 sub sgn 0 floor mult
+*30 * *90 mult *60 * *120 sub sgn 0 floor mult add
+*31 * *91 mult *61 * *121 sub sgn 0 floor mult add 147 store
+*59 * *119 sub sgn 0 floor
+*60 * *120 sub sgn 0 floor add
+*61 * *121 sub sgn 0 floor add 161 store
+                                       
+*32 * *92 mult *62 * *122 sub sgn 0 floor mult
+*33 * *93 mult *63 * *123 sub sgn 0 floor mult add
+*34 * *94 mult *64 * *124 sub sgn 0 floor mult add 148 store
+*62 * *122 sub sgn 0 floor
+*63 * *123 sub sgn 0 floor add
+*64 * *124 sub sgn 0 floor add 162 store
+                                     
+*35 * *95 mult *65 * *125 sub sgn 0 floor mult
+*36 * *96 mult *66 * *126 sub sgn 0 floor mult add
+*37 * *97 mult *67 * *127 sub sgn 0 floor mult add 149 store
+*65 * *125 sub sgn 0 floor
+*66 * *126 sub sgn 0 floor add
+*67 * *127 sub sgn 0 floor add 163 store
+                                     
+*38 * *98 mult *68 * *128 sub sgn 0 floor mult
+*39 * *99 mult *69 * *129 sub sgn 0 floor mult add
+*40 * *100 mult *70 * *130 sub sgn 0 floor mult add 150 store
+*68 * *128 sub sgn 0 floor
+*69 * *129 sub sgn 0 floor add
+*70 * *130 sub sgn 0 floor add 164 store
+                                     
+*41 * *101 mult *71 * *131 sub sgn 0 floor mult
+*42 * *102 mult *72 * *132 sub sgn 0 floor mult add
+*43 * *103 mult *73 * *133 sub sgn 0 floor mult add 151 store
+*71 * *131 sub sgn 0 floor
+*72 * *132 sub sgn 0 floor add
+*73 * *133 sub sgn 0 floor add 165 store
+                                
+*44 * *104 mult *74 * *134 sub sgn 0 floor mult
+*45 * *105 mult *75 * *135 sub sgn 0 floor mult add
+*46 * *106 mult *76 * *136 sub sgn 0 floor mult add 152 store
+*74 * *134 sub sgn 0 floor
+*75 * *135 sub sgn 0 floor add
+*76 * *136 sub sgn 0 floor add 166 store
+                                 
+*47 * *107 mult *77 * *137 sub sgn 0 floor mult
+*48 * *108 mult *78 * *138 sub sgn 0 floor mult add
+*49 * *109 mult *79 * *139 sub sgn 0 floor mult add 153 store
+*77 * *137 sub sgn 0 floor
+*78 * *138 sub sgn 0 floor add
+*79 * *139 sub sgn 0 floor add 167 store
+stop
+'output
+cond
+*168 *172 >
+*.reproing 0 =
+start
+*176 * .up store
+stop
+
+cond
+*169 *173 >
+*.reproing 0 =
+start
+*177 * .aimsx store
+stop
+
+cond
+*170 *174 >
+*.reproing 0 =
+start
+-1 .shoot store
+stop
+
+cond
+*171 *175 >
+*.reproing 0 =
+start
+*179 * .repro store
+stop
+'repro
+
+cond
+*.reproing 2 =
+start
+*180 .tieloc store
+*180 * .tieval store
+180 inc
+*180 28 add 180 *180 140 sub abs -1 mult 1 add mult store
+100 .stifftie store
+20 .fixlen store
+stop
+
+cond
+*180 179 >
+start
+0 .reproing store
+1 .deltie store
+stop
+
+cond
+*.numties 0 
+*.trefage 3 >
+*.reproing 1 = and or
+start
+0 .reproing store
+stop
+
+cond
+*.numties 0 !=
+*.trefage 3 <= or
+*.reproing 1 =
+start
+2 .reproing store
+20 180 store
+stop
+
+cond
+*.reproing 1 =
+start
+1 .tie store
+1 .tienum store
+stop
+
+cond
+*.repro 0 >
+start
+1 .reproing store
+stop
+end

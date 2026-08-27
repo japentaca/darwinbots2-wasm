@@ -1,0 +1,351 @@
+'name: Miller
+'description: Turning veggies into yummies!
+@
+def red 255
+def green 227
+def blue 0
+
+' DEFAULTS {
+cond
+start
+.shoot .ploc store
+-2 .pval store
+0 .fixpos store
+*.tiepres .tienum store
+.tieloc .tieloc store
+100 .tielen store
+90 .stifftie store
+0 .tieval store
+*.myeye 14 store
+0 .out6 store
+99 .out1 store
+460 .eye9width store
+520 .eye9dir store
+460 .eye1width store
+-520 .eye1dir store
+0 999 store
+stop
+
+cond
+*.robage 1 =
+start
+333 .out1 store
+stop
+
+cond
+*.tiepres 33 =
+start
+33 .out5 store
+stop
+' } END DEFAULTS
+
+' VIRUS {
+cond
+start
+*.thisgene .mkvirus store
+1 .vshoot store
+0 .repro *.totalmyspecies 100 sub 0 floor sgn mult *14 *.myeye sub abs sgn mult store
+33 .tie *.myeye 2 sub 0 ceil abs sgn mult store
+2 .sharenrg *.myeye 2 sub 0 ceil abs sgn mult store
+*13 .delgene *.thisgene *13 sub abs 0 floor mult store
+*.thisgene 13 store
+stop
+' } END VIRUS
+
+' RESOURCES {
+cond
+*.venom 200 <
+start
+100 .strvenom store
+stop
+
+cond
+*.poison 400 <
+*.nrg 50 >
+start
+*.nrg 100 div .strpoison store
+stop
+
+cond
+*.shell 250 <
+*.nrg 500 >
+*999 0 >
+*.hit 0 >
+or
+start
+100 .mkshell store
+stop
+
+cond
+start
+-2 .venval store
+.shoot .vloc store
+stop
+
+cond
+*.waste 50 >
+*.numties 0 >
+start
+1 .sharewaste store
+stop
+
+cond
+*.waste 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+' } END RESOURCES
+
+' COMMS {
+cond
+*.in1 333 =
+*.in7 0 >
+*.out7 0 =
+start
+*.in6 5 sub .out6 store
+*.in7 .out7 store
+*.in8 .out8 store
+*.in7 972 store
+*.in8 973 store
+*.in6 5 sub 974 store
+stop
+
+cond
+*.tiepres 33 =
+start
+33 .out5 store
+*.velup .dn store
+*.velsx .dx store
+stop
+
+cond
+*.tiepres 33 !=
+start
+0 .out5 store
+stop
+' } END COMMS
+
+' MOVEMENT {
+cond
+*972 0 =
+*974 0 =
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add 0 =
+start
+*.aim 100 rnd 50 sub add .setaim store
+store
+
+cond
+*972 0 >
+*974 0 >
+*972 *.xpos sub abs
+*973 *.ypos sub abs add 1000 >
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add 0 =
+*.tiepres 33 !=
+start
+*972 *973 angle .setaim store
+*974 1 sub 0 floor 974 store
+*974 .out6 store
+stop
+
+cond
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add 0 =
+*974 0 =
+*.tiepres 33 !=
+start
+100 rnd 50 sub .aimdx store
+*.maxvel .up store
+stop
+
+cond
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add 0 >
+*.tiepres 33 !=
+start
+215
+*.eye6 *.eye7 add *.eye8 add *.eye9 add
+*.eye4 *.eye3 add *.eye2 add *.eye1 add sub sgn mult
+.aimdx store
+*.maxvel 2 div .up store
+stop
+
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+start
+100 974 store
+33 .out5 store
+*.refxpos .out7 store
+*.refypos .out8 store
+*.refxpos 972 store
+*.refypos 973 store
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*974 180 >
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add 0 =
+*.tiepres 33 !=
+start
+1200 rnd .setaim store
+stop
+' } END MOVEMENT
+
+' REPRODUCTION {
+cond
+*.eye5 0 =
+*.nrg 2000 *.totalbots *.totalmyspecies div div 500 floor >
+*.robage 5 >
+start
+314 .aimdx store
+50 .repro store
+stop
+' } END REPRODUCTION
+
+' SHOOTING {
+cond
+*.refeye 1 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+*.refpoison 0 >
+*.eye5 0 >
+start
+24 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.refeye 1 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+*.refpoison 0 =
+*.eye5 0 >
+start
+24 .shootval store
+-1 .shoot store
+stop
+
+cond
+*.eye5 5 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+4 rnd 1 =
+start
+.aimsx .shoot store
+614 .shotval store
+stop
+' } END SHOOTING
+
+' MILLING {
+cond
+*.eye5 0 >
+*.refeye 2 <
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+start
+33 .tie store
+33 .out5 store
+stop
+
+cond
+*.eye5 0 >
+*.in5 33 =
+start
+33 .tie store
+33 .out5 store
+stop
+
+cond
+*.tiepres 33 =
+start
+33 .out5 store
+33 .tienum store
+*.trefxpos *.trefypos angle 614 add .setaim store
+75 .sharenrg store
+1 .sharewaste store
+stop
+' } END MILLING
+
+' BODY {
+cond
+*.nrg *.body 2 mult >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg *.body mult <
+start
+100 .fdbody store
+stop
+' } END BODY
+
+' PANIC {
+cond
+*.eye5 5 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+*.vtimer 1 =
+start
+16 .vshoot store
+stop
+
+cond
+*.tiepres 33 !=
+start
+*.tiepres .deltie 1 rnd mult store
+stop
+
+cond
+*.in7 0 =
+*.refeye *.myeye =
+start
+160 .aimsx store
+stop
+
+cond
+*.eye5 80 >
+*.tiepres 33 =
+start
+0 .up store
+5 .dn store
+stop
+
+cond
+*.paralyzed 10 >
+*.poisoned 10 > or
+*.pwaste 20 > or
+start
+314 .aimsx store
+99 .repro store
+stop
+
+cond
+*.tiepres 33 =
+start
+*.aim 400 rnd 200 sub .aimshoot store
+-3 .shoot store
+stop
+
+cond
+*.shflav 0 >
+*.shflav -1 =
+*.shflav -6 =
+or
+start
+*.shang *.aim add .aimshoot store
+-3 .shoot store
+100 .shotval store
+100 .dx store
+stop
+' } END PANIC

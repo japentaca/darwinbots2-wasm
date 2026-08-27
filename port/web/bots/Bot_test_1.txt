@@ -1,0 +1,167 @@
+'An attempt to make the bot move north no matter how it is turned.
+'Lacks precision due to a integer-only stack.
+'Attempt to correct that by waiting to divide bigs numbers till end.
+'
+'edit these to wherever--maybe pi should be epigenetic?
+'sineIn and sineOut are input/output for Taylor series
+'sineOut returns a number multiplied by factor2 (approx.)
+'pi and factor are internal constants for sine calculation
+'aimHeading is the absolute heading that the bot wants to travel
+'magnitude is how approximately how fast (in Darwinbots units) the bot will travel
+'turn is how much the bot itself turns each cycle--useful to sweep area around the bot
+'aimTurn is how much the bot changes the heading each cycle.
+def sineIn 50
+def sineOut 51
+def pi 52
+def factor 53
+def aimHeading 410 
+def magnitude 54
+def turn 55 
+def aimTurn 56
+def factor2 57
+
+'set constants
+cond
+*.robage 1 =
+start
+31415 .pi store
+10000 .factor store
+32000 .factor2 store
+100 .magnitude store
+0 .aimHeading store
+*.tiepres .deltie store
+35 .turn store
+5 .aimTurn store
+'just to move them out of the way
+1221 .eye1width store
+1221 .eye2width store
+1221 .eye3width store
+1221 .eye4width store
+'1221 .eye5width store
+1221 .eye6width store
+1221 .eye7width store
+1221 .eye8width store
+1221 .eye9width store
+stop
+
+'manage body
+cond
+*.body 10 <
+*.nrg 300 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 500 <
+*.body 10 >
+start
+10 .fdbody store
+stop
+
+cond
+start
+*.aim *.turn add .setaim store
+*.aimHeading *.aimTurn add .aimHeading store
+stop
+
+'try to aim the eye and shoot
+'cond
+'*.refup *.myup !=
+'*.eye5 0 !=
+'start
+'*.refxpos *.refypos angle .aimHeading store
+'*.aimHeading *.aim sub *.turn sub .eye5dir store
+'*.turn *.aim add *.aimHeading sub .aimshoot store
+'-6 .shoot store
+'*.nrg 2 div .shootval store
+'stop
+'
+'cond
+'*.waste 100 >
+'start
+'-4 .shoot store
+'*.waste .shootval store
+'stop
+
+'begin movement section: it makes the bot move in the direction of aimHeading
+'normalize aimheading
+cond
+*.aimHeading 1256 >=
+start
+*.aimHeading 1256 sub .aimHeading store
+stop
+
+cond
+*.aimHeading 0 <
+start
+*.aimHeading 1256 add .aimHeading store
+stop
+
+'from here down it makes the bot move in the direction of *.aimheading
+cond
+start
+*.aimHeading *.aim sub .sineIn store
+stop
+
+'begin sineIn normalization
+cond
+*.sineIn 0 <
+start
+*.sineIn 1256 add .sineIn store
+stop
+
+cond
+*.sineIn 1256 >
+start
+*.sineIn 1256 sub .sineIn store
+stop
+
+'Taylor expansion of sine function
+cond
+start
+628 *.sineIn sub *.pi mult 628 div *.factor div 1 pow *.factor2 mult 1 div 628 *.sineIn sub *.pi mult 628 div *.factor div 3 pow *.factor2 mult 6 div sub 628 *.sineIn sub *.pi mult 628 div *.factor div 5 pow *.factor2 mult 120 div add 628 *.sineIn sub *.pi mult 628 div *.factor div 7 pow *.factor2 mult 5040 div sub .sineOut store
+stop
+
+cond
+start
+*.sineOut *.magnitude mult *.factor2 div .sx store
+stop
+
+'calculate value for .up
+cond
+start
+314 *.aimHeading *.aim sub sub .sineIn store
+stop
+
+cond
+*.sineIn 0 <
+start
+*.sineIn 1256 add .sineIn store
+stop
+
+cond
+*.sineIn 1256 >
+start
+*.sineIn 1256 sub .sineIn store
+stop
+
+'Taylor expansion of sine function
+cond
+start
+628 *.sineIn sub *.pi mult 628 div *.factor div 1 pow *.factor2 mult 1 div 628 *.sineIn sub *.pi mult 628 div *.factor div 3 pow *.factor2 mult 6 div sub 628 *.sineIn sub *.pi mult 628 div *.factor div 5 pow *.factor2 mult 120 div add 628 *.sineIn sub *.pi mult 628 div *.factor div 7 pow *.factor2 mult 5040 div sub .sineOut store
+stop
+
+cond
+start
+*.sineOut *.magnitude mult *.factor2 div .up store
+stop
+'end movement section
+
+'cond
+'*.nrg 500 >
+'*.body 1000 >=
+'start
+'50 .repro store
+'stop
+end

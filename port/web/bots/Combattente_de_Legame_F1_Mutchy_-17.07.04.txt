@@ -1,0 +1,165 @@
+'Topic: F1, F2 and Short-Bots league tables  
+'Mutchy
+
+'initialize
+cond
+*.robage 0 =
+start
+50 rnd 55 store
+14 56 store
+1 .tie store
+stop
+
+cond
+*.robage 1 =
+start
+1 .deltie store
+stop
+
+cond
+*.eye2 *.eye8 !=
+start
+*.eye2 *.eye8 sub .aimsx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub 2 div .aimsx store
+stop
+
+cond
+*.refeye *56 =
+start
+200 .aimsx store
+stop
+
+cond
+*.vel 40 <
+*.refeye *.myeye
+start
+40 *.vel sub .up store
+stop
+
+cond 
+*.nrg 4000 >
+*.eye5 30 <
+start
+50 .repro store
+stop
+
+cond
+*.eye5 30 >
+*.refeye *.myeye
+*.eye5 77 !=
+*.eye4 *.eye6 =
+start
+*55 .tie store
+*55 .readtie store
+stop
+
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+*55 .tienum store
+stop
+
+cond
+*.trefeye *56 =
+start
+*55 .deltie store
+stop
+
+cond
+*.slime 90 <
+start
+100 .mkslime store
+stop
+
+cond
+*.eye5 50 >
+start
+-1 .shoot store
+stop
+
+gene 2
+cond
+*.eye1 *.eye5 >
+start
+mult -104 
+stop
+
+'gene far right eye
+cond
+*.eye9 *.eye5 >
+start
+mult 104 
+stop
+
+'gene middle left eye
+cond
+*.eye3 *.eye5 >
+start
+mult -52
+stop
+
+'gene middle right eye
+cond
+*.eye7 *.eye5 >
+start
+mult 52 
+stop
+
+'gene fire!
+cond
+*.eye5 40 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+'gene im not lazy? 
+cond
+*.vel 30 <
+*.refeye *.myeye !=
+start
+30 *.vel sub .up store
+stop
+
+'gene makin babies
+cond
+*.nrg 5000 >
+start
+50 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'gene no tie
+cond
+*.numties 0 !=
+'*.robage 1 =
+start
+1 .deltie store
+stop
+
+'gene run away from friends
+cond
+*.refeye *.myeye =
+start
+mult -90 
+stop
+
+'gene mult
+cond 
+start
+.aimdx store
+stop
+
+end

@@ -1,0 +1,110 @@
+' Topic: Formula one bots!
+'Jez
+
+'*Vex Pefidiosus - DB V2.13 + patch
+
+'G1 **increase speed to 30** 
+cond
+*.refeye 15 !=
+*.eye5 80 <
+start
+30 *.vel sub .up store
+stop
+
+'G2 **Targetting**
+cond
+*.refeye 15 !=
+*.eye1 *.eye5 >
+start
+*.eye1 .aimsx store
+stop
+
+'G3
+cond
+*.refeye 15 !=
+*.eye9 *.eye5 >
+start
+*.eye9 -1 mult .aimsx store
+stop
+
+'G4
+cond
+*.refeye 15 !=
+*.eye3 *.eye5 >
+start
+-52 .aimdx store
+stop
+
+'G5
+cond
+*.refeye 15 !=
+*.eye7 *.eye5 >
+start
+52 .aimdx store
+stop
+
+'G6 **tie to enemy**
+cond
+*.eye5 30 >
+*.eye5 100 <
+*.refeye 15 !=
+start
+1 .tie store
+0 .aimdx store
+0 .aimsx store
+-1 .shoot store
+stop
+
+'G7 **feed from tie**
+cond
+*.numties 0 >
+start
+1 .tienum store
+1 .readtie store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'G8 **delete ties to friends**
+cond
+*.trefeye 15 =
+*.numties 0 >
+*.trefup 1 =
+start
+1 .tienum
+1 .deltie store
+stop
+
+'G9 **turn away from friends**
+cond
+*.refup 1 =
+*.refeye 15 =
+start
+52 .aimdx store
+stop
+
+'G10 **reproduce**
+cond
+*.nrg 6000 >
+*.eye5 0 =
+start
+25 .repro store
+stop
+
+'G11 **make slime**
+cond
+*.slime 100 <
+start
+100 *.slime sub .mkslime store
+stop
+
+'G12 **Get rid of waste**
+cond
+*.eye5 0 =
+*.waste 1000 >
+*.nrg 5000 >
+start
+50 .shootval
+-4 .shoot store
+stop
+end

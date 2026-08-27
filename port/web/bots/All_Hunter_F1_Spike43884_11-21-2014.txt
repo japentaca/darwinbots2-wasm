@@ -1,0 +1,252 @@
+'All Hunter
+'By Spike43884
+'
+'Derived from All Swarm
+'
+'DESCRIPTION: MAKE LONG
+
+
+def attack 50
+def hunt 51
+
+
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+
+
+'Gene 1 No food = Hunt
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 0 =
+start
+157 rnd .aimdx store
+1 .hunt store
+stop
+
+
+'Gene 2 No food & Turned = Move
+cond
+*.eye1 0 =
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.hunt 1 = and
+start
+15 .up store
+2 .hunt store
+stop
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 2 =
+start
+10 .up store
+3 .hunt store
+stop
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 3 =
+start
+10 .up store
+0 .hunt store
+stop
+
+
+' Gene 1 Food Finder (waiting)
+cond
+*.eye1 sgn
+ *.eye2 sgn add
+ *.eye3 sgn add
+ *.eye4 sgn add
+ *.eye5 sgn add
+ *.eye6 sgn add
+ *.eye7 sgn add
+ *.eye8 sgn add
+ *.eye9 sgn add 0 =
+*.refeye *.myeye = or
+start
+10 rnd .aimdx store
+stop
+
+
+'Gene 2 Food Sighted 
+'*********************
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+start
+550 .aimdx store
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+start
+405 .aimdx store
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+start
+260 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+start
+115 .aimdx store
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+start
+115 .aimsx store
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+start
+260 .aimsx store
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+start
+405 .aimsx store
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+start
+550 .aimsx store
+stop
+'*********************
+
+
+' Gene 3 Chase Food
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 4 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+
+' Gene 5 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+' Gene 6 Recombine
+cond
+*.robage 0 =
+*.numties 0 =
+start
+1 .tie store
+stop
+
+
+' Gene 7 Reproduce
+cond
+ *.nrg 20000 >
+ *.robage 3 > and 
+start
+ 35 .repro store
+stop
+
+
+' Gene 8 Singulise
+cond
+ *.numties 0 !=
+start
+.deltie inc
+.deltie inc
+stop
+
+end

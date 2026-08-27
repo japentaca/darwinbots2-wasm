@@ -1,0 +1,305 @@
+'Topic: New Bots
+'Eight
+'
+' Cerberus 2 (MB) - 05.10.04   by Eight (eightland.com)
+' doggy style
+
+def func 50
+def beat 51
+def see 52
+
+'poop
+cond
+*.waste 100 >
+*.eye5 0 =
+start
+100 .shootval store
+-4 .shoot store
+stop
+
+'initialize
+cond
+*.robage 2 =
+*.numties 0 =
+*.func 0 =
+start
+.func inc
+stop
+
+'reset single
+cond
+*.robage 300 >
+*.numties 0 =
+*.func 0 =
+start
+.func inc
+stop
+
+'grow head
+cond
+*.numties 3 <
+*.func 1 =
+*.nrg 2000 >
+start
+50 .repro store
+stop
+
+'tie
+cond
+*.robage 0 =
+*.func 0 =
+*.numties 0 =
+start
+1 .tie store
+628 .fixang store
+stop
+
+'set
+cond
+*.numties 3 <
+*.func 1 =
+start
+628 .fixang store
+stop
+
+'multi 0
+cond
+*.numties 1 =
+*.multi 0 =
+start
+40 .stifftie store
+stop
+
+'share
+cond
+*.func 0 =
+*.multi 1 =
+start
+50 .sharenrg store
+stop
+
+'move single
+cond
+*.beat 0 =
+*.multi 0 =
+start
+5 .up store
+stop
+
+'move
+cond
+*.func 0 =
+*.beat 0 =
+*.multi 1 =
+start
+5 .up store
+stop
+
+'move
+cond
+*.func 1 =
+*.beat 0 =
+*.multi 1 =
+start
+5 .dn store
+stop
+
+'pulse
+cond
+*.beat 0 =
+start
+.beat inc
+stop
+
+'heart
+cond
+*.beat 0 >
+start
+.beat dec
+stop
+
+'see
+cond
+*.eye4 *.eye6 !=
+*.eye5 30 >
+start
+.see inc
+stop
+
+'nothing
+cond
+*.eye5 0 =
+start
+0 .see store
+stop
+
+'eat
+cond
+*.see 1 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+'eat
+cond
+*.eye5 30 >
+*.refup 0 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+'enemy tie
+cond
+*.func 0 =
+*.multi 1 =
+*.numties 1 >
+*.tiepres 1 >
+*.tiepres 1 !=
+start
+*.tiepres .deltie store
+stop
+
+'back bump
+cond
+*.hitdn 0 !=
+start
+1 .backshot store
+-6 .shoot store
+stop
+
+'starving
+cond
+*.eye5 0 =
+*.func 0 =
+*.multi 1 =
+*.nrg 500 <
+start
+1 .deltie store
+stop
+
+'store body
+cond
+*.multi 1 =
+*.nrg 3000 >
+*.body 32000 <
+start
+50 .strbody store
+stop
+
+'take body if nrg low
+cond
+*.multi 0 =
+*.nrg 100 <
+*.body 500 >
+start
+100 .fdbody store
+stop
+
+'left
+cond
+*.robage 100 >
+*.multi 0 =
+*.eye4 *.eye6 >
+start
+5 .aimsx store
+stop
+
+cond
+*.robage 100 >
+*.multi 0 =
+*.eye1 *.eye9 >
+start
+30 .aimsx store
+stop
+
+'right
+cond
+*.robage 100 >
+*.multi 0 =
+*.eye6 *.eye4 >
+start
+5 .aimdx store
+stop
+
+cond
+*.robage 100 >
+*.multi 0 =
+*.eye9 *.eye1 >
+start
+30 .aimdx store
+stop
+
+'stop if you see food
+cond
+*.multi 0 =
+*.eye5 50 >
+*.refdx *.mydx !=
+*.refeye *.myeye !=
+start
+1 .fixpos store
+stop
+
+'see friend
+cond
+*.func 0 =
+*.multi 1 =
+*.eye5 50 >
+*.refdx *.mydx =
+*.refeye *.myeye =
+start
+5 .dx store
+stop
+
+'see friend
+cond
+*.multi 0 =
+*.eye5 50 >
+*.refdx *.mydx =
+*.refeye *.myeye =
+*.robage 40 >
+start
+628 .aimdx store
+stop
+
+'if fixed
+cond
+*.fixed 1 =
+*.eye9 30 <
+*.eye1 30 <
+start
+0 .fixpos store
+stop
+
+'see food
+cond
+*.func 0 =
+*.multi 1 =
+*.eye1 30 >
+*.refdx *.mydx !=
+*.refeye *.myeye !=
+*.refup 0 =
+start
+1 .fixpos store
+1 .tienum store
+30 .tieval store
+.sx .tieloc store
+stop
+
+'see food
+cond
+*.func 0 =
+*.multi 1 =
+*.eye9 30 >
+*.refdx *.mydx !=
+*.refeye *.myeye !=
+*.refup 0 =
+start
+1 .fixpos store
+1 .tienum store
+30 .tieval store
+.dx .tieloc store
+stop
+
+end

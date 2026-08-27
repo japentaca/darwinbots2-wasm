@@ -1,0 +1,338 @@
+'06.11.03
+'2 cell stable organism that works?????
+'PY
+
+'H_Devincio_Gemini
+
+'*50 = age / counter
+'*51 = tie phase for feeding
+'*52 = robot type in multi cellular
+'*54 = counter to tell if a head is disembodied
+'*55 = feeding mode. 1 = request movement. 0 = allow to feed
+'*56 = push mode 0 = no push. 1 = push
+'*57 = feeding counter. no feeding for 3 cycles changes mode
+'*58 = refeye value
+'***********************
+
+
+
+'reproduce as robot zero
+'****************************
+cond
+*.nrg 20000 > 
+*.eye5 0 =
+*52 0 =
+start
+50 .repro store
+-51 50 store
+stop
+
+'Reproduce as #2 robot
+'**************************
+cond
+*52 2 =
+*.nrg 20000 >
+*.eye5 0 =
+start
+50 .repro store
+10 50 store
+stop
+
+'transfer energy
+'******************
+'cond
+'*52 1 =
+'*.nrg 20000 >
+'start
+'11 .tienum store
+'2000 .tieval store
+'.nrg .tieloc store
+'stop
+
+'request movement from robot 2
+'************************************
+cond
+*52 1 =
+*.eye5 0 =
+*50 23 >
+*55 0 =
+start
+11 .tienum store
+1 .tieval store
+56 .tieloc store
+stop
+
+'initialize
+'******
+cond
+*50 0 =
+start
+9 rnd 1 add 51 store
+0 52 store
+34 58 store
+stop
+
+' move forward robot 0 only
+'****************************
+cond
+*50 23 >
+*52 0 =
+start
+*50 *.eye5 sub 10 div .up store
+*50 *.eye5 sub -10 div .dn store
+stop
+
+'Move backwards to push organism. robot 2 only
+'******************************************************
+cond
+*50 23 >
+*52 2 =
+*56 1 =
+start
+2 .dn store
+-2 .up store
+0 56 store
+stop
+
+'increment counter
+'*********************
+cond
+start
+50 inc
+stop
+
+'turn towards food if robot zero
+'**********************************
+cond
+*.eye1 *.eye6 >
+*.eye1 *.eye9 > 
+*50 23 >
+*52 0 =
+start
+-110 .aimdx store
+stop
+
+cond
+*.eye9 *.eye4 >
+*.eye9 *.eye1 >
+*50 23 >
+*52 0 =
+start
+110 .aimdx store
+stop
+
+cond
+*.eye3 *.eye6 >
+*.eye3 *.eye7 >
+*50 23 >
+*52 0 =
+start
+-70 .aimdx store
+stop
+
+cond
+*.eye7 *.eye4 >
+*.eye7 *.eye3 >
+*50 23 >
+*52 0 =
+start
+70 .aimdx store
+stop
+
+'turn towards food if robot one. No rotation as it messes up the ties sometimes
+'**********************************
+cond
+*50 23 >
+*52 1 =
+start
+*.eye6 *.eye4 sub 4 div .dx store
+*.eye6 *.eye4 sub -4 div .sx store
+stop
+
+cond
+*.eye6 *.eye4 =
+*.eye5 0 !=
+start
+0 .dx store
+stop
+
+
+'avoid conspecifics. 
+'****************************
+cond
+*.refeye *58 =
+*.eye5 20 >
+*50 23 >
+*52 2 !=
+start
+150 .aimsx store
+20 .dx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+*50 21 >
+*52 0 =
+start
+100 rnd 50 sub .aimsx store
+stop
+
+'Tie to an enemy to feed
+'********************
+cond
+*.eye5 30 >
+*.eye5 *.eye6 =
+*.eye5 *.eye4 =
+*.refeye *58 !=
+*50 21 > 
+start
+*51 .tie store
+0 .aimsx store
+0 .aimdx store
+1 55 store
+stop
+
+'Tie to conspecific immediately after breeding to make multi cellular
+'Set robot cell type to 1 (Head)
+'******************************
+cond
+*50 -48 =
+*52 0 =
+start
+11 .tie store
+1 52 store
+1 .out1 store
+stop
+
+'Feed via tie. Both robots can do this
+'***************************
+cond 
+'*50 21 >
+'*.nrg 21000 <
+*55 1 =
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'check to see if feeding is taking place in robot 1
+'If not feeding then reset to movement mode
+'********************************************************
+cond
+*52 1 =
+*55 1 =
+*.nrg 19900 <
+*.pleas 0 <
+start
+57 inc
+stop
+
+cond
+*52 1 =
+*55 1 =
+*.pleas 0 >
+start
+0 57 store
+stop
+
+cond 
+*57 3 >
+start
+0 57 store
+0 55 store
+stop
+
+'transfer energy when nrg greater than 20000
+'**********************************
+cond
+*52 1 =
+*.nrg 20000 >
+start
+11 .tienum store
+100 .tieval store
+-1 .tieloc store
+stop
+
+'Attempt to tell if a tie breaks and leaves a head alone and not able to breed
+'As head has no movement ability, works by checking velocity
+' tail also has no mevement unless asked for by head.
+'****************************************************************************
+***********
+cond
+*.vel 5 <
+*52 0 !=
+start
+54 inc
+stop
+
+cond
+*54 30 >
+*52 1 =
+start
+0 52 store
+0 54 store
+stop
+
+cond
+*.vel 4 >
+start
+0 54 store
+stop
+
+'attempt to keep ties at a resonable length
+'************************************************
+'cond
+'*52 0 !=
+'start
+'11 .tienum store
+'100 .tielen store
+'stop
+
+'Set counter in tagged robot and rotate self 180 degrees
+'Only takes place just after birth
+'************************************************************
+cond
+*52 1 =
+*50 -47 =
+start
+11 .tienum store
+-60 .tieval store
+50 .tieloc store
+624 .aimsx store
+stop
+
+'Set out1 in tail robot
+'****************
+cond
+*52 1 =
+*50 -46 =
+start
+11 .tienum store
+1 .tieval store
+.out1 .tieloc store
+5 50 store
+stop
+
+'Tail robot rotate 180 degrees
+'*********************************
+cond
+*50 -59 =
+start
+624 .aimdx store
+1 50 store
+2 52 store
+stop
+
+'shoot at enemy
+'******************
+'cond
+'*.eye5 35 >
+'*.refeye *58 !=
+'start
+'-1 .shoot store
+'stop
+
+end

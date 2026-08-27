@@ -1,0 +1,364 @@
+' Topic: My attempt at a MultiBot  
+'Henk
+
+' Oranje_Bot
+' attemp at a multibot
+' by Henk
+
+' tie 1 = A tie to a friend
+' tie 2 = ATTACK
+
+'Tie at birth
+cond
+*.robage 0 =
+start
+1 .tie store
+1 .readtie store
+123 .out1 store
+stop
+
+' set length
+cond
+*.numties 1 =
+*.multi 1 =
+*.trefage *.robage >
+start
+1 .tienum store
+200 .fixlen store
+stop
+
+' move when untied
+cond
+*.numties 0 =
+*.robage 2 >
+start
+*.maxvel *.vel sub .up store
+stop
+
+' follow when not tied
+' **************************
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+start
+-128 .aimdx store
+4 .sx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+start
+128 .aimdx store
+4 .dx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+*.numties 0 =
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+cond
+*.numties 0 >
+start
+628 .fixang store
+stop
+
+' follow when tied
+' *********************
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 >
+*.trefage *.robage <
+start
+500 .fixang store
+-135 .aimdx store
+-5 .dx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 >
+*.trefage *.robage <
+start
+756 .fixang store
+135 .aimdx store
+5 .dx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+*.numties 0 >
+*.trefage *.robage <
+start
+1230 .fixang store
+-35 .aimdx store
+-1 .dx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 >
+*.trefage *.robage <
+start
+26 .fixang store
+35 .aimdx store
+1 .dx store
+stop
+
+' Share energy with partner
+cond
+*.numties 1 =
+*.trefnrg *.nrg !%=
+*.trefage *.robage <
+*.trefnrg 7000 <
+*.tiepres 2 !=
+*.robage 50 >
+start
+50 .sharenrg store
+stop
+
+' Share slime with partner
+cond
+*.numties 1 =
+*.trefnrg *.nrg !%=
+*.trefage *.robage >
+*.robage 50 >
+start
+50 .shareslime store
+stop
+
+' Share shell with partner
+cond
+*.numties 1 =
+*.trefnrg *.nrg !%=
+*.trefage *.robage <
+*.robage 50 >
+start
+50 .shareshell store
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage <
+*.shell 90 <
+*.robage 50 >
+start
+100 *.shell sub .mkshell store
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage <
+*.slime 90 <
+*.robage 50 >
+start
+200 *.slime sub .mkslime store
+stop
+
+' repro for sole bot.
+cond
+*.nrg 8000 >
+*.numties 0 =
+start
+50 .repro store
+stop
+
+' FORWARD killing
+cond
+*.numties 1 =
+*.trefage *.robage <
+*.robage 20 >
+*.eye5 35 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+' Killing for lonesome cowboys
+cond
+*.numties 0 =
+*.in1 123 !=
+*.eye5 35 >
+*.robage 20 >
+start
+2 .tie store
+stop
+
+' aft killing
+cond
+*.in1 123 !=
+*.eye5 35 >
+*.trefage *.robage >
+*.multi 1 =
+*.robage 5 >
+start
+2 .tie store
+stop
+
+' eat through tie
+cond
+*.numties 0 >
+*.tiepres 2 =
+start
+2 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+*.waste 0 >
+*.eye5 30 >
+*.refeye 0 =
+*.robage 1 >
+start
+-4 .shoot store
+1 .shootval store
+stop
+
+cond
+*.waste 50 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' move as multibot
+cond
+*.numties 1 =
+*.trefage *.robage <
+*.robage 20 >
+start
+*.maxvel *.vel sub .up store
+stop
+
+' TIE ang reinitiation gene
+cond
+*.robage 1 =
+start
+*.robage 50 add 41 store
+stop
+
+cond
+*.robage *41 >
+*.robage 2 >
+*.numties 0 >
+start
+628 .fixang store
+*.robage 40 add 41 store
+stop
+
+' ************************
+' reproduction for aft bot
+cond
+*.trefage *.robage >
+*.nrg 8000 >
+*.numties 1 =
+*.robage 50 >
+start
+50 .repro store
+' I dont wanna keep my child
+2 55 store
+stop
+
+' restore cell 55 when alone
+cond
+*.numties 0 =
+*55 0 !=
+start
+0 55 store
+stop
+
+' REMOVE SHELL WHEN NOT IN MULTIBOT
+cond
+*.shell 0 >
+*.numties 0 =
+start
+0 *.shell sub .mkshell store
+stop
+
+' avoid friends when I'm tied
+cond
+*.eye5 0 >
+*.in1 123 =
+*.numties 1 =
+*.trefage *.robage <
+start
+314 .aimdx store
+stop
+
+cond
+*.eye5 0 >
+*.in1 123 =
+*.numties 0 =
+start
+314 .aimdx store
+stop
+
+cond
+*.robage 4 =
+*.numties 1 =
+start
+55 .tmemloc store
+stop
+
+cond
+*.robage 5 =
+*.numties 1 =
+start
+55 .tmemloc store
+stop
+
+cond
+*.robage 6 =
+*.numties 1 =
+start
+55 .tmemloc store
+stop
+
+cond
+*.robage 6 =
+*.numties 1 =
+*.tmemval 2 =
+start
+1 .deltie store
+stop
+
+' reset trefage when untied
+cond
+*.numties 0 =
+*.trefage 0 !=
+start
+0 .trefage store
+stop
+
+' Anti tie gene
+' Evil anti-tie gene. 
+cond
+*.tiepres 1 !=
+*.tiepres 2 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+end

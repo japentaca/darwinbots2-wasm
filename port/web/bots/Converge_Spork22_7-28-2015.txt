@@ -1,0 +1,112 @@
+def variableA 1
+
+def search 52
+
+
+cond
+*.eye5 0 =
+*.in1 0 =
+*.in2 0 =
+start
+314 rnd .aimdx store
+stop
+
+'/*****proper reproduction 1
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+  'if time to reproduce store it
+  1
+  972
+  store
+stop
+
+cond
+  '/after robot reproduces it reproduces more until energy less then 3000
+  *972
+  1
+  =
+start
+  50
+  .repro
+  store
+stop
+
+'***** 2
+
+cond
+  *.nrg
+  3000
+  <
+start
+  0
+  972
+  store
+stop
+
+
+cond
+*.in1 0 !=
+*.in2 0 !=
+*.eye5 50 >
+*.refeye *.myeye =
+stat
+*.in1 .out1 store
+*.in2 .out2 store
+*.refvelup .up store
+1 .fixpos store
+stop
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+*.refxpos .out1 store
+*.refypos .out2 store
+stop
+
+
+cond
+*.robage 5 mod 0 =
+*.search 0 =
+start
+*.in1 *.in2 angle .setaim store
+1 .up store
+0 .fixpos store
+stop
+
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+2 .up store
+*.refxpos *.refypos angle .setaim store
+0 .search store
+stop
+
+
+cond
+*.edge 1 =
+start
+30 .dn store
+stop
+
+cond
+*.in1 0 !=
+*.in2 0 !=
+*.eye5 50 >
+*.refeye *.myeye =
+stat
+*.refvelup .up store
+0.fixpos store
+stop

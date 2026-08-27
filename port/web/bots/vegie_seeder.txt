@@ -1,0 +1,53 @@
+'Name         :vegie Seeder
+'bye        :d-EVO
+'type        :vegie
+
+'average body size of 50 units 
+'average life span of 50 cycls
+'looks relly cool in a large environment and high max amount of vegies
+'kills itself after repro so it is difficuld to feed from
+
+cond
+*.robage 0 =
+start
+628 .aimdx store
+*.maxvel .up store
+1 .timer store
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+*.maxvel rnd 10 add .up store
+stop
+
+cond
+*.body 10 >
+*.timer 0 >
+start
+*.body 2 div 100 ceil .fdbody store
+stop
+
+cond
+*.nrg 3000 >
+*.timer 0 > 
+start
+-30 .timer store
+*.maxvel .up store
+stop
+
+cond
+*.timer 0 <
+start
+100 .strbody
+1 .repro store
+245 .aimdx store
+*.timer -1 = *.timer -2 = or *.timer -3 = or
+32000 .shootval store
+-1 .shoot store
+dropbool
+stop
+
+end

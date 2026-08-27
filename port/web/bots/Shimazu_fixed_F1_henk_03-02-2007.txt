@@ -1,0 +1,241 @@
+'Patched by PY for V2.3
+'Shimazu
+
+'reset out1
+cond
+*.eye5 0 =
+*.in1 1 =
+*.robage 100 >
+start
+0 .out1 store
+stop
+
+'Identify as Shimazu
+cond
+*.out1 1 !=
+start
+1
+.out1
+store
+stop
+
+'reproduce. Long survival required to do so, to avoid lucky suckers
+cond
+*.nrg 9000 >
+*.robage 500 >
+*.robage 600 <
+start
+50 .repro store
+628 .aimsx store
+50 50 store
+stop
+
+cond
+*.nrg 9000 >
+*.robage 600 =
+*50 50 !=
+start
+50 .mrepro store
+628 .aimsx store
+stop
+
+' repro to continue really good bots
+cond
+*.nrg 10000 >
+*.robage 2000 >
+start
+50 .repro store
+628 .aimdx store
+50 50 store
+stop
+
+cond
+*.repro 50 =
+*.numties 1 =
+*.trefeye 0 =
+*.trefnrg 1000 <
+start
+31 .deltie store
+stop
+
+'kill
+cond
+*.eye5 0 >
+*.in1 1 !=
+*.robage 100 >
+start
+-1 .shoot store
+stop
+
+'Engage tie
+cond
+*.eye5 30 >
+*.in1 1 !=
+*.numties 0 =
+*.robage 100 >
+*.robage < 500
+start
+31 .tie store
+-3 .shoot store 20 .shootval
+0 .refnrg store
+2 40 store
+stop
+
+'Engage tie 2
+cond
+*.eye5 30 >
+*.in1 1 !=
+*.numties 0 =
+*.robage 100 >
+*.robage > 600
+start
+31 .tie store
+-3 .shoot store 20 .shootval
+0 .refnrg store
+2 40 store
+stop
+
+cond
+*40 2 =
+start
+2 .tielen store
+1 40 store
+stop
+
+'Feed
+cond 
+*.numties 0 >
+*.trefup 0 =
+start
+31 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+100 .sharenrg store
+stop
+
+'read the tie
+cond
+*.numties 0 >
+*.robage 100 >
+start
+31 .readtie store
+stop
+
+cond
+*.trefup 0 >
+*.eye5 0 =
+start
+31 .deltie store
+stop
+
+'move when seeing something
+cond
+*.eye5 0 >
+*.robage 100 >
+*.tie 31 !=
+*.numties 0 =
+start
+10 .up store
+stop
+
+'move when seeing nothing
+cond
+*.eye5 0 =
+*.robage 100 >
+*.tie 31 !=
+*.numties 0 =
+start
+10 .up store
+stop
+
+cond
+*.nrg 1000 >
+*.venom 30000 <
+start
+10 .strvenom store
+stop
+
+cond
+*.eye1 *.eye9 !=
+*.numties 0 =
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+stop
+
+cond
+*.eye2 *.eye8 !=
+*.numties 0 =
+start
+*.eye8 *.eye2 sub 3 mult .aimdx store
+stop
+
+cond
+*.eye3 *.eye7 !=
+*.numties 0 =
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.numties 0 =
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+cond
+*.refage 100 <
+*.robage 100 <
+*.eye5 0 >
+start
+314 .aimdx store
+0 .refage store
+stop
+
+cond
+*.robage 0 =
+start
+314 .aimdx store
+stop
+
+cond
+*.shdx -1 =
+start
+314 .aimdx store
+31 .tie store
+stop
+
+cond
+*.shsx -1 =
+start
+-314 .aimdx store
+31 .tie store
+stop
+
+cond
+*.shdn -1 =
+start
+628 .aimdx store
+31 .tie store
+stop
+
+cond
+*.shup -1 =
+start
+31 .tie store
+stop
+
+cond
+*.in1 1 =
+start
+314 .aimdx store
+stop
+
+cond
+*.eye5 0 =
+*.in1 1 =
+start
+0 .in1 store
+stop
+
+end

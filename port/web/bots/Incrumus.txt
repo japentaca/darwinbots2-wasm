@@ -1,0 +1,226 @@
+'NAME        : Incrumus
+'CLASS        : 0 store, 0 dec
+'BY        : d-EVO
+
+cond
+*.numties 0 =
+*.eye5 0 =
+*.myeye *.refeye = or
+start
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+.aimdx inc
+stop
+
+cond
+*.eye5 0 >
+*.eye5 40 <
+*.myeye *.refeye !=
+*.numties 0 =
+start
+.up inc
+.up inc
+.up inc
+stop
+
+cond
+*.robage 1 >
+*.eye5 40 >
+*.myeye *.refeye !=
+*.numties 0 =
+start
+.tie inc
+.tienum inc
+stop
+
+cond
+*.trefeye *.myeye =
+start
+.deltie inc
+stop
+
+cond
+*.multi 1 =
+start
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharenrg inc
+.sharewaste inc
+stop
+
+cond
+*.body 200 <
+*.nrg 300 >
+start
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+.strbody inc
+*.shell 100 <
+.mkshell inc
+.mkshell inc
+.mkshell inc
+.mkshell inc
+.mkshell inc
+.mkshell inc
+.mkshell inc
+.mkshell inc
+dropbool
+stop
+
+
+
+cond
+*.body 100 >
+*.nrg 500 >
+start
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+.repro inc
+stop
+
+end

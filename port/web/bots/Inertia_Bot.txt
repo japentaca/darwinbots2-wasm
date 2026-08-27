@@ -1,0 +1,129 @@
+ cond
+ *.eye1 *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ mult -100 stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  13  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  14  '''''''''''''''''''''''
+ cond
+ *.eye5 90 >
+ *.refeye *.myeye !=
+ start
+ mult 100 stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  24  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  25  '''''''''''''''''''''''
+ cond
+ *.eye5 >
+ start
+ mult -25 stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  31  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  32  '''''''''''''''''''''''
+ cond
+ start
+ mult 25 stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  36  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  37  '''''''''''''''''''''''
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  53  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  54  '''''''''''''''''''''''
+ cond
+ *.eye5 30 >
+ *.refeye 10 !=
+ start
+ 1 .tie store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  65  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  66  '''''''''''''''''''''''
+ cond
+ *.numties 0 >
+ start
+ -1 .tieloc store
+ -1000 .tieval store
+ 1 .tienum store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  80  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  81  '''''''''''''''''''''''
+ cond
+ *.eye5 50 >
+ start
+ -1 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  89  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  90  '''''''''''''''''''''''
+ cond
+ *.refeye 9 =
+ start
+ mult 180 stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  97  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  98  '''''''''''''''''''''''
+ cond
+ *50 0 >
+ start
+ mult 628 50 dec
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  107  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  108  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye =
+ or
+ start
+ 314 rnd .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  121  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  122  '''''''''''''''''''''''
+ cond
+ *.tiepres 0 >
+ start
+ 453 .tieloc store
+ 1000 .tieval store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  133  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  134  '''''''''''''''''''''''
+ cond
+ *.nrg 5000 >
+ start
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  142  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  143  '''''''''''''''''''''''
+ cond
+ start
+ .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  147  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  148  '''''''''''''''''''''''
+ cond
+ *.robage 0 =
+ start
+ .tie inc
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  155  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  156  '''''''''''''''''''''''
+ cond
+ *.robage 1 =
+ start
+ .deltie inc
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  163  '''''''''''''''''''''''

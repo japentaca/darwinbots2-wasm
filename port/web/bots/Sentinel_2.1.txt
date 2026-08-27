@@ -1,0 +1,82 @@
+cond
+cond
+start
+ 100 *.eye5 sub 50 div .up store
+ 408 .out3 store
+ 408 .out4 store
+ *.nrg 5 div *.body sub .strbody store
+ *.body *.nrg 5 div sub .fdbody store
+ 999 991 store
+ 1216 .eye5width store
+ *.refxpos *.refypos angle *.vel add .setaim store
+ *.tiepres .deltie store
+stop
+
+cond
+ *.in4 *.out4 =
+start
+ *.maxvel .dn store
+stop
+
+cond
+ *.eye5 40 >
+ *.in4 *.out4 !=
+start
+ -6 .shoot store
+stop
+
+cond
+ *.vtimer 0 =
+start
+ *.thisgene 1 add .mkvirus store
+stop
+
+cond
+ *.reffixed 0 !=
+start
+ .fixpos inc
+stop
+
+cond
+ *.reffixed 0 =
+start
+ 0 .fixpos store
+stop
+
+cond
+ *991 999 !=
+start
+ *.eye5 15 sub .shootval store
+ 408 .out3 store
+ *.thisgene 1 rnd 2 mult 1 sub add .delgene store
+ *.eye5 sgn .fixpos mult inc
+ .up inc
+ 1216 .eye5width store
+ *.refxpos *.refypos angle *.refvel add .setaim store
+ *.in3 408 sub sgn abs -4 mult 2 sub .shoot store
+ *.shoot *.eye5 25 sub sgn 1 add sgn mult .shoot store
+ *.thisgene .mkvirus store
+ *.nrg 50 div .vshoot store
+ *.nrg 5 div *.body sub .strbody store
+ .sharenrg .tieloc store
+ 1 .tieval store
+stop
+
+cond
+ *.waste 50 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+cond
+ *.nrg 5000 >
+start
+ 50 .repro store
+stop
+
+cond
+ *.vtimer 1 =
+start
+ *.nrg 10 div .vshoot store
+stop

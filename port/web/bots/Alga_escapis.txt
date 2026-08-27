@@ -1,0 +1,42 @@
+' Alga escapis
+'
+' Vegetable
+'
+' A plant that tries to flee 
+' when it sees a predator.
+' Confuses an enemy when followed.
+
+' Gene 1 Spin
+cond
+*.refeye *.myeye = 
+*.eye5 0 = or
+start
+400 rnd .aimdx store
+stop
+
+' Gene 2 Flee
+cond
+*.eye5 0 >
+*.eye4 0 > or
+*.eye6 0 > or
+*.refeye *.myeye !=
+ start
+25 .dn store
+.aimdx .shoot store
+600 .shootval store
+stop
+
+'Gene 3 Breed
+cond
+  *.nrg
+  30000
+  >
+start
+  50
+  .repro
+  store
+  15
+  .aimdx
+  store
+stop
+end

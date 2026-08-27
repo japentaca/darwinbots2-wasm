@@ -1,0 +1,219 @@
+' Umbra Draconis
+' Changes the enemies *.myeye to his own
+' Made by Shen for versions prior to V2.3
+' *50 used for repro rotations
+' *51 used for chameleon shots
+
+
+' --==-- Movement --==--
+
+' - Spin while moving -
+cond
+*.vel 0 =
+*.refeye *.myeye =
+start
+20 .up store
+stop
+
+cond 
+*.refeye *.myeye =
+start
+100 .aimdx store
+stop
+
+' - Approach Enemys -
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+10 .up store
+stop
+
+
+' --==-- Tracking --==--
+
+' -=- Distant Tracking -=-
+
+' - Wide -
+cond
+*.eye5 50 <
+*.eye2 *.eye8 !=
+*.refeye *.myeye !=
+start
+*.eye8 *.eye2 sub .aimdx store
+*.eye8 *.eye2 sub 5 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 50 <
+*.eye6 *.eye4 !=
+*.refeye *.myeye !=
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 5 div .dx store
+stop
+
+' -=- Close Tracking -=-
+
+' - Wide -
+cond
+*.eye5 50 >
+*.eye3 *.eye7 !=
+*.refeye *.myeye !=
+start
+*.eye7 *.eye3 sub 2 div .aimdx store
+*.eye7 *.eye3 sub 20 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 50 >
+*.eye6 *.eye4 !=
+*.refeye *.myeye !=
+start
+*.eye6 *.eye4 sub 2 div .aimdx store
+*.eye6 *.eye4 sub 20 div .dx store
+stop
+
+
+' --==-- Defence --==--
+
+' - Eat -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.robage 10 >
+*51 5 <
+start
+-6 .shoot store
+51 inc
+stop
+
+' - Chameleon Attack -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.robage 10 >
+*51 5 =
+start
+'728 .shoot store
+'50 .shootval store
+0 51 store
+stop
+
+' - Feed from body -
+cond
+*.body 100 >
+start
+100 .fdbody store
+stop
+
+' - Unfix -
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+' -=- Slime -=-
+
+' - Spotted tie feeder -
+cond
+*.eye5 0 >
+*.reftie 0 >
+*.refeye *.myeye !=
+*.out2 0 =
+*.robage 0 !=
+start
+42 .out2 store
+stop
+
+' - Friend seen tie feeder -
+cond
+*.eye5 11 >
+*.refeye *.myeye =
+*.in2 42 =
+start
+*.in2 .out2 store
+stop
+
+' - Make slime -
+cond
+*.out2 42 =
+*.slime 95 <
+start
+100 *.slime sub .mkslime store
+stop
+
+
+' --==-- Reproduction --==--
+
+' - Turn back round after repro -
+cond
+*50 1 =
+start
+628 .aimdx store
+0 50 store
+stop
+
+' - Repro -
+cond
+*.nrg 4000 >
+*.eye5 50 <
+*.robage 20 >
+start
+628 .aimdx store
+75 .repro store
+1 50 store
+stop
+
+' - Child repro -
+cond
+*.nrg 2000 >
+*.robage 50 <
+*.robage 1 >
+start
+40 .repro store
+150 .aimdx store
+stop
+
+' - Make new tie to parent -
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+' - Break tie -
+cond
+*.robage 1 =
+start
+1 .deltie store
+628 .aimdx store
+stop
+
+
+' -=- Waste disposal -=-
+
+cond
+*.waste 500 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' - Extra eyes for Chameleon -
+cond
+*.nrg 0 >
+*.nrg 0 <
+start
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 
+*.eye5 
+stop
+
+
+' --==-- End DNA --==--
+end

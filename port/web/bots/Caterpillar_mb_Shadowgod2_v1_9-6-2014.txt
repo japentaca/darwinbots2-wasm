@@ -1,0 +1,133 @@
+'Shadowgod2's verson of Peter's caterpillar
+'no fixing and uses body and ties to move to move
+'can reverse when hit edge, sees food, or too close to same kind
+'best in thin fluid envirnment
+'v1
+
+def head 50
+def trig 51
+
+start
+0 .tout2 store
+stop
+
+'birth
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.numties 0 =
+start
+1 .head store
+50 .repro store
+314 rnd .aimsx store
+stop
+
+''head
+
+cond
+*.head 1 =
+*.tin2 2 =
+start
+0 .head store
+stop
+
+cond
+*.head 1 =
+*.eye5 50 <
+start
+1 .tout1 store
+stop
+
+cond
+*.head 1 =
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+0 .tout1 store
+1 rnd 5 mult 6 sub .shoot store
+stop
+
+cond
+*.head 1 =
+*.eye5 50 >
+*.refeye *.myeye =
+start
+-1 .tout1 store
+stop
+
+cond
+*.head 1 =
+*.edge 1 =
+start
+0 .head store
+1 .tout2 store
+stop
+
+''body
+
+cond
+*.refeye *.myeye !=
+*.eye5 10 >
+*.head 0 =
+start
+2 .tout2 store
+1 .head store
+stop
+
+cond
+*.head 0 =
+*.tin2 1 =
+start
+1 .head store
+stop
+
+cond
+*.tielen 100 <
+start
+1 .trig store
+stop
+
+cond
+*.tielen 900 >
+start
+0 .trig store
+stop
+
+cond
+*.trig 1 =
+*.tin1 0 !=
+start
+*.tielen1 40 add .tielen1 store
+1000 *.body sub *.tin1 mult *.head 2 mult -1 mult 1 add mult 0 floor .strbody *.nrg 1000 sub sgn 0 floor mult store
+*.body 50 sub *.tin1 mult -1 mult *.head 2 mult -1 mult 1 add mult  0 floor .fdbody store
+stop
+
+cond
+*.trig 0 =
+*.tin1 0 !=
+start
+*.tielen1 40 sub .tielen1 store
+*.body 50 sub *.tin1 mult *.head 2 mult -1 mult 1 add mult 0 floor .fdbody store
+1000 *.body sub *.tin1 mult *.head 2 mult -1 mult 1 add mult -1 mult 0 floor .strbody *.nrg 1000 sub sgn 0 floor mult store
+stop
+
+''nrg
+
+start
+*.tin1 .tout1 *.head -1 mult 1 add mult store
+50 .sharenrg store
+628 .tieang1 store
+stop
+
+'repro
+
+cond
+*.nrg 20000 >
+start
+1000 .tielen1 store
+stop

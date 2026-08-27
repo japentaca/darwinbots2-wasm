@@ -1,0 +1,323 @@
+'Russian Babies (F1 League)
+'By Spike43884
+'Originally All Eyes V1.5
+'This bot goes into hibernation whilest waiting
+'Should reproduce in the face of danger...or food
+'Dev Info:
+'Hibernation Sys - TRUE
+'Hunting Sys - AllEyes
+'Corpsify - UNKNOWN
+'Confusion - TRUE
+'Retaliation Type - Babies
+
+
+'Just some free variables
+def attack 50
+def hibernate 51
+def head 52
+
+
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+ .aimsx .vloc store
+ 128 .venval store
+stop
+
+
+
+' Gene 1 Initiate Hibernation (waiting)
+cond
+*.eye1 0 =
+ *.eye2 0 = and
+ *.eye3 0 = and
+ *.eye4 0 = and
+ *.eye5 0 = and
+ *.eye6 0 = and
+ *.eye7 0 = and
+ *.eye8 0 = and
+ *.eye9 0 = and
+ *.refeye *.myeye = or
+ *.nrg 3000 < and
+ *.hibernate 0 = and  'KEY
+start
+ 1 .hibernate store
+stop
+
+' Gene 1 Search (waiting)
+cond
+*.eye1 0 =
+ *.eye2 0 = and
+ *.eye3 0 = and
+ *.eye4 0 = and
+ *.eye5 0 = and
+ *.eye6 0 = and
+ *.eye7 0 = and
+ *.eye8 0 = and
+ *.eye9 0 = and
+ *.refeye *.myeye = or
+ *.nrg 3000 >= and
+start
+ 10 rnd .aimdx store
+stop
+
+
+'Gene 2 Food Sighted 
+'*********************
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+start
+550 .aimdx
+0 .hibernate store
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+start
+405 .aimdx
+0 .hibernate store
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+start
+260 .aimdx
+0 .hibernate store
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+start
+115 .aimdx
+0 .hibernate store
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+start
+115 .aimsx
+0 .hibernate store
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+start
+260 .aimsx
+0 .hibernate store
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+start
+405 .aimsx
+0 .hibernate store
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+start
+550 .aimsx
+0 .hibernate store
+stop
+'*********************
+
+
+' Gene 3 Chase Food
+cond
+*.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 4 Long Range Food Handling
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refeye 0 >
+ *.hibernate 0 =
+start
+1 rnd 2 mult 3 sub .shoot store
+216 .shootval store
+stop
+
+
+'Gene 5 Blind Retaliation
+cond
+ *.hit 1 =
+ *.eye5 40 > or
+ *.refeye *.myeye !=
+start
+*.shang 90 sub .aimdx
+10 .repro store
+10 .repro store
+stop
+
+
+' Gene 6 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.hibernate 0 =
+ *.refeye 0 =
+ *.robage 0 !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 7 Venom
+cond
+ *.hibernate 0 =
+ *.venom 50 <
+start
+10 .strvenom store
+stop
+
+' Gene 8 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+ *.hibernate 0 =
+start
+ 314 rnd .aimdx store
+stop
+
+
+' Gene 9 Duplicate
+cond
+ *.robage 0 !=
+ *.numties 0 =
+ *.head 0 =
+start
+ 1 .head store
+stop
+
+
+' Gene 10 Reproduce
+cond
+ *.nrg 15000 >
+ *.robage 3 > and 
+start
+ 15 .repro store
+stop
+
+
+' Gene 11 Reproduce for MB league
+cond
+ *.numties 0 =
+ *.robage 0 !=
+start
+ 10 .repro store
+stop
+
+
+'*-*-*-*-*-*-*-*-*-*-*-*
+
+
+' Core Fat Functions
+body
+cond
+*.nrg 1200 >
+*.nrg *.body 100 add >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+
+' tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+
+' If MB Stuff
+cond
+ *.multi 1 = or
+ *.hibernate 0 = 
+start
+ 49 .sharenrg store
+ 500 .maxlen
+ 60 .stifftie store
+stop
+
+'Gene 13 MB communication
+cond
+ *.eye5 0 !=
+ *.head 1 =
+start
+ *.eye5 .tout1 store
+ *.aimdx .tout2 store
+stop
+
+cond
+ *.tin1 0 !=
+ *.head 0 =
+start
+*.tin2 .aimdx store
+stop
+
+
+'Finale Waste Disposal
+cond
+*.waste 100 >
+*.refeye 0 =
+*.reftie 0 =
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+end

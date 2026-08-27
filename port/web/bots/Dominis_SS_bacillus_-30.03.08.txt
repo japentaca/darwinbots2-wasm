@@ -1,0 +1,43 @@
+'Dominis
+'My first single-store bot.
+'primitive waste disposal
+'feeding
+'movement
+'reproduction
+'turning to avoid conspecs
+cond
+start
+ -4
+  *.waste 500 sub sgn 0 floor mult
+ -6
+ 500 *.waste sub sgn 0 floor mult
+ *.eye5 40 sub sgn 0 floor mult
+ *.refeye *.myeye sub sgn abs mult
+ 2 
+ 39 *.eye5 sub sgn 0 floor mult
+ 500 *.waste sub sgn 0 floor mult
+ 5000 *.nrg sub sgn 0 floor mult add
+ 50
+ 39 *.eye5 sub sgn 0 floor mult
+ 500 *.waste sub sgn 0 floor mult
+ *.nrg 5000 sub sgn 0 floor mult add
+ 314 rnd
+ 500 *.waste sub sgn 0 floor mult
+ *.refeye *.myeye sub sgn abs -- abs mult add
+
+ .shoot
+ *.eye5 40 sub sgn 0 floor mult
+ *.refeye *.myeye sub sgn abs mult
+ .up
+ 39 *.eye5 sub sgn 0 floor mult
+ 500 *.waste sub sgn 0 floor mult
+ 5000 *.nrg sub sgn 0 floor mult add
+ .repro
+ 39 *.eye5 sub sgn 0 floor mult
+ 500 *.waste sub sgn 0 floor mult
+ *.nrg 5000 sub sgn 0 floor mult add
+ .aimsx
+ 500 *.waste sub sgn 0 floor mult
+ *.refeye *.myeye sub sgn abs -- abs mult add
+store
+stop

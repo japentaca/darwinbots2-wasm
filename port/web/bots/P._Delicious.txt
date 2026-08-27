@@ -1,0 +1,348 @@
+' P. Delicious
+' Based (somewhat) on "Animal Minimalis"
+' Now with extra ____!
+
+' 360 degree vision, shamelessly stolen from 'Beholder'
+cond
+ *.robage 0 =
+start
+ 420 .eye1dir store
+ 315 .eye2dir store
+ 210 .eye3dir store
+ 105 .eye4dir store
+ -105 .eye6dir store
+ -210 .eye7dir store
+ -315 .eye8dir store
+ -420 .eye9dir store
+ 105 .eye1width store
+ 105 .eye2width store
+ 105 .eye3width store
+ 105 .eye4width store
+ 105 .eye5width store
+ 105 .eye6width store
+ 105 .eye7width store
+ 105 .eye8width store
+ 105 .eye9width store
+ .shoot .ploc store
+ .body .memloc store
+stop
+
+' Birth initialization
+cond
+ *971 0 >
+ *.robage 0 =
+start
+ .tie inc
+ *.maxvel 4 div *.vel sub .dn store
+stop
+
+' Otherwise
+cond
+ *971 0 =
+ *.robage 0 =
+start
+ 971 inc
+stop
+
+' Food Finder
+cond
+ *.eyef 0 >
+ *.refeye *.myeye !=
+ *.refaimdx *.myaimdx != or
+start
+ *.refveldx *.body mult 1000 div .dx store
+ *.refvelup *.body mult 1000 div 30 add .up store
+ *.refxpos *.refypos angle *.refveldx 2 mult sub .setaim store
+ 0 .focuseye store
+stop
+
+' Eat Food for Nonhostile
+cond
+ *.eye5 30 >
+ *.refeye *.myeye !=
+ *.refaimdx *.myaimdx != or
+ *.waste 500 <
+ *.refshoot 0 =
+ *.focuseye 0 =
+start
+ 4 .shootval store
+ -1 .shoot store
+ *.refvelup *.body mult 1000 div .up store
+stop
+
+' Eat Food for Hostile
+cond
+ *.eye5 40 >
+ *.refeye *.myeye !=
+ *.refaimdx *.myaimdx != or
+ *.waste 500 <
+ *.refshoot 0 !=
+ *.focuseye 0 =
+start
+ 8 .memval 400 sub sgn 1 add 2 div 8 mult add .shootval store
+ -6 .shoot store
+ *.refvelup *.body mult 1000 div .up store
+stop
+
+' Shoot Waste
+cond
+ *.eye5 25 >
+ *.refeye *.myeye !=
+ *.refaimdx *.myaimdx != or
+ *.waste 500 >=
+ *.focuseye 0 =
+start
+ -4 .shoot store
+ *.waste .shootval store
+ *.refvelup *.body mult 1000 div .up store
+stop
+
+' Reproduce
+cond
+ *.nrg 5000 >
+ *.body 1000 >
+ *50 10 <
+ *.poison 20000 >= or
+ *.eye5 20 <
+ *.totalmyspecies 150 <
+start
+ 10 .repro store
+ 50 inc
+stop
+
+' Roam
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+start
+ 3 .up store
+ 4 .aimdx 1 *.aimdx sgn abs sub mult store
+stop
+
+' Begin eXtreme inefficiency.
+' Any help here in making it more efficient would be appreciated, but it works for now
+' "othar" is an intentional misspelling, dont ask
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye -4 =
+start
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye -3 =
+start
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye -2 =
+start
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye -1 =
+start
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye 0 =
+start
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye 1 =
+start
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye 2 =
+start
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+ 3 .focuseye *.eye8 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye 3 =
+start
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+ 4 .focuseye *.eye9 sgn mult store
+stop
+
+' Detect othars
+cond
+ *.eyef 0 =
+ *.refeye *.myeye =
+ *.refaimdx *.myaimdx = and or
+ *.focuseye 4 =
+start
+ 3 .focuseye *.eye8 sgn mult store
+ 2 .focuseye *.eye7 sgn mult store
+ 1 .focuseye *.eye6 sgn mult store
+ 0 .focuseye *.eye5 sgn mult store
+ -1 .focuseye *.eye4 sgn mult store
+ -2 .focuseye *.eye3 sgn mult store
+ -3 .focuseye *.eye2 sgn mult store
+ -4 .focuseye *.eye1 sgn mult store
+stop
+
+' End eXtreme inefficiency
+
+' Retaliate
+cond
+ *.shflav 0 !=
+ *.shflav -2 !=
+start
+ 1256 *.shang sub .aimshoot store
+ 628 .shootval store
+ .aimdx .shoot store
+ 0 .shflav store
+stop
+
+' Store energy
+cond
+ *.nrg 10000 >
+ *.poison 32000 =
+ *.body 2000 < or
+start
+ 1000 .strbody store
+stop
+
+' Restore energy
+cond
+ *.nrg 5000 <
+ *.body 800 >=
+start
+ 1000 .fdbody store
+stop
+
+' Emergency energy restore
+cond
+ *.nrg 2000 <
+ *.pain 200 >=
+start
+ *.body 10 mult 10 sub .fdbody store
+stop
+
+' Create poison
+cond
+ *.nrg 15000 >
+ *.body 2000 >=
+ *.poison 32000 <
+start
+ 5000 .mkpoison store
+stop
+
+' Unstick
+cond
+ *.fixed 0 >
+start
+ .fixpos dec
+stop
+
+' Antivirus
+cond
+ *.mkvirus 0 !=
+start
+ *.mkvirus .delgene store
+stop
+
+' Kill ties
+cond
+ *.numties 0 !=
+start
+ *.tiepres .deltie store
+stop
+
+end

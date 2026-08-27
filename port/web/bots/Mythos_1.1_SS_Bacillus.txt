@@ -1,0 +1,122 @@
+'Mythos
+'The new Single-Store bot by Bacillus
+
+def threshold 2000
+
+start
+
+*.tiepres
+*.numties sgn mult
+
+100
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor -- abs mult
+add
+
+628 rnd
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor
+ *.eye5 30 sub sgn 0 floor mult
+ *.eye5 sgn
+ *.myeye *.refeye sub sgn abs -- abs mult
+ add sgn mult
+add
+
+ 
+40
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor mult
+ *.eye5 30 sub sgn 0 floor -- abs mult
+ add
+
+
+-6
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 40 sub sgn 0 floor mult
+add
+
+-60
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn mult
+add
+
+40 *.velup sub
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn -- abs mult
+add
+
+50 *.eye5 sub 0 floor *.velup sub
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 sgn abs mult
+ *.eye5 40 sub sgn 0 floor -- abs mult
+add
+
+.deltie
+ *.numties sgn mult
+
+.strbody
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor -- abs mult
+add
+
+.aimdx
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor
+ *.eye5 30 sub sgn 0 floor mult
+ *.eye5 sgn
+ *.myeye *.refeye sub sgn abs -- abs mult
+ add sgn mult
+add
+
+.repro
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor mult
+ *.eye5 30 sub sgn 0 floor -- abs mult
+ add
+
+.shoot
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 40 sub sgn 0 floor mult
+add
+
+.aimsx
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn mult
+add
+
+.up
+*.numties sgn -- abs mult
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs
+ *.eye9 sgn -- abs mult
+ *.myeye *.refeye sub sgn abs
+ *.eye5 sgn abs mult
+ *.eye5 40 sub sgn 0 floor -- abs mult
+ add sgn mult
+add
+
+store
+stop

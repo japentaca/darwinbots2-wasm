@@ -1,0 +1,112 @@
+'Topic: Formula one bots!
+'PY
+
+'*PY's Anon Terifica
+cond
+*.vel 10 <
+start
+2 .up store
+stop
+
+' initialize
+' *********
+cond
+*.robage 0 =
+start
+10 rnd 53 store
+stop
+
+cond
+*50 0 =
+start
+628 .aimdx store
+stop
+
+cond
+*50 32000 <
+start
+50 inc
+stop
+
+' dump waste
+' **********
+cond
+*.waste 50 >
+start
+-4 .shoot store
+50 .shootval store
+stop
+
+'reproduce 
+'***********
+cond
+*.nrg 3000 > 
+start
+50 .repro store
+0 50 store
+stop
+
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 > 
+start
+-110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+-70 .aimdx store
+2 .up store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+70 .aimdx store
+2 .up store
+stop
+
+'Tie to an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye4 *.eye6 =
+*.refeye 20 !=
+*50 2 > 
+start
+*53 .tie store
+0 .aimdx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye 20 =
+*.eye5 20 >
+start
+280 .aimsx store
+stop
+
+cond 
+*.numties 0 >
+start
+*53 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+end

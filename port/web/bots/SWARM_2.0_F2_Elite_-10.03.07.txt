@@ -1,0 +1,88 @@
+' SWARM
+' (Updated for v2.43)
+
+' Delete birthtie and move
+
+cond
+start
+.tie 1 *.robage sub 0 floor mult inc
+.deltie inc
+*.maxvel *.vel sub .up store
+stop
+
+' Set eye5
+
+cond
+*.robage 0 =
+start
+1220 .eye5width store
+stop
+
+' Swarm
+
+cond
+*.robage 5 mod 0 =
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim .setaim *.robage sgn mult store
+stop
+
+' Eat food
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refvelup 50 add .up store
+*.refxpos *.refypos angle .setaim *.robage sgn mult store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+*.refvelup .up store
+*.refxpos *.refypos angle .setaim *.robage sgn mult store
+stop
+
+cond
+*.eye6 34 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+16 .shootval store
+stop
+
+' Reproduce
+
+cond
+*.body 700 >
+start
+30 .repro store
+314 rnd .aimdx store
+stop
+
+' Feed on and store body
+
+cond
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 500 <
+start
+*.body 0 floor .fdbody *.body sgn mult store
+stop
+
+' Anti-virus (just in case)
+
+cond
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+stop
+
+end

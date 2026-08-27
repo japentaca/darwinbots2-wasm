@@ -1,0 +1,28 @@
+' Energy Emitting Vegi
+' 
+' a vegi that shoots out all its energy
+' then dies.
+
+cond
+  *.nrg
+  200
+  >
+start
+  100
+  .aimdx
+  store
+stop
+
+cond
+start
+  -2
+  .shoot
+  store
+  200
+  .shootval
+  store
+  5
+  .up
+  store
+stop
+end

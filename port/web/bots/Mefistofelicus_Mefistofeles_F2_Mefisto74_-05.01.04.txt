@@ -1,0 +1,269 @@
+'Topic: my first bots  
+'Mefisto74
+
+'
+' Mefistofelicus Mefistofeles
+'
+' 02/01/2004 by Matteo "Mefisto74" Poropat (nyarlathothep@libero.it)
+'
+' Evolved from the orginal M.M. is an organism that eat everything about
+' its similar. It checks sx and dx (only at 7/9 and 1/3 to use less energy).
+' The first gene identify the Mefistofeles specie, and the second one initialize
+' the [40] var.
+'
+'
+
+' ------------------------------------------
+' identificazione della specie
+' ------------------------------------------
+
+cond
+ 666
+ *.out1  
+ != 
+start
+ 666
+ .out1
+ store
+stop
+
+' ------------------------------------------
+' inizializzazione
+' ------------------------------------------
+
+cond
+start
+ 0
+ 40
+ store
+stop
+
+
+' ------------------------------------------
+' controllo a destra
+' ------------------------------------------
+
+cond
+ *.50
+ 0
+ =
+ *.eye8
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 666
+start
+ 13
+ 40
+ store
+stop
+
+' 5
+cond
+ *.50
+ 0
+ =
+ *.eye9
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 666
+start
+ 14
+ 40
+ store
+stop
+
+
+' ------------------------------------------
+' controllo a sx
+' ------------------------------------------
+
+' 9
+cond
+ *.50
+ 0
+ =
+ *.eye2
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 666
+start
+ 33
+ 40
+ store
+stop
+
+' 10
+cond
+ *.50
+ 0
+ =
+ *.eye1
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 666
+start
+ 34
+ 40
+ store
+stop
+
+
+' -----------------------------------------------------------
+' se non c'è nulla attorno si gira
+' -----------------------------------------------------------
+cond
+ *40
+ 0
+ =
+ *50
+ 0
+ =
+start
+ 41
+ rnd
+ 40
+ store
+ 0
+ 50
+ store
+stop
+
+
+' ------------------------------------------
+' CONDIZIONI FINALI 
+' ------------------------------------------
+
+
+' se c'è qualcosa a sx ci si gira a sx
+cond
+ *40
+ 21
+ >
+ *40
+ 40
+ <
+start
+ 100
+ .aimsx
+ store
+stop
+
+
+' se c'è qualcosa a dx ci si gira a dx
+cond
+ *40
+ 1
+ >
+ *40
+ 20
+ <
+start
+ 100
+ .aimdx
+ store
+stop
+
+
+
+' -----------------------------------------------------------
+' BLOCCO DI CONTROLLO PRESERVATIVO DELLA SPECIE 
+' -----------------------------------------------------------
+
+' SE 
+' c'è qualcosa davanti
+' è abbastanza vicino
+' non è della propria specie
+' ALLORA
+' si caccia!
+cond
+  *.eye5
+  0
+  >
+  *.out1
+  666
+  !=  
+start
+  10
+  40
+  store
+ 1
+ 50
+ store
+stop
+
+
+cond
+  *.eye5
+  0
+  =
+start
+  0
+  40
+  store
+  3
+  .up
+  store
+stop
+
+
+
+' -----------------------------------------------------------
+' FINE BLOCCO DI CONTROLLO PRESERVATIVO DELLA SPECIE 
+' -----------------------------------------------------------
+
+
+' se c'è qualcosa si spara e ci si avvicina
+cond
+ *40
+ 0
+ >
+start
+ -1 
+ .shoot
+ store
+ 3
+ .up
+ store
+stop
+
+
+
+
+' ------------------------------------------
+' ACCOPPIAMENTO
+' ------------------------------------------
+
+cond
+ *.nrg
+ 8000
+ >
+start
+ 50
+ .repro
+ store
+ 300
+ .aimdx
+ store
+stop  
+
+end

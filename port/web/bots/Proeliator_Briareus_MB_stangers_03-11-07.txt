@@ -1,0 +1,252 @@
+'Proeliator Briareus
+'MultiBot Prototype
+'By Strangers
+
+cond
+*.robage 0 =
+start
+.tie inc
+.numties .memloc store
+.in1 .ploc store
+stop
+
+cond
+*.numties 0 =
+*.eye5 0 =
+start
+50 .repro store
+stop
+
+cond
+*.numties 0 =
+*.eye5 0 >
+start
+mult 314
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.numties 1 <
+*.memval 1 <
+start
+.tie inc
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.numties 0 >
+*.refmulti 1 =
+start
+mult 314 rnd
+stop
+
+cond
+*.numties 1 =
+start
+1 .readtie store
+1 .tienum store
+250 .fixlen store
+628 .fixang store
+50 .sharenrg store
+stop
+
+cond
+*.tiepres 0 >
+start
+*.tiepres .tienum store
+stop
+
+cond
+*.tiepres 1 !=
+*.tiepres 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+start
+1 .sharewaste store
+stop
+
+cond
+*.numties 2 =
+*.multi 1 =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.trefeye 0 =
+start
+99 .sharenrg store
+.deltie inc
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye5 0 =
+start
+15 .up store
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye1 *.eye5 >
+start
+mult -140
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye9 *.eye5 >
+start
+mult 140
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye3 *.eye5 >
+start
+mult -70
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye7 *.eye5 >
+start
+mult 70
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye1 *.eye5 >
+start
+mult -140
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye9 *.eye5 >
+start
+mult 140
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye3 *.eye5 >
+start
+mult -70
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye7 *.eye5 >
+start
+mult 70
+stop
+
+cond
+*.trefage *.robage <
+*.nrg 10000 >
+start
+1 .deltie store
+mult 314
+stop
+
+cond
+*.numties 1 =
+*.trefage *.robage >
+*.eye5 0 >
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+*.numties 1 =
+*.eye5 30 >
+*.refeye *.myeye !=
+*.trefage *.robage >
+*.multi 0 != 
+start
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+-16 .shootval store
+*.refvelup .up store
+*.refveldx .dx store
+stop
+
+cond
+*.numties 1 =
+*.multi 1 =
+*.eye5 30 >
+*.refeye *.myeye =
+*.trefage *.robage >
+*.refmulti 0 =
+*.multi 0 != 
+start
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+-16 .shootval store
+*.refvelup .up store
+*.refveldx .dx store
+stop
+
+cond
+*.numties 1 =
+*.shflav 0 !=
+*.shflav -2 !=
+*.multi 0 != 
+start
+*.shang .aimshoot store
+64 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+cond
+start
+.aimdx store
+stop
+
+cond
+*.waste 100 >
+*.trefage *.robage <
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.nrg 2000 >
+*.body 4000 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 500 <
+start
+100 .fdbody store
+stop
+
+cond
+*.nrg 1000 >
+start
+.strpoison inc
+stop
+
+end

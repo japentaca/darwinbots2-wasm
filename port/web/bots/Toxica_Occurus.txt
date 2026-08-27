@@ -1,0 +1,77 @@
+cond
+ *.robage 0 =
+start
+ 7 989 store
+stop
+
+cond
+ *.vtimer 0 =
+start
+ 3 .mkvirus store
+stop
+
+cond
+ 7 *989 !=
+start
+ *.thisgene 1 rnd 2 mult -1 add add .delgene store
+ 50 .shootval store
+ 7 .ploc store
+ 50 .mkpoison store
+stop
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ 50 .vshoot store
+stop
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ 10 .mkvenom store
+ *.myeye .venval store
+ 708 .vloc store
+ 10 .shootval store
+ -3 .shoot store
+stop
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+cond
+ *.nrg 2500 >
+start
+ 50 .repro store
+stop
+
+cond
+ *.waste 40 >
+ *.eye5 50 <
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+cond
+ *.numties 0 >
+start
+ *.prestie .deltie store
+stop
+
+end

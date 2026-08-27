@@ -1,0 +1,152 @@
+'Animal_Packus_Healus
+'By: Triclops200
+'Hunts in packs
+'has toxin to stop 
+'enemy shots
+'tie feeds and it is tie resistant
+'Shares energy througout its group.
+def venomcounter 100
+cond
+*.nrg 10000<
+
+start
+3 .up store
+*.eye5
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle .setaim store 
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+cond
+*.robage 0 =
+start
+.shoot .vloc store
+-2 .venval store
+14 56 store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.memval *.nrg 400 sub >=
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.memval *.nrg 400 sub < 
+start
+-2 .shoot store
+*.refxpos *.refypos angle .setaim store 
+stop
+
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+start
+*.refvelup .up store
+stop
+' Gene 2 Eat Food
+cond
+*.venomcounter 19 >
+start
+50 .shootval store
+-3 .shoot store
+0 .venomcounter store
+1 .shootval store
+stop
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+.venomcounter inc
+-1 .shoot store
+100 .tie store
+*55 .readtie store
+*.refvelup .up store
+stop
+
+cond
+*.nrg 50 >
+start
+
+*.shell 500 <
+50 .mkshell store
+
+*.poison 500 <
+50 .poison store
+
+*.venom 500 <
+50 .strvenom store
+stop
+cond
+*.robage 0 =
+start
+.shoot .ploc store
+310 .memloc store
+stop
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store 
+*.tiepres .tienum store
+stop
+' Gene 4 Reproduce
+' Gene 3 Avoiding Family
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+cond
+*.venom 500 <
+start
+50 .strvenom store
+stop
+'reproduction
+cond
+*.nrg 2000 >
+*.body 1000 >
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+10 .repro store
+140 rnd 140 add .aimsx store
+stop
+
+'body growth
+cond
+*.nrg 2 div *.body >
+start
+*.nrg 2 div *.body sub .strbody store
+stop
+
+'body shrink
+cond
+*.nrg 2 div *.body <
+start
+*.body *.nrg 2 div sub .fdbody store
+stop
+cond
+*.slime 90 <
+start
+100 .mkslime store
+stop
+Cond
+*.trefeye *56 =
+start
+*55 .deltie store
+stop
+end

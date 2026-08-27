@@ -1,0 +1,81 @@
+' Batavus duo
+' a SBMB (ShortBot Multibot)
+
+def id 803
+
+' GENE ONE: make a tie at birth
+' *************************
+cond
+*.robage 0 =
+*.eye5 70 >
+start
+1 .tie store
+314 .id store
+.shoot .ploc store
+stop
+
+' GENE TWO: reproduce if not an mb
+' *****************************
+cond
+*.numties 0 =
+*.robage 0 >
+start
+50 .repro store
+0 .aimdx store
+314 .id store
+stop
+
+' GENE THREE: share through tie, fix tie angle
+' ************************************
+cond
+*.numties 0 >
+*.robage *40 >
+*.robage 10 >
+start
+628 .fixang store
+400 .fixlen store
+*.robage 25 add 40 store
+50 .sharenrg store
+1 .readtie store
+0 .fixpos store
+20 *.poison sub *.nrg 2 div ceil .strpoison store
+stop
+
+'GENE FOUR: Turn and move (head only)
+' ********************************
+cond
+*.numties 0 >
+*.trefage *.robage >
+*.eye5 35 <=
+start
+*.eye9 *.eye1 sub 4 mult 50 store
+*.eye6 *.eye4 sub 51 store
+*50 *51 add 130 ceil .aimdx store
+*.maxvel *.vel sub .up store
+0 .fixpos store
+stop
+
+' GENE FIVE: Reproduce (tail only)
+' ***************************
+cond
+*.trefage *.robage <
+*.nrg 7000 >
+start
+1 .deltie store
+314 .aimdx store
+stop
+
+' GENE 6: Kill (head only)
+' *******************
+cond
+*.numties 0 >
+*.trefage *.robage >
+*.eye5 35 >
+start
+803 .memloc store
+*.memval .aimdx store
+-1 .shoot store
+.fixpos inc
+stop
+
+end

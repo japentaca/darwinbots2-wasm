@@ -1,0 +1,288 @@
+'#generation: 82
+'#mutations: 15
+
+ cond
+ *.nrg 15 >
+ *.numties 0 !=
+ or
+ start
+ .fixpos dec
+ *.robage 0 =
+ 314 .aimright store
+ .deltie inc
+ 300 .eye5width store
+ 336 *.numties 1 >
+ or
+ and
+ *.numties .deltie store
+ *.numties 0 !=
+ *.robage 1 >
+ and
+ *.trefxpos *.trefypos angle .setaim store
+ 99 .sharenrg store
+ dupbool
+ *.memval 13 =
+ and
+ *.trefxpos *.xpos sub abs *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+ *.velsx .dx store
+ dropbool
+ dupbool
+ *973 1 =
+ and
+ .tieval store
+ -1 .shootval store
+ dropbool
+ dupbool
+ *973 2 =
+ and
+ 8 .tieloc store
+ -31999 .tieval store
+ dropbool
+ dupbool
+ *973 3 xor
+ =
+ and
+ 452 .tieloc store
+ -6 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ dropbool
+ *973 3 >
+ and
+ 452 .tieloc store
+ -1 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 =
+ *.memval *.dnalen =
+ or
+ and
+ 350 .aimright store
+ dropbool
+ *.eye5 0 !=
+ and
+ *.memval *.dnalen !=
+ and
+ *.refbody 20 >
+ pow 602 >=
+ or
+ and
+ *.refxpos *.refypos angle .setaim store
+ .tie inc
+ *.memval 13 =
+ and
+ *.velsx .dx store
+ *.refvelup 15 add *.maxvel .tieloc store
+ 3200 .tieval store
+ *.memval 13 =
+ and
+ 452 .shoot store
+ -1 .shootval store
+ dropbool
+ dupbool
+ *973 2 =
+ and
+ 8 .tieloc store
+ -31999 .tieval store
+ dropbool
+ dupbool
+ *973 3 =
+ and
+ 452 .tieloc store
+ -6 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ dropbool
+ *973 3 >
+ and
+ 452 .tieloc store
+ -1 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ *.numties 0 =
+ *.body 1 =
+ and
+ dupbool
+ *.eye5 0 =
+ *.memval *.dnalen =
+ or
+ and
+ .memloc store
+ 336 .tmemloc store
+ 15 rnd 110 store
+ *110 5 <
+ and
+ *973 0 =
+ 5 rnd 973 store
+ *.body 5 >
+ *.nrg 80 >
+ and
+ *.totalmyspecies 1000 2 mult <
+ and
+ *.maxvel .dn store
+ 50 .repro store
+ *.totalmyspecies 1000 <
+ *.nrg 200 >
+ and
+ 50 *.body 10 mult sub 0 floor .strbody store
+ not
+ *.body 1 >
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  327  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  328  '''''''''''''''''''''''
+ else
+ and
+ *.body 10 mult 10 sub 0 floor .fdbody store
+ *.tieang4 0 !=
+ *.tiepres .tienum store
+ *.tmemval *.dnalen =
+ *.numties 1 >
+ or
+ and
+ *.numties .deltie store
+ 1 >
+ and
+ *.trefxpos *.trefypos angle .setaim store
+ 99 .sharenrg store
+ dupbool
+ *.memval 13 =
+ and
+ *.trefxpos *.xpos sub abs *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+ *.velsx .dx store
+ dropbool
+ dupbool
+ *973 1 =
+ and
+ 453 .tieloc store
+ 3200 .tieval store
+ *.memval 13 =
+ and
+ 452 .shoot store
+ -1 .shootval store
+ dropbool
+ dupbool
+ *973 2 =
+ dropbool
+ dupbool
+ *973 1 =
+ and
+ 453 .tieloc store
+ 3200 .tieval store
+ *.memval 13 =
+ and
+ 452 .shoot store
+ -1 .shootval store
+ dropbool
+ dupbool
+ *973 2 =
+ and
+ 8 .tieloc store
+ -31999 .tieval store
+ dropbool
+ dupbool
+ *973 3 =
+ and
+ 452 .tieloc store
+ -6 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ dropbool
+ *973 3 >
+ and
+ 452 .tieloc store
+ -1 .tieval store
+ and
+ 8 .tieloc store
+ -31999 .tieval store
+ dropbool
+ dupbool
+ *973 3 =
+ and
+ 452 .tieloc store
+ -6 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ dropbool
+ *973 3 >
+ and
+ 452 .tieloc store
+ -1 .tieval store
+ 3200 .shootval store
+ *.numties 0 =
+ *.body 1 =
+ and
+ dupbool
+ *.eye5 0 *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+ *.velsx .dx store
+ dropbool
+ dupbool
+ *973 1 =
+ and
+ 453 .tieloc store
+ 3200 .tieval store
+ *.memval 13 =
+ and
+ 452 .shoot store
+ -1 .shootval store
+ dropbool
+ dupbool
+ *973 2 =
+ and
+ 8 .tieloc store
+ -31999 .tieval store
+ dropbool
+ dupbool
+ *973 3 =
+ and
+ 452 .tieloc store
+ -6 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 .shootval store
+ dropbool
+ *973 3 >
+ and
+ 452 .tieloc store
+ -1 .tieval store
+ *.memval 13 =
+ and
+ 453 .shoot store
+ 3200 =
+ *.memval *.dnalen =
+ or
+ and
+ 350 .aimright store
+ dropbool
+ *.eye5 0 !=
+ and
+ *.memval *.dnalen !=
+ and
+ *.refbody 20 >
+ *.totalmyspecies 600 >
+ or
+ and
+ *.refxpos *.refypos angle .setaim store
+ .tie inc
+ *.memval 13 =
+ and
+ *.velsx .dx store
+ *.refvelup 15 add *.maxvel ceil 0 floor .up store
+ 216 .shoot store
+ 1 .shootval store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  689  '''''''''''''''''''''''
+
+'#hash: 4HywD{m=a:Yp6"(Jqxad
+'#tag:Fruit Flies v0.21 (F1) (Moonfisher) 28-09-08.

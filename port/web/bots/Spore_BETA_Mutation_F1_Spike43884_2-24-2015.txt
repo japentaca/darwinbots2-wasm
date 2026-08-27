@@ -1,0 +1,41 @@
+'#generation: 0
+'#mutations: 1
+
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  17  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  18  '''''''''''''''''''''''
+ cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ start
+ -1 .shoot store
+ *.refvelup .up store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  32  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  33  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye =
+ or
+ start
+ 314 rnd .dx store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  46  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  47  '''''''''''''''''''''''
+ cond
+ *.nrg 20000 >
+ start
+ 10 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  55  '''''''''''''''''''''''
+
+'#hash: 6b"9muEGI\,'5WTW=Qm#

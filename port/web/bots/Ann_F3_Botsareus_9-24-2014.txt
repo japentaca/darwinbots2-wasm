@@ -1,0 +1,1233 @@
+'A neural network bot by Botsareus
+'Uses a neural network to balance out insane reproduction,eye design, feeding methods
+
+def pleas2 13 'used as nnet input
+	def oldnrg 991
+	def pleasupdate 992
+
+def 3eye1 14 'used as nnet input
+def 3eye2 15 'used as nnet input
+def 3eye3 16 'used as nnet input
+
+def nactive 17 'neural activity
+	def nupdate 993
+
+'neurons, top down design
+
+def n1attach1layer1web1 20
+def n1attach2layer1web1 21
+def n1typelayer1web1 22
+'
+def n2attach1layer1web1 23
+def n2attach2layer1web1 24
+def n2typelayer1web1 25
+'
+def n3attach1layer1web1 26
+def n3attach2layer1web1 27
+def n3typelayer1web1 28
+'
+	def n1layer2web1 29
+	def n2layer2web1 30
+		def nlayer3web1 31
+
+def n1attach1layer1web2 32
+def n1attach2layer1web2 33
+def n1typelayer1web2 34
+'
+def n2attach1layer1web2 35
+def n2attach2layer1web2 36
+def n2typelayer1web2 37
+'
+def n3attach1layer1web2 38
+def n3attach2layer1web2 39
+def n3typelayer1web2 40
+'
+	def n1layer2web2 41
+	def n2layer2web2 42
+		def nlayer3web2 43
+
+def n1attach1layer1web3 44
+def n1attach2layer1web3 45
+def n1typelayer1web3 46
+'
+def n2attach1layer1web3 47
+def n2attach2layer1web3 48
+def n2typelayer1web3 49
+'
+def n3attach1layer1web3 50
+def n3attach2layer1web3 51
+def n3typelayer1web3 52
+'
+	def n1layer2web3 53
+	def n2layer2web3 54
+		def nlayer3web3 55
+
+def chillout 994 'hack for reproduction, wait for full genetic copy
+def dmode 995 'default mode
+
+'brain activity
+def wave1layer1web1 222
+def wave2layer1web1 223
+def wave3layer1web1 224
+def wave1layer2web1 225
+def wave2layer2web1 226
+def wavelayer3web1 227
+
+def wave1layer1web2 228
+def wave2layer1web2 229
+def wave3layer1web2 230
+def wave1layer2web2 231
+def wave2layer2web2 232
+def wavelayer3web2 233
+
+def wave1layer1web3 234
+def wave2layer1web3 235
+def wave3layer1web3 236
+def wave1layer2web3 237
+def wave2layer2web3 238
+def wavelayer3web3 239
+
+'Painfully Auto-Tweaked by Darwinbots from 4096 robots to optimal efficiency
+
+def dmodespeed 2
+def slownactive 13
+def childmult 243
+def childdiv 315
+def updiv 546
+def dxdiv 1370
+def aimdxdiv 155
+def pleasmult 1
+def pleasdiv 959
+def goodstate 65
+def chilln 9
+
+'code
+
+cond
+*.robage =
+start
+'Setup some boss looking eyes
+70 .eye1dir store
+175 .eye1width store
+'
+0 .eye2dir store
+20 .eye2width store
+'
+-35 .eye3dir store
+-20 .eye3width store
+'
+-40 .eye4dir store
+175 .eye4width store
+'
+0 .eye5dir store
+20 .eye5width store
+'
+35 .eye6dir store
+-20 .eye6width store
+'
+35 .eye7dir store
+-20 .eye7width store
+'
+0 .eye8dir store
+20 .eye8width store
+'
+-75 .eye9dir store
+175 .eye9width store
+stop
+
+'stuff that happens each cycle
+cond
+start
+.chillout inc
+stop
+
+cond
+*.robage 4 >
+*.chillout 4 >
+start
+ 'update counters
+.pleasupdate inc
+.nupdate inc
+ 'shoot energy or body
+-1 1 rnd 5 mult - add .shoot store
+'eye calculation
+*.eye1 *.eye2 *.eye3 add add 3 div .3eye1 store
+*.eye4 *.eye5 *.eye6 add add 3 div .3eye2 store
+*.eye7 *.eye8 *.eye9 add add 3 div .3eye3 store
+stop
+
+'neural activity
+
+cond
+*.nupdate *.nactive >
+start
+0 .nupdate store
+3 rnd 20 35 rnd add store
+'make a copy of neural activity into ratial memory
+
+20 * 
+21 * 4 mult 
+22 * 4 2 pow mult
+23 * 4 3 pow mult
+24 * 4 4 pow mult
+25 * 4 5 pow mult
+26 * 4 6 pow mult
+add
+add
+add
+add
+add
+add
+971 store
+
+27 * 
+28 * 4 mult 
+29 * 4 2 pow mult
+30 * 4 3 pow mult
+31 * 4 4 pow mult
+32 * 4 5 pow mult
+33 * 4 6 pow mult
+add
+add
+add
+add
+add
+add
+972 store
+
+34 * 
+35 * 4 mult 
+36 * 4 2 pow mult
+37 * 4 3 pow mult
+38 * 4 4 pow mult
+39 * 4 5 pow mult
+40 * 4 6 pow mult
+add
+add
+add
+add
+add
+add
+973 store
+
+41 * 
+42 * 4 mult 
+43 * 4 2 pow mult
+44 * 4 3 pow mult
+45 * 4 4 pow mult
+46 * 4 5 pow mult
+47 * 4 6 pow mult
+add
+add
+add
+add
+add
+add
+974 store
+
+48 * 
+49 * 4 mult 
+50 * 4 2 pow mult
+51 * 4 3 pow mult
+52 * 4 4 pow mult
+53 * 4 5 pow mult
+54 * 4 6 pow mult
+add
+add
+add
+add
+add
+add
+975 store
+
+55 * 976 store
+.nactive * .childmult mult .childdiv div 977 store
+
+stop
+
+'decode ratial memory
+
+cond
+*.robage 3 = 
+start
+
+971 * 4 mod 20 store
+20 * 971 substore
+4 971 divstore
+
+'
+971 * 4 mod 21 store
+21 * 971 substore
+4 971 divstore
+'
+971 * 4 mod 22 store
+22 * 971 substore
+4 971 divstore
+'
+971 * 4 mod 23 store
+23 * 971 substore
+4 971 divstore
+'
+971 * 4 mod 24 store
+24 * 971 substore
+4 971 divstore
+'
+971 * 4 mod 25 store
+25 * 971 substore
+4 971 divstore
+'
+971 * 4 mod 26 store
+26 * 971 substore
+4 971 divstore
+
+
+
+972 * 4 mod 27 store
+27 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 28 store
+28 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 29 store
+29 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 30 store
+30 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 31 store
+31 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 32 store
+32 * 972 substore
+4 972 divstore
+'
+972 * 4 mod 33 store
+33 * 972 substore
+4 972 divstore
+
+
+
+973 * 4 mod 34 store
+34 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 35 store
+35 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 36 store
+36 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 37 store
+37 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 38 store
+38 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 39 store
+39 * 973 substore
+4 973 divstore
+'
+973 * 4 mod 40 store
+40 * 973 substore
+4 973 divstore
+
+
+
+974 * 4 mod 41 store
+41 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 42 store
+42 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 43 store
+43 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 44 store
+44 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 45 store
+45 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 46 store
+46 * 974 substore
+4 974 divstore
+'
+974 * 4 mod 47 store
+47 * 974 substore
+4 974 divstore
+
+
+
+975 * 4 mod 48 store
+48 * 975 substore
+4 975 divstore
+'
+975 * 4 mod 49 store
+49 * 975 substore
+4 975 divstore
+'
+975 * 4 mod 50 store
+50 * 975 substore
+4 975 divstore
+'
+974 * 4 mod 51 store
+51 * 974 substore
+4 974 divstore
+'
+975 * 4 mod 52 store
+52 * 975 substore
+4 975 divstore
+'
+975 * 4 mod 53 store
+53 * 975 substore
+4 975 divstore
+'
+975 * 4 mod 54 store
+54 * 975 substore
+4 975 divstore
+
+976 * 55 store
+
+977 * .nactive store
+
+stop
+
+'update neural activity
+
+cond
+*.pleasupdate 2 =
+*.pleas2 0 >
+start
+.slownactive .nactive addstore
+stop
+
+cond
+*.pleasupdate 2 =
+*.pleas2 0 <
+start
+.nactive dec
+stop
+
+'make sure neural activity never below 1
+
+cond
+*.nactive 2 <
+start
+1 .nactive store
+stop
+
+'new way to calculate pleasure
+
+cond
+*.pleasupdate 4 >
+start
+0 .pleasupdate store
+*.oldnrg *.nrg *.body add 2 div sub - .pleasmult mult .pleasdiv div .pleas2 store
+*.nrg *.body add 2 div .oldnrg store
+stop
+
+'brain activity
+
+cond
+*.n1typelayer1web1 0 =
+start
+13 *.n1attach1layer1web1 add *
+13 *.n1attach2layer1web1 add *
+add
+32000 mod
+.wave1layer1web1 store
+stop
+
+cond
+*.n1typelayer1web1 1 =
+start
+13 *.n1attach1layer1web1 add *
+13 *.n1attach2layer1web1 add *
+sub
+32000 mod
+.wave1layer1web1 store
+stop
+
+cond
+*.n1typelayer1web1 2 =
+start
+13 *.n1attach1layer1web1 add *
+13 *.n1attach2layer1web1 add *
+mult
+32000 mod
+.wave1layer1web1 store
+stop
+
+cond
+*.n1typelayer1web1 3 =
+start
+13 *.n1attach1layer1web1 add *
+13 *.n1attach2layer1web1 add *
+div
+32000 mod
+.wave1layer1web1 store
+stop
+
+'
+
+cond
+*.n2typelayer1web1 0 =
+start
+13 *.n2attach1layer1web1 add *
+13 *.n2attach2layer1web1 add *
+add
+32000 mod
+.wave2layer1web1 store
+stop
+
+cond
+*.n2typelayer1web1 1 =
+start
+13 *.n2attach1layer1web1 add *
+13 *.n2attach2layer1web1 add *
+sub
+32000 mod
+.wave2layer1web1 store
+stop
+
+cond
+*.n2typelayer1web1 2 =
+start
+13 *.n2attach1layer1web1 add *
+13 *.n2attach2layer1web1 add *
+mult
+32000 mod
+.wave2layer1web1 store
+stop
+
+cond
+*.n2typelayer1web1 3 =
+start
+13 *.n2attach1layer1web1 add *
+13 *.n2attach2layer1web1 add *
+div
+32000 mod
+.wave2layer1web1 store
+stop
+
+'
+
+cond
+*.n3typelayer1web1 0 =
+start
+13 *.n3attach1layer1web1 add *
+13 *.n3attach2layer1web1 add *
+add
+32000 mod
+.wave3layer1web1 store
+stop
+
+cond
+*.n3typelayer1web1 1 =
+start
+13 *.n3attach1layer1web1 add *
+13 *.n3attach2layer1web1 add *
+sub
+32000 mod
+.wave3layer1web1 store
+stop
+
+cond
+*.n3typelayer1web1 2 =
+start
+13 *.n3attach1layer1web1 add *
+13 *.n3attach2layer1web1 add *
+mult
+32000 mod
+.wave3layer1web1 store
+stop
+
+cond
+*.n3typelayer1web1 3 =
+start
+13 *.n3attach1layer1web1 add *
+13 *.n3attach2layer1web1 add *
+div
+32000 mod
+.wave3layer1web1 store
+stop
+
+'
+
+	cond
+	*.n1layer2web1 0 =
+	start
+	*.wave1layer1web1
+	*.wave2layer1web1
+	add
+	32000 mod
+	.wave1layer2web1 store
+	stop
+
+	cond
+	*.n1layer2web1 1 =
+	start
+	*.wave1layer1web1
+	*.wave2layer1web1
+	sub
+	32000 mod
+	.wave1layer2web1 store
+	stop
+
+	cond
+	*.n1layer2web1 2 =
+	start
+	*.wave1layer1web1
+	*.wave2layer1web1
+	mult
+	32000 mod
+	.wave1layer2web1 store
+	stop
+
+	cond
+	*.n1layer2web1 3 =
+	start
+	*.wave1layer1web1
+	*.wave2layer1web1
+	div
+	32000 mod
+	.wave1layer2web1 store
+	stop
+
+	'
+
+	cond
+	*.n2layer2web1 0 =
+	start
+	*.wave2layer1web1
+	*.wave3layer1web1
+	add
+	32000 mod
+	.wave2layer2web1 store
+	stop
+
+	cond
+	*.n2layer2web1 1 =
+	start
+	*.wave2layer1web1
+	*.wave3layer1web1
+	sub
+	32000 mod
+	.wave2layer2web1 store
+	stop
+
+	cond
+	*.n2layer2web1 2 =
+	start
+	*.wave2layer1web1
+	*.wave3layer1web1
+	mult
+	32000 mod
+	.wave2layer2web1 store
+	stop
+
+	cond
+	*.n2layer2web1 3 =
+	start
+	*.wave2layer1web1
+	*.wave3layer1web1
+	div
+	32000 mod
+	.wave2layer2web1 store
+	stop
+
+	'
+
+		cond
+		*.nlayer3web1 0 =
+		start
+		*.wave1layer2web1
+		*.wave2layer2web1
+		add
+		32000 mod
+		.wavelayer3web1 store
+		stop
+
+		cond
+		*.nlayer3web1 1 =
+		start
+		*.wave1layer2web1
+		*.wave2layer2web1
+		sub
+		.wavelayer3web1 store
+		stop
+
+		cond
+		*.nlayer3web1 2 =
+		start
+		*.wave1layer2web1
+		*.wave2layer2web1
+		mult
+		32000 mod
+		.wavelayer3web1 store
+		stop
+
+		cond
+		*.nlayer3web1 3 =
+		start
+		*.wave1layer2web1
+		*.wave2layer2web1
+		div
+		32000 mod
+		.wavelayer3web1 store
+		stop
+
+cond
+*.n1typelayer1web2 0 =
+start
+13 *.n1attach1layer1web2 add *
+13 *.n1attach2layer1web2 add *
+add
+32000 mod
+.wave1layer1web2 store
+stop
+
+cond
+*.n1typelayer1web2 1 =
+start
+13 *.n1attach1layer1web2 add *
+13 *.n1attach2layer1web2 add *
+sub
+32000 mod
+.wave1layer1web2 store
+stop
+
+cond
+*.n1typelayer1web2 2 =
+start
+13 *.n1attach1layer1web2 add *
+13 *.n1attach2layer1web2 add *
+mult
+32000 mod
+.wave1layer1web2 store
+stop
+
+cond
+*.n1typelayer1web2 3 =
+start
+13 *.n1attach1layer1web2 add *
+13 *.n1attach2layer1web2 add *
+div
+32000 mod
+.wave1layer1web2 store
+stop
+
+'
+
+cond
+*.n2typelayer1web2 0 =
+start
+13 *.n2attach1layer1web2 add *
+13 *.n2attach2layer1web2 add *
+add
+32000 mod
+.wave2layer1web2 store
+stop
+
+cond
+*.n2typelayer1web2 1 =
+start
+13 *.n2attach1layer1web2 add *
+13 *.n2attach2layer1web2 add *
+sub
+32000 mod
+.wave2layer1web2 store
+stop
+
+cond
+*.n2typelayer1web2 2 =
+start
+13 *.n2attach1layer1web2 add *
+13 *.n2attach2layer1web2 add *
+mult
+32000 mod
+.wave2layer1web2 store
+stop
+
+cond
+*.n2typelayer1web2 3 =
+start
+13 *.n2attach1layer1web2 add *
+13 *.n2attach2layer1web2 add *
+div
+32000 mod
+.wave2layer1web2 store
+stop
+
+'
+
+cond
+*.n3typelayer1web2 0 =
+start
+13 *.n3attach1layer1web2 add *
+13 *.n3attach2layer1web2 add *
+add
+32000 mod
+.wave3layer1web2 store
+stop
+
+cond
+*.n3typelayer1web2 1 =
+start
+13 *.n3attach1layer1web2 add *
+13 *.n3attach2layer1web2 add *
+sub
+32000 mod
+.wave3layer1web2 store
+stop
+
+cond
+*.n3typelayer1web2 2 =
+start
+13 *.n3attach1layer1web2 add *
+13 *.n3attach2layer1web2 add *
+mult
+32000 mod
+.wave3layer1web2 store
+stop
+
+cond
+*.n3typelayer1web2 3 =
+start
+13 *.n3attach1layer1web2 add *
+13 *.n3attach2layer1web2 add *
+div
+32000 mod
+.wave3layer1web2 store
+stop
+
+'
+
+	cond
+	*.n1layer2web2 0 =
+	start
+	*.wave1layer1web2
+	*.wave2layer1web2
+	add
+	32000 mod
+	.wave1layer2web2 store
+	stop
+
+	cond
+	*.n1layer2web2 1 =
+	start
+	*.wave1layer1web2
+	*.wave2layer1web2
+	sub
+	32000 mod
+	.wave1layer2web2 store
+	stop
+
+	cond
+	*.n1layer2web2 2 =
+	start
+	*.wave1layer1web2
+	*.wave2layer1web2
+	mult
+	32000 mod
+	.wave1layer2web2 store
+	stop
+
+	cond
+	*.n1layer2web2 3 =
+	start
+	*.wave1layer1web2
+	*.wave2layer1web2
+	div
+	32000 mod
+	.wave1layer2web2 store
+	stop
+
+	'
+
+	cond
+	*.n2layer2web2 0 =
+	start
+	*.wave2layer1web2
+	*.wave3layer1web2
+	add
+	32000 mod
+	.wave2layer2web2 store
+	stop
+
+	cond
+	*.n2layer2web2 1 =
+	start
+	*.wave2layer1web2
+	*.wave3layer1web2
+	sub
+	32000 mod
+	.wave2layer2web2 store
+	stop
+
+	cond
+	*.n2layer2web2 2 =
+	start
+	*.wave2layer1web2
+	*.wave3layer1web2
+	mult
+	32000 mod
+	.wave2layer2web2 store
+	stop
+
+	cond
+	*.n2layer2web2 3 =
+	start
+	*.wave2layer1web2
+	*.wave3layer1web2
+	div
+	32000 mod
+	.wave2layer2web2 store
+	stop
+
+	'
+
+		cond
+		*.nlayer3web2 0 =
+		start
+		*.wave1layer2web2
+		*.wave2layer2web2
+		add
+		32000 mod
+		.wavelayer3web2 store
+		stop
+
+		cond
+		*.nlayer3web2 1 =
+		start
+		*.wave1layer2web2
+		*.wave2layer2web2
+		sub
+		.wavelayer3web2 store
+		stop
+
+		cond
+		*.nlayer3web2 2 =
+		start
+		*.wave1layer2web2
+		*.wave2layer2web2
+		mult
+		32000 mod
+		.wavelayer3web2 store
+		stop
+
+		cond
+		*.nlayer3web2 3 =
+		start
+		*.wave1layer2web2
+		*.wave2layer2web2
+		div
+		32000 mod
+		.wavelayer3web2 store
+		stop
+
+cond
+*.n1typelayer1web3 0 =
+start
+13 *.n1attach1layer1web3 add *
+13 *.n1attach2layer1web3 add *
+add
+32000 mod
+.wave1layer1web3 store
+stop
+
+cond
+*.n1typelayer1web3 1 =
+start
+13 *.n1attach1layer1web3 add *
+13 *.n1attach2layer1web3 add *
+sub
+32000 mod
+.wave1layer1web3 store
+stop
+
+cond
+*.n1typelayer1web3 2 =
+start
+13 *.n1attach1layer1web3 add *
+13 *.n1attach2layer1web3 add *
+mult
+32000 mod
+.wave1layer1web3 store
+stop
+
+cond
+*.n1typelayer1web3 3 =
+start
+13 *.n1attach1layer1web3 add *
+13 *.n1attach2layer1web3 add *
+div
+32000 mod
+.wave1layer1web3 store
+stop
+
+'
+
+cond
+*.n2typelayer1web3 0 =
+start
+13 *.n2attach1layer1web3 add *
+13 *.n2attach2layer1web3 add *
+add
+32000 mod
+.wave2layer1web3 store
+stop
+
+cond
+*.n2typelayer1web3 1 =
+start
+13 *.n2attach1layer1web3 add *
+13 *.n2attach2layer1web3 add *
+sub
+32000 mod
+.wave2layer1web3 store
+stop
+
+cond
+*.n2typelayer1web3 2 =
+start
+13 *.n2attach1layer1web3 add *
+13 *.n2attach2layer1web3 add *
+mult
+32000 mod
+.wave2layer1web3 store
+stop
+
+cond
+*.n2typelayer1web3 3 =
+start
+13 *.n2attach1layer1web3 add *
+13 *.n2attach2layer1web3 add *
+div
+32000 mod
+.wave2layer1web3 store
+stop
+
+'
+
+cond
+*.n3typelayer1web3 0 =
+start
+13 *.n3attach1layer1web3 add *
+13 *.n3attach2layer1web3 add *
+add
+32000 mod
+.wave3layer1web3 store
+stop
+
+cond
+*.n3typelayer1web3 1 =
+start
+13 *.n3attach1layer1web3 add *
+13 *.n3attach2layer1web3 add *
+sub
+32000 mod
+.wave3layer1web3 store
+stop
+
+cond
+*.n3typelayer1web3 2 =
+start
+13 *.n3attach1layer1web3 add *
+13 *.n3attach2layer1web3 add *
+mult
+32000 mod
+.wave3layer1web3 store
+stop
+
+cond
+*.n3typelayer1web3 3 =
+start
+13 *.n3attach1layer1web3 add *
+13 *.n3attach2layer1web3 add *
+div
+32000 mod
+.wave3layer1web3 store
+stop
+
+'
+
+	cond
+	*.n1layer2web3 0 =
+	start
+	*.wave1layer1web3
+	*.wave2layer1web3
+	add
+	32000 mod
+	.wave1layer2web3 store
+	stop
+
+	cond
+	*.n1layer2web3 1 =
+	start
+	*.wave1layer1web3
+	*.wave2layer1web3
+	sub
+	32000 mod
+	.wave1layer2web3 store
+	stop
+
+	cond
+	*.n1layer2web3 2 =
+	start
+	*.wave1layer1web3
+	*.wave2layer1web3
+	mult
+	32000 mod
+	.wave1layer2web3 store
+	stop
+
+	cond
+	*.n1layer2web3 3 =
+	start
+	*.wave1layer1web3
+	*.wave2layer1web3
+	div
+	32000 mod
+	.wave1layer2web3 store
+	stop
+
+	'
+
+	cond
+	*.n2layer2web3 0 =
+	start
+	*.wave2layer1web3
+	*.wave3layer1web3
+	add
+	32000 mod
+	.wave2layer2web3 store
+	stop
+
+	cond
+	*.n2layer2web3 1 =
+	start
+	*.wave2layer1web3
+	*.wave3layer1web3
+	sub
+	32000 mod
+	.wave2layer2web3 store
+	stop
+
+	cond
+	*.n2layer2web3 2 =
+	start
+	*.wave2layer1web3
+	*.wave3layer1web3
+	mult
+	32000 mod
+	.wave2layer2web3 store
+	stop
+
+	cond
+	*.n2layer2web3 3 =
+	start
+	*.wave2layer1web3
+	*.wave3layer1web3
+	div
+	32000 mod
+	.wave2layer2web3 store
+	stop
+
+	'
+
+		cond
+		*.nlayer3web3 0 =
+		start
+		*.wave1layer2web3
+		*.wave2layer2web3
+		add
+		32000 mod
+		.wavelayer3web3 store
+		stop
+
+		cond
+		*.nlayer3web3 1 =
+		start
+		*.wave1layer2web3
+		*.wave2layer2web3
+		sub
+		.wavelayer3web3 store
+		stop
+
+		cond
+		*.nlayer3web3 2 =
+		start
+		*.wave1layer2web3
+		*.wave2layer2web3
+		mult
+		32000 mod
+		.wavelayer3web3 store
+		stop
+
+		cond
+		*.nlayer3web3 3 =
+		start
+		*.wave1layer2web3
+		*.wave2layer2web3
+		div
+		32000 mod
+		.wavelayer3web3 store
+		stop
+
+'spinal cord
+
+cond
+*.nactive .goodstate <
+start
+.dmodespeed .dmode store
+stop
+
+cond
+*.nactive .goodstate >
+start
+0 .dmode store
+stop
+
+cond
+*.robage 4 >
+*.chillout 4 >
+start
+*.wavelayer3web1 .updiv div *.dmode add .up store
+*.wavelayer3web2 .dxdiv div .dx store
+*.wavelayer3web3 .aimdxdiv div .aimdx store
+stop
+
+'reproduction
+
+cond
+*.nrg 6000 >
+start
+0 .chillout store
+50 .repro store
+stop
+
+'move away from mama
+
+cond
+*.chillout 4 <
+start
+1 .dx store
+.chilln .up store
+stop
+
+end

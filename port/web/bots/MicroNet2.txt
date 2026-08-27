@@ -1,0 +1,75 @@
+'MicroNet2
+cond
+start
+'31997 rnd 2 add .setboy store
+.delgene .memloc *.robage sgn 1 sub - mult store
+.delgene .tmemloc *.robage sgn 1 sub - mult store
+-715 .delgene *.delgene -715 sub sgn abs mult store
+
+'firing
+-6 -7 abs -505 abs * sgn mult *.memval -715 sub sgn abs mult store
+
+'tie
+-330 abs *.refshoot sgn sub inc
+
+'primary food gathering
+100 50 *.tmemval -715 sub sgn mult sub .sharenrg *.multi mult store
+
+'repro
+50 .repro *.nrg 2000 sub sgn 0 floor mult store
+ clearbool
+200 *.shell sub 0 floor 200 ceil 200 *.shell sub sgn abs .mkshell mult store
+
+
+'acceleration
+-505 abs * -1 abs -505 abs * sgn mult store
+
+'start of tie section
+*.tiepres .tienum *.tiepres sgn mult store
+stop
+
+
+cond
+*.body 3 >
+start
+*.body 1 sub .fdbody store
+stop
+
+cond
+*.body 2 <
+start
+1 .strbody store
+stop
+
+cond
+*.repro 0 >
+start
+0 -1 abs store
+628 .setaim store
+stop
+
+cond
+*.tienum 0 >
+*.numties 0 >
+*.tmemval -715 !=
+start
+1000 .tieval store
+.tieval .tieloc store
+stop
+
+'turning
+cond
+*.memval -715 =
+-505 abs * 0 >
+or
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'backup for above
+cond
+start
+-715 .delgene *.delgene -715 sub sgn abs mult store
+stop
+
+end

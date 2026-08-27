@@ -1,0 +1,203 @@
+'Vermis Bicerebrus
+ 'The two-headed worm
+ 'A multibot by Bacillus
+ 'Two heads coordinate themselves so one end pulls stronger than the other and the other
+ 'co-operates if it feels it is being pulled too much
+ 'Uses poison and shell
+ 'Body bits' aim is still a bit odd
+ 
+ 'Body vars-tail is obsolete
+ def head 0
+ def bodyp 5
+ def tail 10
+ 
+ 'Minimum body level to be sustained
+ def blevel 200
+ 'Maximium velocity
+ def maxv 40
+ 'Velocity to sustain, be it forwards or backwards
+ def mvel 42
+ 
+ 'INIT-form tie to parent
+ '    -conspec
+ '    'set sustained velocity
+ cond
+  *.robage 0 =
+ start
+  69 .out1 store
+  69 .tout1 store
+  .tie inc
+  .maxv rnd ++ .mvel store
+ stop
+ 
+ 'Clear worm ID if single cell
+ cond
+  *.numties 0 =
+ start
+  .out3 store .tout3 store
+ stop
+ 
+ 'Set worm ID
+ cond
+  *.tout3 0 =
+  *.numties 0 >
+  *.tin3 0 =
+ start
+  -32000 32000 rnd dup .out3 store .tout3 store
+ stop
+ 
+ 'Copy worm ID
+ cond
+  *.tout3 0 =
+  *.numties 0 > and
+  *.tin3 0 != and
+  *.numties 0 >
+  *.tin3 *.tout3 > and or
+ start
+  *.tin3 dup .tout3 store .out3 store
+ stop
+ 
+ 'Update-Antivirus system
+ '      -Anti-manipulations
+ '      -Make shell
+ '      -Body maintenance
+ start
+  *.mkvirus .delgene store
+  .backshot store
+  *.tout2 *.shell sub .mkshell store 
+  .fixpos store
+  .blevel *.totalmyspecies 10 mult add *.body sub dup .strbody store - .fdbody store
+ stop
+ 
+ 'Less than 2 ties = head
+ cond
+  *.numties 2 <
+ start
+  .head dup .out2 store .tout2 store
+  *.mvel abs .mvel store
+ stop
+ 
+ '2 ties = body part
+ cond
+  *.numties 2 =
+ start
+  .bodyp dup .out2 store .tout2 store
+ stop
+ 
+ 'Too much strain, change direction
+ cond
+  *.out2 .head =
+  *.velup *.mvel sgn mult 0 <=
+  *.in1 *.out1 !=
+ start
+  *.mvel - .mvel store
+ stop
+ 
+ 'Head Update-Fix eyes
+ '           -Move tie out of the way
+ '           -Fix shot
+ '           -Set speed
+ '           -OCULUS II
+ cond
+  *.out2 .head =
+ start
+  .eye5dir store
+  628 .fixang store
+  .aimshoot store
+  *.mvel *.eye5 sgn 10 mult add *.velup sub .up store
+  -4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0    floor mult *.eye1 *.eye6 sub sgn 0 floor mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub   sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9     *.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 *.eye6 sub sgn 0 floor mult
+  *.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 floor  mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub   sgn ++ sgn mult *.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6  sub sgn 0 floor mult *.eye2 *.eye5 sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2    *.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn mult add 3 *.eye8 *.eye9 sub sgn ++ sgn     mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 *.eye5 sub sgn 0   floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub   sgn ++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3    *.eye8 sub sgn ++ sgn mult *.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult
+  *.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn   mult *.eye3 *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub     sgn ++ sgn mult *.eye7 *.eye7 sub sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5  sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7     *.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn     mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0    floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub     sgn ++ sgn mult add 1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4    *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn ++ sgn mult *.eye4 *.eye5 sub sgn 0 floor mult
+  *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn     mult add 0 *.eye5 *.eye9 sub sgn ++ sgn mult *.eye5 *.eye8 sub sgn ++ sgn mult *.eye5 *.eye7 sub     sgn ++ sgn mult *.eye5 *.eye6 sub sgn ++ sgn mult *.eye5 *.eye4 sub sgn ++ sgn mult *.eye5 *.eye3   sub sgn ++ sgn mult *.eye5 *.eye2 sub sgn ++ sgn mult *.eye5 *.eye1 sub sgn ++ sgn mult add .focuseye store
+ stop
+ 
+ 'Defense Mechanism-Make poison, take shell from others, wriggle around
+ cond
+  *.shflav -1 =
+  *.shflav -6 =
+  or
+ start
+  99 .shareshell store
+  25 *.poison sub .mkpoison store
+  .shoot .ploc store
+  *.velup 1 rnd 2 mult -- mult .dx store
+  .shflav store
+ stop
+ 
+ 'Food sighted
+ cond
+  *.out2 .head =
+  *.in1 *.out1 !=
+  *.eyef 0 >
+ start
+  *.veldx .sx store
+  *.refxpos *.refypos angle .setaim store
+ stop
+ 
+ 'Use radar-eye if body part (Need to fix aimshoot)
+ cond
+  *.out2 .bodyp =
+ start
+  .focuseye store
+  *.timer 314 mult 628 sub dup .eye5dir store .aimshoot store
+  99 .sharewaste store
+  25 *.shell sub .mkshell store
+  *.trefvelmyup 5 sub floor .up store
+ stop
+ 
+ 'Nrg sharing
+ 'In pulses to localize death by lack of nrg
+ cond
+  *.timer 25 mod 0 =
+ start
+  50 .sharenrg store
+ stop
+ 
+ 'Body parts shed waste
+ cond
+  *.out2 .bodyp =
+  *.waste 50 >=
+ start
+  *.waste .shootval store
+  -4 .shoot store
+ stop
+ 
+ 'Attack food
+ cond
+  *.in1 *.out1 !=
+  *.eyef 30 >
+  *.refnrg 0 >
+ start
+  16 .shootval store
+  -1 .shoot store
+  *.velup .dn *.out2 .head sub sgn abs -- abs mult store
+  *.hitup .fixpos store
+ stop
+ 
+ 'Make tie between two single cells
+ cond
+  *.out2 .head =
+  *.in2 .head =
+  *.in1 *.out1 =
+  *.in3 0 =
+  *.out3 0 =
+ start
+  .tie inc
+ stop
+ 
+ 'Delete excess/foreign ties
+ cond
+  *.tin1 *.tout1 !=
+  *.numties 2 > or
+ start
+  *.tiepres .deltie store
+ stop
+ 
+ 'Grow
+ cond
+  *.nrg *.body 10 mult 5000 floor >
+  *.eye5 30 <
+  *.out2 .head =
+ start
+  50 .repro store
+ stop

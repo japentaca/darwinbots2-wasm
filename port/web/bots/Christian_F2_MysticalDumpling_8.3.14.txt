@@ -1,0 +1,402 @@
+'Has anti-chameleon conspec (checks if in1/out1= and in2/out2 != a 1/31000 chance of failure)
+
+'--------Quickdraw baby booms- Moonfisher--------
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+'----Fixpos and Ties----
+start
+.fixpos dec
+*.myeye *.trefeye =
+.deltie inc
+stop
+
+'-------- Eyes & Junk---------
+cond
+*.robage 0 =
+start
+
+-436 .eye9dir store
+-327 .eye8dir store
+-218 .eye7dir store
+-109 .eye6dir store
+ 109 .eye4dir store
+ 218 .eye3dir store
+ 327 .eye2dir store
+ 436 .eye1dir store
+109 .eye1width store
+109 .eye2width store
+109 .eye3width store
+109 .eye4width store
+109 .eye5width store
+109 .eye6width store
+109 .eye7width store
+109 .eye8width store
+109 .eye9width store
+
+10 .out1 store
+*.out1 .tout1 store
+31000 rnd .out2 store
+*.out2 .tout2 store
+
+.eye9 .ploc store
+1000 .pval store
+stop
+
+'---------Aiming, Movement, and Veggie "Hunting"----------
+
+'Turn towards things
+cond 
+*.in1 *.out1 !=
+*.out2 *.in2 =
+or
+*.eyef 0 >
+and
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'Move away from anything dangerous approaching me
+cond
+*.in1 *.out1 !=
+*.in2 *.out2 =
+or
+*.refkills 0 >
+*.eyef 0 >
+*.refvelup 0 >
+start
+*.refvelup 10 add *.maxvel ceil .dn store
+stop
+
+'Move towards prey
+cond
+*.in1 *.out1 !=
+*.refkills 0 =
+*.eyef 0 >
+*.eyef 30 <
+start
+*.refveldx .dx store
+*.refvelup abs 30 add *.maxvel ceil .up store
+stop
+
+'Shoot and link
+cond
+*.in1 *.out1 !=
+*.out2 *.in2 =
+or
+*.refkills 0 =
+*.eyef 0 >
+*.eyef 30 >=
+start
+*.refveldx .dx store
+-6 .shoot store
+.tie inc
+stop
+
+'Force target to share (no, it's not tie-feeding!)
+cond
+*.tin1 *.tout1 !=
+*.tout2 *.tin2 =
+or
+*.numties 0 !=
+and
+start
+*.tiepres .tienum store
+*.trefxpos *.trefypos angle .setaim store
+.tieval .tieloc store
+1000 .tieval store
+.fixlen1 inc
+stop
+
+'Boot shootval
+cond
+*.nrg 695 >
+start
+15 .shootval store
+stop
+
+cond
+*.shflav -2 =
+'start
+*.shang .setaim store
+stop
+
+'-----Enemy Evasion-----
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .setaim store
+*.maxvel .dn store
+stop
+
+cond
+*.paralyzed 0 !=
+*.poisoned 0 !=
+or
+start
+0 .shoot store
+0 .sexrepro store
+0 .mrepro store
+0 .fixpos store
+0 .paralyzed store
+0 .poisoned store 
+stop
+ 
+'-----Adaptive Defences----- 
+cond
+*.numties 1 >=
+*.pain 100 >
+start
+*.tiepres .deltie store
+*.nrg 1000 >
+100 .mkslime store
+stop
+
+cond
+*.shflav -2 !=
+*.shflav 0 !=
+start
+*.shang setaim store
+*.maxvel .dn store
+0 .timer store
+
+*.shflav -6 =
+*.shflav -3 =
+xor
+*.nrg 3 div 10 ceil .mkshell store
+.out3 inc
+clearbool
+
+*.shflav -1 =
+*.nrg 3 div 10 ceil .strpoison store
+.out4 inc
+clearbool
+
+*.shflav 0 >
+0 .shoot store
+0 .sexrepro store
+0 .mrepro store
+0 .fixpos store
+stop
+
+cond
+*.shflav -2 =
+*.shflav 0 =
+xor
+100 *.timer = 
+start
+0 .out3 store
+0 .out4 store
+stop
+
+cond
+*.in1 *.out1 !=
+*.in2 *.out2 =
+or
+*.nrg 1000 >
+and
+start
+*.in3 0 >
+*.in4 0 =
+*.nrg 3 div 10 ceil .mkshell store
+*.in4 0 >
+*.in3 0 =
+*.nrg 3 div 10 ceil .strpoison store
+*.in3 *.in4 mult 0 !=
+*.nrg 5 div 10 ceil .mkshell store
+*.nrg 5 div 10 ceil .strpoison store
+stop
+
+'------Bodily Fluids------
+cond
+*.nrg 3000 >
+start
+*.poison 1000 <
+20 .strpoison store
+*.shell 1000 <
+20 .mkshell store
+stop
+
+cond
+*.body 80 > 
+start
+50 .fdbody store
+stop
+
+cond
+*.nrg 3000 >
+*.robage 2 >
+start
+100 .strbody store
+stop
+
+cond
+*.waste 100 >
+start
+.backshoot inc
+*.waste .shootval store
+-4 shoot store
+stop
+
+'-------Children Production---------
+cond
+*50 1 =
+start
+628 .aimsx store
+0 50 store
+stop
+
+cond
+*.nrg 1000 >
+*.body 500 >
+*.eye5 50 <
+start
+628 .aimsx store
+50 .repro store
+1 50 store
+stop
+ 
+'-----Aiming-----
+'Change only if there is nothing noteworthy in current eyef
+'Order: 9,1,8,2,7,3,6,4,5
+cond
+*.eyef 0 =
+start
+*.eye9 0 !=
+9 .focuseye store
+*.eye9 0 =
+*.eye1 0 !=
+1 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 !=
+8 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 !=
+2 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 =
+*.eye7 0 !=
+7 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 =
+*.eye7 0 =
+*.eye3 0 !=
+3 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 =
+*.eye7 0 =
+*.eye3 0 =
+*.eye6 0 =
+6 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 =
+*.eye7 0 =
+*.eye3 0 =
+*.eye6 0 =
+*.eye4 0 !=
+4 .focuseye store
+*.eye9 0 =
+*.eye1 0 =
+*.eye8 0 =
+*.eye2 0 =
+*.eye7 0 =
+*.eye3 0 =
+*.eye6 0 =
+*.eye4 0 =
+*.eye5 0 !=
+0 .focuseye store 
+clearbool
+stop
+
+cond
+*.in1 *.out1 =
+*.in2 *.out2 !=
+and
+start
+10 .aimsx store
+stop
+
+cond
+*.in1 *.out1 =
+*.in2 *.out2 !=
+and
+*.eyef 0 =
+start
+100 .aimsx store
+stop
+
+'----Pack Motion----
+cond
+*.in1 *.out1 !=
+*.refkills 0 =
+or
+*.eyef 0 !=
+start
+*.refxpos .out9 store
+*.refypos .out10 store
+stop
+
+cond
+*.in1 *.out1 =
+*.in2 *.out2 !=
+and
+*.in9 *.in10 mult 0 =
+start
+*.in9 *.in10 angle .setaim store
+stop
+
+cond
+*.eyef 0 =
+*.in9 *.in10 mult 0 =
+*.xpos *.in9 %=
+*.ypos *.in10 %=
+start
+0 .out9 store
+0 .out10 store
+618 rnd .aimsx store
+*.maxvel .dn store
+stop
+
+cond
+*.in1 *.out1 =
+*.in2 *.out2 !=
+and
+*.in9 *.in10 mult 0 =
+start
+*.in9 .out9 store
+*.in10 .out10 store
+stop

@@ -1,0 +1,86 @@
+'Topic: My first bot  
+'PY
+
+' Crappy little chameleon-bot.
+' designed simply to show how useless
+' in1 out1 conspecific recognition is
+
+' Based on a chopped down copy of H_Hunter1
+
+
+cond 
+*.robage 0 =
+start
+14 55 store
+stop
+
+cond
+*.eye5 0 !=
+*.in1 0 !=
+*.in1 *.out1 !=
+start
+*.in1 .out1 store
+stop
+
+cond
+*.eye5 0 !=
+*.in2 0 !=
+*.in2 *.out2 !=
+start
+*.in2 .out2 store
+stop
+
+cond
+*.nrg 4000 >
+*.eye5 30 <
+start
+50 .repro store
+stop
+
+cond
+*.vel 40 <
+*.eye5 50 <
+*.numties 0 =
+start
+40 *.vel sub .up store
+stop
+
+
+'turn towards food
+'*************************
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+60 .aimsx store
+20 .sx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+-60 .aimsx store
+20 .dx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye *55 =
+*.eye5 60 >
+start
+200 .aimdx store
+stop
+
+'shoot at enemy
+'******************
+
+cond
+*.eye5 45 >
+*.refeye *55 !=
+start
+-1 .shoot store
+stop
+
+end

@@ -1,0 +1,227 @@
+'Devincio_Dominator_Invincibalis
+'uses tie defence system
+' F1 contender by PY
+' designed for V2.3
+'***********************
+
+'initialize
+'*********
+cond
+    *.robage 0 =
+  start
+    42 55 store
+    .tie inc
+stop
+
+cond 
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond 
+*.robage 300 >
+*.nrg 3000 >
+*.body 5000 <
+start
+100 .strbody store
+stop
+
+cond
+*.body 100 >
+*.nrg 500 <
+start
+100 .fdbody store
+stop
+
+' move forward 
+'****************
+cond
+    *.refeye *.myeye !=
+    *.numties 0 =
+  start
+    *.maxvel *.vel sub .up store
+ stop
+
+'turn towards food
+'*************************
+'avoid other conspecifics
+'****************************
+cond
+start
+mult mult 0 0
+stop
+
+cond
+*.eye4 *.eye6 >
+start
+mult mult -5 -25
+stop
+
+cond
+*.eye6 *.eye4 >
+start
+mult mult 5 25
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye4 >
+*.eye3 *.eye6 >
+start
+mult mult -8 -80 
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye6 >
+*.eye7 *.eye4 >
+start
+mult mult 8 80
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye4 >
+*.eye1 *.eye6 >
+*.eye1 *.eye3 >
+*.eye1 *.eye7 >
+start
+mult mult -14 -140 
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye4 >
+*.eye9 *.eye6 >
+*.eye9 *.eye3 >
+*.eye9 *.eye7 >
+start
+mult mult 14 140 
+stop
+
+' Avoid conspecifics
+' ***********************
+cond
+    *.refeye *.myeye =
+  start
+    mult mult 0 85 
+stop
+
+'reproduce 
+'***********
+cond 
+*.robage 50 <
+*.eye5 50 <
+*.nrg 1500 >
+start
+50 .repro store
+mult mult 0 250
+stop
+
+cond
+    *.nrg 5000 > 
+    *.eye5 50 <
+  start
+    40 .repro store
+    mult mult 0 250 
+stop
+
+'Feed
+'******
+cond
+*.tiepres *51 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+1000 .tieval store
+.tieval .tieloc store
+stop
+
+cond
+*.multi 1 =
+start
+*.tiepres .deltie store
+99 .sharenrg store
+stop
+
+cond
+*52 2 =
+start
+*51 .deltie store
+0 52 store
+stop
+
+cond 
+   *52 0 >
+  start
+    *51 .tienum store
+    -1000 .tieval store
+    -1 .tieloc store
+52 inc
+stop
+
+' sever ties to conspecifics
+' *****************************
+cond
+    *.trefeye *55 =
+  start
+    *.tiepres .deltie store
+stop
+
+' delete painful tie
+' ******************
+cond
+*.numties 0 >
+*.pain 500 >
+start
+*.tiepres .deltie store
+stop
+
+'Tie to an enemy
+'********************
+cond
+    *.eye5 50 >
+    *.eye6 *.eye4 %=
+    *.refeye *.myeye !=
+    *.robage 0 >
+  start
+    800 rnd 100 add 51 store
+    *51 .tie store
+    *51 .readtie store
+    mult mult 0 0 
+    52 inc
+stop
+
+' Actually rotate
+' *****************
+cond
+start
+    .aimdx store
+    .dx store
+stop
+
+cond
+*.refeye *.myeye !=
+*.refeye 1 !=
+*.eye5 50 >
+start
+-6 .shoot store
+stop
+
+cond
+*.waste 100 >
+start
+1 .backshot store
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.poison 1000 <
+*.nrg 1000 >
+start
+10 .strpoison store
+stop
+
+end

@@ -1,0 +1,135 @@
+'Topic: Bot for DB v2.14  
+'K0zm0
+
+'Spore-beta (working)
+'-------------------------
+'Use: - no toroidal
+' - gravity = 1
+' - draw a line of wall 
+'at the top of the screen
+' - set repopulate veg = 100 (optional)
+'--------------------------
+
+
+
+cond
+*51 5 =
+*.nrg 2000 >
+start
+50 .repro store
+stop
+
+cond
+*51 5 =
+*.nrg 600 <
+start
+2 .tienum store
+2 .readtie store
+2 .deltie store
+6 51 store
+stop
+
+cond
+*51 6 =
+*.eye5 0 >
+start
+0 51 store
+stop
+
+cond
+*51 4 =
+start
+628 .aimsx store
+5 51 store
+stop
+
+cond
+*51 3 =
+*.numties 0 >
+start
+4 51 store
+stop
+
+
+cond
+*51 2 =
+start
+11 rnd .aimsx store
+10 .up store
+stop
+
+cond
+*51 2 =
+start
+11 rnd .aimdx store
+10 .up store
+stop
+
+cond
+*51 2 =
+*.eye5 35 >
+*.refnrg 10 <
+start
+2 .tienum store
+2 .tie store
+3 51 store
+stop
+
+cond
+*51 1 =
+*.sun 1 !=
+start
+1 .tienum store
+1 .deltie store
+15 .aimsx store
+stop
+
+cond
+*51 1 =
+*.sun 1 =
+start
+2 51 store
+stop
+
+cond
+*.refnrg 100 >
+*.nrg 29000 <
+*.ref*ge 0 !=
+*51 0 =
+*.eye5 30 >
+*.refeye 0 =
+start
+1 .tienum store
+1 .tie store
+stop
+
+cond
+*.ref*ge 0 !=
+*51 0 =
+*.nrg 29900 <
+start
+1 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*51 0 =
+start
+15 .aimdx store
+stop
+
+cond
+*51 0 =
+*.nrg 28000 >
+start
+1 51 store
+stop
+
+cond
+*.waste 5 >
+start
+5 .shootval store
+-4 .shoot store
+stop
+end

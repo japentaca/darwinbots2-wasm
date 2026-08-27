@@ -1,0 +1,424 @@
+'Spinner v1.1 (F2) 06-04-08
+'by Moonfisher
+'Added a litle comunication
+'Some better repro genes
+'Removed poison, less shell
+'Still relies mostly on the eyes
+
+'------------------- vars
+def seteyes 50
+def seteyewidth 51
+def seteyespace 52
+def setoffset 53
+
+def state 54
+def repspin 55
+
+
+'-------------------- constants
+def spineyewidth 0
+def spineyespace 105
+def spinoffset 140
+
+def scaning 1
+
+
+cond
+*.robage 0 =
+start
+1 .seteyes store
+.spineyewidth .seteyewidth store
+.spineyespace .seteyespace store
+.spinoffset .setoffset store
+.scaning .state store
+123 120 store
+120 .memloc store
+.shoot .vloc store
+-2 .venval store
+.shoot .ploc store
+stop
+
+cond
+*.seteyes 1 =
+start
+*.setoffset .eye9dir store
+*.setoffset *.seteyespace add .eye8dir store
+*.setoffset *.seteyespace 2 mult add .eye7dir store
+*.setoffset *.seteyespace 3 mult add .eye6dir store
+*.setoffset *.seteyespace 4 mult add .eye5dir store
+*.setoffset *.seteyespace 5 mult add .eye4dir store
+*.setoffset *.seteyespace 6 mult add .eye3dir store
+*.setoffset *.seteyespace 7 mult add .eye2dir store
+*.setoffset *.seteyespace 8 mult add .eye1dir store
+4 .focuseye store
+0 .seteyes store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 >
+*.memval 123 !=
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 5 div 30 sub 0 floor 100 ceil *.refvelup add .up store
+*.refveldx .dx store
+-6 .shoot store
+*.nrg 30 div 20 ceil *.eye9 40 sub 0 floor sgn *.body 40 sub 0 floor sgn mult mult .shootval store
+*.refxpos .out4 store
+*.refypos .out5 store
+stop
+
+cond
+*.eye9 0 =
+*.memval 123 = or
+*.out4 0 !=
+*.out5 0 != or
+start
+0 .out4 store
+0 .out5 store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 >
+*.memval 123 !=
+*.robage 5 mod 0 =
+*.venom 1 >
+start
+-3 .shoot store
+0 .shootval store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 mod 16 >=
+*.robage 200 >= or
+start
+*.aim 35 add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 mod 16 <
+*.robage 200 <
+start
+20 .dx store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 !=
+*.memval 123 =
+*.robage 20 mod 16 >=
+*.robage 200 >= or
+start
+*.aim 35 add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 !=
+*.memval 123 =
+*.robage 20 mod 16 <
+*.robage 200 <
+start
+20 .dx store
+stop
+
+cond
+*.robage 100 >=
+*.robage 1000 <
+*.eye9 0 =
+*.robage 20 mod 10 >
+start
+20 .dx store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye1 0 >
+start
+*.aim *.eye1dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye2 0 >
+start
+*.aim *.eye2dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye3 0 >
+start
+*.aim *.eye3dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye4 0 >
+start
+*.aim *.eye4dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye5 0 >
+start
+*.aim *.eye5dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye6 0 >
+start
+*.aim *.eye6dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye7 0 >
+start
+*.aim *.eye7dir add .setaim store
+stop
+
+cond
+*.state .scaning =
+*.eye9 0 =
+*.robage 20 >
+*.memval 123 = and or
+*.eye8 0 >
+start
+*.aim *.eye8dir add .setaim store
+stop
+
+cond
+*.eye9 0 >
+*.memval 123 =
+*.in4 0 !=
+*.in5 0 != or
+*.in4 *.in5 dist 1000 <
+start
+*.in4 *.in5 angle .setaim store
+20 .dx store
+stop
+
+cond
+*.eye9 0 =
+*.memval 123 = or
+*.nrg 3100 > or
+*.nrg 300 >
+*.body 100 > and
+*.totalmyspecies 70 < and
+*.nrg 500 >
+*.body 100 > and
+*.totalmyspecies 70 >= and or
+*.repspin 0 =
+start
+*.robage 1 add .repspin store
+stop
+
+cond
+*.repspin 1 add *.robage =
+start
+*.aim 511 add .setaim store
+0 .up store
+0 .dx store
+stop
+
+cond
+*.repspin 2 add *.robage =
+start
+*.aim 341 add .setaim store
+0 .up store
+0 .dx store
+stop
+
+cond
+*.repspin 3 add *.robage =
+start
+*.aim 511 add .setaim store
+0 .up store
+0 .dx store
+stop
+
+cond
+*.repspin 15 add *.robage <
+*.repspin 0 !=
+start
+0 .repspin store
+stop
+
+cond
+'*.eye9 0 =
+*.nrg 300 >
+*.body 100 >
+*.repspin 1 add *.robage =
+*.repspin 2 add *.robage = or
+*.totalmyspecies 70 <
+start
+32 .repro store
+stop
+
+cond
+'*.eye9 0 =
+*.nrg 500 >
+*.body 100 >
+*.repspin 1 add *.robage =
+*.repspin 2 add *.robage = or
+*.totalmyspecies 70 >=
+start
+32 .repro store
+stop
+
+cond
+*.nrg 200 >
+*.body 500 <
+*.totalmyspecies 70 > or
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 100 <
+*.body 20 >
+start
+50 .fdbody store
+stop
+
+cond
+*.shell 50 <
+*.nrg 50 >
+start
+20 .mkshell store
+stop
+
+cond
+*.shell 200 <
+*.nrg 200 >
+*.body 120 >
+start
+50 .mkshell store
+stop
+
+cond
+*.venom 50 <
+*.nrg 20 >
+start
+10 .strvenom store
+stop
+
+cond
+*.shell 300 <
+*.nrg 200 >
+*.body 100 >
+*.eye9 0 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.refshoot 0 != or
+*.refshell 0 != or
+*.refpoison 0 != or
+*.refvenom 0 != or
+*.refvelscalar 20 > or
+start
+300 *.shell sub .mkshell store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+*.shflav -3 !=
+*.nrg 80 >
+*.venom 5 >
+start
+*.shang .setaim store
+-3 .shoot store
+10 .shootval store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+*.shflav -3 !=
+*.nrg 80 >
+*.venom 5 <=
+start
+*.shang .setaim store
+.setaim .shoot store
+*.refaim 682 add .shootval store
+stop
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.pain 60 >
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.maxvel .dx store
+stop
+
+cond
+*.shflav 0 !=
+start
+0 .shflav store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+*.tiepres .deltie store
+stop
+
+cond
+*.vtimer 0 !=
+start
+0 .vshoot store
+stop
+
+cond
+*.repro 0 !=
+*.repro 32 !=
+*.repro 98 !=
+start
+0 .repro store
+stop
+
+cond
+*.delgene 0 !=
+start
+0 .delgene store
+stop
+
+end

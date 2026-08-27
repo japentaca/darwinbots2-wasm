@@ -1,0 +1,164 @@
+'Topic: Formula one bots!
+'Henk
+
+' Kyushu Bot
+' Tie bot
+' Combat Bot
+' By Henk
+
+' ********** General Genes **********
+
+' Get waste out of the way.
+cond
+*.waste 100 >
+start
+*.waste .strvenom store
+stop
+
+' ********** nonsense genes to identify **********
+
+cond
+*.nrg 0 =
+start
+-1 .shoot store
+-1 .shoot store
+-1 .shoot store
+-1 .shoot store
+-1 .shoot store
+stop
+
+' ********** TIE Genes **********
+
+' Engage tie
+cond
+*.eye5 30 >
+*.refshoot 6 !=
+start
+*55 .tie store
+-1 .shoot store
+stop
+
+' Feed through tie
+cond 
+*.numties 0 >
+*.trefshoot 6 !=
+start
+*55 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+
+' ********** Move genes **********
+cond
+*.numties 0 =
+start
+40 *.vel sub .up store
+stop
+
+' ********** Follow Genes **********
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+start
+-102 .aimdx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+start
+102 .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+' ********** Species genes **********
+
+' turn away from other shimazu's.
+cond
+*.refshoot 6 =
+*.eye5 20 >
+start
+314 .aimdx store
+stop
+
+' delete tie to fellow Darth shimazu
+cond
+*.trefshoot 6 =
+*.numties 0 >
+start
+*55 .deltie store
+stop
+
+' ********** Initiating genes **********
+
+' Tie to father. Or is is a mother?
+cond
+*.robage 0 =
+start
+.tie inc
+900 rnd 1 add 55 store
+stop
+
+‘ delete tie again and store tie phase in .readtie
+cond
+*.robage 1 =
+start
+.deltie inc
+*55 .readtie store
+stop
+
+' make shell
+cond
+*.shell 50 <
+start
+50 *.shell sub .mkshell store
+stop
+
+' ********** Repro Genes **********
+
+' Turn back to food. I hope.
+cond
+*41 0 >
+start
+628 .aimdx store
+41 dec
+stop
+
+' Reproduce
+cond
+*.nrg 4500 >
+*.robage 50 >
+start
+50 .repro store
+628 .aimdx store
+41 inc
+stop
+
+' Evil anti-tie gene. 
+cond
+*.tiepres *55 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+end

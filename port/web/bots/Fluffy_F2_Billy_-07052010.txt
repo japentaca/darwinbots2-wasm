@@ -1,0 +1,162 @@
+def venomcounter 51
+
+' Gene 1 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 2 Eat
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refpoison 0 =
+ *.refshell 0 =
+start
+ .venomcounter inc
+16 .shootval store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 3 Eat Poison
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refpoison 0 >
+ *.refshell 0 =
+start
+ .venomcounter inc
+16 .shootval store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 4 Eat Shells
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refshell 0 >
+ *.refpoison 0 =
+start
+ .venomcounter inc
+16 .shootval store
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 5 Eat Poisonous Shells
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refpoison 0 >
+ *.refshell 0 >
+start
+ .venomcounter inc
+16 .shootval store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 6 SPIN!
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 0 .venomcounter store
+ 314 rnd .aimdx store
+stop
+
+' Gene 7 Have Kids
+cond
+ *.nrg 15000 >
+start
+ 40 .repro store
+stop
+
+' Gene 8 I'm a friend, Reprovirus! 
+' (That's a virus I'll release onto internet mode)
+cond
+*.robage 0 =
+start
+67 989 store
+stop
+
+' Gene 9 Poo
+cond
+*.waste 40 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Gene 10 MOVE!
+cond
+start
+ .fixpos *.fixed mult dec
+stop
+
+' Genes 11 & 12 I hate birth ties
+cond
+ *.robage 0 =
+start
+ .tie inc
+stop
+
+cond
+ *.robage 1 =
+start
+ .deltie inc
+stop
+
+' Gene 13 Poison
+cond
+ *.poison 500 <
+start
+ .eye5 .ploc store
+ 50 .strpoison store
+stop
+
+'Gene 14 Shell
+cond
+ *.shell 250 <
+start
+ 100 .mkshell store
+stop
+
+' Genes 15, 16 & 17 Venom
+cond
+ *.robage 0 =
+start
+ .shoot .vloc store
+ -2 .venval store
+stop
+
+cond
+ *.venomcounter 19 >
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ 50 .shootval store
+ -3 .shoot store
+ 0 .venomcounter store
+stop
+
+cond
+ *.venom 500 <
+start
+ 50 .strvenom store
+stop
+
+'Gene 18 Delete viruses
+cond
+ *.mkvirus 0 !=
+start
+ *.mkvirus .delgene store
+stop
+
+end

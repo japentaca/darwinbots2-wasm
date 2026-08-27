@@ -1,0 +1,175 @@
+'Topic: Help on some coding  
+'Yoyo51
+
+'Tie Paralysis
+'
+'This robot tied to its victim
+'paralyses it
+'and shoot at it
+'
+'
+
+'--------------'
+'1
+'|If not link to a victim and too slow
+'|then turn around and move foreward
+
+
+
+cond
+'*.vel 5 <
+'*51 21 <
+*.eye5 0 =
+*.eye3 0 =
+*.eye7 0 =
+start
+57 .aimsx store
+51 inc
+'2 .up store
+stop
+
+cond
+*.vel 5 <
+*51 20 >
+'*.eye5 0 =
+'*.eye3 0 =
+'*.eye7 0 =
+*.numties 0 =
+start
+0 51 store
+10 .up store
+stop
+
+'-------Repro-------'
+'2
+'|inspired from 'Anon Terifica'
+'|when duplicating the two robot 
+'|go in oposite direction
+
+cond
+*.nrg 5000 >
+start
+50 .repro store
+0 50 store
+stop
+
+cond
+*50
+0
+=
+start
+628
+.aimdx
+store
+5
+.up
+store
+6 .in1 store
+stop
+
+cond
+*50 32000 <
+start
+50 inc
+stop
+
+
+'-------Food Hunt----'
+'3
+'|behavior to track prey
+
+cond
+*.eye1 50 <
+*.eye1 0 >
+*.numties 0 =
+start
+157 .aimsx store
+5 .up store
+2 .sx store
+stop
+
+cond
+*.eye3 50 <
+*.eye3 0 >
+*.numties 0 =
+start
+80 .aimsx store
+5 .up store
+2 .sx store
+stop
+
+cond
+*.eye7 50 <
+*.eye7 0 >
+*.numties 0 =
+start
+80 .aimdx store
+5 .up store
+stop
+
+cond
+*.eye9 50 <
+*.eye9 0 >
+*.numties 0 =
+start
+150 .aimdx store
+5 .up store
+stop
+
+cond
+*.eye5 50 <
+*.eye5 0 >
+start
+0 .aimdx store
+0 .aimsx store
+5 .up store
+stop
+
+'-------Tie & Shoot----'
+'13
+'|behaviour when a prey is tied
+
+cond
+*.eye5 30 <
+*.eye5 0 >
+*.numties 0 =
+*.out1 6 !=
+start
+0 .fixang store
+5 .tie store
+0 .aimdx store
+0 .aimsx store
+0 .up store
+stop
+
+'14
+
+cond
+*.tienum 5 !=
+start
+5 .tienum store
+stop
+
+'15
+cond
+*.numties 0 >
+*.out1 6 !=
+start
+-1 .shoot store
+stop
+
+'16
+cond
+*.numties 0 >
+start
+30 *.tieang add
+.tieang store
+stop
+
+cond
+*.tieang 1256 >
+start
+0 .tieang store
+stop
+
+end

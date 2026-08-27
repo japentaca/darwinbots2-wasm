@@ -1,0 +1,121 @@
+'Spanish Conquistador
+'uses poison and viruses, yikes!
+'version 1.0
+
+def stopper 999
+def timer 998
+def incme 997
+def stopshoot 990
+
+'gene 1
+cond
+start
+89
+*.stopper abs 1 ceil -1 mult 1 add 
+.stopper mult store
+
+.stopper
+*.memloc abs 1 ceil -1 mult 1 add
+.memloc mult store
+
+.shoot *.ploc dup div -1 mult 1 add .ploc mult store
+
+*.tiepres *.numties 1 ceil -1 mult 1 add .deltie mult store
+
+*.robage 1 ceil -1 mult 1 add .tie mult inc
+
+'*.shell 40 div -1 mult .mkshell store
+
+20
+*.shflav -6 sub abs 1 ceil -1 mult 1 add
+.mkshell mult store
+
+*.fixed -1 mult 1 add *.fixed .fixpos mult store
+
+100 *.nrg 2500 sub sgn 0 ceil -1 mult .fdbody mult store
+stop
+
+'gene 2
+cond
+*.robage 40 >
+*.refage 2 >
+*.eye5 0 >
+89 *.memval !=
+start
+-6 .shoot store
+-8 .shootval store
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+'gene 3
+cond
+*.robage 40 >
+*.refage 2 >
+*.eye5 50 >
+89 *.memval !=
+start
+*.refvelup .up store
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+'gene 4
+cond
+*.eye5 0 =
+*.eye5 0 >
+89 *.memval = and
+or
+start
+314 rnd .aimdx store
+stop
+
+'gene 5
+'strbody and reproduce and poison
+cond
+*.nrg 3000 >
+start
+100
+*.body 20000 sub sgn -1 mult 0 floor .strbody mult store
+10
+*.nrg 20000 sub sgn 0 floor .repro mult store
+
+
+'poison
+1000 *.poison sub
+*.poison 1000 sub 10 div sgn -1 mult 0 floor .strpoison mult
+store
+
+'ploc
+.shoot
+*.ploc 1 sub sgn -1 mult 0 floor .ploc mult
+store
+
+'slime
+200 *.slime sub 10 div 0 floor 200 ceil .mkslime store
+stop
+
+'gene 6
+'viruses.  Self replicating.  And in SG league.  Golly!
+cond
+start
+'self propogation code
+*.thisgene
+1000
+
+*.vtimer 1 ceil -1 mult 1 add 998 store
+
+*998 .vshoot mult store
+*998 .mkvirus mult store 
+
+'malicous code
+100 rnd
+20 rnd
+1256 rnd
+
+*.stopper 89 sub abs 1 ceil 0 floor 998 store '1 if right, 0 else
+
+*998 .setaim mult store
+*998 .fdbody mult store
+*998 .repro mult store
+stop
+end

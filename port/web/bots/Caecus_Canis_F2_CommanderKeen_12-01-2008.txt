@@ -1,0 +1,112 @@
+cond
+start
+20 rnd 10 sub .dx store
+20 rnd 10 sub .up store
+stop
+
+cond
+*.eye5width 1200 !=
+start
+1200 .eye5width store
+stop
+
+cond
+*.eye5 90 >
+*.nrg 2000 >
+start
+256 .shootval store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 20 >
+start
+-6 .shoot store
+991 inc
+stop
+
+'MWAHAHAHAA!
+cond
+-6 *.shoot =
+*991 4 >=
+start
+0 991 store
+.mkslime .shoot store
+32000 .shootval store
+stop
+
+'MWAHAHAHAA! v2
+cond
+-6 *.shoot =
+*991 3 =
+start
+.eye5dir .shoot store
+628 .shootval store
+stop
+
+cond
+*.nrg 2000 >
+*.body 2000 <
+start
+*.nrg 2000 sub 10 div .strbody store
+stop
+
+cond
+*.nrg 2000 >
+*.body 1000 >
+start
+50 .repro store
+100 rnd 50 sub .dx store
+100 rnd 50 sub .up store
+stop
+
+cond
+*.nrg 2000 <
+*.body 50 >
+start
+*.body 20 sub .fdbody store
+stop
+
+cond
+*.waste 100 >
+start
+*.waste .shootval .store
+-4 .shoot store
+stop
+
+cond
+*.eye5 0 !=
+start
+*.refxpos *.refypos angle 30 rnd 15 sub add .setaim store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye5 0 !=
+start
+100 *.eye5 sub .up store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye5 80 >
+start
+*.velsx .dx store
+*.velup .dn store
+stop
+
+
+cond
+*.myeye *.refeye =
+*.eye5 0 !=
+start
+*.refvelsx .dx store
+*.refveldn .up store
+stop
+
+cond
+*.vel 75 >
+start
+*.velsx .dx store
+*.veldn .up store
+stop

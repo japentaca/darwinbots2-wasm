@@ -1,0 +1,21 @@
+'Topic: Evolved bots  
+'PY showing what made Shvarz's evolved shooter shoot
+
+' ----------------- 2
+cond
+start
+1 
+50 inc
+stop
+
+' and
+
+' -------------- 10
+cond
+*50 7 >
+start
+50 store
+inc
+stop
+
+end

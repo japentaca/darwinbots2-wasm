@@ -1,0 +1,58 @@
+'animal_minamal_gender
+'by Shadowgod2
+'12/6/2014
+'gender based bot
+'you will need female version
+'males fight eachother because they will take over otherwise
+
+def male 50
+def female 51
+
+cond
+*.refeye *.myeye =
+*.refbody *.male mult 1000 < and
+*.eye5 0 = or
+start
+100 rnd *.female 2 mult 1 sub mult .aimdx store
+stop
+
+cond
+*.refeye *.myeye =
+*.refbody *.male mult 1000 > and
+*.refeye *.myeye != or
+*.eye5 0 >
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye != 
+*.refeye *.myeye =
+*.in1 1 sub *.male mult -1 = and or
+start
+-1 .shoot store
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+start
+1 .male store
+-8 .shoot *.in1 mult *.refbody 1000 sub sgn 0 floor mult store
+stop
+
+start
+1 rnd 2 mult 1 sub *.thisgene add .delgene *.robage sgn -1 mult 1 add mult store
+*.thisgene .delgene *.robage sgn mult store
+stop
+
+cond
+start
+1 .female store
+1 .out1 store
+50 .sexrepro *.fertilized sgn mult *.body 1000 sub sgn 0 floor mult store
+stop
+
+end

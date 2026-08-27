@@ -1,0 +1,190 @@
+'D. Scarab 3 
+'Modified by PY to run in V2.3
+'
+'F1 Bot
+'ScarabDrowner 14 Apr 04
+
+
+'***************************************1
+' store numbers, tie with parent
+cond
+*.robage 0 =
+start
+21 51 store
+500 rnd 1 add 53 store
+*53 .readtie store
+.tie inc
+52 inc
+stop
+
+'******************2
+' reproduce
+cond
+*.nrg 6000 >
+start
+33 .repro store
+stop
+
+' *******************3
+' sever tie to parent
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+' *******************4
+' look for food
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+*.refeye *51 !=
+*.numties 0 =
+start
+mult -110
+52 inc
+stop
+
+'**********************5
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+*.refeye *51 !=
+*.numties 0 =
+start
+mult 110
+52 inc
+stop
+
+'**********************6
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*.refeye *51 !=
+*.numties 0 =
+start
+mult -70
+52 inc
+stop
+
+'**********************7
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*.refeye *51 !=
+*.numties 0 =
+start
+mult 70
+52 inc
+stop
+
+'**********************8
+cond
+*.eye5 15 >
+*.refeye *51 !=
+start
+52 inc
+stop
+
+'***************************************9
+' attach to food or enemy
+cond
+*.eye5 30 >
+*.eye4 *.eye6 =
+*.refeye *51 !=
+start
+*53 .tie store
+314 .tieang store
+mult 0
+*.vel -1 mult .up store
+stop
+
+'***************************************10
+' spin while waiting
+cond
+*52 0 =
+*.numties 0 =
+start
+mult 78
+stop
+
+'***************************************11
+' actually make the turn
+cond
+start
+.aimdx store
+stop
+
+'***************************************12
+' drain energy from food or enemy
+cond
+*.numties 0 >
+start
+*53 .tienum store
+-1000 .tieval store
+.tieloc dec
+stop
+
+'***************************************13
+' velocity, make the sucker move
+cond
+*52 0 >
+*.vel 40 <
+start
+40 *.vel sub .up store
+0 52 store
+stop
+
+'***************************************14
+' maintain slime sheild against ties
+cond
+*.slime 100 <
+start
+10 .mkslime store
+stop
+
+'***************************************15
+' degrade enemy's slime shield
+cond
+*.refeye *51 !=
+*.eye5 40 >
+start
+820 .shoot store
+0 .shootval store
+stop
+
+'***************************************16
+' store poison for defense
+cond
+*.nrg 49 >
+*.poison 50 <
+start
+50 .strpoison store
+stop
+
+'***************************************17
+' detect a tie attack and counterattack
+cond
+*.tiepres *53 !=
+*.numties 0 >
+*.trefeye *51 !=
+start
+*.tiepres .tienum store
+-1000 .tieval store
+.tieloc dec
+stop
+
+'***************************************18
+' if enemy hijacks tie, counterattack
+cond
+*.tiepres *53 =
+*.trefeye *51 !=
+*.pain 100 >
+*.pain 2000 <
+start
+53 .deltie store
+314 .aimdx store
+-1 .shoot store
+stop
+
+end

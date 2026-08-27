@@ -1,0 +1,300 @@
+'Excalibur
+'designed for db 2.35
+'by Light
+'26/2/05
+
+'***********
+' * Targeting *
+'***********
+
+cond
+  *.robage 2 >
+  *.eye5 20 <
+  *.refaimsx *.myaimsx != 
+  *.eye9 *.eye5 > or
+  *.eye1 *.eye5 > or
+  *.eye8 *.eye5 > or
+  *.eye7 *.eye5 > or
+start
+  *.eye9 *.eye8 add *.eye1 sub *.eye2 sub .aimdx store
+stop
+
+cond
+  *.refaimsx *.myaimsx != 
+  *.robage 5 >
+  *.eye5 0 >
+start
+  *.refxpos *.refypos angle .setaim store
+stop
+
+cond
+  *.eye9 0 =
+  *.eye8 0 =
+  *.eye5 5 < 
+  *.eye2 0 =
+  *.eye1 0 = 
+start
+  200 .aimsx store
+stop
+
+cond
+  *.refaimsx *.myaimsx = 
+start
+  200 .aimsx store
+stop
+
+cond
+  *.vel *.maxvel <
+  *.numties 0 =
+  *.robage 2 >
+  *.eye5 0 >
+  *.fixed 0 =
+  *.refaimsx *.myaimsx != 
+start
+  *.refxpos *.refypos dist 300 sub 5 div .up store
+  *.refveldx .dx store
+stop
+
+cond
+  *.vel 0 =
+  *.refaimsx *.myaimsx = 
+start
+  10 .up store
+stop
+
+'****************
+'* Reproduction *
+'****************
+
+cond
+  *50 1 =
+start
+  628 .aimsx store
+  0 50 store
+stop
+
+cond
+  *.nrg 2000 >
+  *.body 4000 >
+  *.eye5 50 <
+start
+  628 .aimsx store
+  51 .repro store
+  1 50 store
+stop
+
+'cond
+'  *.robage 1 >
+'  *.robage 3 <
+'  *.nrg 2000 >
+'start
+'  51 .repro store
+'  150 .aimsx store
+'stop
+
+cond
+  *.robage 0 =
+start
+  .tie inc
+  0 .out1 store
+  .shoot .ploc store
+  .shoot .vloc store
+stop
+
+cond
+  *.robage 1 =
+start
+  .deltie inc
+  628 .aimsx store
+stop
+
+'********
+'* Body *
+'********
+
+cond
+  *.body 20 >
+  *.nrg 500 <
+start
+  100 .fdbody store
+stop
+
+cond
+  *.body *.nrg <
+  *.nrg 1000 >
+  *.robage 2 >
+start
+  100 .strbody store
+stop
+
+'****************
+'* Adaptive Armour *
+'****************
+'1 poison
+'2 shell
+'3 + 4 slime
+
+cond
+  *.in1 *.out1 !=
+  *.in1 0 !=
+  *.out1 3 <
+  *.myeye *.refeye =
+start
+  *.in1 .out1 store
+stop
+
+cond
+  *.shflav -1 =
+  *.out1 1 != 
+start
+  1 .out1 store
+stop
+
+cond
+  *.shflav -6 =
+  *.out1 2 != 
+start
+  2 .out1 store
+stop
+
+cond
+  *.numties 0 >
+  *.out1 3 <
+  *.out1 0 >
+  *.pain 100 >
+  *.genes 28 < or
+start
+  *.out1 2 add .out1 store
+stop
+
+cond
+  *.nrg 900 >
+  *.poison 1000 <
+  *.out1 1 =
+  *.out1 3 = or
+  *.robage 10 < or
+start
+  100 .strpoison store
+stop
+
+cond
+  *.nrg 900 >
+  *.shell 190 <
+  *.out1 2 =
+  *.out1 4 = or
+  *.robage 2 < or
+start
+  200 *.shell sub .mkshell store
+stop
+
+cond
+  *.nrg 900 >
+  *.slime 190 <
+  *.out1 3 =
+  *.out1 4 = or
+start
+  200 *.slime sub .mkslime store
+stop
+
+cond
+  *.numties 0 >
+  *.robage 2 >
+start
+  *.tiepres .tienum store
+  .tieval .tieloc store
+  3000 .tieval store
+  *.tiepres .deltie store
+  *.tieval 3000 div .tieloc store
+  .sharewaste inc
+stop
+
+'**********
+'* Shooting *
+'**********
+cond
+  *.waste 100 >
+start
+  *.waste .shootval store
+  -4 .shoot store
+stop
+
+cond
+  *.shdn 0 <
+  *.shdn -2 !=
+start
+  .backshot inc
+stop
+
+'cond
+'  *.fixed 0 >
+'start
+'  .fixpos dec
+'stop
+
+'cond
+'  *.eye5 20 >
+'  *.robage 2 >
+'  *.refeye *.myeye !=
+'  *.fixed 0 =
+'  *. vel 0 >
+'start
+'  1 .fixpos store
+'stop
+
+cond
+  *.refaimsx *.myaimsx != 
+  *.eye5 5 >
+  *.refnrg 1500 <
+  *.refshell 50 > or
+  *.refpoison 0 = or
+start
+  -1 .shoot store
+  10 .shootval store
+stop
+
+cond
+  *.refaimsx *.myaimsx != 
+  *.eye5 5 >
+  *.refnrg 1500 >
+  *.refshell 50 < or
+  *.refpoison 0 > or
+start
+  -6 .shoot store
+  10 .shootval store
+stop
+
+cond
+    *.venom 10 <
+start
+  10 *.venom sub 0 floor 10 ceil .strvenom store
+stop
+
+cond
+  *.shflav 0 <
+  *.shflav -2 !=
+start
+  *.shang .setaim store
+  -3 .shoot store
+  *.venom .shootval store
+  -2 .venval store
+  0 .shflav store
+stop
+
+cond
+  *.genes 28 !=
+  *.sexrepro 0 != or
+  *.mrepro 0 != or
+start
+  0 .repro store
+  0 .sexrepro store
+  0 .mrepro store
+stop
+
+cond
+  *.delgene 0 !=
+  *.shoot -2 = or
+start
+  0 .delgene store
+  0 .shoot store
+stop
+end

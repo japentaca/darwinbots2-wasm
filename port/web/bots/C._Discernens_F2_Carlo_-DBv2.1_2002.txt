@@ -1,0 +1,261 @@
+' Comisia Discernens
+' Robot evolved by Carlo
+' very primitive these days
+'
+' Robot evolved in presence of walls.
+' It's able to  tell them from food,
+' therefore it don't attacks them.
+
+
+cond
+  *40
+  25
+  >
+start
+  0
+  40
+  store
+stop
+
+cond
+  *.shdn
+  27
+  >
+start
+  0
+  .eye1
+  store
+stop
+
+cond
+  *.hitdx
+ -1
+  !=
+  *.hitdn
+  26
+  <
+  *.eye3
+  26
+  >
+  *.eye5
+  24
+  <
+  *.hitdn
+  26
+  >
+start
+  0
+  .shsx
+  store
+stop
+
+cond
+  *.dn
+  0
+  !=
+  *.dn
+  0
+  !=
+start
+  1
+  .aimdx
+  store
+stop
+
+cond
+  *.eye8
+  0
+  %=
+start
+  14
+  .shootval
+  store
+stop
+
+cond
+  *.eye7
+  0
+  !=
+  *.eye7
+  0
+  !=
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye9
+  1
+  >
+start
+  13
+  .shoot
+  store
+stop
+
+cond
+  *.shdx
+  0
+  >
+  *.shdx
+  0
+  >
+start
+  17
+  .aimsx
+  store
+stop
+
+cond
+  *.pain
+  0
+  !=
+  *.refdx
+  0
+  %=
+  *.refaimsx
+  0
+  >
+start
+  17
+  .eye8
+  store
+stop
+
+cond
+  *.eye2
+ -1
+  <
+start
+  15
+  .aimsx
+  store
+stop
+
+cond
+  *.eye2
+  0
+  <
+  *.eye2
+  1
+  <
+start
+  15
+  .nrg
+  store
+stop
+
+cond
+  *.eye2
+  0
+  <
+  *.eye2
+  1
+  <
+start
+  15
+  .nrg
+  store
+stop
+
+cond
+  *.eye1
+ -3
+  >
+  *.aimsx
+ -1
+  >
+  *.eye1
+ -3
+  >
+  *.eye1
+ -1
+  >
+start
+  13
+  .aimsx
+  store
+stop
+
+cond
+  *.refaimdx
+  0
+  !=
+  *.refaimdx
+  0
+  !=
+  *.refaimdx
+  0
+  !=
+  *.refaimdx
+  0
+  !=
+start
+ -1
+  .shoot
+  store
+  8
+  .shootval
+  store
+  10
+  .up
+  store
+stop
+
+cond
+  *.nrg
+  10000
+  >
+start
+  314
+  .aimdx
+  store
+  40
+  .repro
+  store
+stop
+
+cond
+  *.vel
+  5
+  <
+  *.refdx
+  5
+  <
+  *.vel
+  5
+  <
+  *.refdx
+  5
+  <
+start
+  100
+  *.hitup
+  store
+  .aimdx
+  store
+stop
+
+cond
+  *.vel
+  5
+  <
+  *.refdx
+  5
+  <
+  *.vel
+  5
+  <
+  *.refdx
+  5
+  <
+start
+  100
+  *.hitup
+  store
+  .aimdx
+  store
+stop
+end

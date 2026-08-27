@@ -1,0 +1,969 @@
+' Vermis Patavinus
+' (swimmer)
+'                 Carlo Comis 2002 
+'
+' A little swimming worm, able to eat and
+' reproduce. The egg develops in four cells,
+' with only the head moving to swim. A
+' complex energy movement system is
+' implemented to maintain energy balance
+' through the worm's cells.
+
+' pain - cell 98>0- in parte inseguimento 'cancellazione 86 se 88
+' perception
+
+cond
+  *.shdx
+  0
+  !=
+start
+  1
+  98
+  store
+stop
+
+cond
+  *.shsx
+  0
+  !=
+start
+  1
+  98
+  store
+stop
+
+' Pain transfer towards head
+
+cond
+  *98
+  0
+  >
+  *40
+  6
+  =
+start
+  1
+  .tienum
+  store
+  1
+  .tieval
+  store
+  98
+  .tieloc
+  store
+  0
+  98
+  store
+stop
+
+cond
+  *98
+  0
+  >
+  *40
+  14
+  =
+start
+  2
+  .tienum
+  store
+  1
+  .tieval
+  store
+  98
+  .tieloc
+  store
+  0
+  98
+  store
+stop
+
+cond
+  *98
+  0
+  >
+  *40
+  34
+  =
+start
+  4
+  .tienum
+  store
+  1
+  .tieval
+  store
+  98
+  .tieloc
+  store
+  0
+  98
+  store
+stop
+
+' feeding
+
+cond
+  *40
+  24
+  =
+  *.eye5
+  34
+  >
+start
+  -1
+  .shoot
+  store
+  3
+  .vel
+  store
+stop
+
+' food chasing
+
+cond
+  *40
+  24
+  =
+  *86
+  0
+  >
+start
+  86
+  dec
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye5
+  0
+  >
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye4
+  0
+  >
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye6
+  0
+  >
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye3
+  0
+  <
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye7
+  0
+  <
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye8
+  0
+  <
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye9
+  0
+  <
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye1
+  0
+  >
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.eye2
+  0
+  >
+start
+  86
+  inc
+stop
+
+cond
+  *40
+  24
+  =
+  *.vel
+  2
+  <
+  *.eye5
+  34
+  <
+start
+  0
+  86
+  store
+stop
+
+cond
+  *40
+  24
+  =
+  *98
+  0
+  >
+start
+  0
+  86
+  store
+  0
+  98
+  store
+stop
+
+cond
+  *40
+  24
+  =
+  *86
+  0
+  >
+  *85
+  0
+  =
+start
+  1
+  85
+  store
+  *90
+  92
+  store
+stop
+
+cond
+  *40
+  24
+  =
+  *86
+  0
+  =
+  *85
+  1
+  =
+start
+  0
+  85
+  store
+stop
+
+' energy balance- towards bottom
+
+cond
+  *.nrg
+  5000
+  >
+  *40
+  24
+  =
+start
+  4
+  .tienum
+  store
+  -1
+  .tieloc
+  store
+  100
+  .tieval
+  store
+stop
+
+cond
+  *.nrg
+  2200
+  >
+  *40
+  34
+  =
+start
+  2
+  .tienum
+  store
+  -1
+  .tieloc
+  store
+  100
+  .tieval
+  store
+stop
+
+cond
+  *.nrg
+  2200
+  >
+  *40
+  14
+  =
+start
+  1
+  .tienum
+  store
+  -1
+  .tieloc
+  store
+  100
+  .tieval
+  store
+stop
+
+' energy balance - request towards head
+
+cond
+  *.nrg
+  1600
+  <
+  *40
+  34
+  =
+start
+  2
+  .tienum
+  store
+  2
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+cond
+  *.nrg
+  1600
+  <
+  *40
+  24
+  =
+start
+  4
+  .tienum
+  store
+  4
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+cond
+  *.nrg
+  1600
+  <
+  *40
+  14
+  =
+start
+  1
+  .tienum
+  store
+  1
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+' energy balance- answer
+
+cond
+  *80
+  0
+  >
+  *.nrg
+  1599
+  >
+start
+  *80
+  .tienum
+  store
+  -1
+  .tieloc
+  store
+  100
+  .tieval
+  store
+  0
+  80
+  store
+stop
+
+' reproduction
+
+cond
+  *51
+  1
+  =
+start
+  1
+  41
+  store
+  51
+  dec
+stop
+
+cond
+  *51
+  1
+  >
+start
+  50
+  .shoot
+  store
+  1
+  .shootval
+  store
+  51
+  dec
+stop
+
+cond
+  *40
+  6
+  =
+  *.nrg
+  31000
+  >
+start
+  90
+  .mrepro
+  store
+  40
+  51
+  store
+  2
+  41
+  store
+stop
+
+' swimming
+
+cond
+  *40
+  24
+  =
+start
+  4
+  .tienum
+  store
+  *90
+  .tieang
+  store
+stop
+
+cond
+  *90
+  -150
+  <
+start
+  20
+  91
+  store
+stop
+
+cond
+  *90
+  100
+  >
+start
+  -20
+  91
+  store
+stop
+
+cond
+  *40
+  24
+  =
+  *86
+  0
+  =
+start
+  *91
+  *90
+  add
+  90
+  store
+stop
+
+' chasing objects and turning
+
+cond
+  *41
+  10
+  =
+  *.eye1
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye2
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye3
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye9
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye8
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye7
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+' eating
+
+cond
+  *41
+  0
+  =
+  *40
+  6
+  =
+start
+  1
+  41
+  store
+stop
+
+cond
+  *41
+  0
+  =
+  *40
+  14
+  =
+start
+  1
+  41
+  store
+stop
+
+cond
+  *41
+  0
+  =
+  *40
+  24
+  =
+start
+  1
+  41
+  store
+stop
+
+' embryo development: robot 1
+
+cond
+  *40
+  3
+  =
+start
+  314
+  .aimdx
+  store
+  6
+  40
+  store
+stop
+
+cond
+  *40
+  2
+  =
+start
+  1
+  .tie
+  store
+  1
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  10
+  .tieval
+  store
+stop
+
+cond
+  *40
+  1
+  =
+start
+  66
+  .repro
+  store
+  2
+  40
+  store
+stop 
+
+cond
+  *40
+  -100
+  =
+start
+  628
+  .aimsx
+  store
+  1
+  40
+  store
+stop
+
+cond
+  *40
+  -20
+  =
+  *50
+  0
+  =
+start
+  628
+  .aimsx
+  store
+  1
+  40
+  store
+stop
+
+cond
+  *40
+  1
+  <
+start
+  *40
+  1
+  sub
+  40
+  store
+stop
+
+' embryo development: robot 2
+
+cond
+  *40
+  13
+  =
+start
+  314
+  .aimdx
+  store
+  14
+  40
+  store
+stop
+
+cond
+  *40
+  12
+  =
+start
+  2
+  .tie
+  store
+  2
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  30
+  .tieval
+  store
+stop
+
+cond
+  *40
+  11
+  =
+start
+  50
+  .repro
+  store
+  12
+  40
+  store
+stop
+
+cond
+  *40
+  10
+  =
+start
+  1
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  3
+  .tieval
+  store
+  314
+  .aimdx
+  store
+  11
+  40
+  store
+stop
+
+' embryo development: robot 3
+
+cond
+  *40
+  33
+  =
+start
+  314
+  .aimdx
+  store
+  34
+  40
+  store
+stop
+
+cond
+  *40
+  32
+  =
+start
+  4
+  .tie
+  store
+  4
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  20
+  .tieval
+  store
+stop
+
+cond
+  *40
+  31
+  =
+start
+  50
+  .repro
+  store
+  32
+  40
+  store
+stop
+
+cond
+  *40
+  30
+  =
+start
+  2
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  13
+  .tieval
+  store
+  314
+  .aimdx
+  store
+  31
+  40
+  store
+stop
+
+' embryo development: robot 4
+
+cond
+  *42
+  1
+  >
+start
+  42
+  dec
+stop
+
+cond
+  *42
+  1
+  =
+start
+  42
+  dec
+  40
+  dec
+stop
+
+cond
+  *40
+  23
+  =
+start
+  314
+  .aimdx
+  store
+  30
+  42
+  store
+  25
+  40
+  store
+  4
+  91
+  store
+stop
+
+cond
+  *40
+  21
+  =
+start
+  350
+  .aimdx
+  store
+  23
+  40
+  store
+stop
+
+cond
+  *40
+  20
+  =
+start
+  4
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  33
+  .tieval
+  store
+  21
+  40
+  store
+stop
+end

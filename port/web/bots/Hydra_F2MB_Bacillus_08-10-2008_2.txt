@@ -1,0 +1,73 @@
+'Hydra
+'A multibot by Bacillus
+'Uses no steering system, instead relies on fixed cells acting as
+'pivot for other bots. Very basic in its workings, basically a
+'branching animal multi. Pretty stupid, but can get VERY nasty
+'very quickly if it finds a field of veggies.
+
+def type 990
+
+def head 1
+def main 2
+
+cond
+ *.robage 0 =
+start
+ .tie inc
+ .head .type store
+stop
+
+start
+ 500 *.body sub dup .strbody store - .fdbody store
+ 10 30 rnd *.vel sub .up store
+ 333 .out1 store
+ 333 .tout1 store
+ *.type .out2 store
+ *.type .tout2 store
+ 50 .sharenrg store
+ 50 .sharewaste store
+ *.in1 *.out1 sub sgn abs *.eye5 30 sub sgn 0 floor mult .fixpos store
+stop
+
+cond
+ *.nrg 6000 >
+ *.numties 3 <
+ *.eye5 30 <
+start
+ 50 .repro store
+ .main .type store
+stop
+
+cond
+ *.in1 *.out1 !=
+ *.eye5 30 >
+start
+ 16 .shootval store
+ *.refxpos *.refypos angle .setaim store
+ -6 .shoot store
+ *.velup 2 sub .dn store
+stop
+
+cond
+ *.in1 *.out1 =
+ *.shflav 0 =
+start
+ 314 .aimdx store
+stop
+
+cond
+ *.in1 *.out1 =
+ *.eye5 0 = or
+ *.shflav 0 !=
+start
+ *.shang .aimdx store
+ 0 .shflav store
+stop
+
+cond
+ *.type .main =
+ *.waste 100 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop

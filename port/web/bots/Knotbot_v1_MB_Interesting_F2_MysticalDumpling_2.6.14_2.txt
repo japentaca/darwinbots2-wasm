@@ -1,0 +1,37 @@
+cond
+*.robage 0 =
+start
+123 .tout1 store
+stop
+
+start
+.tie inc
+stop
+
+cond
+*.body 200 >
+*.nrg 9100 > or
+start
+50 .repro store
+stop
+
+cond
+*.tin1 *.tout1 !=
+start
+*.eyef 50 <
+*.trefxpos *.trefypos angle .setaim store
+*.refvelup 30 add .up store
+*.refveldx .dx store
+0 .fixpos store
+clearbool
+*.eyef 50 >
+-6 .shoot store
+.fixpos inc
+stop
+
+cond
+*.myup *.refup =
+*.eye5 0 = or
+start
+0 .fixpos store
+stop

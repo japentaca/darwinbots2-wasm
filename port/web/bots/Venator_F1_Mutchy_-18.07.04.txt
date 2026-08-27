@@ -1,0 +1,84 @@
+'Topic: New Bots
+'Mutchy
+
+Venator
+F1 League
+' Engage tie to non-Venator
+cond
+*.eye5 33 >
+*.refeye *.myeye !=
+start
+31 .tie store
+stop
+
+' Feed through tie
+cond 
+*.numties 0 >
+start
+31 .tienum store 
+-1000 .tieval store
+-1 .tieloc store
+'100 .sharenrg store
+stop
+
+cond
+*.slime 90 <
+start
+100 .mkslime store
+stop
+
+'gene
+cond
+*.tienum 31 !=
+*.numties 0 >
+start
+*.tienum .deltie store
+stop
+
+'gene2
+cond
+*.eye5 34 <
+start
+26 .aimdx store
+stop
+
+
+'gene run away from friends
+cond
+*.refeye *.myeye =
+*.eye5 0 >
+start
+27 .aimdx store
+1 .dn store
+stop
+
+'gene makin babies
+cond
+*.nrg 5000 >
+start
+50 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'gene no tie
+'cond
+'*.numties 0 !=
+'*.robage 1 =
+'start
+'1 .deltie store
+'stop
+
+'gene
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye5 34 <
+start
+5 *.vel sub .up store
+stop
+end

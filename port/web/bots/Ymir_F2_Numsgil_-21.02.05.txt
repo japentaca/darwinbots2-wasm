@@ -1,0 +1,358 @@
+'Ymir, AKA: dogfighter
+'Designed for 2.35
+'Version 1.1 - New conspec system to stop Umbra Draconis
+'Version 1.2 - Added Slime to wallop Deathgrip
+'Uses many of the new DNA functions and labels,
+'manages to defeat every enemy easily and quickly except:
+'1. Icarus, which it beats eventually, but some rounds may take a while (one round took 7 hours)
+'2. Helios, which it lost to 25 to 42.
+
+'our defines, so the code is a smidgen more readable
+def newvectorx 600
+def newvectory 601
+def move_coeff 80 'a constant, not a memory variable
+def bogey_threshold_distance 50 'point at which we stop chasing and start following
+def threshhold 30 'speed threshold at which we chase bogeys
+def aimdxbackup 603 'to protect against icrasus's turning shot
+def meno_age 500
+
+def IDTHING 604
+def isnotconspec 605
+
+cond
+*.IDTHING 8741 !=
+start
+8741 .IDTHING store
+stop
+
+cond
+*.eye5 0 >
+*.memloc .IDTHING !=
+start
+.IDTHING .memloc store
+stop
+
+cond
+*.memval 8741 !=
+start
+.isnotconspec inc
+stop
+
+'1=======================================
+cond
+*.robage 0 =
+start
+'we're a kid! make a tie
+.shoot .vloc store
+-2 .venval store
+.shoot .ploc store
+.tie inc
+stop
+
+'2=======================================
+'deletes ties to parents and feeding ties (should anyway)
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+'3=======================================
+
+cond
+'turn to thing in eyes
+*.eye4 *.eye6 !=
+*.isnotconspec 0 >
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+'4============================================
+'We have a bogey at 12, in the distance
+cond
+*.eye5 .bogey_threshold_distance <
+*.eye5 0 >
+*.isnotconspec 0 >
+start
+'find our new needed vector
+
+*.refveldx
+*.refvelup .threshhold add
+
+stop
+
+'5=======================================
+'we have the bogey in our sights, open fire and match his vector
+cond
+*.eye5 .bogey_threshold_distance >=
+*.isnotconspec 0 >
+*.refage 4 >
+*.robage 4 >
+*.reffixed 0 =
+start
+'if you have to ask, you'll never know :D
+'*.refeye 1 sub sgn 1 add 2 div -5 mult -1 add .shoot store
+-6 .shoot store
+
+*.refveldx
+*.refvelup
+
+stop
+
+'6=======================================
+'this is to stop 'bumping' of fixed bots (a nasty behavior bug that drained alot of energy 'really fast)
+cond
+*.eye5 .bogey_threshold_distance >=
+*.isnotconspec 0 >
+*.refage 4 >
+*.robage 4 >
+*.reffixed 0 >
+start
+'if you have to ask, you'll never know :D
+*.refeye 1 sub sgn 1 add 2 div -5 mult -1 add .shoot store
+
+*.veldx -1 mult
+*.velup -1 mult
+
+stop
+
+'7============================================
+cond
+'There's nothing here! Let's get sick and throw up, just like the teacups ride at Disneyworld
+'add more eye angle conditions so we don't pass up a new meal
+*.eye5 0 =
+*.eye6 0 = and
+*.eye4 0 = and
+*.isnotconspec 0 = or
+*.robage 20 > and
+start
+
+30 .aimsx store
+
+stop
+
+'8======================================
+
+cond
+'this gene does the actual movement
+*.eye5 0 =
+*.eye6 0 = and
+*.eye4 0 = and
+*.isnotconspec 0 = or not
+start
+'vectors are already on stack, in y over x form
+
+*.mass 125 mult 100 div mult .up store
+*.mass 125 mult 100 div mult .dx store
+stop
+
+'9=========================================
+'reproduce! Yeah
+'Only reproduces when it sees food, then throws the baby at the food
+'if its an old bot, it gets menopasal,
+cond
+*.nrg 2000 >
+*.body 100 >
+*.eye5 50 <
+*.eye5 0 >
+*.refeye 0 =
+*.robage .meno_age <
+start
+'100 *.nrg 500 div div .repro store
+25 .repro store
+stop
+
+'10=========================================
+'reproduce only if we have to
+cond
+*.body 10000 >
+*.nrg 2000 > and
+*.eye5 50 < and
+start
+40 .repro store
+stop
+
+'11========================================
+'we're a baby, do a 180
+cond
+*.robage 1 =
+start
+627 .aimsx store
+stop
+
+'12=========================================
+'get fat
+
+cond
+*.nrg 4000 >
+*.nrg *.body >
+*.robage 20 >
+*.nrg 10000 > or
+*.body 100 < or
+start
+100 .strbody store
+stop
+
+'13=========================================
+cond
+*.body 100 >
+*.nrg *.body <
+*.nrg 3000 <
+start
+100 .fdbody store
+stop
+
+'14=======================================
+cond
+*.body 100 >
+*.nrg 700 <
+start
+100 .fdbody store
+stop
+
+cond
+*.slime 200 <
+*.robage .meno_age >
+start
+200 *.slime sub .mkslime store
+stop
+
+'15==========================================
+'Poison
+'============================================
+cond
+*.poison 1000 <
+*.nrg 1000 >
+*.robage .meno_age >
+start
+200 .strpoison store
+stop
+
+'============================================
+'Venom
+'============================================
+'Possible venoms:
+'Currently using #1
+'1. shoot -2 shots
+'2. Stop making shell, or make -shell
+'3. Fix pos
+'4. Turn around alot
+'5. mrepro 50 or 99, makes the bot mutate so much it probably can't survive, would also work as a shot
+
+'16=========================================
+cond
+*.venom 1000 <
+*.nrg 3000 >
+*.robage .meno_age >
+start
+200 .strvenom store
+stop
+
+'17=========================================
+'SHELL
+'==============================================
+cond
+'protects us if we're poisoned for a while
+*.poisoned 0 >
+*.shell 100 <
+*.nrg 2000 >
+start
+100 *.shell sub .mkshell store
+stop
+
+'18==========================================
+cond
+*.refshell *.shell >
+*.refshell 200 <
+*.isnotconspec 0 >
+start
+*.refshell *.shell sub .mkshell store
+stop
+
+'19===========================================
+cond
+*.refshell 200 >
+start
+200 *.shell sub .mkshell store
+stop
+
+'20==========================================
+'Maintenance
+'============================================
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+'21=========================================
+'DEFENSE
+'===========================================
+'turn to a bot that shot us and poop out a bullet for the heck of it
+cond
+*.eye5 50 <
+*.shdn -2 != and
+*.shdn 0 != and
+*.robage 20 >
+start
+627 .aimsx store
+-6 .shoot store
+stop
+
+'22=========================================
+'They say imitation is the sincerest form of flatery
+'later change so that a venom shot that makes bot shoot -2 is stored
+cond
+*.isnotconspec 0 >
+*.shup 0 <
+*.shup -2 !=
+*.eye5 50 >
+*.venom 20 <
+*.refmulti 0 =
+start
+1 rnd .aimdx add .shoot store
+313 .shootval store
+stop
+
+'23=========================================
+cond
+*.isnotconspec 0 >
+*.shup 0 <
+*.shup -2 !=
+*.eye5 50 >
+*.venom 20 >
+start
+-3 .shoot store
+stop
+
+'24=========================================
+'defense against glacies draconis
+cond
+*.fixed 0 >
+start
+0 .fixpos store
+stop
+
+'25=========================================
+'defense against helios
+cond
+*.shoot -2 =
+start
+0 .shoot store
+stop
+
+'26=========================================
+'defense against delgene viral attacks
+cond
+*.delgene 0 >
+start
+0 .delgene store
+stop
+
+cond
+*.isnotconspec 0 >
+start
+.isnotconspec dec
+stop
+end

@@ -1,0 +1,97 @@
+''''''''''''''''''''''''  Gene:  1 Begins at position  1  '''''''''''''''''''''''
+ cond
+ *.robage 30 >
+ *.eye5 0 >
+ *68 0 =
+ start
+ *67 sgn 1 add sgn 60 store
+ -32 *.eye5 div .shootval store
+ -1 .shoot store
+ *.refxpos *.refypos angle .setaim store
+ -1 *60 mult .shoot store
+ 0 .fixpos store
+ *.refvelup 20 add *60 mult .up store
+ *.refveldx 7 div *60 mult .dx store
+ *67 1 add 67 store
+ *.pain *.pleas sub sgn 1 add sgn 1 sub abs 3 mult *64 add 64 store
+ *.pain sgn 1 sub abs 66 store
+ *0 sgn 1 sub abs *66 add sgn *64 add 64 store
+ *64 150 mod sgn 1 sub -628 mult .aimright store
+ *64 150 mod sgn 1 sub -1 mult .fixpos store
+ *.slime 50 sub sgn 1 sub sgn -7 mult 60 store
+ *.refmulti *60 mult .mkslime store
+ *.eye5 40 sub sgn 1 sub sgn -1 mult *.refvelup 61 store
+ *.up 60 store
+ 60 *0 add * .up store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  151  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  152  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ *.robage 30 >
+ *68 0 =
+ start
+ *.eye9 *.eye1 sub sgn 54 store
+ *54 130 mult .aimright store
+ *54 abs -1 add abs 5 mult .up store
+ *54 abs -1 add *.mass mult .dn store
+ *.robage -2 div .dx store
+ 10 .up store
+ *.eye6 *.eye4 sub sgn 63 store
+ *63 35 mult .aimright store
+ *.eye6 *.eye4 add sgn abs .fixpos store
+ *.pain 1 sub abs .pain store
+ *54 abs 65 store
+ *63 add *65 abs sgn 65 store
+ *65 *64 mult 64 store
+ *67 1 add 67 store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  244  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  245  '''''''''''''''''''''''
+ cond
+ *.nrg 16000 mod 0 =
+ *.mass 2 >
+ start
+ -4 .shoot store
+ *.waste .shootval store
+ 20 .strbody store
+ 20 .mkshell store
+ -40 67 store
+ 30 68 store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  273  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  274  '''''''''''''''''''''''
+ cond
+ *.robage 30 <
+ start
+ *.tiepres .deltie store
+ 500 .dx store
+ *.robage 5 sub sgn 1 add sgn 500 mult .dn store
+ *.robage 20 sub 0 floor 9 mult .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  305  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  306  '''''''''''''''''''''''
+ cond
+ *68 0 >
+ start
+ 41 .aimright store
+ 4 .repro store
+ *68 1 sub 68 store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  322  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  323  '''''''''''''''''''''''
+ cond
+ *.body *.refbody <
+ *69 20 <
+ *.robage 5 mod 0 =
+ start
+ 300 .shoot store
+ 50 .shootval store
+ *69 1 add 69 store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  347  '''''''''''''''''''''''

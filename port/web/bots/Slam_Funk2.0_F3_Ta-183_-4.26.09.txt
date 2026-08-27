@@ -1,0 +1,28 @@
+def lead 987
+
+cond
+*.eye5 50 > 
+*.refeye *.myeye != and
+*.IFFF *.foe = and
+start
+*.refxpos *.refypos dist *.refvelup add *.xpos add
+*.ypos *.refvelsx add
+angle
+*.refxpos *.refypos angle add
+.setaim store
+*.refxpos *.refypos dist 30 sub 500 div *.maxvel mult *.refvel *.vel *.refeye sgn mult sub 1 mult add .up store
+*.refveldx .dx store
+*.eyef *.refveldx 400 mult *.refbody div 4 add > 
+-6 .shoot store
+28 .shootval store
+*.refnrg *.refbody <
+*.refpoison *.refshell < or
+-1 .shoot store
+1600 *.refvelsx 2 pow sub sqr *.xpos add
+*.ypos *.refvelsx add 
+angle .lead store
+*.refvelsx *.velsx <
+1256 *.lead sub .lead store
+dropbool
+*.lead .aimshoot store
+stop

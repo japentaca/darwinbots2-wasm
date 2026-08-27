@@ -1,0 +1,133 @@
+'Snake 0.2
+'By Spike
+'It will hunt till its seen, then will run...Also,
+'if anyone got the MGS reference then kudos. Brilliant
+'Games they were.
+'Key Functions used: Memloc | Memval
+
+
+def visible 51
+def venomcounter 52
+def virusping 53
+
+
+'Gene 1 Food Finder
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.visible 0 =
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+
+'Gene 2 Eat Food
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.visible 0 =
+start
+-4 .shootval store
+-6 .shoot store
+.venomcounter inc
+*.refvelup .up store
+stop
+
+
+'Gene 3 Venom shooting
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.visible 0 =
+*.venocounter 19 >
+start
+50 .shootval store
+-3 .shoot store
+0 .venomcounter store
+stop
+
+
+'Gene 4 Avoiding Family
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+*.visible 0 =
+start
+314 rnd .aimdx store
+stop
+
+
+'Gene 5 Reproduce
+cond
+*.nrg 5000 >
+start
+10 .repro store
+10 .repro store
+stop
+
+
+'Gene 6 Venom Creation
+cond
+ *.venom 500 <
+start
+ 50 .strvenom store
+stop
+
+
+'Gene 7 Check-Set for visual
+cond
+*.eye5 0 !=
+*.refeye *.myeye !=
+start
+504 .memloc
+*.memval .visible store
+stop
+
+
+'Gene 8 Singulise + Venomset
+cond
+*.robage 0 =
+start
+1 .tie store
+.backshot .vloc store
+1 .venval store
+stop
+
+
+'Gene 9 Singulise part 2
+cond
+*.robage 1 =
+start
+1 .deltie store
+314 .dx store
+stop
+
+
+'Gene 10 Run-away from mommy
+cond
+*.robage 2 =
+*.robage 3 = or
+start
+10 .up store
+stop
+
+
+'Gene 11 .strbody
+cond
+*.nrg 6000 =
+*.body 500 =
+start
+5 .strbody store
+stop
+
+
+'Final Gene Run-away
+cond
+*.visible 1 =
+start
+15 .dn store
+stop
+
+
+end

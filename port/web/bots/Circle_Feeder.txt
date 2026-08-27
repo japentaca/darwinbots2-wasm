@@ -1,0 +1,156 @@
+'CircleFeeder
+'
+'Will connect to two bots using ties
+'
+'Will not make a third tie to bots of its own species, but will tie to one bot of another species
+'
+'Uses sexrepro by attempting to link with bots of opposite gender
+
+
+
+
+'Define
+def friendlink1 222
+def friendlink2 223
+def foelink 304
+def gender 403
+def male 10
+def female 11
+
+'Tie opposite gender
+cond
+*.eye5 0 >
+*.in1 *.gender sub abs 1 =
+start
+1 .up store
+clearbool
+*.gender .male =
+dupbool
+-10 .shootval store
+-8 .shoot store
+*.friendlink1 0 =
+dupbool
+dupbool
+.friendlink1 .tie store
+.friendlink1 inc
+not
+*.friendlink2 0 =
+and
+dupbool
+.friendlink2 .tie store
+.friendlink2 inc
+stop
+
+
+
+
+
+'check fertilized
+cond
+*.nrg 1000 >
+*.body 200 >
+*.fertilized 0 = not
+start
+50 .sexrepro store
+stop
+
+
+
+'Tie enemy
+cond
+*.eye5 0 >
+*.in1 *.gender sub abs 1 >
+*.tie 0 =
+start
+.foelink .tie store
+stop
+
+
+'prevent unwelcome ties
+cond
+*.tiepres .friendlink1 =
+not
+*.tiepres .friendlink2 =
+not
+*.tiepres .foelink =
+not
+start
+*.tiepres .deltie store
+stop
+
+
+'adjust ties to rotate
+cond
+*.refeye 0 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.refeye 0 =
+start
+10 .aimdx store
+stop
+
+
+'set gender
+cond
+*.gender 0 =
+start
+2 rnd 1 =
+dupbool
+.male .gender store
+
+not
+.female .gender store
+
+stop
+
+
+cond
+*.nrg 2000 >
+start
+10 .strbody
+stop
+
+cond
+*.nrg 1500 <
+start
+100 .fdbody store
+stop
+
+'feed
+cond
+start
+.foelink .tienum store
+-20 .tieval store
+-1 .tieloc store
+stop
+
+
+
+'share
+cond
+start
+99 .sharenrg store
+01 .sharewaste store
+99 .shareshell store
+99 .shareslime store
+stop
+
+
+'tell gender
+cond
+*.out1 *.gender = not
+start
+*.gender .out1 store
+stop
+
+
+'If our population is too low, then allow nonsexrepro, but do a thorough prevention check
+cond
+*.totalmyspecies 10 <
+*.robage 0 >
+start
+50 .repro store
+stop

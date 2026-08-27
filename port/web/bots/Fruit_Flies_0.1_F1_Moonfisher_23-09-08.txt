@@ -1,0 +1,117 @@
+'Fruit Flies 0.1 (for DB2.43.1L)
+'By Moonfisher
+'A very simple tie feeder for F1.
+'Beats EtchII and everything else I've tried it on so far. So it should beat the current F1 league I think.
+'The reproduction gene is capped at 1000, if it's still too slow try 600-700, although that could change the results.
+'No fancy eyes or conspec or anything of that sort, just a very simple strategy.
+
+def alge 13
+def popcap 1000
+
+'-- Birth
+cond
+*.robage 0 =
+start
+.deltie inc
+314 .aimright store
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+stop
+
+'-- Reproduction
+cond
+*.totalmyspecies .popcap < '--- This is to cap the population so the fight doesn't freeze.
+start
+
+*.body 6 >
+*.nrg 80 >
+*.maxvel .dn store
+50 .repro store
+
+clearbool
+*.body 6 <=
+*.nrg 200 >
+10 .strbody store
+stop
+
+'-- Shrinking
+cond
+*.body 1 >
+start
+clearbool
+*.nrg 200 <=
+*.totalmyspecies .popcap > or
+*.body 10 mult 10 sub 0 floor .fdbody store
+stop
+
+'-- Tie feeding
+cond
+*.robage 0 >
+*.numties 0 !=
+start
+
+clearbool
+*.tmemval *.dnalen =
+*.numties 1 > or
+*.body 50 > or
+*.numties .deltie store
+
+clearbool
+*.tiepres .tienum store
+*.trefxpos *.trefypos angle .setaim store
+
+*.trefbody 20 >
+*.nrg 10 >
+*.maxvel .up store
+*.velsx .dx store
+.tieval .tieloc store
+1000 .tieval store
+.tieloc .shoot store
+-1 .shootval store
+
+clearbool
+*.trefbody 20 <=
+.tieloc .tieloc store
+-6 .tieval store
+stop
+
+'-- Hunting
+cond
+*.numties 0 =
+*.body 1 =
+*.nrg 10 >
+start
+
+clearbool
+*.eye5 0 =
+110 .aimright store
+
+clearbool
+*.eye5 0 !=
+*.memval *.dnalen =
+314 .aimright store
+
+clearbool
+*.eye5 0 !=
+*.memval *.dnalen !=
+*.refbody 10 >
+*.refshell 0 > or
+*.refxpos *.refypos angle .setaim store
+.tie inc
+*.velsx .dx store
+*.maxvel .up store
+.memloc .shoot store
+-1 .shootval store
+
+*.memval .alge =
+.fixpos .shoot store
+1 .shootval store
+stop
+
+cond
+start
+0 .fixpos *.fixpos 0 sub dup div mult store
+stop
+
+end

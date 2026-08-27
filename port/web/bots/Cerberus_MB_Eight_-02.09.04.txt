@@ -1,0 +1,312 @@
+' Cerberus (MB)   by Eight (eightland.com)
+' doggy style
+
+' poop
+cond
+*.waste 100 >
+start
+100 .shootval store
+-4 .shoot store
+stop
+
+' grow heads
+cond
+*.slime 0 =
+*45 0 =
+*.nrg 1000 >
+*.numties 3 <
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+10 .repro store
+10 .aimdx store
+0 45 store
+stop
+
+' drop baby
+cond
+*45 0 =
+*.nrg 8000 >
+*.numties 3 =
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+80 .repro store
+stop
+
+' reset single
+cond
+*45 0 >
+*.multi 0 =
+*.numties 0 =
+start
+0 45 store
+stop
+
+' make a stink
+cond
+*.robage 1 =
+*.multi 0 =
+start
+66 .out1 store
+stop
+
+' react to stink
+cond
+*.eye5 50 >
+*.in1 66 =
+*.robage 3 =
+start
+1 45 store
+stop
+
+' make tie
+cond
+*45 1 =
+start
+*45 .tie store
+45 inc
+stop
+
+' fix angles
+cond
+*.multi 0 =
+start
+628 .fixang store
+stop
+
+' solidify
+cond
+*45 2 =
+*.multi 1 =
+start
+30 .stifftie store
+200 .tielen store
+45 inc
+stop
+
+' eat
+cond
+*.eye5 30 >
+*.refup *.myup !=
+start
+-1 .shoot store
+stop
+
+' eat
+cond
+*.eye4 70 >
+*.refup *.myup !=
+start
+-1 .shoot store
+stop
+
+' eat
+cond
+*.eye6 70 >
+*.refup *.myup !=
+start
+-1 .shoot store
+stop
+
+' see friend
+cond
+*45 3 =
+*.eye5 50 >
+*.refsx *.mysx =
+start
+5 .dx store
+stop
+
+' if fixed
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+' stop if you see food
+cond
+*45 3 =
+*.multi 1 =
+*.eye1 50 >
+*.refsx *.mysx !=
+start
+1 .fixpos store
+stop
+
+' stop if you see food
+cond
+*45 3 =
+*.multi 1 =
+*.eye9 50 >
+*.refsx *.mysx !=
+start
+1 .fixpos store
+stop
+
+' stop if you see food
+cond
+*.multi 0 =
+*.eye5 50 >
+*.refsx *.mysx !=
+start
+1 .fixpos store
+stop
+
+' move toward food
+cond
+*45 3 =
+*.eye1 0 >
+*.eye1 50 <
+*.refsx *.mysx !=
+start
+5 .sx store
+stop
+
+' move toward food
+cond
+*45 3 =
+*.eye9 0 >
+*.eye9 50 <
+*.refsx *.mysx !=
+start
+5 .dx store
+stop
+
+' move
+cond
+*44 1 =
+*45 3 =
+start
+30 .up store
+stop
+
+' single move
+cond
+*44 1 =
+*45 0 =
+start
+5 .up store
+stop
+
+' make poison
+cond
+*.multi 1 =
+*44 1 =
+*.poison *.nrg <
+start
+466 .ploc store
+100 .strpoison store
+stop
+
+' enemy tie
+cond
+*.numties 3 >
+*.tiepres 3 >
+*.tiepres 2 !=
+start
+*.tiepres .deltie store
+stop
+
+' back bump
+cond
+*.hitdn 0 !=
+start
+1 .backshot store
+-1 .shoot store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shup -6 = 
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shsx -6 = 
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shdx -6 = 
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shdn -6 = 
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' store body if body low
+cond
+*.multi 1 =
+*.nrg 3000 >
+*.body 1000 <
+start
+50 .strbody store
+stop
+
+' take body if nrg low
+cond
+*.nrg 1000 <
+*.body 500 >
+start
+100 .fdbody store
+stop
+
+' share
+cond
+*44 1 =
+*45 3 =
+*.multi 1 =
+*.trefnrg *.nrg !%=
+start
+50 .sharenrg store
+stop
+
+' pulse
+cond
+*44 0 =
+start
+5 44 store
+stop
+
+' heart
+cond
+*44 0 >
+start
+44 dec
+stop
+
+
+end

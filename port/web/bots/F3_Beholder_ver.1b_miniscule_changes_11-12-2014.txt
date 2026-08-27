@@ -1,0 +1,467 @@
+cond
+*.robage 0 =
+start
+105 .eye1width store
+105 .eye2width store
+105 .eye3width store
+105 .eye4width store
+105 .eye5width store
+105 .eye6width store
+105 .eye7width store
+105 .eye8width store
+105 .eye9width store
+stop
+
+cond
+start
+ 420 *.aim sub 1256 mod .eye1dir store
+ 315 *.aim sub 1256 mod .eye2dir store
+ 210 *.aim sub 1256 mod .eye3dir store
+ 105 *.aim sub 1256 mod .eye4dir store
+   0 *.aim sub 1256 mod .eye5dir store
+-105 *.aim sub 1256 mod .eye6dir store
+-210 *.aim sub 1256 mod .eye7dir store
+-315 *.aim sub 1256 mod .eye8dir store
+-420 *.aim sub 1256 mod .eye9dir store
+stop
+
+
+'setting friend "1" or foe "0" status
+
+
+cond
+*.refeye *.myeye =
+start
+1 *.focuseye 4 add 9 mod 61 add store
+stop
+
+'eye1 specific
+
+cond
+*.eye1 *51 10 !~=
+*.eye1 *52 10 ~=
+*62 1 = and
+*.eye1 *59 10 ~=
+*69 1 = and or
+start
+1 61 store
+stop
+
+cond
+*.eye1 *51 10 !~=
+*.eye1 *52 10 !~=
+*.eye1 *59 10 !~=
+start
+0 61 store
+stop
+
+cond
+*.eye1 0 =
+start
+0 61 store
+stop
+
+'eye2 specific
+
+cond
+*.eye2 *52 10 !~=
+*.eye2 *53 10 ~=
+*63 1 = and
+*.eye2 *51 10 ~=
+*61 1 = and or
+start
+1 62 store
+stop
+
+cond
+*.eye2 *52 10 !~=
+*.eye2 *53 10 !~=
+*.eye2 *51 10 !~=
+start
+0 62 store
+stop
+
+cond
+*.eye2 0 =
+start
+0 62 store
+stop
+
+
+'eye3 specific
+
+cond
+*.eye3 *53 10 !~=
+*.eye3 *54 10 ~=
+*64 1 = and
+*.eye3 *52 10 ~=
+*62 1 = and or
+start
+1 63 store
+stop
+
+cond
+*.eye3 *53 10 !~=
+*.eye3 *54 10 !~=
+*.eye3 *52 10 !~=
+start
+0 63 store
+stop
+
+cond
+*.eye3 0 =
+start
+0 63 store
+stop
+
+'eye4 specific
+
+cond
+*.eye4 *54 10 !~=
+*.eye4 *55 10 ~=
+*65 1 = and
+*.eye4 *53 10 ~=
+*63 1 = and or
+start
+1 64 store
+stop
+
+cond
+*.eye4 *54 10 !~=
+*.eye4 *55 10 !~=
+*.eye4 *53 10 !~=
+start
+0 64 store
+stop
+
+cond
+*.eye4 0 =
+start
+0 64 store
+stop
+
+
+
+'eye5 specific
+
+cond
+*.eye5 *55 10 !~=
+*.eye5 *56 10 ~=
+*66 1 = and
+*.eye5 *54 10 ~=
+*64 1 = and or
+start
+1 65 store
+stop
+
+cond
+*.eye5 *55 10 !~=
+*.eye5 *56 10 !~=
+*.eye5 *54 10 !~=
+start
+0 65 store
+stop
+
+cond
+*.eye5 0 =
+start
+0 65 store
+stop
+
+'eye6 specific
+
+cond
+*.eye6 *56 10 !~=
+*.eye6 *57 10 ~=
+*67 1 = and
+*.eye6 *55 10 ~=
+*65 1 = and or
+start
+1 66 store
+stop
+
+cond
+*.eye6 *56 10 !~=
+*.eye6 *57 10 !~=
+*.eye6 *55 10 !~=
+start
+0 66 store
+stop
+
+cond
+*.eye6 0 =
+start
+0 66 store
+stop
+
+'eye7 specific
+
+cond
+*.eye7 *57 10 !~=
+*.eye7 *58 10 ~=
+*68 1 = and
+*.eye7 *56 10 ~=
+*66 1 = and or
+start
+1 67 store
+stop
+
+cond
+*.eye7 *57 10 !~=
+*.eye7 *58 10 !~=
+*.eye7 *56 10 !~=
+start
+0 67 store
+stop
+
+cond
+*.eye7 0 =
+start
+0 67 store
+stop
+
+'eye8 specific
+
+cond
+*.eye8 *58 10 !~=
+*.eye8 *59 10 ~=
+*69 1 = and
+*.eye8 *57 10 ~=
+*67 1 = and or
+start
+1 68 store
+stop
+
+cond
+*.eye8 *58 10 !~=
+*.eye8 *59 10 !~=
+*.eye8 *57 10 !~=
+start
+0 68 store
+stop
+
+cond
+*.eye8 0 =
+start
+0 68 store
+stop
+
+'eye9 specific
+
+cond
+*.eye9 *59 10 !~=
+*.eye9 *51 10 ~=
+*61 1 = and
+*.eye9 *58 10 ~=
+*68 1 = and or
+start
+1 69 store
+stop
+
+cond
+*.eye9 *59 10 !~=
+*.eye9 *51 10 !~=
+*.eye9 *58 10 !~=
+start
+0 69 store
+stop
+
+cond
+*.eye9 0 =
+start
+0 69 store
+stop
+
+'the focuseye is set
+
+cond
+start
+*.eye1 *61 1 sub abs mult dup
+*.eye2 *62 1 sub abs mult sub abs 
+*.eye2 *62 1 sub abs mult add add 2 div dup
+*.eye3 *63 1 sub abs mult sub abs 
+*.eye3 *63 1 sub abs mult add add 2 div dup
+*.eye4 *64 1 sub abs mult sub abs 
+*.eye4 *64 1 sub abs mult add add 2 div dup
+*.eye5 *65 1 sub abs mult sub abs 
+*.eye5 *65 1 sub abs mult add add 2 div dup
+*.eye6 *66 1 sub abs mult sub abs 
+*.eye6 *66 1 sub abs mult add add 2 div dup
+*.eye7 *67 1 sub abs mult sub abs 
+*.eye7 *67 1 sub abs mult add add 2 div dup
+*.eye8 *68 1 sub abs mult sub abs 
+*.eye8 *68 1 sub abs mult add add 2 div dup
+*.eye9 *69 1 sub abs mult sub abs 
+*.eye9 *69 1 sub abs mult add add 2 div 
+70 store
+
+
+5 .focuseye *70 *.eye1 sub sgn abs 1 sub abs mult *61 1 sub abs mult store
+6 .focuseye *70 *.eye2 sub sgn abs 1 sub abs mult *62 1 sub abs mult store
+7 .focuseye *70 *.eye3 sub sgn abs 1 sub abs mult *63 1 sub abs mult store
+8 .focuseye *70 *.eye4 sub sgn abs 1 sub abs mult *64 1 sub abs mult store
+9 .focuseye *70 *.eye5 sub sgn abs 1 sub abs mult *65 1 sub abs mult store
+1 .focuseye *70 *.eye6 sub sgn abs 1 sub abs mult *66 1 sub abs mult store
+2 .focuseye *70 *.eye7 sub sgn abs 1 sub abs mult *67 1 sub abs mult store
+3 .focuseye *70 *.eye8 sub sgn abs 1 sub abs mult *68 1 sub abs mult store
+4 .focuseye *70 *.eye9 sub sgn abs 1 sub abs mult *69 1 sub abs mult store
+stop
+
+
+'the visual memory is stored
+
+cond
+start
+*.eye1 51 store
+*.eye2 52 store
+*.eye3 53 store
+*.eye4 54 store
+*.eye5 55 store
+*.eye6 56 store
+*.eye7 57 store
+*.eye8 58 store
+*.eye9 59 store
+stop
+
+'set and fire
+
+cond
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle -1 mult *.aim add
+.aimshoot store
+stop
+
+
+
+'movement
+
+cond
+*.eyef 70 <
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle -1 mult *.aim add
+stop
+
+
+
+cond
+*.eyef 70 <
+*.refeye *.myeye !=
+start
+1256 add 1256 mod
+
+dup sin
+2 div *.veldx sub .dx store
+
+cos
+2 div *.velup sub .up store
+
+stop
+
+'swarm behavior
+
+cond
+start
+5 *.eye1 25 sub sgn 1 sub 2 div abs mult *51 mult
+6 *.eye2 25 sub sgn 1 sub 2 div abs mult *52 mult
+7 *.eye3 25 sub sgn 1 sub 2 div abs mult *53 mult
+8 *.eye4 25 sub sgn 1 sub 2 div abs mult *54 mult
+9 *.eye5 25 sub sgn 1 sub 2 div abs mult *55 mult
+1 *.eye6 25 sub sgn 1 sub 2 div abs mult *56 mult
+2 *.eye7 25 sub sgn 1 sub 2 div abs mult *57 mult
+3 *.eye8 25 sub sgn 1 sub 2 div abs mult *58 mult
+4 *.eye9 25 sub sgn 1 sub 2 div abs mult *59 mult
+*51 *52 add *53 add *54 add *55 add *56 add *57 add
+*58 add *59 add div
+9 mod 140 mult
+
+1256 add 1256 mod
+
+dup sin
+5 div *.dx add .dx store
+
+
+cos
+5 div *.up add .up store
+
+stop
+
+
+
+'From multiply
+'______________________
+
+
+cond
+*.shflav 0 !=
+*.refpoison *.refshell <
+start
+*.shang .aimshoot store
+32 .shootval store
+-1 .shoot store
+0 .shflav store
+stop
+
+
+cond
+*.shflav 0 !=
+*.refpoison *.refshell >
+start
+*.shang .aimshoot store
+32 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+
+cond
+*.eyef 5 >
+*.refeye *.myeye !=
+*.refpoison *.refshell =>
+and
+and
+and
+start
+16 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.eyef 5 >
+*.refeye *.myeye !=
+*.refpoison *.refshell <
+start
+16 .shootval store
+-1 .shoot store
+stop
+
+cond
+*.waste 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.nrg 5000 >
+start
+50 .repro store
+100 .strbody store
+stop
+
+cond
+*.nrg 4000 >
+*.body 500 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 100 <
+start
+100 .fdbody store
+stop
+
+
+end

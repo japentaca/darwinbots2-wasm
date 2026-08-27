@@ -1,0 +1,172 @@
+'Bouncer
+'F3-league bot
+'It is a bot that bounces if it touches etches. If it comes close to walls, and even when near other boucers. I 
+
+think it could survive in a possible future coming 'special behaviour league' it works atleast decent in high 
+
+friction settings.
+'Made by Peter.
+'Made 1-11-08.
+'
+
+
+def dir 100
+def spin 951
+
+'start
+cond
+*.robage 0 =
+start
+1256 rnd .dir store
+.deltie inc
+stop
+
+cond
+*.edge 1 =
+*.aim *.dir 300 rnd sub %=
+*.refkills 1 add *.in5 =
+and
+or
+*.reftype 1 =
+or
+start
+1256 rnd .dir store
+stop
+
+'conspec
+start
+*.kills 1 add .out5 store
+stop
+
+'reproduce
+cond
+*.nrg 3000 >
+*.body 1000 >
+*.eye5 0 =
+start
+50 .repro store
+stop
+
+'turning
+cond
+*.eye5 0 =
+start
+*.eye1 0 !=
+60 .aimsx store
+*.eye9 0 !=
+-60 .aimsx store
+*.eye2 0 !=
+45 .aimsx store
+*.eye8 0 !=
+-45 .aimsx store
+*.eye3 0 !=
+30 .aimsx store
+*.eye7 0 !=
+-30 .aimsx store
+*.eye4 0 !=
+15 .aimsx store
+*.eye6 0 !=
+-15 .aimsx store
+stop
+
+'shoot
+cond
+*.refkills 1 add *.in5 !=
+*.eye5 8 >
+*.reftype 0 =
+start
+*.refkills ++ ++ 10 mult .shootval store
+*.refxpos *.refypos angle .setaim store
+-6 .shoot store
+*.refpoison *.refshell <
+-1 .shoot store
+stop
+
+'if opponent go closer
+cond
+*.reftype 0 =
+*.eye5 0 >
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+or
+*.eye5 40 <
+start
+*.refveldx .dx store
+*.refvelup *.body 10 div add .up store
+
+stop
+
+cond
+*.eye5 0 =
+*.refkills 1 add *.in5 =
+or
+*.reftype 1 =
+or
+start
+150 .aimdx store
+stop
+
+'more nrg
+cond
+*.nrg 200 <
+start
+100 .fdbody store
+stop
+
+'body
+cond
+*.body *.nrg <
+*.nrg 500 >
+start 
+100 .strbody store
+stop
+
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.vel  *.maxvel !=
+*.aim *.dir %=
+start
+.spin inc
+stop
+
+cond
+*.eye5 0 =
+*.vel  *.maxvel !=
+*.aim *.dir %=
+*.spin 150 <
+start
+*.dir .setaim store
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .aimshoot store
+-6 .shoot store
+25 .shootval store
+0 .shflav store
+stop
+
+cond
+*.spin 150 >
+start
+0 .spin store
+stop
+
+'you're too strong
+cond
+*.pain 250 >
+start
+250 .sx store
+stop

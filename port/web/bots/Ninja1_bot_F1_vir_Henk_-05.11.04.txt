@@ -1,0 +1,229 @@
+'Topic: New Bots
+' Ninja 1 bot (F1)
+' by Henk
+' uses delgene-shot-weapon
+' is immune to delgene virus
+' most of the time
+
+' Movement
+cond
+*.refeye *.myeye =
+*.robage 3 >
+start
+-300 .aimsx store
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+*.robage 3 >
+start
+130 .aimsx store
+-1 .dx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+*.robage 3 >
+start
+-130 .aimsx store
+1 .dx store
+stop
+
+cond
+*.refeye *.myeye !=
+*.numties 0 =
+*.robage 3 >
+start
+*.maxvel *.vel sub 2 div .up store
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+*.nrg 4800 <
+start
+-628 .aimsx store
+stop
+
+' Reproduction
+' ****************
+
+cond
+*60 0 >
+start
+471 .aimsx store
+0 60 store
+stop
+
+cond
+*.nrg 3500 >
+*.robage 40 >
+*.numties 0 =
+start
+-471 .aimsx store
+50 .repro store
+60 inc
+stop
+
+' INITIALISATION
+' *********************
+cond
+*.robage 0 =
+start
+.tie inc
+10 .dn store
+1 .readtie store
+.aimdx .ploc store
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+-314 .aimsx store
+stop
+
+' SPECIAL COMBAT GENES
+' ***********************************
+
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+' activate gene scanner
+' target is considered beaten when the number of genes is less
+' then 10
+cond
+*.eye5 20 >
+*.refeye *.myeye !=
+start
+.genes .memloc store
+stop
+
+' evil attack
+cond
+*.myeye *.refeye !=
+*.refup 0 >
+*.eye5 30 >
+*.memval 10 >
+start
+.delgene .shoot store
+*.memval 1 sub rnd 1 add .shootval store
+stop
+
+cond
+*.myeye *.refeye !=
+*.refup 0 >
+*.eye5 30 >
+*.memval 10 <
+start
+-1 .shoot store
+stop
+
+cond
+*.myeye *.refeye !=
+*.refup 0 =
+*.eye5 30 >
+start
+1 .tie store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefup 0 =
+start
+1 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+10 .strbody store
+-6 .shoot store
+stop
+
+cond
+*.numties 0 >
+*.trefup 0 >
+start
+1 .deltie store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefup 0 >
+start
+100 .sharenrg store
+1 .fixang store
+stop
+
+cond
+*.tiepres 1 !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.slime 35 <
+*.nrg 1000 >
+start
+40 *.slime sub .mkslime store
+stop
+
+cond
+*.waste 25 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.shdn 0 <
+*.shdn -2 !=
+start
+.backshot inc
+-6 .shoot store
+stop
+
+' right reaction gene
+cond
+*.shdx -1 =
+start
+-314 .aimsx store
+-1 .shoot store
+stop
+
+' Left reaction gene
+cond
+*.shsx -1 =
+start
+314 .aimsx store
+-1 .shoot store
+stop
+
+' poison
+cond
+*.nrg 3000 >
+*.poison 50 <
+start
+100 *.poison sub .strpoison store
+stop
+
+' delgene immune system. will cost energy, but will save my life
+' only works when the virus is inserted before this gene
+cond
+*.genes 25 >
+start
+0 .delgene store
+stop
+
+' END
+' ******
+end

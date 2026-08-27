@@ -1,0 +1,58 @@
+'A veg cluster that on ocassion spawns out tiny scout bots 
+'that repro with other bts of the same specie
+
+def type 21
+
+
+'Init
+cond
+*.robage 0 =
+start
+1000 rnd 50 mod 0 =
+.type inc
+stop
+
+'If I am a norm, produce chlories and spin.
+cond
+*.type 0 =
+start
+618 rnd 618 rnd add rnd 101 floor .aimsx store
+*.chlr *.light <
+100 .mkchlr store
+clearbool
+.fixpos inc
+stop
+
+'If I am a scout, go out, reduce body, ect.
+cond
+*.type 1 =
+start
+.fixpos dec
+.deltie inc
+  *.body 20 >
+  *.body 20 sub 10 mult .fdbody store 
+  *.body 20 <
+  *.nrg 300 >= and
+  100 .strbody store
+clearbool
+20 .up store
+1000 .rmchlr store
+*.eye5 0 >
+*.refxpos *.refypos angle .setaim store
+*.veldx .sx store
+*.eye5 80 >
+-8 .shoot store
+stop
+
+cond
+*.nrg 18000 >
+start
+50 .sexrepro store
+stop
+ 
+cond
+*.nrg 10000 >
+*.totalmyspecies 100 <=
+start
+50 .repro store
+stop

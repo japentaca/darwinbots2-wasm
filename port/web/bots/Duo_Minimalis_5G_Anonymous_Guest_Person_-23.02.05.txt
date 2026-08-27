@@ -1,0 +1,47 @@
+' Duo Minimalis
+'Not the best bot. But once maths can be done in conditions, it might work a bit better!
+'By the Anonomous Guest Person a.k.a. Roara.
+
+cond
+start
+  *.body *.nrg 5 div
+  *.eye5 50 sub dup abs div 1 add dup div *.refeye *.myeye div 1000 mult 1000 sub dup div mult *.shup add *.numties add 0
+  *.eye1 *.eye3 add *.eye7 add *.eye9 add *.eye5 5 mult sub *.numties 100 mult add *.refeye *.myeye div 1000 mult 1000 sub dup div 1 sub abs 200 mult add 0
+  *.maxvel 10 sub *.numties dup div 1 sub abs mult *.vel
+  .deltie *.waste dup div 1 sub abs mult inc
+  .strpoison *.pleas dup abs div mult inc
+  .ploc inc
+  .ploc *.ploc .tieval sub dup abs div mult dec
+stop
+cond
+  >
+start
+  *.maxvel *.vel sub .up store
+stop
+
+cond
+  >
+start
+  *.eye9 *.eye7 3 mult add *.eye3 3 mult *.eye1 add sub *.refeye *.myeye div 1000 mult 1000 sub dup div 1 sub abs 600 mult *.eye5 *.eye5 div mult add *.numties 1 sub abs dup div -100 mult *.eye5 *.eye5 div mult add .aimdx store
+stop
+
+cond
+  >
+start
+  -6 *.shup 893 mult .shoot add store
+  .tie *.shup -2 mult 1 add mult *.waste dup div mult inc
+  .sharewaste *.waste dup div mult inc
+stop
+
+cond
+  !%=
+start
+  *.body *.nrg 5 div sub abs .strbody *.body *.nrg 5 div sub dup abs div 1 add dup div sub store
+stop
+
+cond
+  *.nrg 10000 >
+start
+  50 .repro store
+stop
+end

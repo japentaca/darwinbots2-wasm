@@ -1,0 +1,92 @@
+'Name         :Needle paraste
+'bye        :d-EVO
+'type        :IB
+
+'a parisite that feeds of its host untill enough energy is gained to reproduce many more needle parasite
+'looks like acupuncture needles in vegies
+'not very good at combat
+
+cond
+*.robage 0 =
+start
+628 .eye5width store
+628 .aimdx store
+*.maxvel .up store
+1 .timer store
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+*.maxvel rnd 10 add .up store
+stop
+
+cond
+*.vel 5 <
+*.refeye *.myeye = and
+*.eye5 0 = or
+*.numties 0 = and
+start
+*.maxvel .up store
+stop
+
+cond
+*.numties 0 >
+start
+1 .tienum store
+200 .fixlen store
+100 .stifftie store
+*.trefeye *.myeye =
+1 .deltie store
+dropbool
+*.trefeye 0 =
+99 .sharenrg store
+.sharewaste inc
+dropbool
+*.trefeye 0 > *.trefnrg 90 mult *.nrg > and
+99 .sharenrg store
+dropbool
+*.trefeye 0 > *.trefnrg 90 mult *.nrg < and
+-1 .tieloc store
+-1000 .tieval store
+dropbool
+stop
+
+cond
+*.body 100 >
+*.timer 0 >
+start
+*.body 2 div 100 ceil .fdbody store
+stop
+
+cond
+*.nrg 5000 >
+*.timer 0 > 
+start
+100 .strbody store
+-100 .timer store
+stop
+
+cond
+*.timer 0 <
+*.nrg 20 >
+start
+100 .strbody store
+20 .repro store
+230 .aimdx store
+stop
+
+cond
+*.robage 1 !=
+*.refeye *.myeye !=
+*.eye5 50 >
+*.numties 1 <
+start
+*.refxpos *.refypos angle .setaim store
+1 .tie store
+1 .readtie store
+stop
+
+end

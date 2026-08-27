@@ -1,0 +1,52 @@
+'*************************************
+'*          Chloroplastus            *
+'*                                   *
+'*       Give this bot 40 nrg        *
+'*          from the start!          *
+'*                                   *
+'*     Adapts chloroplast levels     *
+'*     based on light intensity.     *
+'*                                   *
+'* Fun to run with day/night cycles. *
+'*                                   *
+'*************************************
+
+cond
+*.chlr 16000 <
+*.nrg 32 >
+*.daytime 1 =
+*.refxpos 0 =
+start
+1 .mkchlr store
+stop
+
+cond
+*.body 4000 <
+*.nrg 1000 >
+start
+1 .strbody store
+stop
+
+cond
+*.body 3999 >
+*.nrg 1000 >
+start
+50 .repro store
+32 .aimdx store
+stop
+
+cond
+*.refxpos 0 >
+*.chlr
+*.light <
+*.daytime 1 =
+start
+1 .mkchlr store
+stop
+
+cond
+*.daytime 0 =
+*.chlr 500 >
+start
+1 .rmchlr store
+stop

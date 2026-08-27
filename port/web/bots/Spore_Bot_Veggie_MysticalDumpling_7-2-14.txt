@@ -1,0 +1,120 @@
+'mem
+def reproduced 990
+def type 991
+def fling 992
+
+'Do to certain difficulties, vars are not defined
+'reprodced: 1- did, 0-did not
+'type- 0 is core, 1 is spore
+'Fling- spore is preparing for launch
+
+'Form bibot
+cond
+*.reproduced 0 =  
+*.robage 200 >=
+*.type 0 =
+start
+1 .timer store
+10 .repro store
+1 .tie store
+1 .reproduced store
+stop
+
+'After some time, reset .reproduced
+cond
+*.type 0 =
+*.timer 1511 =
+start
+0 .reproduced store
+stop
+
+'Smaller ones are spores
+cond
+*.robage 1 =
+*.body *.trefbody <
+start 
+1 .type store
+stop
+
+'Im a baby, so ill make a tie
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'If I have no ties and am a spore, mature to a core.
+cond
+*.type 1 =
+*.robage 10000 >=
+*.numties 0 =
+start
+0 .type store
+stop 
+
+'Fling spores. Might as well fix cores for now.
+cond
+*.type 1 =
+*.numties 1 >=
+start
+  *.timer 10000 >=
+1 .fling store
+  *.timer 10100 = 
+1 .tienum store
+32000 .fixlen store
+100 .stifftie store
+stop
+
+'Temp. fix of ties so core can move
+cond
+*.numties 0 >
+*.type 0 !=
+*.fling 0 =
+start
+1 .tienum store
+200 .fixlen store
+100 .stifftie store
+stop
+
+'Im the core- Ill fix myself if my spore is gunna fling.
+cond
+*.type 0 =
+start
+992 .tmemloc store
+*.tmemval *1 =
+1 .fixpos store
+stop
+
+'If I have no fligin' spores, ill defixpos myself
+cond
+*.type 0 =
+*.numties 0 =
+start
+0 .fixpos store
+stop
+
+'If I inherited fixpos, or i misgot it, ill defixpos myself.
+start
+*.type 1 =
+0 .fixpos store
+*.robage 0 =
+0 .fixpos store
+stop
+
+
+'Follow the core if im a spore...
+cond
+*.type 1 =
+*.numties 0 !=
+start
+*.tiepres .readtie store
+*.trefxpos *.trefypos *.setaim store
+*.trefvelscalar .up store
+stop
+
+'If I have 2 or more ties, simplify it to one tie
+cond
+*.numties 2 >=
+start
+.deltie inc
+stop

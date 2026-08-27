@@ -1,0 +1,317 @@
+'Topic: 3 cell bot  
+'Shen
+' Attempt at 3 cell life form
+' Using *50 for role assignment
+' 0 is a single bot or new child
+' 110 is 1st cell tie temp 
+' 111 is 1st cell program temp
+' 112 is 1st cell align temp
+' 120 is 2nd cell align temp 
+' 121 is 2nd cell repro temp
+' 122 is 2nd cell tie temp
+' 123 is 2nd cell program temp
+' 124 is 2nc cell 2nd tie align
+' 130 is 3rd cell align temp
+' 10 is 1st Cell
+' 20 is 2nd Cell
+' 30 is 3rd Cell
+' 1st Cell ties to Child
+cond
+*50 110 =
+start
+100 .tie store
+111 50 store
+stop
+
+' 2nd cell ties to child
+cond
+*50 122 =
+start
+200 .tie store
+123 50 store
+stop
+
+' Single Bot repros 2nd cell and becomes 1st cell tie temp
+cond
+*.eye2 20 <
+*.eye3 20 <
+*.eye4 20 <
+*.eye5 20 <
+*.eye6 20 <
+*.eye7 20 <
+*.eye8 20 <
+0 *50 =
+*.numties 0 =
+*.vel 0 =
+start
+50 .repro store
+110 50 store
+stop
+
+' 2nd cell repros 3rd cell after align
+cond
+*.multi 1 =
+*50 121 =
+*.eye2 20 <
+*.eye3 20 <
+*.eye4 20 <
+*.eye5 20 <
+*.eye6 20 <
+*.eye7 20 <
+*.eye8 20 <
+start
+50 .repro store
+122 50 store
+stop
+
+' 1st cell programs child to be 2nd cell align temp
+cond
+*.tiepres 100 =
+111 *50 =
+start
+100 .tienum store
+50 .tieloc store
+120 .tieval store
+112 50 store
+stop
+
+' 2nd cell align
+cond
+*.multi 1 =
+*50 124 =
+*.tiepres 200
+start
+200 .readtie store
+200 .tienum store
+0 .fixang store
+120 .tielen store
+35 .stifftie store
+20 50 store
+stop
+
+' 2nd cell programs 3rd cell to be 3rd cell align temp
+cond
+*.tiepres 200 =
+123 *50 =
+start
+200 .tienum store
+50 .tieloc store
+130 .tieval store
+125 50 store
+stop
+
+'1st cell align
+cond
+*.multi 1 =
+*50 112 =
+start
+100 .readtie store
+100 .tienum store
+628 .fixang store
+120 .tielen store
+35 .stifftie store
+10 50 store
+stop
+
+' 2nd cell aligns tie to 3rd cell
+cond
+*.multi 1 =
+*50 120 =
+start
+100 .readtie store
+100 .tienum store
+628 .fixang store
+120 .tielen store
+35 .stifftie store
+121 50 store
+stop
+
+' 3rd cell programs 2nd
+cond
+*50 131 =
+start
+200 .tienum store
+50 .tieloc store
+124 .tieval store
+30 50 store
+stop
+
+' 3rd cell align
+cond
+*.multi 1 =
+*50 130 =
+start
+200 .readtie store
+200 .tienum store
+628 .fixang store
+131 50 store
+stop
+
+' repro genes
+cond
+*50 30 =
+*.nrg 10000 >
+*.vel -5 >
+start
+70 .repro store
+stop
+
+'rescue bots
+cond
+*50 200 <
+*50 0 >
+*.numties 0 =
+*.robage 200 >
+start
+0 50 store
+stop
+
+cond
+*50 0 =
+*.numties 0 =
+start
+20 .aimdx store
+stop
+
+cond
+*50 20 =
+*.eye5 30 <
+*.numties 2 !=
+start
+121 50 store
+stop
+
+' -=- Head Nav -=-
+
+' - Approach Enemy -
+cond
+*.eye5 0 >
+*.eye5 40 <
+*.refeye *.myeye !=
+*.vel 5 <
+*.multi 1 =
+*50 10 =
+start
+5 .up store
+stop
+
+' - Search -
+cond
+*.eye5 0 =
+*.refeye *.myeye !=
+*.eye3 *.eye 7 =
+*.vel 5 <
+*.multi 1 =
+*50 10 =
+start
+5 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+' --==-- Distant Tracking --==--
+
+' - Wide -
+cond
+*.eye5 30 <
+*.refeye *.myeye !=
+*.eye7 *.eye3 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+*.eye7 *.eye3 sub 4 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 30 <
+*.refeye *.myeye !=
+*.eye6 *.eye4 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye6 *.eye4 sub 2 mult .aimdx store
+*.eye6 *.eye4 sub 4 div .dx store
+stop
+
+' --==-- Close Tracking --==--
+
+' - Wide -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.eye7 *.eye3 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye7 *.eye3 sub 3 div .aimdx store
+*.eye7 *.eye3 sub 8 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.eye6 *.eye4 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye6 *.eye4 sub 3 div .aimdx store
+*.eye6 *.eye4 sub 8 div .dx store
+stop
+
+' --==-- Conspecifics --==--
+
+' - Avoid Close Friend -
+cond
+*.eye5 30 >
+*.refeye *.myeye =
+*.multi 1 =
+*50 10 =
+start
+*.eye4 *.eye6 sub .aimdx store
+*.eye4 *.eye6 sub 5 div .dx store
+stop
+
+' - Ignore Distant Friend -
+cond
+*.eye5 30 <
+*.refeye *.myeye =
+*.vel 5 <
+*.multi 1 =
+*50 10 =
+start
+5 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+
+
+' - Eat -
+cond
+*.eye5 35 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+-1 .shoot store
+stop
+
+' Waste disposal
+cond
+*.waste 400 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' - Sharing -
+cond
+*.nrg *.trefnrg !%=
+*.multi 1 =
+*.robage 30 >
+start
+50 .sharenrg store
+stop
+
+
+end

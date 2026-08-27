@@ -1,0 +1,33 @@
+'Aggressive Dwarfs (F1)(MB) By Spike34884
+'Forms clusters of super-small bots which then scan the horizon for any veggies/bots then once on has found it, they all spread that way, and consume it within their mass.
+'Easily Handled Fruitflies and Bubbles in a sim, Struggled slightly on Quickdraw, Not many bots it is severely beaten by.
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+
+ cond
+ *.eye5 90 >
+ *.refeye *.myeye !=
+ start
+ 1 rnd 5 mult 6 sub .shoot store
+ *.refvelup .up store
+ stop
+
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye =
+ or
+ start
+ 314 rnd .aimright store
+ stop
+
+ cond
+ start
+ 50 .repro store
+ *.tiepres .deltie store
+ stop

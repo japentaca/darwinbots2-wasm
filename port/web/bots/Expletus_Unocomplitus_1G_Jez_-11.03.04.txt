@@ -1,0 +1,163 @@
+'Topic: Short-bots thread
+'Jez
+
+'I guess it would be called Expletus Unocomplitus or summat!
+cond
+start
+'target
+*.eye4
+*.eye8
+sub
+*.sx
+2
+mult
+add
+*.refeye
+*.myeye
+sub
+mult
+*.refeye
+*.myeye
+sub
+div
+.aimsx
+store
+'move
+*.eye5
+100
+sub
+-1
+mult
+10
+div
+*.dn
+add
+*.refeye
+7
+sub
+mult
+*.refeye
+7
+sub
+div
+*.eye5
+77
+sub
+mult
+*.eye5
+77
+sub
+div
+.up
+store
+'shoot
+-1
+*.refeye
+7
+sub
+mult
+*.refeye
+'removed instruction that prevented bot firing
+' sub
+7
+sub
+div
+*.eye5
+77
+sub
+mult
+*.eye5
+77
+sub
+div
+.shoot
+store
+'tie
+330
+*.refeye
+7
+sub
+mult
+*.refeye
+7
+sub
+div
+.tie
+store
+'makeslime
+100
+*.slime
+sub
+.mkslime
+store
+'repro
+50
+*.nrg
+10000
+div
+299
+'missing instruction (add) replaced
+add
+store
+'set tienum!
+'All unused variables removed
+' 330
+' 471
+' *.trefeye
+' 7
+' sub
+' mult
+' *.trefeye
+' 17
+' sub
+' div
+' 17
+' sub
+' div
+' mult
+' 330
+' add
+' *.numties
+' mult
+' *.numties
+' div
+'Why have I got a deltie here? Messes the bot up if removed, how is it used though??
+467
+330
+.tienum
+store
+'feed through tie
+-1
+.tieloc
+store
+-1000
+.tieval
+store
+'avoid
+104
+*.refeye
+7
+sub
+*.refeye
+7
+sub
+mult
+*.refeye
+sub
+*.refeye
+7
+sub
+mult
+mult
+6
+add
+store
+'double on very first go
+'*.robage -1 mult 1 add 50 mult *.numties -1 mult 1 add 300 mult store
+'deltie 
+'*.tiepres *.trefeye 7 sub mult *.trefeye 7 sub div *.trefeye mult *.trefeye div .deltie store
+'store poison
+'10 .strpoison store
+stop
+end
+'10 store instructions, has lost readtie and deltie,now using 11 nrg per turn

@@ -1,0 +1,240 @@
+'Topic: On biodiversity again  
+'Jerry
+
+' Jerry's first tiebot
+' Ursus_lurker
+' special features:
+' * eats herbivores (ursus_herbivoris)
+' * lurks between vegs
+' a bit like a frog
+
+'***** recognize food
+cond
+*50 1 <
+*.robage 500 >
+*.eye5 20 >
+*.refshoot 0 >
+*.refage 1000 >
+start
+50 inc
+stop
+
+'***** init tie ID
+cond
+*51 0 =
+start
+51 inc
+stop
+
+'***** survive w/o food
+cond
+*.body 5000 >
+*.nrg 500 <
+start
+1000 .fdbody store
+stop
+
+'***** good place - fix
+cond
+*.fixed 0 =
+*.depth 200 <
+*.depth 120 >
+start
+500 .fixpos store
+stop
+
+'* stacking turning values *
+'***** init stack
+cond
+start
+mult 16
+stop
+
+'***** follow bots you've seen
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+'***** follow bots you've seen
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+'***** take that navel cord
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+'***** sever that navel cord
+cond
+*.robage 1 =
+start
+.deltie inc
+mult 314
+stop
+
+'***** move to surface
+cond
+*.robage 30 =
+start
+1500 .setboy store
+30 .up store
+stop
+
+'***** dive down when mature
+cond
+*.nrg 21000 >
+*.body 7000 >
+start
+0 .fixpos store
+-500 .setboy store
+stop
+
+'***** give birth 
+cond
+*.nrg 20500 >
+*.body 7000 >
+*.depth 10000 >
+start
+25 .repro store
+mult 628
+39 .dx store
+*.robage -3 div 1500 add .setboy store
+100 .mkshell store
+stop
+
+'* apply steering *
+'***** while not fixed 
+cond
+*.fixed 0 =
+start
+.aimdx store
+stop
+
+'***** What touched me there?
+cond
+*.hitup 0 !=
+*.fixed 0 !=
+start
+.out2 inc
+mult 6 rnd 3 sub
+stop
+
+'***** What touched me there?
+cond
+*.hitdn 0 !=
+*.fixed 0 !=
+start
+.out2 inc
+mult 600
+stop
+
+'***** What touched me there?
+cond
+*.hitdx 0 !=
+*.fixed 0 !=
+start
+.out2 inc
+mult 300
+stop
+
+'***** What touched me there?
+cond
+*.hitsx 0 !=
+*.fixed 0 !=
+start
+.out2 inc
+mult -300
+stop
+
+'***** keep looking in promising directions
+cond
+*.aim 310 >
+*.eye5 0 =
+*.fixed 0 !=
+start
+1 .out2 store
+mult 150
+stop
+
+'***** keep looking in promising directions
+cond
+*.aim 1000 >
+*.eye5 0 =
+*.fixed 0 !=
+start
+1 .out2 store
+mult 250
+stop
+
+'* apply steering *
+'***** while fixed 
+cond
+*.out2 0 >
+start
+.aimdx store
+.out2 dec
+stop
+
+'***** get food
+'***** catch herbivores
+cond
+*50 1 =
+*.refup 0 !=
+start
+*51 .tie store
+50 dec
+stop
+
+'***** leave vegs alone
+cond
+*.trefup 0 =
+start
+.deltie inc
+stop
+
+'***** eat
+cond 
+*.numties 0 >
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+*51 .readtie store
+stop
+
+'***** fertilize vegs
+cond
+*.eye5 25 >
+*.waste 50 >
+*.refup 0 =
+*.refnrg 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+50 dec
+stop
+
+'***** eat the corpse of your victim
+'(doesn't work most of the time)
+cond
+*.eye5 35 >
+*.refnrg 100 <
+start
+-6 .shoot store
+stop
+
+'***** reset food flag if still set
+cond
+*50 0 >
+start
+50 dec
+stop
+
+end

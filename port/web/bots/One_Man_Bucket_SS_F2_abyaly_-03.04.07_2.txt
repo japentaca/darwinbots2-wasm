@@ -1,0 +1,399 @@
+'One Man Bucket
+'Single Store bot by abyaly
+'For version 2.43
+'03-04-07
+
+
+
+'I probably haven't optimized several of 
+'these values, but they aren't that interesting
+'
+'Memloc and value for conspec ident
+def mem 941
+def id 3211
+'Amount of waste to accumulate before expelling it
+def wasteval 1000
+'attack distance
+def eyerange 30
+'age for non-initialization actions
+'(lowering this number without removing init 
+'actions may cause strange things to happen)
+def startage 4
+'amount of shell to make
+def shellsize 300
+'amount of energy to gain before making shell
+def shellthres 700
+'eye width for eye5 placed during init.
+def eyewidth 140
+
+cond
+start
+.id
+  *.robage 0 sub abs sgn -- abs mult
+'no add for first one
+
+.id
+  *.robage 1 sub abs sgn -- abs mult
+add
+
+.id
+  *.robage 2 sub abs sgn -- abs mult
+add
+
+.mem
+  *.robage 3 sub abs sgn -- abs mult
+add
+
+.eyewidth
+	*.robage 4 sub abs sgn -- abs mult
+add
+
+99
+  *.robage .startage sub sqr sgn mult
+  *.paralyzed 0 sub sqr sgn mult
+  *.nrg 50 sub sqr sgn mult
+add
+
+*.maxvel
+  *.robage .startage sub sqr sgn mult
+  *.paralyzed 0 sub sqr sgn mult
+  *.nrg 50 sub sqr sgn -- abs mult
+add
+
+100
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn mult
+  *.nrg 500 sub sqr sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+add
+
+-4
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn mult
+  *.shootval *.waste sub abs sgn -- abs mult
+add
+
+*.waste
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn mult
+  *.shootval *.waste sub abs sgn mult
+add
+
+*.refvelup
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn -- abs mult
+add
+
+*.refxpos *.refypos angle
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn mult
+  *.robage 2 mod 1 sub abs sgn -- abs mult
+add
+
+-6
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn -- abs
+  *.robage 2 mod 1 sub abs sgn add sgn mult
+add
+
+*.refxpos *.refypos angle
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn mult
+  *.robage 2 mod 1 sub abs sgn -- abs mult
+add
+
+10
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn -- abs
+  *.robage 2 mod 1 sub abs sgn add sgn mult
+  *.refvelup -5 sub - sqr sgn -- abs mult
+add
+
+300
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.velscalar 0 sub sqr sgn
+  *.numties 0 sub abs sgn add sgn
+  *.robage 20 mod 0 sub abs sgn add sgn mult
+add
+
+100
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.velscalar 0 sub abs sgn -- abs mult
+  *.numties 0 sub abs sgn -- abs mult
+  *.robage 20 mod 0 sub abs sgn -- abs mult
+add
+
+300
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+
+100
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn -- abs mult
+  *.body 1000 sub - sqr sgn mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+
+50
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn -- abs mult
+  *.body 1000 sub - sqr sgn -- abs mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+'---------------------------------------------------
+.tie
+  *.robage 0 sub abs sgn -- abs mult
+'no add for first one
+
+.deltie
+  *.robage 1 sub abs sgn -- abs mult
+add
+
+.mem
+  *.robage 2 sub abs sgn -- abs mult
+add
+
+.memloc
+  *.robage 3 sub abs sgn -- abs mult
+add
+
+.eye5width
+	*.robage 4 sub abs sgn -- abs mult
+add
+
+.repro
+  *.robage .startage sub sqr sgn mult
+  *.paralyzed 0 sub sqr sgn mult
+  *.nrg 50 sub sqr sgn mult
+add
+
+.dn
+  *.robage .startage sub sqr sgn mult
+  *.paralyzed 0 sub sqr sgn mult
+  *.nrg 50 sub sqr sgn -- abs mult
+add
+
+.mkshell
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn mult
+  *.nrg 500 sub sqr sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+add
+
+.shoot
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn mult
+  *.shootval *.waste sub abs sgn -- abs mult
+add
+
+.shootval
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn mult
+  *.shootval *.waste sub abs sgn mult
+add
+
+.up
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn -- abs mult
+add
+
+.setaim
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn mult
+  *.robage 2 mod 1 sub abs sgn -- abs mult
+add
+
+.shoot
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refvelup 5 sub - sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn -- abs
+  *.robage 2 mod 1 sub abs sgn add sgn mult
+add
+
+.setaim
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn mult
+  *.robage 2 mod 1 sub abs sgn -- abs mult
+add
+
+.up
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn mult
+  *.eye5 .eyerange sub sqr sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.refage 2 sub sqr sgn mult
+  *.refxpos *.refypos angle *.aim sub abs sgn -- abs
+  *.robage 2 mod 1 sub abs sgn add sgn mult
+  *.refvelup -5 sub - sqr sgn -- abs mult
+add
+
+.aimdx
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.velscalar 0 sub sqr sgn
+  *.numties 0 sub abs sgn add sgn
+  *.robage 20 mod 0 sub abs sgn add sgn mult
+add
+
+.dn
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.memval .id sub abs sgn -- abs mult
+  *.eye5 0 sub sqr sgn mult
+  *.velscalar 0 sub abs sgn -- abs mult
+  *.numties 0 sub abs sgn -- abs mult
+  *.robage 20 mod 0 sub abs sgn -- abs mult
+add
+
+.aimdx
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+
+.strbody
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn -- abs mult
+  *.body 1000 sub - sqr sgn mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+
+.repro
+  *.robage .startage sub sqr sgn mult
+  .shellsize *.shell sub sqr sgn -- abs
+  *.nrg .shellthres sub sqr sgn -- abs add sgn mult
+  *.paralyzed 0 sub abs sgn -- abs mult
+  *.waste .wasteval sub sqr sgn -- abs mult
+  *.nrg 1000 sub - sqr sgn -- abs mult
+  *.body 1000 sub - sqr sgn -- abs mult
+  *.eye5 0 sub abs sgn -- abs mult
+add
+store
+stop

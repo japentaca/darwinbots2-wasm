@@ -1,0 +1,27 @@
+'Topic: Virus
+'K0zm0
+'
+*.fixed 0 =
+start
+10 .up store
+-2 .shoot store
+50 .mrepro store
+stop
+
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*.vtimer 0 =
+start
+87 .aimdx store
+*50 .mkvirus store
+*.genes rnd 50 store
+500 .vshoot store
+1 .fixpos store
+stop
+end

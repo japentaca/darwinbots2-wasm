@@ -1,0 +1,504 @@
+'Slime Evo Mach 2.0; The Communicator: Designed from the same principle as the Slim Evo, and still 
+
+'implements the same feeder formulas as the 'previous version.
+'One great improvement is the introduction of armor, secondary weapons genes, and a finall kill all 
+
+'gene for when all goes wrong. The eye 'genes have been reduced to just three gene.
+
+'Initialize Genes
+cond
+*.robage 0 =
+*.eye5 50 <
+start
+1 .tie store
+stop
+
+'Identification Genes
+
+cond
+*.robage 0 =
+start
+5 rnd 110 store
+*110 .out1 store
+*.dnalen .out2 store
+*40 1 add 40 store
+'40 - Parental Override Value
+stop
+
+'Phase 2 of Child (aka 21 activator)
+
+cond
+*.robage 21 =
+start
+1 *40 sub 40 store
+*40 .out3 store
+1 .deltie store
+stop
+
+cond
+*.robage 21 > and
+*140 0 =
+*.nrg 4000 >
+*.body 500 >
+*.numties 0 >
+*.pleas *.numties >
+*.eyef 0 > and
+*.refeye 0 =
+start
+45 *.aim sub .setaim store
+40 .repro store
+90 *.aim add .setaim store
+stop
+
+'Store away 10% of Nrg if 9% pleasure recieved
+
+cond
+*.nrg *.pain add 2 div 1 %=
+*.body 800 <
+start
+*.nrg 10 div .strbody store
+stop
+
+'Maintain a body of 900
+
+cond
+*.nrg 1000 >
+*.body 800 <
+start
+*.nrg *.body div .strbody store
+stop
+
+'Eyef Rotator
+
+cond
+*140 0 =
+*.eye5 *.eye1 >
+*.eye5 *.eye2 >
+*.eye5 *.eye3 >
+*.eye5 *.eye4 >
+*.eye5 *.eye6 >
+*.eye5 *.eye7 >
+*.eye5 *.eye8 >
+*.eye5 *.eye9 >
+start
+0 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye4 *.eye1 >
+*.eye4 *.eye2 >
+*.eye4 *.eye3 >
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+*.eye4 *.eye7 >
+*.eye4 *.eye8 >
+*.eye4 *.eye9 >
+*.refeye 0 !=
+strt
+-1  .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye3 *.eye4 >
+*.eye3 *.eye1 >
+*.eye3 *.eye2 >
+*.eye3 *.eye6 >
+*.eye3 *.eye7 >
+*.eye3 *.eye8 >
+*.eye3 *.eye9 >
+start
+-2 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye2 *.eye1 >
+*.eye2 *.eye6 >
+*.eye2 *.eye7 >
+*.eye2 *.eye8 >
+*.eye2 *.eye9 >
+*.eye2 *.eye4 >
+*.eye2 *.eye3 >
+*.eye2 *.eye5 >
+*.refeye 0 !=
+start
+-3 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.refeye 0 !=
+start
+-4 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye6 *.eye7 >
+*.eye6 *.eye8 >
+*.eye6 *.eye9 >
+*.eye6 *.eye5 >
+*.eye6 *.eye3 >
+*.eye6 *.eye4 >
+*.eye6 *.eye2 >
+*.eye6 *.eye1 >
+*.refeye 0 !=
+start
+1 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye7 *.eye8 >
+*.eye7 *.eye9 >
+*.eye7 *.eye6 >
+*.eye7 *.eye5 >
+*.eye7 *.eye4 >
+*.eye7 *.eye3 >
+*.eye7 *.eye2 >
+*.eye7 *.eye1 >
+*.refeye 0 !=
+start
+2 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye8 *.eye9 >
+*.eye8 *.eye2 >
+*.eye8 *.eye3 >
+*.eye8 *.eye4 >
+*.eye8 *.eye5 >
+*.eye8 *.eye6 >
+*.eye8 *.eye7 >
+*.eye8 *.eye1 >
+*.refeye 0 !=
+start
+3 .focuseye store
+stop
+
+cond
+*140 0 =
+*.eye9 *.eye5 >
+*.eye9 *.eye8 >
+*.eye9 *.eye1 >
+*.eye9 *.eye4 >
+*.refeye 0 !=
+start
+4 .focuseye store
+stop
+
+
+'Tie to Algea
+
+cond
+*140 0 =
+*.eyef 50 >
+*.refeye 0 =
+*.numties 6 <
+start
+300 rnd 20 add .tie store
+0 *40 store
+75 *.aim add .setaim store
+stop
+
+'shoot enemies
+
+cond
+*140 0 =
+*.eyef 55 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.in1 *.out1 !=
+start
+*.refveldx 3 mult .aimshoot store
+*.nrg 4 div .shootval store
+-1 .shoot store
+stop
+
+'respond to shot hits.
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+16 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+'remeber birth place
+
+def xbirth 54
+def ybirth 55
+def return 56
+
+cond
+*.robage 0 =
+start
+*.xpos .xbirth store
+*.ypos .ybirth store
+stop
+
+cond
+*.pain 200 > or
+*.nrg 400 %<
+*.xpos *.xbirth !=
+*.ypos *.ybirth !=
+start
+*.recalls abs 25 mult rnd 0 = and
+*.xfood *.yfood angle .setaim store
+*.return inc
+stop
+
+'Read Ties
+
+cond
+*140 0 =
+*.numties 0 >
+*150 *.numties <
+*.multi 0 >
+149 1 =
+start
+*150 .tienum store
+*150 .readtie store
+*150 1 add 150 store
+0 149 store
+stop
+
+cond
+*.readtie *150 = 
+start
+15 .memloc store
+*.memval 76 store
+454 .memloc store
+*.memval 71 store
+463 .memloc store
+*.memval 72 store
+466 .memloc store
+*.memval 70 store
+505 .memloc store
+*.memval 73 store
+*.sharenrg .tmemloc store
+50 .tmemval store
+stop
+
+cond
+*140 0 =
+*170 *.trefnrg 1 sub<
+*.nrg 9000 <
+*.body 800 <
+*.trefeye 0 =
+*.numties 0 >
+*.waste 0 >
+*.multi 0 >
+*.trefnrg 1000 >
+*.pain 0 >
+start
+*150 .tienum store
+*.out3 1000 div *.out3 315 div add *.pain 2 mult add .tieval store
+.nrg .tieloc store
+1 .sharewaste store
+stop
+
+'Make veggie fire at enemy bot
+
+cond
+*73 40 >
+*.trefnrg 100 >
+start
+.refxpos .memloc store
+*.memval 74 store
+.refypos .memloc store
+*.memval 75 store
+*74 *75 angle 76 store
+19 .tmemloc store
+*76 .tmemval store
+cond
+*.eyef *73 >
+start
+.vel .tmemloc store
+23 .tmemval store
+.trefvel .tmemloc store
+*.vel .tmemval store
+cond
+*.eyef *73 <
+start
+.vel .memloc store
+*.memval .vel store
+*76 .setaim store
+stop
+
+'Make veggie tie to other veggies
+
+cond
+*.numties 0 > and
+*.trefeye 0 = and
+*70 1 <
+*72 *.trefeye = or
+*466 1 >
+start
+'fire tie
+330 .tmemloc store
+100 rnd 10 add .tmemval store
+stop
+
+cond
+*72 0 =
+start
+'share energy
+476 .tmemloc store
+*830 .tmemval store
+stop
+
+'cause veggie to eat enemies
+
+cond
+*.numties 0 > and
+*.trefeye 0 = and
+*70 1 <
+*72 *.trefeye != and
+*72 *.myeye !=
+140 0 = 
+start
+'locate energy info in enemy bot
+476 .tmemloc store
+*.sharenrg .temval store
+1 140 store
+stop
+
+cond
+*140 1 =
+start
+475 .tmemloc store
+*.trefnrg .tmemval store
+0 140 store
+stop
+
+'set the paramaters for the veggie, ie distance and angle
+
+cond
+*.numties 0 > and
+*.trefeye 0 = and
+*.tielen 40 != or
+*.tieang 230 !=
+start
+40 .fixlen store
+0 *.tienum add .fixang store
+40 .stifftie store
+stop
+
+'move forward
+
+cond
+*.vel *.maxvel <
+*.eyef *73 >
+start
+*.maxvel *.vel sub .up store
+stop
+
+'rotate to object
+
+cond
+*.eyef 0 >
+*.eyef 80 <
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'sever bad ties
+
+cond
+*.trefeye *.myeye %!=
+*.trefeye 0 !=
+*.numties 0 >
+*.pain 0 >
+*.nrg 10000 <
+start
+*.tiepres .tienum store
+*.nrg .tieval store
+310 .tieloc store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefeye 0 !=
+start
+*.tiepres *.tienum store
+*.trefaim *.aim sub .setaim store
+*.tiepres .deltie store
+*990 dec
+stop
+
+cond
+*.nrg 14000 <
+*.tiepres *51 !=
+*.numties 0 >
+*.trefeye *.myeye !=
+start
+*.tiepres .tienum store
+400 .tieval store
+.tieval .tieloc store
+99 .sharenrg store
+1 *.sharewaste add .sharewaste store
+stop
+
+cond
+*.nrg 14000 <
+*.multi 0 >
+*.numties 0 >
+*.trefeye 0 = or
+*.trefeye *.meye =
+start
+50 .sharenrg store
+50 .sharewaste store
+stop
+
+cond
+*.tielen 100 <
+*.multi 0 >
+*.trefeye *.myeye %=
+*.trefage *.robage > and
+*.eyef *73 >
+start
+100 .fixlen store
+45 *.refaim add .fixang store
+stop
+
+cond
+*.multi 0 >
+*.trefeye 0 =
+*.stifftie 0 =
+start
+40 .stifftie store
+stop
+
+'feed from body when hungry
+
+cond
+*.nrg 4000 <
+*.body 200 >
+*.pain 0 >
+start
+*.body *.pain div .fdbody store
+stop
+
+cond
+*70 0 >
+*149 0 !=
+start
+0 149 store
+stop
+end

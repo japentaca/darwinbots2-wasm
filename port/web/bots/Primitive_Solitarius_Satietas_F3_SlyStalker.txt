@@ -1,0 +1,147 @@
+'Primitivae Solitarius Satietas
+'Primitive Solitary Feeder
+'By: SlyStalker
+'Basic bot with a fast rate of expansion
+
+'Gene 1 Reproduction
+'Reproduces, keeping 65% nrg, and turns
+
+cond
+  *.nrg
+  4999
+  >
+start
+  15
+  .repro
+  store
+  514
+  .aimdx
+  store
+  25
+  .repro
+  store
+stop
+
+
+'Gene 2 Shooting -1 Particles
+'Shoots a stream of -1 particles forward
+
+cond
+  *.eye5
+  18
+  >
+  *.refeye *.myeye = or
+  *.body
+  *.nrg
+  >
+start
+  -1
+  .shoot
+  store
+stop
+
+
+'Gene 3 Shooting Body Particles
+'Shoots a stream of -6 particles forward
+cond
+  *.eye5
+  18
+  >
+  *.refeye *.myeye = or
+  *.body
+  *.nrg
+  <
+start
+  -1
+  .shoot
+  store
+stop
+  
+
+
+'Gene 4 Moving Closer to Prey
+'Moves robot closer to weaker prey
+
+cond
+  *.eye5
+  0
+  >
+  *.refnrg
+  *.nrg
+  <
+  *.refup
+  2
+  !=
+start
+  15
+  .up
+  store
+  -1
+  .shoot
+  store
+stop
+
+
+'Gene 5 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+'Gene 6 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+'Gene 7 Altruism Gene
+'Sharing is caring
+cond
+  *.eye5
+  100
+  =
+  *.refeye *.myeye = or
+  *.refnrg
+  500
+  <
+  *.nrg
+  1500
+  >
+start
+  -2
+  .shoot
+  store
+stop
+
+
+'Gene 8 Getting rid of tie feeders
+'Cuts any ties
+cond
+  *.numties
+  0
+  >
+start
+  *.tiepres
+  .deltie
+  store
+stop
+
+
+'Gene 9 Waste disposal
+'Shoots off excess waste. Who needs a garbage man?
+cond
+ *.waste 15 >
+start
+ -6 .shoot store
+stop
+
+
+
+end

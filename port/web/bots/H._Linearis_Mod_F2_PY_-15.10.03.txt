@@ -1,0 +1,119 @@
+'15.10.03 
+'Topic: Here is another new idea for everyone!  
+'PY
+
+'Modified version of H_Linearis
+' ***********************
+' trundle forward 
+' ****************
+cond
+start
+10 .up store
+stop
+
+'turn towards target
+'**********************
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+*.nrg 1000 >
+start
+100 .aimsx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*.nrg 1000 >
+start
+50 .aimsx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*.nrg 1000 >
+start
+50 .aimdx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+*.nrg 1000 >
+start
+100 .aimdx store
+stop
+
+'Turn away from conspecifics
+'*********************************
+cond
+*.eye5 20 >
+*.refup 1 =
+*.refaimdx 4 =
+start
+450 .aimdx store
+stop
+
+'Turn away from older robots
+'********************************
+cond
+*.eye5 80 >
+*.in2 1000 >
+start
+320 .aimdx store
+stop
+
+
+'Tag robots so that they are only fed a certain
+'number of times
+'****************************************************
+cond
+*.eye5 70 >
+*.refaimdx 4 !=
+*40 1 =
+start
+.out2 .shoot store
+*.in2 1 add .shootval store
+0 40 store
+stop
+
+'Feed robots 
+'*******************
+cond
+*.eye5 70 >
+*.refaimdx 4 !=
+*.nrg 6000 >
+*.refnrg 20000 <
+*.in2 30 <
+*40 0 =
+start
+-2 .shoot store
+1000 .shootval store
+1 40 store
+stop
+
+'Cull old robots
+'*******************
+cond
+*.eye5 60 >
+*.refaimdx 4 !=
+*.in2 25 >
+start
+-1 .shoot store
+stop
+
+'Force reproduction in unfertile robots
+'******************************************
+cond
+*.eye5 70 >
+*.refaimdx 4 !=
+*.refnrg 3000 >
+start
+.mrepro .shoot store
+50 .shootval store
+0 40 store
+stop
+
+end

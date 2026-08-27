@@ -1,0 +1,443 @@
+' Turneria Preservans
+' (G R E E N P E A C E)
+'           by John Turner 2002
+'
+' This robot is based on some really
+' interesting ideas:
+'
+' 1) It don't attacks his conspecifics
+' 2) It won't kill vegs, but take from them
+'    as much energy as it's possible
+'    without killing them.
+' 3) Pushes away competitors of other
+'    species sending them a chemical
+'    signal which forces them to move
+'    away
+
+cond
+*.refdn
+20
+>
+start
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+*.eye5
+0
+=
+start
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+  *.refdn
+  20
+  >
+  start
+  100
+  .aimdx
+  store
+stop
+
+cond
+  *40
+  200
+  >
+  start
+  1
+  40
+  store
+stop
+
+cond
+  *.eye1
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  59
+  .aimsx
+  store
+stop
+
+cond
+  *.eye2
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  46
+  .aimsx
+  store
+stop
+
+cond
+  *.eye3
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  31
+  .aimsx
+  store
+stop
+
+cond
+  *.eye4
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  16
+  .aimsx
+  store
+stop
+
+cond
+  *.eye5
+  0
+  >
+  *.eye5
+  50
+  <
+  *.refdn
+  20
+  <
+start
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  >
+  *.refshoot
+  0
+  =
+start
+  -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refshoot
+  0
+  >
+start
+  .dn
+  .shoot
+  store
+  5000
+  .shootval
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  <
+  *.nrg
+  500
+  <
+  *.refshoot
+  0
+  =
+start
+  -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  <
+  *.nrg
+  499
+  >
+start
+  200
+  .aimdx
+  store
+stop
+
+cond
+  *.eye6
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye7
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  30
+  .aimdx
+  store
+stop
+
+cond
+  *.eye8
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  45
+  .aimdx
+  store
+stop
+
+cond
+  *.eye9
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  60
+  .aimdx
+  store
+stop
+
+cond
+*.eye1
+0
+=
+*.eye2
+0
+=
+*.eye3
+0
+=
+*.eye4
+0
+=
+*.eye5
+0
+=
+*.eye7
+0
+=
+*.eye8
+0
+=
+*.eye9
+0
+=
+*40
+100
+<
+start
+  4
+  .up
+  store
+  5
+  .aimdx
+  store
+stop
+
+cond
+*.eye1
+0
+=
+*.eye2
+0
+=
+*.eye3
+0
+=
+*.eye4
+0
+=
+*.eye5
+0
+=
+*.eye7
+0
+=
+*.eye8
+0
+=
+*.eye9
+0
+=
+*40
+100
+>
+start
+  4
+  .up
+  store
+  5
+  .aimsx
+  store
+stop
+
+cond
+  *.nrg
+  10000
+  >
+start
+  400
+  .aimdx
+  store
+  20
+  .repro
+  store
+stop
+
+cond
+1
+0
+=
+start
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+stop
+end

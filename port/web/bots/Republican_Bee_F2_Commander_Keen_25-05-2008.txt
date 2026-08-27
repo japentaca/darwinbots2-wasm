@@ -1,0 +1,169 @@
+' It's a Republican Bee!
+' Named after the Republican Bees in Discworld
+' Swarm 1Beta
+' By Commander Keen
+' 23rd September 2008
+'
+' Good points:
+' Takes control of the center of the map
+' Shooting based on shell/poison
+' Can spin while moving
+'
+' Bad points:
+' Only reproduces in center
+' Doesn't use all eyes all the time
+' Doesn't use slime (shouldn't need it too much for F2 anyway, could implement in next version)
+'
+' Updated Conspec
+
+def cx 971
+def cy 972
+def feeding 50
+def badarea 51
+def enemy 55
+
+cond
+*.cx 0 =
+*.cy 0 =
+start
+4619 .cx store
+3464 .cy store
+.delgene inc
+stop
+
+cond
+*.robage 0 =
+start
+140 .eye6width store
+280 .eye7width store
+280 .eye8width store
+280 .eye9width store
+-68 .eye1dir store
+-68 .eye2dir store
+-68 .eye3dir store
+-68 .eye4dir store
+-68 .eye5dir store
+-140 .eye6dir store
+317 .eye7dir store
+634 .eye8dir store
+970 .eye9dir store
+-2 .focuseye store
+.shoot .ploc store
+.tie inc
+stop
+
+cond
+1 1 =
+start
+*.nrg 10 div *.body add *.poison sub 0 floor .strpoison store
+500 *.shell sub 0 floor .mkshell store
+*.nrg *.body 10 mult add 20 div *.body sub 1 floor .strbody store
+*.body *.nrg *.body 10 mult add 20 div sub 0 floor 30000 *.nrg sub 10 div ceil  .fdbody store
+*.tiepres .deltie store
+*.pleas *.feeding add dup 10 div sub 1 sub 0 floor .feeding store
+*.xpos 2 div *.cx >
+*.xpos 2 div .cx store
+clearbool
+*.ypos 2 div *.cy >
+*.ypos 2 div .cy store
+clearbool
+*.refshoot *.myshoot sub *.refaimdx *.myaimdx sub *.refaimsx *.myaimsx sub *.refeye *.myeye sub *.refup *.myup sub *.refdn *.mydn sub *.refsx *.mysx sub *.refdx *.mydx sub abs add abs add abs add abs add abs add abs add abs add abs .enemy store
+*.enemy 1 =
+0 .enemy store
+clearbool
+stop
+
+cond
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9 add add add add add add add add 0 =
+*.enemy 0 = or
+*.badarea 16 >=
+start
+1 *.timer 8 mod sgn sub 10 mult .up store
+1 *.timer 2 add 8 mod sgn sub 10 mult .dx store
+1 *.timer 4 add 8 mod sgn sub 10 mult .dn store
+1 *.timer 6 add 8 mod sgn sub 10 mult .sx store
+stop
+
+cond
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 add add add add 0 =
+*.enemy 0 = or
+start
+157 .aimdx store
+.badarea inc
+stop
+
+cond
+*.eye3 0 =
+*.eye4 0 !=
+start
+34 .aimdx store
+stop
+cond
+*.eye3 0 =
+*.eye2 0 !=
+start
+-34 .aimdx store
+stop
+cond
+*.eye3 0 =
+*.eye5 0 !=
+start
+68 .aimdx store
+stop
+cond
+*.eye3 0 =
+*.eye1 0 !=
+start
+-68 .aimdx store
+stop
+
+cond
+*.eyef 0 !=
+*.enemy 0 !=
+start
+'1 *.refshell sgn sub -5 mult 1 sub .shoot store
+-6 5 *.refshell sgn mult add *.refshell *.refpoison mult sgn 5 mult sub .shoot store
+*.velsx .dx store
+128 *.eyef sub *.velup sub *.veldn 2 div floor *.refvelup add .up store
+*.refxpos *.refypos angle .setaim store
+0 .badarea store
+stop
+
+cond
+*.xpos *.cx %=
+*.ypos *.cy %=
+*.nrg *.body 10 mult add 10000 >
+start
+50 .repro store
+stop
+
+cond
+*.nrg *.body 10 mult add *.totalmyspecies 1000 mult 10000 add 1000 100 mult ceil >
+*.pleas 0 floor 0 =
+*.feeding 0 =
+start
+0 .aimdx store
+*.cx *.cy angle 628 add 1256 mod .setaim store
+'0 *.maxvel *.veldn sub *.cx *.cy dist *.veldn sub ceil sub .up store
+0 *.maxvel *.veldn sub sub .up store
+*.velsx .dx store
+0 .shoot store
+stop
+
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.nrg *.body 10 mult add *.totalmyspecies 1000 mult 10000 add 1000 100 mult ceil <
+*.badarea 64 >=
+start
+*.timer 4 add 8 mod 0 =
+*.maxvel *.veldn sub .dn store
+*.timer 8 mod 0 =
+0 *.maxvel *.velup sub sub .dn store
+clearbool
+stop

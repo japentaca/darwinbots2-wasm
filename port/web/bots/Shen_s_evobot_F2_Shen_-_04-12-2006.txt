@@ -1,0 +1,75 @@
+def newmom 50
+
+' - Birth -
+cond
+*.robage 0 =
+start
+.newmom inc
+stop
+
+cond
+*.newmom 0 >
+start
+.newmom inc
+stop
+
+cond
+*.newmom 200 =
+start
+0 .newmom store
+stop
+
+cond
+*.nrg 10000 >
+start
+30 rnd 20 add .repro store
+1 .newmom store
+stop
+
+
+' - Avoid Babies -
+cond
+*.eye5 0 >
+*.newmom 0 >
+start
+400 .aimsx store
+stop
+
+
+' - Move -
+cond
+*.vel 10 <
+*.eye5 50 <
+start
+5 .up store
+40 80 rnd sub .aimsx store
+stop
+
+' - Eye -
+cond
+*.eye2 *.eye8 >
+*.eye5 0 =
+start
+100 .aimsx store
+10 .sx store
+stop
+
+' - Eye -
+cond
+*.eye8 *.eye2 >
+*.eye5 0 =
+start
+-100 .aimsx store
+-10 .sx store
+stop
+
+' - Eat -
+cond
+*.newmom 0 =
+*.eye5 40 >=
+start
+-1 .shoot store
+stop
+
+
+end

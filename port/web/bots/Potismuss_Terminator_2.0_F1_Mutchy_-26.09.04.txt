@@ -1,0 +1,159 @@
+'Topic: New Bots
+'Mutchy
+'Potissimus Terminator 2.0
+'modified by PY
+
+'gene far left eye
+cond
+*.eye1 *.eye5 >
+*.eye5 *.eye5 =
+start
+mult -104
+stop
+
+'gene far right eye
+cond
+*.eye9 *.eye5 >
+start
+mult 104
+stop
+
+'gene middle left eye
+cond
+*.eye3 *.eye5 >
+start
+mult -52
+stop
+
+'gene middle right eye
+cond
+*.eye7 *.eye5 >
+start
+mult 52
+stop
+
+'gene fire!
+cond
+*.eye5 71 !=
+*.eye5 40 >
+*.refeye *.myeye !=
+*.robage 0 >
+start
+-1 .shoot store
+stop
+
+'gene makin babies .new condition of eye5 = 0 from PY
+cond
+*.nrg 2500 >
+*.eye5 0 =
+start
+50 .repro store
+0 .shoot store
+stop
+
+
+'gene im not lazy?
+cond
+*.vel 30 <
+*.refeye *.myeye !=
+*.numties 0 =
+start
+30 *.vel sub .up store
+stop
+
+
+cond
+*.robage 0 =
+start
+330 .tie store
+stop
+
+
+cond
+*.numties 0 =
+start
+0 66 store
+stop
+
+'*************new****************
+cond
+*.eye5 40 >
+*.refaimdx *.myaimdx !=
+start
+-6 .shoot store
+stop
+
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+'new gene from PY to fix position for feeding
+cond
+*50 1 =
+*.trefeye *.myeye !=
+start
+20 .tienum store
+0 .fixang store
+100 .fixlen store
+0 50 store
+stop
+
+cond
+*.multi 1 =
+start
+1 50 store
+stop
+
+'gene run away from friends
+cond
+*.refeye *.myeye =
+start
+mult -180
+stop
+
+'gene mult
+cond
+start
+.aimdx store
+stop
+
+' modified by PY
+cond
+*.eye5 28 >
+*.refeye *.myeye !=
+*.numties 0 =
+start
+20 .tie store
+20 .readtie store
+stop
+
+' delete ties to family
+cond
+*.trefeye *.myeye =
+start
+20 .deltie store
+stop
+
+cond
+*.body 2000 <
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.tiepres 0 !=
+*.numties 0 >
+*66 0 =
+start
+*.tiepres .tienum store
+20 .tieval store
+.tieval .vloc store
+1000 .venval store
+-3 .tieloc store
+stop
+
+
+end

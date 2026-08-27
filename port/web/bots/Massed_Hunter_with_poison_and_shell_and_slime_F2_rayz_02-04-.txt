@@ -1,0 +1,293 @@
+cond
+*.nrg 750 > 
+*.body 1000 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 500 <
+*.body 1 >
+start
+100 .fdbody store
+stop
+
+cond
+*.shell 100 <
+*.nrg 750 >
+start
+100 .mkshell store
+stop
+
+cond
+*.slime 100 <
+*.nrg 750 >
+start
+100 .mkslime store
+stop
+
+cond
+*.poison 100 <
+*.nrg 750 >
+start
+100 .strpoison store
+7 .ploc store
+stop
+
+cond
+start
+420 .eye1dir store
+315 .eye2dir store
+210 .eye3dir store
+105 .eye4dir store
+-105 .eye6dir store
+-210 .eye7dir store
+-315 .eye8dir store
+-420 .eye9dir store
+stop
+
+cond
+start
+105 .eye1width store
+105 .eye2width store
+105 .eye3width store
+105 .eye4width store
+105 .eye5width store
+105 .eye6width store
+105 .eye7width store
+105 .eye8width store
+105 .eye9width store
+stop
+
+cond
+start
+-4 .focuseye store
+stop
+
+cond
+*.eye1 0 >
+*.refaimsx *.myaimsx !=
+start
+560 .aimsx store
+0 .aimdx store
+stop
+
+cond
+start
+4 .focuseye store
+stop
+
+cond
+*.eye9 0 >
+*.refaimsx *.myaimsx !=
+start
+560 .aimdx store
+0 .aimsx store
+stop
+
+cond
+start
+-3 .focuseye store
+stop
+
+cond
+*.eye2 0 >
+*.refaimsx *.myaimsx !=
+start
+420 .aimsx store
+0 .aimdx store
+stop
+
+cond
+start
+3 .focuseye store
+stop
+
+cond
+*.eye8 0 >
+*.refaimsx *.myaimsx !=
+start
+420 .aimdx store
+0 .aimsx store
+stop
+
+cond
+start
+-2 .focuseye store
+stop
+cond
+*.eye3 0 >
+*.refaimsx *.myaimsx !=
+start
+280 .aimsx store
+0 .aimdx store
+stop
+
+cond
+start
+2 .focuseye store
+stop
+
+cond
+*.eye7 0 >
+*.refaimsx *.myaimsx !=
+start
+280 .aimdx store
+0 .aimsx store
+stop
+
+cond
+start
+-1 .focuseye store
+stop
+
+cond 
+*.eye4 0 >
+*.refaimsx *.myaimsx !=
+start
+140 .aimsx store
+0 .aimdx store
+stop
+
+cond
+start
+1 .focuseye store
+stop
+
+cond 
+*.eye6 0 >
+*.refaimsx *.myaimsx !=
+start
+140 .aimdx store
+0 .aimsx store
+stop
+
+cond
+start
+0 .focuseye store
+stop
+
+cond
+*.eye5 0 >
+*.refaimsx *.myaimsx !=
+*.numties 0 =
+start
+0 .aimsx store
+0 .aimdx store
+*.maxvel .up store
+1 .tie store
+0 .stifftie store
+stop
+
+cond
+*.eye5 25 >
+*.refaimsx *.myaimsx !=
+*.refnrg 0 >
+*.numties 0 =
+start
+-1 .shoot store
+4 .shootval store
+*.maxvel .up store
+stop
+
+cond
+*.eye5 25 >
+*.refaimsx *.myaimsx !=
+*.refnrg 200 <
+*.refbody 1 >
+*.numties 0 =
+start
+-6 .shoot store
+4 .shootval store
+10 .up store
+stop
+
+cond
+*.eye5 0 >
+*.refaimsx *.myaimsx !=
+*.numties 0 !=
+start
+0 .aimsx store
+0 .aimdx store
+10 .up store
+1 .tie store
+0 .stifftie store
+stop
+
+cond
+*.eye5 25 >
+*.refaimsx *.myaimsx !=
+*.refnrg 0 >
+*.numties 0 !=
+start
+-1 .shoot store
+4 .shootval store
+10 .up store
+stop
+
+cond
+*.eye5 25 >
+*.refaimsx *.myaimsx !=
+*.refnrg 200 <
+*.refbody 1 >
+*.numties 0 !=
+start
+-6 .shoot store
+4 .shootval store
+10 .up store
+stop
+
+cond
+*.eye5 0 >
+*.refaimsx *.myaimsx =
+start
+1 .tie store
+630 .aimsx store
+0 .aimdx store
+0 .stifftie store
+stop
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.numties 0 =
+start
+5 .up store
+stop
+
+cond
+*.nrg 100 <
+*.eye5 50 >
+*.refaimsx *.myaimsx =
+start
+1 .shootval store
+-2 .shoot store
+stop
+
+cond
+*.waste 100 >
+*.refaimsx *.myaimsx !=
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.nrg 1000 >
+start
+50 .repro store
+stop
+end

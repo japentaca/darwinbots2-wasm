@@ -1,0 +1,133 @@
+'Topic: Strange.... 
+'PY
+
+' Gravity Bud
+' **********
+' Use with low gravity around 1 or it will not have 
+' the power to climb up the screen
+' Use with blocked Hairy alga on non torroidal 
+' screen for best results
+
+' reproduce
+' ***********
+cond
+*.nrg 15000 >
+*.eye5 0 =
+start
+10 .repro store
+4 50 store
+stop
+
+' Initialize
+' **********
+cond
+*.robage 0 =
+start
+1 50 store
+stop
+
+' Move forward as single robot
+' *********************************
+cond
+*.vel 15 <
+*.numties 0 =
+start
+3 .up store
+stop
+
+' search for food
+' *****************
+cond
+*.eye2 *.eye8 !=
+start
+*.eye8 *.eye2 sub 3 mult .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+' Fire tie at veg
+' ****************
+cond
+*.eye5 30 >
+*.eye5 *.eye4 =
+*.eye5 *.eye6 =
+*.refeye 14 !=
+*50 0 =
+*.numties 0 =
+start
+25 .tie store
+0 .aimdx store
+1 50 store
+stop
+
+' increment counter
+' *********************
+cond
+*50 0 >
+start
+50 inc
+stop
+
+' Fix angles in robot - veg combo
+' ************************************
+cond
+*50 3 =
+'*.numties 0 !=
+start
+628 .aimdx store
+stop 
+
+' check that tie formed
+' ************************
+cond
+*50 3 =
+*.numties 0 =
+start
+0 50 store
+stop
+
+' reset counter
+' ****************
+cond
+*50 7 >
+start
+0 50 store
+stop
+
+' feed from veg
+' and
+' feed the veg with waste to fertilize it
+' ****************************************
+cond
+*.numties 0 >
+start
+25 .readtie store
+stop
+
+cond
+*.trefeye 14 !=
+*.numties 0 !=
+start
+1 .sharewaste store 
+stop
+
+cond
+*.trefeye 14 !=
+*.trefnrg 100 >
+start
+25 .tienum store
+-1 .tieloc store
+*.trefnrg 100 sub -1 mult .tieval store 
+stop 
+
+cond
+*.trefeye 14 =
+start
+25 .deltie store
+stop 
+
+end

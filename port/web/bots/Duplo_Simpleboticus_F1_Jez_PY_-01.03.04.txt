@@ -1,0 +1,126 @@
+'Topic: Formula one bots! 
+'Jez & PY
+
+'The new top of the league bot
+'Written by both Jez and PY
+'Duplo simpleboticus(T) (Duplo Obnoxious x Simplebot16)
+
+'labels are rough guide to construction
+'gene position is now different to originals
+
+' from Simplebot 
+cond
+*.eye3 *.eye5 >
+start
+mult -52
+99 inc 
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult 52
+99 inc
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult -104 
+99 inc
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult 104 
+99 inc
+stop
+
+' Gene 4. Shoot the food - identical
+cond
+*.eye5 0 >
+*.refeye 11 !=
+start
+-1 .shoot store
+'-100 .shootval store
+99 inc
+.tie inc
+stop
+
+cond
+*.numties 0 >
+*.trefeye 11 !=
+start
+.tienum inc
+.tieloc dec
+-1000 .tieval store
+stop
+
+cond
+*.numties 0 >
+*.trefeye 11 =
+start
+.tienum inc
+.deltie inc
+stop
+
+' Gene 6. Avoid conspecifics - identical
+cond
+*.refeye 11 =
+*.eye5 0 >
+start
+mult 628
+99 inc 
+stop
+
+' Gene10. Tie to parent
+cond
+*.robage 0 =
+start
+'.tie inc
+.shoot dec
+50 .repro store
+.readtie inc
+10 .dx store
+stop
+
+' Gene 5. Reproduce - identical
+cond
+*.nrg 6000 >
+*.eye5 0 =
+start
+25 .repro store
+mult 628
+.shoot dec
+stop
+
+cond
+*99 0 =
+start
+mult 78
+stop
+
+' Gene 9. rotate
+cond
+start
+.aimdx store
+100 .mkslime store
+mult 0
+stop
+
+cond
+*.refeye 11 !=
+*99 0 >
+start
+30 *.vel sub .up store
+0 99 store
+stop
+
+cond
+*.refeye 11 =
+*99 0 >
+start
+0 99 store
+stop
+end

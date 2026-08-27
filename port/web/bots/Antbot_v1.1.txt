@@ -1,0 +1,283 @@
+'Antbot v1.1
+'A simple group behaviour bot by Bacillus
+'I/O channel 1: Species conspec
+'I/O channel 2: Ant type
+'I/O channel 3: Reserved for future use of communication
+'I/O channel 4: Hive conspec
+
+'vars
+def youngqueen 0
+def queen 1
+def drone 2
+def worker 3
+def scout 4
+
+'custom memory locations
+def temp 990
+def type 991
+def queenxpos 992
+def queenypos 993
+def dumpdist 994
+def hiveid 995
+
+'Initialization
+''What type of ant am I?
+''Set eyes and conspec
+cond
+ *.robage 0 =
+start
+ 1000 rnd .temp store
+ .youngqueen *.temp sgn -- abs .type mult store
+ .drone *.temp sgn .type mult store
+ .scout *.temp 200 sub sgn 0 floor .type mult store
+ .worker *.temp 300 sub sgn 0 floor .type mult store
+
+ 1235 .out1 store
+
+ -436 .eye9dir store
+ -327 .eye8dir store
+ -218 .eye7dir store
+ -109 .eye6dir store
+  109 .eye4dir store
+  218 .eye3dir store
+  327 .eye2dir store
+  436 .eye1dir store
+ 109 .eye1width store
+ 109 .eye2width store
+ 109 .eye3width store
+ 109 .eye4width store
+ 109 .eye5width store
+ 109 .eye6width store
+ 109 .eye7width store
+ 109 .eye8width store
+ 109 .eye9width store
+stop
+
+'First generation is always a queen
+start
+ *.thisgene .delgene store
+ .youngqueen .type store
+stop
+
+'OCULUS
+'Update bot
+cond
+start
+ *.hiveid .out4 store
+ *.type .out2 store
+ *.nrg 3 div *.body sub dup .strbody store - .fdbody store
+ -4 *.eye1 sgn mult *.eye2 sgn -- abs mult *.eye3 sgn -- abs mult  *.eye4 sgn -- abs mult *.eye5 sgn 
+
+ -- abs mult *.eye6 sgn -- abs mult  *.eye7 sgn -- abs mult *.eye8 sgn -- abs mult *.eye9 sgn -- abs 
+
+ mult  4 *.eye9 sgn mult *.eye2 sgn -- abs mult *.eye3 sgn -- abs mult   *.eye4 sgn -- abs mult 
+
+*.eye5  sgn -- abs mult *.eye6 sgn -- abs mult  *.eye7 sgn -- abs mult *.eye8 sgn -- abs mult add -3 
+
+*.eye2  sgn mult  *.eye3 sgn -- abs mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult   *.eye6 sgn 
+
+-- abs   mult *.eye7 sgn -- abs mult *.eye8 sgn -- abs   mult add 3 *.eye8 sgn mult *.eye3 sgn -- 
+
+abs mult   *.eye4  sgn --   abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult *.eye7 sgn --   
+
+abs mult add -2  *.eye3 sgn mult *.eye4 sgn -- abs mult *.eye5 sgn --  abs mult *.eye6 sgn -- abs 
+
+mult *.eye7 sgn --  abs mult add 2 *.eye7   sgn mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult 
+
+*.eye6 sgn --   abs mult add -1  *.eye4 sgn mult *.eye5 sgn -- abs mult *.eye6 sgn --  abs mult add 
+
+1 *.eye6 sgn mult *.eye5   sgn --  abs mult add 0 *.eye5  sgn mult add .focuseye store
+
+12 *.type .scout sub sgn abs -- abs 3 mult ++ mult *.vel sub .up store
+*.type .queen sub sgn abs -- abs .fixpos store
+*.tiepres .tienum store
+500 rnd 500 add .dumpdist *.type .scout sub sgn abs -- abs mult store
+stop
+
+'I am a drone and should turn towards everything
+cond
+ *.eyef 0 !=
+ *.type .drone =
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+'I'm a worker/young queen, no point turning towards conspecs
+cond
+ *.eyef 0 !=
+ *.type .worker =
+ *.type .youngqueen = or
+ *.out1 *.in1 !=
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+'I am a young queen and are big and fat, so I mature
+cond
+ *.type .youngqueen =
+ *.body 10000 >
+start
+ .fixpos inc
+ .queen .type store
+ *.xpos .queenxpos store
+ *.ypos .queenypos store
+ 32000 rnd .hiveid store
+stop
+
+'I have no hive and you are a queen, I'll join yours
+cond
+ *.queenxpos 0 =
+ *.queenypos 0 =
+ *.type .queen !=
+ *.type .youngqueen !=
+ *.in2 .queen =
+start
+ *.refxpos .queenxpos store
+ *.refypos .queenypos store
+ *.in4 .hiveid store
+stop
+
+'Mature queens turn so there's enough reproduction space.
+cond
+ *.type .queen =
+start
+ 20 .aimdx store
+stop
+
+'Drones and workers feed the queen
+cond
+ *.in1 *.out1 =
+ *.in4 *.hiveid =
+ *.type .drone =
+ *.type .worker = or
+ *.in2 .queen =
+ *.nrg 500 >
+start
+ *.nrg 500 sub 1000 ceil .shootval store
+ -2 .shoot store
+stop
+
+'The queen is dead, I am a huge drone sitting in her place, I think I'll become the new queen.
+cond
+ *.type .drone =
+ *.queenxpos *.queenypos dist 15 <
+ *.in2 .queen !=
+ *.nrg 30000 >=
+start
+ .fixpos inc
+ .queen .type store
+stop
+
+'Drones harvest food from workers to bring to the queen so workers can keep harvesting
+cond
+ *.hiveid *.in4 =
+ *.type .drone =
+ *.in2 .worker =
+ *.eye5 40 >
+ *.refnrg 1000 >
+start
+ -1 .shoot store
+stop
+
+'I am a drone near a queen, but have no food, so I'll move away.
+cond
+ *.in1 *.out1 =
+ *.in2 .queen =
+ *.type .drone =
+ *.nrg 500 <=
+start
+ *.maxvel *.velup add .dn store
+stop
+
+'I am a huge Drone/Worker, better go and give some of that food I harvested to the Queen.
+cond
+ *.type .drone =
+ *.nrg 15000 > and
+ *.type .worker =
+ *.body 1000 > and or
+start
+ *.queenxpos *.queenypos angle .setaim store
+stop
+
+'I am a scout and my cargo is near the queen, I'll dump it and go find some more.
+''It's fixed, so it won't run away.
+cond
+ *.type .scout =
+ *.numties 1 =
+ *.treffixed 0 !=
+start
+ *.tiepres .deltie store
+ 314 .aimdx store
+ 20 .up store
+stop
+
+'I am a scout without cargo and see food, let's get it!
+cond
+ *.type .scout =
+ *.numties 0 =
+ *.in1 *.out1 !=
+ *.reffixed 0 =
+ *.nrg 0 >
+ *.eyef 0 >
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+'I am a scout without cargo and am close to food, so I'll tie to it.
+cond
+ *.type .scout =
+ *.in1 *.out1 !=
+ *.nrg 0 >
+ *.eye5 40 >
+ *.reffixed 0 =
+ *.numties 0 =
+start
+ .tie inc
+stop
+
+'I am a scout with cargo, better bring it back so the others can eat it.
+''Might as well take some of the spoils myself so the load isn't as heavy.
+cond
+ *.type .scout =
+ *.numties 1 =
+start
+ *.queenxpos *.queenypos angle .setaim store
+ 40 .sharenrg store
+ 1 .sharewaste store
+stop
+
+'I am a scout and my cargo is near the queen, I'll dump it and go find some more
+''Let's fix it in place so it doesn't run away.
+cond
+ *.type .scout =
+ *.numties 1 =
+ *.queenxpos *.queenypos dist *.dumpdist <
+start
+ .fixpos .tieloc store
+ .tieval inc
+stop
+
+'I'm not a scout and I see food, let's eat it!
+cond
+ *.eye5 40 >
+ *.out1 *.in1 !=
+ *.type .scout !=
+start
+ -6 .shoot store
+stop
+
+'I should really evolve a toilet...
+cond
+ *.waste 200 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+'I am a Queen, so I should really make a colony
+cond
+ *.type .queen =
+ *.nrg 5000 >
+start
+ 5 .repro store
+stop

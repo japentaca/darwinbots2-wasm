@@ -1,0 +1,151 @@
+'Spyrus
+'F3 bot by abyaly
+'This is a modification of spiral
+'to make it F3 legal and a few other things
+'For version 2.43.1L
+'Oct 18, 2008
+
+
+def spiral -15
+
+def swarmnumber 10
+
+def swarmdensity 90
+
+def id 8658
+def status 62
+def parity 63
+def percent 64 
+def ally 1
+def food 2
+def enemy 3
+
+cond
+*.robage 0 =
+start
+  .tie inc
+  140 .eye5width store
+  .id .out5 store
+  1 rnd 2 mult -- .parity store
+stop
+
+cond
+*.nrg *.body 5 mult <
+start
+*.nrg *.body 5 mult sub 2 div - .fdbody store
+stop
+
+cond
+*.nrg *.body 5 mult >
+start
+*.nrg *.body 5 mult sub 2 div .strbody store
+stop
+
+
+cond
+start
+  *.tiepres dup sgn abs .deltie mult store
+  0 .fixpos *.fixed mult store
+  100 *.totalmyspecies mult *.totalbots div .percent store
+stop
+
+cond
+  *.eye5 0 >
+start
+  .ally 
+    *.in5 .id sub sgn abs -- - mult
+  .status store
+  .food .status 
+    *.status .ally sub sgn abs mult
+    *.refshoot sgn -- - mult
+    *.refaimsx sgn -- - mult
+    *.refshell sgn -- - mult
+    *.refslime sgn -- - mult
+    *.refvenom sgn -- - mult
+    *.refkills sgn -- - mult
+    *.refeye sgn -- - mult
+    *.refup sgn -- - mult
+  store
+  .enemy .status 
+    *.status .ally sub sgn abs mult
+    *.status .food sub sgn abs mult
+  store
+stop
+
+cond
+  *.eye5 0 =
+  *.in3 0 = or
+  *.robage 2 >
+start
+  *.aim 317 sub .setaim store
+  *.robage dup 2 mod add 4 mod -- 10 mult
+  .up *.robage 2 mult 4 mod sgn 3 mult add store
+stop
+
+cond
+  *.eye5 0 >
+  *.status .ally =
+  *.in3 0 !=
+  *.robage 1 >
+start
+  *.in1 .out1 store
+  *.in2 .out2 store
+  *.in3 -- .out3 store
+  *.in1 *.in2 angle .setaim store
+  *.refvelup .swarmdensity *.eye5 sub add *.velup abs - floor .up store
+  *.refveldx .spiral *.parity mult add .dx store
+stop
+
+cond
+  *.eye5 0 >
+  *.status .ally !=
+  *.robage 1 >
+start
+  *.refxpos *.refypos angle .setaim store
+  *.refvelup 80 *.eye5 sub add *.velup abs - floor .up store
+  *.refveldx .dx store
+stop
+
+cond
+  *.eye5 0 >
+  *.status .food =
+  *.robage 1 >
+start
+  *.refxpos .out1 store
+  *.refypos .out2 store
+  .swarmnumber *.percent 10 div sub .out3 store
+stop
+
+cond
+  *.eye5 70 >
+  *.status .food =
+  *.body 33 <=
+  *.refbody 300 <= or
+start
+  -1 .shoot store
+stop
+
+cond
+  *.eye5 70 >
+  *.status .food =
+  *.body 33 >
+  *.refbody 300 >
+start
+  -6 .shoot store
+stop
+
+cond
+  *.eye5 70 >
+  *.status .enemy =
+start
+  -1 .shoot store
+  *.nrg 5 div 200 ceil .shootval store
+stop
+
+cond
+  *.robage 0 >
+  *.nrg *.body 10 mult add 300 *.percent mult 1000 floor >
+start
+  *.aim 317 add .setaim store
+  50 .repro store
+stop

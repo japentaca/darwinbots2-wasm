@@ -1,0 +1,150 @@
+' ScratchDJ
+' AKA Discus Interuptus (19)eye
+' F1 contender by Jez
+
+'deltie
+cond
+*.numties 0 !=
+*.trefeye *91 =
+start
+*90 .deltie store
+stop
+
+'avoidance
+cond
+*.refeye *91 =
+start
+mult 210
+stop
+
+'eyes
+cond
+*.eye1 *.eye5 >
+start
+mult 104 
+'99 inc
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult -104 
+'99 inc
+stop
+
+cond
+*.eye2 *.eye5 >
+start
+mult 78
+'99 inc
+stop
+
+cond
+*.eye8 *.eye5 >
+start
+mult -78
+'99 inc
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+mult 52
+'99 inc 
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult -52
+'99 inc
+stop
+
+cond
+*.eye4 *.eye5 >
+start
+mult 26
+'99 inc
+stop
+
+cond
+*.eye6 *.eye5 >
+start
+mult 26
+'99 inc
+stop
+
+'shoot tie
+cond
+*.refeye *91 !=
+*.eye5 30 >
+start
+*90 .tie store
+99 inc
+stop
+
+'shoot
+cond
+*.refeye *91 !=
+*.eye5 0 >
+*.eye5 77 !=
+start
+-1 .shoot store
+99 inc
+stop
+
+'reproduce
+cond
+*.nrg 6000 >
+start
+mult 1046
+25 .repro store
+stop
+
+'first go
+cond
+*.robage 0 =
+start
+628 mult
+50 .repro store
+1 900 rnd 90 store
+*90 .readtie store
+*90 .tie store
+19 91 store
+mult 0
+stop
+
+'feed through tie
+cond
+*.numties 0 >
+*.trefeye *91 !=
+start
+*90 .tienum store
+.tieloc dec
+-1000 .tieval store
+stop
+
+'move using *99
+cond
+*99 0 !=
+*.vel 35 <
+start
+40 *.vel sub .up store
+99 dec
+stop
+
+'reset 99 if not 0
+cond
+*99 0 !=
+start
+99 dec
+stop
+
+'turn and slime
+cond
+start
+100 .mkslime store
+.aimsx store
+'*.eye5 
+stop
+end

@@ -1,0 +1,253 @@
+'Topic: Another MultiBot  
+'Shen
+
+' Gaesum
+' Two celled Multi-bot
+
+
+'--| Reproduction loop |--
+
+' Unmake slime
+cond
+*.slime 0 >
+*.numties 0 =
+start
+*.slime *.slime *.slime add sub .mkslime store
+stop
+
+' Child ties to parent
+cond
+*.robage 0 =
+*.eye5 70 >
+start
+1 .tie store
+3 50 store
+stop
+
+' Lone bot repros its head
+cond
+*.numties 0 =
+*.eye5 40 <
+*.nrg 500 >
+start
+50 .repro store
+2 50 store
+stop
+
+' Child aligns as head
+cond
+*.multi 1 =
+*50 3 =
+start
+1 .tienum store
+628 .fixang store
+240 .fixlen store
+35 .stifftie store
+0 50 store
+stop
+
+' Parent aligns as tail
+cond
+*.multi 1 =
+*50 2 =
+start
+1 .tienum store
+0 .fixang store
+1 50 store
+stop
+
+' Rescue Lost single bot
+cond
+*.vel 2 <
+*.tiepres 0 =
+start
+20 .aimdx store
+stop
+
+' ---------------------
+' Navigation genes
+
+' Cant see anything, search pattern
+cond
+*50 0 =
+*.vel 20 <
+*.eye5 10 <
+start
+5 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+'Can see freind in distance, continue search
+cond
+*50 0 =
+*.vel 20 <
+*.eye5 10 >
+*.eye5 50 <
+*.refeye *.myeye =
+start
+5 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+'Can see food in distance, approach it
+cond
+*50 0 =
+*.vel 20 <
+*.eye5 9 >
+*.eye5 50 <
+*.refeye *.myeye !=
+start
+5 .up store
+stop
+
+' Can see freind close in front, avoid him
+cond
+*50 0 =
+*.eye5 30 >
+*.refeye *.myeye =
+start
+10 .up rnd store
+*.eye4 *.eye6 sub .aimdx store
+*.eye4 *.eye6 sub 10 div .dx store
+stop
+
+' Can see Food Close in front, eat it
+cond
+*.eye5 40 >
+*50 0 =
+*.refeye *.myeye !=
+*.multi 1 =
+start
+-1 .shoot store 4 .dn store
+stop
+
+' Nothing in front, something to the sides, turn towards it
+cond
+*.eye2 *.eye8 != 
+*.eye5 10 <
+*50 0 =
+*.multi 1 =
+start
+*.eye8 *.eye2 sub .dx store
+stop
+
+' Freind was in front, something to the sides, probably freind avoid him
+cond
+*.eye2 *.eye8 != 
+*.eye5 10 <
+*.refeye *.myeye =
+*50 0 =
+*.multi 1 =
+start
+5 .up rnd store *.eye2 *.eye8 sub 2 div .aimdx store
+*.eye2 *.eye8 sub 10 div .dx store
+stop
+
+' Enemy was in front something to sides, turn towards it
+cond
+*.eye2 *.eye8 != 
+*.eye5 10 <
+*.refeye *.myeye !=
+*50 0 =
+*.multi 1 =
+start
+*.eye8 *.eye2 sub .dx store
+stop
+
+' Enemy in front, refine aim
+cond
+*.eye4 *.eye6 != 
+*.eye5 10 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 5 div .dx store
+stop
+
+' Nothing in front, something to side, last saw an enemy so turn to it
+cond
+*.eye4 *.eye6 !=
+*.eye5 10 <
+*.refeye *.myeye !=
+*.multi 1 =
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 5 div .dx store
+stop
+
+' Tail stuck, wiggle free
+cond
+*.vel 15 <
+*50 1 =
+*.eye5 70 >
+start
+*.eye2 *.eye8 sub 10 div .dx store
+stop
+
+'------------------
+' Other stuff
+
+' Waste disposal
+cond
+*.waste 200 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Share energy with tail
+cond
+*.nrg *.trefnrg !%=
+*.multi 1 =
+*50 0 =
+start
+50 .sharenrg store
+stop
+
+' Make body if your not feeding
+cond
+*.nrg 5000 >
+*.body 1000 <
+*.eye5 30 <
+start
+100 .strbody store
+stop
+
+' Feed from body if you need energy
+cond
+*.nrg 2000 <
+*.body 50 >
+start
+100 .fdbody store
+stop
+
+' Make slime
+cond
+*.nrg 1000 >
+*.slime 190 <
+*.multi 1 =
+start
+50 .mkslime store
+stop
+
+' Make shell
+cond
+*.pain 50 >
+*.nrg 4000 >
+*.shell 50 <
+*.multi 1 =
+start
+20 .mkshell store
+stop
+
+' Start Repro loop
+cond
+*.multi 1 =
+*.nrg 8000 >
+*.eye5 30 <
+start
+1 .deltie store
+stop
+
+end

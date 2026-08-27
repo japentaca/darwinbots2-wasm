@@ -1,0 +1,96 @@
+'Topic: I need some help  
+'Dan
+
+'simple bots expanded from simplebot1 file
+'can defeat simplebot16
+'(If my version is corret)
+
+
+'********************
+'searching
+
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+
+cond
+*.eye3 *.eye5 >
+start
+mult -25 
+stop
+
+
+cond
+*.eye7 *.eye5 >
+start
+mult 25
+stop
+
+
+'********************
+'moving
+
+
+cond
+*.numties 0 =
+*.vel 30 <
+start
+30 *.vel sub 2 div .up store
+stop
+
+
+cond
+start
+.aimdx store
+stop
+
+
+'********************
+'attacking
+
+
+cond
+*.eye5 40 >
+*.refeye 10 !=
+start
+-1 .shoot store
+stop
+
+
+cond
+*.eye5 0 >
+*.refeye 9 =
+start
+mult 180 
+stop
+
+
+'********************
+'reproduction
+
+
+cond
+*40 0 >
+start
+mult 628
+50 dec store
+stop
+
+
+cond
+*.nrg 5000 >
+start
+50 .repro store
+mult 628
+40 inc stop
+end

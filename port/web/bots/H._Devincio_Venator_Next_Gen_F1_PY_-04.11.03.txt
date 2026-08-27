@@ -1,0 +1,135 @@
+'04.11.03
+'Topic: The next generation of ultimate killers  
+'PY
+
+'H_Devincio_Venator
+' *** Tie Hunter ***
+'The next generation
+'***********************
+
+
+
+'reproduce 
+'***********
+cond
+*.nrg 20000 > 
+start
+30 .repro store
+2 50 store
+stop
+
+'initialize
+'*********
+cond
+*50 2 <
+start
+9 rnd 1 add 51 store
+stop
+
+' move forward 
+'****************
+cond
+'*60 21<
+start
+*50 *.eye5 sub 10 div .up store
+*50 *.eye5 sub -10 div .dn store
+stop
+
+cond
+*50 100 <
+start
+50 inc
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 > 
+start
+-110 .aimdx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+-70 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+70 .aimdx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+110 .aimdx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye 25 =
+*.eye5 20 >
+start
+180 .aimsx store
+stop
+
+'Spin when attacked
+'*************************
+cond
+*.shdn 0 <
+*.pleas -10 <
+start
+620 .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+start
+620 .aimsx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+start
+200 rnd 100 sub .aimsx store
+stop
+
+'Tie to an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye5 *.eye4 =
+*.eye5 *.eye6 =
+*.refeye 25 !=
+*50 25 > 
+start
+*51 .tie store
+0 .aimdx store
+stop
+
+cond 
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 35 >
+*.refeye 25 !=
+start
+-1 .shoot store
+stop
+
+end

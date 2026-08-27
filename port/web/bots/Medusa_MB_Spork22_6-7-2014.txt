@@ -1,0 +1,147 @@
+'Jeffalish
+'Floats around, uses tentacles to catch food
+'Made by sammeh
+
+cond
+*971 0 =
+*53 0 =
+*.robage 1 >=
+start
+53 inc
+971 inc
+stop
+
+start
+50 *.multi mult .sharenrg store
+.dnalen .memloc store
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.robage 1 =
+start
+*.aim 628 add .setaim store
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.robage 50 mod 25 =
+*.nrg 300 >
+*.numties 2 <
+start
+50 .repro store
+.tie inc
+stop
+
+cond
+*971 0 !=
+*53 0 !=
+*.numties 4 <
+*.robage 50 mod 25 =
+start
+*.aim 314 add .setaim store
+10 .repro store
+stop
+
+cond
+*971 0 !=
+*53 0 =
+start
+*.body -- -- .fdbody 50 *.body sub sgn 0 floor -- - mult store
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.numties 2 >
+start
+*.tiepres .numtie store
+.deltie inc
+stop
+
+cond
+*971 0 !=
+*53 0 !=
+*.pleas 0 >
+start
+*.body -- -- .fdbody 2000 *.body sub sgn 0 floor -- - mult store
+stop
+
+cond
+*971 0 !=
+*53 0 !=
+*.pleas 0 <=
+*.numties 4 =
+start
+*.robage 100 mod .up store
+*.robage 1221 mod .setaim store
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.robage 100 >
+*.numties 0 =
+start
+53 inc
+stop
+
+cond
+*971 0 !=
+*53 0 =
+*.eye5 0 >
+*.refeye *.myeye !=
+*.memval *.dnalen !=
+start
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+stop
+
+'/*****proper reproduction 1
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+  'if time to reproduce store it
+  1
+  972
+  store
+stop
+
+cond
+  '/after robot reproduces it reproduces more until energy less then 3000
+  *972
+  1
+  =
+start
+  50
+  .repro
+  store
+stop
+
+'***** 2
+
+cond
+  *.nrg
+  3000
+  <
+start
+  0
+  972
+  store
+stop

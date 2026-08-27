@@ -1,0 +1,117 @@
+'Animal_Minimalis
+'By: Botsareus based on by Numsgil
+'Modified By: Sacred_Chair
+'Good for mutation sims and for
+'newbies to see how a basic bot works.
+'Contains everything necessary for it
+'to survive and reproduce.
+'Sexrepro version
+
+' Gene 1 Exploration
+cond
+ *.eye5 0 =
+start
+ 10 .up store or
+ 10 .sx store or
+ 314 rnd .aimdx store or
+ 10 .dx store or
+ 314 rnd .aimsx store
+stop
+
+' Gene 2 Refused or Finished Mating
+cond
+ *.in1 1 =
+start
+ 10 .up store or
+ 10 .sx store or
+ 314 rnd .aimdx store or
+ 10 .dx store or
+ 314 rnd .aimsx store
+stop
+
+' Gene 3 Food Hunter
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 4 Mate Finder
+cond
+ *.robage 16000 >
+ *.eye5 0 >
+ *.refeye *.myeye =
+ *.nrg 20000 >
+ *.refnrg 20000 >
+ *.daytime 1 =
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 5 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ -1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 6 Ask for Consent to Mate
+cond
+ *.robage 16000 >
+ *.eye5 50 >
+ *.refeye *.myeye =
+ *.nrg 20000 >
+ *.refnrg 20000 >
+ *.daytime 1 =
+start
+3 .out3 store
+stop
+
+'Gene 7 Consent Received, Begin Mating
+cond
+ *.robage 16000 >
+ *.eye5 50 >
+ *.refeye *.myeye =
+ *.nrg 20000 >
+ *.refnrg 20000 >
+ *.out3 3 =
+ *.in2 2 =
+start
+ -8 .shoot store
+ *.refvelup 1 add .up store or
+ 1 .in1 store and 'I changed my mind or I'm done
+ 1 .out1 store
+stop
+
+'Gene 8 Consent to Mate
+cond
+ *.in3 3 =
+start
+ 2 .out2 store
+stop
+
+' Gene 9 Avoiding Family
+cond
+ *.robage 1000 <
+ *.eye5 0 >
+ *.refeye *.myeye = or
+ *.nrg 20000 < and 'don't spin if time for sex repro
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 10 Reproduce
+cond
+ *.nrg 20000 >
+ *.out2 2 =
+ *.in2 2 =
+start
+ 10 .sexrepro store 'changed to sex repro
+stop
+
+end

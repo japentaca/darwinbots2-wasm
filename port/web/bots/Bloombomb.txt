@@ -1,0 +1,58 @@
+'*************************************
+'*            BLOOMBOMB              *
+'*         Made by Testlund          *
+'*         September 9, 2013         *
+'*                                   *
+'* Works well with colonies of algae.*
+'*    Make sure to disable vision.   *
+'*************************************
+
+cond
+*.robage 0 =
+start
+67 .memloc store
+101 67 store
+.tie inc
+stop
+
+cond
+*.refxpos 0 > and
+*.memval *67 !=
+start
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+stop
+
+cond
+*.nrg 16000 > and
+*.body 16000 <
+start
+50 .strbody store
+stop
+
+cond
+*.body 16000 > and
+*.nrg 16000 <
+start
+50 .fdbody store
+stop
+
+cond
+*.nrg *.body %=
+start
+50 .repro store
+314 rnd .aimdx store
+stop
+
+cond
+*.nrg 24000 >
+start
+314 rnd .aimdx store
+-2 .shoot store
+stop
+
+cond
+*.waste 500 >
+start
+10 .mkchlr store
+stop

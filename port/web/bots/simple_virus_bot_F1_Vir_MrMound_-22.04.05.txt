@@ -1,0 +1,64 @@
+cond
+*.nrg 1 >=
+*.myaimsx 1 !=
+start
+60 .repro store
+stop
+
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*.eye5 29 <
+*.vel 20 <
+start
+5 .up store
+stop
+
+cond
+*.eye5 0 !=
+*.refeye *.myeye =
+start
+1860 rnd .aimdx store
+stop
+
+cond
+*.eye3 *.eye7 !=
+*.eye1 *.eye9 != or
+*.eye5 35 <
+*.refeye *.myeye !=
+start
+*.eye3 *.eye1 add *.eye7 *.eye9 add sub 2 mult .aimsx store
+stop
+
+cond
+*.nrg 1000 >=
+start
+60 .repro store
+stop
+
+
+
+cond
+*.vtimer 0 =
+start
+1 .mkvirus store
+stop
+
+cond
+*.vtimer 1 >
+start
+'donothing
+stop
+
+cond
+*.vtimer 1 =
+start
+250 .vshoot store
+stop
+
+end

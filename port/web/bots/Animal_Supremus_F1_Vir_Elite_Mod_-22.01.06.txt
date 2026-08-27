@@ -1,0 +1,174 @@
+'Animal_Supremus
+
+'*********************************************
+
+' Immunity to own virus and tie to parent
+
+cond
+ *.robage 0 =
+start
+ 762 781 store
+ .tie inc
+stop
+
+' Virus coding
+
+cond
+ *.vtimer 0 =
+start
+' Make viruses
+ 3 .mkvirus store
+stop
+
+' The virus!
+
+cond
+ *781 762 !=
+start
+ *.thisgene 1 rnd 2 mult -1 add add .delgene store
+stop
+
+'*********************************************
+
+' Delete the birth tie and unfix
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond
+*.fixed 0 !=
+start
+.fixpos dec
+stop
+
+' Get closer to potential pray
+
+cond
+*.eye5 0 >
+*.eye5 50 <
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 60 add .up store
+stop
+
+' Fire ranged shots
+
+cond
+*.eye5 5 >
+*.eye5 40 <
+*.refeye *.myeye !=
+start
+-8 .shootval store
+-6 .shoot store
+stop
+
+' If I get within range of a bot
+
+' Virus
+
+cond
+*.eye5 35 >
+*.refeye *.myeye !=
+start
+100 .vshoot store
+stop
+
+' Aim
+
+cond
+*.eye5 45 >
+*.refeye *.myeye !=
+*.robage 1 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+' Shoot poisonous bots with body (-6) shots
+
+cond
+*.eye5 45 >
+*.refeye *.myeye !=
+*.refpoison 0 >
+start
+8 .shootval store
+-6 .shoot store
+*.refvelup .up store
+stop
+
+' Shoot non-poisonous bots with regular (-1) shots
+
+cond
+*.eye5 45 >
+*.refeye *.myeye !=
+*.refpoison 0 =
+start
+8 .shootval store
+-1 .shoot store
+*.refvelup .up store
+stop
+
+' If there is no pray in sight then look for some
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+' Reproduce
+
+cond
+*.nrg 1000 >
+*.body 100 >
+start
+314 rnd .aimdx store
+30 .repro store
+stop
+
+' Countermeasures
+
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+' Feed and store body
+
+cond
+*.nrg 1000 >
+start
+100 .strbody store
+stop
+cond
+*.nrg 100 <
+start
+100 .fdbody store
+stop
+
+' Dispose of waste
+
+cond
+*.waste 10 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+' Antirepliviral
+
+cond
+*.mkvirus 3 !=
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+stop
+
+end

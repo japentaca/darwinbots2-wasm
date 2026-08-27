@@ -1,0 +1,800 @@
+'#generation: 1016
+'#mutations: 570
+ *.treffixed *.ypos .out2 addstore
+ .out6 store
+ *.trefup
+ start
+ 6723 1 mod -777 | *.trefage .up addstore
+ | *369 *.body -564 .pval store
+ store
+ addstore
+ .aimleft store
+ *.body 5 5 .up addstore
+ .shoot dec
+ .fixlen store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 .up addstore
+ >> rnd >
+ 50 .repro store
+ swap dec
+ clear *388 stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  61  '''''''''''''''''''''''
+ sqr *.tin1 sqrstore
+ =
+ stop
+ mod -564 *.trefage 1 *369 *152 3 ~=
+ addstore
+ *.refvelup absstore
+ or
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  79  '''''''''''''''''''''''
+ else
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  2 Ends at position  85  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  86  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  92  '''''''''''''''''''''''
+ -118 dup -554 *.in4 *.trefage .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  4 Begins at position  101  '''''''''''''''''''''''
+ cond
+ 412 *.reftype *.in4 *.trefage .up addstore
+ | *369 .tieloc store
+ 5 .up addstore
+ 469
+''''''''''''''''''''''''  Gene:  4 Ends at position  115  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  116  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult store
+ * .sharewaste store
+ *.trefup start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  131  '''''''''''''''''''''''
+ 6723 *.tmemval *.in4 *-564 mod *.trefage .up addstore
+ | *369 *.body -1 cos *.ypos .out2 addstore
+ .out6 store
+ *.trefup
+''''''''''''''''''''''''  Gene:  6 Begins at position  151  '''''''''''''''''''''''
+ start
+ 1 mod *.body -564 .pval store
+ ~ addstore
+ | *369 5 .shoot dec
+ .fixlen store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 .up addstore
+ >> *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ .sx dec
+ 6 11581 xor
+ angle div
+''''''''''''''''''''''''  Gene:  6 Ends at position  196  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  197  '''''''''''''''''''''''
+ else
+ dropbool
+ sqrstore
+ *51 sgnstore
+ drop *.body 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  7 Ends at position  221  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  8 Begins at position  222  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  227  '''''''''''''''''''''''
+ mod -564 *.in4 *.tmemval 6746 *.tieloc *.refypos dropbool
+ sqrstore
+ .tout4 store
+ *369 drop *.body 5 1 *.trefup
+''''''''''''''''''''''''  Gene:  9 Begins at position  245  '''''''''''''''''''''''
+ start
+ 6723 *.in4 *.in4 *.tmemval 6723 *.trefage 1 dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 .up addstore
+ & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  9 Ends at position  266  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  267  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  273  '''''''''''''''''''''''
+ 1 mod -564 .sexrepro store
+ 875 ceilstore
+ >
+ stop
+ sub store
+ root -184 addstore
+ | *369 .tieloc store
+ 5 .up addstore
+ 469
+''''''''''''''''''''''''  Gene:  11 Begins at position  296  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult =
+ 299 *.trefup start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  309  '''''''''''''''''''''''
+ 6723 *.tmemval *.in4 *-564 mod *.trefage .up addstore
+ | *369 *.body -1 cos 900 *.in4 -26 455 20501 ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  12 Begins at position  334  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  340  '''''''''''''''''''''''
+ 1 mod
+''''''''''''''''''''''''  Gene:  13 Begins at position  343  '''''''''''''''''''''''
+ start
+ 6723 1 mod -777 | *.trefage .up addstore
+ | *369 *.body -564 .pval store
+ store
+ addstore
+ | *369 *.body 5 5 .up addstore
+ ~ rnd *-456 5 .shoot dec
+ .fixlen store
+ *.in4 & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  13 Ends at position  379  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  380  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult store
+ * 10532 rnd >> .shoot dec
+ 835 6723 *.tmemval overbool
+ store
+ *.in4 addstore
+ *.body *369 *.trefxpos store
+ >> rnd *.tieang1 =
+ addstore
+ overbool
+ store
+ .sexrepro store
+ >
+ store
+ mult clearbool
+ multstore
+ ceil <
+ *369 drop *.body 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ .repro store
+ store
+ * 10532 =
+ *.trefup start
+ sqr *.tin1 =
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  440  '''''''''''''''''''''''
+ 6723 *.in4 *-564 mod .up addstore
+ | *369 addstore
+ .out6 store
+ *.trefup
+''''''''''''''''''''''''  Gene:  15 Begins at position  453  '''''''''''''''''''''''
+ start
+ 6723 1 mod -777 | *.trefage .up addstore
+ | *369 *.body -564 .pval store
+ store
+ addstore
+ | *369 5 5 .up addstore
+ ~ *.refshoot *-456 5 .shoot dec
+ .fixlen store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 *-709 -544 >> sgnstore
+ *369 drop *.body 5 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  15 Ends at position  517  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  16 Begins at position  518  '''''''''''''''''''''''
+ start
+ sqr *.tin1 ceilstore
+ <
+
+''''''''''''''''''''''''  Gene:  16 Ends at position  522  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  523  '''''''''''''''''''''''
+ cond
+ else
+ -567 store
+ *.memloc 6723 *.trefage 1 dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body >> rnd *.tieang1 sqrstore
+ .backshot store
+ mult store
+ * *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  550  '''''''''''''''''''''''
+ 6723 *.thisgene *.in4 *-564 mod *.trefage .up addstore
+ | *.stifftie *297 and
+ absstore
+ 900 *.in4 -26 .tienum store
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  18 Begins at position  575  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  581  '''''''''''''''''''''''
+ 1 mod
+''''''''''''''''''''''''  Gene:  19 Begins at position  584  '''''''''''''''''''''''
+ start
+ 6723 1 mod -777 | *.trefage .up addstore
+ | *.body -564 .pval store
+ store
+ addstore
+ | *369 *.trefxpos 5 5 .up addstore
+ ~ rnd *-456 5 .shoot dec
+ .fixlen store
+ *.in4 5 .up addstore
+ sqrstore
+ dropbool
+ multstore
+ >=
+ <
+ mult ceil .out4 store
+ -564 *.in4 *.tmemval 6723 *.trefage 1 dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 .up addstore
+ >
+ 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  19 Ends at position  647  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  20 Begins at position  648  '''''''''''''''''''''''
+ cond
+ dist *236 dec
+ <=
+ start
+ rnd -564 *.in4 *.tmemval 6723 *.trefage .up addstore
+ | *369 *.body -1 *.vtimer 900 *.in4 cos 900 *.in4 -26
+''''''''''''''''''''''''  Gene:  20 Ends at position  672  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  21 Begins at position  673  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  21 Ends at position  673  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  22 Begins at position  674  '''''''''''''''''''''''
+ else
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  22 Ends at position  680  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  23 Begins at position  681  '''''''''''''''''''''''
+ cond
+ 93 start
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  683  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  24 Begins at position  684  '''''''''''''''''''''''
+ else
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  24 Ends at position  690  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  25 Begins at position  691  '''''''''''''''''''''''
+ cond
+ 93 .aimright addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  696  '''''''''''''''''''''''
+ 1 mod -564 *.in4 *.trefage .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  26 Begins at position  705  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ *.in4 *.trefage -26 .tienum store
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  26 Ends at position  718  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  27 Begins at position  719  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  27 Ends at position  725  '''''''''''''''''''''''
+ 1 mod -564 *.in4 *.trefage 1 floor mult
+''''''''''''''''''''''''  Gene:  28 Begins at position  734  '''''''''''''''''''''''
+ cond
+ 414 and
+ *884 *.trefage .up addstore
+ | *369 addstore
+
+''''''''''''''''''''''''  Gene:  28 Ends at position  743  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  29 Begins at position  744  '''''''''''''''''''''''
+ cond
+ %=
+
+''''''''''''''''''''''''  Gene:  29 Ends at position  745  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  30 Begins at position  746  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  30 Ends at position  747  '''''''''''''''''''''''
+ *.tin9 rnd *-456 5 7 >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 300 *.trefup
+''''''''''''''''''''''''  Gene:  31 Begins at position  762  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  31 Ends at position  767  '''''''''''''''''''''''
+ mod -564 *.in4 addstore
+ 1 *.tmemval *.in4 -564 mod *.body *369 | store
+ >> rnd *.tieang1 =
+ addstore
+ overbool
+ store
+ *.in4 addstore
+ 525 *.myeye *.body | store
+ >> rnd >> rnd *-456 5 65 *652 dec
+ .vloc store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 multstore
+ *.in10 drop *.body .aimright sqrstore
+ 900 >
+ 50 mod -564 *.in4 *.tmemval 6723 *.trefage .up addstore
+ | *369 *.body -1 *.vtimer 900 *.in4 cos addstore
+ =
+ -26
+''''''''''''''''''''''''  Gene:  32 Begins at position  842  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  32 Ends at position  842  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  33 Begins at position  843  '''''''''''''''''''''''
+ else
+ dec
+ 469
+''''''''''''''''''''''''  Gene:  33 Ends at position  845  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  34 Begins at position  846  '''''''''''''''''''''''
+ cond
+ 93 5 *-283 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  34 Ends at position  853  '''''''''''''''''''''''
+ 1 mod -564 *.in4 *.trefage .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  35 Begins at position  862  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ | addstore
+ 1 *.trefage *.in4 *369 .tieloc store
+ 29196 .up addstore
+ 469
+''''''''''''''''''''''''  Gene:  35 Ends at position  876  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  36 Begins at position  877  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult store
+ * 10532 =
+ *.trefup start
+ sqr *.tin1 sqrstore
+ *.in4 *-564 mod *.trefage .up addstore
+ | *369 *.body -1 cos *.ypos .out2 addstore
+ .out6 store
+ addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  36 Ends at position  922  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  37 Begins at position  923  '''''''''''''''''''''''
+ start
+ sqr 30471 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  37 Ends at position  928  '''''''''''''''''''''''
+ abs -577 *.in3 *.tmemval 6723 *.trefage 1 *51 sgnstore
+ *369 drop *.body 5 *.in4 4 525 stop
+ 1 mod -564 *.in4 *.trefage .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  38 Begins at position  954  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ *.in4 *.multi
+''''''''''''''''''''''''  Gene:  38 Ends at position  958  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  39 Begins at position  959  '''''''''''''''''''''''
+ cond
+ inc
+ 3 11 .shootval negstore
+ 461
+''''''''''''''''''''''''  Gene:  39 Ends at position  965  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  40 Begins at position  966  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult *.trefup start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  40 Ends at position  977  '''''''''''''''''''''''
+ mod -564 *.in4 *.tmemval >
+ 50 .repro store
+ add *.up * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  41 Begins at position  992  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  41 Ends at position  997  '''''''''''''''''''''''
+ mod -564 *.in4 *.tmemval 6723 *.trefage .up addstore
+ | *369 *.body -1 *.vtimer *.tin1 sqrstore
+ store
+ *.in4 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * div =
+ *.trefup
+''''''''''''''''''''''''  Gene:  42 Begins at position  1027  '''''''''''''''''''''''
+ start
+ .mkslime store
+ sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  42 Ends at position  1032  '''''''''''''''''''''''
+ 6723 -564 *.body
+''''''''''''''''''''''''  Gene:  43 Begins at position  1036  '''''''''''''''''''''''
+ cond
+ *.mkvirus >> =
+ | .eye1width store
+ absstore
+ start
+
+''''''''''''''''''''''''  Gene:  43 Ends at position  1044  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  44 Begins at position  1045  '''''''''''''''''''''''
+ else
+ ~=
+ root .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  44 Ends at position  1050  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  45 Begins at position  1051  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  45 Ends at position  1057  '''''''''''''''''''''''
+ 1 mod -564 *.in4 *.trefage 9
+''''''''''''''''''''''''  Gene:  46 Begins at position  1064  '''''''''''''''''''''''
+ cond
+ | -802 drop sqrstore
+ stop
+''''''''''''''''''''''''  Gene:  46 Ends at position  1069  '''''''''''''''''''''''
+ 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 sgnstore
+ drop *.body 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  47 Begins at position  1098  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+
+''''''''''''''''''''''''  Gene:  47 Ends at position  1102  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  48 Begins at position  1103  '''''''''''''''''''''''
+ cond
+ mod *.trefage 6723 1 dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 1 *.trefup start
+ 6723 *.in4 *.trefage 1 floor mult
+''''''''''''''''''''''''  Gene:  48 Ends at position  1124  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  49 Begins at position  1125  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ *.in4 *.trefage .up addstore
+ | *369 .tieloc store
+ 5 1 not
+ *.tin9 rnd *-456 5 .shoot dec
+ .vloc store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ else
+ multstore
+ .up addstore
+ ~ rnd *-456 5 .shoot dec
+ .fixlen store
+ *.in4 5 1 .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  49 Ends at position  1171  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  50 Begins at position  1172  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ *.in4 *.trefage .up addstore
+ | *369 .tieloc store
+ * 10532 =
+ *.trefup start
+ sqr *.tin1 sqrstore
+ mult =
+ *.trefup
+''''''''''''''''''''''''  Gene:  50 Ends at position  1193  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  51 Begins at position  1194  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  51 Ends at position  1199  '''''''''''''''''''''''
+ 6723 *.tmemval *.in4 -564 mod *.body *369 | store
+ 900 *.in4 -26
+''''''''''''''''''''''''  Gene:  52 Begins at position  1212  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  52 Ends at position  1212  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  53 Begins at position  1213  '''''''''''''''''''''''
+ else
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  53 Ends at position  1219  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  54 Begins at position  1220  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult store
+ * 10532 =
+ *.trefup start
+ sqr *.tin1 sqrstore
+ store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 drop *.body 5 900 >
+ 50 .repro store
+ mult store
+ * div =
+ sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  54 Ends at position  1258  '''''''''''''''''''''''
+ 6723 *.tmemval *.in4 -564 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  55 Begins at position  1265  '''''''''''''''''''''''
+ start
+ *.tin1 sqrstore
+ | *369 *.body -1 .up addstore
+ | dropbool
+ sqrstore
+ *51 addstore
+ mod sin <
+ .aimright sqrstore
+ >
+ 50 div =
+ *.trefup
+''''''''''''''''''''''''  Gene:  55 Ends at position  1288  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  56 Begins at position  1289  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  56 Ends at position  1294  '''''''''''''''''''''''
+ 6723 *.tmemval root 7 >> rnd *.tieang1 =
+ addstore
+ overbool
+ store
+ *.in4 525 *.myeye *.body *369 | 900 *.in4 cos 900 *.in4 -26 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  57 Begins at position  1333  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  57 Ends at position  1338  '''''''''''''''''''''''
+ mod *.tin7 *.in4 *.tmemval 6723 *.trefage .up addstore
+ | *369 1 mod -777 | *.trefage .up addstore
+ | *369 *.body -1 *.vtimer 900 *.in4 cos 900 *.in4 -26 store
+ 5 .up addstore
+ 469
+''''''''''''''''''''''''  Gene:  58 Begins at position  1372  '''''''''''''''''''''''
+ cond
+ 93 5 6723 *.trefage 1 *369 *152 3 ~=
+ addstore
+ *.refvelup absstore
+ or
+ else
+ ~=
+ root & .shoot dec
+ 469
+''''''''''''''''''''''''  Gene:  58 Ends at position  1392  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  59 Begins at position  1393  '''''''''''''''''''''''
+ cond
+ 93 5 *.in4 addstore
+ 525 stop
+''''''''''''''''''''''''  Gene:  59 Ends at position  1399  '''''''''''''''''''''''
+ -118 dup -554 *.in4 *.trefage .out8 store
+ mult
+''''''''''''''''''''''''  Gene:  60 Begins at position  1408  '''''''''''''''''''''''
+ cond
+ 412 *.reftype *.in4 *.trefage .up addstore
+ | *369 .tieloc store
+ 5 .up addstore
+ 469
+''''''''''''''''''''''''  Gene:  60 Ends at position  1422  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  61 Begins at position  1423  '''''''''''''''''''''''
+ cond
+ 93 .aimright store
+ mult store
+ * .sharewaste store
+ *.trefup start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  61 Ends at position  1438  '''''''''''''''''''''''
+ 6723 *.tmemval *.in4 *-564 mod *.trefage .up addstore
+ | *369 *.body -1 cos *.ypos .out2 addstore
+ .out6 store
+ *.trefup
+''''''''''''''''''''''''  Gene:  62 Begins at position  1458  '''''''''''''''''''''''
+ start
+ 1 mod *.body -564 .pval store
+ ~ addstore
+ | *369 5 .shoot dec
+ .fixlen store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 sgnstore
+ *369 drop *.body 5 .up addstore
+ >> *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ .sx dec
+ 6 11581 xor
+ angle div
+''''''''''''''''''''''''  Gene:  62 Ends at position  1503  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  63 Begins at position  1504  '''''''''''''''''''''''
+ else
+ dropbool
+ sqrstore
+ *51 sgnstore
+ drop *.body 5 .up addstore
+ >> rnd *.tieang1 sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * 10532 =
+ *.trefup
+''''''''''''''''''''''''  Gene:  63 Ends at position  1528  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  64 Begins at position  1529  '''''''''''''''''''''''
+ start
+ sqr *.tin1 sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  64 Ends at position  1534  '''''''''''''''''''''''
+ mod -564 *.in4 *.tmemval 6746 *.tieloc *.refypos dropbool
+ sqrstore
+ .tout4 store
+ *369 drop *.body 5 1 *.trefup
+''''''''''''''''''''''''  Gene:  65 Begins at position  1552  '''''''''''''''''''''''
+ start
+ 6723 *.in4 *.trefage 1 floor mult
+''''''''''''''''''''''''  Gene:  65 Ends at position  1558  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  66 Begins at position  1559  '''''''''''''''''''''''
+ cond
+ .tout3 store
+ *.in4 *.trefage .up addstore
+ | *369 .tieloc store
+ 5 .up addstore
+ *.tin9 rnd *-456 5 .shoot dec
+ .vloc store
+ *.in4 *51 multstore
+ *.in10 drop *.body .aimright sqrstore
+ 900 >
+ 50 .repro store
+ mult store
+ * div -564 mod *.body *369 | store
+ -564 *.in4 .tie store
+ addstore
+ | *369 *.body rnd sgn *-456 5 .shoot addstore
+ 512 angle 134 <
+ ^ xor
+ *.tmemval *.in4 -564 mod *.body *369 =
+ angle >> rnd *.tieang1 =
+ addstore
+ overbool
+ store
+ *.in4 addstore
+ 525 *.myeye *.body | store
+ >> rnd >> rnd *-456 5 65 *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 multstore
+ *.in10 drop *.body .aimright sqrstore
+ 900 >
+ 50 .repro store
+ sqrstore
+ =
+ stop
+''''''''''''''''''''''''  Gene:  66 Ends at position  1674  '''''''''''''''''''''''
+ mod -564 *.in4 *.tmemval 6723 *.trefage 1 *.tielen stop
+ sqr *.tin1 sqrstore
+ =
+ stop
+ mod -552 *.in10 *.tieang2
+''''''''''''''''''''''''  Gene:  67 Begins at position  1693  '''''''''''''''''''''''
+ else
+
+''''''''''''''''''''''''  Gene:  67 Ends at position  1693  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  68 Begins at position  1694  '''''''''''''''''''''''
+ else
+ ~=
+ root .vloc store
+ *.in4 5 .up addstore
+ | dropbool
+ sqrstore
+ *51 multstore
+ *.in10 drop *.body .aimright sqrstore
+ 900 mult store
+ * div 6723 addstore
+ | *369 *.body -1 cos 900 *.in4 -26
+''''''''''''''''''''''''  Gene:  68 Ends at position  1727  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  69 Begins at position  1728  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  69 Ends at position  1728  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  70 Begins at position  1729  '''''''''''''''''''''''
+ else
+ ~=
+ root absstore
+ -- mod dup -535''''''''''''''''''''''''  Gene:  70 Ends at position  1736  '''''''''''''''''''''''
+
+'#hash: AK'B*K}68!cg<:T>M}}p

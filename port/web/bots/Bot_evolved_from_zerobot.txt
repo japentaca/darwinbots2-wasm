@@ -1,0 +1,21 @@
+'#generation: 5
+'#mutations: 35
+ start
+ *20 inc
+ .aimleft inc
+ or
+ *-111 sqr 0 *-959 0 dec
+ store
+ mult add floor swapbool
+ *751 *.refdn 4 0 .backshot inc
+ 517 | clearbool
+ -243 pow 29 swap inc
+ 103 6 >> store
+ rnd 1 *.robage | *.fixlen dec
+ 218 -18 0 1 stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  46  '''''''''''''''''''''''
+ sgn store
+ -11 angle angle 0 18 -2 0 cond
+''''''''''''''''''''''''  Gene:  2 Ends at position  56  '''''''''''''''''''''''
+
+'#hash: *|pOm`&3S)]4@qBA'!G-

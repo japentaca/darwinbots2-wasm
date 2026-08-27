@@ -1,0 +1,322 @@
+'Topic: A bot that sleeps: Solar Bot  
+
+' Solar bot
+' Shot Bot
+' By Henk
+' Will suspend activity during nightime
+
+' ******** Daytime Things ********
+
+cond
+*.daytime 1 =
+*.numties 0 >
+*.tiepres 12 =
+start
+12 .deltie store
+stop
+
+cond
+*.numties 0 =
+*.hitup 0 =
+*.daytime 1 =
+*.vel 39 <
+start
+40 *.vel sub 2 div .up store
+stop
+
+cond
+*.eye5 40 >
+*.refsx 5 !=
+*.refdx 8 !=
+start
+-1 .shoot store
+stop
+
+cond
+*.eye5 40 >
+*.refnrg 100 <
+start
+-6 .shoot store
+stop
+
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+*.daytime 1 =
+start
+-102 .aimdx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+*.daytime 1 =
+start
+102 .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+cond
+*.eye5 20 >
+*.daytime 1 =
+*.refsx 5 =
+*.refdx 8 =
+*.in1 1 =
+*.in2 1 =
+start
+314 .aimdx store
+stop
+
+cond
+*.eye5 20 >
+*.refsx 5 =
+*.refdx 8 =
+*.in1 3 =
+start
+5 .dx store
+stop
+
+cond
+*.daytime 1 =
+*.edge 1 =
+*.eye5 0 =
+start
+157 .aimdx store
+stop
+
+' ID
+cond
+*.nrg 1 =
+start
+1 .sx store
+1 .sx store
+1 .sx store
+1 .sx store
+1 .sx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+stop
+
+cond
+*.daytime 1 =
+*.rdboy 1000 !=
+start
+1000 .setboy store
+stop
+
+cond
+*.daytime 0 =
+*.rdboy -2000 !=
+start
+-2000 .setboy store
+stop
+
+' I don't wanna be fixed.
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*40 0 >
+start
+628 .aimdx store
+40 dec
+stop
+
+cond
+*.nrg 8000 >
+start
+628 .aimdx store
+50 .repro store
+40 inc
+stop
+
+' *** Nighttime things ***
+cond
+*.daytime 0 =
+*.waste 0 >
+start
+*.waste .strpoison store
+stop
+
+cond
+*.daytime 0 =
+*.sun 1 !=
+*.eye5 0 =
+start
+26 .aimdx store
+stop
+
+cond
+*.readtie 12 !=
+start
+12 .readtie store
+stop
+
+cond
+*.daytime 0 =
+*.eye5 40 >
+*.robage 3 >
+*.refsx 5 =
+*.refdx 8 =
+*.numties 3 <
+start
+12 .tie store
+stop
+
+cond
+*.daytime 0 =
+*.tiepres 12 =
+*.numties 0 >
+*.nrg *.trefnrg !%=
+start
+50 .sharenrg store
+stop
+
+' INITIATE
+'**********
+
+'********************** 
+'* ID SYTEM *
+'**********************
+' Out1,In1,Out2 & In2 used
+' ***
+' Out1 is for what I see
+' out2 is my battle status
+
+' out1:
+' 1=I see nothing
+' 2=I see a veg
+' 3=I see loads of posible vegs
+' 4=I see a bot that is not of our species. It is strong (Has more than 5000 energy)
+' 5=I see a bot that is not of our species. It is weak (Has less than 5000 energy)
+' Out2:
+' 1=I'm fine thank you
+' 2=I am attacking an enemy
+' 3=I'M UNDER ATTACK!
+
+'out1:1
+cond
+*.eye5 0 =
+*.out1 1 !=
+start
+1 .out1 store
+stop
+
+'out1:2
+cond
+*.eye5 0 >
+*.eye4 20 <
+*.eye6 20 <
+*.refshoot 0 =
+*.refnrg 100 >
+*.out1 2 !=
+start
+2 .out1 store
+stop
+
+'out1:3
+cond
+*.eye3 0 >
+*.eye4 0 >
+*.eye5 0 >
+*.eye6 0 >
+*.eye7 0 >
+*.refshoot 0 =
+*.refnrg 100 >
+*.out1 3 !=
+start
+3 .out1 store
+stop
+
+'out1:4
+cond
+*.eye5 0 >
+*.refnrg 5000 >
+*.refshoot 0 >
+*.refsx 5 !=
+*.refdx 8 !=
+*.out1 4 !=
+start
+4 .out1 store
+stop
+
+'out1:5
+cond
+*.eye5 0 >
+*.refnrg 5000 <
+*.refshoot 0 >
+*.refsx 5 !=
+*.refdx 8 !=
+*.out1 5 !=
+start
+5 .out1 store
+stop
+
+'out2:1
+cond
+*.shsx 0 =
+*.shdx 0 =
+*.shdn 0 =
+*.out2 1 !=
+start
+1 .out2 store
+stop
+
+'out2:2
+cond
+*.eye5 40 >
+*.daytime 1 =
+*.refsx 5 !=
+*.refdx 8 !=
+*.out2 2 !=
+start
+2 .out2 store
+stop
+
+'out2:3
+cond
+*.shsx 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+cond
+*.shdx 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+cond
+*.shdn 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+end

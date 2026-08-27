@@ -1,0 +1,89 @@
+'The non spinning bot with a very big bite!
+
+'unnofficially came first in F1 and F2
+'losing a max of one round in any match
+
+'simply written and not bug fixed, this bot shouldn't be much of a 
+'challenge for the rest of you to beat...
+
+cond
+*.robage 0 = 
+start
+1 .tie store
+stop
+
+cond 
+*.eye5width 1221 !=
+start
+1221 .eye5width store
+stop
+
+'target and move
+cond
+*.memval *.genes !=
+*.eye5 0 >
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos dist 500 div *.maxvel mult *.refvel add 0 floor 
+*.maxvel ceil .up store
+*.veldx .sx store
+-6 .shoot store 
+*.body 100 div .shootval store
+stop
+
+'repro
+cond
+*.paralyzed 0 =
+*.poisoned 0 = or
+*.pwaste 10000 > or
+start
+100 .repro store
+stop
+
+cond
+*.nrg 30000 >= 
+start
+50 .repro store
+stop
+
+'avoid friends
+cond
+*.memval *.genes =
+start
+5 .up store
+*.refxpos *.refypos angle 628 add .setaim store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.waste 500 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.nrg 2000 >
+*.body 10000 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 200 <
+start
+100 .fdbody store
+stop
+
+'memloc check
+cond
+.genes .memloc !=
+start
+.genes .memloc store
+*.thisgene 1 add .delgene store
+stop

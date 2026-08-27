@@ -1,0 +1,47 @@
+'Sentry - Simplest bot ever for me to make.
+'It's good for beginners to look at as well as I programmed it very self-explanatory.
+'Programmed and given life by Spike43884 (and one bugfix by shadowgod2) on 19th of April 2015
+
+
+'Gene 1 Blind Retaliation
+cond
+*.shdn 0 !=
+*.shup 0 != or
+*.shdx 0 != or
+*.shsx 0 != or
+start
+*.shang .aimshoot store
+-6 .shoot store
+stop
+
+
+'Gene 2 Reproduction
+cond
+*.nrg 30000 >
+start
+50 .repro store
+stop
+
+
+'Gene 3 I was born!
+cond
+*.robage 0 =
+start
+180 .aimdx store
+stop
+
+
+'Gene 4 Moving out
+cond
+*.robage 1 =
+start
+10 .up store
+stop
+
+
+'Gene 5 Almost moved out
+cond
+*.robage 3 =
+start
+10 .up store
+stop

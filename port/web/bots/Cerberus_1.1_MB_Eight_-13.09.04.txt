@@ -1,0 +1,405 @@
+'Topic: New bots
+'v2.32 (beta)
+' Cerberus 1.1 (MB) by Eight (eightland.com)
+' doggy style
+
+' poop
+cond
+*.waste 100 >
+start
+100 .shootval store
+-4 .shoot store
+stop
+
+' grow heads
+cond
+*.slime 0 =
+*45 0 =
+*.nrg 1000 >
+*.numties 3 <
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+10 .repro store
+10 .aimdx store
+0 45 store
+stop
+
+' drop baby
+cond
+*45 0 =
+*.nrg 8000 >
+*.numties 3 =
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+80 .repro store
+stop
+
+' reset single
+cond
+*45 0 >
+*.multi 0 =
+*.numties 0 =
+start
+0 45 store
+stop
+
+' make a stink
+cond
+*.robage 1 =
+*.multi 0 =
+start
+66 .out1 store
+stop
+
+' react to stink
+cond
+*.eye5 50 >
+*.in1 66 =
+*.robage 3 =
+start
+1 45 store
+stop
+
+' make tie
+cond
+*45 1 =
+start
+*45 .tie store
+45 inc
+stop
+
+' fix angles
+cond
+*.multi 0 =
+start
+628 .fixang store
+stop
+
+' solidify
+cond
+*45 2 =
+*.multi 1 =
+start
+40 .stifftie store
+160 .tielen store
+45 inc
+stop
+
+' eat
+cond
+*.eye5 30 >
+*.refup 0 =
+*.refsx *.mysx !=
+*.refaimsx *.myaimsx !=
+start
+-1 .shoot store
+stop
+
+' eat
+cond
+*.eye4 70 >
+*.refup 0 =
+*.refsx *.mysx !=
+*.refaimsx *.myaimsx !=
+start
+-1 .shoot store
+stop
+
+' eat
+cond
+*.eye6 70 >
+*.refup 0 =
+*.refsx *.mysx !=
+*.refaimsx *.myaimsx !=
+start
+-1 .shoot store
+stop
+
+' smash
+cond
+*.eye5 30 >
+*.refup 0 >
+*.refsx *.mysx !=
+*.refaimsx *.myaimsx !=
+start
+-6 .shoot store
+stop
+
+' see friend
+cond
+*45 3 =
+*.multi 1 =
+*.eye5 50 >
+*.refsx *.mysx =
+start
+5 .dx store
+stop
+
+' see friend
+cond
+*.multi 0 =
+*.eye5 50 >
+*.refsx *.mysx =
+*.robage 4 >
+start
+80 .aimdx store
+stop
+
+' see friend
+cond
+*.multi 0 =
+*.eye3 50 >
+*.refsx *.mysx =
+*.robage 4 >
+start
+80 .aimdx store
+stop
+
+' if fixed
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+' if fixed
+cond
+*44 1 =
+*45 3 =
+*47 0 !=
+*.multi 1 =
+*.eye1 0 =
+*.eye9 0 =
+start
+0 47 store
+stop
+
+' stop if you see food
+cond
+*45 3 =
+*.eye1 30 >
+*.eye1 70 <
+*.refsx *.mysx !=
+*.refup 0 =
+start
+1 .fixpos store
+1 47 store
+stop
+
+' stop if you see food
+cond
+*45 3 =
+*.eye9 30 >
+*.eye9 70 <
+*.refsx *.mysx !=
+*.refup 0 =
+start
+1 .fixpos store
+9 47 store
+stop
+
+' spin
+cond
+*45 3 =
+*47 1 =
+*.multi 1 =
+*.fixed 0 =
+start
+15 .sx store
+stop
+
+' spin
+cond
+*45 3 =
+*47 9 =
+*.multi 1 =
+*.fixed 0 =
+start
+15 .dx store
+stop
+
+' spin single
+cond
+*47 1 =
+*.multi 0 =
+start
+30 .aimsx store
+stop
+
+' spin single
+cond
+*47 9 =
+*.multi 0 =
+start
+30 .aimdx store
+stop
+
+' precision
+cond
+*.eye3 *.eye7 !=
+*.multi 0 =
+start
+*.eye3 *.eye7 sub 4 div .aimsx store
+stop
+
+' stop if you see food
+cond
+*.multi 0 =
+*.eye5 50 >
+*.refsx *.mysx !=
+start
+1 .fixpos store
+stop
+
+' move
+cond
+*44 1 =
+*45 3 =
+start
+*.maxvel *.vel sub .up store
+stop
+
+' single move
+cond
+*44 1 =
+*45 0 =
+*.multi 0 =
+start
+5 .up store
+stop
+
+' make poison
+cond
+*.multi 1 =
+*44 1 =
+*.poison *.nrg <
+start
+466 .ploc store
+100 .strpoison store
+stop
+
+' enemy tie
+cond
+*.numties 3 >
+*.tiepres 3 >
+*.tiepres 2 !=
+start
+*.tiepres .deltie store
+20 .mkslime store
+stop
+
+' back bump
+cond
+*.hitdn 0 !=
+start
+1 .backshot store
+-6 .shoot store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shup -6 =
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shsx -6 =
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shdx -6 =
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' make shell if attacked
+cond
+*.multi 1 =
+*.shdn -6 =
+*.shell 200 <
+start
+50 .mkshell store
+stop
+
+' store body if body low
+cond
+*.multi 1 =
+*.nrg 1000 >
+*.body 1000 <
+start
+50 .strbody store
+stop
+
+' take body if nrg low
+cond
+*.nrg 500 <
+*.body 500 >
+start
+100 .fdbody store
+stop
+
+' share
+cond
+*44 1 =
+*45 3 =
+*.multi 1 =
+*.trefnrg *.nrg !%=
+start
+50 .sharenrg store
+stop
+
+' starving
+cond
+*.eye5 0 =
+*44 1 =
+*45 3 =
+*.multi 1 =
+*.nrg 200 <
+start
+1 .deltie store
+stop
+
+' pulse
+cond
+*44 0 =
+start
+*.body 100 div 44 store
+*44 5 add 44 store
+stop
+
+' heart
+cond
+*44 0 >
+start
+44 dec
+stop
+
+
+end

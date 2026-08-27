@@ -1,0 +1,494 @@
+'Topic: A bot that sleeps: Solar Bot  
+'Henk
+
+'-It gets sad when it sees a lot of violence
+'-It can get drunk
+'-it gets mad and will kill everybody
+'-It can be a vegetarian. Or a canniball
+'- It has a mood, and will move faster when it is in a good mood.
+'-It will recover from sadness quicker when it has been sad before
+
+'It is all a bit weird, but I think it's funny
+
+---
+
+' Solar bot
+' Shot Bot
+' By Henk
+' Will suspend activity during nightime
+' Has a "personality"
+
+' ******** Daytime Things ********
+
+cond
+*.daytime 1 =
+*.numties 0 >
+*.tiepres 12 =
+start
+12 .deltie store
+stop
+
+' move fast when I'm in a good or standard mood
+cond
+*.numties 0 =
+*.hitup 0 =
+*.daytime 1 =
+*.vel 39 <
+*107 *109 <
+*111 30 >
+start
+40 *.vel sub 2 div .up store
+stop
+
+'move when I'm in a bad mood
+cond
+*.numties 0 =
+*.hitup 0 =
+*.daytime 1 =
+*.vel 39 <
+*107 *109 <
+*111 30 <
+start
+30 *.vel sub 2 div .up store
+' Mumbling movement. Why you little...
+10 rnd 5 sub .aimsx store
+stop
+
+' it's a non-veg-non-friend!
+cond
+*.eye5 39 >
+*.refsx 5 !=
+*.refdx 8 !=
+*.refshoot 0 >
+*112 40 <
+start
+-1 .shoot store
+107 inc
+stop
+
+' Look! It's a corpse! ew...
+cond
+*.eye5 40 >
+*.refnrg 100 <
+*112 80 <
+start
+-6 .shoot store
+107 inc
+stop
+
+' Oh look! ah vegetable
+cond
+*.eye5 40 >
+*.refshoot 0 =
+*.refnrg 100 >
+*.refsx 5 !=
+*.refdx 8 !=
+*112 96 <
+start
+-1 .shoot store
+stop
+
+' Oh look! a friend! the canni-me might eat him
+cond
+*.eye5 40 >
+*.refsx 5 =
+*.refdx 8 =
+*112 5 <
+start
+-1 .shoot store
+stop
+
+cond
+*.eye1 *.eye9 >
+*.eye1 *.eye5 >
+*.numties 0 =
+*.daytime 1 =
+start
+-102 .aimdx store
+stop
+
+cond
+*.eye9 *.eye1 >
+*.eye9 *.eye5 >
+*.numties 0 =
+*.daytime 1 =
+start
+102 .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 >
+*.eye4 *.eye5 >
+start
+-26 .aimdx store
+stop
+
+cond
+*.eye6 *.eye4 >
+*.eye6 *.eye5 >
+*.numties 0 =
+start
+26 .aimdx store
+stop
+
+cond
+*.eye5 20 >
+*.daytime 1 =
+*.refsx 5 =
+*.refdx 8 =
+*.in1 1 =
+*.in2 1 =
+*112 5 >
+start
+314 .aimdx store
+stop
+
+cond
+*.eye5 20 >
+*.refsx 5 =
+*.refdx 8 =
+*.in1 3 =
+start
+5 .dx store
+stop
+
+cond
+*.daytime 1 =
+*.edge 1 =
+*.eye5 0 =
+start
+157 .aimdx store
+stop
+
+' ID
+cond
+*.nrg 1 =
+start
+1 .sx store
+1 .sx store
+1 .sx store
+1 .sx store
+1 .sx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+1 .dx store
+stop
+
+cond
+*.daytime 1 =
+*.rdboy 1500 !=
+start
+1500 .setboy store
+stop
+
+' I don't wanna be fixed.
+cond
+*.fixed 0 !=
+*.daytime 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*40 0 >
+start
+628 .aimdx store
+40 dec
+stop
+
+' repro. I get a new mood when I do
+cond
+*.nrg 8000 >
+start
+628 .aimdx store
+50 .repro store
+40 inc
+100 rnd 111 store
+stop
+
+' *** Nighttime things ***
+cond
+*.daytime 0 =
+*.waste 0 >
+start
+*.waste .strpoison store
+stop
+
+cond
+*.daytime 0 =
+*.rdboy -2000 !=
+start
+-2000 .setboy store
+stop
+
+cond
+*.daytime 0 =
+*.sun 1 !=
+*.eye5 0 =
+start
+26 .aimdx store
+stop
+
+cond
+*.readtie 12 !=
+start
+12 .readtie store
+stop
+
+cond
+*.daytime 0 =
+*.eye5 40 >
+*.robage 3 >
+*.refsx 5 =
+*.refdx 8 =
+*.numties 3 <
+*.in2 2 !=
+start
+12 .tie store
+stop
+
+cond
+*.daytime 0 =
+*.tiepres 12 =
+*.numties 0 >
+*.nrg *.trefnrg !%=
+start
+50 .sharenrg store
+stop
+
+' Let's get things fixed! Get it? fixed? ... never mind.
+cond
+*.fixed 1 !=
+*.daytime 0 =
+*.edge 1 =
+*.depth 100 >
+start
+1 .fixpos store
+stop
+
+' INITIATE
+'**********
+
+'********************** 
+'* ID SYTEM *
+'**********************
+' Out1,In1,Out2 & In2 used
+' ***
+' Out1 is for what I see
+' out2 is my battle status
+
+' out1:
+' 1=I see nothing
+' 2=I see a veg
+' 3=I see loads of posible vegs
+' 4=I see a bot that is not of our species. It is strong (Has more than 5000 energy)
+' 5=I see a bot that is not of our species. It is weak (Has less than 5000 energy)
+' Out2:
+' 1=I'm fine thank you
+' 2=I am attacking an enemy
+' 3=I'M UNDER ATTACK!
+
+'out1:1
+cond
+*.eye5 0 =
+*.out1 1 !=
+start
+1 .out1 store
+stop
+
+'out1:2
+cond
+*.eye5 0 >
+*.eye4 20 <
+*.eye6 20 <
+*.refshoot 0 =
+*.refnrg 100 >
+*.out1 2 !=
+start
+2 .out1 store
+stop
+
+'out1:3
+cond
+*.eye3 0 >
+*.eye4 0 >
+*.eye5 0 >
+*.eye6 0 >
+*.eye7 0 >
+*.refshoot 0 =
+*.refnrg 100 >
+*.out1 3 !=
+start
+3 .out1 store
+stop
+
+'out1:4
+cond
+*.eye5 0 >
+*.refnrg 5000 >
+*.refshoot 0 >
+*.refsx 5 !=
+*.refdx 8 !=
+*.out1 4 !=
+start
+4 .out1 store
+stop
+
+'out1:5
+cond
+*.eye5 0 >
+*.refnrg 5000 <
+*.refshoot 0 >
+*.refsx 5 !=
+*.refdx 8 !=
+*.out1 5 !=
+start
+5 .out1 store
+stop
+
+'out2:1
+cond
+*.shsx 0 =
+*.shdx 0 =
+*.shdn 0 =
+*.out2 1 !=
+start
+1 .out2 store
+stop
+
+'out2:2
+cond
+*.eye5 40 >
+*.daytime 1 =
+*.refsx 5 !=
+*.refdx 8 !=
+*.out2 2 !=
+start
+2 .out2 store
+stop
+
+'out2:3
+cond
+*.shsx 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+cond
+*.shdx 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+cond
+*.shdn 0 !=
+*.out2 3 !=
+start
+3 .out2 store
+stop
+
+' ************
+' * Personal *
+' ************
+' store data about my birth
+
+' birth
+cond
+*.robage 1 =
+start
+*.depth 100 store
+*.aim 101 store
+*.in1 102 store
+*.in2 103 store
+*.refage 104 store
+*.refnrg 105 store
+*.nrg 106 store
+stop
+
+'set personality
+cond
+*.robage 0 =
+start
+' how much violence I can take
+200 rnd 10 add 109 store 
+' How fast I can recover
+120 rnd 10 add 110 store
+' how moody am I?
+100 rnd 111 store
+' on a scale of 0-100, how vetetarian am I?
+100 rnd 112 store
+stop
+
+'I get very sad when I've killed a lot.
+cond
+*107 *109 >
+start
+108 inc
+1256 rnd .aimdx store
+stop
+
+'let it go...
+cond
+*108 *110 >
+start
+0 107 store
+0 108 store
+' I can recover faster cuz I've been through it already
+*110 5 sub 100 store
+stop
+
+' Seeing a healthy friend makes me happy!
+cond
+*107 *109 >
+*.refsx 5 =
+*.refdx 8 =
+*.refnrg 4000 >
+start
+0 107 store
+0 108 store
+stop
+
+' I am happy again cuz a friend has tied to me.
+cond
+*107 *109 >
+*.numties 0 >
+*.tiepres 12 =
+start
+0 107 store
+0 108 store
+stop
+
+'I'm a bit out of control when I've got poison. hiccup.
+cond
+*.poison 6000 >
+start
+52 rnd 26 sub .aimsx store
+stop
+
+' I get drunk if I have too much poison
+cond
+*.poison 15000 >
+start
+628 rnd 314 sub .aimsx store
+stop
+
+' I get mad when my energy is low and my mood is bad
+' I go killing everybody
+cond
+*.nrg 1000 <
+*111 30 <
+*.numties 0 >
+' I must be able to resist violence
+*109 100 >
+start
+*.tiepres .tienum store
+-1 .tieloc store
+-500 .tieval store
+stop
+end

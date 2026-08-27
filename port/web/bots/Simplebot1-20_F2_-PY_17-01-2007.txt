@@ -1,0 +1,109 @@
+' Gene 12 tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+' Gene 13 sever tie to parent
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+' Gene 7 wide search 1
+cond
+*.eye1 *.eye5 >
+start
+mult -140 
+stop
+
+' Gene 8 wide search 2
+cond
+*.eye9 *.eye5 >
+start
+mult 140 
+stop
+
+' Gene1. Simple search pattern.
+cond
+  *.eye4 *.eye6 >
+start
+mult -35 
+stop
+
+' Gene2. Simple search pattern part 2
+cond
+  *.eye6 *.eye4 >
+start
+mult 35 
+stop
+
+' Gene 3. Move forward
+cond
+  *.vel 40 <
+  *.refeye *.myeye !=
+start
+  40 *.vel sub 2 div .up store
+stop
+
+' Gene 4. Shoot the food
+cond
+  *.eye5 40 >
+  *.refeye *.myeye !=
+start
+  -1 .shoot store
+stop
+
+' Gene 6. Avoid conspecifics
+cond
+*.refeye *.myeye =
+start
+mult 180 
+stop
+
+' Gene 14 rotate back and continue feeding
+cond
+*50 0 >
+start
+mult 628
+50 dec
+stop
+
+' Gene 5. Reproduce
+cond
+*.nrg 5000 >
+start
+50 .repro store
+mult 628
+50 inc
+
+stop
+
+
+
+'Gene 9. Get rid of that waste
+cond
+*.waste 100 >
+start
+1 .backshot store
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Gene 10. Perform the rotation
+cond
+start
+.aimdx store
+stop
+
+' Gene 11. slide to the side.
+cond
+*.aimdx 0 !=
+*.aimdx 180 !=
+start
+*.aimdx 10 div .dx store
+stop
+
+end

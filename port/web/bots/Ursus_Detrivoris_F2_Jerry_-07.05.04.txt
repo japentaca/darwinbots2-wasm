@@ -1,0 +1,183 @@
+'Topic: On biodiversity again 
+'Jerry
+
+' Ursus_detrivoris
+' quick and dirty made from
+' ursus_versatilis 2.0
+
+' ***** recognize conspecs
+cond
+*50 1 <
+*.eye5 0 >
+*.refnrg 500 >
+start
+50 inc
+stop
+
+' * stacking speed values *
+' ***** init stack
+cond
+start
+mult 1
+stop
+
+' ***** sustain min speed
+cond
+*.eye5 20 <
+*.nrg 1500 >
+*.vel 10 <
+*.vel -10 >
+start
+mult 10 *.vel sub 2 div 
+stop
+
+' ***** growing distance - speed up!
+cond
+*.out1 eye5 >
+*.eye5 30 <
+*.eye5 0 >
+*.vel 29 <
+*.vel -10 >
+start
+mult *.vel 5 add 
+stop
+
+' ***** shrinking distance - brake!
+cond
+*.out1 eye5 <
+*.eye5 90 >
+*.eye5 97 <
+*.vel 15 >
+*.vel -10 >
+start
+mult *.vel 3 sub sub 
+stop
+
+' * apply speed *
+' *****
+cond
+start
+.up store
+stop
+
+' ***** get food
+' ***** eat corpses (or harmless bots)
+cond
+*.eye5 30 >
+*.refnrg 100 <
+start
+-6 .shoot store
+stop
+
+' ***** hunt while enough energy
+cond
+*.eye5 30 >
+*.refnrg 100 >
+*.nrg 500 >
+*50 0 =
+start
+-1 .shoot store
+*.eye5 .out1 store
+stop
+
+' * stacking turning values *
+' ***** init stack
+cond
+start
+mult *.nrg 1000 div rnd sub *.shdn 610 mult add
+stop
+
+' ***** dump waste to stay agile
+cond
+*.waste 50 >
+*.nrg 4000 >
+*.aim 900 >
+*.aim 1000 <
+start
+mult 314
+*.waste .shootval store
+-4 .shoot store
+stop
+
+' ***** moving backwards - turn around!
+cond
+*.vel -20 <
+start
+mult 628
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye3 *.eye5 >
+start
+mult -25 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye7 *.eye5 >
+start
+mult 25
+stop
+
+' ***** avoid apparent conspecs
+cond
+*50 0 >
+start
+mult -200
+50 dec
+stop
+
+' ***** stay away from edges
+cond
+*.edge 1 =
+*.eye5 0 =
+start
+mult *.nrg -50 div
+stop
+
+' ***** reproduce
+cond
+*.nrg 10000 >
+start
+50 .repro store
+mult 628
+stop
+
+' ***** take that navel cord
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+' ***** sever that navel cord
+cond
+*.robage 1 =
+start
+.deltie inc
+mult 314
+stop
+
+' * apply steering *
+' *****
+cond
+start
+.aimdx store
+stop
+
+end

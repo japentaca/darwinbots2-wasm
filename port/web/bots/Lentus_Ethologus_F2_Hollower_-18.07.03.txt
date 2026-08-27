@@ -1,0 +1,164 @@
+'18.07.03 
+'Topic: [old message] [robot] Lentus Ethologus  
+
+'Hollower 
+'E-mail address: hollower@hotmail.com 
+
+' Lentus Ethologus 
+' 
+' - Low energy movement optimal 
+' for large fields 
+' - Prefers to eat whatever it 
+' bumps into rather than hunt 
+' - Low energy reproduction 
+' - Uses ref vars to id friends 
+' - Mimics the out1 and out2 
+' cells of other bots it sees 
+
+
+' // RANDOM MOVEMENT 
+cond 
+*.vel 
+5 
+< 
+*.eye5 
+0 
+= 
+start 
+25 
+3 
+rnd 
+1 
+add 
+store 
+stop 
+
+' // MIMIC OTHER BOTS OUTPUT 
+cond 
+*.in1 
+0 
+!= 
+*.in1 
+*.out1 
+!= 
+start 
+*.in1 
+.out1 
+store 
+stop 
+cond 
+*.in2 
+0 
+!= 
+*.in2 
+*.out2 
+!= 
+start 
+*.in2 
+.out2 
+store 
+stop 
+
+' // LOOK AROUND 
+cond 
+*.eye5 
+0 
+= 
+start 
+40 
+.aimdx 
+store 
+stop 
+
+' // TURN TOWARD BUMP 
+cond 
+*.hitsx 
+1 
+= 
+start 
+314 
+.aimsx 
+store 
+stop 
+cond 
+*.hitdx 
+1 
+= 
+start 
+314 
+.aimdx 
+store 
+stop 
+cond 
+*.hitdn 
+1 
+= 
+start 
+628 
+.aimsx 
+store 
+stop 
+
+' // MOVE AWAY FROM FRIEND 
+cond 
+*.eye5 
+0 
+> 
+*.refaimdx 
+2 
+= 
+*.nrg 
+*.refnrg 
+> 
+start 
+5 
+.sx 
+store 
+stop 
+
+' // MOVE TOWARD FOOD 
+cond 
+*.eye5 
+0 
+> 
+*.refaimdx 
+2 
+!= 
+start 
+5 
+.up 
+store 
+stop 
+
+' // SHOOT EXCLUDING FRIENDS 
+cond 
+*.eye5 
+25 
+> 
+*.refaimdx 
+2 
+!= 
+start 
+-1 
+.shoot 
+store 
+10 
+.up 
+store 
+stop 
+
+' // REPRODUCE 
+cond 
+*.nrg 
+4400 
+> 
+start 
+628 
+.aimsx 
+store 
+50 
+.repro 
+store 
+stop 
+
+end

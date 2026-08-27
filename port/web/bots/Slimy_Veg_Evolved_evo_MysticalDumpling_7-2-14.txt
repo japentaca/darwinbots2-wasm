@@ -1,0 +1,28 @@
+cond
+ *.nrg 1000 >=
+ start
+ .strvenom inc
+ 50 .repro store
+ .aimleft inc
+ 0 store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  15  '''''''''''''''''''''''
+ cond
+ *.nrg 500 >
+ start
+ 100 .mkslime store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  24  '''''''''''''''''''''''
+ cond
+ !=
+ *.trefeye *.myeye *.trefypos *.trefxpos start
+ angle .setaim store
+ .sx store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  37  '''''''''''''''''''''''
+ cond
+ *22 0 =
+ start
+ .dn store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  45  '''''''''''''''''''''''

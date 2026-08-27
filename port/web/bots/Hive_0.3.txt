@@ -1,0 +1,511 @@
+'PyHive0.3.txt compiled by PyBot V2 from PyHive0.3.pyr.
+def hivexpos 971
+def hiveypos 972
+def status 973
+def queen 974
+def conspec 975
+def look 51
+def counter 52
+def return 53
+def cc 54
+def seen 55
+def v1 57
+def v2 58
+def v3 59
+def v4 60
+def v5 61
+def v6 62
+def v7 63
+def v8 64
+def v9 65
+def x1 66
+def x2 67
+def x3 68
+def x4 69
+def x5 70
+def x6 71
+def x7 72
+def x8 73
+def x9 74
+def y1 75
+def y2 76
+def y3 77
+def y4 78
+def y5 79
+def y6 80
+def y7 81
+def y8 82
+def y9 83
+def c1 84
+def c2 85
+def c3 86
+def c4 87
+def c5 88
+def c6 89
+def c7 90
+def c8 91
+def c9 92
+cond
+*.status 0 =
+start
+*.refveldx dup *.dx != .dx store
+*.refvelup 30 add dup *.up != .up store
+*.robage 0 =
+1 dupbool dup *.timer != and .timer store dropbool
+dropbool *.eye5 45 >
+-1 dupbool dup *.shoot != and .shoot store dropbool
+8 dupbool dup *.shootval != and .shootval store dropbool
+*.refvelup dupbool dup *.up != and .up store dropbool
+dropbool *.eye5 0 >
+1 dupbool dup *.timer != and .timer store dropbool
+*.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+dupbool not dupbool *.eye6 0 > and
+34 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye4 0 > and
+-34 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye7 0 > and
+69 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye3 0 > and
+-69 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye8 0 > and
+104 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye2 0 > and
+-104 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye9 0 > and
+139 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.eye1 0 > and
+-139 dupbool dup *.aimdx != and .aimdx store dropbool
+not and dupbool *.timer 10 < and
+314 dupbool dup *.aimdx != and .aimdx store dropbool
+not and not or not 
+628 *.timer div dupbool dup *.aimdx != and .aimdx store dropbool
+dropbool *.waste 1000 >
+-4 dupbool dup *.shoot != and .shoot store dropbool
+*.waste dupbool dup *.shootval != and .shootval store dropbool
+dropbool *.nrg 25000 > *.body 6000 > and
+32000 rnd dupbool dup *.conspec != and .conspec store dropbool
+*.conspec dupbool dup *.out5 != and .out5 store dropbool
+*.xpos dupbool dup *.hivexpos != and .hivexpos store dropbool
+*.ypos dupbool dup *.hiveypos != and .hiveypos store dropbool
+.status inc
+.fixpos inc
+dropbool
+stop
+
+cond
+false
+start
+*.eye5 *.eye6 =
+*.eye7 dupbool dup *.up != and .up store dropbool
+dropbool
+stop
+
+cond
+*.robage 0 = *.status 1 = and
+start
+20 rnd 0 = *.queen 1 = or *.hivexpos 0 = or *.hiveypos 0 = or
+0 dupbool dup *.queen != and .queen store dropbool
+not 
+2 dupbool dup *.status != and .status store dropbool
+dropbool
+*.conspec dup *.out5 != .out5 store
+stop
+
+cond
+*.robage 0 > *.status 1 = and
+start
+*.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.seen 0 = and *.refeye *.myeye = and
+*.refkills 1 add dupbool dup *.seen != and .seen store dropbool
+dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.seen *.refkills 1 add = and *.refeye *.myeye = and and
+0 dupbool dup *.seen != and .seen store dropbool
+.tie inc
+not and not or not 
+0 dupbool dup *.seen != and .seen store dropbool
+dropbool
+-34 dup *.eye5width != .eye5width store
+50 dup *.sharenrg != .sharenrg store
+.tieang1 dec
+.tieang2 dec
+.tieang3 dec
+.tieang4 dec
+1 dup *.fixpos != .fixpos store
+*.waste 50 >
+-4 dupbool dup *.shoot != and .shoot store dropbool
+*.waste dupbool dup *.shootval != and .shootval store dropbool
+1256 rnd dupbool dup *.aimshot != and .aimshot store dropbool
+dropbool *.body 2000 > *.nrg 31000 < and
+1000 dupbool dup *.fdbody != and .fdbody store dropbool
+dropbool *.body 2000 < *.nrg 10000 > and
+1000 dupbool dup *.strbody != and .strbody store dropbool
+dropbool *.nrg 25000 >
+dupbool dupbool *.shell 30000 < and
+300 dupbool dup *.mkshell != and .mkshell store dropbool
+dropbool dropbool dupbool dupbool *.poison 30000 < and
+300 dupbool dup *.strpoison != and .strpoison store dropbool
+dropbool dropbool
+dropbool
+*.shoot dup *.ploc != .ploc store
+*.robage 5 > *.hivexpos *.xpos = and *.hiveypos *.ypos = and
+60 dupbool dup *.aimdx != and .aimdx store dropbool
+dupbool dupbool *.body 20000 > *.nrg 20000 > and and
+1 dupbool dup *.queen != and .queen store dropbool
+50 dupbool dup *.repro != and .repro store dropbool
+not and not dupbool not dupbool *.nrg 10000 > *.body 1000 > and *.eye5 35 < and and
+0 dupbool dup *.queen != and .queen store dropbool
+10 *.body 1000 div add dupbool dup *.repro != and .repro store dropbool
+dropbool dropbool dropbool
+dropbool
+*.xpos dup *.hivexpos != .hivexpos store
+*.ypos dup *.hiveypos != .hiveypos store
+stop
+
+cond
+*.robage 0 > *.status 2 = and *.return 0 = and
+start
+*.robage 1 =
+.tie inc
+.mkshell dupbool dup *.vloc != and .vloc store dropbool
+.shoot dupbool dup *.ploc != and .ploc store dropbool
+2 dupbool dup *.delgene != and .delgene store dropbool
+1 rnd 2 mult 1 sub 2 mult dupbool dup *.cc != and .cc store dropbool
+420 dupbool dup *.eye1dir != and .eye1dir store dropbool
+315 dupbool dup *.eye2dir != and .eye2dir store dropbool
+210 dupbool dup *.eye3dir != and .eye3dir store dropbool
+105 dupbool dup *.eye4dir != and .eye4dir store dropbool
+-105 dupbool dup *.eye6dir != and .eye6dir store dropbool
+-210 dupbool dup *.eye7dir != and .eye7dir store dropbool
+-315 dupbool dup *.eye8dir != and .eye8dir store dropbool
+-420 dupbool dup *.eye9dir != and .eye9dir store dropbool
+105 dupbool dup *.eye1width != and .eye1width store dropbool
+105 dupbool dup *.eye2width != and .eye2width store dropbool
+105 dupbool dup *.eye3width != and .eye3width store dropbool
+105 dupbool dup *.eye4width != and .eye4width store dropbool
+105 dupbool dup *.eye5width != and .eye5width store dropbool
+105 dupbool dup *.eye6width != and .eye6width store dropbool
+105 dupbool dup *.eye7width != and .eye7width store dropbool
+105 dupbool dup *.eye8width != and .eye8width store dropbool
+105 dupbool dup *.eye9width != and .eye9width store dropbool
+dropbool *.numties 0 >
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+dropbool *.v1 *.timer >
+-1 dupbool dup *.v1 != and .v1 store dropbool
+0 dupbool dup *.c1 != and .c1 store dropbool
+dropbool *.v2 *.timer >
+-1 dupbool dup *.v2 != and .v2 store dropbool
+0 dupbool dup *.c2 != and .c2 store dropbool
+dropbool *.v3 *.timer >
+-1 dupbool dup *.v3 != and .v3 store dropbool
+0 dupbool dup *.c3 != and .c3 store dropbool
+dropbool *.v4 *.timer >
+-1 dupbool dup *.v4 != and .v4 store dropbool
+0 dupbool dup *.c4 != and .c4 store dropbool
+dropbool *.v5 *.timer >
+-1 dupbool dup *.v5 != and .v5 store dropbool
+0 dupbool dup *.c5 != and .c5 store dropbool
+dropbool *.v6 *.timer >
+-1 dupbool dup *.v6 != and .v6 store dropbool
+0 dupbool dup *.c6 != and .c6 store dropbool
+dropbool *.v7 *.timer >
+-1 dupbool dup *.v7 != and .v7 store dropbool
+0 dupbool dup *.c7 != and .c7 store dropbool
+dropbool *.v8 *.timer >
+-1 dupbool dup *.v8 != and .v8 store dropbool
+0 dupbool dup *.c8 != and .c8 store dropbool
+dropbool *.v9 *.timer >
+-1 dupbool dup *.v9 != and .v9 store dropbool
+0 dupbool dup *.c9 != and .c9 store dropbool
+dropbool *.focuseye 0 = *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or not and *.eyef 0 > and
+*.refveldx dupbool dup *.dx != and .dx store dropbool
+*.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+dupbool dupbool *.eyef 40 > and
+8 dupbool dup *.shootval != and .shootval store dropbool
+dupbool dupbool *.refeye 0 = and
+-1 dupbool dup *.shoot != and .shoot store dropbool
+not and not dupbool not dupbool *.venom 30 >= *.refshell 100 > and and
+-3 dupbool dup *.shoot != and .shoot store dropbool
+30 dupbool dup *.shootval != and .shootval store dropbool
+not and not or not 
+-6 dupbool dup *.shoot != and .shoot store dropbool
+dropbool
+*.refvelup dupbool dup *.up != and .up store dropbool
+not and 
+*.refvelup 40 add dupbool dup *.up != and .up store dropbool
+dropbool
+not 
+dupbool dupbool *.hivexpos *.hiveypos dist 3200 < and
+*.hivexpos *.hiveypos angle 628 add dupbool dup *.setaim != and .setaim store dropbool
+not and 
+*.cc dupbool dup *.aimdx != and .aimdx store dropbool
+dropbool
+10 dupbool dup *.up != and .up store dropbool
+dupbool dupbool *.eyef 0 > and
+dupbool dupbool *.v1 *.v2 <= *.v1 *.v3 <= and *.v1 *.v4 <= and *.v1 *.v5 <= and *.v1 *.v6 <= and *.v1 *.v7 <= and *.v1 *.v8 <= and *.v1 *.v9 <= and and
+*.timer dupbool dup *.v1 != and .v1 store dropbool
+*.refxpos dupbool dup *.x1 != and .x1 store dropbool
+*.refypos dupbool dup *.y1 != and .y1 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c1 != and .c1 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c1 != and .c1 store dropbool
+not and not or not 
+3 dupbool dup *.c1 != and .c1 store dropbool
+dropbool
+not and not dupbool not dupbool *.v2 *.v1 <= *.v2 *.v3 <= and *.v2 *.v4 <= and *.v2 *.v5 <= and *.v2 *.v6 <= and *.v2 *.v7 <= and *.v2 *.v8 <= and *.v2 *.v9 <= and and
+*.timer dupbool dup *.v2 != and .v2 store dropbool
+*.refxpos dupbool dup *.x2 != and .x2 store dropbool
+*.refypos dupbool dup *.y2 != and .y2 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c2 != and .c2 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c2 != and .c2 store dropbool
+not and not or not 
+3 dupbool dup *.c2 != and .c2 store dropbool
+dropbool
+not and dupbool *.v3 *.v1 <= *.v3 *.v2 <= and *.v3 *.v4 <= and *.v3 *.v5 <= and *.v3 *.v6 <= and *.v3 *.v7 <= and *.v3 *.v8 <= and *.v3 *.v9 <= and and
+*.timer dupbool dup *.v3 != and .v3 store dropbool
+*.refxpos dupbool dup *.x3 != and .x3 store dropbool
+*.refypos dupbool dup *.y3 != and .y3 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c3 != and .c3 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c3 != and .c3 store dropbool
+not and not or not 
+3 dupbool dup *.c3 != and .c3 store dropbool
+dropbool
+not and dupbool *.v4 *.v1 <= *.v4 *.v2 <= and *.v4 *.v3 <= and *.v4 *.v5 <= and *.v4 *.v6 <= and *.v4 *.v7 <= and *.v4 *.v8 <= and *.v4 *.v9 <= and and
+*.timer dupbool dup *.v4 != and .v4 store dropbool
+*.refxpos dupbool dup *.x4 != and .x4 store dropbool
+*.refypos dupbool dup *.y4 != and .y4 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c4 != and .c4 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c4 != and .c4 store dropbool
+not and not or not 
+3 dupbool dup *.c4 != and .c4 store dropbool
+dropbool
+not and dupbool *.v5 *.v1 <= *.v5 *.v2 <= and *.v5 *.v3 <= and *.v5 *.v4 <= and *.v5 *.v6 <= and *.v5 *.v7 <= and *.v5 *.v8 <= and *.v5 *.v9 <= and and
+*.timer dupbool dup *.v5 != and .v5 store dropbool
+*.refxpos dupbool dup *.x5 != and .x5 store dropbool
+*.refypos dupbool dup *.y5 != and .y5 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c5 != and .c5 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c5 != and .c5 store dropbool
+not and not or not 
+3 dupbool dup *.c5 != and .c5 store dropbool
+dropbool
+not and dupbool *.v6 *.v1 <= *.v6 *.v2 <= and *.v6 *.v3 <= and *.v6 *.v4 <= and *.v6 *.v5 <= and *.v6 *.v7 <= and *.v6 *.v8 <= and *.v6 *.v9 <= and and
+*.timer dupbool dup *.v6 != and .v6 store dropbool
+*.refxpos dupbool dup *.x6 != and .x6 store dropbool
+*.refypos dupbool dup *.y6 != and .y6 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c6 != and .c6 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c6 != and .c6 store dropbool
+not and not or not 
+3 dupbool dup *.c6 != and .c6 store dropbool
+dropbool
+not and dupbool *.v7 *.v1 <= *.v7 *.v2 <= and *.v7 *.v3 <= and *.v7 *.v4 <= and *.v7 *.v5 <= and *.v7 *.v6 <= and *.v7 *.v8 <= and *.v7 *.v9 <= and and
+*.timer dupbool dup *.v7 != and .v7 store dropbool
+*.refxpos dupbool dup *.x7 != and .x7 store dropbool
+*.refypos dupbool dup *.y7 != and .y7 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c7 != and .c7 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c7 != and .c7 store dropbool
+not and not or not 
+3 dupbool dup *.c7 != and .c7 store dropbool
+dropbool
+not and dupbool *.v8 *.v1 <= *.v8 *.v2 <= and *.v8 *.v3 <= and *.v8 *.v4 <= and *.v8 *.v5 <= and *.v8 *.v6 <= and *.v8 *.v7 <= and *.v8 *.v9 <= and and
+*.timer dupbool dup *.v8 != and .v8 store dropbool
+*.refxpos dupbool dup *.x8 != and .x8 store dropbool
+*.refypos dupbool dup *.y8 != and .y8 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c8 != and .c8 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c8 != and .c8 store dropbool
+not and not or not 
+3 dupbool dup *.c8 != and .c8 store dropbool
+dropbool
+not and dupbool *.v9 *.v1 <= *.v9 *.v2 <= and *.v9 *.v3 <= and *.v9 *.v4 <= and *.v9 *.v5 <= and *.v9 *.v6 <= and *.v9 *.v7 <= and *.v9 *.v8 <= and and
+*.timer dupbool dup *.v9 != and .v9 store dropbool
+*.refxpos dupbool dup *.x9 != and .x9 store dropbool
+*.refypos dupbool dup *.y9 != and .y9 store dropbool
+dupbool dupbool *.refeye 0 = and
+1 dupbool dup *.c9 != and .c9 store dropbool
+not and not dupbool not dupbool *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or and
+2 dupbool dup *.c9 != and .c9 store dropbool
+not and not or not 
+3 dupbool dup *.c9 != and .c9 store dropbool
+dropbool
+dropbool dropbool dropbool
+dropbool dropbool dupbool dupbool *.x1 *.y1 dist 1200 < *.c1 3 = and *.timer *.v1 sub *.timer *.v2 sub <= and *.timer *.v1 sub *.timer *.v3 sub <= and *.timer *.v1 sub *.timer *.v4 sub <= and *.timer *.v1 sub *.timer *.v5 sub <= and *.timer *.v1 sub *.timer *.v6 sub <= and *.timer *.v1 sub *.timer *.v7 sub <= and *.timer *.v1 sub *.timer *.v8 sub <= and *.timer *.v1 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x1 *.y1 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c1 != and .c1 store dropbool
+not and not dupbool not dupbool *.x2 *.y2 dist 1200 < *.c2 3 = and *.timer *.v2 sub *.timer *.v1 sub <= and *.timer *.v2 sub *.timer *.v3 sub <= and *.timer *.v2 sub *.timer *.v4 sub <= and *.timer *.v2 sub *.timer *.v5 sub <= and *.timer *.v2 sub *.timer *.v6 sub <= and *.timer *.v2 sub *.timer *.v7 sub <= and *.timer *.v2 sub *.timer *.v8 sub <= and *.timer *.v2 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x2 *.y2 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c2 != and .c2 store dropbool
+not and dupbool *.x3 *.y3 dist 1200 < *.c3 3 = and *.timer *.v3 sub *.timer *.v1 sub <= and *.timer *.v3 sub *.timer *.v2 sub <= and *.timer *.v3 sub *.timer *.v4 sub <= and *.timer *.v3 sub *.timer *.v5 sub <= and *.timer *.v3 sub *.timer *.v6 sub <= and *.timer *.v3 sub *.timer *.v7 sub <= and *.timer *.v3 sub *.timer *.v8 sub <= and *.timer *.v3 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x3 *.y3 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c3 != and .c3 store dropbool
+not and dupbool *.x4 *.y4 dist 1200 < *.c4 3 = and *.timer *.v4 sub *.timer *.v1 sub <= and *.timer *.v4 sub *.timer *.v2 sub <= and *.timer *.v4 sub *.timer *.v3 sub <= and *.timer *.v4 sub *.timer *.v5 sub <= and *.timer *.v4 sub *.timer *.v6 sub <= and *.timer *.v4 sub *.timer *.v7 sub <= and *.timer *.v4 sub *.timer *.v8 sub <= and *.timer *.v4 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x4 *.y4 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c4 != and .c4 store dropbool
+not and dupbool *.x5 *.y5 dist 1200 < *.c5 3 = and *.timer *.v5 sub *.timer *.v1 sub <= and *.timer *.v5 sub *.timer *.v2 sub <= and *.timer *.v5 sub *.timer *.v3 sub <= and *.timer *.v5 sub *.timer *.v4 sub <= and *.timer *.v5 sub *.timer *.v6 sub <= and *.timer *.v5 sub *.timer *.v7 sub <= and *.timer *.v5 sub *.timer *.v8 sub <= and *.timer *.v5 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x5 *.y5 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c5 != and .c5 store dropbool
+not and dupbool *.x6 *.y6 dist 1200 < *.c6 3 = and *.timer *.v6 sub *.timer *.v1 sub <= and *.timer *.v6 sub *.timer *.v2 sub <= and *.timer *.v6 sub *.timer *.v3 sub <= and *.timer *.v6 sub *.timer *.v4 sub <= and *.timer *.v6 sub *.timer *.v5 sub <= and *.timer *.v6 sub *.timer *.v7 sub <= and *.timer *.v6 sub *.timer *.v8 sub <= and *.timer *.v6 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x6 *.y6 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c6 != and .c6 store dropbool
+not and dupbool *.x7 *.y7 dist 1200 < *.c7 3 = and *.timer *.v7 sub *.timer *.v1 sub <= and *.timer *.v7 sub *.timer *.v2 sub <= and *.timer *.v7 sub *.timer *.v3 sub <= and *.timer *.v7 sub *.timer *.v4 sub <= and *.timer *.v7 sub *.timer *.v5 sub <= and *.timer *.v7 sub *.timer *.v6 sub <= and *.timer *.v7 sub *.timer *.v8 sub <= and *.timer *.v7 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x7 *.y7 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c7 != and .c7 store dropbool
+not and dupbool *.x8 *.y8 dist 1200 < *.c8 3 = and *.timer *.v8 sub *.timer *.v1 sub <= and *.timer *.v8 sub *.timer *.v2 sub <= and *.timer *.v8 sub *.timer *.v3 sub <= and *.timer *.v8 sub *.timer *.v4 sub <= and *.timer *.v8 sub *.timer *.v5 sub <= and *.timer *.v8 sub *.timer *.v6 sub <= and *.timer *.v8 sub *.timer *.v7 sub <= and *.timer *.v8 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x8 *.y8 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c8 != and .c8 store dropbool
+not and dupbool *.x9 *.y9 dist 1200 < *.c9 3 = and *.timer *.v9 sub *.timer *.v1 sub <= and *.timer *.v9 sub *.timer *.v2 sub <= and *.timer *.v9 sub *.timer *.v3 sub <= and *.timer *.v9 sub *.timer *.v4 sub <= and *.timer *.v9 sub *.timer *.v5 sub <= and *.timer *.v9 sub *.timer *.v6 sub <= and *.timer *.v9 sub *.timer *.v7 sub <= and *.timer *.v9 sub *.timer *.v8 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x9 *.y9 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c9 != and .c9 store dropbool
+not and dupbool *.x1 *.y1 dist 1200 < *.c1 1 = and *.timer *.v1 sub *.timer *.v2 sub <= and *.timer *.v1 sub *.timer *.v3 sub <= and *.timer *.v1 sub *.timer *.v4 sub <= and *.timer *.v1 sub *.timer *.v5 sub <= and *.timer *.v1 sub *.timer *.v6 sub <= and *.timer *.v1 sub *.timer *.v7 sub <= and *.timer *.v1 sub *.timer *.v8 sub <= and *.timer *.v1 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x1 *.y1 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c1 != and .c1 store dropbool
+not and dupbool *.x2 *.y2 dist 1200 < *.c2 1 = and *.timer *.v2 sub *.timer *.v1 sub <= and *.timer *.v2 sub *.timer *.v3 sub <= and *.timer *.v2 sub *.timer *.v4 sub <= and *.timer *.v2 sub *.timer *.v5 sub <= and *.timer *.v2 sub *.timer *.v6 sub <= and *.timer *.v2 sub *.timer *.v7 sub <= and *.timer *.v2 sub *.timer *.v8 sub <= and *.timer *.v2 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x2 *.y2 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c2 != and .c2 store dropbool
+not and dupbool *.x3 *.y3 dist 1200 < *.c3 1 = and *.timer *.v3 sub *.timer *.v1 sub <= and *.timer *.v3 sub *.timer *.v2 sub <= and *.timer *.v3 sub *.timer *.v4 sub <= and *.timer *.v3 sub *.timer *.v5 sub <= and *.timer *.v3 sub *.timer *.v6 sub <= and *.timer *.v3 sub *.timer *.v7 sub <= and *.timer *.v3 sub *.timer *.v8 sub <= and *.timer *.v3 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x3 *.y3 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c3 != and .c3 store dropbool
+not and dupbool *.x4 *.y4 dist 1200 < *.c4 1 = and *.timer *.v4 sub *.timer *.v1 sub <= and *.timer *.v4 sub *.timer *.v2 sub <= and *.timer *.v4 sub *.timer *.v3 sub <= and *.timer *.v4 sub *.timer *.v5 sub <= and *.timer *.v4 sub *.timer *.v6 sub <= and *.timer *.v4 sub *.timer *.v7 sub <= and *.timer *.v4 sub *.timer *.v8 sub <= and *.timer *.v4 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x4 *.y4 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c4 != and .c4 store dropbool
+not and dupbool *.x5 *.y5 dist 1200 < *.c5 1 = and *.timer *.v5 sub *.timer *.v1 sub <= and *.timer *.v5 sub *.timer *.v2 sub <= and *.timer *.v5 sub *.timer *.v3 sub <= and *.timer *.v5 sub *.timer *.v4 sub <= and *.timer *.v5 sub *.timer *.v6 sub <= and *.timer *.v5 sub *.timer *.v7 sub <= and *.timer *.v5 sub *.timer *.v8 sub <= and *.timer *.v5 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x5 *.y5 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c5 != and .c5 store dropbool
+not and dupbool *.x6 *.y6 dist 1200 < *.c6 1 = and *.timer *.v6 sub *.timer *.v1 sub <= and *.timer *.v6 sub *.timer *.v2 sub <= and *.timer *.v6 sub *.timer *.v3 sub <= and *.timer *.v6 sub *.timer *.v4 sub <= and *.timer *.v6 sub *.timer *.v5 sub <= and *.timer *.v6 sub *.timer *.v7 sub <= and *.timer *.v6 sub *.timer *.v8 sub <= and *.timer *.v6 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x6 *.y6 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c6 != and .c6 store dropbool
+not and dupbool *.x7 *.y7 dist 1200 < *.c7 1 = and *.timer *.v7 sub *.timer *.v1 sub <= and *.timer *.v7 sub *.timer *.v2 sub <= and *.timer *.v7 sub *.timer *.v3 sub <= and *.timer *.v7 sub *.timer *.v4 sub <= and *.timer *.v7 sub *.timer *.v5 sub <= and *.timer *.v7 sub *.timer *.v6 sub <= and *.timer *.v7 sub *.timer *.v8 sub <= and *.timer *.v7 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x7 *.y7 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c7 != and .c7 store dropbool
+not and dupbool *.x8 *.y8 dist 1200 < *.c8 1 = and *.timer *.v8 sub *.timer *.v1 sub <= and *.timer *.v8 sub *.timer *.v2 sub <= and *.timer *.v8 sub *.timer *.v3 sub <= and *.timer *.v8 sub *.timer *.v4 sub <= and *.timer *.v8 sub *.timer *.v5 sub <= and *.timer *.v8 sub *.timer *.v6 sub <= and *.timer *.v8 sub *.timer *.v7 sub <= and *.timer *.v8 sub *.timer *.v9 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x8 *.y8 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c8 != and .c8 store dropbool
+not and dupbool *.x9 *.y9 dist 1200 < *.c9 1 = and *.timer *.v9 sub *.timer *.v1 sub <= and *.timer *.v9 sub *.timer *.v2 sub <= and *.timer *.v9 sub *.timer *.v3 sub <= and *.timer *.v9 sub *.timer *.v4 sub <= and *.timer *.v9 sub *.timer *.v5 sub <= and *.timer *.v9 sub *.timer *.v6 sub <= and *.timer *.v9 sub *.timer *.v7 sub <= and *.timer *.v9 sub *.timer *.v8 sub <= and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+*.x9 *.y9 angle dupbool dup *.setaim != and .setaim store dropbool
+0 dupbool dup *.c9 != and .c9 store dropbool
+not and dupbool *.eye2 0 > *.focuseye -3 < and and
+-3 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye3 0 > *.focuseye -2 < and and
+-2 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye4 0 > *.focuseye -1 < and and
+-1 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye5 0 > *.focuseye 0 < and and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye6 0 > *.focuseye 1 < and and
+1 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye7 0 > *.focuseye 2 < and and
+2 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye8 0 > *.focuseye 3 < and and
+3 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye9 0 > *.focuseye 4 < and and
+4 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye1 0 > and
+-4 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye2 0 > and
+-3 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye3 0 > and
+-2 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye4 0 > and
+-1 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye5 0 > and
+0 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye6 0 > and
+1 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye7 0 > and
+2 dupbool dup *.focuseye != and .focuseye store dropbool
+not and dupbool *.eye8 0 > and
+3 dupbool dup *.focuseye != and .focuseye store dropbool
+not and not or not 
+8 rnd 4 sub dupbool dup *.focuseye != and .focuseye store dropbool
+dropbool
+dropbool *.body 800 < *.nrg 15000 > and
+500 dupbool dup *.strbody != and .strbody store dropbool
+dropbool *.body 800 > *.nrg 30000 < and
+500 dupbool dup *.fdbody != and .fdbody store dropbool
+dropbool *.nrg 10000 > *.venom 1000 < and
+200 dupbool dup *.strvenom != and .strvenom store dropbool
+dropbool *.fixed 0 !=
+.fixpos dec
+dropbool *.shflav -1 = *.refeye 0 = *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or or and *.poison 500 < and
+500 *.poison sub dupbool dup *.strpoison != and .strpoison store dropbool
+dropbool *.shflav -6 = *.refeye 0 = *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or or and *.shell 500 < and
+500 *.shell sub dupbool dup *.mkshell != and .mkshell store dropbool
+dropbool
+0 dup *.shflav != .shflav store
+*.waste 1000 > *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and *.refeye *.myeye 3 add *.status 1 sub 3 mult sub = *.in5 *.conspec = and or not and
+-4 dupbool dup *.shoot != and .shoot store dropbool
+*.waste dupbool dup *.shootval != and .shootval store dropbool
+dropbool *.nrg 30000 >= *.body 800 >= and
+.return inc
+dropbool
+stop
+
+cond
+*.robage 0 > *.status 2 = and *.shflav 0 != and *.shflav -2 != and *.return 0 != and
+start
+0 dup *.return != .return store
+*.shell 500 <
+500 *.shell sub dupbool dup *.mkshell != and .mkshell store dropbool
+dropbool
+500 dup *.strpoison != .strpoison store
+stop
+
+cond
+*.robage 0 > *.status 2 = and *.return 0 != and
+start
+*.nrg 10000 <
+0 dupbool dup *.return != and .return store dropbool
+dropbool *.eye5 0 = *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and not or
+*.hivexpos *.hiveypos angle dupbool dup *.setaim != and .setaim store dropbool
+30 *.velup sub 0 ceil 30 floor dupbool dup *.up != and .up store dropbool
+dropbool *.eye5 35 < *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and and
+*.refvelup 40 add dupbool dup *.up != and .up store dropbool
+*.refveldx dupbool dup *.dx != and .dx store dropbool
+dropbool *.eye5 35 >= *.refeye *.status 1 sub 3 mult *.myeye add = *.in5 *.conspec = and and
+-2 dupbool dup *.shoot != and .shoot store dropbool
+1000 dupbool dup *.shootval != and .shootval store dropbool
+dupbool dupbool *.refxpos 0 != *.refypos 0 != and and
+*.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+*.refxpos dupbool dup *.hivexpos != and .hivexpos store dropbool
+*.refypos dupbool dup *.hiveypos != and .hiveypos store dropbool
+dropbool dropbool
+*.refvelup dupbool dup *.up != and .up store dropbool
+*.refveldx dupbool dup *.dx != and .dx store dropbool
+dropbool *.numties 0 >
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+dropbool *.hivexpos *.hiveypos dist 200 <
+.counter inc
+not 
+0 dupbool dup *.counter != and .counter store dropbool
+dropbool *.counter 600 >
+1 dupbool dup *.status != and .status store dropbool
+dup ^ inc
+stop

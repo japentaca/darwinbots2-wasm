@@ -1,0 +1,214 @@
+'Cocci Kaleido
+'A bot with a huge eye amount
+'Could be F2 valid, not sure if defense counts
+'If it doesn't work, try deleting the comments
+'
+'###################
+'# STEERING SYSTEM #
+'###################
+'these nine genes each correspond to an eye,
+'setting it as the focus eye if the more inner
+'eyes are 0. To resolve clashes, the right side
+'is favoured.
+
+cond
+ *.eye1 0 !=
+ *.eye2 0 =
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+ *.eye9 0 =
+start
+ -4 .focuseye store
+stop
+
+cond
+ *.eye2 0 =
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+ *.eye9 0 !=
+start
+ 4 .focuseye store
+stop
+
+cond
+ *.eye2 0 !=
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+start
+ -3 .focuseye store
+stop
+
+cond
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 !=
+start
+ 3 .focuseye store
+stop
+
+cond
+ *.eye3 0 !=
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+start
+ -2 .focuseye store
+stop
+
+cond
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 !=
+start
+ 2 .focuseye store
+stop
+
+cond
+ *.eye4 0 !=
+ *.eye5 0 =
+ *.eye6 0 =
+start
+ -1 .focuseye store
+stop
+
+cond
+ *.eye5 0 =
+ *.eye6 0 !=
+start
+ 1 .focuseye store
+stop
+
+cond
+ *.eye5 0 !=
+start
+ 0 .focuseye store
+stop
+
+'If you are my species, or no-one's there,
+'look around.
+cond
+ *.eyef 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimsx store
+stop
+
+'You are not me, so I turn to face you.
+
+cond
+ *.eyef 0 !=
+ *.refeye *.myeye !=
+start
+ *.refxpos *.refypos angle *.refvelsx add .setaim store
+ 3 .up store
+stop
+
+'####################
+'# ANTIVIRUS SYSTEM #
+'####################
+
+cond
+ *.mkvirus 0 !=
+ *.nrg 100 >
+start
+ *.mkvirus .delgene store
+ 10 .mkslime store
+stop
+
+'################
+'# BOT UPDATING #
+'################
+
+cond
+start
+ *.tiepres .deltie store
+ *.nrg 3 div *.body sub dup .strbody store
+ - .fdbody store
+ .shoot store
+stop
+
+'###########
+'# FEEDING #
+'###########
+'Eat normally
+
+cond
+ *.refeye *.myeye !=
+ *.eye5 40 >
+start
+ *.nrg 10 div 4 floor 64 ceil .shootval store
+ -6 .shoot store
+ 999 dec
+stop
+
+'You have shell, but no poison, so I'll switch
+'my attack style.
+
+cond
+ *.refeye *.myeye !=
+ *.eye5 40 >
+ *.refpoison 0 =
+ *.refshell 0 >
+start
+ -1 .shoot store
+stop
+
+'Waste disposal
+
+cond
+ *.waste 50 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+'##########
+'# POISON #
+'##########
+
+cond
+ *999 0 <=
+ *.nrg 200 >
+start
+ 10 .strvenom store
+ .mkslime .vloc store
+ 32000 .venval store
+ 250 999 store
+stop
+
+cond
+ *.refeye *.myeye !=
+ *.refeye 0 !=
+ *.eye5 40 >
+ *.timer 0 <=
+start
+ *.venom .shootval store
+ -3 .shoot store
+stop
+
+'################
+'# REPRODUCTION #
+'################
+
+cond
+ *.nrg 5000 >
+start
+ 50 .repro store
+stop

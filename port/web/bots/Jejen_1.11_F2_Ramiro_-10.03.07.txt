@@ -1,0 +1,135 @@
+' Jejen 1.11
+' Just a mix of SWARM (Elite) and Hunter 2.13 (PY)
+' and many other good ideas from other authors
+' Nothing of my own creation actually
+' Works on 2.43
+
+
+
+' Anti birth-tie
+
+cond
+start
+.tie *.robage 1 add mult inc
+.deltie inc
+stop
+
+' Swarm
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim .setaim store
+*.refvelup .up store
+stop
+
+' Move
+
+cond
+*.eye5 0 =
+start
+1 .up store
+*.eye9 *.eye1 sub 2 mult .aimdx store
+stop
+
+' Aim
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+100 .aimsx store
+'5 .sx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+-100 .aimsx store
+'5 .dx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+50 .aimsx store
+'5 .sx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+-50 .aimsx store
+'5 .dx store
+stop
+
+cond
+*.eye5 35 >
+*.refeye *.myeye !=
+start
+*.refvelup .up store
+*.refvelsx .sx store
+*.refveldx .dx store
+*.refxpos *.refypos angle .setaim store
+
+stop
+
+' Attack
+
+cond
+*.eye5 35 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+16 .shootval store
+stop
+
+' Retaliate
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+1256 *.shang sub .setaim store
+8 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+
+' Reproduce
+
+cond
+*.body 1000 >
+start
+30 .repro store
+stop
+
+' Feed on and store body
+
+cond
+*.nrg 10000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 1000 <
+start
+*.body 0 floor .fdbody *.body sgn mult store
+stop
+
+end 

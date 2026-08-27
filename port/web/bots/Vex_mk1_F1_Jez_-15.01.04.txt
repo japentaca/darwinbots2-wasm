@@ -1,0 +1,85 @@
+'Topic: Formula one bots!
+'Jez
+
+'*Vex
+cond
+*.eye5 80 <
+start
+2 .up store
+26 .aimsx store
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+*.eye1 .aimsx store
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+*.eye9 -1 mult .aimsx store
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+-52 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+52 .aimdx store
+stop
+
+cond
+*.eye5 30 >
+*.eye5 100 <
+*.refeye 14 !=
+start
+1 .tie store
+0 .aimdx store
+0 .aimsx store
+stop
+
+cond
+*.numties 0 >
+start
+1 .tienum store
+1 .readtie store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.trefeye 14 =
+*.numties 0 >
+*.trefup 1 =
+start
+1 .tienum
+1 .deltie store
+stop
+
+cond
+*.refup 1 =
+*.refeye 14 =
+start
+52 .aimdx store
+stop
+
+cond
+*.nrg 6000 >
+*.eye5 0 =
+start
+25 .repro store
+stop
+
+cond
+*.waste 20000 >
+*.nrg 5000 >
+start
+500 .shootval
+-4 .shoot store
+stop
+end

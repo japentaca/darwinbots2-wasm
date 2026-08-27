@@ -1,0 +1,574 @@
+' Triangulus Patavinus
+'            Carlo Comis 2002
+'
+' The first and simplest multicellular
+' organism I've programmed.
+' It uses the motion abilities of 
+' his single cells to move, and 
+' each of them feeds and reproduces
+' by his own, altough reproducing
+' the whole triangle.
+
+' equilibrio energia- risposta
+
+cond
+  *80
+  0
+  >
+  *.nrg
+  1600
+  >
+start
+  *80
+  .tienum
+  store
+  -1
+  .tieloc
+  store
+  100
+  .tieval
+  store
+  0
+  80
+  store
+stop
+
+' equilibrio energia -domanda
+
+cond
+  *.nrg
+  1500
+  <
+  *40
+  24
+  =
+start
+  3
+  .tienum
+  store
+  3
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+cond
+  *.nrg
+  1500
+  <
+  *40
+  14
+  =
+start
+  2
+  .tienum
+  store
+  2
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+cond
+  *.nrg
+  1500
+  <
+  *40
+  6
+  =
+start
+  1
+  .tienum
+  store
+  1
+  .tieval
+  store
+  80
+  .tieloc
+  store
+stop
+
+'riproduzione
+
+cond
+  *51
+  1
+  =
+start
+  1
+  41
+  store
+  51
+  dec
+stop
+
+cond
+  *51
+  1
+  >
+start
+  50
+  .shoot
+  store
+  1
+  .shootval
+  store
+  51
+  dec
+stop
+
+cond
+  *41
+  10
+  =
+  *.nrg
+  24000
+  >
+  *.eye5
+  0
+  =
+start
+  50
+  .repro
+  store
+  40
+  51
+  store
+  2
+  41
+  store
+stop
+
+'ciclo
+
+
+'inseguimento oggetti avanti
+
+cond
+  *41
+  1
+  =
+  *.eye5
+  0
+  >
+  *.refeye
+  5
+  <
+start
+  10
+  41
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye5
+  0
+  >
+  *.refeye
+  4
+  >
+start
+  1
+  41
+  store
+stop
+
+cond
+  *.eye5
+  0
+  >
+  *.refeye
+  5
+  <
+start
+  1
+  43
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye5
+  0
+  >
+start
+  10
+  .up
+  store
+  -1
+  .shoot
+  store
+stop
+
+' inseguimento oggetti lato
+
+cond
+  *41
+  10
+  =
+  *.eye1
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye2
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye3
+  0
+  >
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye9
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye8
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+cond
+  *41
+  10
+  =
+  *.eye7
+  0
+  >
+start
+  10
+  .dx
+  store
+stop
+
+' inizio nutrimento
+
+cond
+  *41
+  0
+  =
+  *40
+  6
+  =
+start
+  1
+  41
+  store
+stop
+
+cond
+  *41
+  0
+  =
+  *40
+  14
+  =
+start
+  1
+  41
+  store
+stop
+
+cond
+  *41
+  0
+  =
+  *40
+  24
+  =
+start
+  1
+  41
+  store
+stop
+
+'sviluppo: robot 1
+
+cond
+  *40
+  5
+  =
+start
+  3
+  .tienum
+  store
+  23
+  .tieval
+  store
+  40
+  .tieloc
+  store
+  6
+  40
+  store
+stop
+
+cond
+  *40
+  3
+  =
+start
+  250
+  .aimdx
+  store
+  4
+  40
+  store
+stop
+
+cond
+  *40
+  2
+  =
+start
+  1
+  .tie
+  store
+  1
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  10
+  .tieval
+  store
+stop
+
+cond
+  *40
+  1
+  =
+start
+  66
+  .repro
+  store
+  2
+  40
+  store
+stop 
+
+cond
+  *40
+  -100
+  =
+start
+  471
+  .aimsx
+  store
+  1
+  40
+  store
+stop
+
+cond
+  *40
+  -20
+  =
+  *50
+  0
+  =
+start
+  471
+  .aimsx
+  store
+  1
+  40
+  store
+stop
+
+cond
+  *40
+  1
+  <
+start
+  *40
+  1
+  sub
+  40
+  store
+stop
+
+' sviluppo: robot 2
+
+cond
+  *40
+  13
+  =
+start
+  236
+  .aimdx
+  store
+  14
+  40
+  store
+stop
+
+cond
+  *40
+  12
+  =
+start
+  2
+  .tie
+  store
+  2
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  20
+  .tieval
+  store
+stop
+
+cond
+  *40
+  11
+  =
+start
+  50
+  .repro
+  store
+  12
+  40
+  store
+stop
+
+cond
+  *40
+  10
+  =
+start
+  1
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  3
+  .tieval
+  store
+  79
+  .aimdx
+  store
+  11
+  40
+  store
+stop
+
+' sviluppo robot 3
+
+cond
+  *40
+  23
+  =
+start
+  250
+  .aimdx
+  store
+  24
+  40
+  store
+stop
+
+cond
+  *40
+  22
+  =
+start
+  3
+  .tie
+  store
+  3
+  .tienum
+  store
+  5
+  .tieval
+  store
+  40
+  .tieloc
+  store
+stop
+
+cond
+  *40
+  21
+  =
+start
+  350
+  .aimdx
+  store
+  22
+  40
+  store
+stop
+
+cond
+  *40
+  20
+  =
+start
+  2
+  .tienum
+  store
+  40
+  .tieloc
+  store
+  13
+  .tieval
+  store
+  21
+  40
+  store
+stop
+end

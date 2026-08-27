@@ -1,0 +1,177 @@
+' Glacies Draconis
+' Nice little robot from Shen
+' Shoots .fixpos shots at enemy bots
+' Only makes slime shield if it sees a tie feeder...
+' Then tells his friends to as well
+
+
+' Nothing around, turn at random
+cond
+*.vel 15 <
+*.eye5 10 <
+start
+200 rnd 200 rnd sub .aimdx store
+1 .up store
+stop
+
+' Friend in distance, ignore him
+cond
+*.vel 15 <
+*.eye5 10 >
+*.eye5 50 <
+*.refeye *.myeye =
+start
+100 rnd 100 rnd sub .aimdx store
+1 .up store
+stop
+
+' Enemy far in front, go towards him
+cond
+*.eye5 10 >
+*.eye5 60 <
+*.refeye *.myeye !=
+*.vel 40 <
+start
+10 .up store
+stop
+
+' Enemy close in front, slow down a bit
+cond
+*.eye5 60 >
+*.refeye *.myeye !=
+*.vel 40 <
+start
+2 .up store
+stop
+
+' Nothing in front, something to the sides, turn towards it
+cond
+*.eye1 *.eye9 != 
+*.eye5 10 <
+start
+*.eye9 *.eye1 sub 2 mult .aimdx store
+stop
+
+' Friend close in front, avoid him
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+start
+30 .dx store 250 .aimdx store
+stop
+
+' Enemy in front, refine aim
+cond
+*.eye4 *.eye6 !=
+*.refeye *.myeye !=
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 3 div .dx store
+stop
+
+' Feed
+cond
+*.eye5 30 >
+*.myeye *.refeye !=
+start
+-1 .shoot store
+stop
+
+' Freeze enemy robots
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.reffixed 0 =
+*.refeye 0 !=
+start
+216 .shoot store
+0 .shootval store
+stop
+
+' Antidote if you get fixed 
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+' Waste disposal
+cond
+*.waste 200 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Reproduction
+cond
+*50 1 =
+start
+628 .aimdx store
+0 50 store
+stop
+
+cond
+*.nrg 5200 >
+*.eye5 50 <
+*.robage 20 >
+start
+628 .aimdx store
+80 .repro store
+1 50 store
+stop
+
+' If youve just been born have more babies
+cond
+*.nrg 2000 >
+*.robage 20 <
+*.robage 1 >
+start
+30 .repro store
+150 .aimdx store
+stop
+
+' Break birth tie
+' Make new tie to parent
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+cond
+*.robage 1 =
+start
+1 .deltie store
+628 .aimdx store
+stop
+
+' Spotted tie feeder
+cond
+*.eye5 0 >
+*.reftie 0 >
+*.refeye *.myeye !=
+*.out2 0 =
+*.robage 0 !=
+start
+42 .out2 store
+stop
+
+' Friend seen tie feeder
+cond
+*.eye5 11 >
+*.refeye *.myeye =
+*.in2 42 =
+start
+*.in2 .out2 store
+stop
+
+' Make slime
+cond
+*.out2 42 =
+*.slime 95 <
+start
+100 *.slime sub .mkslime store
+stop
+
+end

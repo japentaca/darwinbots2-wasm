@@ -90,6 +90,10 @@ opcionales, si el usuario las pide:
 - ~~**Rendimiento**~~: **cerrada 2026-08-26** (Web Worker + frame único
   transferible; WebGL medido y descartado por innecesario — ver la fila
   "Ext · Rendimiento" y el registro).
+- ~~**Bestiary del foro**~~: **cerrada 2026-08-26** (545 bots del foro
+  oficial bajados, validados con el core y servidos como presets en la
+  página — ver el registro; el archivador reproducible vive en
+  `port/tools/bestiary/`).
 
 ## Pendiente
 
@@ -281,3 +285,26 @@ opcionales, si el usuario las pide:
   descartado por innecesario** (documentado en `port/README.md`
   §"Página web"; queda como opción futura si el render dominara alguna
   vez). Fuentes sin modificar.
+
+- **2026-08-26** — Extensión Bestiary del foro (a pedido del usuario;
+  capa host pura: `port/web/` + herramienta nueva en
+  `port/tools/bestiary/`; cero cambios en `port/core/`, `port/wasm/` o
+  CMake). Archivador en tres pasos: `crawl_bestiary.py` rastrea los 12
+  sub-boards del Bestiary de forum.darwinbots.com (board 13: F1/F2/F3,
+  Short, Multi-Bots, Veggies, Interesting behaviour, EcoSim, Mutations,
+  The Starting Gate, Single store, Untagged; ~700 temas, solo bloques
+  [code] de la primera página de cada tema — los adjuntos del foro no
+  son visibles para invitados) y extrae 607 candidatos;
+  `validate_bots.js` los valida con el core real (dbcore.wasm bajo
+  node: alta de especie + siembra del fundador + al menos un gen
+  cerrado en `db_sim_bot_text` + 50 ticks) — 607/607 válidos tras
+  normalizar `&nbsp;`/zero-width del HTML de SMF, que el tokenizador
+  convertía en genes vacíos; `publish_bots.py` publica uno por tema (el
+  bloque válido más largo) → **545 bots en `port/web/bots/` +
+  `bots.json`**. La página los ofrece en el selector de especies
+  agrupados por sub-board (los Veggies siembran como vegetales); sin
+  `bots.json` la página sigue igual que antes. Verificado en Chrome:
+  545 en el selector, Callidus (F1) sembrado caza a las algas, un veggie
+  del Bestiary siembra como vegetal ×15. Nota de la verificación: en un
+  tab oculto el rAF no dispara y la sim se pausa sola (por diseño del
+  ping-pong; no es bug). Fuentes sin modificar.

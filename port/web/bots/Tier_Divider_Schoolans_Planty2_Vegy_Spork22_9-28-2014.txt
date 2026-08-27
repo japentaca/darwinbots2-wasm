@@ -1,0 +1,193 @@
+cond
+*.edge 0 =
+start
+40 40 angle .setaim store
+30 *.vel sub .up store
+stop
+
+cond
+start
+.delgene *.edge mult inc
+stop
+
+cond
+start
+.fixpos *.fixed mult dec
+9 inc
+stop
+
+cond
+*.robage 0 =
+start
+50 1 rnd mult inc
+stop
+
+cond
+*.nrg 300 >
+*50 0 =
+start
+50 inc
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 *.refage *.refage div mult .shoot store
+stop
+
+cond
+*.refeye 0 =
+start
+.tie inc
+stop
+
+cond
+*.numties 4 =
+start
+.fixpos inc
+stop
+
+cond
+*50 0 !=
+*.vel 20 <
+*.numties 0 =
+*.eye5 50 <
+start
+20 *.vel sub 2 div rnd .up store
+stop
+
+cond
+*.eye2 *.eye8 !=
+start
+*.eye2 *.eye8 sub 2 div .aimsx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+cond
+*.refeye *.myeye =
+start
+314 rnd .aimsx store
+stop
+
+cond
+*.nrg 10000 >
+start
+300 inc
+stop
+
+'/*****proper reproduction 1
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+  'if time to reproduce store it
+  1
+  972
+  store
+stop
+
+cond
+  '/after robot reproduces it reproduces more until energy less then 3000
+  *972
+  1
+  =
+start
+  50
+  .repro
+  store
+stop
+
+'***** 2
+
+cond
+  *.nrg
+  3000
+  <
+start
+  0
+  972
+  store
+stop
+
+'FOLLOW THE MASS
+cond
+pain 0 =<
+start
+-10 *.eye9 sgn mult
+-10 *.eye8 sgn mult add
+-10 *.eye7 sgn mult add
+-10 *.eye6 sgn mult add
+
+10 *.eye4 sgn mult add
+10 *.eye3 sgn mult add
+10 *.eye2 sgn mult add
+10 *.eye1 sgn mult add
+
+*.aim add 1256 mod .setaim store
+
+50 *.velup sub .up store
+0 .fixpos store
+stop
+
+
+-
+
+It could have also been this:
+
+'FOLLOW THE MASS
+cond
+pain 0 =<
+start
+-10 *.eye9 sgn mult
+-10 *.eye8 sgn mult add
+-10 *.eye7 sgn mult add
+-10 *.eye6 sgn mult add
+
+10 *.eye4 sgn mult add
+10 *.eye3 sgn mult add
+10 *.eye2 sgn mult add
+10 *.eye1 sgn mult add
+
+*.aim add 1256 mod .setaim store
+
+50 *.velup sub .up store
+0 .fixpos store
+stop
+
+'MATCH SPEED
+cond
+*.eye5 0 >
+start
+50 *.velup sub .up store
+*.refveldx .dx store
+0 .fixpos store
+stop
+
+
+'MATCH DIRECTION
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim *.aim sub 2 div *.aim add .setaim store
+stop
+
+cond 'new gene from Botsareus and Panda
+  *.chlr
+  *.light
+  <
+start
+160 .mkchlr store
+stop
+end

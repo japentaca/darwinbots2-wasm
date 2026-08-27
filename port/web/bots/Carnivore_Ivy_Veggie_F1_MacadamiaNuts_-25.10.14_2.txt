@@ -1,0 +1,100 @@
+'name: Carnivore Ivy
+'description: Do not eat!
+
+@
+def red 213
+def green 190
+def blue 22
+
+cond
+*.robage 2 >
+start
+*.thisgene .mkvirus *.vtimer 1 sub abs mult store
+.vshoot *.vtimer mult inc
+942 .setaim *.ypos 20000 sub 0 floor sgn mult store
+*13 .delgene *.thisgene *13 sub abs 0 floor mult store
+*.thisgene 13 store
+stop
+
+cond
+*.ypos 12000 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.ypos 9000 >
+start
+900 20 rnd add .setaim store
+100 .dn store
+stop
+
+cond
+*.ypos 10000 <
+start
+.shoot .ploc store
+0 .pval store
+0 .fixpos store
+*.tiepres .tienum store
+.tieval .tieloc store
+.aimsx .tieloc 10 rnd 9 sub 0 floor mult store
+614 .tieval store
+914 .setaim store
+850 .tielen store
+90 .stifftie store
+.tie *.eye5 sgn mult inc
+50 .sharenrg store
+*.tout7 1 sub 0 floor .tout7 store
+*.aim *14 add .setaim store
+*.nrg 100 div .mkchlr 30000 *.chlr sub sgn 0 floor mult store
+*.body 11 sub *.nrg 4 div sub .fdbody *.body 25 sub sgn 0 floor mult store
+*.nrg 4 div *.body 11 add sub .strbody *.nrg 200 sub sgn 0 floor mult store
+0 -1 store
+stop
+
+cond
+*.refeye *.myeye =
+start
+*14 sgn 100 rnd mult -1 mult 14 *.refeye *.myeye sub sgn abs 1 sub abs store
+stop
+
+cond
+*.tin7 *.tout7 >
+start
+*.tin7 5 sub 0 floor .tout7 store
+stop
+
+cond
+*.tout7 0 >
+*.nrg 200 >
+start
+*.nrg 25 div .strpoison store
+*.nrg 300 div .mkshell store
+stop
+
+cond
+*.nrg 200 >
+*.body 20 >
+start
+286 56 rnd add .setaim store
+100 .dn store
+80 .repro store
+stop
+
+cond
+*.hit 0 >
+start
+100 .tout7 store
+*.nrg 20 div .mkshell store
+*.nrg 5 div .strpoison store
+stop
+
+cond
+*.refeye *.myeye !=
+*.refeye 0 >
+*.eye5 10 >
+start
+10 .shotval store
+-6 .shoot store
+stop
+end

@@ -1,0 +1,195 @@
+ 'Rabidus: A bot by googlyeyesultra.
+ 
+ cond
+ start
+ 'Conspec, Self-Virus Protection, Set Eyewidth
+ *.myeye *.myshoot add 92 add 998 *.robage sgn 1 sub -1 mult mult store
+ 65 999 *.robage sgn 1 sub -1 mult mult store
+ 1221 .eye5width *.robage sgn 1 sub -1 mult mult store
+ stop
+ 
+ 'Reproduce
+ cond
+ *.nrg 850 >
+ start
+ 100 .strbody store
+ 49 .repro store
+ stop
+ 
+ 'Conspec
+ cond
+ *.refeye *.refshoot add 92 add *997 !=
+ start
+ *.refeye *.refshoot add 92 add 997 store
+ stop
+ 
+ 'Spread out when born
+ cond
+ *.eye5 0 !=
+ *997 *998 =
+ *.robage 20 <
+ start
+ *.refxpos *.refypos angle 628 add .setaim store
+ *.eye5 .up store
+ stop
+ 
+ 'Targeting/Movement
+ cond
+ *.eye5 0 >
+ *997 *998 !=
+ start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx *.veldx sub .dx store
+ *.refxpos *.refypos dist *.refvelup add *.velup sub 10 sub .up store
+ stop
+ 
+ 'Shootfeed
+ cond
+ *.eye5 30 >
+ *997 *998 !=
+ start
+ -6 .shoot store
+ stop
+ 
+ 'Del ties not made by me
+ cond
+ *.numties 0 >
+ *.tiepres *996 !=
+ start
+ *.tiepres .deltie store
+ stop
+ 
+ 'Tie
+ cond
+ *.eye5 30 >
+ *997 *998 !=
+ *.numties 0 =
+ start
+ 999 rnd 996 store
+ *996 .tie store
+ stop
+ 
+ 'Tiefeed
+ cond
+ *.numties 0 >
+ start
+ 996 *.numties sub rnd 996 *.numties add * .tienum store
+ -1 .tieloc store
+ -1000 .tieval store
+ stop
+ 
+ 'Sharefeed if multi
+ cond
+ *.multi 0 >
+ start
+ 99 .sharenrg store
+ stop
+ 
+ 'Body to Energy Conversion
+ cond
+ *.nrg 850 <
+ *.body 50 >
+ start
+ *.body 50 sub 100 ceil 10 mult .fdbody store
+ stop
+ 
+ 'Energy to Body Conversion
+ cond
+ *.nrg 250 >
+ *.body 50 <
+ start
+ *.body 50 sub 100 ceil .strbody store
+ stop
+ 
+ 'Waste Removal
+ cond
+ *.waste 50 >=
+ start
+ -4 .shoot store
+ *.waste .shootval store
+ stop
+ 
+ 'Shoot Virii
+ cond
+ *.eye5 15 >
+ *.nrg 150 >
+ *.vtimer 1 =
+ start
+ 50 .vshoot store
+ stop
+ 
+ 'Make Virii
+ cond
+ *.vtimer 0 =
+ start
+ *.thisgene 1 add .mkvirus store
+ stop
+ 
+ 'Virus
+ cond
+ 65 *999 !=
+ start
+ *.thisgene .mkvirus store
+ *.myeye *.myshoot add 32000 mult 50 add 32000 ceil .vshoot store
+ .delgene dec
+ stop
+ 
+ 'Chameleon genes
+ cond
+ *.in1 0 !=
+ *.in1 *.out1 !=
+ start
+ *.in1 .out1 store
+ stop
+ 
+ cond
+ *.in2 0 !=
+ *.in2 *.out2 !=
+ start
+ *.in2 .out2 store
+ stop
+ 
+ 'Some various code defenses
+ cond
+ *.fixed 0 !=
+ start
+ 0 .fixpos store
+ stop
+ 
+ cond
+ *.delgene 0 >
+ start
+ 0 .delgene store
+ stop
+ 
+ cond
+ *.shoot -6 !=
+ *.shoot -1 !=
+ *.shoot 0 !=
+ *.shoot -4 !=
+ start
+ 0 .shoot store
+ stop
+ 
+ cond
+ *.mrepro 0 !=
+ start
+ 0 .mrepro store
+ stop
+ 
+ cond
+ *.sexrepro 0 !=
+ start
+ 0 .sexrepro store
+ stop
+ 
+ cond
+ *.repro 49 !=
+ *.repro 0 !=
+ start
+ 0 .repro store
+ stop
+ 
+ 'End of Program
+ end
+ 

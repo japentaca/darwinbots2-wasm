@@ -224,6 +224,35 @@ function vbColorToCss(c) {
   return `rgb(${r},${g},${b})`;
 }
 
+// ---- Bestiary (bots bajados del foro, web/bots/) --------------------------
+// bots.json lo genera el archivador del Bestiary (scripts fuera del repo de
+// la sim): un registro por bot validado con el propio dbcore.wasm. La página
+// solo los ofrece como presets; si no existe el archivo, todo sigue igual.
+let BESTIARY = [];
+async function loadBestiary() {
+  try {
+    const r = await fetch('bots/bots.json');
+    if (!r.ok) return;
+    BESTIARY = await r.json();
+    const sel = document.getElementById('preset');
+    const groups = new Map();
+    BESTIARY.forEach((b, i) => {
+      let g = groups.get(b.board);
+      if (!g) {
+        g = document.createElement('optgroup');
+        g.label = 'Bestiary · ' + b.board;
+        groups.set(b.board, g);
+        sel.appendChild(g);
+      }
+      const o = document.createElement('option');
+      o.value = 'bestiary:' + i;
+      o.textContent = b.name + (b.veg ? ' (veg)' : '');
+      g.appendChild(o);
+    });
+    if (BESTIARY.length) log(`bestiary: ${BESTIARY.length} bots del foro en el selector`);
+  } catch (e) { /* sin bots.json (p. ej. file://): la página sigue igual */ }
+}
+
 // ---- Worker de sim --------------------------------------------------------
 // La sim corre entera en worker.js (protocolo documentado allí); esta página
 // solo manda comandos y dibuja el último frame recibido.
@@ -430,8 +459,20 @@ document.getElementById('btn-seed').onclick = seedFromForm;
 document.getElementById('speed').onchange = (e) =>
   worker.postMessage({ t: 'speed', n: parseInt(e.target.value, 10) });
 
-document.getElementById('preset').onchange = (e) => {
-  const p = PRESETS[e.target.value];
+document.getElementById('preset').onchange = async (e) => {
+  const v = e.target.value;
+  if (v.startsWith('bestiary:')) {
+    const b = BESTIARY[parseInt(v.slice(9), 10)];
+    const r = await fetch('bots/' + b.file);
+    if (!r.ok) { log(`no pude leer bots/${b.file}`); return; }
+    document.getElementById('dna').value = await r.text();
+    document.getElementById('sp-name').value = b.name + '.txt';
+    document.getElementById('sp-veg').checked = b.veg;
+    document.getElementById('sp-qty').value = b.veg ? 15 : 5;
+    document.getElementById('sp-nrg').value = 3000;
+    return;
+  }
+  const p = PRESETS[v];
   if (!p) return;
   document.getElementById('dna').value = p.dna;
   document.getElementById('sp-name').value = p.name;
@@ -465,6 +506,7 @@ function onReady() {
   document.getElementById('dna').value = p.dna;
   worker.postMessage({ t: 'speed', n: parseInt(document.getElementById('speed').value, 10) });
   newSim();
+  loadBestiary();
   log('dbcore.wasm cargado (en worker)');
   updateStats();
 }

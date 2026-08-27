@@ -1,0 +1,82 @@
+'Little Furiae
+'6 gene bot
+'designed for db 2.36 (3.0)
+'by Light
+'21/4/05
+
+'deletes all viruses from its genome, although I know its only a matter of time before you lot manage to break it :)
+
+'Gene 1 - Movement
+cond
+  *.robage 5 >
+  *.eye5 1 > and
+  *.myeye *.refeye != and
+  *.genes 6 != or
+start
+  *.genes 6 sub 2 mult 950 store
+  *.refxpos *.refypos angle .setaim store
+  *.refvelup *.refxpos *.refypos dist *.body 20 div 100 add sub 10 div add .up store
+  *.refveldx .dx store
+  -6 .shoot store
+  -5 .shootval store
+stop
+
+'Gene 2 - Rotation
+cond
+  *.eye5 0 =
+  *.refeye *.myeye = or
+  *950 0 != or
+start
+  1 *.thisgene *950 sub 1 add div *950 add 950 store
+  300 .aimsx store
+  1 *.velscalar 1 add div 25 mult .up store
+stop
+
+'Gene 3
+cond
+  *.nrg 1000 >
+  *950 0 != or
+start
+  1 *.thisgene *950 sub 1 add div *950 add 950 store
+  1 *.genes 5 sub div *.nrg 1500 sub mult .strbody store
+  1 *.genes 5 sub div 200 *.shell sub mult .mkshell store
+  1 *.genes 5 sub div 200 *.slime sub mult .mkslime store
+stop
+
+'Gene 4 - waste
+cond
+  *.waste 100 >
+  *950 0 != or
+start
+  1 *.thisgene *950 sub 1 add div *950 add 950 store
+  *.waste .shootval store
+  -4 .shoot store
+stop
+
+'Gene 5 - Reproduction
+cond
+  *.nrg 3500 >
+  *.eye5 0 = and
+  *950 0 != or
+start
+  1 *.thisgene *950 sub 1 add div *950 add 950 store
+  1 *.genes 5 sub div 40 mult .repro store
+  628 .aimdx store
+stop
+
+'gene 6
+cond
+  *.delgene 0 !=
+  *950 0 != or
+  *.genes 6 != or
+start
+  1 *.thisgene *950 sub 1 add div *950 add 950 store
+  *950 .delgene store
+  0 950 store
+  0 .shoot store
+  0 .repro store
+  0 .mrepro store
+  0 .sexrero store
+  0 .mkvirus store
+stop
+end

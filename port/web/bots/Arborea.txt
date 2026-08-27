@@ -1,0 +1,91 @@
+'Arborea
+'A multibot veggie/failed fractal bot
+'by Bacillus
+
+def iteration 991
+def initang 992
+def status 993
+def prevrepro 994
+def branching 3
+def maxiterands 6
+def step 2
+
+def stepsize 998
+
+cond
+ *.robage 0 =
+start
+ *.aim .initang store
+ .tie inc
+stop
+
+cond
+ *.robage 20 =
+start
+ *.tin1 .iteration store
+ *.tin2 .step add .status store
+ *.iteration ++ *.stepsize *.status sub sgn -- abs  
+
+sgn .iteration mult store
+ 0 *.stepsize *.status sub sgn -- abs  sgn .status 
+
+mult store
+stop
+
+cond
+ *.numties 0 =
+ *.nrg 5000 <
+start
+ 50 .dx store
+stop
+
+start
+ *.prevrepro 1000 sub sgn 0 floor .fixpos store
+ *.velup 5 add .dn store
+ 100 .tielen store
+ .maxiterands *.iteration .step mult sub .stepsize   
+
+store
+ 50 .sharenrg store
+ 50 .shareshell store
+ .prevrepro inc
+ *.iteration .tout1 store
+ *.status .tout2 store
+ *.body 400 sub .fdbody store
+ 100 *.shell sub .mkshell store
+ 100 *.poison sub .strpoison store
+stop
+
+cond
+ *.nrg 10000 >
+start
+ 2000 .shootval store
+ 628 .aimshoot store
+ -2 .shoot store
+stop
+
+cond
+ *.prevrepro 30 >
+ *.nrg 7500 >
+ *.numties 2 <
+ *.status 0 =
+ *.iteration .maxiterands <
+start
+ *.initang 628 add .setaim store
+ 0 .prevrepro store
+ 50 .repro store
+stop
+
+cond
+ *.prevrepro 20 >
+ *.nrg 7500 >
+ *.numties .branching <
+ *.status 0 >
+ *.iteration .maxiterands <
+start
+ 1256 .branching div *.numties mult add *.initang 
+
+add .setaim store
+ 0 .prevrepro store
+ 50 .repro store
+stop

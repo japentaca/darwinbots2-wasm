@@ -1,0 +1,258 @@
+'(C. Algificus) Zebedee V2.1 
+'F2 bot for DB V2.37.6
+'The Bot that Bounces Back!
+'Uses 'spring' to delete birth tie (program bug fixed after DB V2.37.6)
+'Only uses eye5
+'Attacks food in swarms
+'Designed by Jez 
+'Original swarm and shell idea by Steve
+
+
+'ID gene - Endy
+cond
+*.robage 0 =
+start
+.thisgene .memloc store
+stop
+
+'search for food
+cond
+*.eye5 0 =
+start
+140 .aimsx store
+0 .out1 store
+0 .out2 store
+stop
+
+'move toward food/rival
+cond
+*.eye5 0 >
+*.eye5 45 <
+*.memval *.genes !=
+start
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 2 add 0 floor *.maxvel ceil .up store
+*.veldx .sx store
+0 .out1 store
+0 .out2 store
+stop
+
+'shoot food/rival
+cond
+*.eye5 45 >=
+*.eye5 80 <
+*.memval *.genes !=
+start
+-1 .shoot store
+20 .shootval store
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 1 add 0 floor *.maxvel ceil .up store
+*.veldx .sx store
+*.refxpos .out1 store
+*.refypos .out2 store
+stop
+
+'shoot rival with venom
+cond
+*.refshell 5 <
+*.eye5 45 >=
+*.venom 5 >
+*.eye5 80 <
+*.memval *.genes !=
+*.refeye 0 >
+start
+-3 .shoot store
+.shoot .vloc store
+-2 .venval store
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 1 add 0 floor *.maxvel ceil .up store
+*.veldx .sx store
+'*.refxpos .out1 store
+*.refypos .out2 store
+stop
+
+'shoot rival with shell
+cond
+*.refshell 5 >
+*.eye5 45 >=
+*.venom 5 >
+*.eye5 80 <
+*.memval *.genes !=
+*.refeye 0 >
+start
+-3 .shoot store
+.shoot .vloc store
+-2 .venval store
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 1 add 0 floor *.maxvel ceil .up store
+*.refxpos .out1 store
+*.refypos .out2 store
+*.veldx .sx store
+stop
+
+'shoot food/rival
+cond
+*.shell 5 <
+*.eye5 80 >=
+*.memval *.genes !=
+start
+-6 .shoot store
+20 .shootval store
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 0 floor *.maxvel ceil .up store
+*.refxpos .out1 store
+*.refypos .out2 store
+*.veldx .sx store
+stop
+
+'shoot food/rival with shell
+cond
+*.shell 5 >
+*.eye5 80 >=
+*.memval *.genes !=
+start
+-1 .shoot store
+20 .shootval store
+*.refxpos *.refypos angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 0 floor *.maxvel ceil .up store
+*.refxpos .out1 store
+*.refypos .out2 store
+*.veldx .sx store
+stop
+
+'avoid friend
+cond
+*.memval *.genes =
+*.in1 0 =
+*.in2 0 =
+*.refage 1 >
+*.eye5 0 >
+start
+140 .aimsx store
+stop
+
+'follow friend
+cond
+*.memval *.genes =
+*.in1 0 !=
+*.in2 0 !=
+*.refage 1 >
+*.eye5 0 >
+start
+*.in1 *.in2 angle .setaim store
+100 *.eye5 sub abs 10 div *.refvelscalar abs add 0 floor *.maxvel ceil .up store
+0 .out1 store
+0 .out2 store
+stop
+
+'reproduce baby behind
+cond
+*.nrg 1500 >
+*.body 600 >
+start
+50 .repro store
+628 .aimsx store
+.shoot dec
+stop
+
+'parent rotates back
+cond
+*.memval *.genes =
+*.refage 1 =
+start
+628 .aimsx store
+stop
+
+'cut ties/ lengthen ties
+cond
+*.numties 0 !=
+start
+32000 .tielen1 store 'Endy's from Elite's post (not in v 2.4? 
+stop
+
+'energy to body
+cond
+*.nrg 1900 >
+start
+100 .strbody store
+stop
+
+'body to energy
+cond
+*.nrg 999 <
+*.body 100 >
+start
+100 .fdbody store
+stop
+
+'poison
+cond
+*.shotflav -1 =
+*.poison 200 <
+*.nrg 1000 >
+start
+10 .strpoison store
+stop
+
+cond
+*.ploc .shoot !=
+start
+.shoot .ploc store
+stop
+
+'mkshell
+cond
+*.shotflav -6 =
+*.shotflav -3 = or
+*.refnrg 1000 >
+*.refshell 1000 <
+start
+100 .mkshell store
+stop
+
+'venom
+cond
+*.venom 200 <
+*.nrg 1000 >
+start
+10 .strvenom store
+stop 
+
+'counter attack (ty Elite)
+cond
+*.eye5 0 =
+*.memval *.genes = or
+*.refshoot 0 = or
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .aimshoot store
+32 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+'anti leach gene '(ty PY)
+cond
+*.tiepres 0 >
+start
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.robage 32000 =
+start
+stop
+
+'ID gene - Endy
+cond 
+start
+' little constant viral defense gene doubles as ID gene
+*.genes .delgene
+ .fixpos *.fixed mult dec 'anti fixpos by Elite
+*.thisgene *.genes sub dup div
+mult *.robage sgn mult store
+.genes inc
+stop
+end

@@ -1,0 +1,45 @@
+'Topic: CRITICAL POINT  
+'Desesperate
+
+'Animalzar
+'Cazador
+'Este cazador es mi segundo bot, asi que no esperen que sea perfecto
+'Por Desesperate
+
+'el primer gen especifica que se mueva para arriba
+'el segundo especifica que si detecta algo, que dispare
+'el tercero que se reproduzca
+'el cuarto que se mueva si esta parado
+'el quinto especifica que si le dan por atras se vuelva y dispare
+
+cond
+*.nrg >500
+start
+5 .up store
+stop
+cond
+*.eye5
+0
+>
+start
+-1 .shoot store
+stop
+cond
+*.nrg 3000 
+>
+start
+40 .repro store
+1256 .aimsx store
+stop
+cond
+*.up 1 <
+start
+5 .up store
+stop
+cond
+*.hitup 1 =
+start
+1256 .aimsx store
+-1 .shoot store
+stop
+end

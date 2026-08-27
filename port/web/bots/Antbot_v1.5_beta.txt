@@ -1,0 +1,691 @@
+'Antbot v1.5 beta
+''A hivebot by Bacillus
+
+'''''''''''''''''''''''''''''
+'I/O CHANNELS
+'''''''''''''''''''''''''''''
+''I/O 1-species conspec
+''I/O 2-type recognition
+''I/O 3-status report and queen communication channel
+''I/O 4-hive conspec
+''I/O 5-andrenaline level
+''I/O 6-food timer-measures time elapsed since worker last saw food
+''I/O 7-X coordinate of last food sighting
+''I/O 8-Y coordinate of last food sighting
+''I/O 9-status timer-shows how long a decision by the queen lasts
+''I/O 10-Hostility-Factor on which queen decides to attack or not
+
+'''''''''''
+'VARS
+'''''''''''
+''Young Queen-collects energy to form her own colony. Chance-1 in 1000
+''Queen-spawns smaller ants
+''Drone-Poisons enemies, collects nrg from workers & other species,
+''relays back to queen. Chance-1 in 5
+''Worker-Finds food, brings it back to queen, and shares location
+''of food with other workers. Chance-1 in 2
+''Scout-Moves quickly to pull in veggies. Chance-1 in 5
+''Guard-Protects the queen and reports enemy raids. Chance-1 in 10
+
+def youngqueen 0
+def queen 1
+def drone 2
+def worker 3
+def scout 4
+def guard 5
+
+''Default-Ants act normally
+''Raid-Ants attempt to steal food from other hives
+''Attack-Ants will attack other hives
+''Report-A guard stus of going back to the queen and reporting a theft
+
+def default 0
+def raid 10
+def attack 20
+def report 30
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'CUSTOM MEMORY LOCATIONS
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''Status-Influences behaviour of ants
+''Hostility-How angry a hive is
+''Temp-initialization purposes
+''Type-The Ant's job in the colony
+''Queenxpos and Queenypos-Queen's coordinates
+''Dumpdist-The distance from the queen at which a scout should dump a veggie
+''Hiveid-The id of the hive this ant belongs to
+''Andrenaline-The amount of andrenaline a drone has
+''Memtimer-The time elapsed since worker last saw food
+''Foodxpos and Foodypos-the coordinates of the last seen food
+def statustimer 987
+def status 988
+def hostility 989
+def temp 990
+def type 991
+def queenxpos 992
+def queenypos 993
+def dumpdist 994
+def hiveid 995
+def andrenaline 996
+def memtimer 997
+def foodxpos 998
+def foodypos 999
+
+''Path tracker custom memlocs
+def minxpos 20
+def minypos 60
+def count 100
+def bearing 101
+def mindist 350
+def distance 102
+
+'Initialization
+''What type of ant am I?
+''Set eyes and conspec
+cond
+*.robage 0 =
+start
+1000 rnd .temp store
+.youngqueen *.temp sgn -- abs .type mult store
+.drone *.temp sgn .type mult store
+.scout *.temp 200 sub sgn 0 floor .type mult store
+.guard *.temp 400 sub sgn 0 floor .type mult store
+.worker *.temp 500 sub sgn 0 floor .type mult store
+
+1235 .out1 store
+
+-436 .eye9dir store
+-327 .eye8dir store
+-218 .eye7dir store
+-109 .eye6dir store
+109 .eye4dir store
+218 .eye3dir store
+327 .eye2dir store
+436 .eye1dir store
+105 .eye1width store
+105 .eye2width store
+105 .eye3width store
+105 .eye4width store
+105 .eye5width store
+105 .eye6width store
+105 .eye7width store
+105 .eye8width store
+105 .eye9width store
+stop
+
+'First generation is always a queen
+start
+.youngqueen .type store
+*.thisgene .delgene store
+stop
+
+'OCULUS
+'Update bot
+cond
+start
+*.hiveid .out4 store
+*.andrenaline .out5 store
+*.type .out2 store
+*.memtimer .out6 store
+*.foodxpos .out7 store
+*.foodypos .out8 store
+*.status .out3 store
+*.statustimer .out9 store
+*.hostility .out10 store
+*.nrg 3 div *.body sub dup .strbody store - .fdbody store
+-4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0
+
+floor mult *.eye1 *.eye6 sub sgn 0 floor mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub
+
+sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9
+
+*.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 *.eye6 sub sgn 0 floor mult
+*.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 floor
+
+mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub
+
+sgn ++ sgn mult *.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6
+
+sub sgn 0 floor mult *.eye2 *.eye5 sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2
+
+*.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn mult add 3 *.eye8 *.eye9 sub sgn ++ sgn
+
+mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 *.eye5 sub sgn 0
+
+floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub
+
+sgn ++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3
+
+*.eye8 sub sgn ++ sgn mult *.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult
+*.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn
+
+mult *.eye3 *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub
+
+sgn ++ sgn mult *.eye7 *.eye7 sub sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5
+
+sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7
+
+*.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn
+
+mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0
+
+floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub
+
+sgn ++ sgn mult add 1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4
+
+*.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn ++ sgn mult *.eye4 *.eye5 sub sgn 0 floor mult
+*.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn
+
+mult add 0 *.eye5 *.eye9 sub sgn ++ sgn mult *.eye5 *.eye8 sub sgn ++ sgn mult *.eye5 *.eye7 sub
+
+sgn ++ sgn mult *.eye5 *.eye6 sub sgn ++ sgn mult *.eye5 *.eye4 sub sgn ++ sgn mult *.eye5 *.eye3
+
+sub sgn ++ sgn mult *.eye5 *.eye2 sub sgn ++ sgn mult *.eye5 *.eye1 sub sgn ++ sgn mult add
+
+.focuseye store
+
+12 *.type .scout sub sgn abs -- abs 3 mult ++ mult *.vel sub .up store
+*.type .queen sub sgn abs -- abs .fixpos store
+*.tiepres .tienum store
+500 rnd 1500 add .dumpdist *.type .scout sub sgn abs -- abs mult store
+*.andrenaline *.venom sub .strvenom store
+.andrenaline *.andrenaline sgn mult dec
+.memtimer *.memtimer sgn mult dec
+.statustimer *.statustimer sgn mult dec
+-2 .venval store
+.shoot .vloc store
+.paralyzed .memloc store
+40 .stifftie store
+.minxpos *.count add * .minypos *.count add * dist .distance store
+stop
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'BEGIN WORKER PATH CODE
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'If I reached the end/beginning of my path, I turn around and start again
+cond
+ *.type .worker =
+ *.count 0 =
+start
+ 1 .bearing store
+stop
+
+cond
+ *.type .worker =
+ *.count 39 =
+start
+ -1 .bearing store
+stop
+
+'I see nothing and my timer's gone off, I'll remember this place.
+cond
+ *.type .worker =
+ *.eyef 0 =
+ *.count .minxpos add * 0 = 
+ *.count .minypos add * 0 =
+ *.timer 250 mod 1 =
+start
+ *.xpos *.count .minxpos add store
+ *.ypos *.count .minypos add store
+ *.count *.bearing add .count store
+stop
+
+'I see nothing, so I'll follow where I last left the highway.
+cond
+ *.type .worker =
+ *.eyef 0 =
+ .minxpos *.count add * 0 !=
+ .minypos *.count add * 0 !=
+start
+ .minxpos *.count add * .minypos *.count add * angle *.veldx 2 div sub .setaim store
+stop
+
+'I've reached my marker, so I'll go to the next.
+cond
+ *.type .worker =
+ .minxpos *.count add * 0 !=
+ .minypos *.count add * 0 != 
+ *.distance .mindist <
+start
+ *.count *.bearing add .count store
+stop
+
+'''''''''''''''''''''
+'END WORKER PATH CODE
+'''''''''''''''''''''
+
+'I'm too small!!
+cond
+*.body 150 <
+start
+175 *.body sub .strbody store
+stop
+
+'Some idiot has tied to me!!
+cond
+*.numties 0 !=
+*.type .scout !=
+start
+*.tiepres .deltie store
+stop
+
+'I am a guard and should only turn towards enemy conspecs
+cond
+ *.type .guard =
+ *.eyef 0 !=
+ *.refnrg 0 >
+ *.in1 *.out1 =
+ *.in4 *.hiveid != and
+ *.in1 *.out1 !=
+ *.nrg 1000 < and or
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+'I am a drone and should turn towards workers and queens as well as ants of other hives
+cond
+*.eyef 0 !=
+*.type .drone =
+*.nrg 15000 <
+*.in2 .scout !=
+*.in1 *.out1 = and
+*.in2 .youngqueen !=
+*.in1 *.out1 = and and
+*.in2 .drone !=
+*.in1 *.out1 = and and
+*.refnrg 0 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'I'm a worker/young queen, no point turning towards conspecs
+cond
+*.eyef 0 !=
+*.type .worker =
+*.body 1000 < and
+*.type .youngqueen = or
+*.out1 *.in1 !=
+*.refnrg 0 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'I am a young queen and am big and fat, so I mature
+cond
+*.type .youngqueen =
+*.body 10000 >
+start
+.fixpos inc
+.queen .type store
+*.xpos .queenxpos store
+*.ypos .queenypos store
+32000 rnd .hiveid store
+stop
+
+'I have no hive and you are a queen, I'll join yours
+cond
+*.queenxpos 0 =
+*.queenypos 0 =
+*.type .queen !=
+*.type .youngqueen !=
+*.in2 .queen =
+start
+*.refxpos .queenxpos store
+*.refypos .queenypos store
+*.in4 .hiveid store
+stop
+
+'Queen update cycle
+''Turn so I can make more ants
+''Make some shell so I don't die easily
+''Randomly decide to raid another hive
+cond
+*.type .queen =
+start
+20 .aimdx store
+*.nrg 20000 sub sgn 0 floor 5 mult .mkshell store
+10000 rnd dup sgn -- abs .raid mult .status store .statustimer store
+stop
+
+''If another hive has stolen more than 10 times, attack. 
+''Attacks can last for up to 2500 cycles.
+cond
+ *.type .queen =
+ *.hostility 10 >
+start
+ .attack .status store
+ 2500 rnd .statustimer store
+stop
+
+'Read instructions from the queen
+cond
+ *.in1 *.out1 =
+ *.in4 *.hiveid =
+ *.in2 .queen =
+ *.type .queen !=
+ *.type .youngqueen !=
+start
+ *.in3 .status store
+ *.in9 .statustimer store
+stop
+
+'Passive Drones and workers feed the queen
+cond
+*.in1 *.out1 =
+*.in4 *.hiveid =
+*.type .drone =
+*.status .attack != and
+*.type .worker = or
+*.in2 .queen =
+*.nrg 500 >
+*.eye5 40 >
+start
+ .fixpos inc
+*.nrg 1500 sub 1000 ceil .shootval store
+-2 .shoot store
+*.refxpos .queenxpos store
+*.refypos .queenypos store
+stop
+
+'The queen is dead, I am a huge drone sitting in her place, I think I'll become the new queen.
+cond
+*.type .drone =
+*.queenxpos *.queenypos dist 15 <
+*.in2 .queen !=
+*.nrg 30000 >=
+start
+.fixpos inc
+.queen .type store
+stop
+
+'Drones harvest food from workers to bring to the queen so workers can keep harvesting.
+cond
+*.hiveid *.in4 =
+*.type .drone =
+*.in2 .worker =
+*.eye5 40 >
+*.refnrg 1000 >
+start
+-1 .shoot store
+stop
+
+'I am a drone near a queen, but have no food, so I'll move away.
+cond
+*.in1 *.out1 =
+*.in2 .queen =
+*.type .drone =
+*.nrg 500 <=
+start
+*.maxvel *.velup add .dn store
+stop
+
+'I am a huge Drone/Worker, better go and give some of that food I harvested to the Queen.
+cond
+*.type .drone =
+*.nrg 15000 > and
+*.type .worker =
+*.body 2500 > and or
+start
+*.queenxpos *.queenypos angle .setaim store
+stop
+
+'Oooh, lots of food, let's share!
+cond
+*.type .worker =
+*.in1 *.out1 !=
+*.refnrg 20000 >
+*.reffixed 0 =
+start
+10 .memtimer store
+*.refxpos .foodxpos store
+*.refypos .foodypos store
+stop
+
+'You know where food is, I'll remember where.
+cond
+*.type .worker =
+*.in1 *.out1 =
+*.in2 .worker =
+*.in6 *.memtimer >
+start
+*.in6 .memtimer store
+*.in7 .foodxpos store
+*.in8 .foodypos store
+stop
+
+'Forget it.
+cond
+*.type .worker =
+*.memtimer 0 =
+*.foodxpos 0 !=
+*.foodypos 0 !=
+start
+628 .aimdx store
+*.maxvel *.veldn add .up store
+0 .foodxpos store
+0 .foodypos store
+stop
+
+'I see no food, but know where some is, so I'll go find it.
+cond
+*.type .worker =
+*.memtimer 0 >
+*.in1 *.out1 =
+*.eyef 0 = or
+start
+*.foodxpos *.foodypos angle .setaim store
+stop
+
+'I am a scout and my cargo is near the queen, I'll dump it and go find some more.
+''It's fixed, so it won't run away.
+cond
+*.type .scout =
+*.numties 1 =
+*.treffixed 0 !=
+start
+*.tiepres .deltie store
+314 .aimdx store
+20 .up store
+stop
+
+'I am a scout without cargo and see food, let's get it!
+cond
+*.type .scout =
+*.numties 0 =
+*.in1 *.out1 !=
+*.reffixed 0 =
+*.refnrg 0 >
+*.eyef 0 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'I am a scout without cargo and am close to food, so I'll tie to it.
+''Only steal fixed food if I was told to raid.
+cond
+*.type .scout =
+*.in1 *.out1 !=
+*.nrg 0 >
+*.eye5 40 >
+*.reffixed 0 =
+*.reffixed 0 !=
+*.in4 *.hiveid != and
+*.status .raid = and or
+*.refshoot 0 =
+*.numties 0 =
+start
+.tie inc
+stop
+
+'I am a scout with cargo, better bring it back so the others can eat it.
+''Might as well take some of the spoils myself so the load isn't as heavy.
+''I'll mark this food as our own and unfix it.
+cond
+*.type .scout =
+*.numties 1 =
+start
+*.queenxpos *.queenypos angle .setaim store
+40 .sharenrg store
+1 .sharewaste store
+.out4 *.timer 2 mod mult *.timer 2 mod -- abs .fixpos mult add .tieloc store
+*.hiveid *.timer 2 mod mult .tieval store
+stop
+
+'I am a scout and my cargo is near the queen, I'll dump it and go find some more.
+''Let's fix it in place so it doesn't run away.
+cond
+*.type .scout =
+*.numties 1 =
+*.queenxpos *.queenypos dist *.dumpdist <
+start
+.fixpos .tieloc store
+.tieval inc
+stop
+
+'I'm not a scout and I see food, let's eat it!
+''If the veggie is part of out garden eg a scout pulled it in, to not kill it.
+''If it's an enemy, I am a drone, and we were told to attack, do so.
+cond
+*.eye5 40 >
+*.out1 *.in1 !=
+*.out1 *.in1 =
+*.in4 *.hiveid != and
+*.type .drone = and
+*.status .attack = and or
+*.type .scout !=
+*.reffixed 0 =
+*.refnrg 0 > and
+*.reffixed 0 >
+*.refbody 1000 > and or
+start
+*.velsx .dx store
+-6 .shoot store
+stop
+
+''If it's part of our garden, and it's small, eat its nrg instead.
+cond
+ *.eye5 40 >
+ *.out1 *.in1 !=
+ *.in4 *.hiveid =
+ *.type .scout !=
+ *.reffixed 0 !=
+ *.body 1000 <=
+ *.nrg 10000 >
+start
+ -1 .shoot store
+stop
+
+'I am a scout/guard, but am too close to the queen, so I'll move away
+cond
+*.type .scout =
+*.type .guard =
+*.status .report != and or
+*.queenxpos *.queenypos dist 500 <
+*.queenxpos *.queenypos angle *.aim %=
+start
+*.maxvel *.velsx add .dx store
+stop
+
+'I am a guard, but am too far away from the hive, I'll turn so I stay within the boundary
+cond
+ *.type .guard =
+ *.queenxpos *.queenypos dist 5000 >
+start
+ *.queenxpos *.queenypos angle 50 rnd 175 add add .setaim store
+stop
+
+'Timer runs out, time to forget what the queen told us.
+cond
+ *.statustimer 0 =
+ *.status .attack =
+ *.status .raid = or
+start
+ .default .status store
+stop
+
+'I am a guard and someone's stealing our food, I'll report it to the queen
+cond
+ *.type .guard =
+ *.in1 *.out1 =
+ *.in4 *.hiveid !=
+ *.in3 .raid =
+start
+ .report .status store
+stop
+
+'I'm reporting a theft
+''Step 1-go to the queen
+cond
+ *.type .guard =
+ *.status .report =
+start
+ *.queenxpos *.queenypos angle .setaim store
+ 25 .up store
+stop
+
+'I'm reporting a theft
+''Step 2-tell the queen
+cond
+ *.type .guard =
+ *.status .report =
+ *.eyef 40 >
+ *.in1 *.out1 =
+ *.in4 *.hiveid =
+ *.in2 .queen =
+start
+ *.in10 ++ .shootval store
+ .hostility .shoot store
+ .default .status store
+stop
+
+'I am a drone under attack, take countermeasures
+''Part 1:If attacked, make andrenaline.
+cond
+*.type .drone =
+*.shflav -1 =
+*.shflav -6 = or
+start
+*.andrenaline 5 add .andrenaline store
+*.shang .setaim store
+0 .shflav store
+stop
+
+''Part 2:If venom is stored due to andrenaline, spit it at the enemy.
+cond
+*.eye5 40 >
+*.out1 *.in1 !=
+*.type .drone =
+*.refshoot 0 >
+*.venom 0 >
+*.memval 0 !=
+start
+*.venom .shootval store
+-3 .shoot store
+stop
+
+''Part 3:You're angry, so I'll be as angry as you.
+cond
+*.in1 *.out1 =
+*.in2 .drone =
+*.type .drone =
+*.in5 *.andrenaline >
+start
+*.in5 .andrenaline store
+stop
+
+'I should really evolve a toilet...
+cond
+*.waste 200 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+'I am a Queen, so I should really make a colony
+cond
+*.type .queen =
+*.nrg 5000 >
+start
+5 .repro store
+stop

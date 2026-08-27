@@ -1,0 +1,123 @@
+'Topic: Ideas  
+'Mutchy original mod by PY
+'*****Movement Genes!*****
+
+cond
+*.eye4 *.eye5 >
+start
+-20 .aimdx store
+stop
+
+cond
+*.eye6 *.eye5 >
+start
+20 .aimdx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+200 .aimdx store
+stop
+
+cond
+*.vel 30 <
+start
+2 .up store
+stop
+
+'*****feeding*****
+
+'cond
+'*.numties 1 =
+'start
+'20 .tienum store
+'0 .fixang store
+'100 .fixlen store
+'0 50 store
+'stop
+
+cond
+*.numties 0 =
+start
+0 66 store
+stop
+
+cond
+*.eye5 30 >
+*.eye5 77 !=
+*.refeye *.myeye !=
+start
+1 .tie store
+-1 .tieloc store
+-1000 .tieval store
+1 .tienum store
+66 inc
+stop
+
+
+'*****Reproduction genes!*****
+cond
+*.nrg 2500 >
+start
+50 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+'*****Attempt at new venom genes!*****
+
+'***Attack enemy Tie gene***
+
+cond
+*.venom 20 <
+start
+10 .strvenom store
+stop
+
+'cond
+'*.numties 0 >
+'*.refeye *.myeye !=
+'*.refeye 0 %=
+'start
+'*.tiepres .tienum store
+'20 .tieval store
+'.repro .vloc store
+'1 .venval store
+'-3 .tieloc store
+'stop
+
+cond
+*.tiepres 0 !=
+*.numties 0 >
+'*.refeye *.myeye !=
+'*.refeye 1 !>
+'activate the *66 0 = line to enable proper tie feeding
+'and to disable venom attacks on veggies.
+'*66 0 =
+start
+*.tiepres .tienum store
+20 .tieval store
+.repro .vloc store
+1 .venval store
+-3 .tieloc store
+stop
+
+'*****Slime and Other Stuff*****
+cond
+*.slime 100 <
+start
+50 .mkslime store
+stop
+end

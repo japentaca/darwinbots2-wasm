@@ -1,0 +1,13 @@
+cond
+*.readtie 0 >
+*.robage *.trefage <
+
+*.in5 .out5 > and
+
+*.tin5 *.tout5 > xor
+start
+
+*.tin5 *.tout5 store
+
+*.in5 .out5 store
+stop

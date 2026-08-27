@@ -1,0 +1,281 @@
+'Topic: Parasites, here we come!
+'Fizban
+
+' P1 Parasite Bot
+' This nasty little thing goes behind other active bots and ties to them. It then drains
+' Energy is small amounts and practically lives on their backs.
+' It can only multiply when its attached to a host.
+' Created by fizban
+
+
+
+
+' Custom Locations
+' -----------------
+' P1 *999 - status - -2 - baby 
+' -1 - delay
+' 0 - searching for a host
+' 1 - establishing tie to host
+' 2 - fixing host .fixang
+' 3 - starting .nrg transfer 
+' 4 - multiply
+' ----------------------------------------------------
+
+
+' ---------------- Start of initializtion ------------
+cond
+*.robage 0 =
+start
+666 .out1 store
+0 999 store
+stop
+' ---------------- End of initialization -------------
+
+' ----------------------------------
+' Anomaly Detection Genes Code Block
+' ---------------------------------- 
+
+' Move back to search pattern code block (backup gene, if something is wrong with the connection)
+cond
+*.numties 0 =
+*999 0 >
+start
+0 999 store
+stop
+' ===================================
+
+' --------------------------
+' status -1 code block (999)
+' --------------------------
+
+' Delay 1 cycle, wait for .numties to rise (anomaly code block was skipped because *999 = -1)
+cond
+*999 -1 =
+start
+1 999 store
+stop
+' ===================================
+
+' -------------------------
+' status 4 code block (999)
+' -------------------------
+' Multiply!
+cond
+*999 4 =
+start
+50 .repro store
+3 999 store
+stop
+
+' Baby condition - do nothing for 75 cycles.
+cond
+*.robage 75 <
+*.numties 0 !=
+start
+-2 999 store
+stop
+
+' Baby condition - ready for work
+cond
+*.robage 75 =
+start
+0 999 store
+stop
+' ==========================
+
+' -------------------------
+' status 3 code block (999)
+' -------------------------
+
+' Energy transfer gene - get more energy if the para is short in energy.
+cond
+*999 3 =
+*.nrg 700 <
+start
+666 .tienum store
+-20 .tieval store
+-1 .tieloc store
+stop
+
+' Energy transfer gene - regular
+cond
+*999 3 =
+*.refnrg 1000 >
+*.refnrg 2500 <
+*.nrg 700 >
+start
+666 .tienum store
+-10 .tieval store
+-1 .tieloc store
+stop
+
+' Energy transfer gene - maximal
+cond
+*999 3 =
+*.refnrg 2500 >
+start
+666 .tienum store
+-15 .tieval store
+-1 .tieloc store
+stop
+
+' Move to code block of status 4 - multiply
+cond
+*.nrg 3050 >
+start
+4 999 store
+stop
+
+' =====================================
+
+' -------------------------
+' status 2 code block (999)
+' -------------------------
+
+' Set .fixang for host
+cond
+*999 2 =
+start
+666 .tienum store
+628 .tieval store
+.fixang .tieloc store
+3 999 store
+stop
+
+' ==========================
+?
+' -------------------------
+' status 1 code block (999)
+' -------------------------
+
+' fix view on tie
+cond
+*999 1 =
+start
+666 .tienum store
+0 .fixang store
+stop
+
+' Check if this host really without and para attached to it.
+cond
+*999 1 =
+*.reftie 0 !=
+start
+666 .deltie store
+0 999 store
+stop
+
+' Detach tie from veggies
+cond
+*999 1 =
+*.refshoot 0 =
+*.reffixed 1 =
+start
+666 .deltie store
+0 999 store
+stop
+
+' Make first contect with host - set its .tienum to 666 for fixang in status 2
+cond
+*999 1 =
+start
+666 .tienum store
+666 .tieval store
+.tienum .tieloc store
+stop
+
+' Move to status 2 gene
+cond 
+*999 1 =
+*.multi 1 =
+start
+2 999 store
+stop
+
+' ===========================================================================
+
+' -------------------------
+' status 0 code block (999)
+' -------------------------
+
+' Wide search pattern (left and right)
+cond
+*999 0 = 
+' *.eye3 30 <
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+120 .aimsx store
+stop
+
+cond
+*999 0 =
+' *.eye7 30 <
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+-120 .aimsx store
+stop
+
+' Narrow search pattern (left and right)
+cond
+*999 0 =
+*.eye4 20 <
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+start
+100 .aimsx store
+stop
+
+cond
+*999 0 =
+*.eye6 20 <
+*.eye6 *.eye5 >
+*.eye6 *.eye4 >
+start
+-100 .aimsx store
+stop
+
+' Move away from veg gene
+cond 
+*999 0 =
+*.refshoot 0 =
+*.eye5 65 >
+start
+200 .aimsx store
+stop
+
+' Move away from my own family gene
+cond
+*999 0 =
+*.in1 666 = 
+start
+-100 .aimsx store
+stop
+
+' Axccel gene
+cond
+*999 0 =
+start
+*.maxvel *.vel sub .up store
+stop
+
+
+' Tie creation gene
+cond
+*999 0 =
+*.numties 0 = 
+*.eye5 20 >
+*.refshoot 0 >
+*.reffixed 0 =
+*.in1 666 !=
+*.reftie 0 =
+start
+666 .tie store
+0 .aimsx store
+0 .up store
+-1 999 store
+stop
+' ====================================
+
+end

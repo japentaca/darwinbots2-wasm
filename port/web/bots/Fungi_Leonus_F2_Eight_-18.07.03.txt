@@ -1,0 +1,232 @@
+'18.07.03 
+'Topic: [robot] Fungi Leonus, Alga Spiralis and questions  
+
+' Fungi Leonus (lion fungus) by Eight (www.eightland.com)
+' 
+' these little lions have a huge appetite, are very aggressive
+' and territorial.. but when they're full they just like to 
+' chill around, conserving their energy 
+
+
+
+' spray chemical
+
+cond
+  *40
+  0
+  =
+start
+  66
+  .out1
+  store
+  1
+  40
+  store
+  1
+  70
+  store
+stop
+
+
+
+
+' search
+
+cond
+  *.eye1
+  0
+  =
+  *.eye3
+  0
+  =
+  *.eye5
+  0
+  =
+  *.eye7
+  0
+  =
+  *.eye9
+  0
+  =
+  *.nrg
+  2000
+  >
+start
+  10
+  .up
+  store
+  10
+  .aimsx
+  store
+stop
+
+cond
+  *.eye1
+  0
+  =
+  *.eye3
+  0
+  =
+  *.eye5
+  0
+  =
+  *.eye7
+  0
+  =
+  *.eye9
+  0
+  =
+  *.nrg
+  2000
+  <
+start
+  3
+  .up
+  store
+  3
+  .aimsx
+  store
+stop
+
+
+
+' aim
+
+cond
+  *.eye1
+  10
+  >
+  *.eye5
+  0
+  =
+  *.refaimsx 
+  6 
+  !=
+start
+  100
+  .aimsx
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye9
+  10
+  >
+  *.eye5
+  0
+  =
+  *.refaimsx 
+  6 
+  !=
+start
+  100
+  .aimdx
+  store
+  5
+  .up
+  store
+stop
+
+
+
+' eat
+
+
+cond
+  *.eye5
+  10
+  >
+  *.refaimsx 
+  6 
+  !=
+start
+  -1
+  .shoot
+  store
+  10
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  10
+  >
+  *.refaimsx 
+  6 
+  =
+start
+  30
+  .aimsx
+  store
+stop
+
+
+' pain
+
+cond
+  *.hitdn
+  0
+  >
+start
+  628
+  .aimsx
+  store
+stop
+
+cond
+  *.hitup
+  0
+  >
+start
+  5
+  .dn
+  store
+stop
+
+cond
+  *.hitsx
+  0
+  >
+start
+  157
+  .aimsx
+  store
+stop
+
+cond
+  *.hitdx
+  0
+  >
+start
+  157
+  .aimdx
+  store
+stop
+
+
+
+' reproduce
+
+cond
+  *.nrg
+  5000
+  >
+start
+  314
+  .aimdx
+  store
+  50
+  .repro
+  store
+stop
+
+
+
+
+
+
+end

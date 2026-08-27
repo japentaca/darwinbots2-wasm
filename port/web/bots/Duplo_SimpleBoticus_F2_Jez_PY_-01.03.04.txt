@@ -1,0 +1,115 @@
+'Duplo simpliboticus(t)
+'Hybrid of Simplebot and Duplo Obnoxious
+'Created by Jez
+
+cond
+*.eye3 *.eye5 >
+start
+mult -52
+99 inc 
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult 52
+99 inc
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult -104 
+99 inc
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult 104 
+99 inc
+stop
+
+' Gene 4. Shoot the food - identical
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+99 inc
+.tie inc
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+start
+1 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye =
+start
+.deltie inc
+stop
+
+' Gene 6. Avoid conspecifics - identical
+cond
+*.refeye 10 =
+*.eye5 0 >
+start
+mult 628
+99 inc 
+stop
+
+' Gene10. Tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+'.shoot dec
+'50 .repro store
+.readtie inc
+stop
+
+' Gene 5. Reproduce - identical
+cond
+*.nrg 6000 >
+start
+25 .repro store
+mult 628
+.shoot dec
+stop
+
+cond
+*99 0 =
+start
+mult 78
+stop
+
+' Gene 9. rotate
+cond
+start
+.aimdx store
+100 .mkslime store
+mult 0
+stop
+
+cond
+*.refeye 10 !=
+*99 0 >
+start
+30 *.vel sub .up store
+0 99 store
+stop
+
+cond
+*.refeye 10 =
+*99 0 >
+start
+0 99 store
+stop
+end

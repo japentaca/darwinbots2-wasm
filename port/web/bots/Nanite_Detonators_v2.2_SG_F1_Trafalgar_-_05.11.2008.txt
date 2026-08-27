@@ -1,0 +1,191 @@
+'Nanite Detonators 2.2.txt compiled by PyBot V2 from Nanite Detonators 2.2.pyr.
+' These updated Nanite Detonators now feed off veggies (non-mutated ones, anyways), and use their energy to pump out more nanite detonator bots. The normal nanites cease reproducing after the total number of nanites reaches 500, and the ones connected to a veggie (factory nanites) stop pumping out more tiny nanites at 600, but will produce larger ones whenever they exceed 1000 body, until the total number of nanites reaches 1000.
+def lastTieNum 988
+def lastTiePres 986
+def mode 981
+def myid 985
+def reproducedLastCycle 962
+def isVeggie 984
+cond
+true
+start
+0 dup *.fixpos != .fixpos store dropbool
+.myid dup *.tmemloc != .tmemloc store dropbool
+.myid dup *.memloc != .memloc store dropbool
+9136 dup *.myid != .myid store dropbool
+500 dup *.eye5width != .eye5width store dropbool
+*.aim 630 add dup *.setaim != *.robage 1 = and .setaim store dropbool
+*.nrg 150 > *.velscalar 100 > and *.body 10 > and *.totalmyspecies 500 < and
+50 .repro store
+*.robage .reproducedLastCycle store
+dropbool *.nrg 500 >
+dupbool dupbool *.eye5 0 > *.memval 9136 != and *.robage 2 > and *.refage 2 > and and
+*.refxpos *.refypos angle .setaim store
+dupbool dupbool *.timer 3 & 0 = and
+-1 .shoot store
+10 .shootval store
+not and not dupbool not dupbool *.timer 3 & 1 = and
+-6 .shoot store
+-10 .shootval store
+not and dupbool *.timer 3 & 2 = and
+.mkslime .shoot store
+-31999 .shootval store
+not and not or not 
+.shootval .shoot store
+31999 .shootval store
+dropbool
+0 .aimshoot store
+dropbool dropbool
+dropbool *.numties 0 =
+0 .mode store
+dupbool dupbool *.eye5 0 > *.memval 9136 != and *.robage 2 > and *.refage 2 > and and
+dupbool dupbool *.lastTiePres 2354 = *.lastTieNum 2354 = and and
+1 .fixpos store
+not and 
+dropbool
+2354 .tie store
+*.tie .tienum dupbool *.tie 0 != and store dropbool
+*.refxpos *.refypos angle .setaim store
+not and 
+dupbool dupbool *.velscalar 50 > and
+dupbool dupbool *.veldx 1 > and
+*.veldx .aimdx store
+not and not dupbool not dupbool *.velsx 1 > and
+*.velsx .aimsx store
+dropbool dropbool dropbool
+dropbool dropbool
+dropbool dupbool dupbool *.shoot 0 = and
+0 .fixpos store
+dupbool dupbool *.robage 0 > and
+.up dupbool *.nrg 25 > and inc dropbool
+.up dupbool *.nrg 50 > and inc dropbool
+.up dupbool *.nrg 75 > and inc dropbool
+.up dupbool *.nrg 100 > and inc dropbool
+dropbool dropbool
+dropbool dropbool
+not 
+*.numties 0 sub sgn 0 floor *.trefshell 0 sub sgn abs - ++ & *.trefeye 0 sub sgn abs - ++ & *.trefshoot 0 sub sgn abs - ++ & *.trefup 0 sub sgn abs - ++ & *.trefdn 0 sub sgn abs - ++ & *.trefsx 0 sub sgn abs - ++ & *.trefdx 0 sub sgn abs - ++ & *.tmemval 0 sub sgn abs - ++ & *.reproducedLastCycle *.robage sub abs 2 sub sgn 0 floor & dupbool dup *.isVeggie != and .isVeggie store dropbool
+dupbool dupbool *.lastTieNum 2354 = and
+2354 dupbool dup *.tienum != and .tienum store dropbool
+dupbool dupbool *.tiepres 2354 = and
+dupbool dupbool *.isVeggie 0 != and
+dupbool dupbool *.mode 0 = and
+.mode inc
+.fixpos .tieloc store
+1 .tieval store
+*.trefxpos *.trefypos angle 630 add .setaim store
+1 .fixpos store
+not and not dupbool not dupbool *.mode 1 = and
+.mode inc
+.setaim .tieloc store
+*.trefxpos *.trefypos angle 630 add .tieval store
+not and dupbool *.mode 3 & 2 = and
+.mode inc
+.tie .tieloc store
+9753 .tieval store
+not and dupbool *.mode 10 > and
+1 dupbool dup *.tielen != and .tielen store dropbool
+0 dupbool dup *.mode != and .mode store dropbool
+not and not or not 
+.mode inc
+*.tiepres .tienum store
+-1 .tieloc store
+-10000 .tieval store
+dropbool
+not and not dupbool not dupbool *.tmemval 9136 != *.robage 2 > and *.reproducedLastCycle *.robage sub abs 2 > and and
+dupbool dupbool *.mode -1 = and
+dupbool dupbool *.nrg *.body dup add < and
+-1 .tieloc store
+not and 
+-6 .tieloc store
+dropbool
+-31999 .tieval store
+not and 
+.tie .tieloc store
+9753 .tieval store
+dropbool
+-1 .mode store
+not and not or not 
+*.tiepres .deltie store
+dropbool
+not and 
+*.tiepres .tienum store
+.shootval .tieloc store
+31999 .tieval store
+100 dupbool dup *.stifftie != and .stifftie store dropbool
+-1 dupbool dup *.mode != and .mode store dropbool
+dropbool
+not and not dupbool not dupbool *.reproducedLastCycle *.robage sub abs 2 <= and
+dupbool dupbool *.tiepres 0 = and
+4824 dupbool dup *.tie != and .tie store dropbool
+4824 dupbool dup *.deltie != and .deltie store dropbool
+dropbool dropbool
+not and dupbool *.lastTieNum 0 > *.lastTieNum 5 < and *.trefnrg 0 > and and
+dupbool dupbool *.tiepres *.lastTieNum != *.tiepres 0 != and and
+dupbool dupbool *.mode -1 != and
+*.tiepres .deltie store
+not and 
+*.tiepres .tienum store
+.mode inc
+dropbool
+not and 
+*.lastTieNum .tienum store
+dropbool dupbool dupbool *.multi 0 != and
+dupbool dupbool *.trefnrg 100 mult *.trefnrg *.nrg add div 10 >= and
+.sharenrg .tieloc store
+1 *.isVeggie 9 mult add .tieval store
+not and not dupbool not dupbool *.waste 100 > and
+.sharewaste .tieloc store
+100 .tieval store
+not and not or not 
+.fdbody .tieloc store
+100 .tieval store
+dropbool
+not and 
+.shootval .tieloc store
+31999 .tieval store
+dropbool dupbool dupbool *.tieang 1256 < and
+*.tieang 100 add .tieang store
+not and 
+1 .tieang store
+dropbool dupbool dupbool *.tielen 100 < and
+100 .tielen store
+dropbool dropbool
+not and dupbool *.lastTieNum 0 = *.tiepres 0 > *.tiepres 5 < and *.tiepres 4824 = or and and
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+not and dupbool *.robage 2 < and
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+not and dupbool *.tiepres 0 != and
+*.tiepres dupbool dup *.tienum != and .tienum store dropbool
+dupbool dupbool *.multi 0 != *.trefnrg 100 mult *.trefnrg *.nrg add div 2 >= and and
+.sharenrg dupbool dup *.tieloc != and .tieloc store dropbool
+1 dupbool dup *.tieval != and .tieval store dropbool
+not and 
+.fdbody dupbool dup *.tieloc != and .tieloc store dropbool
+100 dupbool dup *.tieval != and .tieval store dropbool
+dropbool dupbool dupbool *.tieang 1256 < and
+*.tieang 20 add dupbool dup *.tieang != and .tieang store dropbool
+not and 
+1 dupbool dup *.tieang != and .tieang store dropbool
+dropbool dupbool dupbool *.tielen 100 < and
+100 dupbool dup *.tielen != and .tielen store dropbool
+dropbool dropbool
+not and not or not 
+4824 dupbool dup *.tie != and .tie store dropbool
+4824 dupbool dup *.deltie != and .deltie store dropbool
+dropbool dupbool dupbool *.robage 2 > and
+dupbool dupbool *.nrg 1000 > and
+dupbool dupbool *.body 10 > *.totalmyspecies 600 < and *.body 1000 > *.totalmyspecies 1000 < and or and
+50 dupbool dup *.repro != and .repro store dropbool
+*.robage dupbool dup *.reproducedLastCycle != and .reproducedLastCycle store dropbool
+*.aim 5 rnd add 2 sub dupbool dup *.setaim != and .setaim store dropbool
+not and 
+100 dupbool dup *.strbody != and .strbody store dropbool
+dropbool
+dropbool dropbool
+dropbool dropbool
+dropbool
+*.body 1 sub dup *.fdbody != *.body 1 > *.strbody 0 = and *.nrg 700 < and and .fdbody store dropbool
+*.tienum dup *.lastTieNum != *.tienum 0 != and .lastTieNum store dropbool
+*.tiepres dup *.lastTiePres != .lastTiePres store dropbool
+stop

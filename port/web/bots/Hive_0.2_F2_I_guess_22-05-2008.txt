@@ -1,0 +1,231 @@
+   'PyHive0.2.txt compiled by PyBot V2 from PyHive0.2.pyr.
+   def hivexpos 971
+   def hiveypos 972
+   def status 973
+   def queen 974
+   def counter 53
+   def return 54
+   def first 55
+   def seen 56
+   def counter2 57
+   cond
+   *.status 0 =
+   start
+   *.refveldx dup *.dx != .dx store
+   *.refvelup 30 add dup *.up != .up store
+   *.robage 0 =
+   1 dupbool dup *.timer != and .timer store dropbool
+   100 dupbool dup *.eye5width != and .eye5width store dropbool
+   dropbool *.eye5 45 >
+   -1 dupbool dup *.shoot != and .shoot store dropbool
+   8 dupbool dup *.shootval != and .shootval store dropbool
+   *.refvelup dupbool dup *.up != and .up store dropbool
+   dropbool *.eye5 0 =
+   628 *.timer div dupbool dup *.aimdx != and .aimdx store dropbool
+   not 
+   1 dupbool dup *.timer != and .timer store dropbool
+   *.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+   dropbool *.waste 1000 >
+   -4 dupbool dup *.shoot != and .shoot store dropbool
+   *.waste dupbool dup *.shootval != and .shootval store dropbool
+   dropbool *.nrg 25000 > *.body 6000 > and
+   32000 rnd dupbool dup *.timer != and .timer store dropbool
+   *.xpos dupbool dup *.hivexpos != and .hivexpos store dropbool
+   *.ypos dupbool dup *.hiveypos != and .hiveypos store dropbool
+   0 dupbool dup *.eye5width != and .eye5width store dropbool
+   .status inc
+   .fixpos inc
+   dropbool
+   stop
+   
+   cond
+   *.status 0 !=
+   start
+   *.timer dup *.out6 != .out6 store
+   stop
+   
+   cond
+   *.robage 0 = *.status 1 = and
+   start
+   20 rnd 0 = *.queen 1 = or
+   1 dupbool dup *.status != and .status store dropbool
+   0 dupbool dup *.queen != and .queen store dropbool
+   not 
+   2 dupbool dup *.status != and .status store dropbool
+   dropbool
+   stop
+   
+   cond
+   *.robage 0 > *.status 1 = and
+   start
+   *.in5 *.timer 1 sub = *.seen 0 = and *.refeye *.myeye = and
+   *.refkills 1 add dupbool dup *.seen != and .seen store dropbool
+   dupbool not dupbool *.in5 *.timer 1 sub = *.seen *.refkills 1 add = and *.refeye *.myeye = and and
+   0 dupbool dup *.seen != and .seen store dropbool
+   .tie inc
+   not and not or not 
+   0 dupbool dup *.seen != and .seen store dropbool
+   dropbool
+   50 dup *.sharenrg != .sharenrg store
+   .tieang1 dec
+   .tieang2 dec
+   .tieang3 dec
+   .tieang4 dec
+   1 dup *.fixpos != .fixpos store
+   80 rnd 0 =
+   -4 dupbool dup *.shoot != and .shoot store dropbool
+   *.waste dupbool dup *.shootval != and .shootval store dropbool
+   dropbool *.body 2000 > *.nrg 31000 < and
+   1000 dupbool dup *.fdbody != and .fdbody store dropbool
+   dropbool *.body 2000 < *.nrg 10000 > and
+   1000 dupbool dup *.strbody != and .strbody store dropbool
+   dropbool *.nrg 25000 >
+   dupbool dupbool *.shell 30000 < and
+   500 dupbool dup *.mkshell != and .mkshell store dropbool
+   dropbool dropbool dupbool dupbool *.poison 30000 < and
+   500 dupbool dup *.strpoison != and .strpoison store dropbool
+   dropbool dropbool
+   dropbool
+   *.shoot dup *.ploc != .ploc store
+   *.robage 5 >
+   60 dupbool dup *.aimdx != and .aimdx store dropbool
+   dupbool dupbool *.body 20000 > *.nrg 20000 > and and
+   1 dupbool dup *.queen != and .queen store dropbool
+   50 dupbool dup *.repro != and .repro store dropbool
+   not and not dupbool not dupbool *.nrg 10000 > *.body 1000 > and *.eye5 40 < and and
+   0 dupbool dup *.queen != and .queen store dropbool
+   10 *.body 1000 div add dupbool dup *.repro != and .repro store dropbool
+   dropbool dropbool dropbool
+   not 
+   dropbool
+   *.xpos dup *.hivexpos != .hivexpos store
+   *.ypos dup *.hiveypos != .hiveypos store
+   *.timer dup *.out5 != .out5 store
+   stop
+   
+   cond
+   *.robage 0 > *.status 2 = and *.return 0 = and
+   start
+   *.robage 1 =
+   .tie inc
+   .mkshell dupbool dup *.vloc != and .vloc store dropbool
+   -32000 dupbool dup *.venval != and .venval store dropbool
+   31 dupbool dup *.counter2 != and .counter2 store dropbool
+   628 dupbool dup *.aimdx != and .aimdx store dropbool
+   4 dupbool dup *.delgene != and .delgene store dropbool
+   dropbool *.numties 0 >
+   *.tiepres dupbool dup *.deltie != and .deltie store dropbool
+   dropbool
+   .shoot dup *.ploc != .ploc store
+   *.hivexpos *.hiveypos dist 300 <
+   .counter2 inc
+   not 
+   0 dupbool dup *.counter2 != and .counter2 store dropbool
+   dropbool *.eye5 0 > *.in6 *.timer 1 sub = not and
+   0 dupbool dup *.counter != and .counter store dropbool
+   dupbool not dupbool *.counter2 30 > and
+   *.hivexpos *.hiveypos angle 628 add dupbool dup *.setaim != and .setaim store dropbool
+   15 dupbool dup *.up != and .up store dropbool
+   not and dupbool *.eye6 0 > and
+   34 dupbool dup *.aimdx != and .aimdx store dropbool
+   not and dupbool *.eye7 0 > and
+   69 dupbool dup *.aimdx != and .aimdx store dropbool
+   not and dupbool *.eye8 0 > and
+   104 dupbool dup *.aimdx != and .aimdx store dropbool
+   not and dupbool *.eye9 0 > and
+   139 dupbool dup *.aimdx != and .aimdx store dropbool
+   not and not or not 
+   dupbool dupbool *.counter 30 < and
+   174 dupbool dup *.aimdx != and .aimdx store dropbool
+   .counter inc
+   not and 
+   2 dupbool dup *.aimdx != and .aimdx store dropbool
+   10 dupbool dup *.up != and .up store dropbool
+   dropbool
+   dropbool *.eye5 0 > *.in6 *.timer 1 sub = not and
+   *.refveldx dupbool dup *.dx != and .dx store dropbool
+   dupbool dupbool *.eye5 35 > and
+   *.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+   8 dupbool dup *.shootval != and .shootval store dropbool
+   dupbool dupbool *.refeye 0 = and
+   -1 dupbool dup *.shoot != and .shoot store dropbool
+   not and not dupbool not dupbool *.venom 30 >= *.refshell 0 > and 3 rnd 0 = and and
+   -3 dupbool dup *.shoot != and .shoot store dropbool
+   30 dupbool dup *.shootval != and .shootval store dropbool
+   not and not or not 
+   -6 dupbool dup *.shoot != and .shoot store dropbool
+   dropbool
+   *.refvelup dupbool dup *.up != and .up store dropbool
+   not and 
+   *.refvelup 30 add dupbool dup *.up != and .up store dropbool
+   dropbool
+   dropbool *.body 800 < *.nrg 15000 > and
+   500 dupbool dup *.strbody != and .strbody store dropbool
+   dropbool *.body 800 > *.nrg 30000 < and
+   500 dupbool dup *.fdbody != and .fdbody store dropbool
+   dropbool *.nrg 10000 > *.venom 1000 < and
+   200 dupbool dup *.strvenom != and .strvenom store dropbool
+   dropbool *.fixed 0 !=
+   .fixpos dec
+   dropbool *.shflav -1 = *.refeye 0 = *.in6 *.timer 1 sub = or and *.poison 500 < and
+   500 *.poison sub dupbool dup *.strpoison != and .strpoison store dropbool
+   dropbool *.shflav -6 = *.refeye 0 = *.in6 *.timer 1 sub = or and *.shell 500 < and
+   500 *.shell sub dupbool dup *.mkshell != and .mkshell store dropbool
+   dropbool
+   0 dup *.shflav != .shflav store
+   *.waste 1000 >
+   -4 dupbool dup *.shoot != and .shoot store dropbool
+   *.waste dupbool dup *.shootval != and .shootval store dropbool
+   dropbool
+   stop
+   
+   cond
+   *.robage 0 > *.status 2 = and *.nrg 30000 >= and *.body 1000 > and *.return 0 = and
+   start
+   .return inc
+   stop
+   
+   cond
+   *.robage 0 > *.status 2 = and *.nrg 10000 < and *.return 0 != and
+   start
+   0 dup *.return != .return store
+   31 dup *.counter2 != .counter2 store
+   628 dup *.aimdx != .aimdx store
+   stop
+   
+   cond
+   *.robage 0 > *.status 2 = and *.shflav 0 != and *.shflav -2 != and *.return 0 != and
+   start
+   0 dup *.return != .return store
+   *.shell 500 <
+   500 *.shell sub dupbool dup *.mkshell != and .mkshell store dropbool
+   dropbool
+   500 dup *.strpoison != .strpoison store
+   stop
+   
+   cond
+   *.robage 0 > *.status 2 = and *.return 0 != and
+   start
+   *.eye5 0 = *.in5 *.timer 1 sub = not or
+   *.hivexpos *.hiveypos angle dupbool dup *.setaim != and .setaim store dropbool
+   30 *.velup sub 0 ceil 30 floor dupbool dup *.up != and .up store dropbool
+   dropbool *.eye5 40 < *.in5 *.timer 1 sub = and
+   *.refvelup 30 add dupbool dup *.up != and .up store dropbool
+   dropbool *.eye5 40 >= *.in5 *.timer 1 sub = and
+   -2 dupbool dup *.shoot != and .shoot store dropbool
+   1200 dupbool dup *.shootval != and .shootval store dropbool
+   *.refxpos *.refypos angle dupbool dup *.setaim != and .setaim store dropbool
+   *.refxpos dupbool dup *.hivexpos != and .hivexpos store dropbool
+   *.refypos dupbool dup *.hiveypos != and .hiveypos store dropbool
+   *.refvelup dupbool dup *.up != and .up store dropbool
+   *.refveldx dupbool dup *.dx != and .dx store dropbool
+   dropbool *.numties 0 >
+   *.tiepres dupbool dup *.deltie != and .deltie store dropbool
+   dropbool *.hivexpos *.hiveypos dist 200 <
+   .counter inc
+   not 
+   0 dupbool dup *.counter != and .counter store dropbool
+   dropbool *.counter 700 >
+   1 dupbool dup *.status != and .status store dropbool
+   dup ^ inc
+   stop

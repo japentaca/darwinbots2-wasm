@@ -1,0 +1,48 @@
+'#generation: 3
+'#mutations: 1
+ 0 0 cond
+ start
+ 216 *.fixed mult dec
+ *.shup *.shdn add *.shdx add *.shsx add *.hitup add dup div 216 mult *.shflav 2 add dup div 1 sub -1 mult =
+ 0 *.robage
+''''''''''''''''''''''''  Gene:  1 Ends at position  33  ''''''''''''''''''''''' cond
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  35  '''''''''''''''''''''''
+ inc
+ mult start
+ .tie inc
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  41  '''''''''''''''''''''''
+ cond
+ *.robage 1 =
+ start
+ .deltie inc
+ 600 28 rnd 1 rnd mult add 28 rnd 1 rnd mult sub .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  64  '''''''''''''''''''''''
+ cond
+ start
+ 10 rnd *.vel sub 0 floor 1 rnd store
+ 2 4 *.shup dup div mult 4 *.shdn dup div mult add 1 *.shdx dup div mult add 1 *.shsx dup div mult add *.shflav 1 add dup div 1 sub -1 mult mult store
+ 628 5 *50 dup div mult store
+ 50 *50 dup div mult dec
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  124  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ start
+ 50 .repro store
+ 628 .aimright store
+ 50 inc
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  138  '''''''''''''''''''''''
+ cond
+ start
+ 25 rnd 5 *.hitdx mult *.fixpos dup div 1 sub -1 mult mult store
+ 25 rnd 6 *.hitsx mult *.fixpos dup div 1 sub -1 mult mult store
+ 25 rnd 5 1 rnd add *.hitup *.shup sub mult store
+ -1 7 *.robage sgn mult *50 dup div 1 sub -1 mult mult *.hitup mult store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  196  '''''''''''''''''''''''
+
+'#hash: c`h%'-j&'FU9P%RI\9&+

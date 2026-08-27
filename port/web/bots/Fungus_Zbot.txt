@@ -1,0 +1,17 @@
+ 326 stop
+ store
+ store
+
+''''''''''''''''''''''''  Gene:  1 Begins at position  5  '''''''''''''''''''''''
+ start
+ sqr .tie dec
+ 59 << *.robage 192
+''''''''''''''''''''''''  Gene:  1 Ends at position  12  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  13  '''''''''''''''''''''''
+ start
+ overbool
+ .shoot dec
+ ceil >> rnd << << ++ store
+ store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  25  '''''''''''''''''''''''

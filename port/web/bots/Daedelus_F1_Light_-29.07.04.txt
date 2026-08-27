@@ -1,0 +1,392 @@
+'Daedalus
+'designed for F2 (db 2.31)
+'by Light
+
+'**************
+'* initialize *
+'**************
+
+cond 
+*911 0 =
+start
+1 911 store
+5 914 store
+1905 .out1 store
+1 .tie store
+100 rnd 1 add 912 store
+stop
+
+cond
+*.robage 1 =
+start
+1 .deltie store
+stop
+
+'*********
+'* shoot *
+'*********
+
+cond
+*.eye5 10 >
+*.in1 1905 !=
+*.refeye 2 >
+*.venom 10 >
+start
+-4 .shoot store
+stop
+
+cond
+*.waste 10 >
+*.eye5 0 =
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.nrg 1000 >
+*.poison 100 <
+start
+10 .strpoison store
+stop
+
+cond
+*.nrg 1000 >
+*.venom 200 <
+start
+100 .strvenom store
+stop
+
+cond
+*.eye5 25 >
+*.in1 1905 !=
+start
+-1
+.shoot
+store
+stop
+
+cond
+*.eye5 30 >
+*.in1 1905 !=
+*.refeye 2 >
+start
+-6
+.shoot
+store
+stop
+
+cond
+*.eye5 30 >
+*.in1 1904 !=
+*.shup -6 =
+start
+.aimdx
+.shoot
+store
+300
+.shootval
+store
+stop
+
+cond
+*.eye5 30 >
+*.in1 1904 !=
+*.shup -1 =
+start
+.aimdx
+.shoot
+store
+300
+.shootval
+store
+stop
+
+'*********
+'* Slime *
+'*********
+
+cond
+*.reftie 1 >
+0 *913 =
+*.in1 1905 !=
+start
+1 913 store
+stop
+
+cond
+*.913 0 >
+*.slime 90 <
+start
+100 *.slime sub .mkslime store
+stop
+
+'***********
+'* turning *
+'***********
+
+cond
+*.in1 1905 !=
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+*.nrg 100 >
+start
+10 *.vel add 1 mult .aimsx store
+-6 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye6 *.eye5 >
+*.eye6 *.eye4 >
+*.nrg 100 >
+start
+10 *.vel add 1 mult .aimdx store
+6 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye3 *.eye4 >
+*.eye3 *.eye5 >
+*.eye3 *.eye6 >
+*.eye3 *.eye7 >
+*.nrg 100 >
+start
+10 *.vel add 2 mult .aimsx store
+-8 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye7 *.eye6 >
+*.eye7 *.eye5 >
+*.eye7 *.eye4 > 
+*.eye7 *.eye3 >
+*.eye5 0 =
+*.nrg 100 >
+start
+10 *.vel add 2 mult .aimdx store
+8 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye2 *.eye3 >
+*.eye2 *.eye4 >
+*.eye2 *.eye5 >
+*.eye2 *.eye6 >
+*.eye2 *.eye7 >
+*.eye2 *.eye8 >
+*.nrg 100 >
+start
+10 *.vel add 3 mult .aimsx store
+-9 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye8 *.eye7 >
+*.eye8 *.eye6 >
+*.eye8 *.eye5 >
+*.eye8 *.eye4 >
+*.eye8 *.eye3 >
+*.eye8 *.eye2 >
+*.eye5 0 =
+*.nrg 100 >
+start
+10 *.vel add 3 mult .aimdx store
+9 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.eye1 *.eye5 >
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >
+*.nrg 100 >
+start
+10 *.vel add 4 mult .aimsx store
+-10 .dx store
+stop
+
+cond
+*.in1 1905 !=
+*.eye9 *.eye8 >
+*.eye9 *.eye7 >
+*.eye9 *.eye6 >
+*.eye9 *.eye5 >
+*.eye9 *.eye4 >
+*.eye9 *.eye3 >
+*.eye9 *.eye2 >
+*.eye9 *.eye1 >
+*.eye5 0 =
+*.nrg 100 >
+start
+10 *.vel add 4 mult .aimdx store
+10 .dx store
+stop
+
+'***************
+'*move forwards*
+'***************
+
+cond
+*.vel *.maxvel <
+*.numties 0 =
+*.eye5 40 <
+start
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.vel *.maxvel <
+*.numties 0 =
+*.eye5 30 >
+start
+*.maxvel *.vel sub 5 div .up store
+20 .aimdx store
+stop
+
+'***********
+'* If shot *
+'***********
+
+cond
+*.shdx 0 !=
+*.pain 10 >
+start
+314
+.aimdx
+store
+stop
+
+cond
+*.shsx 0 !=
+*.pain 10 >
+start
+314
+.aimsx
+store
+stop
+
+cond
+*.shdn 0 !=
+*.pain 10 >
+start
+628
+.aimsx
+store
+stop
+
+'*************
+'* reproduce *
+'*************
+
+cond
+*.nrg 1000 >
+*.eye5 40 <
+*.robage 10 <
+start
+40 .repro store
+350 .aimdx store
+stop
+
+cond
+*.nrg 4000 >
+*.eye5 40 <
+start
+40 .repro store
+350 .aimdx store
+stop
+
+'********
+'* Body *
+'********
+
+cond
+*.body 20 <
+*.nrg 1000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 2500 >
+*.body 800 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 5000 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 20 >
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.body 1000 >
+*.robage 10 <
+start
+50 .fdbody store
+stop
+
+cond
+*.body 30000 >
+start
+50 .fdbody store
+stop
+
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+'********
+'* Ties *
+'********
+
+cond
+*.eye5 0 >
+*.robage 2 >
+*.eye4 *.eye6 =
+*.reftie 2 <
+start
+*912 .tie store
+*912 .readtie store
+stop
+
+cond
+*.numties 0 >
+start
+1 .fixang store
+stop
+
+cond
+*.trefeye *.myeye =
+start
+*912 .deltie store
+stop
+
+cond
+*.numties 0 >
+*.robage 2 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+end

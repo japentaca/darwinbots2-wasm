@@ -1,0 +1,87 @@
+'Name: Lionfish 1.0
+'Author: MacadamiaNuts 9 August 2007
+'Description: F1-edition of Fishy bot, with DNA improvements from T_Mosquito and Optisim self-mutation engine.
+'It is able to mutate and evolve certain values to find an optimal point even with mutations disabled.
+'It uses the first gene to initialize the racial memory and then deletes it as it isn't useful anymore.
+'When healthy, it casts a venom and virus cloud that confuses and kills nearby bots.
+'It drops some activity when it falls below 1000 energy.
+'It uses a simple random overriding series of genes to shoot different kinds of venom. Some of it messes with other bots eyes, which is a quite effective way to disable them. Most bots doesn't repair their own eyes.
+'It uses Fishy's pack movement DNA. It's really good in a mid sized sim, healthy bots protect small ones and their pack behaviour helps them to defend and find targets. Quite amusing to watch, too.
+'Note how it expands its field of view once each while to spot things around.
+'Besides one tie check, it uses robage and racial memory to recognize friendly bots, so it's immune to many mimickizers, including Blue on Blue.
+
+cond
+start
+1 971 store
+6000 972 store
+50 973 store
+50 974 store
+100 975 store
+10 976 store
+stop
+
+
+cond
+start
+*.robage 1 add .out1 store
+
+*972 3 rnd 2 sub add 31900 ceil 972 100 rnd 99 sub 0 floor mult store
+*973 3 rnd 2 sub add 5 floor 973 500 rnd 499 sub 0 floor mult store
+*974 3 rnd 2 sub add 1 floor 974 500 rnd 499 sub 0 floor mult store
+*975 3 rnd 2 sub add 0 floor 975 250 rnd 249 sub 0 floor mult store
+*976 3 rnd 2 sub add 0 floor 976 500 rnd 499 sub 0 floor mult store
+
+*.refveldx .dx *.eye5 sgn mult store
+*.refaim *.aim sub 2 div *.aim add 1220 mod .setaim *.eye5 sgn mult *.in1 *.refage sub abs sgn 1 sub abs mult store
+
+-40 *.eye9 sgn mult -30 *.eye8 sgn mult add -20 *.eye7 sgn mult add -10 *.eye6 sgn mult add 10 *.eye4 sgn mult add 20 *.eye3 sgn mult add 30 *.eye2 sgn mult add 40 *.eye1 sgn mult add .aimsx store
+
+*.refxpos *.refypos angle .setaim *.in1 *.refage sub abs sgn mult *.eye5 sgn mult *.refxpos sgn mult *.refypos sgn mult store
+*973 *.velup sub .up  store
+0 .fixpos store
+
+0 .eye5dir store
+0 .eye5width store
+900 .eye5width 4 rnd sgn 1 sub abs mult store
+
+1200 rnd .aimshoot 60 *.eye5 sub sgn 0 floor mult store
+.eye5width .vloc store
+.eye5dir .vloc 1 rnd mult store
+.strvenom .vloc 1 rnd mult store
+1000 .venval store
+-3 .shoot *.nrg 1000 sub sgn 0 floor mult store
+-3 .shoot *.in1 *.refage sub abs sgn mult *.eye5 60 sub sgn 0 floor mult store
+-6 .shoot *.refeye sgn 1 sub abs mult *.eye5 60 sub sgn 0 floor mult store
+77 .tie *.numties sgn 1 sub abs mult *.in1 *.refage sub abs sgn mult *.eye5 50 sub sgn 0 floor mult *.refage sgn mult store
+100 .fixlen store
+40 .stifftie store
+1 .fixpos *.in1 *.refage sub abs sgn mult *.eye5 65 sub sgn 0 floor mult store
+1256 rnd .setaim *.nrg *972 sub sgn 0 floor mult store
+*974 .repro *.nrg *972 sub sgn 0 floor mult store
+*975 *.venom sub .strvenom store
+*975 *.poison sub .strpoison store
+*.nrg 10 div *.body sub .strbody *.nrg 1000 sub sgn 0 floor mult store
+*.body 10 mult *.nrg sub .fdbody store
+*.waste .shootval *.waste 100 div abs mult store
+-4 .shoot *.waste 100 div abs sgn mult store
+
+95 .sharenrg store
+99 .shareslime store
+99 .shareshell store
+.shoot .ploc store
+.sharenrg .tieloc *.trefeye *.myeye sub sgn abs mult store
+1 .tieval store
+*.tiepres .deltie *.trefeye *.myeye sub sgn abs 1 sub abs mult store
+*.tiepres .tienum store
+*.thisgene 2 add .delgene store
+*.thisgene 1 sub .delgene *.thisgene 1 sub sgn mult *.robage 10 sub sgn 0 floor mult store
+*976 .vshoot *.vtimer sgn 1 sub abs mult *.nrg 1000 sub sgn 0 floor mult store
+*.thisgene 1 add .mkvirus *.vtimer sgn 1 sub abs mult *.nrg 1000 sub sgn 0 floor mult store
+stop
+
+cond
+*971 1 !=
+start
+*.thisgene 1 sub .delgene store
+stop
+end

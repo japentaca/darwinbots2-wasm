@@ -1,0 +1,287 @@
+'05.11.03
+'Topic: The next generation of ultimate killers  
+'PY
+
+'H_Devincio_Duo
+
+'*50 = age
+'*51 = tie phase for feeding
+'*52 = robot type in multi cellular organism
+'***********************
+
+
+
+'reproduce 
+'***********
+cond
+*.nrg 20000 > 
+*.eye5 0 =
+*52 1 !=
+start
+50 .repro store
+15 50 store
+stop
+
+cond
+*.nrg 10000 >
+*52 2 =
+start
+30 .repro store
+stop
+
+'transfer energy. 
+' This doesn't seem to do anything
+' It should perhaps be removed as .tievals > 100 don't work anyway. 
+'A later gene does this function in any case
+'Also completely in the wrong place in the genome
+'************************************
+cond
+*52 1 =
+*.nrg 20000 >
+start
+11 .tienum store
+2000 .tieval store
+.nrg .tieloc store
+stop
+
+'initialize
+'******
+cond
+*50 0 =
+start
+9 rnd 1 add 51 store
+0 52 store
+stop
+
+' move forward 
+'****************
+cond
+*50 23 >
+*52 2 <
+start
+*50 *.eye5 sub 10 div .up store
+*50 *.eye5 sub -10 div .dn store
+stop
+
+cond
+*50 100 <
+start
+50 inc
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 > 
+*50 23 >
+*52 2 <
+start
+-110 .aimdx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*50 23 >
+*52 2 <
+start
+-50 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*50 23 >
+*52 2 <
+start
+50 .aimdx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+*50 23 >
+*52 2 <
+start
+110 .aimdx store
+stop
+
+'avoid other conspecifics. Only when cell type not 0
+'**************************************
+cond
+*.refeye 32 =
+*.eye5 20 >
+*52 0 !=
+*50 0 !=
+start
+624 .aimsx store
+stop
+
+cond
+*.eye5 0 !=
+*.in1 1 =
+*52 2 !=
+start
+624 .aimsx store
+stop
+
+
+'Spin when attacked
+'*************************
+cond
+*.shdn 0 <
+*.pleas -10 <
+start
+620 .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+start
+620 .aimsx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+*50 21 >
+start
+200 rnd 100 sub .aimsx store
+stop
+
+'Tie to an enemy to feed
+'********************
+cond
+*.eye5 30 >
+*.eye5 *.eye4 =
+*.eye5 *.eye6 =
+*.refeye 32 !=
+*50 21 > 
+start
+*51 .tie store
+0 .aimsx store
+0 .aimdx store
+stop
+
+'Tie to conspecific to make multi cellular
+'Set robot cell type to 1 (Head)
+'******************************
+cond
+*.eye5 30 >
+*.eye5 *.eye2 >
+*.eye5 *.eye8 >
+*.refeye 32 = 
+*50 23 >
+*52 0 =
+*.in1 1 !=
+start
+11 .tie store
+1 50 store
+1 52 store
+1 .out1 store
+stop
+
+'Feed via tie. Both robot can do this
+'***************************
+cond 
+*50 21 >
+*.nrg 21000 <
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'make sure robots are facing away from each other
+'**********************************************************
+cond
+start
+624 .tieang store
+stop
+
+'transfer energy when nrg greater than 20000
+'**********************************
+cond
+*52 1 =
+*.nrg 20000 >
+start
+11 .tienum store
+100 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.nrg 21000 >
+*54 2 <
+start
+*.nrg 53 store
+54 inc
+stop
+
+cond
+*.nrg 21000 >
+*54 2 =
+*53 *.nrg sub 50 <
+start
+0 52 store
+0 54 store
+stop
+
+'Reset age in tagged robot so it doesn't move till it's 21
+'*****************************************
+cond 
+*50 1 =
+*52 1 =
+start
+11 .tienum store
+50 .tieloc store
+1 .tieval store
+stop
+
+'Set positions in both robots
+'**********************
+'cond
+'*50 18 >
+'*50 22 <
+'*52 1 =
+'start
+'400 .aimsx store
+'11 .tienum store
+'.aimsx .tieloc store
+'400 .tieval store
+'stop
+
+'Set cell type in tagged robot
+'*********************
+cond
+*52 1 =
+*50 3 =
+start
+11 .tienum store
+2 .tieval store
+52 .tieloc store
+stop
+
+'Set out1 in tail robot
+'****************
+cond
+*52 1 =
+*50 4 =
+start
+11 .tienum store
+1 .tieval store
+.out1 .tieloc store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 35 >
+*.refeye 32 !=
+start
+-1 .shoot store
+stop
+
+end

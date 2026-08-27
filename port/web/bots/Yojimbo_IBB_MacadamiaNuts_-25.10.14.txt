@@ -1,0 +1,149 @@
+'name: Yojimbo
+'description: Baka!
+
+@
+def red 213
+def green 0
+def blue 0
+
+cond
+start
+*.tiepres .tienum store
+.sharenrg .tieloc store
+1 .tieval store
+99 .sharenrg store
+99 .shareshell store
+99 .shareslime store
+*.myeye 14 store
+stop
+
+cond
+start
+0 .in1 store
+*.thisgene .mkvirus *.vtimer sgn 1 sub abs mult store
+.vshoot *.vtimer 1 sub sgn 1 sub abs mult inc
+16000 16000 angle .setaim *14 *.myeye sub sgn abs mult store
+10 .up store
+*13 .delgene *.thisgene *13 sub abs 0 floor mult store
+*.thisgene 13 store
+0 .shoot *14 *.myeye sub sgn abs mult store
+1 .sharenrg *14 *.myeye sub sgn abs mult store
+1000 .tieval *14 *.myeye sub sgn abs mult store
+100 .rmchlr store
+stop
+
+cond
+*.in1 98 =
+start
+*.in2 *.in3 angle .setaim store
+*.in2 .out2 store
+*.in3 .out3 store
+stop
+
+cond
+start
+*.totalmyspecies 25 add *971 24 mult add 25 div 971 store
+stop
+
+cond
+*971 0 =
+start
+250 971 store
+stop
+
+cond
+*.robage 4000 mod 500 <
+*.xpos 16000 sub abs
+*.ypos 16000 sub abs add 4000 >
+*.eye5 0 =
+start
+460 .eye9width store
+520 .eye9dir store
+460 .eye1width store
+-520 .eye1dir store
+16000 16000 angle .setaim store
+stop
+
+cond
+*.eye5 0 =
+start
+135
+*.eye6 *.eye7 add *.eye8 add *.eye9 add
+*.eye4 *.eye3 add *.eye2 add *.eye1 add sub sgn mult
+.aimdx store
+stop
+
+cond
+*.eye5 5 >
+*.refeye *.myeye !=
+start
+*.refxpos .out2 store
+*.refypos .out3 store
+-6 .shoot store
+1 .tie store
+.sharenrg .vloc store
+1 .venval store
+10 .mkpoison store
+-3 .shoot 1 rnd mult store
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.eye5 5 >
+*.refeye *.myeye !=
+4 rnd 1 =
+start
+.fdbody .shoot store
+100 .shotval store
+stop
+
+cond
+*.refeye *.myeye =
+start
+314 .aimsx store
+0 .tie store
+stop
+
+cond
+*.eye5 40 <
+start
+100 rnd 50 sub .aimsx store
+*.maxvel .up store
+stop
+
+cond
+*.eye5 80 >
+start
+0 .up store
+stop
+
+cond
+*.nrg 1000 >
+*.totalmyspecies *971 <
+start
+50 .repro store
+stop
+
+cond
+*.nrg 30 >
+*.body 6 mult *.nrg <
+start
+10 .strbody store
+stop
+
+cond
+*.body 2 >
+*.body 5 mult *.nrg >
+start
+1 .fdbody store
+stop
+
+cond
+*.hit 0 >
+start
+50 .mkshell store
+.shoot .ploc store
+-2 .pval store
+50 .strpoison store
+*.shang 614 add .setaim store
+stop

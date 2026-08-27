@@ -1,0 +1,89 @@
+'Enitor Comesum
+'By Numsgil - June 2005
+'2.37
+'Programmed for maximum _personal_ benefit.
+'Eats others of its own kind if it can win the fight
+'Children run away from parent before they can get eaten by
+'distracting the parent with a 'hey, look over there'.
+'Not very efficient, run on largest sim size to get an
+'appropriate population size for selection to start working.
+
+'''''''''''''''''''''''''''''''''''''
+'Form and break birth ties'''''''''''
+'''''''''''''''''''''''''''''''''''''
+cond
+*.robage 2 <
+start
+.tie *.robage 1 add mult inc
+.deltie inc
+stop
+
+'''''''''''''''''''''''''''''''''''''
+'Feed on everything and anything'''''
+'''''''''''''''''''''''''''''''''''''
+cond
+*.eye5 0 >
+*.nrg 30000 <
+start
+-1 .shoot store
+*.refveldx .dx store
+
+*.refvelup 
+12000 *.eye5 div 240 sub 0 floor 30 ceil add
+.up store
+stop
+'''''''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''''''
+'Turn if there's nothing to eat
+'''''''''''''''''''''''''''''''''''''
+cond
+*.eye5 0 =
+*.nrg 30000 >= or
+start
+1256 rnd .setaim store 'pick a random direction to look at
+stop
+
+cond
+*.eye5 0 =
+*.velscalar 0 =
+start
+100 .up store
+stop
+''''''''''''''''''''''''''''''''''''''
+
+''''''''''''''''''''''''''''''''''''''
+'Run from stronger foes
+''''''''''''''''''''''''''''''''''''''
+cond
+start
+*.refbody 2 div dup
+stop
+
+cond
+*.eye5 0 >
+*.body >
+*.refeye 1 >
+start
+-15 .up store
+stop
+
+cond
+*.eye5 50 >
+*.body >
+*.refeye 1 >
+start
+.setaim .shoot store
+*.aim .shootval store
+stop
+
+''''''''''''''''''''''''''''''''''''''
+'Reproduce''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''
+cond
+*.nrg 25000 >
+start
+10 .repro store
+stop
+''''''''''''''''''''''''''''''''''''''
+end

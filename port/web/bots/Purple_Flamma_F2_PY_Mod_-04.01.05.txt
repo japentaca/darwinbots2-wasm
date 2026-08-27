@@ -1,0 +1,222 @@
+' Purple flamma
+' ( IMMORTAL FIRE  PY style)
+' "P_Fire" for short
+'
+' Jeremiah Martell
+' May 27, 2003
+' Modded by Purple Youko
+' Jan 4 , 2005
+'
+' http://inlovewithGod.com
+'
+' 1) Doesnt attack other P_Fire bots
+' 2)  Very *QUICKLY* reproduces and kills most
+
+' Good old I Flamma has been brought into the 21st century
+
+
+'******************
+'* SETUP          *
+'******************
+
+' out1 and out2 are used to identify
+' this bot as an I_Fire
+' position 50 is used for the searching
+' pattern
+
+def search 50
+def newmom 51
+
+cond
+  *.robage 0 =
+start
+  13 .out1 store
+  46 .out2 store
+  1 .search store
+  .tie inc
+stop
+
+cond 
+  *.robage 1 =
+start
+  .deltie inc
+stop
+
+'******************
+'* MOVEMENT       *
+'******************
+
+' AIM
+
+cond
+  *.eye9 10 >
+  *.eye5 0 =
+  *.newmom 0 =
+start
+  120 .aimdx store
+  3 .dx store
+stop
+
+cond
+  *.eye1 10 >
+  *.eye5 0 =
+  *.newmom 0 =
+start
+ 120 .aimsx store
+  3 .sx store
+stop
+
+cond
+  *.eye4 *.eye6 !=
+  *.eye5 0 !=
+start
+  *.eye4 *.eye6 sub .aimsx store
+stop
+
+' STEER CLEAR OF OTHER PURPLE FLAMMAs
+
+cond
+  *.eye5 30 >
+  *.in1 13 =
+  *.in2 46 =
+  *.newmom 0 =
+  *.myeye *.refeye =
+start
+  300 .aimdx store
+stop
+
+'******************
+'* REPRODUCTION   *
+'******************
+
+cond
+  *.newmom 1 =
+start
+  628 .aimsx store
+  .newmom dec
+stop
+
+cond
+  *.nrg 6000 >
+start
+  628 .aimsx store
+  50 .repro store
+ 1 .newmom store
+ 1 .fixpos store
+stop
+
+' quick repro
+cond
+  *.robage 20 <
+  *.nrg 1000 >
+  *.body 100 >
+start
+  50 .repro store
+stop
+
+'******************
+' MOVEMENT
+'******************
+cond
+*.eye5 0 >
+*.eye5 45 <
+*.vel *.maxvel <
+*.newmom 0 =
+*.fixed 0 =
+start
+*.maxvel *.vel sub 2 sub .up store
+stop
+
+' move if I don't see anything
+cond
+*.eye5 0 =
+*.vel 0 =
+*.fixed 0 =
+start
+20 .up store
+stop
+
+
+' FIRE 
+
+cond
+  *.eye5 10 >
+  *.eye5 50 <
+  *.in1 13 !=
+  *.in2 46 !=
+start
+  3 .up store
+stop
+
+cond
+  *.eye5 45 >
+  *.in1 13 !=
+  *.in2 46 !=
+  *.robage 0 !=
+  *.refpoison 0 =
+start
+ -1 .shoot store
+  1 .fixpos store
+stop
+
+cond
+  *.eye5 45 >
+  *.in1 13 !=
+  *.in2 46 !=
+  *.robage 0 !=
+  *.refpoison 0 !=
+start
+ -6 .shoot store
+  1 .fixpos store
+stop
+
+' SEARCH PATTERN
+
+cond
+  *.eye1 0 =
+  *.eye3 0 =
+  *.eye5 0 =
+  *.eye7 0 =
+  *.eye9 0 =
+start
+  *.search .aimdx store
+  50 inc 
+  '5 .up store
+stop
+
+cond
+  *.search 60 >
+start
+  -60 .serch store
+stop
+
+cond
+  *.newmom 0 =
+  *.fixed 1 =
+  *.pleas 0 <
+start
+  0 .fixpos store
+stop
+
+cond
+  *.body 500 <
+  *.pleas 10 >
+start
+  10 .strbody store
+stop
+ 
+cond
+*.waste 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+1 .backshot store
+stop
+
+
+'******************
+'* END            *
+'******************
+
+
+end

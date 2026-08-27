@@ -1,0 +1,353 @@
+'Topic: New Bots
+'Eight
+
+' Paranoia 1  by Eight (eightland.com)
+' identifies enemy types and tries to act accordingly.
+
+' pee in pool
+cond
+*.waste 100 >
+start
+100 .shootval store
+1 .backshot store
+-4 .shoot store
+stop
+
+' bored
+cond
+*.eye5 0 =
+start
+40 .aimsx store
+stop
+
+' see friend
+cond
+*.eye5 0 >
+*.refaimdx *.myaimdx =
+start
+80 .aimsx store
+stop
+
+' sproing
+cond
+*.sun 1 =
+*.vel 0 =
+start
+30 .up store
+stop
+
+' unfix bot if frozen.
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+' if target is tie with lower energy, shoot -1
+cond
+*.eye5 0 >
+*.refaimdx *.myaimdx !=
+*.reftie 0 >
+*.refnrg *.nrg <
+start
+45 inc
+-1 .shoot store
+stop
+
+' if target is tie with higher energy, shoot -6
+cond
+*.eye5 0 >
+*.refaimdx *.myaimdx !=
+*.reftie 0 >
+*.refnrg *.nrg >
+start
+45 inc
+-6 .shoot store
+stop
+
+' if has seen tiefeeder, make slime and scent
+cond
+*45 0 >
+*.slime 100 <
+*.nrg *.slime >
+start
+50 .mkslime store
+stop
+
+' if has seen tiefeeder, make poison and scent
+cond
+*45 0 >
+*.poison 100 <
+*.nrg *.poison >
+start
+50 .mkpoison store
+stop
+
+' send scent
+cond
+*45 0 >
+start
+.out1 inc
+stop
+
+' pick up scent
+cond
+*.in1 0 >
+start
+45 inc
+stop
+
+' if target is poisonous, shoot it.
+cond
+*.eye5 30 >
+*.refaimdx *.myaimdx !=
+*.refpoison 0 >
+start
+-6 .shoot store
+stop
+
+' if target is venomous, keep distance and try to disable it.
+cond
+*.eye5 30 >
+*.refaimdx *.myaimdx !=
+*.refvenom 0 >
+*.reffixed 0 =
+start
+5 .dn store
+1 .shootval store
+216 .shoot store
+stop
+
+' approach frozen bot.
+cond
+*.eye5 30 <
+*.refaimdx *.myaimdx !=
+*.reffixed 1 =
+start
+5 .up store
+stop
+
+' pick at frozen bot and back away.
+cond
+*.eye5 30 >
+*.refaimdx *.myaimdx !=
+*.reffixed 1 =
+start
+5 .dn store
+-1 .shoot store
+stop
+
+' if hit with a body shot, heal self
+cond
+*.shup -6 =
+*.body *.nrg !%=
+start
+50 .mkshell store
+50 .strbody store
+stop
+
+' if hit with a body shot, heal self
+cond
+*.shsx -6 =
+*.body *.nrg !%=
+start
+50 .mkshell store
+50 .strbody store
+5 .sx store
+stop
+
+' if hit with a body shot, heal self
+cond
+*.shdx -6 =
+*.body *.nrg !%=
+start
+50 .mkshell store
+50 .strbody store
+5 .dx store
+stop
+
+' if hit with a body shot, heal self
+cond
+*.shdn -6 =
+*.body *.nrg !%=
+start
+50 .mkshell store
+50 .strbody store
+-1 .backshot store
+5 .up store
+stop
+
+' if hit with energy shot, restore energy
+cond
+*.shup -1 =
+*.body *.nrg !%=
+start
+50 .fdbody store
+stop
+
+' if hit with energy shot, restore energy
+cond
+*.shsx -1 =
+*.body *.nrg !%=
+start
+50 .fdbody store
+60 .aimsx store
+stop
+
+' if hit with energy shot, restore energy
+cond
+*.shdx -1 =
+*.body *.nrg !%=
+start
+50 .fdbody store
+60 .aimdx store
+stop
+
+' if hit with energy shot, restore energy
+cond
+*.shdn -1 =
+*.body *.nrg !%=
+start
+100 .fdbody store
+-6 .backshot store
+628 .aimdx store
+stop
+
+' bumped
+cond
+*.eye5 80 >
+*.refaimdx *.myaimdx !=
+*.refnrg *.nrg <
+*.hitup 0 !=
+start
+-1 .shoot store
+stop
+
+' bumped
+cond
+*.eye5 80 >
+*.refaimdx *.myaimdx !=
+*.refnrg *.nrg >
+*.hitup 0 !=
+start
+-6 .shoot store
+stop
+
+' bumped
+cond
+*.hitsx 0 !=
+start
+300 .aimsx store
+stop
+
+' bumped
+cond
+*.hitdx 0 !=
+start
+300 .aimdx store
+stop
+
+' bumped
+cond
+*.hitdn 0 !=
+start
+628 .aimdx store
+stop
+
+' eyes
+cond
+*.eye1 *.eye9 !=
+*.refaimdx *.myaimdx !=
+start
+*.eye1 *.eye9 sub 2 mult .aimsx store
+*.eye1 *.eye9 sub 2 div .sx store
+stop
+
+' eyes
+cond
+*.eye3 *.eye7 !=
+*.refaimdx *.myaimdx !=
+start
+*.eye3 *.eye7 sub 2 div .aimsx store
+stop
+
+' eyes
+cond
+*.eye4 *.eye6 !=
+*.refaimdx *.myaimdx !=
+start
+*.eye4 *.eye6 sub 4 div .aimsx store
+stop
+
+' eyes
+cond
+*.eye4 0 >
+*.refaimdx *.myaimdx !=
+start
+5 .up store
+stop
+
+' launch
+cond
+*.robage 0 =
+start
+30 .dn store
+stop
+
+' pounce
+cond
+*.eye5 0 >
+*.refaimdx *.myaimdx !=
+*.maxvel *.vel >
+start
+*.maxvel 5 div .up store
+stop
+
+' see, attach tie and feed
+cond
+*.eye5 30 >
+*.numties 0 =
+*.refaimdx *.myaimdx !=
+*.refup 0 =
+start
+600 rnd 2 add .tie store
+stop
+
+' tie present
+cond
+*.tiepres 0 >
+start
+*.tiepres .readtie store
+1 .fixpos store
+stop
+
+' disconnect friend
+cond
+*.numties 0 >
+*.tiepres 0 >
+*.trefaimdx *.myaimdx =
+start
+*.readtie .deltie store
+stop
+
+' eat
+cond
+*.numties 0 >
+*.tiepres 0 >
+*.trefaimdx *.myaimdx !=
+start
+*.readtie .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+' repro
+cond
+*.numties 0 =
+*.eye5 50 <
+*.nrg 5000 >
+start
+50 .repro store
+stop
+
+end

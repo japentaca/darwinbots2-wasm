@@ -1,0 +1,101 @@
+'Mythos
+'The new Single-Store bot by Bacillus
+
+def threshold 1000
+
+start
+
+100
+*.body 50 sub sgn 0 floor -- abs mult
+
+0 628 rnd
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor
+ *.eye5 30 sub sgn 0 floor mult
+ *.eye5 sgn
+ *.myeye *.refeye sub sgn abs -- abs mult
+ add sgn mult
+add
+
+ 
+30
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor mult
+ *.eye5 30 sub sgn 0 floor -- abs mult
+ add
+
+
+-6
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 40 sub sgn 0 floor mult
+add
+
+-60
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn mult
+add
+
+40 *.velup sub
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn -- abs mult
+add
+
+50 *.eye5 sub 0 floor *.velup sub
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 sgn abs mult
+ *.eye5 40 sub sgn 0 floor -- abs mult
+add
+
+.strbody
+*.body 50 sub sgn 0 floor -- abs mult
+
+.aimdx
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor
+ *.eye5 30 sub sgn 0 floor mult
+ *.eye5 sgn
+ *.myeye *.refeye sub sgn abs -- abs mult
+ add sgn mult
+add
+
+.repro
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor mult
+ *.eye5 30 sub sgn 0 floor -- abs mult
+ add
+
+.shoot
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.myeye *.refeye sub sgn abs mult
+ *.eye5 40 sub sgn 0 floor mult
+add
+
+.aimsx
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs mult
+ *.eye9 sgn mult
+add
+
+.up
+*.body 50 sub sgn 0 floor mult
+ *.nrg .threshold sub sgn 0 floor -- abs mult
+ *.eye5 sgn -- abs
+ *.eye9 sgn -- abs mult
+ *.myeye *.refeye sub sgn abs
+ *.eye5 sgn abs mult
+ *.eye5 40 sub sgn 0 floor -- abs mult
+ add sgn mult
+add
+
+store
+stop

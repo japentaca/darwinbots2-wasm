@@ -1,0 +1,321 @@
+'name: EyeOfTheBeholder
+'description: Eye See What You Did There!
+
+cond
+*.robage 1 =
+start
+99 .out8 store
+460 .eye9width store
+520 .eye9dir store
+460 .eye1width store
+-520 .eye1dir store
+.shoot .ploc store
+-2 .pval store
+stop
+
+' Lotsa stuff
+start
+200 rnd 100 sub .aimdx *.eye5 sgn 1 sub abs mult store
+80 *.eye6 *.eye7 2 mult add *.eye8 3 mult add *.eye1 add *.eye4 *.eye3 2 mult add *.eye2 3 mult add *.eye9 add sub sgn mult .aimdx store
+614 .aimdx *.in8 99 sub sgn abs 1 sub abs mult *.refbody *.body sub sgn 0 floor mult store
+*.refveldx .dx *.eye5 sgn mult *.in8 99 sub sgn abs mult store
+*.maxvel *.eye5 sgn 1 sub 20 mult add .up *.eye5 85 sub sgn 0 ceil abs mult store
+*.eye5 5 div 10 ceil 1 floor .shootval store
+-1 5 1 rnd mult sub .shoot *.eye5 30 sub sgn 0 floor mult *.in8 99 sub sgn abs mult *.refage sgn mult store
+*.nrg 250 div .strpoison 100 *.poison sub sgn 0 floor mult *.hit mult store
+*.nrg 250 div .mkshell 200 *.shell sub sgn 0 floor mult *.hit mult store
+*.tiepres .deltie store
+*.refxpos *.refypos angle .setaim *.in8 99 sub sgn abs mult *.refnrg sgn mult 15 *.refeye sub sgn 0 floor mult store
+*.nrg 5 div .strbody *.nrg 12 div *.body sub sgn 0 floor mult store
+*.body 5 div .fdbody *.body 10 mult *.nrg sub sgn 0 floor mult store
+*.shang .aimshoot *.shang sgn mult store
+*.waste .shootval *.waste 100 sub sgn 0 floor mult store
+-4 .shoot *.waste 50 sub sgn 0 floor mult store
+50 .repro *.nrg 25000 sub sgn 0 floor mult store
+314 .aimdx *.nrg 25000 sub sgn 0 floor mult store
+0 .shang store
+stop
+
+cond
+*.in1 0 >
+start
+*.in1 .out1 store
+*.in2 .out2 store
+*.in3 .out3 store
+*.in4 .out4 store
+*.in5 .out5 store
+*.in6 .out6 store
+*.in7 .out7 store
+stop
+
+' Eeeeeee...
+cond
+*.refeye 16 >
+*.ypos 500 >
+*.in8 99 !=
+*.robage 1 >
+*.refage 1 >
+*.genes 5 >
+*.nrg 150 >
+*.body 10 >
+start
+*.genes .delgene *.refeye *.myeye sub 0 ceil abs sgn mult store
+*.maxvel -1 mult .up store
+5 .repro store
+stop
+
+' Regrow eyes and mess with other bots
+cond
+*.nrg 100 >
+*.pleas 10 >
+start
+*.eye5
+*.thisgene .mkvirus store
+1 .vshoot store
+*.thisgene .delgene *.thisgene 5 ceil sgn 1 sub abs mult store
+stop
+
+' Disposable eyes
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop
+
+start
+*.eye5
+stop

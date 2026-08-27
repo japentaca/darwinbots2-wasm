@@ -1,0 +1,410 @@
+def IFFF5 102
+def IFFF6 103
+
+'-=_SETUP_=-'
+cond
+*.robage 0 =
+start
+1744 .eye1dir store
+1622 .eye2dir store
+1500 .eye3dir store
+1378 .eye4dir store
+1291 .eye6dir store
+1169 .eye7dir store
+1047 .eye8dir store
+925 .eye9dir store
+122 .eye1width store
+122 .eye2width store
+122 .eye3width store
+122 .eye4width store
+122 .eye5width store
+122 .eye6width store
+122 .eye7width store
+122 .eye8width store
+122 .eye9width store
+1 .focuseye store
+.dnalen .memloc store
+5 .shootval store
+32000 rnd 32000 rnd sub .timer store
+stop
+
+'-=_VENOM_=-'
+start
+.shootval .vloc store
+32000 .venval store
+stop
+
+cond
+*.venom 250 <
+start
+100 .strvenom store
+stop
+
+cond
+*.IFFF6 3 =
+*.eye6 0 !=
+*.timer abs 5 mod 0 =
+start
+-3 .shoot store
+stop
+
+
+'-=_FACE CENTER_=-'
+cond
+*.numties 0 =
+*.nrg 500 >
+start
+16000 16000 angle 628 add 1256 mod .setaim store
+16000 16000 dist *.timer abs 250 sub sub *.maxvel ceil *.maxvel - floor .dn store
+stop
+
+cond
+*.numties 0 =
+*.nrg 500 <=
+start
+16000 16000 angle 1256 mod .setaim store
+16000 16000 dist 500 sub *.maxvel ceil *.maxvel - floor - .dn store
+stop
+
+''-=_TURN EYE5 TO CLOSEST_=-'
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn =
+start
+1884 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add =
+start
+1727 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add =
+start
+1570 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add =
+start
+1413 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add =
+start
+1256 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add =
+start
+1099 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add =
+start
+942 .eye5dir store
+stop
+
+cond
+*.timer
+*.eye1 sgn
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add mod
+*.eye1 sgn 
+*.eye2 sgn add
+*.eye3 sgn add
+*.eye4 sgn add
+*.eye6 sgn add
+*.eye7 sgn add
+*.eye8 sgn add
+*.eye9 sgn add =
+start
+785 .eye5dir store
+stop
+
+'-=_IFFF_=-'
+cond
+*.dnalen *.memval !=
+*.memval 100 >
+start
+3 .IFFF5 store
+stop
+
+cond
+*.dnalen *.memval !=
+*.memval 100 <=
+start
+2 .IFFF5 store
+stop
+
+cond
+*.dnalen *.memval =
+start
+1 .IFFF5 store
+stop
+
+cond
+*.eye5 0 =
+start
+0 .IFFF5 store
+stop
+
+cond
+*.myeye *.refeye !=
+*.refeye 1 >
+start
+3 .IFFF6 store
+stop
+
+cond
+*.myeye *.refeye !=
+*.refeye 1 <=
+start
+2 .IFFF6 store
+stop
+
+cond
+*.myeye *.refeye =
+start
+1 .IFFF6 store
+stop
+
+cond
+*.eye6 0 =
+start
+0 .IFFF6 store
+stop
+
+'-=_BODY MANAGEMENT_=-'
+cond
+*.body 2 >
+start
+*.body 2 sub 100 ceil .fdbody store
+stop
+
+cond
+*.body 2 <
+start
+*.body 2 sub 100 ceil .strbody store
+stop
+
+'-=_TURN TO ITEM OF INTREST IN EYE5_=-'
+cond
+*.IFFF5 *.IFFF6 <
+start
+*.eye5dir *.aim add 1256 mod .setaim store
+stop
+
+'-=_FOLLOW TARGET_=-'
+cond
+*.IFFF6 1 >
+start
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+*.numties 0 =
+stop
+
+'-=_DODGE ENEMIES ATTACKS_=-'
+cond
+*.IFFF6 3 =
+*.eye6 0 !=
+*.refxpos *.refypos angle 628 add 1256 mod *.refaim 1256 mod >=
+*.refxpos *.refypos angle 628 add 1256 mod *.refaim 20 add 1256 mod <
+start
+*.refveldx *.maxvel add .dx store
+stop
+
+cond
+*.IFFF6 3 =
+*.eye6 0 !=
+*.refxpos *.refypos angle 628 add 1256 mod *.refaim 1256 mod <
+*.refxpos *.refypos angle 628 add 1256 mod *.refaim 20 sub 1256 mod >
+start
+*.refveldx *.maxvel sub .dx store
+stop
+
+'-=_TIE_=-'
+cond
+*.numties 0 =
+*.IFFF6 3 =
+start
+16000 rnd 16000 add .tie store
+stop
+
+cond
+*.numties 0 =
+*.IFFF6 2 =
+16000 16000 dist 2000 >
+*.nrg 1250 < or
+start
+16000 rnd .tie store
+stop
+
+cond
+*.numties 1 =
+start
+*.tiepres .tienum store
+stop
+
+cond
+*.numties 1 =
+*.tiepres 16000 >=
+start
+100 .sharenrg store
+100 .shareshell store
+100 .shareslime store
+1 .sharewaste store
+.shoot .tieloc store
+-2 .tieval store
+stop
+
+cond
+*.numties 1 =
+*.tiepres 16000 <
+start
+50 .sharenrg store
+0 .tieloc
+stop
+
+cond
+*.tiepres 16000 <
+*.numties 0 !=
+16000 16000 dist 1600 <
+*.nrg 500 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav 2 !=
+*.numties 0 !=
+*.tiepres 10 =
+start
+*.tiepres .deltie store
+628 .aimdx store
+0 .shflav store
+stop
+
+'-=_REPRODUCTION_=-'
+cond
+*.nrg 1200 >
+start
+50 .repro store
+628 .aimdx store
+*.maxvel .dn store
+stop
+
+'-=_VIRUS_=-'
+cond
+*.vtimer 1 =
+start
+50 .vshoot store
+stop
+
+cond
+*.nrg 500 >
+*.timer 1000 mod 100 <
+start
+*.genes .mkvirus store 
+stop
+
+cond
+*.myeye 1 <=
+start
+16000 16000 angle 628 add 1256 mod .setaim store
+16000 16000 dist *.timer abs 16 div sub *.maxvel ceil *.maxvel - floor .dn store
+stop

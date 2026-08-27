@@ -1,0 +1,329 @@
+'{Genus: Vegetiser} {Species Huntarius (hunter)}
+'By Spike43884
+'Another to the vegetiser series, this 1 is derived from ALL HUNTER
+'Considering the analysis of vegetiser shadowrian being a complete monster
+'to all that face it. Then you have all hunter, which is just unrivalled
+'In my opinion, this - If the genes are implemented properly - will be
+'completely, and utterly, destructive.
+'The Virus gene is also programmed to be effective against any bot, because
+'it doesn't attack memory locations...
+'This means, if a virus is ready, and fruitflies appears. Well, its bad news
+'for someone.
+'
+'Next implementation will be into an aggressive dwarfs. And a very, very
+'cancerous form of popper. Hopefully I can get enough bots carrying this in
+'time so that every fruitflies that appears will...err well, die.
+
+
+def attack 50
+def hunt 51
+def pingvirus 52
+
+
+'Initialisation (EYES)
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+
+
+'Gene 1 Tie to parent*
+cond
+*.robage 0 =
+start
+4 .tie store
+stop
+
+
+'Gene 2 No food = Hunt
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 0 =
+start
+157 rnd .aimdx store
+1 .hunt store
+stop
+
+
+'Gene 3 No food & Turned = Move
+cond
+*.eye1 0 =
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.hunt 1 = and
+start
+15 .up store
+2 .hunt store
+stop
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 2 =
+start
+10 .up store
+3 .hunt store
+stop
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+*.hunt 3 =
+start
+10 .up store
+0 .hunt store
+stop
+
+
+' Gene 4 Food Finder (waiting)
+cond
+*.eye1 sgn
+ *.eye2 sgn add
+ *.eye3 sgn add
+ *.eye4 sgn add
+ *.eye5 sgn add
+ *.eye6 sgn add
+ *.eye7 sgn add
+ *.eye8 sgn add
+ *.eye9 sgn add 0 =
+*.refeye *.myeye = or
+start
+10 rnd .aimdx store
+stop
+
+
+'Gene 5 Food Sighted 
+'*********************
+cond
+*.refeye *.myeye !=
+*.eyef 0 !=
+start
+1 .attack store
+stop
+
+cond
+*.refeye *.myeye =
+*.eyef 0 = or
+start
+0 .attack store
+stop
+
+cond
+*.eye1 0 >
+*.attack 0 =
+start
+550 .aimdx store
+stop
+
+cond
+*.eye2 0 >
+*.attack 0 =
+start
+405 .aimdx store
+stop
+
+cond
+*.eye3 0 >
+*.attack 0 =
+start
+260 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+*.attack 0 =
+start
+115 .aimdx store
+stop
+
+cond
+*.eye6 0 >
+*.attack 0 =
+start
+115 .aimsx store
+stop
+
+cond
+*.eye7 0 >
+*.attack 0 =
+start
+260 .aimsx store
+stop
+
+cond
+*.eye8 0 >
+*.attack 0 =
+start
+405 .aimsx store
+stop
+
+cond
+*.eye9 0 >
+*.attack 0 =
+start
+550 .aimsx store
+stop
+'*********************
+
+
+' Gene 6 Chase Food
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 7 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+ 4 .shoot store
+-1 .shoot store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+
+'Gene 8 Antidote
+cond
+start
+99 .tout5 store
+stop
+
+
+'Gene 9 MEMLOC/MEMVAL
+cond
+start
+.chlr .memloc store
+stop
+
+
+'Gene 10 VIRUS CREATION PROTOCOL
+cond
+*.eye5 0 !=
+*.tout5 99 =
+*.refeye *.myeye !=
+*.memval 0 =
+start
+ .vshoot inc
+stop
+
+cond
+*.vtimer 0 =
+start
+*.thisgene 1 add .mkvirus store
+stop
+
+
+' Gene 11 Vegetiser Virus
+cond
+*.genes 1 !=
+*.tout5 99 !=
+start
+*.thisgene 1 rnd 2 mult 1 sub add .delgene store
+1 .backshot store
+1 .fixpos store
+1255 .eye1width
+1255 .eye2width
+1255 .eye3width
+1255 .eye4width
+1255 .eye5width
+1255 .eye6width
+1255 .eye7width
+1255 .eye8width
+1255 .eye9width
+stop
+
+
+'Gene 12 Antifixpos
+start
+0 .fixpos store
+stop
+
+
+' Gene 13 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+' Gene 14 Recombine
+cond
+*.robage 0 =
+*.numties 0 =
+start
+1 .tie store
+stop
+
+
+' Gene 15 Reproduce
+cond
+ *.nrg 20000 >
+ *.robage 3 > and 
+start
+ 35 .repro store
+stop
+
+
+' Gene 16 Singulise
+cond
+ *.numties 0 !=
+start
+.deltie inc
+.deltie inc
+stop
+
+end

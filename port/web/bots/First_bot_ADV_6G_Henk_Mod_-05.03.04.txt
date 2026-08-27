@@ -1,0 +1,53 @@
+'Topic: Short-bots thread  
+'Henk & Jez
+
+'This is the advanced First_Bot.
+'Initialy designed by Jez, modified and improved by Henk.
+-----------------------------------
+' First_bot Advanced
+
+cond
+*.nrg 6000 >
+start
+40 .repro store
+22 .readtie store
+stop
+
+cond
+*.eye5 0 >
+start
+40 .up store
+-1 .shoot store
+stop
+
+cond
+*.eye5 0 =
+start
+150 .aimdx store
+stop
+
+cond
+*.refeye 4 =
+*.eye5 0 !=
+start
+150 .aimdx store
+stop
+
+cond
+*.eye5 30 >
+*.refeye 4 !=
+*.robage 20 >
+start
+22 .tie store
+stop
+
+cond
+*.numties 0 >
+*.trefeye 4 !=
+start
+22 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+end

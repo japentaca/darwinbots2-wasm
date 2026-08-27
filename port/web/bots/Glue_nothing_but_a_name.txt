@@ -1,0 +1,193 @@
+' GLUE v1.2
+' COUNTDOWN TIMER
+
+' cond
+' *21 0 !=
+' start
+' 21 dec
+' stop
+
+' cond
+' *22 0 !=
+' start
+' 22 dec
+' stop
+
+cond
+*23 0 !=
+start
+23 dec
+stop
+
+cond
+*24 0 !=
+start
+24 dec
+stop
+
+cond
+*25 0 !=
+start
+25 dec
+stop
+
+cond
+*26 0 !=
+start
+26 dec
+stop
+
+cond
+*27 0 !=
+start
+27 dec
+stop
+
+' DELETE BIRTH TIE
+
+cond
+*.robage 1 =
+start 
+.deltie inc
+stop
+
+' EDGE
+
+cond
+*.edge 0 >
+*27 0 =
+start
+618 rnd .aimdx store
+15 27 store
+stop
+
+
+' BODY/MASS
+
+cond
+*.body 20 >
+*.nrg 32000 <
+start
+100 .fdbody store
+stop
+
+' REPRODUCTION
+
+cond
+*.nrg 1000 >
+*25 0 =
+start
+30 25 store
+stop
+
+cond
+*.nrg 1000 >
+*25 2 <
+start
+50 .repro store
+stop
+
+' SHELL
+
+cond
+*.nrg 20 >
+*.shell 15000 <
+start
+.mkshell inc
+.strbody inc
+stop
+
+cond
+*.nrg 500 >
+*.shell 32000 <
+start
+.mkshell inc
+stop
+
+' WASTE
+
+cond
+*.waste 50 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' SIGHT
+
+cond
+*.robage 1 <
+start
+-210 .eye2dir store
+-105 .eye3dir store
+-35 .eye4dir store
+35 .eye6dir store
+105 .eye7dir store
+210 .eye8dir store
+300 .eye5width store
+100 .eye6width store
+50 .eye2width store
+50 .eye8width store
+42 .out1 store
+stop
+
+' FOWARD
+
+cond
+*.eye4 0 =
+*.in1 != 42
+start
+20 .up store
+stop
+
+cond
+*.eye4 0 >
+*.eye5 1 >
+*.in1 != 42
+start
+10 .up store
+stop
+
+' TURNS
+
+cond
+*.eye1 1 >
+*.eye2 0 =
+*.eye6 0 =
+start
+21 inc
+stop
+
+cond
+*.eye9 1 >
+*.eye8 0 =
+*.eye6 0 =
+start
+22 inc
+stop
+
+cond
+*21 0 !=
+start
+185 .aimsx store
+21 dec
+stop
+
+cond
+*22 0 !=
+start
+185 .aimdx store
+22 dec
+stop
+
+' FEED
+
+cond
+*.eye5 1 >
+*.in1 42 !=
+*25 0 =
+start
+-1 .shoot store
+stop
+
+end

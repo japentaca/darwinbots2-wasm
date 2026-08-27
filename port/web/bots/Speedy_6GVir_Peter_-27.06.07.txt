@@ -1,0 +1,63 @@
+'Speedy
+'Fast bot, fun to watch.
+'Isn't the strongest around
+'but has a pretty strong virus
+
+cond
+ *.robage 0 =
+start
+ 7 989 store
+'200 .mkslime store
+'200 .mkshell store
+10 .shootval store
+stop
+
+cond
+ 7 *989 !=
+start
+*.thisgene .mkvirus store
+550 .vshoot store
+*.thisgene 1 rnd 2 mult -1 add add .delgene store
+stop
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+50 .vshoot store
+ 2 .mkvirus store
+-6 .shoot store		
+stop
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ *.refvelup .up store
+ 2 .mkvirus store
+-1 .shoot store
+stop
+
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 500 .up store
+*.eye9 *.eye1 sub 4 mult .aimdx store
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+cond
+  *.nrg
+  6000
+  >
+start
+   50
+  .repro
+  store
+  15
+  .aimdx
+  store
+stop

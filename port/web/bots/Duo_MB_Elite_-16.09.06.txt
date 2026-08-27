@@ -1,0 +1,94 @@
+' Duo
+'
+' 2-Bot MB
+' Moves using ties
+
+cond
+*.numties 0 =
+start
+50 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.numties 1 =
+start
+1 .tienum store
+628 .fixang store
+50 .sharenrg store
+stop
+
+cond
+*.eye5 0 >
+*.eye5 40 <
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle .setaim *.robage sgn mult store
+-8 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.eye5 39 >
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle .setaim *.robage sgn mult store
+8 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.trefage *.robage >
+*.robage 10 mod 5 >
+start
+*.tiepres .deltie *.body 500 sub sgn 0 floor mult store
+1000 .fixlen store
+1 .fixpos store
+stop
+
+cond
+*.trefage *.robage <
+*.trefage 10 mod 5 >
+start
+0 .fixpos store
+*.eye9 *.eye1 sub 2 mult .aimdx store
+stop
+
+cond
+*.trefage *.robage >
+*.robage 10 mod 5 <
+start
+1 .fixlen store
+0 .fixpos store
+stop
+
+cond
+*.trefage *.robage <
+*.trefage 10 mod 5 <
+start
+1 .fixpos store
+stop
+
+cond
+*.waste 10 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 1000 <
+start
+*.body 100 ceil .fdbody store
+stop

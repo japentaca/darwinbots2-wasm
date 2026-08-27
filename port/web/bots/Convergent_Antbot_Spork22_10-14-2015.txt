@@ -1,0 +1,223 @@
+def ex 55
+def ey 54
+def circle 53
+def qx 56
+def qy 57
+def queen 50
+def worker 51
+def queenset 58
+def goinghome 59
+def nrgratio 100
+
+
+
+cond
+*.queen 1 =
+start
+
+10 dup *.nrgratio sub sgn abs .nrgratio mult store
+
+100 .strbody *.nrg *.body 10 div *.nrgratio ++ mult       sub sgn 0 floor mult store
+100 .fdbody        *.body 10 div *.nrgratio    mult *.nrg sub sgn 0 floor mult *.body 100 sub sgn 0 floor mult store
+
+stop
+
+
+
+'/*****proper reproduction 1
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+ 
+cond
+*.robage 50 >=
+*.nrg 1000 >=
+*.worker 0 =
+start
+2 .repro store
+1 .queen store
+1 .out6 store
+1 .fixpos store
+stop
+
+cond
+*.eye5 50 >
+*.in6 1 =
+start
+1 .queenset store
+1 .worker store
+*.refxpos .qx store
+*.refypos .qy store
+1 .out7 store
+stop
+
+
+
+cond
+*.in6 1 =
+*.robage 20 >
+*.goinghome 0 =
+start
+1 .dn store
+0 .fixpos store
+stop
+
+cond
+*.goinghome 1 =
+*.in7 1 =
+start
+0 .fixpos store
+1 .dx store
+stop
+
+cond
+*.kills 0 >
+*.queenset 1 =
+*.worker 1 =
+start
+1 .goinghome store
+0 .circle store
+stop
+
+cond
+*.goinghome 1 =
+*.worker 1 =
+start
+*.qx *.qy  angle .setaim store
+1 .up store
+stop
+
+
+
+
+cond
+*.robage 20 >=
+*.circle 0 =
+start
+*.xpos .ex store
+*.ypos .ey store
+stop
+
+
+cond
+*.goinghome 1 =
+*.robage 15 mod 0 =
+*.worker 1 =
+*.in6 1 =
+start
+1 .fixpos store
+stop
+
+
+cond
+*.goinghome 1 =
+*.refeye *.myeye =
+*.in6 1 =
+*.worker 1 =
+*.hit 1 =
+start
+-2 .shoot store
+stop
+
+
+
+cond
+*.goinghome 1 =
+*.robage 20 mod 0 =
+*.worker 1 =
+*.in6 1 =
+start
+0 .fixpos store
+stop
+
+
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+*.refxpos .ex store
+*.refypos .ey store
+*.refxpos .out1 store
+*.refypos .out2 store
+1 .out5 store
+1 .circle store
+stop
+
+
+cond
+*.circle 1 =
+*.ex 0 !=
+*.ey 0 !=
+start
+1 .up store
+*.ex *.ey angle .setaim store
+else
+1 .up store
+stop
+
+
+cond
+*.queen 1 =
+*.circle 1 =
+start
+0 .circle store
+stop
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+*.in5 1 =
+*.in1 0 !=
+*.in2 0 !=
+*.worker 1 =
+start
+*.in1 .ex store
+*.in2 .ey store
+*.ex .out1 store
+*.ey .out2 store
+1 .out5 store
+1 .circle store
+stop
+
+
+cond
+*.eye5 0 =
+*.circle 0 =
+start
+314 rnd .aimdx store
+stop
+
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+
+cond
+*.circle 1 =
+*.refeye *.myeye =
+*.hit 1 =
+*.goinghome 0 =
+start
+628 .aimdx store
+stop
+
+cond
+*.in6 1 =
+*.worker 1 =
+start
+*.refxpos .qx store
+*.refypos .qy store
+stop

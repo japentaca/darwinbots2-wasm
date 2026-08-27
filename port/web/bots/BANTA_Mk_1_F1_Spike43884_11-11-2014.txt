@@ -1,0 +1,114 @@
+'BANTA!
+'This isn't the time for BANTA, This is the time for WORKA! *educating yorkshire*
+'Make it so eyes 360 until *.eye5 sees,
+'make it turn to put stuff into *.eye5 if any eyes see but eye5
+'Then put it more long range when that is true.
+
+' Gene 1 wide search 1
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+' Gene 2 wide search 2
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+' Gene 3 Simple search pattern.
+cond
+  *.eye3 *.eye5 >
+start
+mult -25 
+stop
+
+' Gene 4 Simple search pattern part 2
+cond
+  *.eye7 *.eye5 >
+start
+mult 25
+stop
+
+' Gene 5 Food Chaser
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 6 Ties
+cond
+*.eye5 30 >
+*.refeye 10 !=
+start
+1 .tie store
+stop
+
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+1 .tienum store
+stop
+
+' Gene 7 Shoot Stuff
+cond
+*.eye5 50 >
+start
+-1 .shoot store
+stop
+
+' Gene 8 Avoid conspecifics
+cond
+*.refeye 9 =
+start
+mult 180 
+stop
+
+' Gene 7 Something?
+cond
+*50 0 >
+start
+mult 628
+50 dec
+stop
+
+
+' Gene 8 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+' Gene 9 Reproduce
+cond
+  *.nrg 5000 >
+start
+  50 .repro store
+stop
+
+' Gene 10 rotate
+cond
+start
+.aimdx store
+stop
+
+
+' Gene 11 Tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+
+end

@@ -1,0 +1,9 @@
+'name: Nano
+'class: One Line Bot
+'version: 1.02
+'author: Macadamia Nuts
+'description: Multipurpose gene developed from evolved zerobot DNA.
+
+start
+50 830 5 1 rnd mult sub 500 1 rnd mult sub 30 1 rnd mult sub 299 1 rnd mult sub store
+stop

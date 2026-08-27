@@ -1,0 +1,149 @@
+ 
+'ratita australopitecus
+'por/by Anazasi
+'primer/first bot;)
+
+'gene 1 and 2 del fathers tie
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+
+'genes 3 to 10 make the bot look at the nearest bot if the one he is looking isnt of his species (this is wrong I'll fix it in later versions)
+cond
+*.eye1 *.eye5 >
+*.refeye *.myeye != and
+start
+-157 .aimdx store
+stop
+
+cond
+*.eye2 *.eye5 >
+*.refeye *.myeye != and
+start
+-100 .aimdx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.refeye *.myeye != and
+start
+-78 .aimdx store
+stop
+
+cond
+*.eye4 *.eye5 >
+*.refeye *.myeye != and
+start
+-15 .aimdx store
+stop
+
+cond
+*.eye6 *.eye5 >
+*.refeye *.myeye != and
+start
+15 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.refeye *.myeye != and
+start
+78 .aimdx store
+stop
+
+cond
+*.eye8 *.eye5 >
+*.refeye *.myeye != and
+start
+100 .aimdx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.refeye *.myeye != and
+start
+157 .aimdx store
+stop
+
+'if nothing at sight it turns 90 degres
+cond
+*.eye1 0 =
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+*.refeye *.myeye = or
+start
+314 .aimdx store
+stop
+
+'if it sees a bot from another species it follows him
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 15 add .up store
+stop
+
+'if an enemy is close it ties at it
+cond
+*.refeye *.myeye !=
+*.eye5 25 >
+start
+13 .tie store
+stop
+
+cond
+*.tiepres 0 >
+*.tienum 0 =
+start
+*.tiepres .tienum store
+stop
+
+'delete friendly ties
+cond
+*.tienum 0 >
+*.trefeye *.myeye = and
+start
+*.tiepres .deltie store
+stop
+
+'feed throw ties
+cond
+*.tienum 0 >
+*.refeye *.myeye != and
+start
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+'shoot this was modified in later versions cause the shoots never hit the enemy
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+*.refvelup .up store
+stop
+
+'reproduce
+cond
+*.nrg 10000 >
+start
+50 .repro store
+stop
+end

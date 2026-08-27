@@ -1,0 +1,190 @@
+'Pow Pow
+'By Spike43884
+'Im obsessed with reproduction in
+'bots, so decided to turn babies
+'into a weapon of mass destruction.
+'Hopefully this will be as big of
+'a success as my beloved series of
+'russian babies. Reproduction is
+'fun.
+'
+'Developer Notes:
+'This bot uses 'alternating gene activations' when the conditions are met
+'such as in the bots attack genes for the body, which fire the first one
+'when an enemy is seen, then fires the second, then the first and so on.
+'This is incredibly effective for stopping adaptions of the enemy, such
+'as the system encorporated to fruit flies, it also allows for more actions
+'to happen without to much energy cost
+
+
+def head 50
+def tval 51
+def tlen 52
+def shootstage 53
+
+
+'Gene Food Finder
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.numties 0 =
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+
+'Gene Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+-6 .shoot store
+*.refvelup .up store
+stop
+
+
+'Gene Avoiding Family
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+*.head 0 =
+start
+314 rnd .aimdx store
+stop
+
+
+'Gene Reproduce
+cond
+*.nrg 15000 >
+*.numties 3 !=
+*.head 1 =
+start
+10 .repro store
+1 .tie store
+stop
+
+
+'Gene Head identification
+cond
+*.numties 0 =
+*.robage 0 =
+start
+1 .head store
+stop
+
+
+'Gene Head fixing
+cond
+*.numties 0 !=
+*.head 1 =
+start
+1 .fixpos store
+stop
+
+
+'Gene Tie angles
+cond
+*.head 1 =
+*.numties 0 !=
+start
+ 418 .tieang1 store
+ 837 .tieang2 store
+1256 .tieang3 store
+'------------------------------NON HEAD STUFF NOW------------------------------'
+
+
+'Gene Tie lengthen
+cond
+*.refeye *.myeye =
+*.tielen 1000 <
+*.head 0 =
+start
+*.tielen .tlen store
+*.tlen 2 add .tielen store
+stop
+
+
+'Gene Tie shorten
+cond
+*.refeye *.myeye =
+*.tielen 5 >
+*.head 0 =
+start
+*.tielen .tlen store
+*.tlen 2 sub .tielen store
+stop
+
+
+'Gene Tie lengthen 2
+cond
+*.eye5 0 =
+*.tielen 1000 <
+*.head 0 =
+start
+*.tielen .tlen store
+*.tlen 2 add .tielen store
+stop
+
+
+'Gene Tie shorten 2
+cond
+*.eye5 0 =
+*.tielen 5 >
+*.head 0 =
+start
+*.tielen .tlen store
+*.tlen 2 sub .tielen store
+stop
+
+
+'Gene attack
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+0 .shootstage =
+0 .head =
+start
+4 .shootval store
+-1 .shoot store
+-6 .shoot store
+1 .shootstage store
+stop
+
+
+'Gene attack 2
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+1 .shootstage =
+0 .head =
+start
+628 .shootval store
+5 .shoot store
+0 .shootstage store
+stop
+
+
+'------------------------------NON HEAD STUFF NOW------------------------------'
+
+
+'Gene Head NRG sharing
+cond
+*.head 1 =
+*.numties 0 !=
+start
+40 .sharenrg store
+stop
+
+
+'Gene Body NRG sharing
+cond
+*.head 0 =
+*.numties 0 !=
+start
+50 .sharenrg store
+stop
+
+
+end

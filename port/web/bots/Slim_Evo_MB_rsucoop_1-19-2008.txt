@@ -1,0 +1,780 @@
+'The Slim Evo Bot.
+
+'-initialization
+cond
+*.robage 0 =
+*.eye5 50 <
+start
+8 rnd 2 add 51 store
+*51 .tie store
+500 .fixlen store
+4 .out4 store
+1 40 store
+stop
+890 178 store
+
+'Age 21 activator
+
+cond
+*.robage 21 =
+*.trefage *.robage >
+*.hit 0 =
+start
+*.trefaim .setaim store
+stop
+
+'Tie to Algea
+
+cond
+*140 0 =
+*.eye5 50 >
+*.refeye 0 =
+*.numties 6 <
+start
+*51 .tie store
+0 *40 store
+75 *.aim add .setaim store
+stop
+
+'Identification Gene
+
+cond
+*120 1 =
+*.out1 *.dnalen !=
+*.refeye *.myeye =
+start
+*.dnalen .out1 store
+*.in1 .out2 store
+stop
+
+cond
+*140 0 =
+*.in2 *.in1 =
+*.in2 *.dnalen =
+*.hit 0 >
+start
+-30 *.aim add .setaim store
+stop
+
+'Virus of the Hunter
+
+cond
+*.vtimer 0 =
+*.mkvirus 0 !=
+start
+34 *.pleas add .vshoot store
+stop
+
+cond
+*.nrg 4000 >
+*.vtimer 0 =
+*.robage 300 <
+start
+*.thisgene *40 add .mkvirus store
+*40 1 add 40 store
+stop
+
+cond
+*.out1 *.dnalen !=
+*.out4 4 !=
+*.vtimer 0 =
+*.myeye 0 !=
+start
+*.thisgene .mkvirus store
+0 .shoot store
+*.aim dec
+1 *.eye5width store
+*.eye5width inc
+*.nrg 2 div .mkshell store
+*.body .vshoot store
+*.thisgene 1 sub .delgene store
+stop
+
+'Vius of the weakling.
+cond
+*.nrg *.pain
+ <
+*.out4 4 !=
+*.vtimer 0 =
+start
+*.thisgene .mkvirus store
+*.vtimer *.eye4 mult 770 890 mult 1 mult .vshoot store
+*.vshoot inc
+stop
+
+cond
+*140 0 =
+*.out4 4 !=
+*.out1 *.dnalen !=
+start
+1 .delgene store
+25 .mrepro store
+1 40 store
+*.dnalen .out1 store
+stop
+
+'Eye Commands
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye5 *.eye1 >
+*.eye5 *.eye2 >
+*.eye5 *.eye3 >
+*.eye5 *.eye4 >
+*.eye5 *.eye6 >
+*.eye5 *.eye7 >
+*.eye5 *.eye8 >
+*.eye5 *.eye9 >
+start
+*.eye5 .out2 store
+*.aim .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye4 *.eye1 >
+*.eye4 *.eye2 >
+*.eye4 *.eye3 >
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+*.eye4 *.eye7 >
+*.eye4 *.eye8 >
+*.eye4 *.eye9 >
+*.refeye 0 !=
+strt
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.eye3 *.eye4 >
+*.eye3 *.eye1 >
+*.eye3 *.eye2 >
+*.eye3 *.eye6 >
+*.eye3 *.eye7 >
+*.eye3 *.eye8 >
+*.eye3 *.eye9 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye2 *.eye1 >
+*.eye2 *.eye6 >
+*.eye2 *.eye7 >
+*.eye2 *.eye8 >
+*.eye2 *.eye9 >
+*.eye2 *.eye4 >
+*.eye2 *.eye3 >
+*.eye2 *.eye5 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye6 *.eye7 >
+*.eye6 *.eye8 >
+*.eye6 *.eye9 >
+*.eye6 *.eye5 >
+*.eye6 *.eye3 >
+*.eye6 *.eye4 >
+*.eye6 *.eye2 >
+*.eye6 *.eye1 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye7 *.eye8 >
+*.eye7 *.eye9 >
+*.eye7 *.eye6 >
+*.eye7 *.eye5 >
+*.eye7 *.eye4 >
+*.eye7 *.eye3 >
+*.eye7 *.eye2 >
+*.eye7 *.eye1 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye8 *.eye9 >
+*.eye8 *.eye2 >
+*.eye8 *.eye3 >
+*.eye8 *.eye4 >
+*.eye8 *.eye5 >
+*.eye8 *.eye6 >
+*.eye8 *.eye7 >
+*.eye8 *.eye1 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.eye9 *.eye5 >
+*.eye9 *.eye8 >
+*.eye9 *.eye1 >
+*.eye9 *.eye4 >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*140 0 =
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+'store important information about the enemy bot in memory locations 50 - 56
+
+cond
+*.eye5 0 >
+*.refeye 0 !=
+*.refeye *.myeye 0 !=
+*140 0 =
+start
+3 59 store
+*.refeye 50 store
+*.refxpos 51 store
+*.refypos 52 store
+*.refvel 53 store
+*.refaim 54 store
+*62 55 store
+*.eye5 56 store
+0 57 store
+1 59 store
+stop
+
+'update hibernate mode
+cond
+*121 0 =
+*.eye5 0
+*110 *120 sub *178 <
+start
+1 140 store
+1 121 store
+*110 *120 sub 178 store
+stop
+
+cond
+*121 1 =
+*.robage *120 sub *178 >
+start
+0 140 store
+0 121 store
+890 178 store
+stop
+
+cond
+*.fixed 0 !=
+start
+.fixpos dec
+stop
+
+'Store away 10% of Nrg if 9% pleasure recieved
+
+cond
+*.nrg *.pain add 2 div 1 %=
+*.body 800 <
+start
+*.nrg 10 div .strbody store
+stop
+
+'Maintain a body of 800
+
+cond
+*.nrg 1000 >
+*.body 800 <
+*.please *.nrg 10 div %=
+start
+*.nrg *.body div .strbody store
+stop
+
+'Feed when hungry from body
+
+cond
+*.nrg 500 <
+*.body 0 >
+*.pain *.nrg 10 div %=
+start
+*.body *.pain add 2 div .fdbody store
+stop
+
+'Read Ties
+cond
+*140 0 =
+*.numties 0 >
+*150 *.numties <
+*.multi 0 >
+149 1 =
+start
+*150 .tienum store
+*150 .readtie store
+*150 1 add 150 store
+0 149 store
+stop
+
+'Reproduce when at right stage
+
+cond
+*140 0 =
+*.nrg 4000 >
+*.body 500 >
+*.numties 0 >
+*.pleas *.numties >
+start
+45 *.aim sub .setaim store
+40 .repro store
+90 *.aim add .setaim store
+stop
+
+'fixlength with parent cell
+cond
+*.tielen 100 <
+*.multi 0 >
+*.trefeye *.myeye %=
+*.trefage *.robage >
+start
+100 .fixlen store
+45 *.refaim add .fixang store
+stop
+
+'fixlength with veg to protect
+cond
+*.tielen 200 <
+*.multi 0 >
+*.trefeye 0 =
+start
+200 .fixlen store
+0 .fixang store
+stop
+
+'go same speed as parent
+
+cond
+*.multi 0 >
+*.trefage *.robage >
+*.trefvel *.vel !=
+start
+*.trefvel .vel store
+stop
+
+'Feed from Algae Ties and give waste to the algae.
+
+cond
+*140 0 =
+*.out3 0 =
+start
+*.nrg 3.5714205 mult *.nrg add .out3 store
+*.nrg *.pain div *.pain add 170 store
+stop
+
+cond
+*140 0 =
+*170 *.trefnrg 1 sub<
+*.nrg 9000 <
+*.body 800 <
+*.trefeye 0 =
+*.numties 0 >
+*.waste 0 >
+*.multi 0 >
+*.trefnrg 1000 >
+*.pain 0 >
+start
+*150 .tienum store
+*.out3 1000 div *.out3 315 div add *.pain 2 mult add .tieval store
+.nrg .tieloc store
+1 .sharewaste store
+stop
+
+cond
+*140 0 =
+*.nrg 1000 <
+*.body 800 <
+*.trefeye 0 =
+*.multi 0 >
+start
+*150 .tienum store
+*.trefnrg 2 div 400 add .tieval store
+.nrg .tieloc store
+*.out3 10 div .sharenrg store
+stop
+
+cond
+*140 0 =
+*.waste 0 >
+*.trefeye 0 =
+*.numties 0 >
+start
+*150 .tienum store
+*.waste .sharewaste  store
+stop
+
+cond
+*140 0 =
+*149 1 != or
+*150 *.numties = or
+*.multi 0 >
+start
+1 150 store
+1 149 store
+stop
+
+'Shoot Waste
+
+cond
+*140 0 =
+*.numties 0 =
+*.waste 0 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+'Move
+
+
+'predict future position of last enemy
+
+cond
+start
+134 76 div *60 mult *62 *55 sub mult 63 store
+*63 *51 *52 angle mult 61 store
+stop
+
+'reset write enabler
+
+cond
+*.refnrg 10 %< or
+*.eye5 0 =
+start
+1 57 store
+1 66 store
+stop
+
+cond
+*140 0 =
+*.myeye *.refeye !=
+*.refeye 0 !=
+*.refaim *.aim -1 mult %!=
+start
+*.refvel *.vel add 5 add .up store
+stop
+
+cond
+*140 0 =
+*.myeye *.refeye !=
+*.refeye 0 !=
+*.refaim *.aim -1 mult %=
+start
+*.refvel *.vel add 5 sub .up store
+stop
+
+cond
+*140 0 =
+*.in *.dnalen !=
+*.eye5 90 <
+*.refvel *.maxvel %!=
+*.refaim *.aim !=
+start
+25 *.vel sub .up store
+stop
+
+cond
+*140 0 =
+*.nrg 5000 >
+*.eye5 0 =
+*.refeye *.myeye !=
+*.in1 *.dnalen !=
+*.refvel *.maxvel %=
+start
+*.maxvel *.vel sub .up store
+1 66 store
+stop
+
+cond
+*140 0 =
+*.nrg 3000 >
+*.eye5 50 >
+*.in *.dnalen !=
+*.refeye 0 =
+start
+25 *.vel sub .up store
+stop
+
+cond
+*140 0 =
+*.eye5 50 <
+*.vel 5 >
+*.myeye *.refeye !=
+*.in1 *.dnalen !=
+*.refeye 0 !=
+start
+5 *.vel sub .up store
+1 40 store
+stop
+
+'Move Backwards
+
+cond
+*140 0 =
+*.eye5 90 >
+*.myeye *.refeye =
+*.in1 *.dnalen = or
+*.in1 *.out1 =
+*.vel 10 <
+start
+10 *.vel sub .dn store
+24 *.aim sub .setaim store
+stop
+
+'Shot Mode:
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.in1 *.dnalen %!=
+*.eye5 60 >
+*.nrg 9000 <
+*57 1 =
+start
+*.refxpos *.refypos angle .shootaim store
+-1 .shoot store
+stop
+
+'a very powerful shot gene used to precisely hit the target everytime
+
+cond
+*140 0 =
+*57 0 =
+*.refeye 0 !=
+*.refeye *.myeye !=
+*.in1 *.dnalen %!=
+*.nrg 9000 <
+*53 *.vel <
+*.eye5 40 >
+start
+*61 *.xpos *.ypos angle *.vel mult sub .shootaim store
+-1 .shoot store
+stop
+
+cond
+*140 0 =
+*57 0 =
+*.refeye 0 !=
+*.refeye *.myeye !=
+*.in1 *.dnalen %!=
+*.nrg 9000 <
+*53 *.vel >
+start
+*61 *.xpos *.ypos angle *.vel mult add .shootaim store
+stop
+
+cond
+*.vtimer 1 =
+*.nrg 800 >
+start
+200 .vshoot store
+stop
+
+cond
+*140 0 =
+*.refeye *.myeye !=
+*.in1 *.dnalen %!=
+*.refpoison 0 >
+*.venom 0 >
+*.eye5 40 >
+*57 1 =
+start
+827 .vloc store
+*.refxpos *.refypos angle .shootaim store
+-3 .shoot store
+stop
+
+'Create Venom When out. and poison
+
+cond
+*140 0 =
+*.venom 1 <
+*.nrg 2000 >
+start
+20 .strvenom store
+stop
+
+cond
+*140 0 =
+*.poison 1 <
+*.nrg 2000 >
+start
+50 .poison store
+.shoot .ploc store
+stop
+
+'Tie to eachother when old enough
+
+cond
+*140 0 =
+*.robage 120 >
+*.numties 3 <
+*.refage *.robage <
+*.eye5 50 <
+*.focuseye 5 =
+*.in1 *.dnalen =
+*.myeye *.refeye =
+start
+800 rnd 100 add 51 store
+*51 .tie store
+50 *.aim add .setaim store
+stop
+
+'Sharenrg and Waste with Conspecs, if there is no Plant.
+
+cond
+*140 0 =
+*.nrg *.trefnrg <
+*.numties 0 >
+*.body 800 <
+*.nrg 2100 <
+*.multi 0 >
+start
+50 .sharenrg store
+stop
+
+cond
+*.out4 0 =
+*.waste 0 >
+*.numties 0 >
+*.multi 0 >
+start
+*.waste *.trefnrg add 2 div .sharewaste store
+stop
+
+'Delete Ties to enemies
+
+cond
+*.trefeye *.myeye %!=
+*.trefeye 0 !=
+*.numties 0 >
+*.pain 0 >
+*.nrg 10000 <
+start
+*.tiepres .tienum store
+*.nrg .tieval store
+310 .tieloc store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefeye 0 !=
+start
+*.tiepres *.tienum store
+*.trefaim *.aim sub .setaim store
+*.tiepres .deltie store
+*990 dec
+stop
+
+cond
+*.tiepres *51 !=
+*.numties 0 >
+*.trefeye *.myeye !=
+start
+*.tiepres .tienum store
+400 .tieval store
+.tieval .tieloc store
+99 .sharenrg store
+1 *.sharewaste add .sharewaste store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+*.refshoot 0 = or
+*.shflav 0 !=
+*.shflav -2 !=
+start
+942 *.shang sub .setaim store
+0 .shflav store
+100 .mkshell store
+26 .strvenom
+.shoot .vloc store
+stop
+
+'Disguise if mutated
+
+cond
+*140 0 =
+*.in1 *.dnalen !=
+*.in1 *.out1 !=
+*.refeye *.meye %=
+*.refeye 0 !=
+start
+*.in1 .out1 store
+2 120 store
+stop
+
+'Timer Gene, Remembers the time
+
+cond
+*121 0 =
+start
+*120 1 add 120 store
+stop
+
+'counter gene
+
+cond
+start
+1 *62 add 62 store
+stop
+
+'erase memory locations 50 - 56
+
+cond
+*66 1 =
+start
+0 50 store
+0 51 store
+0 52 store
+0 53 store
+0 54 store
+0 55 store
+0 56 store
+0 60 store
+0 66 store
+stop
+end

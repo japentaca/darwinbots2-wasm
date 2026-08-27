@@ -1,0 +1,206 @@
+' Carnatus Orbis (Fat Circle)
+' Obese son of HDV4
+' By PY.
+' Basic F1 tie feeder with body controls
+
+def feed 70
+def feedrate 71
+def tietag 72
+
+'reproduce 
+'***********
+cond
+*.nrg *60 > 
+*.body *61 >
+*.eye5 0 =
+start
+20 .repro store
+2 50 store
+150 .aimdx store
+stop
+
+'initialize
+'*********
+cond
+*.robage 0 =
+start
+.shoot .ploc store
+2000 60 store 
+200 61 store
+.tie inc
+*.myeye .refeye store
+.tienum .vloc store
+999 .venval store
+stop
+
+cond 
+*.robage 1 =
+start
+.deltie inc
+628 .aimdx store
+stop
+
+cond
+*60 30000 <
+start
+60 inc
+61 inc
+stop
+
+' move forward 
+'****************
+cond
+*.eye5 60 <
+*.robage 0 !=
+*.vel 20 <
+*.numties 0 =
+start
+5 .up store
+stop
+
+cond
+*.eye5 0 >
+*.eye5 50 <
+*.refeye *.myeye !=
+*.numties 0 =
+start
+*.maxvel *.vel sub .up store
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye5 0 =
+*.eye1 *.eye9 !=
+start
+mult
+*.eye9 *.eye1 sub 4 mult
+stop
+
+cond
+*.eye5 30 <
+*.eye2 *.eye8 !=
+start
+mult
+*.eye8 *.eye2 sub 3 mult
+stop
+
+cond
+*.eye5 40 <
+*.eye3 *.eye7 !=
+start
+mult
+*.eye7 *.eye3 sub 2 mult
+stop
+
+cond
+*.eye5 70 <
+*.eye4 *.eye6 !=
+start
+mult
+*.eye6 *.eye4 sub
+stop
+
+'avoid conspecifics
+'*********************
+cond
+*.refeye *.myeye =
+*.eye5 20 >
+*.robage 0 !=
+start
+mult
+280
+stop
+
+cond
+start
+.aimdx store
+stop
+
+cond
+*.tiepres 0 !=
+'*.tietag 0 !=
+start
+.feed inc
+.tietag inc
+stop
+
+cond
+*.feed 1 =
+start
+-3 .tieloc store
+25 .tieval store
+*.tiepres .tienum store
+stop
+
+cond
+*.feed 1 >
+start
+-1 .tieloc store
+-3000 .tieval store
+*.tiepres .tienum store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye4 *.eye6 =
+*.eye5 40 >
+*.numties 0 =
+start
+500 rnd .tie store
+'.tietag inc
+stop
+
+cond
+*.feed 0 >
+*.numties 0 =
+start
+0 .feed store
+'0 .tietag store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 50 >
+*.refpoison 0 =
+start
+-1 .shoot store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 50 >
+*.refpoison 0 >
+start
+-6 .shoot store
+stop
+
+cond
+*.nrg 1000 >
+*.poison 5000 <
+start
+10 .strpoison store
+stop
+
+cond
+*.nrg 100 >
+*.venom 100 <
+start
+10 .strvenom store
+stop
+
+cond
+*.nrg 800 >
+start
+100 .strbody store
+stop
+
+cond
+*.waste 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+1 .backshot store
+stop
+
+end

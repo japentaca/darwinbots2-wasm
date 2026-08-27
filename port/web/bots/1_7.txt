@@ -1,0 +1,264 @@
+'sexbau by Botsareus to test type b repro.
+'shipped with some junk dna
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+'vision setup
+cond
+*.robage 2 <
+start
+358 .eye0dir store
+538 .eye1dir store
+717 .eye2dir store
+897 .eye3dir store
+1076 .eye4dir store
+1435 .eye6dir store
+1614 .eye7dir store
+1794 .eye8dir store
+1973 .eye9dir store
+50 .eye0width store
+50 .eye1width store
+50 .eye2width store
+50 .eye3width store
+50 .eye4width store
+50 .eye5width store
+50 .eye6width store
+50 .eye7width store
+50 .eye8width store
+50 .eye9width store
+'cospec setup
+55 .out1 store
+'bouy setup
+10 .setboy store
+stop
+'I see something in a waird eye, lets turn so I see it with eye5
+
+cond
+*.eye1 0 >
+start
+556 .aimdx store
+stop
+cond
+*.eye9 0 >
+start
+-556 .aimdx store
+stop
+
+cond
+*.eye2 0 >
+start
+417 .aimdx store
+stop
+cond
+*.eye8 0 >
+start
+-417 .aimdx store
+stop
+
+cond
+*.eye3 0 >
+start
+278 .aimdx store
+stop
+cond
+*.eye7 0 >
+start
+-278 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+start
+139 .aimdx store
+stop
+cond
+*.eye6 0 >
+start
+-139 .aimdx store
+stop
+
+cond
+*.eye5 0 >
+start
+0 .aimdx store
+stop
+
+'If conspec and not time to reproduce, then move -20
+
+cond
+55 *.in1 =
+*.body 3000 <
+start
+-20 .up store
+stop
+
+'if not conspec and not time to reproduce, slowly move forward and shoot for food
+
+cond
+55 *.in1 !=
+*.body 3000 <
+start
+-6 .shoot store
+stop
+
+cond
+55 *.in1 !=
+*.body 3000 <
+start
+1 .up store
+stop
+
+'if conspec and time to reproduce, slowly move forward shoot sperm and sexreproduce
+'this gene will be amplifyed x8 and we distribute the male/female sex organs
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+1 .up store
+stop
+
+'if robot already reproduced give some space
+
+cond
+*.body 3000 >
+*999 1 =
+55 *.in1 =
+0 *.sexrepro =
+start
+-20 .up store
+stop
+
+'resets special case
+
+cond
+*.body 3000 <
+start
+0 999 store
+stop
+
+cond
+*.edge 1 =
+start
+314 .setaim store
+20 .up store
+stop
+
+999
+998
+997
+996
+995
+994
+993
+992
+991
+990
+989
+988
+987
+986
+985
+984
+983
+982
+981
+980
+979
+978
+977
+976
+end

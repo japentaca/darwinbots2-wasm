@@ -1,0 +1,300 @@
+'Topic: 3 cell bot
+'Shen
+' Updated Gaesum
+' Improved repro genes
+' Better tracking and navigation
+' 
+'
+'
+' --==-- Reproduction loop --==--
+'
+' Using *50 for role assignment
+' 0 will only rotate and try to repro its head
+' 10 is the Head
+' 20 is the Tail
+' 100 is Temp Head
+' 200 is Temp Tail
+'
+' - Unmake Slime -
+cond
+*.slime 0 >
+*.numties 0 =
+start
+*.slime *.slime *.slime add sub .mkslime store
+stop
+
+' - Lone bots repro Heads and becomes Temp Tail -
+cond
+*.numties 0 =
+*.eye5 30 <
+*.nrg 500 >
+*.vel 20 <
+start
+50 .repro store
+200 50 store
+stop
+
+' - Child ties to parent and becomes Temp Head -
+cond
+*.robage 0 =
+start
+100 .tie store
+100 50 store
+stop
+
+' - Temp Head aligns and becomes Head -
+cond
+*.multi 1 =
+*50 100 =
+start
+100 .readtie store
+100 .tienum store
+628 .fixang store
+200 .fixlen store
+35 .stifftie store
+10 50 store
+stop
+
+' - Temp Tail aligns and becomes Tail -
+cond
+*.multi 1 =
+*50 200 =
+start
+100 .readtie store
+100 .tienum store
+628 .fixang store
+20 50 store
+stop
+
+' - Rescue lost bots -
+cond
+*.numties 0 =
+*.vel 2 <
+*.robage 10 >
+start
+10 .aimdx store
+stop
+
+' - Detach multi headed bots -
+cond
+*.numties 1 >
+' *.tiepres 100 =
+start
+*.tiepres .deltie store
+200 50 store
+stop
+
+' - Start Repro Loop -
+cond
+*.multi 1 =
+*.nrg 5000 >
+*.eye5 20 <
+*.body 400 >
+start
+100 .deltie store
+stop
+
+
+' --==-- Navigation --==--
+
+' -=- Head Nav -=-
+
+' - Approach Enemy -
+cond
+*.eye5 0 >
+*.eye5 30 <
+*.refeye *.myeye !=
+*.vel 40 <
+*.multi 1 =
+*50 10 =
+start
+10 .up store
+stop
+
+' - Search -
+cond
+*.eye5 0 =
+*.refeye *.myeye !=
+*.eye3 *.eye 7 =
+*.vel 30 <
+*.multi 1 =
+*50 10 =
+start
+10 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+' --==-- Distant Tracking --==--
+
+' - Wide -
+cond
+*.eye5 30 <
+*.refeye *.myeye !=
+*.eye7 *.eye3 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+*.eye7 *.eye3 sub 2 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 30 <
+*.refeye *.myeye !=
+*.eye6 *.eye4 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye6 *.eye4 sub 2 mult .aimdx store
+*.eye6 *.eye4 sub 2 div .dx store
+stop
+
+
+' --==-- Close Tracking --==--
+
+' - Wide -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.eye7 *.eye3 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye7 *.eye3 sub 3 div .aimdx store
+*.eye7 *.eye3 sub 4 div .dx store
+stop
+
+' - Narrow -
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+*.eye6 *.eye4 !=
+*.multi 1 =
+*50 10 =
+start
+*.eye6 *.eye4 sub 3 div .aimdx store
+*.eye6 *.eye4 sub 4 div .dx store
+stop
+
+
+' --==-- Conspecifics --==--
+
+' - Avoid Close Friend -
+cond
+*.eye5 30 >
+*.refeye *.myeye =
+*.multi 1 =
+*50 10 =
+start
+*.eye4 *.eye6 sub .aimdx store
+*.eye4 *.eye6 sub 5 div .dx store
+stop
+
+' - Ignore Distant Friend -
+cond
+*.eye5 30 <
+*.refeye *.myeye =
+*.vel 30 <
+*.multi 1 =
+*50 10 =
+start
+10 .up store
+30 rnd 30 rnd sub .aimdx store
+stop
+
+
+' -=- Tail Nav -=-
+
+' - Narrow -
+cond
+*.eye5 30 >
+*.eye6 *.eye4 !=
+*.refeye *.myeye !=
+*.multi 1 =
+*50 20 =
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 4 div .dx store
+stop
+
+' - Wide -
+cond
+*.eye5 30 >
+*.eye7 *.eye3 !=
+*.refeye *.myeye !=
+*.multi 1 =
+*50 20 =
+start
+*.eye7 *.eye3 sub .aimdx store
+*.eye7 *.eye3 sub 4 div .dx store
+stop
+
+
+' --==-- Defence --==--
+
+' - Eat -
+cond
+*.eye5 29 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+-1 .shoot store
+stop
+
+' - Make shell -
+cond
+*.nrg 1000 >
+*.shell 50 <
+*.multi 1 =
+start
+10 .mkshell store
+stop
+
+' - Make slime -
+cond
+*.nrg 500 >
+*.slime 190 <
+*.multi 1 =
+start
+200 *.slime sub .mkslime store
+stop
+
+
+' --==-- Other Stuff --==--
+
+' - Sharing -
+cond
+*.nrg *.trefnrg !%=
+*.multi 1 =
+start
+50 .sharenrg store
+50 .shareslime store
+50 .shareshell store
+stop
+
+' - Make Body -
+cond
+*.nrg 4500 >
+*.body 500 <
+start
+50 .strbody store
+stop
+
+' - Feed from Body -
+cond
+*.nrg 1000 <
+*.body 10 >
+start
+100 .fdbody store
+stop
+
+' Waste disposal
+cond
+*.waste 400 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+end

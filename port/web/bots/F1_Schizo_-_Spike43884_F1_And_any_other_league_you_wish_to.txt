@@ -1,0 +1,834 @@
+'Schizo
+'By Spike43884
+'A Schizophrenic Bot by Spike43884 (With some code stolen from Moonfishers bots...
+'...actually, make that a lot of code stolen from Moonfishers bots as quickdraw is
+'very long!
+
+'Just some free variables
+def attack 50
+def hibernate 51
+def identity 52
+
+'For Fruitflies
+def maxpop 1000
+def alge 13
+def rand 110
+def type 973
+
+'For Quickdraw
+def fruitfly 971
+def original 972
+def creep 974
+def setoffset 53
+def seteyespace 54
+def seteyes 55
+def spineyespace 105
+def spinoffset 140
+
+
+'Initialisation (BIRTH)
+cond
+*.robage 1 =
+start
+40 .repro store
+30 .dn store
+stop
+
+
+'Initialisation (EYES)
+cond
+ *.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 135 .eye4width store
+ 15 .eye5width store
+ 135 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 80 .eye4dir store
+ 0 .eye5dir store
+ -80 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+ .aimsx .vloc store
+ 128 .venval store
+ 1 rnd .identity store
+stop
+
+
+
+' Gene 1 Initiate Hibernation (waiting)
+cond
+*.eye1 0 =
+ *.eye2 0 = and
+ *.eye3 0 = and
+ *.eye4 0 = and
+ *.eye5 0 = and
+ *.eye6 0 = and
+ *.eye7 0 = and
+ *.eye8 0 = and
+ *.eye9 0 = and
+ *.refeye *.myeye = or
+ *.nrg 1000 < and
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ 1 .hibernate store
+stop
+
+
+' Gene 1 Search (waiting)
+cond
+*.eye1 0 =
+ *.eye2 0 = and
+ *.eye3 0 = and
+ *.eye4 0 = and
+ *.eye5 0 = and
+ *.eye6 0 = and
+ *.eye7 0 = and
+ *.eye8 0 = and
+ *.eye9 0 = and
+ *.refeye *.myeye = or
+ *.nrg 1000 >= and
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ 8 rnd 1 rnd 1 add div 1 rnd 1 add div .aimdx store
+ 5 rnd 5 rnd add 1 rnd 1 add div 2 rnd 1 add mult 1 rnd 1 add div .up store
+stop
+
+
+'Gene 2 Food Sighted 
+'*********************
+cond
+ *.refeye *.myeye !=
+ *.eyef 0 !=
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+1 .attack store
+stop
+
+cond
+ *.refeye *.myeye =
+ *.eyef 0 = or
+ *.poisoned 0 =
+ *.paralyzed 0 =
+start
+0 .attack store
+stop
+
+cond
+ *.eye1 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+550 .aimdx
+0 .hibernate store
+stop
+
+cond
+ *.eye2 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+405 .aimdx
+0 .hibernate store
+stop
+
+cond
+ *.eye3 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+260 .aimdx
+0 .hibernate store
+stop
+
+cond
+ *.eye4 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+115 .aimdx
+0 .hibernate store
+stop
+
+cond
+ *.eye6 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+115 .aimsx
+0 .hibernate store
+stop
+
+cond
+ *.eye7 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+260 .aimsx
+0 .hibernate store
+stop
+
+cond
+ *.eye8 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+405 .aimsx
+0 .hibernate store
+stop
+
+cond
+ *.eye9 0 >
+ *.attack 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+550 .aimsx
+0 .hibernate store
+stop
+'*********************
+
+
+' Gene 3 Chase Food
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 4 Long Range Food Handling
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refeye 0 >
+ *.hibernate 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+1 rnd 2 mult 3 sub .shoot store
+216 .shootval store
+stop
+
+' Gene 5 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.hibernate 0 =
+ *.refeye 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 6 Venom
+
+cond
+ *.hibernate 0 =
+ *.venom 50 <
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+10 .strvenom store
+stop
+
+' Gene 7 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+ *.hibernate 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 8 Reproduce
+cond
+ *.nrg 20000 >
+ *.robage 3 > and 
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ 10 .repro store
+ 1 rnd 2 mult 3 sub .shoot store
+ 216 .shootval store
+stop
+
+
+' Gene 9 tie to parent
+cond
+ *.robage 0 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ .tie inc
+stop
+
+' Gene 10 sever tie to parent
+cond
+ *.robage 1 =
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+.deltie inc
+stop
+
+
+' Gene 11 If MB Stuff
+cond
+ *.multi 1 = or
+ *.hibernate 0 = 
+ *.poisoned 0 =
+ *.paralyzed 0 =
+ *.identity 0 =
+start
+ 50 .sharenrg store
+stop
+
+
+' Gene 12 It Hurts!
+cond
+ *.pain 100 >
+ *.identity 0 =
+start
+ 30 .dn store
+
+
+' Gene 13 I'm old!
+cond
+ *.robage 1000 >
+ *.identity 0 =
+start
+ 20 .repro store
+ 25 .repro store
+ 33 .repro store
+stop
+
+
+' Gene 14 Death By Baby! (Elderly)
+cond
+ *.robage 10000
+ *.identity 0 =
+start
+ 10 .repro store
+ 20 .repro store
+ 25 .repro store
+ 33 .repro store
+ 43 .repro store
+ 75 .repro store
+ 100 .repro store
+stop
+
+
+' Gene 14 Death By Baby!
+cond
+ *.poisoned 0 !=
+ *.paralyzed 0 !=
+ *.identity 0 =
+start
+ 20 .repro store
+ 25 .repro store
+ 33 .repro store
+ 43 .repro store
+ 75 .repro store
+ 100 .repro store
+stop
+
+'--------------------Fruit Flies (By Moonfisher) v0.21--------------------'
+'Fruit Flies v0.21 (for DB2.43.1L)
+'By Moonfisher : 28-09-08
+'A very simple tie feeder for F1.
+'Beats EtchII and everything else I've tried it on so far. So it should beat the current F1 league I think.
+'The reproduction gene is capped at 1000, if it's still too slow try 700, although that could change the results.
+'No fancy eyes or conspec or anything of that sort, just a very simple strategy.
+'v0.2 : Now addapts to it's oponent through natural selection.
+'It also beats most oponents a lot faster, but has a slightly harder time beating Etch II.
+'It's also now one gene and generaly shorter, planning to use it as a virus for an alge.
+'v0.21 : Now beats v0.1 tongue.gif
+
+cond
+*.nrg 15 >
+*.numties 0 != or
+ *.identity 1 =
+start
+.fixpos dec
+'-- Birth
+*.robage 0 =
+314 .aimright store
+.deltie inc
+25 .repro store
+.tie inc
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+15 rnd .rand store
+*.rand 5 < and
+*.rand .type store
+*.type 0 =
+5 rnd .type store
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.totalmyspecies .maxpop 2 mult < and
+*.maxvel .dn store
+50 .repro store
+*.totalmyspecies .maxpop <
+*.nrg 200 > and
+50 *.body 10 mult sub 0 floor .strbody store
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+'-- Tie feeding
+*.numties 0 !=
+*.tiepres .tienum store
+*.tmemval *.dnalen =
+*.numties 1 > or and
+*.numties .deltie store
+*.numties 0 !=
+*.robage 1 > and
+*.trefxpos *.trefypos angle .setaim store
+99 .sharenrg store
+dupbool
+*.memval .alge = and
+*.trefxpos *.xpos sub abs *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+*.velsx .dx store
+dropbool
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+3200 .tieval store
+*.memval .alge = and
+.tieloc .shoot store
+-1 .shootval store
+dropbool
+dupbool
+*.type 2 = and
+.shootval .tieloc store
+-31999 .tieval store
+dropbool
+dupbool
+*.type 3 = and
+.tieloc .tieloc store
+-6 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+dropbool
+*.type 3 > and
+.tieloc .tieloc store
+-1 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 =
+*.memval *.dnalen = or and
+350 .aimright store
+dropbool
+*.eye5 0 != and
+*.memval *.dnalen != and
+*.refbody 20 >
+*.totalmyspecies 600 > or and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+*.memval .alge = and
+*.velsx .dx store
+*.refvelup 15 add *.maxvel ceil 0 floor .up store
+.fixpos .shoot store
+1 .shootval store
+stop
+
+
+'********************************************************************
+'------------------------- Quickdraw --------------------------------
+
+cond
+*.identity 2 =
+start
+25 .repro store
+.tie inc
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+cond
+*.identity 2 =
+start
+25 .repro store
+.tie inc
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+cond
+*.identity 2 =
+start
+1 .creep store
+1 .original store
+25 .repro store
+.tie inc
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'------------------------- Robage 0 ---------------------------------
+cond
+*.identity 2 =
+start
+.fixpos dec
+stop
+
+cond
+*.identity 2 =
+*.robage 0 =
+start
+.deltie inc
+.tie inc
+1 .seteyes store
+.spineyespace .seteyespace store
+.spinoffset .setoffset store
+.dnalen .memloc store
+.dnalen .tmemloc store
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'------------------------- Eyes -------------------------------------
+cond
+*.seteyes 1 =
+*.identity 2 =
+start
+*.setoffset .eye9dir store
+*.setoffset *.seteyespace add .eye8dir store
+*.setoffset *.seteyespace 2 mult add .eye7dir store
+*.setoffset *.seteyespace 3 mult add .eye6dir store
+*.setoffset *.seteyespace 4 mult add .eye5dir store
+*.setoffset *.seteyespace 5 mult add .eye4dir store
+*.setoffset *.seteyespace 6 mult add .eye3dir store
+*.setoffset *.seteyespace 7 mult add .eye2dir store
+*.setoffset *.seteyespace 8 mult add .eye1dir store
+4 .focuseye store
+0 .seteyes store
+stop
+
+
+cond
+*.eyef 0 =
+*.memval *.dnalen = or
+*.memval .alge != 
+*.fruitfly 1 != and or
+*.original 1 != or
+*.identity 2 =
+start
+*.aim *.eye1dir add .eyedist 4 mult add .setaim 500 1 add * abs sgn mult store
+*.aim *.eye2dir add .eyedist 3 mult add .setaim 500 2 add * abs sgn mult store
+*.aim *.eye3dir add .eyedist 2 mult add .setaim 500 3 add * abs sgn mult store
+*.aim *.eye4dir add .eyedist 1 mult add .setaim 500 4 add * abs sgn mult store
+*.aim *.eye5dir add .eyedist 0 mult sub .setaim 500 5 add * abs sgn mult store
+*.aim *.eye6dir add .eyedist 1 mult sub .setaim 500 6 add * abs sgn mult store
+*.aim *.eye7dir add .eyedist 2 mult sub .setaim 500 7 add * abs sgn mult store
+*.aim *.eye8dir add .eyedist 3 mult sub .setaim 500 8 add * abs sgn mult store
+10 .repro store
+.tie inc
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'------------------------- Molester ---------------------------------
+cond
+*.creep 1 =
+*.original 1 =
+*.identity 2 =
+start
+*.memval .alge !=
+*.robage 15 < and
+*.velup *.velup 3 div add .up store
+*.veldx *.veldx 3 div add .dx store
+*.eyef 0 !=
+*.memval .alge = and
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 5 div 20 sub 0 floor 100 ceil *.refvelup add .up store
+*.refveldx .dx store
+-8 .shoot store
+.tie inc
+0 .shootval store
+*.numties 0 = and
+.tie inc
+*.numties 0 >
+*.tmemval .alge = and
+*.tiepres .tienum store
+dupbool
+*.timer 2 mod 0 = and
+.aimsx .tieloc store
+300 .tieval store
+dropbool
+*.timer 2 mod 1 = and
+.sexrepro .tieloc store
+20 .tieval store
+*.numties 0 >
+*.robage 0 > and
+*.tmemval *.dnalen != and
+*.tmemval .alge != and
+*.numties .deltie store
+.strvenom .tieloc store
+100 .tieval store
+*.numties 0 =
+*.tmemval .alge != or
+0 .tieloc store
+0 .tieval store
+*.robage 30 >
+'*.pain 10 > or
+1 .fruitfly store
+0 .creep store
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'------------------------- Fruitflies -------------------------------
+'-------------------- (Slightly modified) ---------------------------
+cond
+*.nrg 15 >
+*.numties 0 != or
+*.fruitfly 1 = and
+*.identity 2 =
+start
+'-- Birth
+*.robage 0 =
+314 .aimright store
+.deltie inc
+'300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+20 rnd .rand store
+*.rand 5 < and
+*.rand .type store
+*.type 0 =
+6 rnd .type store
+'-- Reproduction
+*.body 5 >
+*.nrg 150 > and
+*.totalmyspecies .maxpop 2 mult < and
+50 .repro store
+*.tin9 234 != and
+*.maxvel .dn store
+*.totalmyspecies .maxpop <
+*.nrg 300 > and
+50 *.body 10 mult sub 0 floor .strbody store
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+*.body 1 =
+100 .strbody store
+100 .fdbody store
+'-- Tie feeding
+*.numties 0 !=
+*.tiepres .tienum store
+*.tmemval *.dnalen =
+*.numties 1 > or and
+*.tin9 234 != and
+*.numties .deltie store
+*.numties 0 !=
+*.robage 1 > and
+*.trefxpos *.trefypos angle .setaim store
+99 .sharenrg store
+dupbool
+*.memval .alge = and
+*.trefxpos *.xpos sub abs *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+*.velsx .dx store
+dropbool
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+3200 .tieval store
+*.memval .alge = and
+.tieloc .shoot store
+-6 .shootval store
+dropbool
+dupbool
+*.type 2 = and
+.shootval .tieloc store
+-31999 .tieval store
+*.memval .alge != and
+*.timer 2 mod 0 = and
+.mkslime .tieloc store
+dropbool
+dupbool
+*.type 3 = and
+.strvenom .tieloc store
+100 .tieval store
+*.numties .deltie store
+*.memval .alge != and
+*.timer 2 mod 0 = and
+.fdbody .tieloc store
+dropbool
+dupbool
+*.type 4 = and
+.tieloc .tieloc store
+-6 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+dropbool
+*.type 4 > and
+.tieloc .tieloc store
+-1 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+*.tmemval *.dnalen =
+0 .tieloc store
+0 .tieval store
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+*.eyef 0 != and
+*.memval *.dnalen != and
+*.refbody 20 >
+*.totalmyspecies 600 > or and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+*.memval .alge = and
+*.velsx .dx store
+*.refvelup 15 add *.maxvel ceil 0 floor .up store
+.fixpos .shoot store
+1 .shootval store
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'------------------------- Infected alge ----------------------------
+cond
+*.robage 0 >
+*.original 1 !=
+start
+50 .repro store
+50 .repro store
+.tie inc
+.deltie inc
+234 .tout9 store
+234 .out9 store
+*.nrg 300 >
+dupbool
+*.slime 300 < and
+50 .mkslime store
+dropbool
+dupbool
+*.shell 500 < and
+500 *.shell sub 0 floor .mkshell store
+dropbool
+*.poison *.shell < and
+*.shell 50 add *.poison sub 0 floor .mkpoison store
+*.robage 1 =
+.up .ploc store
+*.robage 15 <
+500 .dn store
+70 .aimsx store
+*.body 90 >
+100 .fdbody store
+*.robage 15 >=
+*.nrg 2000 > and
+dupbool
+.tie inc
+*.eyef 0 != and
+*.memval *.dnalen = and
+*.in9 234 != and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+0 .deltie store
+dropbool
+*.numties 0 > and
+*.tmemval *.dnalen = and
+*.tiepres .tienum store
+-1 .tieloc store
+1000 .tieval store
+40 .stifftie store
+*.numties 0 >
+*.tmemval *.dnalen = and
+*.tin9 234 != and
+40 .stifftie store
+1 .fixlen store
+0 .deltie store
+*.tielen 400 > and
+*.trefxpos *.trefypos angle .setaim store
+*.maxvel .up store
+*.numties 0 >
+*.tmemval *.dnalen != and
+.strvenom .tieloc store
+100 .tieval store
+*.tin9 234 = or
+*.numties .deltie store
+*.shflav 0 !=
+*.maxvel .dn store
+*.velsx 2 mult .sx store
+0 .shflav store
+stop
+
+end

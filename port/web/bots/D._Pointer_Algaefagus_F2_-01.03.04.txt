@@ -1,0 +1,170 @@
+'Topic: Hunters of himselves  
+'Joan
+
+'D_Pointer_Algaefagus
+'Points to prey. Defense genes. Evasion gene. 
+'Only attacks vegs.
+
+'Mar.2004 Joan
+
+'----------------------- 
+'*41 *42 counters 
+'*80 .aimdx value 
+'*82 .aimdx/.aimsx
+'-----------------------
+
+'-----Setup
+
+cond
+*80 50 !=
+
+start
+50 80 store
+.aimdx 82 store
+300 *82 store
+
+-1 .out1 store
+
+stop
+
+'-----Reproduction
+
+cond
+*.hitdx 0 !=
+*.nrg 10000 >
+
+start
+50 .repro store
+150 .aimsx store
+
+stop
+
+'-----Rotation
+
+cond
+*.eye5 0 =
+
+start
+*80 *82 store
+*41 *80 add 41 store
+
+stop
+
+'-----Control
+
+cond
+*41 1200 >
+*.eye5 0 =
+
+start
+5 .up store
+0 41 store
+
+stop
+
+'-----Feed
+
+cond
+*.eye5 0 !=
+42 0 >
+
+start
+-1 .shoot store
+
+*.up 5 add .up store
+*.up 5 add .up store
+
+0 40 store
+0 41 store
+
+stop
+
+'---------------------Pointer genes
+'----------------------------------
+
+'-----Direction Change
+
+
+cond
+*.refeye 0 !=
+
+'-----*.in1 *.out1 = -> no agaefagus
+'-----? -> Mimetic killer
+
+start
+590 *82 store
+
+stop
+
+'-------------Pointing
+
+cond
+*.eye3 0 !=
+
+start
+.aimsx 82 store
+
+stop
+
+'---------------------
+
+cond
+*.eye7 0 !=
+
+start
+.aimdx 82 store
+
+stop
+
+'-----Getting Shooted
+'-----Evasion
+
+cond
+*.shdn 0 !=
+*.pain 200 >
+
+start
+*.up 15 add .up store
+20 .sx store
+*80 *82 store
+
+stop
+
+'-----Shoot dx
+
+cond
+*.shdx 0 !=
+*.pain 200 >
+
+start
+-3 42 store 
+.aimdx 82 store
+300 *82 store
+stop
+
+'-----Shoot sx
+
+cond
+*.shsx 0 !=
+*.pain 200 >
+
+start
+-3 42 store 
+.aimsx 82 store
+300 *82 store
+stop
+
+'-----Defend
+
+cond
+*42 0 <
+
+start
+.aimdx .shoot store
+400 .shootval store
+
+inc 42 store
+
+stop
+'-------------
+end

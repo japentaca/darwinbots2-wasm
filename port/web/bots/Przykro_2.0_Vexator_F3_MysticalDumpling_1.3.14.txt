@@ -1,0 +1,120 @@
+def maxpop 971
+def type 972
+
+cond
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+1 rnd .type store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store 
+stop
+
+'1-gene, but not SStr format.
+start
+*.numties sgn abs .deltie mult inc
+
+'Baby-making
+*.body 15 >
+*.nrg 300 > and
+*.totalmyspecies .maxpop 2 mult < and
+314 rnd .aimsx store
+50 .repro store
+clearbool
+
+'Body
+*.body 30 >
+10 .fdbody store
+*.nrg 500 >
+10 .strbody store
+clearbool
+
+*.robage 0 =
+50 rnd 0 mod 2 rnd 1 floor mult *.type store 
+314 rnd .aimdx store
+700 .maxpop store
+*.maxvel .dn store
+'Choose type                             
+*.robage 0 =
+50 rnd 1 floor 0 =
+1 rnd .type store 
+clearbool
+
+
+
+clearbool
+'Turn and move
+*.eyef 0 >
+*.myshoot *.refshoot !=
+*.refxpos *.refypos angle .setaim store
+*.refvelup 0 >
+*.refveldx .dx store
+30 *.refvelup add *.maxvel ceil .up store
+clearbool
+
+'Turn if I see cons or nothin'
+*.eyef 0 =
+*.myshoot *.refshoot != 
+or
+and
+20 .aimsx store
+clearbool
+
+'Hey... Food! Lemme at 'im
+*.myshoot *.refshoot !=
+and
+*.eyef 1000 >
+*.type 0 =
+and
+-6 .shoot store
+clearbool
+
+*.myshoot *.refshoot !=
+and
+*.eyef 1000 >
+*.type 1 =
+and
+-1 .shoot store
+clearbool
+
+*.pain 100 >
+*.pain .dx store
+stop
+
+start
+'Oculus
+-4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0 floor mult *.eye1 *.eye6 sub sgn 0 floor mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9 *.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 *.eye6 sub sgn 0 floor mult *.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 floor mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub sgn ++ sgn mult *.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6 sub sgn 0 floor mult *.eye2 *.eye5 sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2 *.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn mult add 3 *.eye8 *.eye9 sub sgn ++ sgn mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 *.eye5 sub sgn 0 floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub sgn ++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3 *.eye8 sub sgn ++ sgn mult *.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult *.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn mult *.eye3 *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub sgn ++ sgn mult *.eye7 *.eye7 sub sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5 sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7 *.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0 floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn mult add 1 *.eye6 *.eye9 sub sgn ++ sgn mult *.eye6 *.eye8 sub sgn ++ sgn mult *.eye6 *.eye7 sub sgn ++ sgn mult *.eye6 *.eye6 sub sgn ++ sgn mult *.eye6 *.eye5 sub sgn 0 floor mult *.eye6 *.eye3 sub sgn ++ sgn mult *.eye6 *.eye2 sub sgn ++ sgn mult *.eye6 *.eye1 sub sgn ++ sgn mult add 4 add *.focuseye 4 add sub dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- 9 add - dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec --
+stop

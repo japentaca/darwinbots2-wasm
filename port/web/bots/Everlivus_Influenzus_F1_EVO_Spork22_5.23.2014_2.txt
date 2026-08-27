@@ -1,0 +1,336 @@
+'#generation: 3
+'#mutations: 50
+ cond
+ *.thisgene 7 <
+ & *.tiepres .deltie store
+ 0 .repro store
+ 0 .shoot multstore
+ .mass sqrstore
+ store
+ 500 .vshoot store
+ 1 .delgene store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  24  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  59  '''''''''''''''''''''''
+ cond
+ *.eye5 0 >
+ *.myeye !=
+ start
+ *.tiepres .deltie store
+ *.refveldx .dx store
+ *.refvelup 50 add .up store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  78  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  113  '''''''''''''''''''''''
+ cond
+ swapbool
+ -27 >
+ *.eye5 30 <
+ *.refeye *.myeye !=
+ start
+ multstore
+ .eye8 store
+ *.refveldx .dx store
+ *.refvelup 50 add .up store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  136  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  171  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *489 -7 !%=
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 6 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  206  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  235  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  270  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  299  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  334  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  369  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  404  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  439  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye =
+ or
+ start
+ *.tiepres .deltie store
+ 50 mult .sx store
+ 45 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  459  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  494  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  529  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  564  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.light <
+ 100 .mkchlr store
+ clearbool
+ .fixpos inc
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  589  '''''''''''''''''''''''
+ cond
+ *.eye5 30 >
+ *.refeye *.myeye !=
+ start
+ *.tiepres .deltie store
+ -1 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  20 Ends at position  604  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  21 Ends at position  639  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos anglecmp 21 sqrstore
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  22 Ends at position  674  '''''''''''''''''''''''
+ cond
+ *.nrg 1000 >
+ *.body 1000 >
+ start
+ 50 .repro store
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  685  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  24 Ends at position  720  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  749  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.light <
+ 100 .mkchlr store
+ 216 stop
+''''''''''''''''''''''''  Gene:  26 Ends at position  772  '''''''''''''''''''''''
+ cond
+ 7 *989 !=
+ start
+ *.eyef 0 =
+ 10 .up store
+ not
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 5 add .up store
+ *.refveldx .dx store
+ -8 .shoot store
+ *.thisgene .mkvirus store
+ 50 .vshoot store
+ stop
+''''''''''''''''''''''''  Gene:  27 Ends at position  807  '''''''''''''''''''''''
+
+'#hash: 8XCU0@8FmZ&0^&yTMgWy

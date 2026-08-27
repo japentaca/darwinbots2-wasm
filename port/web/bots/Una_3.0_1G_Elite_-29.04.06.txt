@@ -1,0 +1,41 @@
+'Una
+'
+'Who needs conditions?
+
+def IDcode 964
+def parent 965
+
+cond
+start
+.tie *.robage -1 mult 1 add mult inc
+.deltie inc
+.fixpos *.fixed mult dec
+*.refveldx .dx *.eye5 sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult store
+*.refvelup 60 add .up *.eye5 -1 mult 45 add sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+42 .IDcode *.robage -1 mult 1 add mult store
+.IDcode .memloc *.robage -1 mult 1 add mult store
+-6 .shoot *.eye5 0 sub sgn 1 add sgn mult *.eye5 40 sub sgn 1 add sgn -1 add -1 mult mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+-8 .shootval *.eye5 0 sub sgn 1 add sgn mult *.eye5 40 sub sgn 1 add sgn -1 add -1 mult mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+-6 .shoot *.refpoison sgn *.refshell sgn -1 mult 1 add add sgn mult *.eye5 45 sub sgn 1 add sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+-1 .shoot *.refshell sgn mult *.refpoison sgn -1 mult 1 add mult *.eye5 45 sub sgn 1 add sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+16 .shootval *.eye5 45 sub sgn 1 add sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+*.refvelup .up *.eye5 45 sub sgn 1 add sgn mult *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.eye5 sgn mult store
+*.refxpos *.refypos angle .setaim *.memval 42 sub dup mult sgn *.refeye *.myeye sub dup mult sgn add sgn mult *.robage sgn mult *.eye5 35 sub sgn mult store
+314 rnd .aimdx *.memval 42 sub dup mult sgn -1 add -1 mult *.refeye *.myeye sub dup mult sgn -1 add -1 mult mult *.eye5 sgn -1 add -1 mult add sgn mult store
+628 .aimdx *.parent mult store
+.parent *.parent mult dec
+40 .repro *.body 100 *.robage add sub sgn mult *.nrg 1000 sub sgn 1 add sgn mult store
+628 .aimdx *.body 100 *.robage add sub sgn mult *.nrg 1000 sub sgn 1 add sgn mult store
+0 .shoot *.body 100 *.robage add sub sgn mult *.nrg 1000 sub sgn 1 add sgn mult store
+.parent *.body 100 *.robage add sub sgn mult *.nrg 1000 sub sgn 1 add sgn mult inc
+100 .strbody *.nrg 1000 sub sgn mult store
+*.body 100 ceil .fdbody *.nrg -1 mult 100 add sgn mult *.body sgn mult store
+*.tiepres .tienum *.numties sgn mult *.robage 1 sub sgn mult store
+.tieval .tieloc *.numties sgn mult *.robage 1 sub sgn mult store
+1000 .tieval *.numties sgn mult *.robage 1 sub sgn mult store
+*.waste .shootval *.waste 10 sub sgn mult store
+-4 .shoot *.waste 10 sub sgn mult store
+.delgene inc .delgene inc
+stop
+
+end

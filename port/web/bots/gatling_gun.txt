@@ -1,0 +1,61 @@
+'gatling gun
+
+def cock 50
+
+cond
+*.robage 0 =
+start
+-34 .eye5width store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+10 .aimdx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye != 
+start
+*.refxpos *.refypos angle .setaim store
+*.cock 1 = *.velup 0 <
+0 .cock store
+1 .fixpos store
+dropbool
+*.cock 1 = *.velup 0 = and
+0 .fixpos store
+*.maxvel .dn store
+dropbool
+*.velup 0 >
+*.cock inc
+1 .fixpos store
+dropbool
+*.velup 0 = *.cock 0 = and
+0 .fixpos store
+*.maxvel .up store
+*.nrg 20000 >
+40 .repro store
+not and
+-1 .shoot store
+1 .cock store
+dropbool
+dropbool
+stop
+
+cond 
+*.body 1000 <
+start
+100 .strbody store
+stop
+
+cond
+*.waste 40 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+end

@@ -1,0 +1,177 @@
+'Topic: Ecosistem (Bot for 2.15Pond1) 
+'K0zm0
+
+'B-Alpha
+'Bot for DBv2.2
+'Made by k0zm0
+'25.04.2004
+
+cond
+*.robage 0 =
+start
+-50 .setboy store
+628 .aimdx store
+stop
+
+cond
+*.eye5 30 <
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add 2 div .aimsx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye 12 =
+start
+628 .aimdx store
+stop
+
+cond
+*.eye5 0 =
+start
+15 .aimdx store
+stop
+
+cond
+*.refeye 11 !=
+*.eye5 30 >
+start
+-6 .shoot store
+stop
+
+cond
+*.nrg 10000 >
+start
+1250 rnd .aimsx store
+50 .repro store
+1250 rnd .aimdx store
+stop
+
+cond
+*.depth 6500 >
+*.fixed 0 =
+start
+1 .fixpos store
+0 .setboy store
+stop
+end
+
+
+and something new:
+
+'Coral
+'Bot for DBv2.2
+'Made by k0zm0
+'25.04.2004
+cond
+*.robage 0 =
+start
+12 55 store
+628 .aimdx store
+stop
+
+cond
+*.nrg 6000 >
+start
+5 rnd .aimsx store
+5 rnd .aimdx store
+50 .repro store
+stop
+
+cond
+*55 *.refeye =
+*.eye5 30 >
+start
+1 .tienum store
+1 .tie store
+stop
+
+cond
+*.refeye 0 =
+*.eye5 30 >
+start 
+2 .tienum store
+2 .tie store
+2 .readtie store
+stop
+
+cond
+*.waste 100 >
+start
+1 .sharewaste store
+stop
+
+cond
+*.trefnrg 500 >
+start
+2 .tienum store
+-1 .tieloc store
+-30 .tieval store
+stop
+
+cond
+*.trefnrg 500 <
+*.trefbody 1500 >
+start
+.fdbody .tieloc store
+100 .tieval store
+stop
+
+cond
+*.multi 1 =
+*.fixed 0 =
+start
+314 .fixang store 
+1 .fixpos store
+stop
+
+cond
+*.multi 0 =
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.body 2000 >
+start
+100 .fdbody store
+stop
+
+cond
+*.eye5 0 =
+*.numties 0 =
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add 2 div .aimsx store
+stop
+
+cond
+*.numties 0 =
+start
+45 .aimdx store
+stop
+
+cond
+*.numties 0 =
+*.refnrg 0 =
+*.eye5 30 >
+start
+-6 .shoot store
+stop
+
+cond
+*.multi 1 =
+*.nrg 500 <
+start
+1 .tienum store
+50 .sharenrg store
+stop
+end

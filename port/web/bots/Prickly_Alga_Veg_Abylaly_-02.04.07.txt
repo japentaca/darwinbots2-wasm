@@ -1,0 +1,14 @@
+' Prickly_Algae
+' Inedible Vegetable by abyaly
+
+cond
+start
+  *.maxvel .dn *.robage -- abs sgn -- - mult store
+  50 .repro store
+  315 .aimdx *.robage sgn mult store
+  *.body .fdbody store
+  .strpoison inc
+  .shoot .ploc store
+  *.tiepres .deltie store
+stop
+end

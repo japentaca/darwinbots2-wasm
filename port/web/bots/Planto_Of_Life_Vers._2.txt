@@ -1,0 +1,282 @@
+'Plant of Life: Uses some adaptive genes, locks in energy limitations and metabolic at birth. Uses a complex sexual identification system and uses a very primitative conspec system
+
+'Set Metabolic Rate, sex, growth-type, role
+def sex 40
+def type 41
+def role 42
+def nrglim 43
+def blimhigh 44
+def blimlow 45
+def focustie 46
+def sexswitch 50
+
+cond
+*.robage 0 =
+start
+1 rnd 2 .sex store
+1 rnd 2 .type store
+*.nrg .nrglim store
+*.nrg *.body div .blimlow store
+*.nrg 2 div .blimhigh store
+1 rnd .tie store
+240 *.aim add .setaim store
+*.sex .out4 store
+*.type .out5 store
+*.out4 .tout4 store
+*.out5 .tout5 store
+stop
+
+'Dietary Genes
+
+cond
+*.body *.blimhigh >=
+start
+40 .fdbody store
+stop
+
+cond
+*.body *.blimlow <=
+start
+20 .strbody store
+stop
+
+'Eyes
+
+cond
+*.timer *.sex mod *.type =
+start
+-4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0 floor mult *.eye1 *.eye6 sub sgn 0 floor mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9 *.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 *.eye6 sub sgn 0 floor mult
+*.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 floor mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub sgn ++ sgn mult *.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6 sub sgn 0 floor mult *.eye2 *.eye5 sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2 *.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn mult add 3 *.eye8 *.eye9 sub sgn ++ sgn mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 *.eye5 sub sgn 0 floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub sgn ++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3 *.eye8 sub sgn ++ sgn mult *.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult
+*.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn mult *.eye3 *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub sgn ++ sgn mult *.eye7 *.eye7 sub sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5 sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7 *.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0 floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn mult add 1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn ++ sgn mult *.eye4 *.eye5 sub sgn 0 floor mult
+*.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn mult add 0 *.eye5 *.eye9 sub sgn ++ sgn mult *.eye5 *.eye8 sub sgn ++ sgn mult *.eye5 *.eye7 sub sgn ++ sgn mult *.eye5 *.eye6 sub sgn ++ sgn mult *.eye5 *.eye4 sub sgn ++ sgn mult *.eye5 *.eye3 sub sgn ++ sgn mult *.eye5 *.eye2 sub sgn ++ sgn mult *.eye5 *.eye1 sub sgn ++ sgn mult add .focuseye store
+stop
+
+'Tie And Turning Genes
+
+cond
+*.type 2 =
+*.eyef 0 >
+*.refeye *.myeye =
+*.refrepro *.myrepro =
+start
+20 rnd .tie store
+stop
+
+cond
+*.eyef 0 >
+*.tieang *.refxpos *.refypos angle =
+*.refeye *.myeye =
+sart
+314 *.aim add .setaim store
+stop
+
+'Tie Reading
+
+cond
+5 rnd 1 =
+*.multi 1 =
+start
+*.numties rnd 1 .readtie store
+*53 .readtie store
+stop
+
+'Store Ties to Vars for access
+
+cond
+*.multi 1 =
+*.tin4 *.tout4 >=
+*53 0 =
+start
+*.readtie 53 store
+stop
+
+'Tactical Tie Communication
+
+cond
+*.eyef 0 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+*.refxpos *.refypos angle .tout8 store
+*.aim .tout9 store
+*.eyef .tout10 store
+60 *.eyef sub mod 30 .fixlen store
+stop
+
+cond
+*.eyef 0 =
+*.refeye *.myeye = or
+*.multi 1 =
+*.tin10 0 >
+start
+*.tin10 exp 2 *.tielen exp 2 add sqr *.vel sub .up store
+*.tin8 *.xpos *.ypos sub mod *.trefxpos *.trefypos angle .setaim store
+stop
+
+'Combat Genes
+
+cond
+*.eyef 50 >
+*.refeye *.myeye !=
+start
+*.nrg 10 div .shotval store
+-1 .shoot store
+stop
+
+'Movement Genes
+
+cond
+*.eyef 0 =
+*.type 1 =
+start
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.eyef 0 =
+*.multi 1 =
+start
+*.trefvelup *.vel sub .up store
+*.trefveldn *.vel sub .dn store
+stop
+
+'Reproductive Genes:
+'////////////// Type 1
+
+cond
+*.type 2 !=
+*.nrg *.nrglim >=
+*.sex 1 =
+*.sex *.in4 <=
+*.sexswitch 0 =
+start
+50 .sexrepro store
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+-8 .shoot store
+*.sexswitch inc
+stop
+
+cond
+*.fertilized 0 >
+*.nrg *.nrglim >=
+*.sex 2 =
+*.type 1 =
+*.type 5 = or
+start
+50 .sexrepro store
+stop
+
+'////////////// Type 2
+
+cond
+*.sex 1 =
+*.type 2 =
+*.type 10 = or
+*.sexswitch 0 =
+*.nrg *.nrglim >=
+start
+50 .repro store
+314 *.aim add .setaim store
+25 .repro store
+314 *.aim add .setaim store
+*.sexswitch inc
+stop
+
+cond
+*.sex 2 =
+*.type 2 =
+*.sexswitch 0 =
+*.nrg *.nrglim >=
+start
+50 .repro store
+314 *.aim sub .setaim store
+25 .mrepro store
+314 *.aim sub .setaim store
+*.sexswitch inc
+stop
+
+'Type 3; Evolve
+
+cond
+*.robage 1500 =
+start
+2 rnd mult 5 .type store
+*.numties .deltie store
+*.tiepres .deltie store
+*.maxvel *.mass mult *.vel sub .up store
+stop
+
+'Type 5 - Become Large Groups
+
+cond
+5 rnd 1 =
+*.multi 1 =
+start
+*.numties rnd .readtie store
+stop
+
+cond
+*.multi 1 =
+*.type 5 =
+start
+*.refeye *.myeye div 1 sub *.eyef mult .tout10 store
+45 .sharenrg *.multi mult store
+*.tout5 .out5 store
+*.tiepres .out2 store
+*.timer mod *.out2 .redtie store
+*.tout5 *.tielen mult 40 store
+*.out1 .tout1 store
+*.robage mod *.tin1 41 store
+*40 *41 div 8 mult *.xpos *.ypos angle mod *.trefxpos *.trefypos angle add div *.tout6 *.tout7 angle *.tin8 *.tin9 angle add add *.numties *.tiepres mult add .fixang store
+*.vel *.trefvel sub *.timer add mod 20 rnd 1 2 mult mod *.tin5 *.tielen mult *.mass mult *.eyef mod *.tin10 add *.numties *.tiepres add mult add .fixlen store
+45 .stifftie store
+stop
+
+cond
+*.type 5 =
+*.eyef 0 >
+*.refeye *.myeye =
+*.tiepres 2 <
+*.numties 2 < xor
+start
+.tie inc
+*.tiepres *.numties add .tout5 store
+20 *.tieang *.aim div mult sub .setaim store
+stop
+
+cond
+*.type 5 =
+*.readtie 0 >
+*.robage *.trefage <
+*.tin5 *.tout5 > xor
+start
+*.eye1 *.eye2 add *.eye3 *.eye4 add add 4 div .tout8 store
+*.eye6 *.eye7 add *.eye8 *.eye9 add add 4 div .tout9 store
+*.tin5 .tout5 store
+stop
+
+'Type 10 - Become Massive Energy Harnessers
+
+cond
+*.trefeye *.myeye %=
+*.robage *.trefage >
+*.type 10 =
+start
+30 *.aim add .setaim store
+*.maxvel *.vel sub .dn store
+stop
+
+cond
+*.type 10 =
+*.trefeye *.myeye %=
+*.robage *.trefage <
+start
+20 .fixlen
+0 140 store
+260 .fixang store
+40 .stifftie store
+*.trefvel *.vel sub .up store
+*.trefaim .aim store
+stop
+end

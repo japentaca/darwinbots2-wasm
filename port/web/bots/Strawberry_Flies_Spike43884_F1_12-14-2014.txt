@@ -1,0 +1,143 @@
+'Strawberry Flies v1
+'By spike43884 (Adapted from Moonfishers fruitflies v0.21)
+'Upgraded majorly, though only a few DNA changes, huge behavior upgrade.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@
+def red 250
+def green 76
+def blue 77
+def maxpop 3000
+def alge 14
+def rand 110
+def type 973
+cond
+*.nrg 15 >
+*.numties 0 != or
+start
+.fixpos dec
+'-- Birth
+*.robage 0 =
+314 .aimright store
+.deltie inc
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+16 rnd .rand store
+*.rand 5 < and
+*.rand .type store
+*.type 0 =
+32 rnd .type store
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.totalmyspecies .maxpop 2 mult < and
+*.maxvel .dn store
+45 .repro store
+45 .repro store
+*.totalmyspecies .maxpop <
+*.nrg 200 > and
+51 *.body 10 mult sub 0 floor 2 add .strbody store
+'-- Shrinking
+not
+*.body 1 > and
+*.body 11 mult 10 sub 0 floor .fdbody store
+'-- Tie feeding
+*.numties 0 !=
+*.tiepres .tienum store
+*.tmemval *.dnalen =
+*.numties 1 > or and
+*.numties .deltie store
+*.numties 0 !=
+*.robage 1 > and
+*.trefxpos *.trefypos angle .setaim store
+99 99 mult 90 mult .sharenrg store
+dupbool
+*.memval .alge = and
+*.trefxpos *.xpos sub abs *.trefypos *.ypos sub abs pyth 5 div 10 sub 0 floor *.maxvel ceil .up store
+*.velsx .dx store
+dropbool
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+3200 .tieval store
+*.memval .alge = and
+.tieloc .shoot store
+-1 .shootval store
+ .tieloc .shoot store
+-6 .shootval store
+ .tieloc .shoot store
+-2 .shootval store
+dropbool
+dupbool
+*.type 2 = and
+.shootval .tieloc store
+-31999 .tieval store
+dropbool
+dupbool
+*.type 3 = and
+.tieloc .tieloc store
+-6 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+dropbool
+*.type 3 > and
+.tieloc .tieloc store
+-1 .tieval store
+*.memval .alge = and
+.tieval .shoot store
+3200 .shootval store
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 = 
+*.memval *.dnalen = or and
+349 .aimright store
+dropbool
+*.eye5 0 != and
+*.memval *.dnalen != and
+*.refbody 20 >
+*.totalmyspecies 10000 > or and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+*.memval .alge = and
+*.velsx .dx store
+*.refvelup 17 add *.maxvel ceil 0 floor .up store
+.fixpos .shoot store
+1 .shootval store
+*.eye5 12 =
+3 .tie store
+-40 .sharenrg store
+*.nrg 500 = *.pain 100 =
+314 .aimdx store
+20 .up store
+10 .up store
+'Nice little evac
+stop
+end
+'#tag:Strawberry Flies (Spike43884) Credit to moonfisher for the bot which it derived from (fruitflies).txt

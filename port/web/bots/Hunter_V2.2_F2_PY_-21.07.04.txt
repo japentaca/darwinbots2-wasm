@@ -1,0 +1,184 @@
+'New generation Hunter bot with state of the art features
+' Rather more up to date Hunter bot that
+' ruled both leagues for quite a while
+
+' Quite Advanced F2 bot with leach defence by PY
+'***********************
+
+
+' Initialize
+' *********
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond
+*.body 20 <
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 200 >
+start
+100 .fdbody store
+stop
+
+cond
+*.eye5 70 <
+*.refeye *.myeye !=
+*.vel *.maxvel <
+start
+*.maxvel *.vel sub 2 div .up store
+stop
+
+'turn towards enemies or food
+'*************************
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+mult mult 140 15 
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+mult mult -140 -15
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+mult mult 80 7
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+mult mult -80 -7
+stop
+
+cond
+*.eye4 *.eye6 >
+start
+mult mult 40 4
+stop
+
+cond
+*.eye6 *.eye4 >
+start
+mult mult -40 -4
+stop
+
+
+'avoid conspecifics
+'****************************
+cond
+*.refeye *.myeye =
+start
+mult mult 120 0
+stop
+
+cond 
+*.refeye *.myeye =
+*.eye5 60 >
+start
+mult mult 628 0
+stop
+
+' Spin back after repro
+' ************************
+cond
+*51 0 !=
+start
+mult mult 628 0
+0 51 store
+stop
+
+'reproduce 
+'*********
+cond
+*.nrg 2000 >
+*.robage 40 <
+*.body 20 >
+*.eye5 30 <
+start
+50 .repro store
+1 51 store
+mult mult 628 0
+stop
+
+cond
+*.nrg 4000 >
+*.body 100 >
+*.eye5 30 <
+start
+70 .repro store
+mult mult 628 0
+stop
+
+' rotate
+' *******
+cond
+start
+.sx store
+.aimsx store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 50 >
+*.refeye 2 <
+start
+-1 .shoot store
+stop
+
+cond
+*.eye5 50 >
+*.refeye 1 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+'delete ties
+'*********
+cond
+*.numties 0 >
+*.tiepres 1 =
+start
+1 .deltie store
+stop
+
+'Leach
+'********
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+end

@@ -1,0 +1,321 @@
+' Inch worm
+' by Purple Youko
+' October 18 2004
+' for version 2.33 Multi-bot league
+' Not the greatest combat robot around but more fun than most
+' And make a reliable MB every time.
+
+def type 50
+def counter 51
+def newmom 52
+def adult 53
+def fix 54
+' fix works as a chemical signal between head and tail
+def avoid 55
+
+cond
+*.robage 0 =
+start
+.fixpos inc
+40 .stifftie store
+1 .readtie store
+.shoot .ploc store
+stop
+
+cond
+*.robage 20 =
+start
+.fixpos dec
+stop
+
+' new mom
+cond
+*.robage 2 >
+*.numties 0 =
+*.eye5 50 <
+*.eye7 50 <
+*.eye3 50 <
+start
+50 .repro store
+20 .newmom store
+1 .type store
+0 .adult store
+stop
+
+' tie to baby
+cond
+*.type 1 =
+*.newmom 19 =
+start
+1 .tie store
+stop
+
+' program tail
+cond
+*.type 0 =
+*.numties 0 !=
+start
+2 .type store
+stop
+
+'what if I can't make a tail? (panic)
+cond
+*.robage 2 >
+*.numties 0 =
+*.eye5 40 >
+start
+50 .aimsx store
+stop
+
+cond
+*.robage 2 >
+*.numties 0 =
+*.eye7 40 >
+*.eye5 40 >
+*.newmom 0 =
+start
+100 .aimsx store
+stop
+
+' Increment counters
+cond
+*.type 1 =
+*.adult 1 =
+*.eye5 50 <
+*.eye7 60 <
+*.eye3 60 <
+start
+.counter inc
+stop
+
+cond
+*.newmom 0 >
+start
+.newmom dec
+stop
+
+cond 
+*.robage 15 =
+start
+628 .aimsx store
+1 .tienum store
+628 .tieval store
+.aimsx .tieloc store
+stop
+
+' straighten out
+cond
+*.multi 1 =
+*.adult 0 =
+start
+628 .fixang store
+1 .tienum store
+1 .adult store
+stop
+
+'fix position
+cond
+*.type 2 =
+*.fix 1 =
+start
+1 .fixpos store
+0 .fix store
+stop
+
+'unfix position
+cond
+*.type 2 =
+*.fix 2 =
+start
+0 .fixpos store
+0 .fix store
+stop
+
+' head fixes and tail unfixes
+cond
+*.type 1 =
+*.counter 1 =
+start
+1 .fixpos store
+1 .tienum store
+2 .tieval store
+.fix .tieloc store
+stop
+
+' shrink tie
+cond
+*.type 1 =
+*.counter 2 =
+start
+1 .tienum store
+120 .fixlen store
+stop
+
+' head unfixes and tail fixes
+cond
+*.type 1 =
+*.counter 6 =
+start
+0 .fixpos store
+1 .tienum store
+1 .tieval store
+.fixpos .tieloc store
+stop
+
+' stretch tie
+cond
+*.type 1 =
+*.counter 7 =
+start
+1 .tienum store
+360 .fixlen store
+stop
+
+'reset counter
+cond
+*.type 1 =
+*.counter 10 =
+start
+0 .counter store
+628 .fixang store
+stop
+
+
+
+' search for food
+
+cond
+'*.type 1 =
+*.eye1 20 >
+*.eye1 *.eye5 >
+'*.refeye *.myeye !=
+*.avoid 0 =
+start
+*.eye1 *.eye5 sub 3 div .sx store
+stop
+
+cond
+'*.type 1 =
+*.eye9 20 >
+*.eye9 *.eye5 >
+'*.refeye *.myeye !=
+*.avoid 0 =
+start
+*.eye5 *.eye9 sub 3 div .sx store
+stop
+
+cond
+'*.type 1 =
+*.eye7 20 >
+*.eye7 *.eye4 >
+'*.refeye *.myeye !=
+*.avoid 0 =
+start
+*.eye4 *.eye7 sub 2 div .sx store
+stop
+
+cond
+'*.type 1 =
+*.eye3 20 >
+*.eye3 *.eye6 >
+'*.refeye *.myeye !=
+*.avoid 0 =
+start
+*.eye3 *.eye6 sub 2 div .sx store
+stop
+
+'shoot when it sees a target
+cond
+*.eye5 25 >
+*.eye4 20 >
+*.eye6 20 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+1 .fixpos store
+1 .tienum store
+1 .tieval store
+.fix .tieloc store
+stop
+
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+*.multi 1 =
+start
+-1 .shoot store
+stop
+
+'avoids conspecs
+cond
+*.type 1 =
+*.eye5 20 >
+*.refeye *.myeye =
+*.multi 1 =
+*.newmom 0 =
+*.robage 50 >
+start
+5 .avoid store
+stop
+
+cond
+*.avoid 0 >
+start
+0 .fixpos store
+15 .sx store
+.avoid dec
+1 .tienum store
+.fixpos .tieloc store
+1 .tieval store
+stop
+
+'share energy
+cond
+*.nrg *.trefnrg !=
+start
+50 .sharenrg store
+stop
+
+'reproduce
+cond
+*.type 1 =
+*.nrg 10000 >
+start
+1 .deltie store
+stop
+
+'body management
+cond
+*.nrg 5000 >
+*.body 1000 <
+start
+50 .strbody store
+stop
+
+cond
+*.nrg 1000 <
+*.body 100 >
+start
+100 .fdbody store
+stop
+
+cond
+*.shell 50 <
+start
+10 .mkshell store
+stop
+
+cond
+*.poison 500 <
+start
+20 .strpoison store
+stop
+
+' waste amanagement
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+end

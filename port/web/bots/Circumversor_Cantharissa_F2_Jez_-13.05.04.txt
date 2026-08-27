@@ -1,0 +1,139 @@
+'Circumversor Cantharisa
+' Retuned (female) version of Cantharis
+' Shot-bot by Jez
+
+'delties
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+'tie to parent
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'search
+cond
+*.eye5 0 =
+start
+mult mult 208 0
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult mult 124 7 
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult mult -124 -7 
+stop
+
+'target
+cond
+*.eye2 *.eye5 >
+start
+mult mult 78 4 
+stop
+
+cond
+*.eye8 *.eye5 >
+start
+mult mult -78 -4 
+stop
+
+cond
+*.eye4 *.eye5 >
+start
+mult mult 36 2 
+stop
+
+cond
+*.eye6 *.eye5 >
+start
+mult mult -36 -2 
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+mult mult 52 2 
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult mult -52 -2 
+stop
+
+'lock to target
+cond
+*.eye5 0 >
+*.refeye 22 !=
+start
+mult mult 0 0 
+stop
+
+'avoid friends
+cond
+*.refeye 22 =
+*.eye5 0 >
+start
+mult mult 208 0
+stop
+
+'reproduce
+cond
+*.nrg 6000 >
+start
+25 .repro store
+mult mult -208 0
+stop
+
+'turn
+cond
+start
+.sx store
+.aimsx store
+stop
+
+'shoot
+cond
+*.refage 0 >
+*.eye5 30 >
+*.refeye 22 !=
+start
+-1 .shoot store
+stop
+
+'accelerate
+cond
+*.eye5 0 >
+*.refeye 22 !=
+start
+*.eye5 -1 mult 100 add 10 div .up store
+stop
+
+'head start gene
+cond
+*.robage 1 =
+*.numties 0 =
+*.nrg 2000 >
+start
+50 .repro store
+stop
+
+'make poison
+cond
+*.nrg 1000 >
+*.poison 150 <
+start
+50 .strpoison store
+stop
+end

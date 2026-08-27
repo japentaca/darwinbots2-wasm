@@ -1,0 +1,69 @@
+'29.08.03
+'Topic: ties, in and out  
+'Joachim unnamed bot
+
+'-------------
+' turn to objects
+'-------------
+cond
+*.eye5 0 =
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add
+2 div
+.aimsx store
+stop
+
+'-------------
+' avoid straigt lines when hungry
+'-------------
+cond
+*.nrg 1000 <
+start
+0 *.aimsx store
+60 rnd 30 sub .aimdx store
+-2 .dn store
+stop
+
+'-------------
+' set speed
+'-------------
+cond
+start
+' 1 .up store
+0 *.eye5 sub 120 add 30 div .up store
+stop
+
+'-------------
+'camelion
+'-------------
+cond
+*.eye5 20 >
+start
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+'-------------
+' shoot
+'-------------
+cond
+*.eye5 25 >
+*.refeye 0 =
+start
+-1 .shoot store
+stop
+
+'-------------
+' reproduce
+'-------------
+cond
+*.nrg 6000 >
+start
+50 .repro store
+15 .aimdx store
+stop
+end

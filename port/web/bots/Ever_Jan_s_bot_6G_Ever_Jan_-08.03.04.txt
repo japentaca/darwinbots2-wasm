@@ -1,0 +1,45 @@
+'Topic: Short-bots thread 
+'Evert Jan unnamed bot
+
+cond
+*.nrg 4000 >
+start
+50 .repro store
+stop
+
+cond
+*.eye5 0 >
+*.refeye 2 !=
+start
+-1 .shoot store
+stop
+
+cond
+*.vel 30 <
+start
+30 .up store
+stop 
+
+cond
+*.eye5 0 >
+*.refeye 2 !=
+start
+60 .tie store
+60 .readtie
+stop
+
+cond
+*.numties 0 >
+*.trefeye 2 !=
+start
+60 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+start
+100 *.slime sub .mkslime store
+stop
+
+end

@@ -1,0 +1,41 @@
+ start
+ *.robage 0 =
+ .deltie inc
+ 30 rnd 21 *.tieang2 -1 rnd 474 *.mkvirus *.myshoot *.totalmyspecies 100 *.refveldn 30 *.eye9dir 30 *.shell .dx inc
+ clearbool
+ *782 20 *.pwaste *.refxpos 20 sub 10 mult 312 *.sharechlr clearbool
+ *.body 20 <
+ *333 300 *.eye7width and
+ 100 .strbody store
+ dupbool
+ *.body 500 .trefaimsx store
+ 312 100 and
+ *.trefaimsx *.trefdn *.out6 *.mkpoison *.body 500 <
+ *22 1 =
+ and
+ *.trefvelyoursx 313 *.in2 clearbool
+ *.eye5dir 725 *.readtie *.eye2width *.nrg *.refdn 10 mult div 800 >
+ and
+ *.strbody *.out9 *.edge *.backshot *.vtimer .dn store
+ 50 .repro store
+ 628 *.trefup 5 *.tin8 clearbool
+ *.eyef 0 >
+ *.myeye *.refeye !=
+ and
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 100 *.eye5 sub add *.in6 abs - floor .up store
+ *.refveldx .dx store
+ clearbool
+ *.eye5 50 *.myeye *.refeye store
+ *.eye5 50 >
+ and
+ *.myeye *.refeye !=
+ and
+ -6 .shoot store
+ *.tin6 *21 *.in8 =
+ and
+ *.myeye store
+ clearbool
+ clearbool
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  152  '''''''''''''''''''''''

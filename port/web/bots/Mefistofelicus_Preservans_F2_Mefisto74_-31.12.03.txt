@@ -1,0 +1,351 @@
+'Topic: my first bots  
+'Mefisto74
+
+'
+' Mefistofelicus Preservans
+'
+' 31/12/2003 by Matteo "Mefisto74" Poropat (nyarlathothep@libero.it)
+'
+' Bot molto semplice che controlla se ci sono altri bot, diversi dalla propria
+' specie a dx e poi sx, identificati dal valore 666 in out1.
+' Se trova qualcosa si gira nella giusta direzione e spara, altrimenti gira in circolo,
+' con un algoritmo simile alla Comisia Circumgirans.
+' E' stato notevole aggiungere la caratteristica di T_Preservans (thanks to 
+' John Turner) di non risucchiare tutta l'energia ai vegetali.
+'
+
+' ------------------------------------------
+' identificazione della specie
+' ------------------------------------------
+
+' 1
+cond
+ 555
+ *.out1  
+ != 
+start
+ 555
+ .out1
+ store
+stop
+
+' ------------------------------------------
+' inizializzazione
+' ------------------------------------------
+
+' 1
+cond
+start
+ 0
+ 40
+ store
+stop
+
+
+' ------------------------------------------
+' controllo a destra
+' ------------------------------------------
+
+' 4
+cond
+ *.50
+ 0
+ =
+ *.eye8
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 555
+start
+ 13
+ 40
+ store
+stop
+
+' 5
+cond
+ *.50
+ 0
+ =
+ *.eye9
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 555
+start
+ 14
+ 40
+ store
+stop
+
+
+' ------------------------------------------
+' controllo a sx
+' ------------------------------------------
+
+' 9
+cond
+ *.50
+ 0
+ =
+ *.eye2
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 555
+start
+ 33
+ 40
+ store
+stop
+
+' 10
+cond
+ *.50
+ 0
+ =
+ *.eye1
+ 0
+ >
+ *.eye5
+ 0
+ =
+ *.in1
+ !=
+ 555
+start
+ 34
+ 40
+ store
+stop
+
+
+' -----------------------------------------------------------
+' se non c'è nulla attorno si gira
+' -----------------------------------------------------------
+cond
+ *40
+ 0
+ =
+start
+ 41
+ rnd
+ 40
+ store
+ 0
+ 50
+ store
+stop
+
+
+' ------------------------------------------
+' CONDIZIONI FINALI 
+' ------------------------------------------
+
+
+' se c'è qualcosa a sx ci si gira a sx
+cond
+ *40
+ 21
+ >
+ *40
+ 40
+ <
+start
+ 40
+ .aimsx
+ store
+stop
+
+
+' se c'è qualcosa a dx ci si gira a dx
+cond
+ *40
+ 1
+ >
+ *40
+ 20
+ <
+start
+ 40
+ .aimdx
+ store
+stop
+
+
+
+' -----------------------------------------------------------
+' BLOCCO DI CONTROLLO PRESERVATIVO DELLA SPECIE 
+' -----------------------------------------------------------
+
+' SE 
+' c'è qualcosa davanti
+' è abbastanza vicino
+' non è della propria specie
+' ha abbastanza energia
+' ALLORA
+' si caccia!
+cond
+  *.eye5
+  10
+  >
+  *.in1
+  555
+  != 
+  *.refnrg
+  600
+  >
+start
+  10
+  40
+  store
+ 1
+ 50
+ store
+stop
+
+
+' SE 
+' c'è qualcosa davanti
+' è abbastanza vicino
+' è un vegetale
+' ha abbastanza energia
+' ALLORA
+' si caccia!
+cond
+  *.eye5
+  10
+  >
+  *.refshoot
+  0
+  = 
+  *.refnrg
+  600
+  >
+start
+  10
+  40
+  store
+ 1
+ 50
+ store
+stop
+
+
+cond
+  *.eye5
+  0
+  >
+  *.in1
+  555
+  !=  
+  *.refnrg
+  600
+  <
+start
+  0
+  40
+  store
+  0
+  50
+  store
+stop
+
+' SE 
+' c'è qualcosa davanti
+' è abbastanza vicino
+' non è della propria specie
+' ALLORA
+' si caccia!
+cond
+  *.eye5
+  0
+  >
+  *.in1
+  555
+  !=  
+  *.refnrg
+  600
+  <
+  *.nrg
+  3000
+  <
+start
+  10
+  40
+  store
+  1
+  50
+  store
+stop
+
+cond
+  *.eye5
+  0
+  =
+start
+  0
+  40
+  store
+  3
+  .up
+  store
+  0
+  50
+  store
+stop
+
+
+
+' -----------------------------------------------------------
+' FINE BLOCCO DI CONTROLLO PRESERVATIVO DELLA SPECIE 
+' -----------------------------------------------------------
+
+
+' se c'è qualcosa si spara e ci si avvicina
+cond
+ *40
+ 0
+ >
+start
+ -1 
+ .shoot
+ store
+ 3
+ .up
+ store
+stop
+
+
+
+
+' ------------------------------------------
+' ACCOPPIAMENTO
+' ------------------------------------------
+
+cond
+ *.nrg
+ 8000
+ >
+start
+ 0
+ .up
+ store
+ 30
+ .repro
+ store
+stop  
+
+end

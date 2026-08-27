@@ -1,0 +1,180 @@
+'vars
+def youngqueen 0
+def queen 1
+def drone 2
+def worker 3
+
+'custom memory locations
+def temp 990
+def type 991
+def queenxpos 992
+def queenypos 993
+
+cond
+ *.robage 0 =
+start
+ 1000 rnd .temp store
+ .youngqueen *.temp sgn -- abs .type mult store
+ .drone *.temp sgn .type mult store
+ .worker *.temp 200 sub sgn 0 floor .type mult store
+
+ 1235 .out1 store
+
+ -436 .eye9dir store
+ -327 .eye8dir store
+ -218 .eye7dir store
+ -109 .eye6dir store
+  109 .eye4dir store
+  218 .eye3dir store
+  327 .eye2dir store
+  436 .eye1dir store
+ 109 .eye1width store
+ 109 .eye2width store
+ 109 .eye3width store
+ 109 .eye4width store
+ 109 .eye5width store
+ 109 .eye6width store
+ 109 .eye7width store
+ 109 .eye8width store
+ 109 .eye9width store
+stop
+
+start
+ *.thisgene .delgene store
+ .youngqueen .type store
+stop
+
+cond
+start
+ *.type .out2 store
+ *.nrg 3 div *.body sub dup .strbody store - .fdbody store
+ -4 *.eye1 sgn mult *.eye2 sgn -- abs mult *.eye3 sgn -- abs mult  
+
+*.eye4 sgn -- abs mult *.eye5 sgn  -- abs mult *.eye6 sgn -- abs mult  
+
+*.eye7 sgn -- abs mult *.eye8 sgn -- abs mult *.eye9 sgn -- abs  mult  
+
+4 *.eye9 sgn mult *.eye2 sgn -- abs mult *.eye3 sgn -- abs mult   
+
+*.eye4 sgn -- abs mult *.eye5  sgn -- abs mult *.eye6 sgn -- abs mult  
+
+*.eye7 sgn -- abs mult *.eye8 sgn -- abs mult add -3 *.eye2  sgn mult  
+
+*.eye3 sgn -- abs mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult   
+
+*.eye6 sgn -- abs   mult *.eye7 sgn -- abs mult *.eye8 sgn -- abs   
+
+mult add 3 *.eye8 sgn mult *.eye3 sgn -- abs mult   *.eye4  sgn --   
+
+abs mult *.eye5 sgn -- abs mult *.eye6 sgn -- abs mult *.eye7 sgn --   
+
+abs mult add -2  *.eye3 sgn mult *.eye4 sgn -- abs mult *.eye5 sgn --  
+
+abs mult *.eye6 sgn -- abs mult *.eye7 sgn --  abs mult add 2 *.eye7   
+
+sgn mult *.eye4 sgn -- abs mult *.eye5 sgn -- abs mult *.eye6 sgn --   
+
+abs mult add -1  *.eye4 sgn mult *.eye5 sgn -- abs mult *.eye6 sgn --  
+
+abs mult add 1 *.eye6 sgn mult *.eye5   sgn --  abs mult add 0 *.eye5  
+
+sgn mult add .focuseye store
+
+12 *.vel sub .up store
+*.type .queen sub sgn abs -- abs .fixpos store
+stop
+
+cond
+ *.eyef 0 !=
+ *.type .worker !=
+ *.type .queen !=
+ *.type .youngqueen !=
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+cond
+ *.eyef 0 !=
+ *.type .worker =
+ *.type .youngqueen = or
+ *.out1 *.in1 !=
+start
+ *.refxpos *.refypos angle .setaim store
+stop
+
+cond
+ *.type .youngqueen =
+ *.body 10000 >
+start
+ .fixpos inc
+ .queen .type store
+ *.xpos .queenxpos store
+ *.ypos .queenypos store
+stop
+ 
+cond
+ *.queenxpos 0 =
+ *.queenypos 0 =
+ *.type .queen !=
+ *.type .youngqueen !=
+ *.in2 .queen =
+start
+ *.refxpos .queenxpos store
+ *.refypos .queenypos store
+stop
+
+cond
+ *.type .queen =
+ *.eye5 30 >
+start
+ 20 .aimdx store
+stop
+
+'TODO worker and drone code
+
+cond
+ *.type .drone =
+ *.in2 .queen =
+ *.nrg 500 >
+start
+ *.nrg 500 sub 1000 ceil .shootval store
+ -2 .shoot store
+stop
+
+cond
+ *.type .drone =
+ *.in2 .worker =
+ *.eye5 40 >
+ *.refnrg 1000 >
+start
+ -1 .shoot store
+stop
+
+cond
+ *.in2 .queen =
+ *.type .drone =
+ *.nrg 500 <=
+start
+ *.maxvel *.velup add .dn store
+stop
+
+cond
+ *.type .drone =
+ *.nrg 15000 >
+start
+ *.queenxpos *.queenypos angle .setaim store
+stop
+
+cond
+ *.eye5 40 >
+ *.out1 *.in1 !=
+start
+ -6 .shoot store
+stop
+
+cond
+ *.type .queen =
+ *.nrg 5000 >
+start
+ 5 .repro store
+stop

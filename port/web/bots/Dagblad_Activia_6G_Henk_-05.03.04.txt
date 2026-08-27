@@ -1,0 +1,57 @@
+'Topic: Short-bots thread 
+'Topic: Formula one bots! 
+'Henk
+
+'Basics bot
+
+cond
+*.numties 0 =
+start
+*.eye6 *.eye4 sub .aimdx store
+40 *.vel sub .up store
+3 .readtie store
+stop
+
+cond
+*.eye5 0 >
+*.refeye 8 !=
+start
+-1 .shoot store
+3 .tie store
+0 .fixang store
+3 .readtie store
+stop
+
+cond
+*.eye1 *.eye9 !=
+*.numties 0 =
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+stop
+
+cond
+*.nrg 4000 >
+start
+50 .repro store
+628 .aimdx store
+100 .mkshell store
+stop
+
+cond
+*.numties 0 >
+*.trefeye 8 !=
+start
+3 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.eye5 0 >
+*.trefeye 8 =
+start
+314 .aimdx store
+3 .deltie store
+stop
+
+end

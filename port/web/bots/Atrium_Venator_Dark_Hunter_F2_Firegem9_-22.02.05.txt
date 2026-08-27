@@ -1,0 +1,149 @@
+' Atrium Venator (Dark Hunter)
+' by Firegem9
+' Somewhat untested and still a work in progress
+
+'unfix if fixed
+'************
+cond
+*.eye5 45 <
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.refeye *.myeye =
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+'move forward (and braking)
+'***********
+cond
+*.fixed 0 =
+*.eye5 60 < 
+*.vel *.maxvel !=
+start
+5 .up store
+stop
+
+'turn
+'*****
+cond
+*.eye4 *.eye6 !=
+*.eye2 *.eye8 !=
+start
+mult
+*.eye2 *.eye8 sub 
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye1 50 >
+start
+mult
+150 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye9 50 >
+start
+mult
+-150 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye2 50 >
+start
+mult
+122 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye8 50 >
+start
+mult
+-122
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye3 50 >
+start
+mult
+87 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye7 50 >
+start
+mult
+-87 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye4 50 >
+start
+mult
+52 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.eye6 50 >
+start
+mult
+-52 
+1 .fixpos store
+stop
+
+cond
+*.eye4 *.eye6 =
+*.eye5 45 >
+start
+mult
+0 
+1 .fixpos store
+stop
+
+cond
+*.refeye *.myeye =
+start
+mult
+473 
+0 .fixpos store
+stop
+
+'actually rotate
+'************
+cond
+start
+.aimsx store
+stop
+
+'(I am finally around to it)
+'SHOOTING!!!!!
+'************************
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+
+
+end

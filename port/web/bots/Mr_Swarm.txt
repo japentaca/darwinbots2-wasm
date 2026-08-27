@@ -1,0 +1,237 @@
+' Mister Swarm v1.1
+' Sight
+
+cond
+*.robage 1 <
+start
+0 .eye1dir store
+-35 .eye2dir store
+-35 .eye3dir store
+-35 .eye4dir store
+1028 .eye6dir store
+35 .eye7dir store
+35 .eye8dir store
+0 .eye9dir store
+300 .eye5width store
+100 .eye6width store
+50 .eye2width store
+50 .eye8width store
+43 .out1 store
+stop
+
+' Anti-Tie
+
+cond
+*.robage 1 <
+start
+.deltie inc
+stop
+
+' Edge
+
+cond
+*.edge 0 !=
+*21 0 =
+start
+357 rnd .aimsx store
+30 21 store
+stop
+
+' Timer
+
+cond
+*21 0 !=
+start
+21 dec
+stop
+
+' Movement
+
+cond
+*.eye5 0 =
+*.velscalar 5 <
+*.velup 5<
+*.veldn 5<
+*.velsx 5<
+*.veldx 5<
+start
+23 inc
+stop
+
+cond
+*23 100 >=
+start
+10 rnd .up store
+0 23 store
+stop
+
+
+cond
+*.eye4 1 >
+*.eye5 0 =
+*.in1 43 !=
+*.velscalar 10 <
+*.velup 10 <
+*.veldn 10 <
+*.velsx 10 <
+*.veldx 10 <
+start
+5 .up store
+stop
+
+cond
+*.eye4 1 >
+*.eye5 1 >
+*.in1 43 !=
+*.velscalar 2 <
+*.velup 2 <
+*.veldn 2 <
+*.velsx 2 <
+*.veldx 2 <
+start
+2 .up store
+stop
+
+cond
+*.eye3 1 >
+*.eye7 0 =
+start
+22 inc
+stop
+
+cond
+*.eye3 1 >
+*.eye7 0 =
+start
+24 inc
+stop
+
+cond
+*.eye1 1 >
+*.eye9 0 =
+*.eye4 0 =
+*.in1 43 !=
+start
+25 inc
+stop
+
+cond
+*.eye9 1 >
+*.eye1 0 =
+*.eye4 0 =
+*.in1 43 !=
+start
+26 inc
+stop
+
+cond
+*.in1 43 =
+*.eye5 1 >
+*.shoot 0 =
+*27 0 <=
+start
+27 inc
+stop
+
+cond
+*22 0 !=
+start
+35 .aimsx store
+1 .up store
+22 dec
+stop
+
+cond
+*23 0 !=
+start
+35 .aimdx store
+1 .up store
+23 dec
+stop
+
+cond
+*25 0 !=
+start
+140 .aimsx store
+25 dec
+stop
+
+cond
+*26 0 !=
+start
+140 .aimdx store
+26 dec
+stop
+
+cond
+*27 1 >=
+*.shoot 0 =
+*.reffixed 0 =
+start
+*.refaim .setaim store
+27 dec
+stop
+
+cond
+*.in1 43 =
+*.eye5 1 >
+*.shoot 0 =
+start
+5 .up store
+stop
+
+' Reproduction
+
+cond
+*.body 120 >=
+*.nrg 8000 >
+*.robage 100 >
+start
+50 .repro store
+357 rnd .aimsx store
+stop
+
+' Body
+
+cond
+*.body 120 <
+*.nrg 3000 >
+start
+100 .strbody store
+stop
+
+' Feed
+
+cond
+*.shoot 0 =
+*.out2 0 !=
+start
+0 .out2 store
+stop
+
+cond
+*.eye5 1 >
+*.in1 43 !=
+start
+-1 .shoot store
+1 .out2 store
+1 .up store
+stop
+
+cond
+*.in1 43 !=
+*.reffixed 0 =
+*.in2 1 =
+start
+*.refaim .setaim store
+-1 .shoot store
+1 .up store
+stop
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+end

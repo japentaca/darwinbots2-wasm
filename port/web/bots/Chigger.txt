@@ -1,0 +1,233 @@
+'Chigger
+'By Joseph
+'Ties onto bots
+'And reproduces rapidly
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+cond
+ *.nrg 5000 >
+start
+ 30 .repro store
+stop
+
+cond
+ *.robage 0 =
+start
+ .tie inc
+stop
+
+cond
+ *.robage 1 =
+start
+ .deltie inc
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 45 >
+start
+13 .tie *.robage sgn mult *.refage sgn mult store
+stop
+
+cond
+*.tiepres 0 >
+*.tienum 0 =
+start
+*.tiepres .tienum store
+stop
+
+cond
+*.tienum 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+*.robage 0 =
+start
+31999 rnd 1 add 50 store
+.tie inc
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 45 >
+start
+*50 .tie *.robage sgn mult *.refage sgn mult store
+stop
+
+cond
+*.tiepres 0 >
+start
+*.tiepres .tienum store
+stop
+
+cond
+*.tienum *50 =
+start
+-1000 .tieval store
+*.tieval sgn .tieloc store
+stop
+
+cond
+*.tiepres *50 !=
+*.tiepres 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle *.refaim *.refvel mult 40 *.refxpos *.xpos sub 2 pow *.refypos *.ypos sub 2 pow add sqr div mult 60 *.focuseye mult mult .aimdx store
+*.refxpos *.refypos angle `(*.refaim *.aim sub abs mult) .aimshot store
+stop
+
+cond
+start
+-4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0 floor mult *.eye1 *.eye6 sub sgn 0 floor mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor mult *.eye1 *.eye2 sub sgn 0 floor mult 4 *.eye9 *.eye8 sub sgn 0 floor mult *.eye9 *.eye7 sub sgn 0 floor mult *.eye9 *.eye6 sub sgn 0 floor mult *.eye9 *.eye5 sub sgn 0 floor mult *.eye9 *.eye4 sub sgn 0 floor mult *.eye9 *.eye3 sub sgn 0 floor mult *.eye9 *.eye2 sub sgn 0 floor mult *.eye9 *.eye1 sub sgn ++ sgn mult add -3 *.eye2 *.eye9 sub sgn ++ sgn mult *.eye2 *.eye8 sub sgn 0 floor mult *.eye2 *.eye7 sub sgn 0 floor mult *.eye2 *.eye6 sub sgn 0 floor mult *.eye2 *.eye5 sub sgn 0 floor mult *.eye2 *.eye4 sub sgn 0 floor mult *.eye2 *.eye3 sub sgn 0 floor mult *.eye2 *.eye1 sub sgn ++ sgn mult add 3 *.eye8 *.eye9 sub sgn ++ sgn mult *.eye8 *.eye7 sub sgn 0 floor mult *.eye8 *.eye6 sub sgn 0 floor mult *.eye8 *.eye5 sub sgn 0 floor mult *.eye8 *.eye4 sub sgn 0 floor mult *.eye8 *.eye3 sub sgn 0 floor mult *.eye8 *.eye2 sub sgn ++ sgn mult *.eye8 *.eye1 sub sgn ++ sgn mult add -2 *.eye3 *.eye9 sub sgn ++ sgn mult *.eye3 *.eye8 sub sgn ++ sgn mult *.eye3 *.eye7 sub sgn 0 floor mult *.eye3 *.eye6 sub sgn 0 floor mult *.eye3 *.eye5 sub sgn 0 floor mult *.eye3 *.eye4 sub sgn 0 floor mult *.eye3 *.eye2 sub sgn ++ sgn mult *.eye3 *.eye1 sub sgn ++ sgn mult add 2 *.eye7 *.eye9 sub sgn ++ sgn mult *.eye7 *.eye8 sub sgn ++ sgn mult *.eye7 *.eye7 sub sgn 0 floor mult *.eye7 *.eye6 sub sgn 0 floor mult *.eye7 *.eye5 sub sgn 0 floor mult *.eye7 *.eye4 sub sgn ++ sgn mult *.eye7 *.eye2 sub sgn ++ sgn mult *.eye7 *.eye1 sub sgn ++ sgn mult add -1 *.eye4 *.eye9 sub sgn ++ sgn mult *.eye4 *.eye8 sub sgn ++ sgn mult *.eye4 *.eye7 sub sgn ++ sgn mult *.eye4 *.eye6 sub sgn 0 floor mult *.eye4 *.eye5 sub sgn 0 floor mult *.eye4 *.eye3 sub sgn ++ sgn mult *.eye4 *.eye2 sub sgn ++ sgn mult *.eye4 *.eye1 sub sgn ++ sgn mult add 1 *.eye6 *.eye9 sub sgn ++ sgn mult *.eye6 *.eye8 sub sgn ++ sgn mult *.eye6 *.eye7 sub sgn ++ sgn mult *.eye6 *.eye6 sub sgn ++ sgn mult *.eye6 *.eye5 sub sgn 0 floor mult *.eye6 *.eye3 sub sgn ++ sgn mult *.eye6 *.eye2 sub sgn ++ sgn mult *.eye6 *.eye1 sub sgn ++ sgn mult add 4 add *.focuseye 4 add sub dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- dup sgn -- sgn ++ .focuseye mult inc -- 9 add - dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec -- dup sgn -- sgn ++ .focuseye mult dec --
+stop
+
+cond
+start
+def suppotie 76
+def tiecheck 75 
+def writpos 74
+def inspect 73
+stop
+
+cond
+*.tiecheck *.numties >
+start
+*.readtie 80 >=
+*.readtie 80 *.tiecheck add <= and
+*.trefnrg 0 = and
+*.readtie .writpos store
+dropbool
+80 *.inspect add * .readtie store
+.inspect inc
+*.inspect *.tiecheck >
+0 .inspect store
+stop
+
+
+cond
+*.tiepres *.suppotie !=
+start
+*.numties *.tiecheck >
+*.numties .tiecheck store
+*.numties .writpos store
+dropbool
+*.tiepres .suppotie store
+*.tiepres 79 *.writpos add store
+stop
+
+cond
+start
+  .id *.timer ++ .key mod mod .out1 store
+stop
+
+cond
+  *.in1 .id *.timer .key mod mod !=
+start
+'attack
+stop
+
+'using the genes intended for waypoints, a universal conspec reader is easily created.
+cond
+*.memloc 819 = or
+*.eyef 0 >
+start
+810 .memloc store
+stop
+
+cond
+*.memval *.buffer !=
+start
+.memloc inc
+stop
+
+cond
+*.memloc 819 =
+*.memval *.buffer !=
+start
+250 *.aim add .setaim store
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.memval *.buffer =
+start
+1 .enemy store
+stop
+
+cond
+*.robage 1 =
+start
+32000 rnd 1 .out1 store
+.....etc,etc until you have stored a random value into every out spot. 
+stop
+
+cond
+ *.slime 100 <
+start
+ 10 .mkslime store
+stop
+
+cond
+ *.poison 100 <
+start
+ 10 .strpoison store
+stop
+
+cond
+ *.shell 100 <
+start
+ 10 .mkshell store
+stop
+
+cond
+*.waste 40 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+start
+ .fixpos *.fixed mult dec
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+8 .shootval store
+-6 .shoot store
+0 .shflav store
+stop

@@ -1,0 +1,73 @@
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim .setaim store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+start
+*.refaim .setaim store
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+45 .aimsx store
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+45 .aimdx store
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+75 .aimsx store
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+75 .aimdx store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 34 >
+start
+-1 .shoot store
+stop
+
+cond
+*.fixed 0 =
+*.vel 15 <
+start
+1 .up store
+stop
+
+cond
+*.eye5 35 >
+*.fixed 0 =
+start
+1 .fixpos store
+stop
+
+cond
+*.eye5 36 <
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.nrg 6000 >
+start
+50 .repro store
+stop
+end

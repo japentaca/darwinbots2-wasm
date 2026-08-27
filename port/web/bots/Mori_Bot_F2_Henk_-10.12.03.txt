@@ -1,0 +1,264 @@
+'10.12.03
+'Topic: My first 2 bots  
+'Henk B
+
+'Mori bot. A hungry bot that'll rest when he has enough energy
+
+'identidy as Mori
+cond
+*.out1 2 !=
+start
+2
+.out1
+store
+stop
+
+'reproduce
+cond
+*.nrg 8000 >
+start
+50
+.repro
+store
+10
+*.aimdx
+store
+stop
+
+'go forward when seeing something
+cond
+*.nrg 8000 <
+*.eye5 0 =
+start
+10
+.up
+store
+stop
+
+'kill
+cond
+*.nrg 8000 <
+*.eye5 0 >
+*.in1 2 !=
+start
+-1
+.shoot
+store
+stop
+
+'follow left
+cond
+*.nrg 8000 <
+*.eye1 0 >
+*.in1 2 !=
+start
+45
+.aimsx
+store
+stop
+
+'follow right
+cond
+*.nrg 8000 <
+*.eye9 0 >
+*.in1 2 !=
+start
+45
+.aimdx
+store
+stop
+
+'follow
+cond
+*.nrg 8000 <
+*.eye4 0 >
+*.in1 2 !=
+start
+10
+.aimsx
+store
+stop
+
+'follow
+cond
+*.nrg 8000 <
+*.eye6 0 >
+*.in1 2 !=
+start
+10
+.aimdx
+store
+stop
+
+'movement
+cond
+*.nrg
+8000
+<
+*.eye5
+0
+>
+start
+10
+.up
+store
+stop
+
+'run away
+cond
+*.nrg 8000 >
+*.eye5 0 >
+*.in1 2 !=
+start
+10
+.dn
+store
+10
+.aimsx
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye1 0 >
+*.in1 2 !=
+start
+45
+.aimdx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye9 0 >
+*.in1 2 !=
+start
+45
+.aimsx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye2 0 >
+*.in1 2 !=
+start
+45
+.aimdx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye8 0 >
+*.in1 2 !=
+start
+45
+.aimsx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye3 0 >
+*.in1 2 !=
+start
+45
+.aimdx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye7 0 >
+*.in1 2 !=
+start
+45
+.aimsx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye4 0 > 
+*.in1 2 !=
+start
+45
+.aimdx
+store
+10
+.up
+store
+stop
+
+'evade
+cond
+*.nrg 8000 >
+*.eye6 0 >
+*.in1 2 !=
+start
+45
+.aimsx
+store
+10
+.up
+store
+stop
+
+'move when hitting other bot
+cond
+*.hitup
+0
+>
+*.nrg
+8000
+>
+start
+10
+.dn
+store
+-1
+.shoot
+store
+stop
+
+'turn away vice
+cond
+*.nrg 8000 >
+*.eye5 0 >
+*.refup 0 >
+*.in1 2 !=
+start
+.aimdx
+.shoot
+store
+250
+.shootval
+store
+stop
+end

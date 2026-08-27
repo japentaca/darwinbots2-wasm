@@ -1,0 +1,112 @@
+'27.10.03 
+'Topic: Problem with costs  
+'PY
+
+'H_Hunter3
+'Modified version of H_Linearis
+'Very economical robot that does well in sparse conditions
+'or high friction / unblocked veg environments
+'***********************
+
+'Initialize and mimic
+'***********************
+cond
+*.eye5 0 !=
+*.refshoot 0 !=
+*.refaimdx 2 !=
+*.in2 0 !=
+*.in1 0 !=
+start
+*.in2 .out2 store
+*.in1 .out1 store
+stop
+
+'reproduce 
+'***********
+cond
+*.nrg 8000 > 
+*.eye5 0 =
+start
+50 .repro store
+stop
+
+' move forward 
+'****************
+cond
+*.eye5 61 <
+start
+100 *.eye5 sub 10 div .up store
+100 *.eye5 sub -10 div .dn store
+stop
+
+'slow down near vegs
+'***********************
+cond
+*.refshoot 0 =
+*.eye5 60 >
+start
+*.vel -1 mult .up store
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye5 65 <
+start
+*.eye1 -1 mult *.eye3 -2 mult add 
+*.eye7 2 mult *.eye9 add add 4 div .aimdx store
+stop 
+
+'spin around when attacked
+'*******************************
+cond
+*.eye5 0 =
+*.pleas -50 <
+start
+314 .aimdx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refup 3 =
+*.refaimdx 2 =
+*.refaimsx 2 =
+*.eye5 20 >
+*.pleas 0 <
+start
+200 .aimsx store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 45 >
+start
+-1 .shoot store
+stop
+
+'Don't shoot if facing a friend
+'********************************
+cond
+*.eye5 55 >
+*.refup 3 =
+*.refaimsx 2 =
+start
+0 .shoot store
+stop
+
+'defensive maneovre
+'**********************
+cond
+*.eye5 55 >
+*.refshoot 0 !=
+*.shup 0 <
+*.pleas -50 <
+start
+300 .aimsx store
+20 .dn store
+-20 .up store
+stop
+
+end

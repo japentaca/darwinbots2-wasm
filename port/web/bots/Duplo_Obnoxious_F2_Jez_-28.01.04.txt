@@ -1,0 +1,83 @@
+'Duplo Obnoxious
+' Shot-Bot by Jez
+
+'*Targetting
+cond
+*.eye3 *.eye5 >
+start
+52 .aimsx store
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+-52 .aimsx store
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+104 .aimsx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+-104 .aimsx store
+stop
+
+'*Shoot
+cond
+*.eye5 0 >
+*.refeye 13 !=
+start
+-1 .shoot store
+stop
+
+'*turn from friend
+cond
+*.eye5 0 >
+*.refeye 13 =
+start
+628 .aimdx store
+stop
+
+'*repro
+cond
+*.nrg 6000 >
+start
+25 .repro store 
+628 .aimsx store
+stop
+
+'*tie to young
+cond
+*.eye5 77 =
+*.refaimdx 0 =
+start
+1 .tie store
+stop
+
+'*Delete tie to young
+cond
+*.numties 0 >
+start
+1 .deltie store
+stop
+
+'*move
+cond
+*.vel 28 <
+start
+30 *.vel sub .up store
+stop
+
+'*duplicate on games first cycle
+cond
+*.robage 0 =
+*.numties 0 =
+start
+50 .repro store
+stop
+end

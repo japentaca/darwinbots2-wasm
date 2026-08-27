@@ -1,0 +1,470 @@
+def mode 50
+def submode 51
+def timer 52
+def count 53
+
+'Defines starting values on birth
+cond
+*.robage 0 =
+start
+1 .mode store
+1 .submode store
+stop
+
+'The timer. IMPORTANT
+cond
+1 *.count =
+start
+.timer inc
+stop
+
+cond
+0 *.count =
+start
+0 .timer store
+stop
+
+'Change direction ocassionally
+cond
+*.robage 100 mod 0 =
+*.mode 1 =
+start
+140 .aimdx store
+
+'S1
+cond
+1 *.mode =
+1 *.submode =
+start
+15 .dx store
+.timer inc
+stop
+
+'S2
+cond
+1 *.mode =
+2 *.submode =
+start
+15 .up store
+.timer inc
+stop
+
+'S3
+cond
+1 *.mode =
+3 *.submode =
+start
+15 .sx store
+.timer inc
+stop
+
+'S2
+cond
+1 *.mode =
+4 *.submode =
+start
+15 .up store
+.timer inc
+stop
+
+'T1
+cond
+1 *.mode =
+1 *.submode =
+*.timer 15 >
+start
+2 .submode store
+0 .timer store
+stop
+
+'T2
+cond
+1 *.mode =
+2 *.submode =
+*.timer 15 >
+start
+3 .submode store
+0 .timer store
+stop
+
+'T2
+cond
+1 *.mode =
+3 *.submode =
+*.timer 15 >
+start
+4 .submode store
+0 .timer store
+stop
+
+'T2
+cond
+1 *.mode =
+4 *.submode =
+*.timer 15 >
+start
+1 .submode store
+0 .timer store
+stop
+
+'Move out of the way
+cond
+*.eye5 50 >
+*.refshoot 0 = and
+*.refeye *.myeye != and
+start
+45 .shootval store
+.sx .shoot store
+stop
+
+'Search and Destroy mode detection
+cond
+*.eye5 0 >
+*.refshoot 0 !=
+*.refeye *.myeye !=
+*.mode 2 !=
+*.out1 4515 !=
+start
+0 .timer store
+2 .mode store
+1 .submode store
+stop
+
+cond
+*.eye5 0 >
+*.in1 4515 =
+*.mode 2 !=
+start
+0 .timer store
+2 .mode store
+1 .submode store
+stop
+
+'SD1
+cond
+2 *.mode =
+1 *.submode =
+*.eye5 0 >
+*.eye5 50 <
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+'SS1 (Kill or Heal)
+cond
+2 *.mode =
+1 *.submode =
+*.eye5 50 >
+*.in1 4515 !=
+start
+2 .submode store
+stop
+
+cond
+2 *.mode =
+1 *.submode =
+*.eye5 50 >
+*.in1 4515 =
+*.refnrg *.nrg <
+start
+0 .in1 store
+8 .submode store
+stop
+
+cond
+2 *.mode =
+1 *.submode =
+*.eye5 50 >
+*.in1 4515 =
+*.refnrg *.nrg >
+start
+15 .dx store
+0 .in1 store
+1 .submode store
+stop
+
+'Prepare venom
+cond
+*.robage 20 mod 0 =
+*.nrg 1000 >
+*.venom 300 <
+start
+300 *.venom sub .strvenom store
+.fixpos .vloc store
+1 .venval store
+stop
+
+'SD2 (Kill)
+cond
+2 *.mode =
+2 *.submode =
+*.venom 50 >=
+start
+4 .submode store
+32000 .shootval store
+stop
+
+cond
+2 *.mode =
+2 *.submode =
+*.robage 20 mod 0 !=
+start
+5 .submode store
+stop
+
+
+'SD4 If you are ready to feed, paralyze the target
+cond
+2 *.mode =
+4 *.submode =
+start
+-3 .shoot store
+5 .submode store
+stop
+
+'SD5 Finally eat the pray
+cond
+2 *.mode =
+5 *.submode =
+*.refpoison 0 =
+*.venom 0 =
+start
+-1 .shoot store
+.oldven dec
+stop
+
+cond
+2 *.mode =
+5 *.submode =
+*.refpoison 0 !=
+*.venom 0 =
+start
+-6 .shoot store
+.oldven dec
+stop
+
+cond
+2 *.mode =
+5 *.submode =
+*.robage 1 add 20 mod 0 =
+start
+2 .submode store
+stop
+
+'Exit S&D if you don't see anything you would eat
+cond
+2 *.mode =
+*.eye5 0 =
+*.refeye *.myeye = or
+*.refshoot 0 = or
+start
+1 .mode store
+1 .submode store
+0 .timer store
+stop
+
+'SD8 Paralyze the injured bot so you can heal him
+cond
+*.mode 2 =
+*.submode 8 =
+start
+-3 .shoot store
+0 .timer store
+1 .count store
+9 .submode store
+stop
+
+'SD9 Give him some of your energy
+cond
+*.mode 2 =
+*.submode 9 =
+*.timer 2 =
+start
+*.refnrg *.nrg add 3 div *.refnrg sub .shootval store
+-2 .shoot store
+10 .submode store
+stop
+
+'SD10
+cond
+*.mode 2 =
+*.submode 10 =
+*.timer 3 =
+start
+0 .count store
+*.refveldx -2 mult .dx store
+1 .mode store
+1 .submode store
+stop
+
+'A small adjustment in turning
+cond
+*.mode 2 =
+start
+*.refveldx 3 div .aimdx store
+stop
+
+'If you have enough energy, make some poison
+cond
+*.nrg 1000 >
+*.poison 50 <
+start
+50 *.poison sub .strpoison store
+.shoot .ploc store
+stop
+
+'If you have enough energy, make some slime
+cond
+*.nrg 2000 >
+*.slime 300 <
+start
+300 *.slime sub .mkslime store
+stop
+
+'If you get tied, free yourself
+cond
+*.mode 3 !=
+*.numties 0 !=
+start
+*.tienum .deltie store
+stop
+
+'If you are full, make a fammily, tell them to wait till the tie is broken
+cond
+*.nrg 5000 >
+*.mode 2 !=
+*.mode 0 !=
+start
+3 .mode store
+1 .submode store
+0 .timer store
+stop
+
+'R1
+cond
+*.mode 3 =
+*.submode 1 =
+start
+560 .aimdx store
+50 .repro store
+2 .submode store
+0 .timer store
+stop
+
+'R2
+cond
+*.mode 3 =
+*.submode 2 =
+start
+560 .aimdx store
+1 .mode store
+1 .submode store
+stop
+
+cond
+*.body 300 <
+*.nrg 300 *.body sub 10 mult 500 add >
+start
+300 *.body sub 10 mult .strbody store
+stop
+
+'WARNING Random crazyness
+cond
+*.hit 0 !=
+*.hitsx 0 !=
+*.hitdx 0 !=
+*.hitdn 0 !=
+*.hitup 0 !=
+start
+2 .mode store
+7 .submode store
+stop
+
+'If you'r surrounded, start spinning and shooting. If you can't win, at least give them some fight >:-)
+cond
+2 *.mode =
+7 *.submode =
+start
+90 .aimdx
+-1 .shoot store
+start
+
+'If you are searching and you get shot, look at the target and eliminate it
+'cond
+'*.mode 1 =
+'*.shflav 0 !=
+'*.shflav -2 !=
+'start
+'*.shang 2 div .aimdx store
+'2 .mode store
+'1 .submode store
+'stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+8 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+
+'Domination dance =)))))
+cond
+*.totalbots *.totalmyspecies =
+*.robage 0 >
+start
+0 .mode store
+0 .submode store
+0 .timer store
+8000 6000 angle .setaim store
+stop
+
+cond
+0 *.mode =
+0 *.submode =
+*.hit 0 =
+*.xpos 7000 <
+*.xpos 9000 > or
+*.ypos 5200 < or
+*.ypos 6800 > or
+start
+15 .up store
+stop
+
+cond
+0 *.mode =
+0 *.submode =
+*.xpos 7000 >
+*.xpos 9000 <
+*.ypos 5200 >
+*.ypos 6800 <
+start
+628 .aimdx store
+1 .submode store
+stop
+
+'Unstuck your self
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+'Call for help if injured
+cond
+*.nrg 500 <
+start
+4515 .out1 store
+stop
+
+cond
+*.nrg 500 >=
+start
+0 .out1 store
+stop
+
+end

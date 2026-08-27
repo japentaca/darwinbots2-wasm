@@ -1,0 +1,40 @@
+cond
+start
+ *.thisgene .mkvirus store
+ 150 .vshoot store
+ 1 .sharenrg store
+ .tie inc
+ 50 .repro store
+ 20 .mkshell store
+ 20 .mkpoison store
+ .shoot .ploc store
+ 3 .up store
+stop
+
+cond
+start
+ -1000 .
+ 0 .repro store
+ 99 .sharenrg store
+ 0 .shoot store
+ 0 .fixpos store
+ 111 .out3 store
+ 180 .shootval store
+ *.nrg 3 div *.body sub .strbody store
+ *.body *.nrg 3  div sub .fdbody store
+ *.eye3 *.eye5 sub 0 floor *.eye7 *.eye5 sub 0 floor sub .aimdx store
+stop
+
+cond
+ *.shflav 0 !=
+ *.shflav -2 !=
+start
+ *.shang .setaim store
+ .dn .shoot store
+stop
+
+cond
+ *.nrg 5000 >
+start
+ 50 .repro store
+stop

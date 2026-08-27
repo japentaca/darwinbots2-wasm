@@ -1,0 +1,536 @@
+'Topic: New Bots
+'Shen
+' --==-- Dimacheri --==--
+
+' MultiBot
+' Tie feeder
+' Uses both heads
+' Venomous
+' Custom labels for ease of reading
+' Robust repro genes. Uses .fixpos to ensure tie. 99% success rate.
+
+
+' -=- Custom Labels -=-
+' *.Head is the primary bot
+' *.Temp is used for tie aligning
+' *.BotTie is the tie joining the MB
+' *.EatTie is feeding tie
+' *.VenShot is for timing venom shots
+' *.ID is a non-corruptable conspecific ID
+' *.Tied is to time the feeding tie
+
+def Head 50
+def Temp 51
+def BotTie 52
+def EatTie 53
+def VenShot 54
+def RefSet 55
+def ID 56
+def Tied 57
+
+
+
+' --==-- Navigation --==--
+
+' - Switch Heads -
+cond
+*.refeye *.ID =
+*.numties 1 =
+*.multi 1 =
+*.Head 1 =
+*.Tied 0 =
+start
+*.BotTie .tienum store
+.refeye .tmemloc store
+stop
+
+cond
+*.tmemval *.ID !=
+*.refeye *.ID =
+*.numties 1 =
+*.multi 1 =
+*.Head 1 =
+*.Tied 0 =
+start
+2 .Head store
+*.BotTie .tienum store
+.Head .tieloc store
+1 .tieval store
+stop
+
+' - Reset Refeye -
+cond
+*.eye5 0 =
+*.refeye *.ID =
+*.multi 1 =
+*.Head 1 =
+start
+.RefSet inc
+stop
+
+cond
+*.RefSet 20 =
+start
+0 .refeye store
+0 .RefSet store
+stop
+
+
+' -=- Head Nav -=-
+
+' - Approach Enemy -
+cond
+*.eye5 0 >
+*.eye5 35 <
+*.refeye *.ID !=
+*.vel *.maxvel <
+*.multi 1 =
+*.Head 1 =
+start
+*.maxvel *.vel sub .up store
+stop
+
+' - Search -
+cond
+*.eye5 0 =
+*.refeye *.ID !=
+*.eye3 *.eye 7 =
+*.vel *.maxvel <
+*.multi 1 =
+*.Head 1 =
+start
+*.maxvel *.vel sub .up store
+100 rnd 100 rnd sub .aimdx store
+*.aimdx 10 div .dx store
+stop
+
+
+' -=- Distant Tracking -=-
+
+' - Wide -
+cond
+*.eye3 30 <
+*.eye3 *.eye7 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+-80 .aimdx store
+-15 .dx store
+stop
+
+' - Wide -
+cond
+*.eye7 30 <
+*.eye7 *.eye3 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+80 .aimdx store
+15 .dx store
+stop
+
+' - Narrow -
+cond
+*.eye4 30 <
+*.eye4 *.eye6 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+-40 .aimdx store
+-10 .dx store
+stop
+
+' - Narrow -
+cond
+*.eye6 30 <
+*.eye6 *.eye4 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+40 .aimdx store
+10 .dx store
+stop
+
+
+' -=- Close Tracking -=-
+
+
+' - Narrow -
+cond
+*.eye4 30 >
+*.eye4 *.eye6 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+-30 .aimdx store
+-20 .dx store
+stop
+
+' - Narrow -
+cond
+*.eye6 30 >
+*.eye6 *.eye4 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+30 .aimdx store
+20 .dx store
+stop
+
+' - Wide -
+cond
+*.eye3 30 >
+*.eye3 *.eye7 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+-50 .aimdx store
+-30 .dx store
+stop
+
+' - Wide -
+cond
+*.eye7 30 >
+*.eye7 *.eye3 >
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 1 =
+start
+50 .aimdx store
+30 .dx store
+stop
+
+
+' -=- Conspecifics -=-
+
+' - Avoid Close Friend -
+cond
+*.eye5 30 >
+*.refeye *.ID =
+*.multi 1 =
+*.Head 1 =
+start
+*.eye4 *.eye6 sub .aimdx store
+10 rnd 10 rnd sub *.eye4 *.eye6 sub 5 div add .dx store
+stop
+
+' - Ignore Distant Friend -
+cond
+*.eye5 30 <
+*.refeye *.ID =
+*.vel *.maxvel <
+*.multi 1 =
+*.Head 1 =
+start
+*.maxvel *.vel sub .up store
+100 rnd 100 rnd sub .aimdx store
+*.aimdx 10 div .dx store
+stop
+
+
+' -=- Tail Nav -=-
+
+' - Narrow -
+cond
+*.eye6 *.eye4 !=
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 2 =
+start
+*.eye6 *.eye4 sub .aimdx store
+*.eye6 *.eye4 sub 4 div .dx store
+stop
+
+' - Wide -
+cond
+*.eye7 *.eye3 !=
+*.refeye *.ID !=
+*.multi 1 =
+*.Head 2 =
+start
+*.eye7 *.eye3 sub .aimdx store
+*.eye7 *.eye3 sub 4 div .dx store
+stop
+
+
+
+' --==-- Defence --==--
+
+
+' -=- Shot/Venom -=-
+
+' - Body Shot -
+cond
+*.eye5 20 >
+*.refeye *.ID !=
+*.refeye 0 !=
+*.VenShot 3 <
+*.multi 1 =
+start
+-6 .shoot store
+.VenShot inc
+stop
+
+' - Eat Alga -
+cond
+*.eye5 20 >
+*.refeye 0 =
+*.multi 1 =
+start
+-6 .shoot store
+stop
+
+' - Venom Attack -
+cond
+*.eye5 20 >
+*.refeye *.ID !=
+*.refeye 0 !=
+*.VenShot 3 =
+*.multi 1 =
+start
+8 .strvenom store
+-3 .shoot store
+8 .shootval store
+.mkslime .vloc store
+-200 .venval store
+0 .VenShot store
+stop
+
+
+' -=- Tie Feed -=-
+
+' - Sever Feeding Tie -
+cond
+*.Tied 2 =
+start
+*.EatTie .deltie store
+0 .Tied store
+stop
+
+' - Drain Energy -
+cond
+*.Tied 0 >
+start
+*.EatTie .tienum store
+-1 .tieloc store
+-1000 .tieval store
+.Tied inc
+stop
+
+' - Tie to Enemy -
+cond
+*.eye5 35 >
+*.refeye *.ID !=
+*.numties 1 =
+*.multi 1 =
+*.Head 0 !=
+*.Tied 2 !=
+start
+*.EatTie .tie store
+.Tied inc
+stop
+
+' - Leech -
+cond
+*.tiepres *.BotTie !=
+*.tiepres *.EatTie !=
+*.numties 1 >
+start
+*.tiepres .tienum store
+1000 .tieval store
+.tieval .tieloc store
+stop
+
+
+' -=- Shields -=-
+
+' - Make shell -
+cond
+*.maxvel 40 >
+*.multi 1 =
+*.nrg 2000 >
+start
+5 .mkshell store
+stop
+
+' - Lighten Shell -
+cond
+*.maxvel 35 <
+*.multi 1 =
+*.nrg 2000 >
+start
+-1 .mkshell store
+stop
+
+' - Make slime -
+cond
+*.nrg 500 >
+*.slime 190 <
+*.numties 1 =
+start
+200 *.slime sub .mkslime store
+stop
+
+' - Make Body -
+cond
+*.body 500 <
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+' - Feed from Body -
+cond
+*.nrg 1500 <
+start
+100 .fdbody store
+stop
+
+
+
+' --==-- Other Stuff --==--
+
+
+' - Sharing -
+cond
+*.nrg *.trefnrg !%=
+*.numties 1 =
+*.multi 1 =
+*.Tied 0 =
+start
+50 .sharenrg store
+50 .shareslime store
+50 .shareshell store
+50 .sharewaste store
+stop
+
+' - Unfix -
+cond
+*.fixed 1 =
+*.multi 1 =
+start
+0 .fixpos store
+stop
+
+' - Chameleon -
+cond
+*.out1 0 =
+*.in1 0 !=
+start
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+' - Waste -
+cond
+*.waste 400 >
+*.Tied 0 >
+start
+*.EatTie .tienum store
+-4 .tieloc store
+*.waste .tieval store
+stop
+
+
+
+' --==-- Reproduction loop --==--
+' Using *.Head for final role assignment
+' 0 is lone bot, 1 is Head, 2 is Tail
+' Using *.Temp for tie aligning
+' 0 is aligned, 1 is align Head, 2 is align Tail
+' *.BotTie is the tie joining the MB
+
+' - Unmake slime -
+cond
+*.slime 0 >
+*.Temp 0 =
+*.multi 0 =
+start
+-200 .mkslime store
+stop
+
+' - Spin Lone Bots -
+cond
+*.numties 0 =
+*.robage 10 >
+start
+30 .aimdx store
+stop
+
+' - Child ties to parent and becomes Temp Head -
+cond
+*.robage 0 =
+start
+*.myeye .ID store
+1000 rnd 1 add .BotTie store
+1000 rnd 1 add .EatTie store
+*.BotTie .tie store
+1 .Temp store
+stop
+
+' - Lone bot repros its Head and becomes Temp Tail -
+cond
+*.numties 0 =
+*.eye2 30 <
+*.eye5 30 <
+*.eye8 30 <
+*.nrg 500 >
+start
+50 .repro store
+1 .fixpos store
+2 .Temp store
+stop
+
+' - Temp Head aligns and becomes Head -
+cond
+*.multi 1 =
+*.Temp 1 =
+start
+*.BotTie .readtie store
+*.BotTie .tienum store
+628 .fixang store
+150 .fixlen store
+35 .stifftie store
+1 .Head store
+0 .Temp store
+stop
+
+' - Temp Tail aligns and becomes Tail -
+cond
+*.multi 1 =
+*.Temp 2 =
+start
+*.tiepres .BotTie store
+*.BotTie .readtie store
+*.BotTie .tienum store
+628 .fixang store
+2 .Head store
+0 .Temp store
+stop
+
+' - Start Repro Loop -
+cond
+*.multi 1 =
+*.nrg 4000 >
+*.numties 1 =
+*.eye2 20 <
+*.eye5 20 <
+*.eye8 20 <
+*.Head 1 =
+start
+*.BotTie .deltie store
+1 .fixpos store
+0 .Head store
+stop
+
+
+
+' -=- End DNA -=-
+end

@@ -1,0 +1,101 @@
+'Bot that (like Saber) finds a veggie and shhots from behing
+'However, these bots farm the veg and protect it
+
+cond
+*.robage 0 =
+start
+.chlr .memloc store
+.chrlr .tmemloc store
+628 .eye5dir store
+.shootval .vloc store
+-31000 .venval store
+180 *.velscalar sub 0 floor .dn store
+.deltie inc
+
+start
+*.eye5 0 >
+*.memval 0 > and
+  *.refxpos *.refypos angle 628 add .setaim store
+  628 .aimshoot store
+  .tie inc
+  *.refveldn 100 *.eyef sub add *.velup abs - floor .dn store
+  *.refveldx .dx store
+*.eye5 50 >
+*.trefnrg 6000 >=
+-1 .shoot store
+clearbool
+*.tmemval 0 >
+12 .sharenrg store
+stop
+
+start
+*.eye5 0 =
+*.myeye *.refeye = or
+*.eyef 0 != and
+314 rnd .aimsx store
+stop
+
+start
+*.nrg *.body 10 mult > and
+  *.nrg *.body 10 mult sub .strbody store
+stop
+
+start
+.nrg *.body 10 mult < and
+  *.body 10 mult *.nrg sub .fdbody store
+stop
+
+start
+*.venom 1000 <=
+*.nrg 500 >
+10 rnd 1 =
+.strvenom inc
+stop
+
+start
+ *.nrg *.body 10 mult add 1000 > and
+10 .strvenom store 
+20 .repro store
+   7117 10 mult *.veldx *.velup mult mult
+    356 *.velup dup mult mult
+    100 *.veldx dup mult mult
+    add div
+  *.velup sgn - sqr 628 mult add
+  - *.aim add 628 add .setaim store
+stop
+
+start
+*.myeye *.trefeye =
+*.tiepres .deltie store
+stop
+
+start
+*.waste 100 >
+-4 .shoot store
+stop
+
+'=================Defending================
+'Use other eyes to spot an enemy and shot venom at it
+'Abalone focuseye cycle
+cond
+*.eyef 0 =
+start
+*.timer 4 sub 6 ceil .focuseye store
+*.focuseye 6 =
+0 .timer store
+stop
+
+cond
+*.eyef 50 >
+*.memval 0 =
+*.myeye *.refeye !=
+start
+*.refxpos *.refypos angle .aimshoot store
+-3 .shoot store
+stop
+
+cond
+*.focuseye 0 =
+start
+.focuseye inc
+stop

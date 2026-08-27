@@ -1,0 +1,236 @@
+'Oculus Infinitus v1.1 by Commander Keen for F2 League
+'Changes from version 1:
+'Tie defence deleted to make it F2 legal
+'Shootval code update
+'General cleanout of extra unecessary DNA and waste code
+'Some other small fixes
+
+cond
+start
+*.velsx .dx store
+stop
+
+cond
+*.refeye *.myeye =
+start
+*.maxvel *.vel sub .up .store
+stop
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye4 *.eye1 1 sub >
+*.eye4 *.eye2 1 sub >
+*.eye4 *.eye3 1 sub >
+*.eye4 *.eye5 >
+*.eye4 *.eye6 1 sub >
+*.eye4 *.eye7 1 sub >
+*.eye4 *.eye8 1 sub >
+*.eye4 *.eye9 1 sub >
+start
+35 .aimsx store
+stop
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye6 *.eye1 1 sub >
+*.eye6 *.eye2 1 sub >
+*.eye6 *.eye3 1 sub >
+*.eye6 *.eye4 1 sub >
+*.eye6 *.eye5 >
+*.eye6 *.eye7 1 sub >
+*.eye6 *.eye8 1 sub >
+*.eye6 *.eye9 1 sub >
+start
+35 .aimdx store
+stop
+
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye3 *.eye1 1 sub >
+*.eye3 *.eye2 1 sub >
+*.eye3 *.eye4 1 sub >
+*.eye3 *.eye5 >
+*.eye3 *.eye6 1 sub >
+*.eye3 *.eye7 1 sub >
+*.eye3 *.eye8 1 sub >
+*.eye3 *.eye9 1 sub >
+start
+70 .aimsx store
+stop
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye7 *.eye1 1 sub >
+*.eye7 *.eye2 1 sub >
+*.eye7 *.eye3 1 sub >
+*.eye7 *.eye4 1 sub >
+*.eye7 *.eye5 >
+*.eye7 *.eye6 1 sub >
+*.eye7 *.eye8 1 sub >
+*.eye7 *.eye9 1 sub >
+start
+70 .aimdx store
+stop
+
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye2 *.eye1 1 sub >
+*.eye2 *.eye3 1 sub >
+*.eye2 *.eye4 1 sub >
+*.eye2 *.eye5 >
+*.eye2 *.eye6 1 sub >
+*.eye2 *.eye7 1 sub >
+*.eye2 *.eye8 1 sub >
+*.eye2 *.eye9 1 sub >
+start
+105 .aimsx store
+stop
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye8 *.eye1 1 sub >
+*.eye8 *.eye2 1 sub >
+*.eye8 *.eye3 1 sub >
+*.eye8 *.eye4 1 sub >
+*.eye8 *.eye5 >
+*.eye8 *.eye6 1 sub >
+*.eye8 *.eye7 1 sub >
+*.eye8 *.eye9 1 sub >
+start
+105 .aimdx store
+stop
+
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye1 *.eye2 1 sub >
+*.eye1 *.eye3 1 sub >
+*.eye1 *.eye4 1 sub >
+*.eye1 *.eye5 >
+*.eye1 *.eye6 1 sub >
+*.eye1 *.eye7 1 sub >
+*.eye1 *.eye8 1 sub >
+*.eye1 *.eye9 1 sub >
+start
+140 .aimsx store
+stop
+
+cond
+*.veldx *.vel <
+*.velsx *.vel <
+*.eye9 *.eye1 1 sub >
+*.eye9 *.eye2 1 sub >
+*.eye9 *.eye3 1 sub >
+*.eye9 *.eye4 1 sub >
+*.eye9 *.eye5 >
+*.eye9 *.eye6 1 sub >
+*.eye9 *.eye7 1 sub >
+*.eye9 *.eye8 1 sub >
+start
+140 .aimdx store
+stop
+
+cond
+*.eye5 90 >
+*.nrg 2000 >
+start
+256 .shootval store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 50 >
+start
+.shoot dec
+1 *991 sub 991 store
+stop
+
+cond
+*.shoot -1 =
+*991 1 =
+start
+-6 .shoot store
+stop
+
+cond
+*.aimsx 0 =
+*.aimdx 0 =
+*.refeye *.myeye =
+start
+300 .aimdx store
+0 .refeye store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eye5 0 !=
+start
+*.refvelup 100 add *.eye5 sub .up store
+stop
+
+cond
+*.nrg 2000 >
+*.body 2000 <
+start
+*.nrg 2000 sub 10 div .strbody store
+stop
+
+cond
+*.nrg 2000 >
+*.body 1000 >
+start
+50 .repro store
+stop
+
+cond
+*.nrg 2000 <
+*.body 50 >
+start
+*.body 20 sub .fdbody store
+stop
+
+cond
+*.waste 100 >
+start
+*.waste .shootval .store
+-4 .shoot store
+stop
+
+cond
+*.up 0 =
+*.vel 20 <
+*.eye5 0 =
+start
+10 .up store
+stop
+
+'Chameleon Gene
+cond
+*.in1 0 !=
+or
+*.in2 0 !=
+or
+*.in3 0 !=
+or
+*.in4 0 !=
+or
+*.out1 0 =
+*.out2 0 =
+*.out3 0 =
+*.out4 0 =
+*.refeye *.myeye !=
+start
+*.in1 .out1 store
+*.in2 .out2 store
+*.in3 .out3 store
+*.in4 .out4 store
+stop

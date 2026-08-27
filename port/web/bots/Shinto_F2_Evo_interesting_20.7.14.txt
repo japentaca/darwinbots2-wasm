@@ -1,0 +1,226 @@
+'Peacable bot
+'Does not attack unless attacked, then all of its children will (remebers dna length in epigen memory)
+
+'Vendettas
+def vend1 971
+def vend2 972
+def vend3 973
+
+'==========
+'Quickdraw- Moonfisher
+'==========
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+
+'==========
+'Init
+'==========
+cond
+*.robage 3 <
+start
+'Eyes- from Etch!
+-140 dup *.eye1dir sub sgn abs .eye1dir mult store
+  -105 dup *.eye2dir sub sgn abs .eye2dir mult store
+  -70  dup *.eye3dir sub sgn abs .eye3dir mult store
+  -35  dup *.eye4dir sub sgn abs .eye4dir mult store
+  35   dup *.eye6dir sub sgn abs .eye6dir mult store
+  70   dup *.eye7dir sub sgn abs .eye7dir mult store
+  105  dup *.eye8dir sub sgn abs .eye8dir mult store
+  140  dup *.eye9dir sub sgn abs .eye9dir mult store
+  -30  dup *.eye1width sub sgn abs .eye1width mult store
+  -25  dup *.eye2width sub sgn abs .eye2width mult store
+  -15  dup *.eye3width sub sgn abs .eye3width mult store
+  5    dup *.eye4width sub sgn abs .eye4width mult store
+  45   dup *.eye5width sub sgn abs .eye5width mult store
+  125  dup *.eye6width sub sgn abs .eye6width mult store
+  285  dup *.eye7width sub sgn abs .eye7width mult store
+  605  dup *.eye8width sub sgn abs .eye8width mult store
+  1221 dup *.eye9width sub sgn abs .eye9width mult store
+  .deltie inc
+'Memloc
+.dnalen .memloc store
+'ID
+-32000 32000 rnd .out2 store
+12 .out1 store
+'Misc.
+.shootval .vloc store
+31000 .venval store
+.eyef 9 rnd sub .ploc store
+50 .pval store
+stop
+
+'==================
+'Focuseye
+'==================
+
+cond
+  *.eye1 0 >
+  *.eye2 0 > or
+  *.eye3 0 > or
+  *.eye4 0 > or
+  *.eye5 0 > or
+  *.eye6 0 > or
+  *.eye7 0 > or
+  *.eye8 0 > or
+  *.eye9 0 > or
+start
+'Focus using the narrowest eye that sees something
+  *.eye1 *.eye2 *.eye3 *.eye4 
+  *.eye5 *.eye6 *.eye7 *.eye8 *.eye9 
+  floor floor floor floor
+  floor floor floor floor
+  50 store
+  -4 *50 *.eye1 sub sgn abs -- - .focuseye mult store
+  -3 *50 *.eye2 sub sgn abs -- - .focuseye mult store
+  -2 *50 *.eye3 sub sgn abs -- - .focuseye mult store
+  -1 *50 *.eye4 sub sgn abs -- - .focuseye mult store
+  0  *50 *.eye5 sub sgn abs -- - .focuseye mult store
+  1  *50 *.eye6 sub sgn abs -- - .focuseye mult store
+  2  *50 *.eye7 sub sgn abs -- - .focuseye mult store
+  3  *50 *.eye8 sub sgn abs -- - .focuseye mult store
+  4  *50 *.eye9 sub sgn abs -- - .focuseye mult store
+stop
+
+cond
+*.eyef 0 =
+*.in1 *.out1 =
+*.in2 *.out2 != and or
+start
+200 .aimsx store
+stop
+'===================
+
+'Approach tasty things
+'Veggies tend not to have eye commands.
+cond
+*.eyef 0 >
+*.refeye 0 =
+start
+'Borrowed from Etch
+*.refvelup 250 *.eye3 sub add *.velup abs - floor .up store
+  
+*.refvelsx - .dx store
+*.refxpos *.refypos angle .setaim store
+stop
+
+'Skit around things that look dangerous
+cond
+*.refkills 0 >
+*.in1 *.out1 !=
+*.in2 *.out2 = or and
+start 
+5 rnd .sx store
+10 .aimsx store
+stop
+
+'Turn towards pain
+cond
+*.shang 0 !=
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .setaim store
+0 .shang store
+0 .shflav store
+stop
+
+'ATTACK!
+cond
+*.in1 *.out1 !=
+*.in2 *.out2 = or
+*.menval *.vend1 =
+*.memval *.vend2 = or
+*.memval *.vend3 = or and
+*.refeye 0 = or
+*.eyef 0 > and
+start
+*.refvelup 100 *.eye5 sub add *.veldn abs - floor .up store
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+-6 .shoot store
+*.refkills 0 >
+*.venom 10 > and
+-3 .shoot store
+stop
+
+cond
+*.waste 10 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+'============================
+'Production!
+'============================
+cond
+*.nrg 3211 >
+start
+*.venom 100 <
+20 .strvenom store
+dropbool
+*.shell 65 10 rnd add <
+20 .mkshell store
+dropbool
+*.poison 1000 <
+20 .strpoison store
+stop
+
+*.body 90 >
+*.body 90 sub 10 mult .fdbody store 
+clearbool
+*.body 90 <
+*.nrg 4000 >= and
+100 .strbody store
+clearbool
+'=================
+
+'Vendetta!
+cond
+*.pain 100 >
+*.eyef 0 > and
+*.in1 *.out1 !=
+*.in2 *.out2 = or and
+start
+*.vend1 0 =
+*.memval .vend1 store
+*.vend2 0 =
+*.memval *.vend1 != and
+*.memval .vend2 store
+*.vend3 0 =
+*.memval *.vend1 != and
+*.memval *.vend2 != and
+*.memval .vend3 store
+stop
+
+'===========
+'Reproduction!
+'===========
+start
+*.nrg *.body 10 mult add 800 > and
+80 *.velscalar sub 0 floor .sx store
+50 .repro store
+628 rnd .aimsx store
+stop

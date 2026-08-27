@@ -1,0 +1,155 @@
+'When the earth was still flat, and 2d, and made of circles that shoot lines and dots.... there was Hedwig Bot.  Been working on this off and on
+'for the last month, still can't get slime to work with her so tie-feeders/viruses really mess up Hedwig, but I've run her against all of the
+'multibot league bots 1 on 1 and she comes out on top against all of them, even Helios.  Dimacheri comes dangerously close to beating her,
+'but Hedwig won 42 to 29 against it.  Here's the code.  Based on Batavus_minimalis, but I'm working on changing the movement/reproductive
+'genes to erase almost all traces of Batavus, with any luck, by the end of March I'll have a bot I can call coded 95 percent by myself alone.
+
+
+cond
+*.robage 0 =
+*.eye5 50 >
+start
+.shoot .vloc store
+-2 .venval store
+1 .tie store
+314 .id store
+stop
+
+cond
+*.numties 0 =
+*.robage 0 >
+start
+50 .repro store
+0 .aimdx store
+314 .id store
+stop
+
+cond
+*.numties 0 >
+start
+628 .fixang store
+150 .fixlen store
+50 .sharewaste store
+50 .sharenrg store
+50 .shareshell store
+1 .readtie store
+0 .fixpos store
+stop
+
+cond
+*.numties 0 >
+*.trefage *.robage >
+*.eye5 35 <=
+start
+*.eye9 *.eye1 sub 4 mult 50 store
+*.eye6 *.eye4 sub 51 store
+*50 *51 add 130 ceil .aimdx store
+*.maxvel *.vel sub .up store
+0 .fixpos store
+stop
+
+cond
+*.trefage *.robage <
+*.nrg 20000 >
+start
+1 .deltie store
+314 .aimdx store
+stop
+
+cond
+*.numties 0 >
+*.trefage *.robage >
+*.refeye *.myeye !=
+*.eye5 35 >
+*.refpoison 0 =
+*.refeye 0 >
+start
+-1 .shoot store
+10 .shootval store
+.fixpos inc
+stop
+
+cond
+*.numties 0 >
+*.trefage *.robage >
+*.refeye *.myeye !=
+*.eye5 35 >
+*.refpoison 0 >
+*.refeye 0 = or
+start
+-6 .shoot store
+10 .shootval store
+.fixpos inc
+stop
+
+cond
+*.numties 0 >
+*.refeye *.myeye !=
+*.eye5 20 >
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.numties 0 >
+*.trefage *.robage <
+*.refeye *.myeye !=
+*.eye5 20 >
+*.refpoison 0 =
+*.refeye 0 >
+start
+-1 .shoot store
+-10 .shootval store
+stop
+
+cond
+*.numties 0 >
+*.trefage *.robage <
+*.refeye *.myeye !=
+*.eye5 35 >
+*.refpoison 0 <
+*.refeye 0 = or
+start
+-6 .shoot store
+-10 .shootval store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+0 *.shang add .aimshoot store
+-3 .shoot store
+0 .shflav store
+stop
+
+cond
+*.nrg 4000 >
+*.venom 5000 <
+start
+100 .strvenom store
+stop
+
+cond
+*.numties 0 >
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.numties 0 >
+*.nrg 7000 >
+start
+100 .strbody store
+stop
+
+cond
+*.trefage *.robage <
+*.nrg 5000 >
+*.shell 200 <
+start
+100 .mkshell store
+stop

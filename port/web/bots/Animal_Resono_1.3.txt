@@ -1,0 +1,195 @@
+' Animal_Resono_1.2 (F3)(Tilthan) 05.06.12
+' Also Blind Bot, Interesting Behavior
+
+' This bot does not use any eyes (in practice) and can run with vision disabled
+' It uses it's echolocation properties as conspec recognition, if hit by only one shot, friendly
+' It is the only bot I know of that uses echolocation using shots
+' A side effect of it's conspec is that it makes a mine field and plays pinball
+' Changes 1.2 - Uses shot pings as long-distance conspec
+'         1.1 - Uses ref values for further conspec and touch targeting, (Having eyes as priority for ref is annoying)
+
+' Variables
+def guess 50
+def search 51
+def detect 52
+
+' Constants
+def age 10
+def power 32
+
+' 1 Get Mom Tie, and try to make my eyef useless.
+cond
+ *.robage 0 =
+start
+ .tie inc
+ 1222 .eye5width store
+ 628 .eye5dir store
+stop
+
+' 2 Get Rid of Mom Tie
+cond
+ *.robage 1 =
+start
+ .deltie inc
+stop
+
+' 3 Get Away from Mom
+cond
+ *.robage .age <
+ *.vel 180 <
+start
+ 10 .dn store
+stop
+
+' 4 Find Food, Start Sonar
+cond
+ 400 *.nrg div 5 add rnd 0 =
+and
+ *.guess 0 =
+and
+ *.robage .age >
+start
+ 214 rnd 100 add .aimdx store
+ -1 .shoot store
+ .search inc
+stop
+
+' 5 Find Food, Get Sonar
+cond
+ *.shang 0 >
+and
+ *.robage .age >
+start
+ *.shang .aimdx store
+ 2 .guess store
+ *.velup -1 mult .up store
+ *.veldx -1 mult .dx store
+ 0 .search store
+stop
+
+' 7 Shoot at Food
+cond
+ *.guess 0 !=
+start
+ -6 .shoot store
+ .power .shootval store
+ .guess dec
+stop
+
+' 8 Migrate for more Food
+cond
+ *.search 600 >
+ *.nrg 500 >
+start
+ -100 .up store
+ 0 .search store
+stop
+
+' 9 Unstick if stuck
+cond
+ *.fixed 0 >
+start
+ 0 .fixpos store
+stop
+
+'''''''''''Better movement hopefully
+' 10 Shot Front, move forward
+cond
+ *.shdn 0 !=
+start
+ *.up -10 add .up store
+stop
+
+' 11 Shot Back, move back
+cond
+ *.shup 0 !=
+start
+ *.up 10 add .up store
+stop
+
+' 12 Shot Right, Move Right
+cond
+ *.shdx 0 !=
+start
+ *.dx 10 add .dx store
+stop
+
+' 13 Shot Left, Move Left
+cond
+ *.shsx 0 !=
+start
+ *.dx -10 add .dx store
+stop
+
+' 14 Body Maintenence
+cond
+ *.nrg 1105 >
+ *.body 1000 <
+start
+ 100 .strbody store
+stop
+
+' 15
+cond
+ *.nrg 1000 <
+ *.body 1010 > or
+start
+ 100 .fdbody store
+stop
+
+' Fam Detector
+cond
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ 0 .timer store
+ .detect inc
+stop
+
+' 16 If Fam Fired at Me, Move
+cond
+ *.shang 0 =
+ *.timer 1 >
+ *.detect 0 >
+and
+ *.robage 0 !=
+start
+ 0 .guess store
+ 0 .detect store
+ 284 rnd 120 add .aimdx store
+ -35 .up store
+stop
+
+' 17 Hit Fam Get Away
+cond
+ *.refup *.myup =
+start
+ 0 .guess store
+ 0 .detect store
+ 284 rnd 120 add .aimdx store
+ -35 .up store
+stop
+
+' 18 Hit Food, Eat Food--From EricL
+cond
+ *.refxpos 0 >
+ *.refup *.myup !=
+start
+ *.refxpos *.refypos angle .setaim store
+ -6 .shoot store
+ .power .shootval store
+stop
+
+' 19 Reproduce
+cond
+ *.nrg 9000 >
+and
+ *.guess 0 =
+and 
+ *.pleas abs 100 <
+start
+ -314 .aimdx store
+ 30 .repro store
+stop
+
+end

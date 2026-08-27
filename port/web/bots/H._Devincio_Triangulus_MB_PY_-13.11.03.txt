@@ -1,0 +1,269 @@
+'13.11.03
+'Topic: H_Devincio_Triangulus  
+'PY
+
+'H_Devincio_Triangulus
+' *** Tie Triangle ***
+'the next attempt at a multi cellular organism
+'***********************
+
+'*50 = timer / counter
+'*51 = tie phase
+'*52 = feeding mode
+'*53 = robot id
+'*55 = .refeye number
+
+'initialize
+'*********
+cond
+*50 0 =
+*53 0 =
+start
+8 rnd 2 add 51 store
+26 55 store
+stop
+
+cond
+*50 1 =
+*.nrg 3100 <
+*53 0 =
+start
+1 53 store
+stop
+
+'reproduce if robot one
+'*************************
+cond
+*.nrg 20000 > 
+*.eye5 0 =
+*.eye1 0 =
+*.eye3 0 =
+*.eye7 0 =
+*.eye8 0 =
+*53 1 =
+start
+0 50 store
+66 .repro store
+3 53 store
+stop
+
+'reproduce if robot zero
+'**************************
+cond
+*53 0 =
+*50 1 =
+start
+208 .aimsx store
+stop
+
+'reproduce if robot 0
+'***************************
+cond
+*53 0 =
+*.nrg 20000 >
+start
+15 .repro store
+stop
+
+'reproduce to make a new triangulus
+'*****************************************
+cond
+*53 0 =
+*50 1 =
+start
+50 .repro store
+stop
+
+'tie to new young or to original robot
+'*****************************************
+cond
+*50 2 =
+*53 1 !=
+start
+11 .tie store
+stop
+
+'Sets angles
+'********************************************
+cond
+*53 1 !=
+*50 5 =
+start
+530 .aimsx store
+stop
+
+' move forward if robot = 1
+'****************
+cond
+*50 30 >
+*53 1 =
+start
+6 .up store
+-6 .dn store
+stop
+
+'move if robot 3
+'*****************
+cond
+*53 3 =
+*50 30 >
+*50 200 <
+start
+-10 .dn store
+10 .up store
+stop
+
+'move if robot 0
+'*****************
+cond
+*53 0 =
+*50 200 >
+start
+10 .dn store
+-10 .up store
+stop
+
+cond
+*53 1 !=
+*50 200 <
+*50 30 >
+start
+20 .aimsx store
+stop
+
+cond
+*eye5 0 !=
+*.refeye *55 !=
+start
+10 50 store
+stop
+
+'Increment counter
+'*********************
+cond
+start
+50 inc
+stop
+
+'turn towards food if robot 1
+'*************************
+cond
+*.eye1 *.eye9 !=
+*53 0 !=
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+stop
+
+cond
+*.eye2 *.eye8 !=
+*53 0 !=
+start
+*.eye8 *.eye2 sub 3 mult .aimdx store
+stop
+
+cond
+*.eye3 *.eye7 !=
+*53 0 !=
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*53 0 !=
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye *55 =
+*.eye5 20 >
+*53 1 =
+*50 23 >
+start
+380 .aimsx store
+stop
+
+'Spin when attacked
+'*************************
+cond
+*.shdn 0 <
+*.pleas -10 <
+*50 30 >
+start
+620 .aimsx store
+stop
+
+cond
+*.hitdn 0 !=
+*50 30 >
+start
+620 .aimsx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+start
+200 rnd 100 sub .aimsx store
+stop
+
+'Tie to feed
+'********************
+cond
+*.eye5 30 >
+*.eye6 *.eye4 =
+*.eye5 0 !=
+*.refeye *55 !=
+*50 5 > 
+*.nrg 30000 <
+start
+*51 .tie store
+0 .aimdx store
+stop
+
+'Feed via tie
+'*************
+cond 
+*50 0 >
+*.nrg 30000 <
+start
+*51 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'transfer energy within the structure of the robot
+'******************************************************
+cond
+*.nrg 20000 >
+*53 1 !=
+start
+11 .tienum store
+100 .tieval store
+-1 .tieloc store
+stop
+
+cond
+*.nrg 1000 <
+*53 1 !=
+start
+11 .tienum store
+-100 .tieval store
+-1 .tieloc store
+stop
+
+'Reset location 52 to turn off feeding
+'*****************************************
+cond
+*52 1 =
+*.pleas 100 <
+start
+0 52 store
+stop
+
+
+end

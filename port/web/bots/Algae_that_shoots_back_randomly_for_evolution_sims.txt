@@ -1,0 +1,26 @@
+' Algae that shoots back randomly
+' Literally just alga_minimalis_choloroplastus but without the slime since that's a huge waste of time
+' and that shoots randomly when being shot at. It's pretty simple, I use this for evolution
+' sims since alga_minimalis is literally challengeless, but anything resembling a competent defense
+' with shells or venom or poison kills poor animal_minimalis outright before it evolves anything cool :(
+' This should make hunting kinda dangerous but not lethally deadly
+
+cond 'new gene from Botsareus and Panda
+  *.chlr *.light <
+start
+  160 .mkchlr store
+stop
+
+cond ' have BABIES :DDD
+  *.nrg 6000 >
+start
+  50 .repro store
+  15 .aimdx store
+stop
+
+cond 'shoot randomly when being shot at
+  *.shflav 0 <
+start
+  -1 .shoot store
+  1256 rnd .aimdx store
+stop

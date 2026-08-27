@@ -1,0 +1,294 @@
+'A system with some practical eyes
+'And a test bot (F3) wich shows some of the posibilities.
+'The conspec is buildt into the eye system, it just uses 
+'.dnalen to reconize it's own
+
+'- Variables -
+'To apply new eye settings store the value 1 in seteyes
+'seteyes will be 0 if not set and 2 if they've been set to something.
+def seteyes 50
+
+'When seteyes is 1 the values in seteyespace, setoffset and seteyewidth
+'will be applied.
+def seteyespace 52
+def setoffset 53
+def seteyewidth 54
+
+'Eyeuse chooses between changing the focuseye to look, 
+'or turning the current focus eye to look.
+'If you plan on shooting without using .aimshoot and you're using the
+'system for turning, then remember to set the focus eye to the one you have centered
+'Same goes for using angle and setaim to face the oponent, 
+'always rememeber to keep track of your focuseye. 
+'(Unless ofcourse you're never using the system for changing eyefocus)
+def eyesystem 55
+
+
+'- Constants -
+'eyedist is used for turning and should be 35 unless something changes in the source.
+def eyedist 35		'The eyes default offset
+
+'These are just some values I usualy use, but you can use any values you like.
+'They also don't need to be defined as constant, you can just push raw values into the set vars.
+def fulleyespace 105	'360 degree spread
+def fulloffset 140	'Offset to center eye9
+def slimeyewidth -30	'Slimmest eye width
+def normaleyewidth 0
+def wideeyewidth 80	'Wider eyewidth
+
+
+'- Vars and const for the test bot
+'These are just used in the example to show how the system can be used.
+
+'vars
+def state 56
+
+'const
+def alge 13
+def maxbody 15000
+def movebody 6000
+
+
+'********************************************************************
+'------------------------- Init Eyes --------------------------------
+'--- Initializing the eyes ---
+cond
+*.seteyes 0 =
+start
+1 .seteyes store
+.dnalen .memloc store
+.fulleyespace .seteyespace store
+.fulloffset .setoffset store
+.normaleyewidth .seteyewidth store
+stop
+'********************************************************************
+
+
+'********************************************************************
+'------------------------- Eyes -------------------------------------
+'--- Setup ---
+cond
+*.seteyes 1 =
+start
+*.setoffset .eye9dir store
+*.setoffset *.seteyespace add .eye8dir store
+*.setoffset *.seteyespace 2 mult add .eye7dir store
+*.setoffset *.seteyespace 3 mult add .eye6dir store
+*.setoffset *.seteyespace 4 mult add .eye5dir store
+*.setoffset *.seteyespace 5 mult add .eye4dir store
+*.setoffset *.seteyespace 6 mult add .eye3dir store
+*.setoffset *.seteyespace 7 mult add .eye2dir store
+*.setoffset *.seteyespace 8 mult add .eye1dir store
+*.seteyewidth .eye1width store
+*.seteyewidth .eye2width store
+*.seteyewidth .eye3width store
+*.seteyewidth .eye4width store
+*.seteyewidth .eye5width store
+*.seteyewidth .eye6width store
+*.seteyewidth .eye7width store
+*.seteyewidth .eye8width store
+*.seteyewidth .eye9width store
+2 .seteyes store
+stop
+
+'--- Change focus ---
+cond
+*.eyesystem 0 =
+start
+*.eyef 0 =
+*.memval *.dnalen = or
+ 501 *.focuseye 5 add 9 mod add * abs sgn 501 *.focuseye 6 add 9 mod add * abs sgn 2 mult | 501 *.focuseye 7 add 9 mod add * abs sgn 4 mult | 501 *.focuseye 8 add 9 mod add * abs sgn 8 mult | 501 *.focuseye 9 add 9 mod add * abs sgn 16 mult | 501 *.focuseye 10 add 9 mod add * abs sgn 32 mult | 501 *.focuseye 11 add 9 mod add * abs sgn 64 mult | 501 *.focuseye 12 add 9 mod add * abs sgn 128 mult | dup dup dup dup dup dup dup dup 1 & 1 sub dup div 1 sub abs *.focuseye 5 add 9 mod 4 sub mult swap 3 & 2 sub dup div 1 sub abs *.focuseye 6 add 9 mod 4 sub mult add swap 7 & 4 sub dup div 1 sub abs *.focuseye 7 add 9 mod 4 sub mult add swap 15 & 8 sub dup div 1 sub abs *.focuseye 8 add 9 mod 4 sub mult add swap 31 & 16 sub dup div 1 sub abs *.focuseye 9 add 9 mod 4 sub mult add swap 63 & 32 sub dup div 1 sub abs *.focuseye 10 add 9 mod 4 sub mult add swap 127 & 64 sub dup div 1 sub abs *.focuseye 11 add 9 mod 4 sub mult add swap 255 & 128 sub dup div 1 sub abs *.focuseye 12 add 9 mod 4 sub mult add swap 511 swap sgn mult store
+stop
+
+'--- Turn ---
+cond
+*.eyesystem 1 =
+start
+*.eyef 0 =
+*.memval *.dnalen = or
+ 501 *.focuseye 5 add 9 mod add * abs sgn 501 *.focuseye 6 add 9 mod add * abs sgn 2 mult | 501 *.focuseye 7 add 9 mod add * abs sgn 4 mult | 501 *.focuseye 8 add 9 mod add * abs sgn 8 mult | 501 *.focuseye 9 add 9 mod add * abs sgn 16 mult | 501 *.focuseye 10 add 9 mod add * abs sgn 32 mult | 501 *.focuseye 11 add 9 mod add * abs sgn 64 mult | 501 *.focuseye 12 add 9 mod add * abs sgn 128 mult | dup dup dup dup dup dup dup dup 1 & 1 sub dup div 1 sub abs *.aim 521 *.focuseye 5 add 9 mod add * add 35 4 mult add mult swap 3 & 2 sub dup div 1 sub abs *.aim 521 *.focuseye 6 add 9 mod add * add 35 3 mult add mult add swap 7 & 4 sub dup div 1 sub abs *.aim 521 *.focuseye 7 add 9 mod add * add 35 2 mult add mult add swap 15 & 8 sub dup div 1 sub abs *.aim 521 *.focuseye 8 add 9 mod add * add 35 1 mult add mult add swap 31 & 16 sub dup div 1 sub abs *.aim 521 *.focuseye 9 add 9 mod add * add 35 0 mult add mult add swap 63 & 32 sub dup div 1 sub abs *.aim 521 *.focuseye 10 add 9 mod add * add 35 1 mult sub mult add swap 127 & 64 sub dup div 1 sub abs *.aim 521 *.focuseye 11 add 9 mod add * add 35 2 mult sub mult add swap 255 & 128 sub dup div 1 sub abs *.aim 521 *.focuseye 12 add 9 mod add * add 35 3 mult sub mult add swap 19 swap sgn mult store
+stop
+'********************************************************************
+
+
+
+'********************************************************************
+'************ From here on it's just the test bot *******************
+'********************************************************************
+
+start
+.fixpos dec
+.deltie inc
+
+*.nrg *.body >
+*.nrg 500 > and
+100 .strbody store
+
+*.nrg 2000 >
+*.body *.nrg < and
+*.body .maxbody < and
+*.nrg 10 mult *.body sub .strbody store
+
+*.robage 50 >
+1 .seteyes store
+.wideeyewidth .seteyewidth store
+stop
+
+'- Scout - 
+cond
+*.state 0 =
+start
+*.eyesystem 0 !=
+0 .eyesystem store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+*.maxvel .up store
+
+*.robage 5 <
+*.body 1100 > and
+*.maxvel - .up store
+
+*.eyef 0 !=
+*.memval .alge != and
+*.memval *.dnalen != and
+*.refvelsx 100 mult .dx store
+*.refveldn 100 mult .up store
+
+*.eyef 0 !=
+*.memval .alge = and
+1 .state store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+*.shflav 0 = and
+*.nrg 20000 > and
+*.body 3000 > and
+2 .state store
+
+*.eyef 0 !=
+*.memval *.dnalen != and
+*.body *.refbody 200 sub > and
+3 .state store
+
+*.body .movebody >
+4 .state store
+*.totalmyspecies 2 < and
+*.nrg 10000 > and
+*.eyef 0 = and
+2 .state store
+stop
+
+cond
+*.state 1 =
+start
+*.eyesystem 1 !=
+1 .eyesystem store
+4 .focuseye store
+
+*.eyef 0 !=
+*.memval .alge = and
+*.refxpos *.refypos angle .setaim store
+*.refvelsx *.veldx add .sx store
+*.refvelup 100 *.eyef sub add 10 floor .up store
+-6 .shoot store
+16 .shootval store
+
+*.eyef 0 =
+*.memval .alge != or
+0 .state store
+stop
+
+cond
+*.state 2 =
+start
+*.eyef 0 =
+*.memval *.dnalen = or
+*.shflav 0 = and
+*.nrg 20000 > and
+*.body 3000 > and
+*.aim 314 add .setaim store
+20 .repro store
+
+not
+3 .state store
+stop
+
+cond
+*.state 3 =
+start
+*.eyesystem 1 !=
+1 .eyesystem store
+4 .focuseye store
+
+*.eyef 0 !=
+*.memval *.dnalen != and
+*.refxpos *.refypos angle .setaim store
+*.refvelsx *.veldx add .sx store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 5 div 30 sub 0 floor 100 ceil *.refvelup add .up store
+*.nrg 100 div *.refnrg ceil 25 floor .shootval store
+-6 .shoot store
+
+*.shflav 0 !=
+*.shang .aimshoot store
+-6 .shoot store
+40 .shootval store
+0 .shflav store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+0 .state store
+
+*.body .movebody >
+4 .state store
+stop
+
+cond
+*.state 4 =
+start
+*.eyesystem 1 !=
+1 .eyesystem store
+4 .focuseye store
+1 .seteyes store
+.wideeyewidth .seteyewidth store
+
+*.eyef 0 !=
+*.memval *.dnalen != and
+*.refxpos *.refypos angle .setaim store
+-6 .shoot store
+*.memval .alge != and
+*.nrg 100 div *.refnrg ceil 25 floor .shootval store
+
+*.refxpos *.refypos dist 600 >
+*.memval .alge = and
+*.shflav 0 = and
+-10 .shootval store
+
+*.timer 15 mod 0 =
+*.memval .alge = and
+150 .aimsx store
+
+*.shflav 0 !=
+*.shang .aimshoot store
+-6 .shoot store
+40 .shootval store
+0 .shflav store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+0 .state store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+*.memval .alge = or
+*.body .movebody < and
+0 .state store
+
+*.eyef 0 =
+*.memval *.dnalen = or
+*.memval .alge = or
+*.body .maxbody > and
+4 .state store
+stop
+
+end

@@ -1,0 +1,182 @@
+'==========
+'Gnat 3.0 based on Quickdraw
+'==========
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+start
+50 .repro store
+341 .aimsx store
+500 .dn store
+500 .dx store
+*.thisgene .delgene store
+stop
+
+
+'==========
+'Init
+'==========
+cond
+*.robage 3 <
+start
+'Eyes- from Etch!
+-140 dup *.eye1dir sub sgn abs .eye1dir mult store
+  -105 dup *.eye2dir sub sgn abs .eye2dir mult store
+  -70  dup *.eye3dir sub sgn abs .eye3dir mult store
+  -35  dup *.eye4dir sub sgn abs .eye4dir mult store
+  35   dup *.eye6dir sub sgn abs .eye6dir mult store
+  70   dup *.eye7dir sub sgn abs .eye7dir mult store
+  105  dup *.eye8dir sub sgn abs .eye8dir mult store
+  140  dup *.eye9dir sub sgn abs .eye9dir mult store
+  -30  dup *.eye1width sub sgn abs .eye1width mult store
+  -25  dup *.eye2width sub sgn abs .eye2width mult store
+  -15  dup *.eye3width sub sgn abs .eye3width mult store
+  5    dup *.eye4width sub sgn abs .eye4width mult store
+  45   dup *.eye5width sub sgn abs .eye5width mult store
+  125  dup *.eye6width sub sgn abs .eye6width mult store
+  285  dup *.eye7width sub sgn abs .eye7width mult store
+  605  dup *.eye8width sub sgn abs .eye8width mult store
+  1221 dup *.eye9width sub sgn abs .eye9width mult store
+  .deltie inc
+
+'ID
+-32000 32000 rnd .out2 store
+12 .out1 store
+'Misc.
+.shootval .vloc store
+31000 .venval store
+.eyef 9 rnd sub .ploc store
+50 .pval store
+stop
+
+'==================
+'Focuseye
+'==================
+
+cond
+  *.eye1 0 >
+  *.eye2 0 > or
+  *.eye3 0 > or
+  *.eye4 0 > or
+  *.eye5 0 > or
+  *.eye6 0 > or
+  *.eye7 0 > or
+  *.eye8 0 > or
+  *.eye9 0 > or
+start
+'Focus using the narrowest eye that sees something
+  *.eye1 *.eye2 *.eye3 *.eye4 
+  *.eye5 *.eye6 *.eye7 *.eye8 *.eye9 
+  floor floor floor floor
+  floor floor floor floor
+  50 store
+  -4 *50 *.eye1 sub sgn abs -- - .focuseye mult store
+  -3 *50 *.eye2 sub sgn abs -- - .focuseye mult store
+  -2 *50 *.eye3 sub sgn abs -- - .focuseye mult store
+  -1 *50 *.eye4 sub sgn abs -- - .focuseye mult store
+  0  *50 *.eye5 sub sgn abs -- - .focuseye mult store
+  1  *50 *.eye6 sub sgn abs -- - .focuseye mult store
+  2  *50 *.eye7 sub sgn abs -- - .focuseye mult store
+  3  *50 *.eye8 sub sgn abs -- - .focuseye mult store
+  4  *50 *.eye9 sub sgn abs -- - .focuseye mult store
+stop
+
+
+
+'=============================================================================
+'=============================================================================
+
+
+start
+*.eyef 0 =
+*.in1 *.out1 =
+*.in2 *.out2 != and or
+200 .aimsx store
+clearbool
+
+'Approach tasty things
+*.eyef 0 >
+*.in1 *.out1 !=
+*.in2 *.out3 = or and
+'Borrowed from Etch
+*.refvelup 250 *.eye3 sub add *.velup abs - floor .up store
+  
+*.refvelsx - .dx store
+*.refxpos *.refypos angle .setaim store
+clearbool
+
+
+'Turn towards pain
+*.shang 0 !=
+*.shflav 0 != and
+*.shflav -2 != and
+*.shang .setaim store
+0 .shang store
+0 .shflav store
+clerbool
+
+'ATTACK!
+*.in1 *.out1 !=
+*.in2 *.out2 = or
+*.eyef 0 > and
+*.refvelup 100 *.eye5 sub add *.veldn abs - floor .up store
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+-6 .shoot store
+*.refkills 0 >
+*.venom 10 > and
+-3 .shoot store
+clearbool
+
+
+*.waste 10 >
+*.waste .shootval store
+-4 .shoot store
+clearbool
+
+'============================
+'Production!
+'============================
+*.nrg 3211 >
+*.venom 100 < and
+20 .strvenom store
+clearbool
+*.shell 65 10 rnd add <
+*.nrg 3211 > and
+20 .mkshell store
+clearbool
+*.poison 1000 <
+*.nrg 3211 > add
+20 .strpoison store
+clearbool
+*.body 90 >
+*.body 90 sub 10 mult .fdbody store 
+clearbool
+*.body 90 <
+*.nrg 4000 >= and
+100 .strbody store
+clearbool
+'=================
+
+
+'===========
+'Reproduction!
+'===========
+*.nrg *.body 10 mult add 800 > and
+80 *.velscalar sub 0 floor .sx store
+50 .repro store
+628 rnd .aimsx store
+clearbool

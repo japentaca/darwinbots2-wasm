@@ -1,0 +1,186 @@
+'Topic: New Bots
+'Endy
+'
+' Inchy
+' Does extremely well in high-G enviroments and when pitted against non-tiefeeding tiebots
+cond
+*.eye1 0 >
+start
+-102 .aimdx store
+stop
+
+cond
+*.eye9 0 >
+start
+102 .aimdx store
+stop
+
+cond
+*.eye4 0 >
+start
+-25 .aimdx store
+stop
+
+cond
+*.eye6 0 >
+start 
+25 .aimdx store
+stop
+
+' ============================
+' Random Locomotion
+cond
+start
+1 rnd 79 store
+*79 .fixpos store
+-100 *79 mult 
+9000 *79 1 sub -1 mult mult
+add .tielen store
+stop
+' ============================
+' Shoot the food
+' Smaller weapon for food and attacks
+cond
+*.refeye *.myeye !=
+*.eye5 77 !=
+*.eye5 26 >
+start
+*.robage *.robage div .fixpos mult inc
+-1 *.refage *.refage div mult .shoot store
+stop
+
+' Major weapon for hostile bots
+' How do you define hostile?
+' It's not in my family line. Open fire.
+cond
+*.refeye *.myeye !=
+*.eye5 77 !=
+*.refeye 0 !=
+*.eye5 26 >
+start
+.strbody .shoot store
+32000 .shootval store
+stop
+' ============================
+'********
+'* Body *
+'********
+
+cond
+*.body 20 <
+*.nrg 1000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 2500 >
+*.body 800 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 5000 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 20 >
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.body 1000 >
+*.robage 10 <
+start
+50 .fdbody store
+stop
+
+cond
+*.body 30000 >
+start
+50 .fdbody store
+stop
+' ============================
+' Tiebot section
+' Sharing Gene
+cond
+*.multi 1 =
+*.myeye *.trefeye =
+*.tiepres 1 =
+start
+50 .sharenrg store
+50 .sharewaste store
+stop
+
+' Child ties to parent
+cond
+*.robage 0 =
+*.eye5 77 =
+start
+1 .tie store
+stop
+
+' Lone bot repros its head
+cond
+*.numties 0 =
+*.eye5 40 <
+*.nrg 100 >
+start
+50 .repro store
+stop
+
+cond
+*.numties 1 =
+start
+1 .readtie store
+1 .tienum store
+628 .fixang store
+stop
+
+' Rescue Lost single bot
+cond
+*.tiepres 0 =
+start
+20 .aimdx store
+stop
+
+cond
+*.numties 1 >
+*.myeye *.trefeye !=
+start
+*.tiepres .tienum store 
+-1 .tieloc store
+-1000 .tieval store
+*.eye5 0 mult
+stop
+
+cond
+*.numties 1 >
+*.myeye *.trefeye =
+start
+*.tiepres .deltie store
+stop
+
+' Start Repro loop
+cond
+*.multi 1 =
+*.nrg 3000 >
+*.eye5 30 <
+start
+1 .deltie store
+stop
+
+' Last Ditch MB method
+cond
+*.nrg 100 <
+*.numties 0 =
+*.eye5 26 >
+start
+-1 .shoot store
+stop
+end

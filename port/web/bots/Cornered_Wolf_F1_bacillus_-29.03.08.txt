@@ -1,0 +1,194 @@
+'Update routine:
+''suck nrg from tie
+''make tie
+''conspec and virus killcode
+''body control
+''waste dumping
+''virus spreading
+
+cond
+start
+ 99 .sharenrg store
+ -1 .tieloc store
+ -1000 .tieval store
+ .tie inc
+ 999 989 store
+ 999 .out1 store
+ .out1 .tmemloc store
+ 10 *.numties 2 mult sub .up store
+ *.nrg 3 div *.body sub dup .strbody store - .fdbody store
+ 1 .sharewaste store
+ *.thisgene ++ .mkvirus store
+ 50 .vshoot *.nrg 100 sub 0 floor sgn mult store
+stop
+
+'virus
+
+cond
+ *989 999 !=
+start
+ *.thisgene .mkvirus store
+ *.nrg 2 div .vshoot store
+stop
+
+'high-accuracy navigation
+
+cond
+ *.eye1 0 !=
+ *.eye2 0 =
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+ *.eye9 0 =
+start
+ -4 .focuseye store
+stop
+
+cond
+ *.eye2 0 =
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+ *.eye9 0 !=
+start
+ 4 .focuseye store
+stop
+
+cond
+ *.eye2 0 !=
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 =
+start
+ -3 .focuseye store
+stop
+
+cond
+ *.eye3 0 =
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+ *.eye8 0 !=
+start
+ 3 .focuseye store
+stop
+
+cond
+ *.eye3 0 !=
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 =
+start
+ -2 .focuseye store
+stop
+
+cond
+ *.eye4 0 =
+ *.eye5 0 =
+ *.eye6 0 =
+ *.eye7 0 !=
+start
+ 2 .focuseye store
+stop
+
+cond
+ *.eye4 0 !=
+ *.eye5 0 =
+ *.eye6 0 =
+start
+ -1 .focuseye store
+stop
+
+cond
+ *.eye5 0 =
+ *.eye6 0 !=
+start
+ 1 .focuseye store
+stop
+
+cond
+ *.eye5 0 !=
+start
+ 0 .focuseye store
+stop
+
+cond
+ *.eyef 0 =
+ *.shang 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimsx store
+stop
+
+cond
+ *.eyef 0 =
+ *.refeye *.myeye = or
+ *.shang 0 !=
+start
+ *.shang .setaim store
+stop
+
+'conspec tie-breaking
+
+cond
+ *.tmemval *.out1 =
+start
+ *.tiepres .deltie store
+stop
+
+'default feeding
+
+cond
+ *.in1 *.out1 !=
+ *.eye5 40 >
+start
+ 16 .shootval store
+ -6 .shoot store
+stop
+
+'alternative feeding for bots that hide in shells
+
+cond
+ *.in1 *.out1 !=
+ *.eye5 40 >
+ *.refshell 0 >
+ *.refpoison 0 =
+start
+ -1 .shoot store
+stop
+
+'eat closer food more quickly
+
+cond
+ *.eye5 60 >
+start
+ 64 .shootval store
+stop
+
+'waste disposal
+
+cond
+ *.waste 100 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+'reproduction
+
+cond
+ *.nrg 5000 >
+start
+ 50 .repro store
+stop

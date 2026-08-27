@@ -1,0 +1,328 @@
+ 'SmartShooter: A bot by googlyeyesultra.
+ 
+ 'Springy Birth-ties + Self-Virus Protection
+ cond
+ *.robage 0 =
+ start
+ 0 .stifftie store
+ 65 999 store
+ *.myeye *.myshoot add 998 store
+ stop
+ 
+ 'Conspec
+ cond
+ *.refeye *.refshoot add *997 !=
+ start
+ *.refeye *.refshoot add 997 store
+ stop
+ 
+ 'Set Poison
+ cond
+ *.ploc .shoot !=
+ start
+ .shoot .ploc store
+ stop
+ 
+ 'Reproduce
+ cond
+ *.nrg 5000 >
+ *.body 1000 >
+ *.eye5 40 <
+ start
+ 50 .repro store
+ stop
+ 
+ 'Targeting
+ cond
+ *.hit 0 !=
+ *.shang 90 add 180 <=
+ start
+ 0 .hit store
+ *.shang 90 add .aimdx store
+ stop
+ 
+ cond
+ *.hit 0 !=
+ *.shang 90 add 180 >
+ start
+ 0 .hit store
+ 360 *.shang sub 90 add .aimsx store
+ stop
+ 
+ cond
+ *.eye1 *.eye2 >=
+ *.eye1 *.eye3 >=
+ *.eye1 *.eye4 >=
+ *.eye1 *.eye5 >=
+ *.eye1 *.eye6 >=
+ *.eye1 *.eye7 >=
+ *.eye1 *.eye8 >=
+ *.eye1 *.eye9 >=
+ start
+ mult -140
+ stop
+ 
+ cond
+ *.eye9 *.eye2 >=
+ *.eye9 *.eye3 >=
+ *.eye9 *.eye4 >=
+ *.eye9 *.eye5 >=
+ *.eye9 *.eye6 >=
+ *.eye9 *.eye7 >=
+ *.eye9 *.eye8 >=
+ *.eye9 *.eye1 >=
+ start
+ mult 140
+ stop
+ 
+ cond
+ *.eye2 *.eye9 >=
+ *.eye2 *.eye3 >=
+ *.eye2 *.eye4 >=
+ *.eye2 *.eye5 >=
+ *.eye2 *.eye6 >=
+ *.eye2 *.eye7 >=
+ *.eye2 *.eye8 >=
+ *.eye2 *.eye1 >=
+ start
+ mult -105
+ stop
+ 
+ cond
+ *.eye8 *.eye9 >=
+ *.eye8 *.eye3 >=
+ *.eye8 *.eye4 >=
+ *.eye8 *.eye5 >=
+ *.eye8 *.eye6 >=
+ *.eye8 *.eye7 >=
+ *.eye8 *.eye2 >=
+ *.eye8 *.eye1 >=
+ start
+ mult 105
+ stop
+ 
+ cond
+ *.eye3 *.eye9 >=
+ *.eye3 *.eye8 >=
+ *.eye3 *.eye4 >=
+ *.eye3 *.eye5 >=
+ *.eye3 *.eye6 >=
+ *.eye3 *.eye7 >=
+ *.eye3 *.eye2 >=
+ *.eye3 *.eye1 >=
+ start
+ mult -70
+ stop
+ 
+ cond
+ *.eye7 *.eye9 >=
+ *.eye7 *.eye8 >=
+ *.eye7 *.eye4 >=
+ *.eye7 *.eye5 >=
+ *.eye7 *.eye6 >=
+ *.eye7 *.eye3 >=
+ *.eye7 *.eye2 >=
+ *.eye7 *.eye1 >=
+ start
+ mult 70
+ stop
+ 
+ cond
+ *.eye4 *.eye9 >=
+ *.eye4 *.eye8 >=
+ *.eye4 *.eye7 >=
+ *.eye4 *.eye5 >=
+ *.eye4 *.eye6 >=
+ *.eye4 *.eye3 >=
+ *.eye4 *.eye2 >=
+ *.eye4 *.eye1 >=
+ start
+ mult -35
+ stop
+ 
+ cond
+ *.eye6 *.eye9 >=
+ *.eye6 *.eye8 >=
+ *.eye6 *.eye7 >=
+ *.eye6 *.eye5 >=
+ *.eye6 *.eye4 >=
+ *.eye6 *.eye3 >=
+ *.eye6 *.eye2 >=
+ *.eye6 *.eye1 >=
+ start
+ mult 35
+ stop
+ 
+ cond
+ *997 *998 !=
+ *.eye5 *.eye9 >=
+ *.eye5 *.eye8 >=
+ *.eye5 *.eye7 >=
+ *.eye5 *.eye6 >=
+ *.eye5 *.eye4 >=
+ *.eye5 *.eye3 >=
+ *.eye5 *.eye2 >=
+ *.eye5 *.eye1 >=
+ start
+ *.refveldx *.veldx sub .dx store
+ 5000 *.eye5 div *.refvelup add *.velup sub .up store
+ *.refxpos *.refypos angle .setaim store
+ mult
+ stop
+ 
+ cond
+ start
+ .aimdx store
+ stop
+ 
+ 'Veggie Feed
+ cond
+ *997 *998 !=
+ *997 0 =
+ *.eye5 30 >
+ *.refnrg 10 mult *.refbody >=
+ start
+ -1 .shoot store
+ stop
+ 
+ cond
+ *997 *998 !=
+ *997 0 =
+ *.eye5 30 >
+ *.refbody *.refnrg 10 mult >
+ start
+ -6 .shoot store
+ stop
+ 
+ 'Enemy Kill
+ cond
+ *997 0 !=
+ *997 *998 !=
+ *.eye5 30 >
+ *.refnrg 10 mult *.refbody <=
+ start
+ -1 .shoot store
+ stop
+ 
+ cond
+ *997 0 !=
+ *997 *998 !=
+ *.eye5 30 >
+ *.refbody *.refnrg 10 mult <
+ start
+ -6 .shoot store
+ stop
+ 
+ 'Body to Energy Conversion
+ cond
+ *.nrg 2000 <
+ start
+ 100 .fdbody store
+ stop
+ 
+ 'Energy to Body Conversion
+ cond
+ *.nrg 1.3 div *.body  >
+ *.nrg 3000 >
+ *.body 1500 <
+ start
+ 100 .strbody store
+ stop
+ 
+ 'Waste Removal
+ cond
+ *.waste 50 >=
+ start
+ -4 .shoot store
+ *.waste .shootval store
+ stop
+ 
+ 'Some various code defenses
+ cond
+ *.in1 0 !=
+ *.in1 *.out1 !=
+ start
+ *.in1 .out1 store
+ stop
+ 
+ cond
+ *.in2 0 !=
+ *.in2 *.out2 !=
+ start
+ *.in2 .out2 store
+ stop
+ 
+ cond
+ *.fixed 0 !=
+ start
+ 0 .fixpos store
+ stop
+ 
+ cond
+ *.numties 0 >
+ start
+ *.tiepres .deltie store
+ stop
+ 
+ cond
+ *.delgene 0 !=
+ start
+ 0 .delgene store
+ stop
+ 
+ cond
+ *.shoot -2 =
+ start
+ 0 .shoot store
+ stop
+ 
+ 'Defenses
+ cond
+ cond
+ *.nrg 1000 >
+ *.shell 500 <
+ start
+ 500 *.shell sub 100 ceil .mkshell store
+ stop
+ 
+ cond
+ *.nrg 1000 >
+ *.poison 500 <
+ start
+ 500 *.poison sub 100 ceil .strpoison store
+ stop
+ 
+ cond
+ *.nrg 1000 >
+ *.slime 500 <
+ start
+ 500 *.slime sub 100 ceil .mkslime store
+ stop
+ 
+ 'Shoot Virii
+ cond
+ *.nrg 2000 >
+ *.vtimer 1 =
+ start
+ 50 .vshoot store
+ stop
+ 
+ 'Make Virii
+ cond
+ *.vtimer 0 =
+ start
+ *.thisgene 1 add .mkvirus store
+ stop
+ 
+ 'Virus
+ cond
+ 65 *999 !=
+ start
+ *.thisgene .mkvirus store
+ *.myeye *.myshoot add 32000 mult 50 add 32000 ceil .vshoot store
+ .delgene dec
+ stop
+ 
+ 'End of Program
+ end
+ 

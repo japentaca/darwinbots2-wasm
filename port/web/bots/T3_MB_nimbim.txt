@@ -1,0 +1,333 @@
+'T3 multibot
+'
+'
+
+def bodypart 50
+'0 limb 1
+'1 head
+'2 limb 2
+def split 52
+def lonely 54
+
+'identity
+cond
+  *.robage 0 =
+start
+  41 .out1 store
+  0 .out2 store
+  .tie inc
+  .shoot .ploc store
+  -2 .pval store
+stop
+
+'antistuck
+cond
+  *.vel 0 =
+  *.numties 0 =
+  *.multi 0 =
+start
+  314 rnd .aimdx store
+  30 .dn store
+  .lonely inc
+stop
+
+cond
+  *.lonely 3 >
+start
+  *.tiepres .deltie store
+  70 .up store
+  0 .bodypart store
+  0 .split store
+  0 .out2 store
+  0 .lonely store
+stop
+  
+
+'split
+cond
+  *.nrg 20000 >
+start
+  *.tiepres .deltie store
+  1256 rnd .aimdx store
+  70 .up store
+  0 .bodypart store
+  0 .split store
+  0 .out2 store
+  0 .lonely store
+stop
+
+'duplicate
+cond
+  *.numties 0 =
+  *.robage 5 mod 0 =
+  *.robage 0 !=
+  *.bodypart 0 =
+  *.eye5 60 <
+start
+  50 .repro store
+  .bodypart inc
+stop
+
+
+'head
+'form limb 2
+cond
+  *.bodypart 1 =
+  *.multi 1 =
+  *.tiepres 1 =
+  *.robage 21 mod 0 =
+  *.split 0 =
+start
+  418 .aimdx store
+  50 .repro store
+  .split inc
+  3 .out2 store
+stop
+
+
+'limb 1
+'turn into limb 2
+cond
+  *.robage 1 =
+  *.in2 3 =
+start
+  2 .bodypart store
+stop
+
+'virus
+cond
+  *.bodypart 0 =
+  *.multi 1 =
+  *.nrg 1500 >=
+  *.vtimer 0 =
+start
+  *.thisgene 1 add .mkvirus store
+  100 .vshoot store
+stop
+
+cond
+  *.out1 41 !=
+start
+  *.thisgene .mkvirus store
+  200 .vshoot store
+  1 .fixpos store
+  -2 .shoot store
+stop
+
+'shell
+cond
+  *.bodypart 0 =
+  *.multi 1 =
+  *.nrg 4500 >
+  *.shell 150 <
+  *.body 500 >
+start
+  100 .mkshell store
+stop
+
+'slime
+cond
+  *.bodypart 0 =
+  *.multi 1 =
+  *.nrg 4500 >
+  *.slime 150 <
+  *.body 500 >
+start
+  100 .mkslime store
+stop
+
+'poison l1
+cond
+  *.bodypart 0 =
+  *.multi 1 =
+  *.nrg 3500 >
+  *.poison 2000 <
+  *.body 500 >
+start
+  100 .strpoison store
+stop
+
+
+
+'limb 2
+'waste
+cond
+  *.bodypart 2 =
+  *.multi 1 =
+  *.waste 200 >=
+  *.in1 41 !=
+start
+  -4 .shoot store
+  *.waste .shootval store
+stop
+
+'poison l2
+cond
+  *.bodypart 2 =
+  *.multi 1 =
+  *.nrg 3500 >
+  *.poison 2000 <
+  *.body 500 >
+start
+  100 .strpoison store
+stop
+
+'multibotness
+'l1
+cond
+  *.multi 1 =
+  *.bodypart 0 =
+start
+  50 .sharenrg store
+  50 .shareshell store
+  50 .shareslime store
+  1 .fixlen store
+  100 .stifftie store
+  628 .fixang store
+stop
+
+cond
+  *.multi 1 =
+  *.bodypart 0 =
+  *.waste 400 >=
+start
+  1 .sharewaste store
+stop
+
+'head
+cond
+  *.multi 1 =
+  *.bodypart 1 =
+start
+  33 .sharenrg store
+  33 .shareshell store
+  33 .shareslime store
+  1 .fixlen store
+  100 .stifftie store
+  628 .fixang store
+stop
+
+'limb2
+cond
+  *.multi 1 =
+  *.bodypart 2 =
+start
+  50 .sharenrg store
+  50 .shareshell store
+  50 .shareslime store
+  99 .sharewaste store
+  1 .fixlen store
+  100 .stifftie store
+  942 .fixang store
+stop
+
+
+
+'GROW
+cond
+  *.nrg 4000 >
+  *.body 600 <
+start
+  100 .strbody store
+stop
+
+'STARVE
+cond
+  *.nrg 1000 <
+  *.body 40 >
+start
+  100 .fdbody store
+stop
+
+cond
+  *.nrg 30000 <
+  *.body 620 >
+start
+  100 .fdbody store
+stop
+
+'search
+'push
+cond
+  *.bodypart 1 =
+  *.multi 1 =
+  *.vel 6 <=
+  *.eye5 0 =
+  *.in1 41 = or
+start
+  50 .up store
+stop
+
+'spin
+cond
+  *.vel 18 >=
+  *.multi 1 =
+  *.bodypart 1 =
+  *.eye5 0 =
+  *.in1 41 = or
+start
+  314 rnd .aimdx store
+stop
+
+'find
+cond
+  *.eye5 0 >
+  *.in1 41 !=
+  *.bodypart 1 =
+  *.multi 1 =
+start
+  *.refveldx .dx store
+  *.refvelup 30 add .up store
+stop
+
+
+'eat
+'head
+cond
+  *.eye5 50 >
+  *.in1 41 !=
+  *.multi 1 =
+  *.bodypart 1 =
+  *.refbody 400 <
+start
+  -1 .shoot store
+  8 .shootval store
+  *.refvelup .up store
+stop
+
+cond
+  *.eye5 50 >
+  *.in1 41 !=
+  *.multi 1 =
+  *.bodypart 1 =
+  *.refbody 400 >=
+start
+  -6 .shoot store
+  8 .shootval store
+  *.refvelup .up store
+stop
+
+'limbs
+cond
+  *.eye5 50 >
+  *.in1 41 !=
+  *.multi 1 =
+  *.bodypart 1 !=
+  *.refbody 400 <
+start
+  -1 .shoot store
+  8 .shootval store
+stop
+
+cond
+  *.eye5 50 >
+  *.in1 41 !=
+  *.multi 1 =
+  *.bodypart 1 !=
+  *.refbody 400 >=
+start
+  -6 .shoot store
+  8 .shootval store
+stop
+
+end  

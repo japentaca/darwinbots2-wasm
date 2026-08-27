@@ -1,0 +1,220 @@
+' Darth Shimazu.
+' "The Dark side has come. 
+' Muhahaha. Poor Shimazu, I knew
+' that weakling would fall for
+' the dark side..."
+' This bot is the dark side version of
+' Shimazu. It eats all but his friends
+' By Henk
+
+' ********************************* General Genes *********************************
+
+'reset out1 when no-one is in sight
+cond
+*.eye5 0 =
+*.in1 11 =
+start
+0 .in1 store
+stop
+
+'reproduce
+cond
+*.nrg 4500 >
+*.robage 50 >
+start
+50 .repro store
+628 .aimsx store
+stop
+
+
+
+' ***************************** Battle genes****************************************
+
+' kill with standard shooting routine
+cond
+*.eye5 0 >
+*.in1 11 !=
+start
+-1 .shoot store
+stop
+
+' ************************** nonsense genes to identify, so trefshoot=5**************
+
+' Nonsense
+cond
+*.nrg 2 =
+start
+-3 .shoot store
+stop
+
+' Nonsense
+cond
+*.nrg 1 =
+start
+-3 .shoot store
+stop
+
+' Nonsense
+cond
+*.nrg 3 =
+start
+-1 .shoot store
+stop
+
+' Very important gene that controls the whole of the bot 
+cond
+*.nrg 4 =
+start
+-1 .shoot store
+stop
+
+' **********************************TIE Genes****************************************
+
+' Engage tie
+cond
+*.eye5 30 >
+*.in1 11 !=
+start
+31 .tie store
+stop
+
+' Feed through tie
+cond 
+*.numties 0 >
+start
+31 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+100 .sharenrg store
+stop
+
+' read the tie
+cond
+*.numties 0 >
+start
+31 .readtie store
+stop
+
+' ***************************************Move genes************************************
+' Move.
+cond
+*.vel 30 <
+start
+10 .up store
+stop
+
+' ********************* Follow Genes **************************************************
+' Follow gene 1
+cond
+*.eye1 *.eye9 !=
+*.numties 0 =
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+stop
+
+' Follow gene 2
+cond
+*.eye2 *.eye8 !=
+*.numties 0 =
+start
+*.eye8 *.eye2 sub 3 mult .aimdx store
+stop
+
+' Follow gene 3
+cond
+*.eye3 *.eye7 !=
+*.numties 0 =
+start
+*.eye7 *.eye3 sub 2 mult .aimdx store
+stop
+
+' Follow gene 4
+cond
+*.eye4 *.eye6 !=
+*.numties 0 =
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+' ******************* Species genes ****************************************************
+
+' turn away from other Darth Shimazu's
+cond
+*.in1 11 =
+*.robage 20 >
+start
+314 .aimdx store
+stop
+
+'Identify as Darth Shimazu
+cond
+*.out1 11 !=
+start
+11 .out1 store
+stop
+
+' delete tie to fellow Darth Shimazu
+cond
+*.trefshoot 5 =
+*.numties 0 >
+start
+31 .deltie store
+stop
+
+' *******************Reaction genes******************************************************
+
+' right reaction gene
+cond
+*.shdx -1 =
+start
+314 .aimdx store
+31 .tie store
+stop
+
+' Left reaction gene
+cond
+*.shsx -1 =
+start
+-314 .aimdx store
+31 .tie store
+stop
+
+' Aft Reaction gene
+cond
+*.shdn -1 =
+start
+628 .aimdx store
+31 .tie store
+stop
+
+' Forward reaction gene; Useless
+' cond
+' *.shup -1 =
+' start
+' 31 .tie store
+' stop
+
+' ****************/reaction genes********************************************************
+
+‘ Tie to daddy on birth
+cond
+*.robage 0 =
+start
+31 .tie store
+stop
+
+‘ delete tie again. Bye daddy...
+cond
+*.robage 1 =
+start
+31 .deltie store
+stop
+
+' make small slime. Yuk
+cond
+*.slime 100 <
+start
+80 .mkslime store
+stop
+
+end

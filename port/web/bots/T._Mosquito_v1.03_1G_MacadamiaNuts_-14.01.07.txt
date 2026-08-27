@@ -1,0 +1,41 @@
+'My first (posted) bot. Tested with 2.42.9s.
+
+'name: Mosquito
+'class: One Gene Bot
+'version: 1.03
+'author: Macadamia Nuts
+'description: This bot uses ties for feeding with sharenrg. A nice offspring spreading 'guarantees tieing to all nearby targets. It's also a fast reproducer and it deletes virus. It uses 'venom shots in a nasty way to force other eyed bots to store huge amounts of venom.
+
+start
+*.in1 .out1 store
+*.in2 .out2 store
+*.refeye *.myeye sub abs sgn *.eye5 sgn mult 973 store
+80 *.nrg 3000 sub sgn 1 sub sgn 1 add .repro mult store
+107 *.nrg 3000 sub sgn 1 sub sgn 1 add .aimdx mult store
+5 *.vel 20 sub sgn 1 sub sgn abs .up mult store
+3 .tienum store
+.sharenrg .tieloc store
+1 .tieval store
+*.body *.nrg 20 div sub .fdbody store
+*.nrg 20 div *.body sub .strbody store
+1 .strvenom store
+*.nrg 2000 div sgn abs .strpoison store
+*.nrg 750 div abs .mkslime store
+*.nrg 2000 div abs .mkshell store
+.strvenom .vloc store
+1000 .venval store
+.eye5 .ploc store
+3 .tie *973 mult store
+*.thisgene 1 add .delgene store
+*.thisgene 1 sub .delgene *.thisgene sgn mult store
+*.waste .shootval *.waste 100 div abs sgn mult store
+-6 *973 .shoot mult store
+-3 *973 .shoot mult *.refeye sgn mult store
+-4 .shoot *.waste 100 div abs sgn mult store
+*.tiepres .deltie *.tiepres 3 sub abs sgn mult store
+*.eye9 *.eye1 sub sgn 60 mult .aimdx *973 mult store
+*.eye2 *.eye8 sub sgn 50 mult .aimsx *973 mult store
+*.eye7 *.eye3 sub sgn 40 mult .aimdx *973 mult store
+*.eye4 *.eye6 sub sgn 30 mult .aimsx *973 mult store
+stop
+end

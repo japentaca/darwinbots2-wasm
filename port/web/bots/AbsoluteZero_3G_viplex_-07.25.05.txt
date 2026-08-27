@@ -1,0 +1,19 @@
+cond
+*.nrg 8000 >
+start
+40 .repro store
+stop
+
+cond
+*.refeye *.myeye !=
+start
+*.eye5 5 div 4 add .up store 
+-1 .shoot store
+*.eye1 *.eye9 sub .aimsx store 
+stop
+
+cond
+start
+1 .up store
+1 .aimdx store
+stop

@@ -1,0 +1,169 @@
+' Lisa_Vegetarius bot
+' "Spicy" Veterian bot
+' It doesn't eat his enemies, he just kills them.
+
+' Can't remember who programmed this one
+
+' Count when there are ties active
+cond
+*.numties 0 >
+start
+40 inc
+stop
+
+' Let opponent bot store his energy value in .shootval
+cond
+*.numties 0 >
+*40 1 =
+*.robage 3 >
+*.trefeye 20 !=
+*.nrg 6000 <
+start
+1 .tienum store
+.shootval .tieloc store
+*.trefnrg 2 mult .tieval store
+stop
+
+' Forcing opponent to shoot away it's energy.
+cond
+*.numties 0 >
+*40 2 =
+*.robage 3 >
+*.trefeye 20 !=
+*.nrg 6000 <
+start
+1 .tienum store
+.shoot .tieloc store
+-2 .tieval store
+stop
+
+' Reset count
+cond 
+*40 2 =
+*.numties 0 >
+start
+0 40 store
+stop
+
+' Tie to opponent
+cond
+*.eye5 30 >
+*.in1 7 !=
+*.refshoot 0 !=
+*.robage 3 >
+*.numties 0 =
+start
+1 .tie store
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+-100 .aimdx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+100 .aimdx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+-50 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+50 .aimdx store
+stop
+
+' Follow close left
+cond
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+start
+-26 .aimdx store
+stop
+
+' Follow close right
+cond
+*.eye6 *.eye5 >
+*.eye6 *.eye4 >
+start
+26 .aimdx store
+stop
+
+' Don't turn when something is in sight
+cond
+*.eye5 0 >
+*.in1 7 !=
+start
+0 .aimdx store
+stop
+
+' Eat vegs
+cond
+*.eye5 0 >
+*.refshoot 0 =
+*.in1 7 !=
+start
+-1 .shoot store
+stop
+
+' G13: Move 
+cond
+*.numties 0 =
+*.hitup 0 =
+start
+40 *.vel sub .up store
+stop
+
+' Tie to father
+cond
+*.robage 0 =
+start
+1 .tie store
+1 .readtie store
+7 .out1 store
+stop
+
+' Delete tie to father
+cond
+*.robage 1 =
+start
+1 .deltie store
+stop
+
+' Turn away from friends
+cond
+*.robage 3 >
+*.eye5 0 >
+*.in1 7 =
+start
+314 .aimdx store
+stop
+
+'turn back to food source
+cond
+*56 1 =
+start
+628 .aimdx store
+56 dec
+stop
+
+' Reproduce
+cond
+*.nrg 6000 >
+start
+628 .aimdx store
+50 .repro store
+56 inc
+stop
+end

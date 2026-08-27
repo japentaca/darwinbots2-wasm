@@ -231,6 +231,15 @@ propio, con color a elección), guardar/cargar sim (formato binario de VB6
 como archivo `.dbsim`) y crear un teleporter local. La barra de stats
 muestra ticks/s, fps y el costo de `draw()`.
 
+El selector de especies incluye además el **Bestiary del foro oficial**:
+`web/bots/bots.json` indexa los bots bajados de forum.darwinbots.com
+(545 en la corrida del 2026-08-26, agrupados por sub-board: F1/F2/F3,
+Short, Multi-Bots, Veggies, …), cada uno validado sembrándolo con el
+propio `dbcore.wasm`. Los de Veggies se siembran como vegetales. El
+archivador que los baja/valida/publica vive en `tools/bestiary/` (ver su
+README); si `bots.json` no está, la página funciona igual con los dos
+presets de siempre.
+
 Medido en esta máquina (Chrome, campo 32000², velocidad máx): con ~2000
 bots el `draw()` de Canvas 2D cuesta ~4 ms/frame mientras el tick del core
 cuesta ~160 ms — el cuello es la sim, no el render, así que **WebGL no

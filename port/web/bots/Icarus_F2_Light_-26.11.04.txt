@@ -1,0 +1,268 @@
+'Icarus
+'designed for F2 (db 2.33)
+'by Light
+'26/11/04
+
+'***********
+'* turning *
+'***********
+
+cond
+*.eye1 0 =
+*.eye2 0 =
+*.eye3 0 =
+*.eye4 0 =
+*.eye5 0 =
+*.eye6 0 =
+*.eye7 0 =
+*.eye8 0 =
+*.eye9 0 =
+start
+10 .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+start
+20 *.vel add 1 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye6 *.eye5 >
+*.eye6 *.eye4 >
+start
+20 *.vel add -1 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye3 *.eye4 >
+*.eye3 *.eye5 >
+*.eye3 *.eye6 >
+*.eye3 *.eye7 >
+*.eye5 0 =
+start
+20 *.vel add 2 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye7 *.eye6 >
+*.eye7 *.eye5 >
+*.eye7 *.eye4 > 
+*.eye7 *.eye3 >
+*.eye5 0 =
+start
+20 *.vel add -2 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye2 *.eye3 >
+*.eye2 *.eye4 >
+*.eye2 *.eye5 >
+*.eye2 *.eye6 >
+*.eye2 *.eye7 >
+*.eye2 *.eye8 >
+*.eye5 0 =
+start
+20 *.vel add 3 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye8 *.eye7 >
+*.eye8 *.eye6 >
+*.eye8 *.eye5 >
+*.eye8 *.eye4 >
+*.eye8 *.eye3 >
+*.eye8 *.eye2 >
+*.eye5 0 =
+start
+20 *.vel add -3 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.eye1 *.eye5 >
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >
+*.eye5 0 =
+start
+20 *.vel add 4 mult .aimsx store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye9 *.eye8 >
+*.eye9 *.eye7 >
+*.eye9 *.eye6 >
+*.eye9 *.eye5 >
+*.eye9 *.eye4 >
+*.eye9 *.eye3 >
+*.eye9 *.eye2 >
+*.eye9 *.eye1 >
+*.eye5 0 =
+start
+20 *.vel add -4 mult .aimsx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+*.refaimsx *.myaimsx !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+'************
+'* shooting *
+'************
+
+cond
+*.eye5 30 >
+*.refaimsx *.myaimsx !=
+start
+-6
+.shoot
+store
+stop
+
+cond
+*.refaimsx *.myaimsx !=
+*.shup 0 <
+*.shup -2 !=
+start
+.aimdx
+.shoot
+store
+300
+.shootval
+store
+stop
+
+cond
+*.shdn -1 =
+start
+1 .backshoot store
+-6 .shoot store
+stop
+
+'****************
+'* Reproduction *
+'****************
+
+cond
+*50 1 =
+start
+628 .aimdx store
+0 50 store
+stop
+
+cond
+*.nrg 5000 >
+*.eye5 50 <
+start
+628 .aimdx store
+60 .repro store
+1 50 store
+stop
+
+' go fourth and multiply
+cond
+*.robage 1 >
+*.robage 3 <
+*.nrg 500 >
+start
+40 .repro store
+150 .aimdx store
+stop
+
+' Break birth tie
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+cond
+*.robage 1 =
+start
+1 .deltie store
+628 .aimdx store
+stop
+
+'********
+'* Body *
+'********
+
+cond
+*.body 20 >
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.body 1000 <
+*.nrg 1100 >
+*.robage 2 >
+start
+100 .strbody store
+stop
+
+'**********
+'* moving *
+'**********
+
+cond
+*.vel *.maxvel <
+*.numties 0 =
+*.eye5 40 <
+*.robage 1 >
+start
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.eye5 40 >
+*.robage 1 >
+*.refaimdx 1 =
+*.refaimsx *.myaimsx !=
+start
+' *.vel 2 div -1 mult .up store
+1 .fixpos store
+stop
+
+'*********
+'* defense *
+'*********
+cond
+*.numties 0 >
+*.robage 2 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+*.tienum .deltie store
+*.tieval 1000 div .tieloc store
+stop
+
+cond
+start
+0 .delgene store
+stop
+end

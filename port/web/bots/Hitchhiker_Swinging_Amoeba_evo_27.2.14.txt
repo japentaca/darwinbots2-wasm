@@ -1,0 +1,304 @@
+*.tiepres 0 >
+ start
+ *.tiepres 455 1000 .tieval dec
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  10  '''''''''''''''''''''''
+ cond
+ *.robage 0 =
+ start
+ .tie inc
+ 7 .memloc store
+ 7 .vloc store
+ -2 .venval store
+ 7 .ploc store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  30  '''''''''''''''''''''''
+ cond
+ *.robage 1 =
+ start
+ .deltie inc
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  38  '''''''''''''''''''''''
+ cond
+ *.waste 500 >
+ start
+ *.waste .shootval store
+ -4 .shoot store
+ 0 .shflav store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  53  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye1 *.eye2 >=
+ *.eye1 *.eye3 >=
+ *.eye1 *.eye4 >=
+ *.eye1 *.eye5 >=
+ *.eye1 *.eye6 >=
+ *-668 *.eye1 *.eye7 >=
+ *.eye1 *.eye8 >=
+ *.eye1 *.eye9 >=
+ start
+ mult -140 stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  86  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye9 *.eye2 >=
+ *.eye9 *.eye3 >=
+ *.eye9 *.eye4 >=
+ *.eye9 *.eye5 >=
+ *.eye9 *.eye6 >=
+ *.eye9 *.eye7 *.eye8 *.eye9 >=
+ >=
+ *.eye9 *.eye1 >=
+ start
+ mult 140 stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  118  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye2 *.eye9 >=
+ *.eye2 *.eye3 >=
+ *.eye2 *.eye4 >=
+ *.eye2 *.eye5 >=
+ *.eye2 *.eye6 >=
+ *.eye2 *.eye7 >=
+ *.eye2 *.eye8 >=
+ *.eye2 *.eye1 >=
+ start
+ mult -105 stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  150  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye8 *.eye9 >=
+ *.eye8 *.eye3 >=
+ *.eye8 *.eye4 *.eye8 *.eye5 >=
+ *.eye8 *.eye6 >=
+ *.eye8 *.eye7 >=
+ *.eye8 *.eye2 >=
+ *.eye8 *.eye1 >=
+ start
+ mult 105 stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  181  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye3 *.eye9 >=
+ *.eye3 *.eye8 >=
+ *.eye3 *.eye4 >=
+ *.eye3 *.eye5 >=
+ *.eye3 *.eye6 >=
+ *.eye3 *.eye7 >=
+ *.eye3 *.eye2 >=
+ *.eye3 over *.eye1 >=
+ start
+ mult *.refeye *.myeye !=
+ *.eye7 *.eye9 >=
+ *.eye7 *.eye8 >=
+ *.eye7 *.eye4 >=
+ *.eye7 *.eye5 >=
+ *.eye7 *.eye6 >=
+ *.eye7 *.eye3 >=
+ *.eye7 *.eye2 >=
+ *.eye7 *.eye1 >=
+
+''''''''''''''''''''''''  Gene:  9 Ends at position  239  ''''''''''''''''''''''' start
+ mult 70 stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  243  '''''''''''''''''''''''
+ cond
+ *.eye9 *.eye4 !=
+ *.myeye *.refeye >=
+ *.eye4 *.eye8 *.eye4 *.eye7 >=
+ *.eye4 *.eye5 >=
+ *.eye4 *.eye6 >=
+ *.eye3 >=
+ *.eye4 *.eye2 >=
+ *.eye4 *.eye1 >=
+ start
+ mult -35 stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  273  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye6 *.eye9 >=
+ *.eye6 *.eye8 >=
+ *.eye6 *.eye7 >=
+ *.eye6 *.eye5 >=
+ *.eye6 *.eye4 >=
+ *.eye6 *.eye3 >=
+ *.eye6 *.eye2 >=
+ *.eye6 *.eye1 >=
+ start
+ mult 35 stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  305  '''''''''''''''''''''''
+ cond
+ *.refeye *.myeye !=
+ *.eye5 *.eye9 >=
+ *.eye5 *.eye8 >=
+ *.eye5 *.eye7 >=
+ *.eye5 *.eye6 >=
+ *.eye5 *.eye4 >=
+ *.eye5 *.eye3 >=
+ *.eye5 *.eye2 >=
+ *.eye5 *.eye1 >=
+ start
+ mult stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  336  '''''''''''''''''''''''
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye =
+ start
+ mult 900 rnd 100 add 100 .up store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  353  '''''''''''''''''''''''
+ cond
+ *.eye1 =
+ 0 *.eye2 =
+ pyth 0 *.eye3 =
+ 0 *.eye4 =
+ 0 *.eye5 =
+ 0 *.eye6 =
+ 0 *.eye7 =
+ 0 *.eye8 =
+ 0 *.eye9 =
+ 0 *.robage 50 mod >=
+ 0 start
+ mult 900 rnd 100 add stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  394  '''''''''''''''''''''''
+ cond
+ -2 *.shoot =
+ 0 *.eye5 *.dx *.refeye *.myeye !=
+ start
+ store
+ mult 900 rnd 100 add stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  412  '''''''''''''''''''''''
+ cond
+ *.nrg 5100 >
+ start
+ abs 628 50 inc
+ <
+ .repro store
+ 100 .strbody store
+ >
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  429  '''''''''''''''''''''''
+ cond
+ *50 0 >
+ start
+ mult 628 50 dec
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  439  '''''''''''''''''''''''
+ cond
+ start
+ .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  444  '''''''''''''''''''''''
+ cond
+ *.eye1 =
+ 0 *.eye2 =
+ 0 *.eye3 >
+ 0 *.eye4 =
+ 0 *.eye5 =
+ 0 *.eye6 =
+ 0 *.eye7 =
+ 0 *.eye8 =
+ 0 *.eye9 =
+ 0 else
+ 100 .aimleft store
+ stop
+''''''''''''''''''''''''  Gene:  20 Ends at position  477  '''''''''''''''''''''''
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.refvelup 30 add *.up dec
+ stop
+''''''''''''''''''''''''  Gene:  21 Ends at position  499  '''''''''''''''''''''''
+ cond
+ *.eye5 25 >
+ *.refeye *.myeye !=
+ *.memval -2 !=
+ *.refeye -4 !=
+ start
+ 50 .shootval store
+ -3 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  22 Ends at position  520  '''''''''''''''''''''''
+ cond
+ *.eye5 25 >
+ *.refeye *.myeye !=
+ -2 sub sgn abs 1 sub 16 mult *.refeye 0 sub sgn abs 1 sub -1 mult add sgn abs 1 =
+ *.refpoison *.refshell 1 start
+ 16 .shootval store
+ -6 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  23 Ends at position  560  '''''''''''''''''''''''
+ cond
+ *.eye5 25 >
+ *.refeye *.myeye !=
+ *.memval sgn sub -2 abs 1 sub -1 mult *.refeye 0 sub sqr sgn abs 1 sub -1 sgn abs 1 =
+ *.refpoison *.refshell <
+ start
+ 16 .shootval store
+ -1 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  24 Ends at position  600  '''''''''''''''''''''''
+ cond
+ *.shflav 0 !=
+ *.refpoison *.refshell <
+ *.memval -2 =
+ start
+ *222 .aimshoot store
+ 32 .shootval store
+ -1 .shoot store
+ 0 .shflav store
+ stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  624  '''''''''''''''''''''''
+ cond
+ !=
+ 0 *.shflav *.refpoison *.refshell inc
+ *.memval -2 =
+ start
+ *.shang .aimshoot store
+ 32 .shootval store
+ -6 .shoot store
+ 0 .shflav store
+ stop
+''''''''''''''''''''''''  Gene:  26 Ends at position  648  '''''''''''''''''''''''
+ cond
+ false
+ *.shflav 0 !=
+ *.memval -2 !=
+ start
+ *.shang .aimshoot store
+ 25 .shootval store
+ -3 .shoot store
+ 0 .shflav store
+ stop
+''''''''''''''''''''''''  Gene:  27 Ends at position  670  '''''''''''''''''''''''
+ cond
+ *.venom clear <
+ *.nrg 1000 >
+ start
+ 50 .strvenom store
+ stop
+''''''''''''''''''''''''  Gene:  28 Ends at position  682  '''''''''''''''''''''''
+ cond
+ *.poison 500 1000 *.nrg <
+ >
+ start
+ 50 .mkpoison store
+ stop
+''''''''''''''''''''''''  Gene:  29 Ends at position  694  '''''''''''''''''''''''
+ cond
+ *.shell 300 <
+ *.nrg 1016 >
+ start
+ 38 .mkshell store
+ stop
+''''''''''''''''''''''''  Gene:  30 Ends at position  706  '''''''''''''''''''''''
+ start
+ *.fixed 1 =
+
+''''''''''''''''''''''''  Gene:  31 Ends at position  710  ''''''''''''''''''''''' start
+ .fixpos dec
+ stop
+''''''''''''''''''''''''  Gene:  32 Ends at position  714  '''''''''''''''''''''''

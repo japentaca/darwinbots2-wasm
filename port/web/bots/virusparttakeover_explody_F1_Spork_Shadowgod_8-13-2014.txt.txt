@@ -1,0 +1,133 @@
+'Animal_Minimalis
+'By: Nums
+'Good for mutation sims and for
+'newbies to see how a basic bot works.
+'Contains everything necessary for it
+'to survive and reproduce.
+
+' Gene 1 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ *.reftype 0 =
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 2 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.reftype 0 =
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 3 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+ *.reftype 0 =
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 4 Reproduce
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+cond
+start
+*.genes *.thisgene *.genes sub sgn 1 add sub .delgene *20 sgn - 1 add mult store
+20 inc
+*.chlr .rmchlr store
+.tie *.refeye *.myeye sgn abs mult inc
+*.eye7 *.eye3 sub .aimdx store
+10 .up store
+0 .aimsx store
+50 .mkslime 50 *.slime sub sgn 0 floor mult store
+*.thisgene .mkvirus store
+1 .vshoot store
+stop
+
+'/*****proper reproduction 1
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+  'if time to reproduce store it
+  1
+  972
+  store
+stop
+
+cond
+  '/after robot reproduces it reproduces more until energy less then 3000
+  *972
+  1
+  =
+start
+  50
+  .repro
+  store
+stop
+
+'***** 2
+
+cond
+  *.nrg
+  3000
+  <
+start
+  0
+  972
+  store
+stop
+
+'FOLLOW THE MASS
+cond
+pain 0 =<
+start
+-10 *.eye9 sgn mult
+-10 *.eye8 sgn mult add
+-10 *.eye7 sgn mult add
+-10 *.eye6 sgn mult add
+
+10 *.eye4 sgn mult add
+10 *.eye3 sgn mult add
+10 *.eye2 sgn mult add
+10 *.eye1 sgn mult add
+
+*.aim add 1256 mod .setaim store
+
+50 *.velup sub .up store
+0 .fixpos store
+stop
+
+'MATCH SPEED
+cond
+*.eye5 0 >
+start
+50 *.velup sub .up store
+*.refveldx .dx store
+0 .fixpos store
+stop
+
+
+'MATCH DIRECTION
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim *.aim sub 2 div *.aim add .setaim store
+stop

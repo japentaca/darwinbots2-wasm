@@ -1,0 +1,170 @@
+'Etch
+'Dirty F1 virus bot by abyaly
+'For version 2.43
+'April 10, 2007
+
+
+def safety 940
+def nacho 1234
+def id 5674
+def rrr 942
+def status 53
+def ally 1
+def veggie 2
+def enemy 3
+
+cond
+'Initializing....
+  *.robage 0 =
+start
+  .tie inc
+  140 .eye5width store
+  .nacho .safety store
+  2 .mkvirus store
+  .id .out5 store
+  .shoot .ploc store
+  100 rnd .rrr store
+stop
+
+cond
+'Deadly virus!
+  *.safety .nacho !=
+start
+  *.maxvel .dn *.robage -- abs sgn -- - mult store
+  50 .repro store
+  317 .aimdx store
+  *.body .fdbody store
+  .strpoison inc
+  .shoot .ploc store
+  *.tiepres .deltie store
+stop
+
+cond
+'aim at what parent was looking at before it reproduced
+  *.robage 1 =
+start
+  .deltie inc
+  314 .aimdx store
+stop
+
+cond
+'nothing interesting? run away!
+  *.robage 2 =
+  *.eye5 0 =
+  *.in5 .id = or
+start
+  *.maxvel .dn store
+stop
+
+cond
+'I see something..   what is it?
+  *.eye5 0 >
+start
+'Oh, you. Hi again, I guess.
+  .ally 
+	*.in5 .id sub sgn abs -- - mult
+	*.refbody 5 sub - sgn abs
+	*.refkills sgn -- - add sgn mult
+	*.refshell sgn -- - mult
+	*.refslime sgn -- - mult
+	*.refshoot 3 sub sgn abs -- - mult
+  .status store
+
+'Its a veggie! Let's eat it!
+  .veggie .status 
+	*.status .ally sub sgn abs mult
+	*.refshoot sgn -- - mult
+	*.refaimsx sgn -- - mult
+	*.refshell sgn -- - mult
+	*.refslime sgn -- - mult
+	*.refvenom sgn -- - mult
+	*.refkills sgn -- - mult
+	*.refeye sgn -- - mult
+	*.refup sgn -- - mult
+  store
+
+'You're not my race and you're not food.. you must be trying to kill me!
+  .enemy .status 
+	*.status .ally sub sgn abs mult
+	*.status .veggie sub sgn abs mult
+  store
+stop
+
+cond
+'Let's spin around and move until we see something interesting
+  *.status .ally =
+  *.eye5 0 = or
+  *.robage 2 >
+start
+  317 .aimdx store
+  *.robage dup 2 mod add 4 mod 2 mult
+  .up *.robage 2 mult 4 mod sgn 3 mult add store
+stop
+
+cond
+'You're not an ally, so I need to aim at you accurately
+  *.eye5 0 >
+  *.status .ally !=
+  *.robage 1 >
+start
+  *.refxpos *.refypos angle .setaim store
+  *.refvelup 80 *.eye5 sub add *.velup abs - floor .up store
+  *.refveldx .dx store
+stop
+
+cond
+'You're poisonous! Shooting you could be dangerous, so I need to fix that.
+  *.eye5 50 >
+  *.status .ally !=
+  *.refpoison 0 >
+start
+  -3 .shoot store
+  *.venom .strvenom store
+  *.venom .shootval store
+  .strpoison .vloc store
+  -1000 .venval store
+stop
+
+cond
+'Let's eat the veggie and infect it so enemies cant eat it.
+  *.eye5 70 >
+  *.status .veggie =
+  *.refpoison 0 =
+start
+  -1 .shoot store
+  .vshoot *.vtimer 1 sub sgn abs -- - mult inc
+stop
+
+cond
+'You're an enemy, so you must die!
+  *.eye5 50 >
+  *.status .enemy =
+  *.refpoison 0 =
+start
+  .shootval *.robage *.rrr add 5 mod 0 sub sgn abs -- - mult
+  .mkslime  *.robage *.rrr add 5 mod 1 sub sgn abs -- - mult add
+  .mkshell  *.robage *.rrr add 5 mod 2 sub sgn abs -- - mult add
+  .strvenom *.robage *.rrr add 5 mod 3 sub sgn abs -- - mult add
+  .fixpos   *.robage *.rrr add 5 mod 4 sub sgn abs -- - mult add
+  .shoot store
+  10000 .shootval store
+stop
+
+cond
+'Boring maintenance
+start
+  *.body .fdbody store
+  10 *.venom sub 0 floor .strvenom store
+  5 *.poison sub 0 floor .strpoison store
+  *.tiepres dup sgn abs .deltie mult store
+  0 .fixpos *.fixed mult store
+stop
+
+cond
+'At two cycles, I'm now old enough to reproduce.
+  *.nrg 1000 >
+  *.robage 2 >
+start
+  50 .repro store
+  317 .aimdx store
+stop

@@ -1,0 +1,90 @@
+'Animal Archaea 1.1
+ 'Author: MacadamiaNuts, 10.08.2007
+ 'Description: SS bot. It calculates first the value, any else genes are false once the first one true is found. Then it uses the same 1G conditions to drop the proper sysvar into the stack. It consumes less energy with F1 conditions than multiple store bots, and the simulation will run somewhat faster. Also it's very picky about which mutations it tolerates.
+ 
+ start
+ 
+ 'VALUE BLOCK
+ 
+ 0
+ 
+ dup sgn abs 1 sub abs
+ *.refxpos *.refypos angle *.eye5 55 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult *.refxpos *.refypos angle 60 div abs *.aim 60 div abs sub sgn abs mult  *.numties sgn 1 sub abs mult 1000 *.refnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ -6 *.eye5 55 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult *.refxpos *.refypos angle 60 div abs *.aim 60 div abs sub sgn abs 1 sub abs mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 600 600 *.eye5width sub sgn mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 50 *.nrg 1000 sub sgn 0 floor mult 50 *.eye5 sub sgn 0 floor mult *.body 250 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ *.tiepres *.numties sgn mult 500 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 99 *.numties sgn mult *.multi mult *.trefnrg 500 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 1 *.numties sgn 1 sub abs mult *.eye5 50 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 750 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 100 *.eye5 sub 2 div abs 1 add 10 *.velup sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ 10 260 *.body sub sgn 0 floor mult *.nrg 1000 sub sgn 0 floor mult
+ mult add
+ 
+ 'SYSVAR BLOCK
+ 
+ 0
+ 
+ dup sgn abs 1 sub abs
+ .setaim *.eye5 55 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult *.refxpos *.refypos angle 60 div abs *.aim 60 div abs sub sgn abs mult *.numties sgn 1 sub abs mult 1000 *.refnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .shoot *.eye5 55 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult *.refxpos *.refypos angle 60 div abs *.aim 60 div abs sub sgn abs 1 sub abs mult 
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .eye5width 600 *.eye5width sub sgn mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .repro *.nrg 1000 sub sgn 0 floor mult 50 *.eye5 sub sgn 0 floor mult *.body 250 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .deltie *.numties sgn mult 500 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .sharenrg *.numties sgn mult *.multi mult *.trefnrg 500 sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .tie *.numties sgn ~ abs mult *.eye5 50 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 750 *.trefnrg sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .up 10 *.velup sub sgn 0 floor mult
+ mult add
+ 
+ dup sgn abs 1 sub abs
+ .strbody 260 *.body sub sgn 0 floor mult *.nrg 1000 sub sgn 0 floor mult
+ mult add
+ 
+ 'STORE
+ 
+ store
+ stop

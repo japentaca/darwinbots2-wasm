@@ -1,0 +1,76 @@
+'Topic: Interesting group behaviour  
+'Group Mind Bot
+'Made by k0zm0
+'made: 4.aug.2004
+'changed :5.aug.2004
+cond
+*.robage 50 =
+start
+1256 rnd .aimsx store
+999 rnd .out1 store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.aim *.refaim sub .aimdx store
+stop
+
+cond
+*.eye5 20 >
+*.refeye 0 !=
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*.in1 0 =
+*.refeye 0 =
+*.eye5 30 >
+start
+*.out1 .shootval store
+.out1 .shoot store
+stop
+
+cond
+*.refnrg 1000 >
+*.in1 *.out1 =
+*.refeye 0 =
+*.eye5 30 >
+start
+-1 .shoot store
+stop
+
+cond
+*.in1 0 !=
+*.in1 *.out1 !=
+*.refeye 0 =
+*.eye5 30 >
+start
+-1 .shoot store
+stop
+
+cond
+*.in1 *.out1 !=
+*.refeye *.myeye =
+*.eye5 30 >
+start
+*.out1 .shootval store
+.out1 .shoot store
+stop
+
+cond
+*.vel 10 <
+start
+10 *.vel sub 2 div .up store
+stop
+
+cond
+*.nrg 6000 >
+*.eye5 50 <
+start
+50 .repro store
+stop
+end

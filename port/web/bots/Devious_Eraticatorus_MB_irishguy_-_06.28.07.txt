@@ -1,0 +1,147 @@
+'start gene
+cond
+  *.robage 0 =
+start
+  256 41 store
+  *.genes .mkvirus store
+stop
+
+'virus launcher
+cond
+*.eye5 50 >
+*.refeye 8 !=
+*.refeye 0 !=
+*.eye5 77 !=
+*.vtimer 1 =
+start 
+100 .vshoot store
+
+stop
+
+'tie-maker
+cond
+*.eye5 50 >
+*.refeye 0 =
+*.eye5 77 !=
+start 
+1 .tie store
+stop
+
+'virus production
+cond
+*.vtimer 0 =
+start
+  *.genes .mkvirus store
+stop
+
+'tie-bots eye system
+cond
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+'speed control
+cond
+*.vel 30 <
+start
+30 *.vel sub .up store
+stop
+
+'actual feeding routine
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store 
+*.tiepres .tienum store
+stop
+
+'birth-tie kill
+cond
+*.robage 1 >
+*.robage 50 <
+start
+0 .deltie store
+stop
+
+'never get fixed
+cond
+*.fixed 0 !=
+start
+.fixpos dec
+stop
+
+'reproduction - I don't know what "mult 250" does. I saw it in some bot. I think it may just be
+'there to slow reproduction. also because he needs 4000 to make kids, but only 2000 to add to
+'his body, he'll rarely reproduce if he has no veggies.
+cond
+  *.nrg 4000 >
+start
+  20 .repro store
+  mult 250
+stop
+
+'slime, so I can minimize viral infection
+cond
+  *.slime 100 <
+start
+  1000 .mkslime store
+stop
+
+'waste release, alot of times he just happens to hit his veggies
+cond
+*.waste 10 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+'the superleech, I don't know if trefage actually helps
+cond
+*.robage 30 >
+*.trefage 30 >
+*.multi 1 =
+start
+99 .sharenrg store
+.sharewaste inc
+stop
+
+'nrg storage
+cond
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+'nrg replenish
+cond
+*.nrg 500 <
+start
+100 .fdbody store
+stop
+
+'gene check
+'this simple AV stops almost every infection I've seen. im so mad that I found this
+'because it means other people will be able to easily stop viral attacks.
+cond
+*.genes 17 >
+start
+*.genes .delgene store
+stop
+
+'my virus - a.k.a. the down syndrome virus (lol)
+'he doesn't replicate, because of the AVs that kill replicators.
+'but his payload does 2 great things
+'1. he make a extremely small child, which is is easy pickings for my other bots!!
+'2. he deletes the first gene, over and over until all the genes, including the 
+'   the virus are gone. now the infected bot is free food for his attacker.
+'   because he is reproducing, each child he makes, will be more retarded than the last!
+cond
+  *41 256 !=
+start
+1 .repro store
+1 .delgene store
+stop
+
+end

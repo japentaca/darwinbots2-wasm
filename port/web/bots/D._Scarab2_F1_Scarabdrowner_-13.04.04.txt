@@ -1,0 +1,207 @@
+'Topic: bug & questions  
+'ScarabDrowner
+
+'D. Scarab 2
+'
+'Tie feeder. Performs best with unblocked vegs. Population tops out at approx 250 under default conditions and no mutations.
+
+'***************************************1
+' store numbers, tie with parent
+cond
+*.robage 0 =
+start
+0 50 store
+23 51 store
+500 rnd 1 add 53 store
+*53 .readtie store
+.tie inc
+stop
+
+'***************************************2
+' artificial age counter
+cond
+*50 32000 <
+start
+50 inc
+stop
+
+'***************************************3
+' reproduce
+cond
+*.nrg 10000 >
+start
+50 .repro store
+stop
+
+'***************************************4
+‘ sever tie to parent
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+'***************************************5
+' velocity, make the sucker move
+cond
+*.vel 30 <
+start
+30 *.vel sub 2 div .up store
+stop
+
+'***************************************6
+' look for food
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+*.refeye *51 !=
+start
+mult -110
+5 .up store
+stop
+
+'**********************7
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+*.refeye *51 !=
+start
+mult 110
+5 .up store
+stop
+
+'**********************8
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*.refeye *51 !=
+start
+mult -70
+3 .up store
+stop
+
+'**********************9
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*.refeye *51 !=
+start
+mult 70
+3 .up store
+stop
+
+'**********************10
+cond
+*.eye5 15 >
+*.refeye *51 !=
+start
+2 .up store
+stop
+
+'***************************************11
+' attach to food or enemy
+cond
+*.eye5 30 >
+*.eye4 *.eye6 =
+*.refeye *51 !=
+start
+*53 .tie store
+mult 0
+stop
+
+'***************************************12
+' spin while coasting
+cond
+*.vel 30 =
+*.eye5 0 =
+start
+mult 52
+stop
+
+'***************************************13
+' actually make the turn
+cond
+start
+.aimdx store
+stop
+
+'***************************************14
+' avoid family
+cond
+*.refeye *51 =
+*.eye5 20 >
+start
+mult 280
+stop
+
+'***************************************15
+' turn to face food if hit
+cond
+*.hitdn 0 >
+*.refeye *51 !=
+start
+mult 628
+stop
+
+'**********************16
+cond
+*.hitsx 0 >
+*.refeye *51 !=
+start
+mult 157
+stop
+
+'**********************17
+cond 
+*.hitdx 0 >
+*.refeye *51 !=
+start
+mult -157
+stop
+
+'***************************************18
+' actually make the turn
+cond
+start
+.aimsx store
+stop
+
+'***************************************19
+' drain energy from food or enemy
+cond
+*.numties 0 >
+start
+*53 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'***************************************20
+' turn waste into poison to use later
+cond
+*.waste 49 >
+start
+50 .strpoison store
+stop
+
+'***************************************21
+' poison enemy, but not vegs
+cond
+*.eye5 30 >
+*.refshoot 1 >
+*.refeye *51 !=
+*.poison 50 >
+start
+827 .shoot store
+50 .shootval store
+stop
+
+'***************************************22
+' defense
+cond
+*.slime 90 <
+start
+5 .mkslime store
+stop
+
+end

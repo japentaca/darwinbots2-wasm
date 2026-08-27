@@ -1,0 +1,106 @@
+'TieRotation
+
+def nexttie 20
+def lasttie 21
+def species 971
+def wait 22
+
+cond
+*.wait 0 >
+start
+.wait dec
+stop
+
+cond
+*.numties 2 <
+start
+*.nexttie .tie store
+500 rnd .aimdx store
+stop
+
+cond
+*.numties 0 >
+start
+*.tieang1 20 rnd sub 1256 add 50 add 1256 mod .tieang1 store
+30 rnd 50 add .aimdx store
+stop
+
+cond
+*.numties 0 >
+*.robage 2 mod 1 =
+start
+*.lasttie .tienum store
+.species .tieloc store
+stop
+
+cond
+*.numties 0 >
+*.robage 2 mod 0 =
+*.readtie *.species = not
+*.robage 10 >
+*.wait 0 =
+start
+*.lasttie .tienum store
+-10 .tieval store
+-1 .tieloc store
+1 .sharewaste store
+stop
+
+cond
+*.readtie *.species =
+start
+50 .sharenrg store
+50 .sharebody store
+stop
+
+cond
+*.numties 1 >
+start
+*.lasttie .deltie store
+stop
+
+cond
+*.nexttie *.tiepres =
+start
+*.nexttie .lasttie store
+*.nexttie 2 mod 1 add .nexttie store
+stop
+
+cond
+*.nexttie 0 =
+start
+.nexttie inc
+stop
+
+cond
+*.species 73 = not
+start
+73 .species store
+stop
+
+cond
+*.nrg 1000 >
+start
+10 .strbody store
+stop
+
+cond
+*.nrg 100 <
+start
+2 .fdbody store
+stop
+
+cond
+*.body 1000 >
+start
+50 .repro store
+100 .wait store
+stop
+
+cond
+*.robage 100 <
+start
+100 *.tieang add .fixang store
+1 .wait store
+100 .up store
+stop

@@ -1,0 +1,33 @@
+' Cockroach version 1 by Commander Keen
+
+' Set conspec
+cond
+*.robage 0 =
+start
+*.dnalen 50 store
+stop
+
+' Reproduce
+cond
+*.nrg 2000 >
+start
+50 .repro store
+.strbody inc
+stop
+
+' Viral gene, causes uber-virus suicide
+cond
+start
+*341 335 store
+*310 *336 *50 sub abs sgn mult 1 add 338 store
+stop
+
+' Main gene
+cond
+start
+*.eye5 .tie store
+99 .sharenrg store
+.sharewaste inc
+50 .aimdx store
+1 .vshoot store
+stop

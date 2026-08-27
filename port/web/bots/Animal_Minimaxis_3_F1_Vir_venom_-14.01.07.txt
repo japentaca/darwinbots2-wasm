@@ -1,0 +1,153 @@
+ 'Animal_Minimaxis 3
+ 'By: -venom-
+ 'orij by nums 
+ 'now eats to gain energy, roams, and randomly fires
+ 'virus wich deletes the infected bots genes and
+ 'replaces them with a new gene that makes them fire
+ 'all there nrg untill they die. 
+ '(credit goes to henk for nrg drain)
+ 
+ ' Gene 1 roam
+ cond
+ *.eye5 0 =
+ start
+ -4 .dn store
+ 4 .up store
+ stop
+ 
+ ' Gene 2 Food Finder
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start 
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+ 
+ ' Gene 3 Eat Food
+ cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ start
+ -1 .shoot store
+ *.refvelup .up store
+ stop
+ 
+ ' Gene 4 shoot back
+ cond
+ *.shflav 0 !=
+ *.shflav -2 !=
+ start
+ 1256 *.shang sub .aimshoot store
+ 8 .shootval store
+ 400 .vshoot store
+ 0 .shflav store
+ stop
+ 
+ ' Gene 5,6,7,8 Avoiding others
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+ start
+ 314 rnd .aimdx store
+ stop
+ 
+ cond
+ start
+ *.refbody 2 div dup
+ stop
+ 
+ cond
+ *.eye5 0 >
+ *.body >
+ *.refeye 1 >
+ start
+ -15 .up store
+ stop
+ 
+ cond
+ *.eye5 50 >
+ *.body >
+ *.refeye 1 >
+ start
+ .setaim .shoot store
+ *.aim .shootval store
+ stop
+ 
+ ' Gene 9 make shell
+ cond
+ *.shell 250 <
+ start
+ 100 .mkshell store
+ stop
+ 
+ ' Gene 10 make slime
+ cond
+ *.slime 100 <
+ start
+ 1000 .mkslime store
+ stop
+ 
+ ' Gene 11 Reproduce
+ cond
+ *.nrg 9000 >
+ start
+ 30 .repro store
+ stop
+ 
+ ' Gene 12,13,14,15 virus genes
+ cond
+ *.robage 0 =
+ start
+ 7 989 store
+ stop
+ 
+ cond
+ *.vtimer 0 =
+ start
+ 14 .mkvirus store
+ 15 .mkvirus store
+ stop
+ 
+ cond
+ 7 *989 !=
+ start
+ 400 .vshoot store
+ *.thisgene .mkvirus *.vtimer -1 mult 1 add mult store
+ 676 .myeye store
+ 676 *.memloc store
+ *.mkvirus 1 add .delgene *.mkvirus *.thisgene sub dup mult sgn mult
+ *.thisgene 1 rnd 2 mult -1 add add .delgene store
+ stop
+ 
+ cond
+  7 *989 !=
+ *.robage 0 !=
+ start
+ -2 .shoot store
+ *.nrg .shootval store
+ stop
+ 
+ ' Gene 16,17,18
+ cond
+ *.refeye *.myeye !=
+ *.eye5 45 >
+ start
+ 13 .tie *.robage sgn mult *.refage sgn mult store
+ stop
+ 
+ cond
+ *.tiepres 0 >
+ *.tienum 0 =
+ start
+ *.tiepres .tienum store
+ stop
+ 
+ cond
+ *.tienum 0 >
+ start
+ -1 .tieloc store
+ -1000 .tieval store
+ stop
+ 
+ end 

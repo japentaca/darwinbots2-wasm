@@ -1,0 +1,54 @@
+cond
+*.nrg 1 >=
+*.myaimsx 0 !=
+start
+60 .repro store
+stop
+
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+
+
+cond
+start
+1860 rnd .aimdx store
+stop
+
+
+
+
+
+cond
+*.nrg 1000 >=
+start
+60 .repro store
+stop
+
+
+
+cond
+*.vtimer 0 =
+start
+1 .mkvirus store
+stop
+
+cond
+*.vtimer 1 >
+start
+'donothing
+stop
+
+cond
+*.vtimer 1 =
+start
+250 .vshoot store
+stop
+
+
+
+end

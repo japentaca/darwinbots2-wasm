@@ -1,0 +1,99 @@
+'Ridiculous
+'By Bagel
+'First Bot
+'Modified A. Minimalis with a bunch
+'of new bells and whistles
+
+'Find food
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+'Shoot nrg
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refnrg *.refbody >
+start
+ 2 .shootval store
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+'Shoot Body
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refnrg *.refbody <
+start
+ 2 .shootval store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+'Idle Roam
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+ 10 rnd .up store
+stop
+
+'Reproduce
+cond
+ *.nrg 18000 >
+start
+ 15 .repro store
+stop
+
+'Sever the Tie
+cond
+ *.robage 0 =
+start
+ 1 .deltie store
+ 7 .ploc store
+-2 .pval store
+stop
+
+'Defence
+cond
+ *.shell 25 <=
+start
+ 10 .mkshell store
+stop
+
+cond
+ *.ploc 0 =
+start
+ 7 .ploc store
+-2 .pval store
+stop
+
+cond
+ *.poison 50 <=
+start
+ 10 .strpoison store
+stop
+
+'Garbage Removal
+cond
+ *.eye5 5 <=
+ *.waste 100 >
+start
+ *.waste .shootval store
+ -4 .shoot store
+stop
+
+cond
+start
+ 0 .refeye store
+ 0 .refnrg store
+ 0 .refbody store
+stop
+
+end

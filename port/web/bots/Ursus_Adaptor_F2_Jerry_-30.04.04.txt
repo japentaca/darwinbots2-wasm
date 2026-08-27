@@ -1,0 +1,196 @@
+'Topic: Ursus_adaptor  
+'Jerry
+
+
+' Jerry's first bot
+' Ursus_adaptor
+' special features:
+' * turns canibalic if really hungry
+' * prefers non-hostile food when nrg low
+' * slowly adapts prey's speed
+' * tries to save nrg by detecting blocks and push-backs
+' whith corpses enabled it needs gravity set to at least .1
+' should work fine wit KE mode enabled too
+
+
+
+' * stacking speed values *
+' ***** init stack
+cond
+start
+mult 1
+stop
+
+' ***** sustain min speed
+cond
+*.eye4 10 <
+*.eye6 10 <
+*.vel 10 <
+*.vel -10 >
+*.hitup 1 !=
+*.hitdx 1 !=
+*.hitsx 1 !=
+start
+mult 10 *.vel sub 2 div 
+stop
+
+' ***** growing distance - speed up!
+cond
+*.out1 eye5 >
+*.eye5 30 <
+*.eye5 0 >
+*.vel 29 <
+*.vel -10 >
+start
+mult *.vel 5 add 
+stop
+
+' ***** shrinking distance - brake!
+cond
+*.out1 eye5 <
+*.eye5 90 >
+*.eye5 97 <
+*.vel 15 >
+*.vel -10 >
+start
+mult *.vel 3 sub -1 multi 
+stop
+
+' * apply speed *
+' *****
+cond
+start
+.up store
+stop
+
+' ***** get food
+' ***** eat corpses (or harmless bots)
+cond
+*.eye5 30 >
+*.refshoot 1 <
+start
+-6 .shoot store
+stop
+
+' ***** hunt while enough energy
+cond
+*.eye5 30 >
+*.refnrg 100 >
+*.nrg 1500 >
+start
+-1 .shoot store
+*.eye5 .out1 store
+stop
+
+' * stacking turning values *
+' ***** init stack
+cond
+start
+mult 1
+stop
+
+' ***** dump waste to stay agile
+cond
+*.waste 50 >
+*.nrg 4000 >
+*.aim 900 >
+*.aim 1000 <
+start
+mult 314
+*.waste .shootval store
+-4 .shoot store
+stop
+
+' ***** moving backwards - turn around!
+cond
+*.vel -20 <
+start
+mult 628
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye1 *.eye5 >
+start
+mult -100 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye9 *.eye5 >
+start
+mult 100 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye3 *.eye5 >
+start
+mult -25 
+stop
+
+' ***** follow bots you've seen
+cond
+*.eye7 *.eye5 >
+start
+mult 25
+stop
+
+' ***** reproduce
+cond
+*.nrg 5000 >
+start
+50 .repro store
+mult 628
+stop
+
+' ***** avoid apparent conspecs
+cond
+*.eye5 10 >
+*.nrg 500 >
+*.refnrg *.nrg >
+*.refeye 19 =
+*.refshoot 3 =
+start
+mult 314
+stop
+
+' ***** stay away from edges
+cond
+*.edge 1 =
+*.eye5 30 <
+start
+mult *.nrg 100 div
+stop
+
+' ***** reproduce
+cond
+*.nrg 5000 >
+start
+50 .repro store
+mult 628
+stop
+
+' ***** take that navel cord
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+' ***** sever that navel cord
+cond
+*.robage 1 =
+start
+.deltie inc
+mult 314
+stop
+
+' * apply steering *
+' *****
+cond
+start
+.aimdx store
+stop
+
+end

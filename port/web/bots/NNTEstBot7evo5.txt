@@ -1,0 +1,262 @@
+''''''''''''''''''''''''  Gene:  1 Begins at position  1  '''''''''''''''''''''''
+ cond
+ *.robage 0 =
+ start
+ 7 .ploc store
+ 7 .vloc store
+ -2 .venval store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  15  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  16  '''''''''''''''''''''''
+ cond
+ *.dnalen 400 <
+ start
+ *.robage 1500 <
+ 40 .up store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  27  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  28  '''''''''''''''''''''''
+ cond
+ *.dnalen 500 <
+ start
+ *.robage 2000 <
+ *.eye5 0 >
+ and
+ *.refage 500 >
+ and
+ *.refeye 0 =
+ and
+ *.refshoot 0 =
+ and
+ -6 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  55  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  56  '''''''''''''''''''''''
+ cond
+ *.dnalen 600 <
+ start
+ *.robage 0 =
+ 628 .aimleft store
+ *.eye5 0 =
+ *.body 1000 >
+ and
+ *.robage 2000 <
+ and
+ 314 .aimleft store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  81  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  82  '''''''''''''''''''''''
+ cond
+ *.dnalen 700 <
+ start
+ *.eye5 0 =
+ *.body 1000 >
+ and
+ *.robage 2500 <
+ and
+ 50 .repro store
+ *.robage 4500 >
+ -2 .shoot store
+ 32000 .shootval store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  110  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  111  '''''''''''''''''''''''
+ start
+ true
+ *.refxpos *.refypos angle 70 store
+ *.body 1000 sub 71 store
+ *.refeye *.myeye sub abs 72 store
+ *.refshoot *.myshoot sub abs 73 store
+ *.refdx *.mydx sub abs 74 store
+ *.nrg 3000 sub 75 store
+ *.shell 500 sub 76 store
+ *.poison 500 sub 77 store
+ *.venom 500 sub 78 store
+ *.shang - *.aim add 79 store
+ *.eyef 80 store
+ *.aim 81 store
+ *.refshell 82 store
+ *.refvelup 83 store
+ *.refvelsx 84 store
+ *.refveldx 85 store
+ *.refvelup 86 store
+ *.eye9 87 store
+ *.eye1 88 store
+ *.pain 89 store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  197  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  198  '''''''''''''''''''''''
+ start
+ *100 0 >
+ 50 .repro store
+ *101 0 >
+ -1 .shoot store
+ *102 0 >
+ -6 .shoot store
+ *103 0 >
+ -3 .shoot store
+ *104 0 !=
+ *104 .mkshell store
+ *105 0 !=
+ *105 .mkpoison store
+ *106 0 !=
+ *106 .strvenom store
+ *107 0 !=
+ *107 .strbody store
+ *108 0 !=
+ *108 .fdbody store
+ *109 0 !=
+ *109 .up store
+ *110 0 !=
+ *110 .dn store
+ *111 0 !=
+ *111 .dx store
+ *112 0 !=
+ *112 .sx store
+ *113 0 !=
+ *113 .setaim store
+ *114 0 !=
+ *114 .aimleft store
+ *115 0 !=
+ *115 .aimright store
+ *116 0 !=
+ *116 .aimshoot store
+ *117 0 !=
+ *117 .shootval store
+ *118 0 !=
+ *118 .focuseye store
+ *119 0 !=
+ *119 .eye5width store
+ true
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  320  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  321  '''''''''''''''''''''''
+ start
+ 0 674 store
+ 0 109 store
+ 0 909 store
+ 0 107 store
+ 0 .eye2dir store
+ 0 .readtie store
+ 0 .eye3dir store
+ 0 104 store
+ 0 110 store
+ 0 874 store
+ 0 106 store
+ 0 .sharewaste store
+ 0 175 store
+ 0 .sharewaste store
+ 0 100 store
+ 0 112 store
+ 0 109 store
+ 0 .stifftie store
+ 0 .backshot store
+ 0 109 store
+ 0 110 store
+ 0 .eye6width store
+ 0 106 store
+ 0 109 store
+ 0 .genes store
+ 0 108 store
+ 0 106 store
+ 0 .mkvirus store
+ 0 116 store
+ 0 105 store
+ 0 883 store
+ 0 .readtie store
+ 0 .eye3dir store
+ 0 108 store
+ 0 113 store
+ 0 182 store
+ 0 105 store
+ 0 .in8 store
+ 0 .eye2dir store
+ 0 .eye1dir store
+ 0 116 store
+ 0 .readtie store
+ 0 107 store
+ 0 .strvenom store
+ 0 .sharewaste store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  457  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  458  '''''''''''''''''''''''
+ start
+ *674 *73 24 mult add *78 -31 mult add *109 -70 mult add 119 div 674 store
+ *102 *82 -35 mult add *674 -66 mult add *100 18 mult add *.paralyzed 24 mult add 134 div 102 store
+ *110 *80 137 mult add *674 -63 mult add *82 31 mult add *.shup 4 mult add *73 11 mult add 35 div 110 store
+ *109 *.trefvelyourdn -68 mult add *.sharewaste -37 mult add 100 div 109 store
+ *102 *102 -28 mult add 168 div 102 store
+ *909 *.hitdx -9 mult add *75 42 mult add 100 div 909 store
+ *107 *102 -35 mult add 148 div 107 store
+ *101 *.eye3dir -57 mult add *115 -3 mult add 100 div 101 store
+ *.eye2dir *85 -123 mult add *.myties 95 mult add 148 div .eye2dir store
+ *.sharewaste *85 57 mult add *.slime 31 mult add 281 div .sharewaste store
+ *.eye3width *.genes 59 mult add *82 141 mult add *.in3 -37 mult add 100 div .eye3width store
+ *.eye3dir *109 25 mult add 113 div .eye3dir store
+ *101 *81 73 mult add 73 div 101 store
+ *.readtie *109 29 mult add *70 28 mult add *105 -7 mult add 131 div .readtie store
+ *.eye3dir *108 -155 mult add *.eyef 27 mult add *.eye9 120 mult add 101 div .eye3dir store
+ *104 *84 11 mult add *76 -43 mult add 126 div 104 store
+ *110 *.readtie 1 mult add 94 div 110 store
+ *874 *.shsx -47 mult add *.shup -20 mult add *74 -22 mult add 100 div 874 store
+ *101 *106 8 mult add *71 45 mult add 91 div 101 store
+ *100 *78 -10 mult add *.trefvelyourup 50 mult add *674 -62 mult add *101 185 mult add *79 73 mult add *76 -29 mult add 131 div 100 store
+ *106 *102 42 mult add *.tieang 9 mult add *.in3 87 mult add 95 div 106 store
+ *.sharewaste *.multi 102 mult add 87 div .sharewaste store
+ *175 *.eye3dir 20 mult add *100 8 mult add 100 div 175 store
+ *.sharewaste *101 31 mult add *.trefxpos -31 mult add *.trefbody -5 mult add 100 div .sharewaste store
+ *100 *102 -67 mult add *83 -4 mult add 100 div 100 store
+ *112 *.velsx 51 mult add 119 div 112 store
+ *101 *.trefvelmydx -34 mult add *114 52 mult add 100 div 101 store
+ *109 *110 -51 mult add *71 -38 mult add *.eye5 -68 mult add 100 div 109 store
+ *.stifftie *84 -22 mult add 94 div .stifftie store
+ *109 *.refvelscalar 33 mult add 100 div 109 store
+ *.backshot *.trefvelyourdx 73 mult add 75 div .backshot store
+ *109 *.fertilized -57 mult add *.eye3dir 52 mult add 156 div 109 store
+ *110 *115 18 mult add *106 -156 mult add *.hitup -83 mult add 89 div 110 store
+ *.eye6width *74 27 mult add *.refvelup -54 mult add 100 div .eye6width store
+ *106 *.vel 63 mult add *87 -31 mult add *.in5 138 mult add 100 div 106 store
+ *111 *85 160 mult add 100 div 111 store
+ *109 *.out6 -100 mult add 144 div 109 store
+ *109 *82 102 mult add 52 div 109 store
+ *.genes *.out2 -65 mult add *.shdx 32 mult add 20 div .genes store
+ *.fixlen *89 -25 mult add 100 div .fixlen store
+ *108 *.tout2 -20 mult add 84 div 108 store
+ *106 *109 -115 mult add *110 91 mult add 100 div 106 store
+ *.in5 *.mysx -39 mult add *81 -16 mult add 101 div .in5 store
+ *.mkvirus *.refveldx 52 mult add *112 -2 mult add *.shsx 1 mult add 100 div .mkvirus store
+ *116 *109 -128 mult add 100 div 116 store
+ *105 *.shup 41 mult add *.rdboy 78 mult add 101 div 105 store
+ *883 *.refmulti -78 mult add *101 59 mult add 142 div 883 store
+ *.readtie *.trefvelmysx 87 mult add *79 28 mult add 100 div .readtie store
+ *.eye3dir *.poisoned 51 mult add 100 div .eye3dir store
+ *106 *72 5 mult add 139 div 106 store
+ *108 *107 -36 mult add *.eye1 7 mult add 84 div 108 store
+ *113 *70 100 mult add 100 div 113 store
+ *182 *.out9 0 mult add *.dnalen -23 mult add 100 div 182 store
+ *105 *.eye1 -4 mult add 100 div 105 store
+ *.in8 *.eye2dir 63 mult add 100 div .in8 store
+ *.eye2dir *116 -145 mult add *85 -113 mult add 100 div .eye2dir store
+ *.eye1dir *84 -56 mult add *.eye5 75 mult add 100 div .eye1dir store
+ *116 *182 -23 mult add 100 div 116 store
+ *.readtie *.trefvelmysx 87 mult add *71 28 mult add 100 div .readtie store
+ *105 *874 18 mult add *.stifftie -33 mult add 101 div 105 store
+ *101 *.eye3dir -57 mult add *115 -3 mult add 100 div 101 store
+ *883 *.eye2dir -22 mult add *175 8 mult add 117 div 883 store
+ *.in3 *892 -2 mult add 100 div .in3 store
+ *.sharewaste *85 57 mult add *.slime 38 mult add 281 div .sharewaste store
+ *107 *909 42 mult add *.refveldx 96 mult add 127 div 107 store
+ *.strvenom *78 75 mult add 100 div .strvenom store
+ *.sharewaste *101 31 mult add *.trefxpos -31 mult add *.trefbody -5 mult add 100 div .sharewaste store
+ *.eye4width *.refaim -44 mult add 100 div .eye4width store
+ *.in8 *84 23 mult add 100 div .in8 store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  1336  '''''''''''''''''''''''

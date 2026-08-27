@@ -1,0 +1,117 @@
+' Leechbot - My first F1/MB bot
+
+'Gene 15 - the initialization gene
+cond
+*.robage 0 =
+start
+100 .stifftie store
+stop
+
+'Gene two - the narrow search gene
+cond
+*.eye3 *.eye7 !=
+start
+*.eye3 *.eye7 sub .aimsx store
+stop
+
+'Gene four - the wide search gene
+cond
+*.eye1 *.eye9 !=
+start
+*.eye1 *.eye9 sub .aimsx store
+stop
+
+'Gene three - the normal search gene
+cond
+*.eye2 *.eye8 !=
+start
+*.eye2 *.eye8 sub .aimsx store
+stop
+
+'Gene one - the very narrow search gene
+cond
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+'Gene five - the drift around gene
+cond
+*.vel 10 <
+*.numties 0 =
+start
+10 *.vel sub .up store
+stop
+
+'Gene seven - the avoiding family gene
+*.refeye 5 =
+start
+180 .aimsx store
+stop
+
+
+' Gene 14 - move forward
+cond
+  *.vel 30 <
+  *.refeye 9 !=
+start
+  30 *.vel sub 2 div .up store
+stop
+
+'Gene six - the tie gene
+*.eye5 40 >
+*.numties 3 <
+start
+1 .tie store
+stop
+
+'Gene eight - the sucker gene
+cond
+*.multi 1 =
+start
+99 .sharenrg store
+99 .shareslime store
+99 .shareshell store
+.sharewaste inc
+stop
+
+'Gene 12 - the energy sucker gene
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+*55 .tienum store
+stop
+
+'Gene nine - the hacker gene
+cond
+*.trefeye *.myeye !=
+start
+.up .tieloc store
+0 .tieval store
+stop
+
+' Gene 10 - tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+' Gene 11 - sever tie to parent
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+'Gene 13 - reproduce
+cond 
+*.nrg 4000 >
+*.eye5 30 <
+start
+50 .repro store
+stop
+
+end

@@ -1,0 +1,67 @@
+'the important feeding gene
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.in1 77 !=
+start
+*.eye5 40 <
+*.up 10 add .up store
+not
+*.refvelup 1 add .up store
+true
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+stop
+
+'set my out1 to 88 so sybot2 can find me
+cond
+*.out1 88 !=
+start
+88 .out1 store
+stop
+
+'show im not tied
+cond
+*.numties 0 =
+*.out2 33 !=
+start
+33 .out2 store
+stop
+
+'show im tied
+cond
+*.numties 0 >
+*.out2 22 !=
+start
+22 .out2 store
+stop
+
+'turn if i see nothing
+cond
+*.eye5 0 =
+start
+314 rnd .aimdx store
+stop
+
+'turn from allies
+start
+*.refeye *.myeye =
+*.in1 77 = or
+314 rnd .aimdx store
+true
+stop
+
+'share the spoils :)
+cond
+*.multi 1 =
+*.nrg *.trefnrg !%=
+start
+41 .sharenrg store
+stop
+
+'share the waste :(
+cond
+*.waste 100 >
+start
+1 .sharewaste store
+stop

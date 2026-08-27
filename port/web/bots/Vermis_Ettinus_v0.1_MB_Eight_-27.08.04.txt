@@ -1,0 +1,277 @@
+'Topic: New Bots
+'Vermis Ettinus Ettin Worm (guest) (aka Eight)
+' Vermis Ettinus v0.1 (my first MB)
+'
+' Ettin Worm ___ by Eight (eightland.com)
+' "two heads are better than one"
+'
+' - each head can eat and see, and when one sees something 
+' it tells the other head through the tie so they can coordinate
+' their efforts.
+' - has a nasty reproduction tie bug, making some children misaligned
+' and useless, however if the deformed baby gets enough food or has
+' its head blown off, there is a good chance it will redevelop properly.
+
+' timer
+cond
+*44 0 >
+start
+44 dec
+stop
+
+cond
+*44 0 =
+start
+5 44 store
+stop
+
+' energy share
+cond
+*44 1 =
+*.multi 1 =
+*.tiepres 1 =
+start
+1 .tienum store
+50 .sharenrg store
+50 .sharewaste store
+stop
+
+' waste management
+cond
+*.waste 100 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+' no head
+cond
+*.numties 0 =
+start
+0 45 store
+stop
+
+' grow head
+cond
+*45 0 =
+*.numties 0 =
+*.nrg 500 >
+start
+50 .repro store
+2 45 store
+stop
+
+' make a tie
+cond
+*.robage 0 =
+*.eye5 70 >
+start
+1 .tie store
+3 45 store
+stop
+
+cond
+*.numties 1 =
+*45 3 =
+start
+628 .fixang store
+160 .fixlen store
+40 .stifftie store
+628 .tieval store
+.fixang .tieloc store
+1 .tienum store
+4 45 store
+stop
+
+cond
+*.numties 1 =
+*45 2 =
+start
+628 .fixang store
+5 45 store
+stop
+
+' which is closer
+cond
+*.robage 3 >
+*.multi 1 =
+*45 4 =
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+46 .eye5 store
+.eye5 .tieval store
+46 .tieloc store
+1 .tienum store
+stop
+
+cond
+*.robage 3 >
+*.multi 1 =
+*45 5 =
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+47 .eye5 store
+.eye5 .tieval store
+47 .tieloc store
+1 .tienum store
+stop
+
+'move
+cond
+*.robage 3 >
+*.multi 1 =
+*45 5 =
+*.eye5 *46 >
+*.refeye *.myeye !=
+start
+5 .up store
+5 .tieval store
+.dn .tieloc store
+1 .tienum store
+stop
+
+cond
+*.robage 3 >
+*.multi 1 =
+*45 4 =
+*.eye5 *47 >
+*.refeye *.myeye !=
+start
+5 .up store
+5 .tieval store
+.dn .tieloc store
+1 .tienum store
+stop
+
+' search
+cond
+*.multi 1 =
+*47 0 =
+*46 0 =
+*.sun 1 =
+*.vel 0 =
+start
+30 .up store
+30 .tieval store
+.dn .tieloc store
+1 .tienum store
+stop
+
+cond
+*47 0 =
+*46 0 =
+*.multi 1 =
+*.vel 0 =
+start
+5 .dx store
+stop
+
+' turn
+cond
+*.multi 1 =
+*.eye1 *.eye3 >
+*.refeye *.myeye !=
+start
+30 .sx store
+30 .tieval store
+.sx .tieloc store
+1 .tienum store
+stop
+
+cond
+*.multi 1 =
+*.eye3 *.eye5 >
+*.refeye *.myeye !=
+start
+15 .sx store
+15 .tieval store
+.sx .tieloc store
+1 .tienum store
+stop
+
+cond
+*.multi 1 =
+*.eye7 *.eye5 >
+*.refeye *.myeye !=
+start
+15 .dx store
+15 .tieval store
+.dx .tieloc store
+1 .tienum store
+stop
+
+cond
+*.multi 1 =
+*.eye9 *.eye7 >
+*.refeye *.myeye !=
+start
+30 .dx store
+30 .tieval store
+.dx .tieloc store
+1 .tienum store
+stop
+
+cond
+*.multi 1 =
+*.eye4 *.eye6 >
+*.refeye *.myeye !=
+start
+5 .sx store
+5 .up store
+stop
+
+cond
+*.multi 1 =
+*.eye6 *.eye4 >
+*.refeye *.myeye !=
+start
+5 .dx store
+5 .up store
+stop
+
+' eat
+cond
+*.multi 1 =
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+15 .tie store
+stop
+
+cond
+*.multi 0 =
+*.robage 3 >
+*.numties 0 =
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+15 .tie store
+stop
+
+' sabotage attack ties/feed
+cond
+*.multi 1 =
+*.numties 1 >
+*.tiepres 2 >
+*.tiepres 1 !=
+start
+-1000 .tieval store
+-1 .tieloc store
+*.tiepres .tienum store
+stop
+
+' divide
+cond
+*.numties 1 =
+*.nrg 8000 >
+start
+0 .tieval store
+45 .tieloc store
+1 .tienum store
+1 .deltie store
+0 45 store
+stop
+
+end

@@ -1,0 +1,48 @@
+start
+'==========Init============
+*.robage 0 =
+.deltie inc
+30 rnd 21 =
+1 rnd 971 store
+clearbool
+'========Body==========
+*.body 20 >
+*.body 20 sub 10 mult .fdbody store 
+clearbool
+*.body 20 <
+*.nrg 300 >= and
+100 .strbody store
+clearbool
+*.totalmyspecies 725 < and
+*.nrg *.body 10 mult add 300 > and
+80 *.velscalar sub 0 floor .dn store
+50 .repro store
+628 rnd .aimsx store
+clearbool
+'========Hunting Mec.=========
+*.eye5 0 >
+*.myeye *.refeye !=
+and
+*.refxpos *.refypos angle .setaim store
+*.veldx .sx store
+*.refvelup 30 add *.maxvel ceil .up store
+*.eye5 80 >
+*.myeye *.refeye !=
+and
+-6 .shoot store
+dropbool
+*.eye5 80 >
+*.myeye *.refeye != and
+*971 1 = and
+-1 .shoot store
+clearbool
+*.eye5 0 = *.myeye *.refeye != or
+10 .up store
+clearbool
+'========Defence==========
+*.shflav 0 != *.shflav -2 != and
+*.shang .setaim store
+-6 .shoot store
+0 .shflav store
+clearbool
+stop

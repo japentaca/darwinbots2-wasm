@@ -1,0 +1,438 @@
+'Helios
+'4 + 2 cell multibot
+'by Light
+'18/12/05
+'for db 2.37.6 NOT 2.4
+
+def state 50
+'state 1 = head
+'state 2 = left
+'state 3 = tail
+'state 4 = right
+def type 51
+def twin 52
+def adult 53
+def type1 54
+
+'*********
+'* Turning *
+'*********
+
+cond
+  *.robage 25 >
+  *.eye5 20 <
+  *.refeye *.myeye != 
+  *.eye9 *.eye5 > or
+  *.eye1 *.eye5 > or
+  *.eye8 *.eye5 > or
+  *.eye7 *.eye5 > or
+start
+  *.eye9 *.eye8 add *.eye1 sub *.eye2 sub .aimdx store
+stop
+
+cond
+  *.refeye *.myeye != 
+  *.robage 25 >
+  *.eye5 0 >
+start
+  *.refxpos *.refypos angle .setaim store
+stop
+
+'**********
+'* Targeting *
+'**********
+
+cond
+*.state 1 =
+*.hitsx 1 =
+start
+-5 .sx store
+stop
+
+cond
+*.state 1 =
+*.hitdx 1 =
+start
+5 .sx store
+stop
+
+'**********
+'* shooting *
+'**********
+
+cond
+  *.waste 100 >
+start
+  *.waste .shootval store
+  -4 .shoot store
+stop
+
+cond
+  *.refeye *.myeye != 
+  *.eye5 10 >
+  *.refnrg 1500 <
+  *.refshell 50 > or
+  *.refpoison 0 = or
+start
+  -1 .shoot store
+  -10 .shootval store
+stop
+
+cond
+  *.refeye *.myeye != 
+  *.eye5 10 >
+  *.refnrg 1500 >
+  *.refshell 50 < or
+  *.refpoison 0 > or
+start
+  -6 .shoot store
+  -10 .shootval store
+stop
+
+cond
+    *.venom 10 <
+start
+  10 *.venom sub 0 floor 10 ceil .strvenom store
+stop
+
+cond
+  *.shflav 0 <
+  *.shflav -2 !=
+  *.refeye *.myeye != 
+start
+  *.shang .setaim store
+  -3 .shoot store
+  *.venom .shootval store
+  -2 .venval store
+  0 .shflav store
+  0 .shang store
+stop
+
+'**************
+'* Reproduction *
+'**************
+
+cond
+*.robage 25 >
+*.eye5 10 <
+*.numties 0 =
+*.nrg 2000 >
+start
+0 .setaim store
+0 .type store
+75 .repro store
+1 .state store
+2 .out1 store
+0 .adult store
+stop
+
+cond
+  *.robage 0 =
+start
+  .shoot .ploc store
+  .shoot .vloc store
+stop
+
+cond
+*.robage 0 =
+*.eye5 40 <
+*.twin 1 !=
+*.nrg 2000 >
+start
+0 .type store
+75 .repro store
+1 .state store
+2 .out1 store
+stop
+
+cond
+*.state 1 =
+*.type 25 <
+*.twin 1 !=
+start
+.type inc
+stop
+
+cond
+*.robage 1 =
+*.state 1 !=
+*.twin 1 !=
+start
+*.in1 .state store
+*.state 10 mult .type store
+stop
+
+cond
+*.robage 2 =
+*.state 1 >
+*.twin 1 !=
+' *.state 3 !=
+start
+*.type .tie store
+*.type .readtie store
+40 .stifftie store
+300 .fixlen store
+*.state 1 add .out1 store
+stop
+
+cond
+*.robage 3 =
+*.state 1 >
+*.state 4 <
+*.twin 1 !=
+start
+314 .aimdx store
+75 .repro store
+stop
+
+cond
+*.robage 3 =
+*.state 4 =
+*.twin 1 !=
+start
+314 .aimdx store
+*.type .tie store
+*.type .readtie store
+40 .stifftie store
+stop
+
+cond
+*.robage 4 =
+*.state 2 >
+*.state 5 <
+*.twin 1 !=
+start
+.type inc
+157 .aimsx store
+*.type .tie store
+*.type .readtie store
+40 .stifftie store
+stop
+
+cond
+*.robage 5 =
+*.state 2 >
+*.state 5 <
+*.twin 1 !=
+start
+628 .aimsx store
+stop
+
+cond
+*.robage 5 =
+*.state 2 =
+*.twin 1 !=
+start
+471 .aimdx store
+stop
+
+cond
+*.type 5 =
+*.state 1 =
+*.twin 1 !=
+start
+471 .aimdx store
+stop
+
+cond
+*.robage 18 =
+*.state 1 !=
+*.twin 1 !=
+*.state 3 !=
+start
+50 .fixlen store
+1 .adult store
+stop
+
+cond
+*.type 22 =
+*.state 1 =
+*.twin 1 !=
+start
+628 .fixang store
+1 .adult store
+stop
+
+cond
+*.state 1 !=
+*.robage 50 >
+*.numties 3 <
+*.twin 1 !=
+start
+*.tiepres .tienum store
+*.tienum .deltie store
+0 .state store
+stop
+
+cond
+*.state 1 !=
+*.robage 50 >
+*.nrg 17500 >
+*.body 17500 >
+start
+*.tiepres .tienum store
+*.tienum .deltie store
+20 .up store
+0 .twin store
+0 .state store
+stop
+
+'*******
+'* Twin *
+'*******
+
+cond
+*.type1 1 =
+start
+628 .aimdx store
+0 .type1 store
+1 .adult store
+1 .state store
+stop
+
+cond
+*.eye5 40 <
+*.numties 0 =
+*.nrg 2000 <
+*.robage 1 >
+start
+628 .aimdx store
+50 .repro store
+1 .type1 store
+8 .out2 store
+1 .twin store
+stop
+
+cond
+*.robage 1 =
+*.in2 8 =
+*.eye5 40 >
+start
+1 .tie store
+1 .readtie store
+40 .stifftie store
+628 .fixang store
+100 .fixlen store
+3 .state store
+1 .twin store
+1 .adult store
+stop
+
+cond
+  *.myeye *.refeye =
+  *.eye6 50 >
+  *.eye5 50 >
+  *.eye4 50 >
+start
+  628 .fixang store
+stop
+
+'*********
+'* moving *
+'*********
+
+cond
+  *.eye5 0 >
+  *.adult 1 =
+  *.state 1 =
+  *.numties 0 >
+start
+  *.refvelup *.refxpos *.refypos dist *.body 20 div 100 add sub 20 div add .up store
+stop
+
+cond
+  *.vel *.maxvel <
+  *.eye5 0 =
+  *.state 1 =
+start
+  *.maxvel *.vel sub 5 div .up store
+stop
+
+'******
+'* ties *
+'******
+
+cond
+  *.nrg *.trefnrg !%=
+  *.multi 1 =
+start
+  50 .sharenrg store
+stop
+
+'*********
+'* defense *
+'*********
+
+cond
+  *.nrg 800 >
+  *.shell 390 <
+start
+  400 *.shell sub .mkshell store
+stop
+
+'********
+'* Body *
+'********
+
+cond
+  *.body 20 >
+  *.nrg 1000 <
+start
+  100 .fdbody store
+stop
+
+cond
+  *.body 1000 <
+  *.nrg 1100 >
+  *.robage 2 >
+start
+  100 .strbody store
+stop
+
+cond
+*.body *.nrg <
+*.nrg 4000 >
+*.robage 2 >
+start
+100 .strbody store
+stop
+
+cond
+*.numties 1 >
+*.trefeye *.myeye !=
+*.robage 5 >
+*.twin 1 =
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+*.tienum .deltie store
+*.tieval 1000 div .tieloc store
+stop
+
+'cond
+'  *.shflav 0 <
+'  *.shflav -2 !=
+'start
+'  *.shang .setaim store
+'  -3 .shoot store
+'  *.venom .shootval store
+'  -2 .venval store
+'stop
+
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.eye5 40 >
+*.adult 1 =
+*.refaimdx 1 =
+*.state 1 =
+*.refaimsx *.myaimsx !=
+start
+1 .fixpos store
+stop
+end

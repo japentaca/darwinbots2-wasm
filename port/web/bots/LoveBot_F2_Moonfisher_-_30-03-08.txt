@@ -1,0 +1,309 @@
+'Lovebot (F2) : 30-03-08
+'Make love not war !
+'By Moonfisher, v0.01
+'First draft for a rape bot
+'Would probably be more effective SG'fied with a propper conspec
+'But this way is more fun.
+'Sometimes causes a crash in 2.43.1e though
+
+def repspin 122
+def original 971
+def birthx 972
+def birthy 973
+
+def origkey 1234
+
+cond
+*.robage 0 =
+start
+*.tiepres .deltie store
+.sexrepro .vloc store
+99 .venval store
+100 .eye5width store
+.shoot .memloc store
+stop
+
+cond
+*.robage 2 <
+*.nrg 3000 %=
+*.body 1000 %=
+*.totalmyspecies 6 <
+*.totalbots 21 <
+start
+.origkey .original store
+stop
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.body 100 <
+*.nrg 500 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 50 >
+*.nrg 100 <
+start
+100 .fdbody store
+stop
+
+cond
+*.venom 50 <
+*.nrg 100 >
+start
+10 .strvenom store
+stop
+
+cond
+*.shell 200 <
+*.nrg 100 >
+start
+10 .mkshell store
+stop
+
+cond
+*.shell 50 <
+*.nrg 300 >
+start
+100 *.shell sub .mkshell store
+stop
+
+cond
+*.eyef 0 =
+*.robage 20 mod 10 <
+start
+20 .up store
+stop
+
+cond
+*.eyef 0 =
+*.robage 20 mod 10 >=
+start
+*.aim 70 add .setaim store
+stop
+
+cond
+*.refshoot *.myshoot =
+*.robage 20 mod 10 <
+start
+10 .dx store
+stop
+
+cond
+*.refshoot *.myshoot =
+*.robage 20 mod 10 >=
+start
+*.aim 70 add .setaim store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 10 div 20 sub 0 floor *.refvelup add .up store
+*.refveldx .dx store
+*.refxpos .birthx store
+*.refypos .birthy store
+stop
+
+cond
+*.shoot -2 =
+start
+*.refveldx 30 add .dx store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+*.refshoot 0 =
+*.refeye 0 =
+*.refshell 0 =
+*.refpoison 0 =
+*.refvenom 0 =
+*.memval 0 =
+*.original .origkey !=
+start
+0 .up store
+30 .dn store
+*.aim 682 add .setaim store
+stop
+
+cond
+*.poisoned 0 !=
+start
+0 .up store
+*.refvelup 50 add .dn store
+stop
+
+cond
+*.pain 50 >
+*.shflav -2 != 
+*.shflav 0 != 
+start
+*.pain .dx store
+stop
+
+cond
+*.body 100 >=
+*.nrg 500 >=
+*.repspin 0 =
+start
+1 .repspin store
+stop
+
+cond
+*.body 100 >=
+*.nrg 500 >=
+*.repspin 0 >
+*.repspin 6 <
+start
+*.aim 341 add .setaim store
+50 .repro store
+.repspin inc
+stop
+
+cond
+*.repspin 5 >
+*.robage 20 mod 0 =
+start
+0 .repspin store
+stop
+
+cond
+*.robage 1 =
+start
+*.birthx *.birthy angle .setaim store
+stop
+
+cond
+*.robage 6 < 
+*.robage 1 >
+*.refshoot *.myshoot =
+*.eyef 0 = or
+start
+*.aim 341 add .setaim store
+stop
+
+cond
+*.shflav -2 =
+*.original .origkey =
+start
+1 .fixpos store
+stop
+
+cond
+*.shflav -2 =
+*.original .origkey !=
+start
+100 .up store
+stop
+
+cond
+*.shflav 0 !=
+start
+0 .shflav store
+stop
+
+cond
+*.body 300 >
+start
+3000 .fdbody store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+*.robage 3 mod 0 =
+start
+-3 .shoot store
+0 .shootval store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+*.robage 3 mod 1 =
+start
+-8 .shoot store
+0 .shootval store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+*.robage 3 mod 2 =
+*.refbody 100 >
+*.refnrg 300 >
+start
+.sexrepro .shoot store
+99 .shootval store
+stop
+
+cond
+*.refshoot *.myshoot !=
+*.eyef 0 >
+*.refshoot 0 =
+*.refeye 0 =
+*.refshell 0 =
+*.refpoison 0 =
+*.refvenom 0 =
+*.memval 0 =
+*.original .origkey =
+*.robage 5 >
+start
+-1 .shoot store
+*.nrg 20 div 10 ceil .shootval store
+stop
+
+cond
+*.original .origkey !=
+*.shoot -1 =
+*.shoot -6 = or
+start
+0 .shoot store
+0 .shoot store 'Remove or add shoots if another bot has the same amount
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shoot store
+0 .shootval store
+stop
+
+cond
+*.refshoot *.myshoot =
+*.eyef 0 >
+start
+0 .shoot store
+0 .shootval store
+stop
+
+cond
+*.robage 20 >
+*.refshoot *.myshoot =
+*.eyef 0 >
+*.nrg 1000 >
+*.refnrg 1000 <
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 10 div 20 sub 0 floor *.refvelup add .up store
+*.refveldx .dx store
+0 .dn store
+-2 .shoot store
+*.eyef 50 sub 0 floor 50 ceil .shootval store
+stop
+
+end

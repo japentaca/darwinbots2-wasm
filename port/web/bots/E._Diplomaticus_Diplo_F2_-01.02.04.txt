@@ -1,0 +1,108 @@
+'E_Diplomaticus 'Diplo' 
+'Feb. 2004 Joan
+'---------------------
+
+'---------------------
+'*40 *41 counter values
+'*80 .aimdx value 
+'---------------------
+
+'----------Setup
+
+cond
+*.out1 32 !=
+start
+32 .out1 store
+*.out1 .out2 store
+300 .aimdx store
+50 80 store
+stop
+
+'---Reproduction
+cond
+*.nrg 10000 >
+start
+50 .repro store
+150 .aimsx store
+stop
+
+'------Movement
+'--------Rotation
+cond
+*.eye5 0 =
+start
+*80 .aimdx store
+*80 *41 add
+41 store *.out1 .out2 store
+stop
+
+'---------Control
+cond
+*41 1200 >
+*.eye5 0 =
+start
+15 .up store 
+0 41 store 
+stop
+
+'---Go away from parthners
+cond
+*.eye5 0 !=
+*.in1 *.out1 =
+*.in2 *.out1 =
+start
+300 .aimdx store
+stop
+
+'---Go away from parthners
+cond
+*.eye1 0 !=
+*.in1 *.out1 =
+*.in2 *.out1 =
+start
+15 .dn store
+stop
+
+'---Atacs partners while eating
+cond
+*.eye5 0 !=
+*.in2 *.out1 !=
+start
+10 .up store
+-1 .shoot store
+stop
+
+'----------Feed
+'----------------
+cond
+*.eye5 0 !=
+*.in1 *.out1 !=
+start
+-1 .shoot store
+*.up 5 add .up store
+0 40 store
+0 41 store
+0 .out2 store
+stop
+
+'--------Defend
+'-----------------
+cond
+*40 0 <
+start
+.aimdx .shoot store
+300 .shootval store
+150 .aimdx store
+*40 10 add 40 store 
+0 .out2 store
+stop
+
+'------SideShot
+cond
+*.shsx 0 !=
+start 
+-80 40 store
+stop
+
+'--------------
+end

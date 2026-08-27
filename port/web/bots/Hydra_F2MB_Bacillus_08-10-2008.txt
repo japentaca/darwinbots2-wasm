@@ -1,0 +1,73 @@
+'Hydra Velocans
+'A multibot by Bacillus
+'Mutation observed by DeMaskus
+'Creates erratic movement
+'#generation: 8
+'#mutations: 3
+ cond
+ *.robage 0 =
+ start
+ 348 inc
+ 1 990 store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  11  '''''''''''''''''''''''
+ start
+ 500 *.body sub dup .strbody store
+ - 312 *.vel sub .up store
+ 333 .out1 store
+ 333 .tout1 store
+ *990 .out2 store
+ *990 .tout2 store
+ 50 .sharenrg store
+ 50 .sharewaste store
+ *.in1 *.out1 sub sgn abs *.eye5 30 sub sgn 0 floor mult .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  57  '''''''''''''''''''''''
+ cond
+ *.nrg 6000 >
+ *.numties 3 <
+ *.eye5 30 <
+ start
+ 50 .repro store
+ 2 990 store
+
+''''''''''''''''''''''''  Gene:  3 Ends at position  74  ''''''''''''''''''''''' else
+
+''''''''''''''''''''''''  Gene:  4 Ends at position  75  '''''''''''''''''''''''
+ cond
+ *.in1 *.out1 !=
+ *.eye5 30 >
+ start
+ 16 .shootval store
+ *.refxpos *.refypos angle .setaim store
+ -6 .shoot store
+ *.vel 2 sub .dn store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  100  '''''''''''''''''''''''
+ cond
+ *.in1 *.out1 =
+ *.shflav 0 =
+ start
+ 314 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  112  '''''''''''''''''''''''
+ cond
+ *.in1 *.out1 =
+ *.eye5 0 =
+ or
+ *.shflav 0 !=
+ start
+ *.shang .aimright store
+ 0 .shflav store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  131  '''''''''''''''''''''''
+ cond
+ *990 2 =
+ *.waste 100 >
+ start
+ *.waste .shootval store
+ -4 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  146  '''''''''''''''''''''''
+
+'#hash: <EQs7R%40B}#+$ha7%x$

@@ -1,0 +1,152 @@
+'Released with DB2.15 pond2
+'PY
+
+' *PY's Anon Terifica
+' ************************
+cond
+*.vel 10 <
+*.refeye *55 !=
+start
+2 .up store
+stop
+
+' initialize
+' *********
+cond
+*.robage 0 =
+start
+10 rnd 1 add 53 store
+20 55 store
+.tie inc
+*53 .readtie store
+1000 .setboy store
+stop
+
+' Detect edges
+' ****************
+cond
+*.edge 0 !=
+start
+100 .aimsx store
+stop
+
+' keep track of body
+' *********************
+cond
+*.body 1000 >
+start
+100 .fdbody store
+stop
+
+cond
+*.body 100 <
+*.nrg 2000 >
+start
+100 .strbody store
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+' dump waste
+' **********
+cond
+*.waste 50 >
+start
+-4 .shoot store
+50 .shootval store
+stop
+
+'reproduce 
+'***********
+cond
+*.nrg 3000 > 
+start
+50 .repro store
+0 50 store
+628 .aimdx store
+stop
+
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 > 
+start
+-110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+-70 .aimdx store
+2 .up store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+70 .aimdx store
+2 .up store
+stop
+
+' delete tie to family
+cond
+*.trefeye *55 =
+start
+*53 .deltie store
+stop
+
+'Tie to an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye4 *.eye6 %=
+*.refeye *55 !=
+*.refnrg 100 >
+*.robage 2 >
+start
+*53 .tie store
+0 .aimdx store
+stop
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye *55 =
+start
+280 .aimsx store
+stop
+
+' Avoid corpses
+' ****************
+cond
+*.refnrg 1 <
+*.eye5 50 >
+start
+150 .aimsx store
+stop
+
+cond 
+*.numties 0 >
+start
+*53 .tienum store
+-100 .tieval store
+-1 .tieloc store
+stop
+end

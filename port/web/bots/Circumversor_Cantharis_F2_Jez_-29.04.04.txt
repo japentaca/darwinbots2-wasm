@@ -1,0 +1,138 @@
+'Circumversor Cantharis
+' Shot-bot by Jez
+
+'Delete ties
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+'start
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+'lock to target?
+cond
+*.eye5 0 >
+*.refeye 22 !=
+start
+mult mult 0 0 
+stop
+
+'search
+cond
+*.eye5 0 =
+start
+mult mult 208 0
+stop
+
+'target
+cond
+*.eye1 *.eye5 >
+start
+mult mult 104 4 
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult mult -104 -4 
+stop
+
+cond
+*.eye2 *.eye5 >
+start
+mult mult 78 3 
+stop
+
+cond
+*.eye8 *.eye5 >
+start
+mult mult -78 -3 
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+mult mult 52 2 
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult mult -52 -2 
+stop
+
+cond
+*.eye4 *.eye5 >
+start
+mult mult 26 1 
+stop
+
+cond
+*.eye6 *.eye5 >
+start
+mult mult -26 -1 
+stop
+
+'avoid friends
+cond
+*.refeye 22 =
+*.eye5 0 >
+start
+mult mult 208 0
+stop
+
+'reproduce
+cond
+*.nrg 4000 >
+start
+25 .repro store
+mult mult -208 0
+stop
+
+'turn
+cond
+start
+.sx store
+.aimsx store
+stop
+
+'shoot
+cond
+*.refage 0 >
+*.eye5 30 >
+*.refeye 22 !=
+start
+-1 .shoot store
+stop
+
+'move forward
+cond
+*.eye5 0 >
+*.refeye 22 !=
+start
+*.eye5 -1 mult 100 add 10 div .up store
+stop
+
+'very first go
+cond
+*.robage 1 =
+*.numties 0 =
+*.nrg 2000 >
+start
+50 .repro store
+stop
+
+'nasty poison bit that doesn't work
+cond
+*.nrg 1000 >
+*.poison 100 <
+start
+100 .strpoison store
+stop
+end

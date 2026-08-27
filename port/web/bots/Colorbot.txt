@@ -1,0 +1,526 @@
+'******************************************
+'*                                        *
+'*               Colorbot                 *
+'*                                        *
+'* Made by Testlund in December 3, 2013.  *
+'*                                        *
+'*    My behavior is dependent on the     *
+'* color you choose to write into my dna. *
+'*                                        *
+'******************************************
+
+*** Red bot ***
+
+'Unfix me from birth (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ robage 0 =
+start
+0 .fixpos store
+stop
+
+'Make a protective shell against -6 shots (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.nrg 2000 >
+ *.shell 500 <
+start
+ 1 .mkshell store
+stop
+
+'If I'm hit with a -1 or -6 shot I will flee (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.refxpos *.refypos angle sub .setaim store
+ 32 .up store
+stop
+
+'If I see something to the left I will turn to it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye3 *.eye5 >
+start
+ -50 .aimright store
+stop
+
+'If I see something to the right I will turn to it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye7 *.eye5 >
+start
+ 50 .aimright store
+stop
+
+'Swim forward (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.nrg 32 >
+start
+ 32 .up store
+stop
+
+'If I see something I
+'will ask if I can eat it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+start
+ 1 .out1 store
+stop
+
+'If it doesn't say "No", I will eat it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.out1 1 =
+ *.in2 2 !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ -6 .shoot store
+stop
+
+'If a bot asks if it can eat me,
+'I will say "No" and turn away (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.in1 1 =
+start
+ 2 .out2 store
+ 314 rnd .aimright store
+stop
+
+'If I see a bot with no eyes
+'I will turn away from it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.refeye 0 =
+start
+ 314 rnd .aimright store
+stop
+
+'If I'm small I will store energy to make me larger (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.body 16000 <
+ *.nrg 8000 >
+start
+ 2 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.body 16000 >
+ *.nrg 8000 >
+start
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+'*** Green bot ***
+
+'Make a small amount of chloroplast (green bot)
+cond
+ .red 128 <
+ .green 127 >
+ .blue 128 <
+ *.chlr .green 128 add <
+start
+ 1 .mkchlr store
+stop
+
+'Make a large amount of chloroplast (green bot)
+cond
+ .red 128 <
+ .green 127 >
+ .blue 128 <
+ *.chlr .green 32 mult <
+start
+ 1 .mkchlr store
+stop
+
+'If I'm small I will store energy to make me larger (green bot)
+cond
+ .red 128 <
+ .green 127 >
+ .blue 128 <
+ *.body 4000 <
+ *.nrg 2000 >
+start
+ 3 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (green bot)
+cond
+ *.body 4000 >
+ *.nrg 2000 >
+start
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+'*** Blue bot ***
+
+'(blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ robage 0 =
+start
+0 .fixpos store
+stop
+
+'If I'm hit with a -1 or -6 shot I will flee (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.refxpos *.refypos angle sub .setaim store
+ 64 .up store
+stop
+
+'If I'm hit with a -1 shot I will make slime for defence (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ 32 .up store
+ 1000 .mkslime store
+stop
+
+'If I see something to the left I will turn to it (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.eye3 *.eye5 >
+start
+ -50 .aimright store
+stop
+
+'If I see something to the right I will turn to it (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.eye7 *.eye5 >
+start
+ 50 .aimright store
+stop
+
+'If I see a bot with no eyes I will move to it (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.eye5 0 >
+ *.refeye 0 =
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+'If I see a bot with no eyes I will steal it's energy (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.eye5 50 >
+ *.refeye 0 =
+ *.refnrg 0 >
+start
+ -1 .shoot store
+ *.refvelup .up store
+stop
+
+'If I see a bot with eyes I will turn away from it (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.eye5 0 >
+ *.refeye 0 >
+start
+ 314 rnd .aimright store
+stop
+
+'(blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.nrg 32 >
+start
+ 64 rnd .up inc
+stop
+
+'If I'm small I will store energy to make me larger (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.body 8000 <
+ *.nrg 4000 >
+start
+ 1 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (blue bot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 127 >
+ *.body 8000 >
+ *.nrg 4000 >
+start
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+'*** High colorbot ***
+
+'Set my species identity (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.robage 0 =
+start
+ 68 .memloc store
+ 101 68 store
+ 0 .fixpos store
+stop
+
+'Keep my venom at 100 (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.venom 100 <
+start
+ 100 .strvenom store
+stop
+
+'Defend with venom if I'm attacked and move away (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.refxpos *.refypos angle .setaim store
+ .fixpos .vloc store
+ 1 .venval store
+ -3 .shoot store 
+ 32 .dn store
+stop
+
+'Move around (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.nrg 32 >
+start
+ 16 rnd .aimsx store
+ 16 rnd .aimdx store
+ .up inc
+stop
+
+'If I see a bot of a different
+'species I will move to it (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.eye5 0 >
+ *.memval *68 !=
+ *.refeye 0 >
+ *.reffixed 0 =
+ *.venom 16 >
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup 32 .up store
+ .fixpos .vloc store
+  1 .venval store
+ -3 .shoot store 
+stop
+
+'If I see a bot of a different species
+'I will kill it and feed on it (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.eye5 100 >
+ *.refvelup 0 =
+ *.memval *68 !=
+ *.refeye 0 >
+ *.refnrg 0 >
+start
+ -1 .shoot store
+ *.refvelup .up store
+stop
+
+'If I see a conspecies I will turn away from it (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.eye5 0 >
+ *.memval *68 =
+ *.refeye 0 = or
+ *.refnrg 0 = or
+start
+ 314 rnd .aimdx store
+stop
+
+'If I'm small I will store energy to make me larger (high colorbot)
+cond
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ *.body 16000 <
+ *.nrg 8000 >
+start
+ 2 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (high colorbot)
+cond
+ *.body 16000 >
+ *.nrg 8000 >
+start
+ .red 128 >
+ .green 128 >
+ .blue 128 >
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+'*** Low colorbot ***
+
+'Set my species identity (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.robage 5 <
+start
+ 67 .memloc store
+ 101 67 store
+stop
+
+'Tie to any bot I see that is not my conspecies (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.memval *67 !=
+start
+ *.refxpos *.refypos angle .setaim store
+ .tie inc
+stop
+
+'If I'm tied to anything and my
+'nrg is low I will feed on it (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.nrg 2500 <
+ *.numties 0 >
+start
+ *.tiepres .tienum store
+ -32 .tieval store
+ -1 .tieloc store
+stop
+
+'Use poison for defence against
+'-1 shots and delete my tie (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.shflav -1 =
+start
+ .deltie inc
+ 480 .strpoison store
+ .shoot .ploc store
+stop
+
+'Delete my tie (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.refnrg 0 =
+ *.shflav -6 = or
+start
+ .deltie inc
+stop
+
+'If I'm small I will store energy to make me larger (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.body 4000 <
+ *.nrg 2000 >
+start
+ 3 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (low colorbot)
+cond
+ .red 128 <
+ .green 128 <
+ .blue 128 <
+ *.body 4000 >
+ *.nrg 2000 >
+start
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+end

@@ -1,0 +1,361 @@
+'Proeliator Gryphus
+'Tie Feeder/Hunter Prototype
+'by Strangers
+
+
+'Initialize
+'*************
+cond
+*.robage 0 =
+start
+200 rnd 55 store
+.eye5 .ploc store
+256 41 store
+7 989 store
+stop
+
+'Spinning
+'************
+cond
+*.eye5 0 =
+start
+mult 50
+stop
+
+'Wide search 1
+'*******************
+cond
+*.refeye *.myeye !=
+*.eye1 *.eye5 >
+start
+mult -140
+stop
+
+'Wide search 2
+'*******************
+cond
+*.refeye *.myeye !=
+*.eye9 *.eye5 >
+start
+mult 140
+stop
+
+' Simple search pattern
+'***************************
+cond
+*.refeye *.myeye !=
+*.eye3 *.eye5 >
+start
+mult -70
+stop
+
+'Simple search pattern part 2
+'**********************************
+cond
+*.refeye *.myeye !=
+*.eye7 *.eye5 >
+start
+mult 70
+stop
+
+' Moving
+'**********
+cond
+*.refeye *.myeye !=
+*.eye5 0 >
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+' Obtaining Food and Shooting
+'***********************************
+cond
+*.eye5 40 >
+*.refeye 0 =
+*.robage 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+.shoot dec
+16 .shootval store
+*.refvelup .up store
+*.refveldx .dx store
+stop
+
+cond
+*.eye5 40 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.refpoison 0 >
+*.robage 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+-6 .shoot store
+16 .shootval store
+*.refvelup .up store
+*.refveldx .dx store
+stop
+
+cond
+*.eye5 40 >
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.refpoison 0 =
+*.robage 0 !=
+start
+*.refxpos *.refypos angle .setaim store
+.shoot dec
+32 .shootval store
+*.refvelup .up store
+*.refveldx .dx store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .aimshoot store
+64 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+'Avoid conspecifics
+'**********************
+cond
+*.refeye *.myeye =
+start
+*.maxvel *.vel add *.eye5 mult 50 div 15 ceil .dx store
+stop
+
+‘Rotate back and continue feeding
+'****************************************
+cond
+*50 0 >
+start
+50 dec
+mult -628
+stop
+
+'Reproduction
+'****************
+cond
+*.nrg 3000 >
+*.body 300 >
+start
+mult 628
+25 .repro store
+0 .shoot store
+50 inc
+stop
+
+‘Perform the rotation
+'************************
+cond
+start
+.aimdx store
+stop
+
+'Tie Feeding
+'****************
+cond
+*.eye5 30 >
+*.refeye *.myeye !=
+start
+*55 .tie store
+*55 .readtie store
+stop
+
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+*55 .tienum store
+stop
+
+Cond
+*.trefeye *.myeye =
+start
+*55 .deltie store
+stop
+
+cond
+*.tiepres *55 !=
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.multi 1 =
+*.trefeye *.myeye !=
+start
+99 .sharenrg store
+.sharewaste inc
+stop
+
+'Body Management
+'***********************
+cond
+*.nrg 1000 >
+*.body 5000 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 500 <
+start
+100 .fdbody store
+stop
+
+'Slime Management
+'************************
+cond
+*.slime 300 <
+*.nrg 3000 >
+start
+300 *.slime sub .mkslime store
+stop
+
+'Shell Management
+'**********************
+cond
+*.shell 50 <
+*.nrg 3000 >
+start
+50 *.shell sub .mkshell store
+stop
+
+'Poison
+'********
+cond
+*.poison 500 <
+*.nrg 3000 >
+start
+500 *.poison sub .strpoison store
+stop
+
+'Waste Management
+'*************************
+cond
+*.waste 100 >
+start
+1 .backshot store
+-4 .shoot store
+*.waste .shootval store
+stop
+
+'Anti Virus and Defense
+'***************************
+cond
+*.mkvirus 0 >
+start
+*.mkvirus .delgene store
+stop
+
+cond
+*.vtimer 0 >
+start
+0 .vshoot store
+stop
+
+cond
+*.shoot -2 =
+start
+0 .shoot store
+stop
+
+cond
+*.fixpos 0 >
+start
+.fixpos dec
+stop
+
+'Chameleon Defense
+'***********************
+cond
+start
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5
+stop
+
+end

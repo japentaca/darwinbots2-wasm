@@ -1,0 +1,264 @@
+' Symbioticus 2.5
+'
+' A tank with a battery ...
+'
+' Ties to a veg, pulls
+' it close behind it and
+' uses it as an energy 
+' source
+'
+' Version 2.0
+' - Code completely redone
+' - Uses a modified version of Animal Minimalis' search pattern
+' Version 2.1
+' - Uses some better coding to save energy
+' Version 2.2
+' - Improves on turning and movement genes
+' Version 2.3
+' - Adds a roaming routine to cover more ground
+' Version 2.4
+' - Some minor changes, improved some routines, better .fdbody routine
+' Version 2.5
+' - Some minor changes, corrected an error in the coding which caused Symbioticus to become immobile when it lost it's veg, annotated some more of the code to make it more understandable
+
+'*************************************************************
+
+def roam 51 ' Used for movement
+def done 52 ' Used for setting tie
+
+' Delete birth tie and set .memloc
+
+cond
+start
+.tie *.robage -1 mult 1 add mult inc
+.tiepres .memloc *.robage -1 mult 1 add mult store
+.deltie inc
+stop
+
+'*************************************************************
+
+' Find and tie to a veggie
+
+cond
+*.robage 0 >
+*.done 0 =
+*.multi 0 =
+*.eye5 0 >
+*.eye5 45 <
+*.refshoot 0 =
+*.refaimdx 1 =
+*.refeye 0 =
+*.memval 86 !=
+*.numties 0 =
+start
+40 .up store
+stop
+
+cond
+*.robage 0 >
+*.eye5 45 >
+*.refshoot 0 =
+*.refaimdx 1 =
+*.refeye 0 =
+*.memval 86 !=
+*.numties 0 =
+start
+86 .tie store
+stop
+
+cond
+*.robage 0 >
+*.numties 0 =
+*.eye5 0 =
+*.memval 86 = or
+*.refshoot 0 != or
+*.refaimdx 1 != or
+*.refeye 0 != or
+start
+314 rnd .aimdx store
+stop
+
+'*************************************************************
+
+' Set tie and unfix veg
+
+cond
+*.numties 1 =
+*.treffixed 1 =
+start
+86 .tienum store
+.fixpos .tieloc store
+0 .tieval store
+stop
+
+cond
+*.numties 1 =
+*.multi 0 =
+*.done 0 =
+start
+.done inc
+628 .fixang store
+15 .fixlen store
+86 .tienum store
+.fixang .tieloc store
+628 .tieval store
+86 .readtie store
+stop
+
+'*************************************************************
+
+' When tied to a vegetable
+
+cond
+*.myeye *.trefeye =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.numties 0 =
+start
+0 *.shell sub .mkshell *.shell sgn mult store
+.done *.done sgn mult dec
+stop
+
+'*************************************************************
+
+' Sharing and producing
+
+cond
+*.multi 1 =
+start
+75 .sharenrg store
+50 .shareslime store
+50 .shareshell store
+.sharewaste inc
+*.pleas 3 div .strbody *.pleas sgn mult store
+*.pleas 3 div .mkslime *.pleas sgn mult store
+600 *.shell sub .mkshell store
+stop
+
+' Shooting and tracking genes for when I become an MB
+
+' Shoot
+
+cond
+*.multi 1 =
+*.eye5 0 >
+*.refeye *.myeye !=
+*.memval 86 !=
+start
+-32 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.multi 1 =
+*.eye5 45 >
+*.refeye *.myeye !=
+*.memval 86 !=
+start
+32 .shootval store
+-6 .shoot store
+stop
+
+' Move
+
+cond
+*.multi 1 =
+*.eye5 0 =
+*.memval 86 = or
+*.refeye *.myeye = or
+*.roam 100 <
+start
+100 .aimdx store
+.roam inc
+stop
+
+cond
+*.roam 99 >
+*.multi 1 =
+*.eye5 0 =
+*.memval 86 = or
+*.refeye *.myeye = or
+start
+100 .up store
+.roam inc
+stop
+
+cond
+*.roam 200 >
+start
+0 .roam store
+stop
+
+' Aim and chase
+
+cond
+*.multi 1 =
+*.eye5 0 >
+*.refeye *.myeye !=
+*.memval 86 !=
+start
+*.refxpos *.refypos angle .setaim store
+*.refveldx .aimdx store
+stop
+
+cond
+*.multi 1 =
+*.eye5 0 >
+*.eye5 30 <
+*.refeye *.myeye !=
+*.memval 86 !=
+start
+*.refvelup *.refvelup add 60 add .up store
+stop
+
+'*************************************************************
+
+' Reproduction
+
+cond
+start
+10 .repro *.body 5000 sub sgn mult *.multi sgn mult store
+stop
+
+cond
+*.nrg 100 <
+start
+*.body 100 ceil .fdbody *.body sgn mult store
+stop
+
+'*************************************************************
+
+' Shoot back at annoying enemies
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+*.multi 1 =
+*.shoot 0 =
+*.refeye 0 = or
+start
+1256 *.shang sub .aimshoot store
+64 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+' Antiviral (for replicating viruses)
+
+cond
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+stop
+
+' Junk DNA (for conspecific recognition)
+
+cond
+start
+*.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 *.eye5 
+stop
+
+end

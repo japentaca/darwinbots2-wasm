@@ -1,0 +1,84 @@
+'Topic: the nex one zelos has made his first bot
+'Zelos
+
+' Borg 
+'This is my first bot, im gonna mke it hell better
+' 
+' 
+' 
+def type 50
+'
+' 
+
+' 
+
+'Move Bot
+cond
+*.eye5 40 <
+*.vel > 25
+start
+5 .up store
+stop
+
+'Move Bot when close to food
+cond
+*.eye5 30 >
+*.vel > 10
+*.refeye *.myeye !=
+start
+0,5 .up store
+stop
+
+'gene run away from friends
+cond
+*.refeye *.myeye =
+*.eye5 0 >
+start
+-628 .aimdx store 
+stop
+
+'gene run away from food whti less then 1000 energy
+cond
+*.refeye 0 =
+*.eye5 0 >
+*.refnrg 1000 <
+start
+-628 .aimdx store
+20 .up store
+stop
+
+'Shoot Food
+cond
+*.eye5 40 >
+*.refnrg 1000 >
+*.hfh 0 =
+*.in1 *.out1 =
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+'Look Left
+cond
+*.eye1 *.eye5 >
+start
+-100 .aimdx store
+stop
+
+'Look Look Right
+cond
+*.eye9 *.eye5 >
+start
+100 .aimdx store
+stop
+
+'Reproduce
+cond
+*.nrg 6000 >
+*.eye5 0 =
+start
+314 .aimdx store
+40 .repro store
+stop
+
+end

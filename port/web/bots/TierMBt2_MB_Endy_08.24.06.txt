@@ -1,0 +1,79 @@
+'TierMBt2
+' Bot is a test model able to join with family members into either a line or triangle
+' When there's too many ties it'll deltie one of it's ties.
+' Bots are able to independently spin while being attached via use of .setaim
+
+
+cond
+*.robage 0 =
+start
+.numties .memloc store
+.tie inc
+stop
+
+cond
+*.nrg 3000 >
+*.body 100 >
+start
+50 .repro 1 rnd 2 mult add store
+stop
+
+cond
+*.myeye *.refeye =
+*.numties 2 <
+*.memval 2 <
+start
+.tie inc
+stop
+
+
+cond
+*.myeye *.refeye !=
+*.eye5 45 >
+start
+-1 .shoot store
+stop
+
+
+cond
+*.myeye *.refeye =
+*.eye5 0 >
+start
+314 rnd *.aim add .setaim store store
+stop
+
+cond
+*.numties 2 >
+start
+.deltie inc
+stop
+
+cond
+*.nrg 3000 >
+*.body 100 <
+start
+100 *.body sub .strbody store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye !=
+start
+*.maxvel *.vel sub 2 div .up store
+stop
+
+
+cond
+*.myeye *.refeye !=
+*.eye5 0 >
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.eye5 0 =
+start
+314 rnd *.aim add .setaim store
+stop
+
+end

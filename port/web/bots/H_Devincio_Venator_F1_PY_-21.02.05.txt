@@ -1,0 +1,136 @@
+'H_Devincio_Venator
+' *** Tie Hunter ***
+' Made by PY
+'H_DV version 2.11. Streamlined version of H_DV 
+'for version 2.11 software
+' Makes use of *.tienum
+' Cheaper movement now that loophole is plugged
+' The robot who started the whole tie-feeding thing
+' See how much he sucks nowadays
+'***********************
+
+'initialize
+'******
+cond
+*50 0 =
+start
+10 rnd 53 store
+stop
+
+'reproduce 
+'***********
+cond
+*.nrg 10000 > 
+start
+30 .repro store
+0 50 store
+stop
+
+' move forward 
+'****************
+cond
+*.vel 20 <
+start
+*50 *.eye5 sub 10 div .up store
+stop
+
+cond
+*50 100 <
+start
+50 inc
+stop
+
+'turn towards food
+'*************************
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 > 
+start
+-110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+110 .aimdx store
+3 .up store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+-70 .aimdx store
+2 .up store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+70 .aimdx store
+2 .up store
+stop
+
+
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye 22 =
+*.eye5 20 >
+start
+280 .aimsx store
+stop
+
+'Spin when attacked
+'*************************
+cond
+*.shdn 0 <
+*.pleas -10 <
+start
+620 .aimsx store
+stop
+
+'random direction change
+'****************************
+cond
+10 rnd 1 =
+start
+200 rnd 100 sub .aimsx store
+stop
+
+'Tie to an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye4 *.eye6 =
+*.refeye 22 !=
+*50 20 > 
+*.numties 0 =
+start
+*53 .tie store
+0 .aimdx store
+stop
+
+
+cond 
+*.numties 0 >
+start
+*53 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 35 >
+*.refeye 22 !=
+start
+-1 .shoot store
+stop
+
+end

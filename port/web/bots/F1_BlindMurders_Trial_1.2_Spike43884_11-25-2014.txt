@@ -1,0 +1,109 @@
+'You think I have to see to kill you...No, I just wait for you to attack!
+'Contrary to its name, it isn't blind...so sorry about that, But it doesn't
+'need to see you, to kill you...It uses .shang and .shflav to counter what
+'you have shot at it, then shoot back as well!
+
+
+'Gene 1 Initialisation
+cond
+*.robage 2 <
+start
+ 135 .eye1width store
+ 135 .eye2width store
+ 135 .eye3width store
+ 140 .eye4width store
+ 10 .eye5width store
+ 140 .eye6width store
+ 135 .eye7width store
+ 135 .eye8width store
+ 135 .eye9width store
+ 410 .eye1dir store
+ 300 .eye2dir store
+ 190 .eye3dir store
+ 79 .eye4dir store
+ 0 .eye5dir store
+ -79 .eye6dir store
+ -190 .eye7dir store
+ -300 .eye8dir store
+ -410 .eye9dir store
+stop
+
+
+'Gene 2 Food Finder
+cond
+*.eye3 0 >
+*.eye4 0 >
+*.eye5 0 >
+*.eye6 0 >
+*.eye7 0 >
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+'Gene 4 Blind Retaliation
+cond
+*.hit 1 =
+start
+*.shang 90 sub .aimshoot
+-1 .shoot store
+stop
+
+
+'Gene 5 Eat Food
+cond
+*.eye5 49 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+'216 .shootval store
+-6 .shoot store
+*.refvelup .up store
+stop
+
+
+'Gene 6 Multi
+cond
+*.multi 1 =
+start
+48 .sharenrg store
+10 .fixlen store
+30 .stifftie store
+stop
+
+
+'Gene 7 Avoiding Family
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+
+'Gene 8 Reproduce
+cond
+*.nrg 15000 >
+start
+30 .repro store
+1 .tie store
+stop
+
+
+'Gene 9 Anti Virus/Anti Error (suicide)
+cond
+*.genes 9 !=
+start
+314 rnd .aimdx store
+40 .up store
+40 .dn store
+40 .up store
+40 .dn store
+40 .up store
+40 .dn store
+40 .up store
+40 .dn store
+stop
+
+end

@@ -1,0 +1,194 @@
+cond
+  *40
+  29
+  >
+start
+  0
+  40
+  store
+stop
+
+cond
+start
+  1
+  .aimdx
+  store
+stop
+
+cond
+  *.eye6
+  0
+  >
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye7
+  0
+  >
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye8
+  0
+  >
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye9
+  0
+  >
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.shdx
+  0
+  >
+start
+  15
+  .aimsx
+  store
+stop
+
+cond
+  *.vel
+  0
+  !=
+  *.eye3
+  0
+  >
+start
+  15
+  .aimsx
+  store
+stop
+
+cond
+  *.eye2
+  0
+  >
+start
+  15
+  .aimsx
+  store
+stop
+
+cond
+  *.eye1
+ -1
+  >
+start
+  15
+  .aimsx
+  store
+stop
+
+cond
+  *.eye5
+ -1
+  >
+  *.refshoot
+  0
+  =
+start
+ -1
+  .shoot
+  store
+  9
+  .shootval
+  store
+  10
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  0
+  <
+  *.refshoot
+  0
+  >
+start
+  10
+  .dn
+  store
+stop
+
+cond
+  *.nrg
+  10000
+  >
+start
+  314
+  .aimdx
+  store
+  50
+  .hitdn
+  store
+stop
+
+cond
+  *50
+  1
+  =
+start
+  50
+  .repro
+  store
+  0
+  50
+  store
+stop
+
+cond
+  *.nrg
+  15000
+  >
+start
+  33
+  .repro
+  store
+  1
+  50
+  store
+stop
+
+cond
+  *.nrg
+  3000
+  <
+  *.eye5
+  0
+  =
+start
+  10
+  .sx
+  store
+stop
+
+cond
+  *.vel
+  5
+  <
+start
+  100
+  .aimdx
+  store
+stop
+end

@@ -1,0 +1,101 @@
+'SS bot of Ebrejs
+
+start
+
+'Values
+
+'1
+100
+*.eye5 0 sub sgn abs - ++ mult
+*.myeye *.refeye sub sgn abs - ++ add abs
+2 rnd 0 sub sgn abs - ++ mult
+
+'2
+*.refxpos *.refypos angle 
+*.eye5 0 sub sgn 0 floor mult
+*.eye5 50 sub sgn - 0 floor mult
+*.myeye *.refeye sub sgn abs mult
+1 rnd 0 sub sgn abs - ++ mult
+add
+
+'3
+*.maxvel 
+*.eye5 0 sub sgn 0 floor mult
+*.eye5 50 sub sgn - 0 floor mult
+*.myeye *.refeye sub sgn abs mult
+1 rnd 1 sub sgn abs - ++ mult
+add
+
+'4
+-6
+*.eye5 50 sub sgn 0 floor mult
+*.myeye *.refeye sub sgn abs mult
+add
+
+'5
+'100
+'*.eye5 0 sub sgn abs - ++ mult
+'*.myeye *.refeye sub sgn abs - ++ add abs
+'2 rnd 2 sub sgn abs - ++ mult
+'*.body 70 sub sgn 0 floor mult
+'add
+
+'6
+50 
+*.eye5 0 sub sgn abs - ++ mult
+*.myeye *.refeye sub sgn abs - ++ add abs
+2 rnd 1 sub sgn abs - ++ mult
+*.nrg 1000 sub sgn 0 floor mult
+add
+
+'Locations
+
+
+'1
+.aimsx
+*.eye5 0 sub sgn abs - ++ mult
+*.myeye *.refeye sub sgn abs - ++ add abs
+2 rnd 0 sub sgn abs - ++ mult
+
+'2
+.setaim
+*.eye5 0 sub sgn 0 floor mult 
+*.eye5 50 sub sgn - 0 floor mult 
+*.myeye *.refeye sub sgn abs mult
+1 rnd 0 sub sgn abs - ++ mult 
+add
+
+'3
+.up
+*.eye5 0 sub sgn 0 floor mult
+*.eye5 50 sub sgn - 0 floor mult
+*.myeye *.refeye sub sgn abs mult
+1 rnd 1 sub sgn abs - ++ mult
+add
+
+'4
+.shoot
+*.eye5 50 sub sgn 0 floor mult
+*.myeye *.refeye sub sgn abs mult
+add
+
+'5
+'.fdbody
+'*.eye5 0 sub sgn abs - ++
+'*.myeye *.refeye sub sgn abs - ++ add abs
+'2 rnd 2 sub sgn abs - ++ mult
+'*.body 170 sub sgn 0 floor mult
+'add
+
+'6
+.repro
+*.eye5 0 sub sgn abs - ++ mult
+*.myeye *.refeye sub sgn abs - ++ add abs
+2 rnd 1 sub sgn abs - ++ mult
+*.nrg 1000 sub sgn 0 floor mult
+add
+
+
+store
+
+stop

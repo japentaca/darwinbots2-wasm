@@ -1,0 +1,132 @@
+'Topic: Ecosistem (Bot for 2.15Pond1)
+'K0zm0
+
+'F-Alpha
+'Made for DB v 2.15Pond1
+'Made by k0zm0 12.04.2004
+
+cond
+*.robage 0 =
+start
+12 50 store
+15 rnd 51 store
+100 .setboy store
+stop
+
+cond
+*.nrg 5000 >
+start
+50 .repro store
+15 .aimdx store
+stop
+
+cond
+*.eye5 0 =
+start
+*.eye1 *.eye9 sub
+*.eye2 *.eye8 sub
+*.eye3 *.eye7 sub
+*.eye4 *.eye6 sub
+add add add 2 div .aimsx store
+stop
+
+cond
+*.eye5 20 <
+start
+45 .aimsx store
+stop
+
+cond
+*.numties 1 =
+*.eye5 30 >
+*.refeye *50 =
+start
+*51 .tienum store
+*51 .tie store
+*51 .readtie store
+624 .aimsx store
+stop
+
+cond
+*.numties 0 >
+*.nrg 1000 <
+start
+50 .sharenrg store
+50 .sharewaste store
+stop
+
+cond
+*.slime 80 <
+*.numties 0 >
+start
+50 .shareslime store
+stop
+
+cond
+*.shell 80 <
+*.numties 0 >
+start
+50 .shareshell store
+stop
+
+cond
+*.eye5 30 >
+*.refeye *50 !=
+start
+-1 .shoot store
+stop
+
+cond
+*52 1 =
+*.numties 0 =
+start
+0 52 store
+stop
+
+cond
+*52 0 =
+*.numties 0 >
+start
+1 52 store
+stop
+
+cond
+*52 0 =
+*.slime 99 <
+start
+100 *.slime sub .mkshell store
+stop
+
+cond
+*52 0 =
+*.shell 99 <
+start
+100 *.shell sub .mkshell store
+stop
+
+cond
+*52 1 =
+*.slime 199 <
+start
+200 *.slime sub .mkslime store
+stop
+
+cond
+*52 1 =
+*.shell 199 <
+start
+200 *.shell sub .mkshell store
+stop
+
+cond
+*.body 1000 >
+start
+100 .fdbody store
+stop
+
+cond
+*.waste 0 >
+start
+*.waste .strpoison store
+stop
+end

@@ -1,0 +1,3 @@
+start
+-6 *.eye5 40 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 50 *.nrg 2000 sub sgn 0 floor mult 39 *.eye5 sub sgn 0 floor mult add 314 rnd *.eye5 0 sub sgn - 0 floor mult sub *.refeye *.myeye sgn abs -- abs add abs add 7 *.eye5 40 sub sgn 0 floor mult *.refeye *.myeye sub sgn abs mult 300 *.nrg 2000 sub sgn 0 floor mult 39 *.eye5 sub sgn 0 floor mult add 6 *.eye5 0 sub sgn - 0 floor mult *.myeye *.refeye sub sgn abs -- abs add abs add store
+stop

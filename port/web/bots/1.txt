@@ -1,0 +1,52 @@
+' Gene 1 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 2 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 3 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 4 Reproduce
+cond
+ *.nrg 15000 >
+start
+ 30 .repro store
+stop
+
+
+' gene 5 waste disposal
+cond
+*.waste 40 >
+start
+.backshot inc
+-4 .shoot store
+
+' gene 6 counter attack
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+16 .shootval store
+628 .shoot store
+0 .shflav store
+stop
+end

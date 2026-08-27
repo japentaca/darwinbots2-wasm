@@ -1,0 +1,102 @@
+'Big v1.1 (F3)
+'by Moonfisher
+'Not that clever... just goes ahead and shoots stuff, and grows big.
+'The eyes are from excalibur.
+'v1.1: Just fixed reproduction and tweeked a litle here and there.
+
+def movebody 5000
+def maxbody 15000
+def alge 13
+def x 10
+
+start
+.deltie inc
+
+*.memloc .dnalen !=
+.dnalen .memloc store
+
+*.nrg 500 <
+*.body 100 > and
+100 .fdbody store
+
+*.nrg 2000 >
+*.body *.nrg < and
+*.body .maxbody < and
+*.nrg 10 mult *.body sub .strbody store
+
+*.eye5 0 !=
+*.dnalen *.memval != and
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 5 div 30 sub 0 floor 100 ceil *.refvelup add .up store
+*.nrg 100 div *.refnrg ceil 25 floor .shootval store
+
+dupbool
+*.refpoison 0 = and
+*.memval .alge != and
+*.refnrg 100 < and
+-1 .shoot store
+
+dropbool
+dupbool
+*.memval .alge != and
+*.refnrg 100 >= and
+-6 .shoot store
+
+dropbool
+dupbool
+*.memval .alge = and
+-1 5 *.timer 2 mod mult sub .shoot store
+16 .shootval store
+
+dropbool
+not
+*.body .movebody < and
+*.maxvel .up store
+*.veldx .sx store
+*.robage 50 <
+*.timer 30 mod 20 < or and
+dupbool
+*.eye9 *.eye1 != and
+*.eye1 *.eye9 sub sgn 139 .x 2 mult add mult .aimsx store
+dropbool
+dupbool
+*.eye8 *.eye2 != and
+*.eye2 *.eye8 sub sgn 104 .x 2 mult add mult .aimsx store
+dropbool
+dupbool
+*.eye7 *.eye3 != and
+*.eye3 *.eye7 sub sgn 70 .x add mult .aimsx store
+dropbool
+dupbool
+*.eye6 *.eye4 != and
+*.eye4 *.eye6 sub sgn 35 .x add mult .aimsx store
+
+*.eye5 0 !=
+*.dnalen *.memval = and
+*.body .movebody < and
+150 .aimsx store
+
+*.eye5 0 =
+*.dnalen *.memval = or
+*.body .movebody >= and
+30 .aimsx store
+
+*.eye5 0 =
+*.memval *.dnalen = or
+*.shflav 0 = and
+*.nrg 31000 > and
+*.body 3000 > and
+*.aim 314 add .setaim store
+20 .repro store
+
+*.shflav 0 !=
+*.shang .aimshoot store
+-6 .shoot store
+30 .shootval store
+0 .shflav store
+
+*.robage 5 <
+*.body 1100 > and
+500 .dn store
+stop

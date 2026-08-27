@@ -1,0 +1,249 @@
+' Din2
+' Dominator Icarus Ninja
+' PY, Light, Henk
+' Three bots combined are better than three alone.
+' Mod by Endy
+' Only TF from Agla to limit counter attack possibilities
+' Added shell and a few constant genes.
+
+cond
+start
+' constant gene uses only dec and inc
+' unfix
+.fixpos *.fixed mult dec
+' birth tie related
+.tie *.robage 1000 mult add inc
+.deltie *.robage 1 sub 1000 mult add inc
+' Decrease 53 and 54 to zero
+53 *53 *53 div mult dec
+54 *54 *54 div mult dec
+' random out1/2
+.out1 1 rnd add inc
+.out2 1 rnd sub dec
+stop
+
+cond
+*.robage 0 =
+start
+39 55 store
+'43 55 store
+.shoot .ploc store
+' saved energy by using readtie for tienum.
+998 rnd 1 add .readtie store
+stop
+
+' move forward 
+'****************
+cond
+*.refeye *55 !=
+*.numties 0 =
+start
+' droped up to make bot look more similar to alga
+0 *.maxvel *.vel sub 2 div sub .dn store
+stop
+
+cond
+start
+mult mult 0 0
+stop
+
+cond
+*.eye4 *.eye6 >
+start
+mult mult -5 -25
+stop
+
+cond
+*.eye6 *.eye4 >
+start
+mult mult 5 25
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye4 >
+*.eye3 *.eye6 >
+start
+mult mult -8 -80 
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye6 >
+*.eye7 *.eye4 >
+start
+mult mult 8 80
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye4 >
+*.eye1 *.eye6 >
+*.eye1 *.eye3 >
+*.eye1 *.eye7 >
+start
+mult mult -14 -140 
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye4 >
+*.eye9 *.eye6 >
+*.eye9 *.eye3 >
+*.eye9 *.eye7 >
+start
+mult mult 14 140 
+stop
+
+' Avoid conspecifics
+' ***********************
+cond
+*.refeye *55 =
+start
+mult mult 0 85 
+stop
+
+'reproduce 
+'***********
+cond 
+*.robage 50 <
+*.eye5 50 <
+*.nrg 1500 >
+start
+50 .repro store
+mult mult 0 250
+stop
+
+cond
+*.nrg 5000 > 
+*.eye5 50 <
+start
+40 .repro store
+mult mult 0 250 
+stop
+
+' Actually rotate
+' *****************
+cond
+start
+.aimdx store
+.dx store
+stop
+'********
+cond
+*.eye5 50 >
+start
+' 53 tests refeye myeye =
+53 *55 *.refeye sub *55 *.refeye sub div mult inc
+' 54 tests if bot has more than one up or dn command
+54 *.refup *.refdn add *.refup *.refdn add div mult inc
+stop
+
+cond
+*53 0 >
+start
+-6 .shoot store
+stop
+
+cond
+*53 0 >
+*54 0 =
+*.robage 0 >
+start
+*.readtie .tie store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *55 !=
+*.trefup 0 =
+start
+*.readtie .tienum store
+-1000 .tieval store
+*.tieval 1000 div .tieloc store
+10 .strbody store
+stop
+
+cond
+*.numties 0 >
+*.multi 1 =
+start
+99 .sharenrg store
+1 .fixang store
+stop
+
+cond
+*.numties 0 >
+*.multi 1 =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.numties 0 >
+*.trefeye *55 =
+start
+*.readtie .deltie store
+stop
+
+cond
+*.pain 500 >
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.tiepres *.readtie !=
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.body 20 >
+*.nrg 1000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.body 1000 <
+*.nrg 1100 >
+*.robage 2 >
+start
+100 .strbody store
+stop
+
+cond
+*.shdn 0 <
+*.shdn -2 !=
+start
+.backshot inc
+-6 .shoot store
+stop
+
+' poison
+cond
+*.nrg 3000 >
+*.poison 50 <
+start
+100 *.poison sub .strpoison store
+stop
+
+cond
+*.shell 200 <
+*.nrg 200 >
+start
+200 *.shell sub .mkshell store
+stop
+
+cond
+start
+*.thisgene .mkvirus store
+.vshoot inc
+.repro *55 39 sub *.robage mult dup div mult inc
+stop
+end

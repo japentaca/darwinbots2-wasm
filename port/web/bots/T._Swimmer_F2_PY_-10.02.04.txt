@@ -1,0 +1,180 @@
+'Topic: Anybody found any bugs in 2.14 yet?
+'PY
+
+'Cheatbot mk3. The "T swimmer"
+'Unscrupulously exploits a cheat loophole
+'to reproduce at alarming rates
+'use in larger fields or it gets uncontrollable
+'best with at least size 3 without many veg
+
+'initialize and set reproduction rate
+cond
+*.robage 0 =
+start
+300 30 store
+' make this higher for faster breed rate.
+' max at 1000. BEWARE of OVERPOPULATION.
+100 31 store
+' set this number for length of ties.
+' shorter ties make smoother swimming
+30 .dn store
+stop
+
+'Simple search pattern.
+cond
+*.eye3 *.eye5 >
+*.numties 0 =
+start
+-35 .aimdx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.numties 0 =
+start
+35 .aimdx store
+stop
+
+' gene 3. Move forward
+cond
+*.numties 0 =
+*.robage 1 >
+*.refeye 8 !=
+start
+30 *.vel sub .up store
+stop
+
+'gene6 avoid conspecifics
+cond
+*.refeye 8 =
+'*.eye5 0 >
+*.numties 0 =
+start
+180 .aimdx store
+stop
+
+cond
+*.in1 10 =
+*.numties 0 =
+start
+180 .aimdx store
+stop
+
+
+cond
+*.refeye 8 !=
+*.eye5 50 >
+*.numties 2 !=
+*.numties 1 !=
+*.in1 10 !=
+start
+-1 .shoot store
+stop
+
+cond
+*.robage 0 =
+start
+6 .tie store
+stop
+
+cond
+*.numties 0 =
+start
+0 50 store
+stop
+
+cond
+*.numties 3 =
+*50 50 =
+start
+-30 *.vel add .up store
+stop
+
+cond
+*.numties 0 >
+start
+6 .tienum store
+-1 .tieloc store
+*30 .tieval store
+1 .sharewaste store
+60 .sharenrg store
+stop
+
+cond 
+*50 50 =
+*.numties 3 =
+*.nrg 5000 >
+start
+50 .repro store
+stop
+
+cond
+*50 5 =
+start
+6.tienum store
+.fixang .tieloc store
+628 .tieval store
+50 50 store
+628 .fixang store
+stop
+
+'rob ties to it's second young
+cond
+*50 4 =
+*.numties 0 >
+start
+6 .tie store
+50 inc
+stop
+
+'rob gives birth the second time
+cond
+*50 3 =
+*.numties 0 >
+start
+300 .aimdx store
+50 .repro store
+50 inc
+stop
+
+'rob ties to it's young
+cond
+*50 2 =
+*.numties 0 >
+start
+6 .tie store
+50 inc
+stop
+
+'rob reproduces after tying to veg
+cond
+*50 1 =
+*.numties 0 >
+*.in1 10 !=
+start
+-150 .aimdx store
+50 .repro store
+50 inc
+5 .tienum store
+.out1 .tieloc store
+10 .tieval store
+stop
+
+
+'free rob ties to veg
+cond
+*.eye5 30 >
+*.eye4 *.eye6 %=
+*.refeye 0 =
+*50 0 =
+*.robage 10 >
+*.nrg 6000 >
+*.numties 0 =
+start
+5 .tie store
+50 inc
+*31 .fixlen store
+628 .fixang store
+stop
+
+end

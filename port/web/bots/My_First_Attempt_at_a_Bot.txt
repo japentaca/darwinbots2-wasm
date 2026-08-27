@@ -1,0 +1,150 @@
+' M-Bot 1
+' My first bot - hopefully not too bad
+' Shot-Bot - Helped _massively_ by Purple Youko's tutorial
+##############################################################
+cond
+*.eye1 0 = and
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 =
+start
+314 .aimdx store
+stop
+
+cond
+*.eye1 0 != and
+*.eye5 0 =
+start
+-140 .aimdx store
+stop
+
+cond
+*.eye2 0 != and
+*.eye5 0 =
+start
+-105 .aimdx store
+stop
+
+cond
+*.eye3 0 != and
+*.eye5 0 =
+start
+-70 .aimdx store
+stop
+
+cond
+*.eye4 0 != and
+*.eye5 0 =
+start
+-35 .aimdx store
+stop
+
+cond
+*.eye6 0 != and
+*.eye5 0=
+start
+35 .aimdx store
+stop
+
+cond
+*.eye7 0 != and
+*.eye5 0 =
+start
+70 .aimdx store
+stop
+
+cond
+*.eye8 0 != and
+*.eye5 0 =
+start
+105 .aimdx store
+stop
+
+cond
+*.eye9 0 != and
+*.eye5 0 =
+start
+140 .aimdx store
+stop
+
+cond
+*.eye5 0 !=
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+start
+40 *.vel sub 2 div .up store
+stop
+
+cond
+*.eye5 0 !=
+*.refeye *.myeye !=
+*.refshoot *.myshoot !=
+start
+8 .shootval store
+-1 .shoot store
+stop
+
+cond
+*.aimdx 0 !=
+*.aimdx 180 !=
+start
+*.aimdx 10 div .dx store
+stop
+
+cond
+*.eye5 0 !=
+*.refeye *.myeye =
+start
+628 .aimdx store
+stop
+
+cond
+*50 0 >
+start
+628 .aimdx store
+50 dec
+stop
+
+cond
+*.nrg 10000 >
+start
+50 .repro store
+628 .aimdx store
+50 inc
+stop
+
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 0 !=
+start
+.deltie inc
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+8 .shootval store
+-1 .shoot store
+0 .shflav store
+stop
+
+end

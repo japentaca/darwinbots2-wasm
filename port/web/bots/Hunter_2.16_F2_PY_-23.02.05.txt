@@ -1,0 +1,139 @@
+'New generation Hunter bot with state of the art features
+' Surpassed Hunter 2.13 then crashed and burned
+' with the introduction of DB V2.3
+
+' Slightly advanced (but badly tuned) F2 bot by PY
+'***********************
+
+
+' Initialize
+' *********
+cond
+*.robage 0 =
+start
+.tie inc
+19 55 store
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+
+
+cond
+*.eye5 80 <
+*.refeye *55 !=
+start
+40 *.vel sub 2 div .up store
+stop
+
+'turn towards enemies or food
+'*************************
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+mult mult 120 10 
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+mult mult -120 -10
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+mult mult 60 5
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+mult mult -60 5
+stop
+
+'avoid conspecifics
+'****************************
+cond
+*.refeye *55 =
+'*.eye5 30 >
+start
+mult mult 120 0
+stop
+
+cond 
+*.refeye *55 =
+*.eye5 60 >
+start
+mult mult 628 0
+stop
+
+'reproduce 
+'*********
+
+cond
+*.nrg 2000 >
+*.robage 40 <
+start
+50 .repro store
+mult mult 628 0
+stop
+
+cond
+*.nrg 4000 >
+start
+70 .repro store
+mult mult 628 0
+stop
+
+' rotate
+' *******
+cond
+start
+.sx store
+.aimsx store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 50 >
+*.refeye *55 !=
+start
+-1 .shoot store
+stop
+
+'delete ties
+'*********
+cond
+*.numties 0 >
+*.tiepres 1 =
+start
+1 .deltie store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.nrg 1000 >
+*.poison 100 <
+start
+10 .strpoison store
+stop
+
+end

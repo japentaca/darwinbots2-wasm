@@ -1,0 +1,127 @@
+'Topic: Formula one bots!
+'PY
+
+
+'New generation Hunter bot with state of the art features
+'***********************
+
+
+'reproduce 
+'*********
+cond
+*.nrg 4000 >
+start
+60 .repro store
+628 .aimsx store
+1 40 store
+stop
+
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+cond
+*.robage 1 =
+start
+314 .aimdx store
+stop
+
+cond 
+*.robage 3 =
+start
+314 .aimsx store
+stop
+
+cond
+*40 0 !=
+start
+40 inc
+stop
+
+
+cond
+*.eye5 80 <
+*.refeye 18 !=
+start
+30 *.vel sub .up store
+stop
+
+
+
+'turn towards enemies or food
+'*************************
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+100 .aimsx store
+'5 .sx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+-100 .aimsx store
+'5 .dx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+50 .aimsx store
+'5 .sx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+-50 .aimsx store
+'5 .dx store
+stop
+
+cond
+*40 3 =
+start
+628 .aimdx store
+0 40 store
+stop
+
+'avoid conspecifics
+'****************************
+cond
+*.refeye 18 =
+'*.eye5 30 >
+start
+120 .aimsx store
+stop
+
+'shoot at enemy
+'******************
+
+cond
+*.eye5 50 >
+*.refeye 18 !=
+start
+-1 .shoot store
+stop
+
+'delete ties
+'*********
+cond
+*.numties 0 >
+start
+1 .deltie store
+stop
+
+cond
+start
+100 .mkslime store
+stop
+
+end

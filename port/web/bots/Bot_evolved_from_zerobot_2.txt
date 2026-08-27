@@ -1,0 +1,110 @@
+'#generation: 19
+'#mutations: 174
+ pow start
+ over
+''''''''''''''''''''''''  Gene:  1 Ends at position  3  ''''''''''''''''''''''' else
+ ^ -7 over not
+ inc
+ -25 pow dec
+ inc
+ 3
+''''''''''''''''''''''''  Gene:  2 Ends at position  14  ''''''''''''''''''''''' else
+ -9 ~=
+ !%=
+ angle *16 angle *.up dist dist ceil ceil 19
+''''''''''''''''''''''''  Gene:  3 Ends at position  27  ''''''''''''''''''''''' else
+ pyth 511 ^ mod =
+ <
+
+''''''''''''''''''''''''  Gene:  4 Ends at position  34  '''''''''''''''''''''''
+ cond
+ sub dup mult .sx store
+ 64 *.shoot inc
+ >=
+ true
+ *606 store
+ <
+ | mult store
+ & store
+ inc
+ dupbool
+ << inc
+ %=
+ dist and
+ dropbool
+ angle 1 895 *771 overbool
+ << *.robage dec
+ dropbool
+ store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  72  '''''''''''''''''''''''
+ ceil <
+ ~ 978 store
+ !%=
+ %=
+ - overbool
+ store
+ false
+ cond
+ start
+ clearbool
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  87  '''''''''''''''''''''''
+ div >> div start
+ .tin2 store
+ 7 ceil floor 608 .shoot dec
+ - 2 1 clearbool
+ rnd store
+
+''''''''''''''''''''''''  Gene:  7 Ends at position  105  '''''''''''''''''''''''
+ cond
+ clear sub store
+ not
+ -8 <
+ and
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  113  '''''''''''''''''''''''
+ cond
+ *-305
+''''''''''''''''''''''''  Gene:  9 Ends at position  115  '''''''''''''''''''''''
+ cond
+ false
+ not
+ *-988 -229 stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  121  '''''''''''''''''''''''
+ !~=
+ swap 900 stop
+ clearbool
+ 26 sqr 465 ^ <
+ clear ~ <=
+ start
+ store
+ angle overbool
+ div *328 sqr xor
+ dupbool
+ clear sqr 4 swap <=
+ ^
+''''''''''''''''''''''''  Gene:  11 Ends at position  149  ''''''''''''''''''''''' start
+ ~ -181 inc
+ add 7 26 | or
+ store
+ xor
+ inc
+ rnd 1 sgn store
+ -863 *-33 abs *15 * ~ and
+ dec
+ ^ inc
+ *544 dec
+ << inc
+ dup
+''''''''''''''''''''''''  Gene:  12 Ends at position  180  '''''''''''''''''''''''
+ cond
+ 16 inc
+ mult -16 *.shootval pow angle
+''''''''''''''''''''''''  Gene:  13 Ends at position  188  '''''''''''''''''''''''
+ cond
+ pow 5 431
+''''''''''''''''''''''''  Gene:  14 Ends at position  192  '''''''''''''''''''''''
+ cond
+ 37 or
+ 0 4''''''''''''''''''''''''  Gene:  15 Ends at position  197  '''''''''''''''''''''''

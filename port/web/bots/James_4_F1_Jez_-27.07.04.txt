@@ -1,0 +1,151 @@
+'James 4
+'Made by Jez
+' Pretty good Tie feeder
+
+cond
+*.eye5 *.eye5 =
+start
+0 234 store
+stop
+
+cond
+*.myeye *.refeye =
+*.myshoot *.refshoot =
+*.myup *.refup =
+*.myaimdx *.refaimdx =
+*.mydx *.refdx =
+'*.myties *.refties =
+*.eye5 0 >
+start
+1 234 store
+stop
+
+cond
+*.robage 0 =
+start
+1 1000 rnd 567 store
+*567 .tie store
+stop
+
+cond
+*.robage 1 =
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.nrg 2000 >
+*.eye5 0 =
+start
+40 .repro store
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult 104
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult -104
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+mult 52
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult -52
+stop
+
+cond
+*.refeye 0 !=
+*.numties 0 =
+*.eye5 0 >
+*234 1 !=
+start
+*.nrg 99 div .up store
+stop
+
+cond
+*.refeye 0 =
+'*.numties 0 =
+*.eye5 0 >
+*234 1 !=
+start
+*.nrg 99 div 1 add .up store
+stop
+
+cond
+*.eye5 0 =
+start
+mult 104
+stop
+
+cond
+*234 1 =
+*.eye5 0 >
+start
+mult 208
+stop
+
+cond
+start
+.aimdx store
+100 *.slime sub .mkslime store
+50 *.poison sub .mkpoison store
+mult 0
+stop
+
+cond
+*.refpoison 0 =
+*.refeye 0 !=
+*.eye5 30 >
+*234 1 !=
+start
+-1 .shoot store
+*567 .tie store
+stop
+
+cond
+*.refpoison 0 =
+*.refeye 0 =
+*.eye5 30 >
+*234 1 !=
+start
+'-1 .shoot store
+*567 .tie store
+stop
+
+cond
+*.refpoison 0 >
+*.eye5 30 >
+*234 1 !=
+start
+505 .shoot store
+0 .shootval store
+*567 .tie store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+cond
+*.pain 900 >
+start
+*.tiepres .deltie store
+stop
+
+end

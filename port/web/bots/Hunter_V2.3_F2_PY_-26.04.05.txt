@@ -1,0 +1,327 @@
+'New generation Hunter bot for V 2.36
+'***********************
+def newmom 51
+def spin 52
+def spincount 53
+def replevel 54
+def heading 55
+def venomcounter 56
+
+
+' Initialize
+' *********
+cond
+*.robage 0 =
+start
+.tie inc
+602 .memloc store
+*.aim .heading store
+100 .replevel store
+.shoot .ploc store
+.shoot .vloc store
+-2 .venval store
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond
+*.nrg 1000 >
+start
+100 .strbody store
+stop
+
+cond
+*.nrg 300 <
+start
+100 .fdbody store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye !=
+*.spin 0 =
+start
+20 *.vel sub 4 div .up store
+stop
+
+cond
+*.eye5 60 <=
+*.eye5 0 >
+*.refeye *.myeye !=
+*.vel *.maxvel <
+start
+*.maxvel *.vel sub 2 div .up store
+stop
+
+cond
+*.eye5 60 >
+*.refeye *.myeye !=
+start
+*.refvel .up store
+stop
+
+'turn towards enemies or food
+'*************************
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye9 >
+start
+mult 140
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye1 >
+start
+mult -140
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+start
+mult 90
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+start
+mult -90
+stop
+
+cond
+*.eye4 *.eye6 >
+start
+mult 50
+stop
+
+cond
+*.eye6 *.eye4 >
+start
+mult -50
+stop
+
+cond
+*.eye4 *.eye6 =
+*.eye3 *.eye7 >
+start
+mult 20
+stop
+
+cond
+*.eye4 *.eye6 =
+*.eye3 *.eye7 <
+start
+mult -20
+stop
+
+'avoid conspecifics
+'****************************
+cond
+*.refeye *.myeye =
+*.spincount 0 =
+start
+1 .spin store
+10 rnd 5 add .spincount store
+stop
+
+cond 
+*.refeye *.myeye !=
+*.spincount 0 !=
+start
+0 .spincount store
+stop
+
+cond
+*.spincount 0 >
+start
+.spincount dec
+mult 75
+stop
+
+cond
+*.spincount 1 <
+*.spin 1 =
+start
+0 .refeye store
+0 .spin store
+stop
+
+cond 
+*.refeye *.myeye =
+*.eye5 60 >
+start
+mult 628
+stop
+
+' Spin back after repro
+' ************************
+cond
+*.newmom 0 !=
+start
+mult 628
+0 .newmom store
+stop
+
+'reproduce 
+'*********
+cond
+*.nrg 2000 >
+*.robage 40 <
+*.body 20 >
+*.eye5 30 <
+start
+20 .repro store
+1 .newmom store
+mult 628
+stop
+
+cond
+*.nrg 2000 >
+*.robage 40 >
+*.body *.replevel >
+start
+50 .repro store
+1 .newmom store
+*.replevel 4 mult .replevel store
+mult 628
+stop
+
+'If I get shot
+'***********
+cond
+*.shdn 0 !=
+*.shdn -2 !=
+start
+mult 628
+stop
+
+' rotate
+' *******
+cond
+*.heading *.aim !=
+start
+mult 0
+stop
+
+cond
+*.robage 0 !=
+start
+*.heading add .heading store
+*.heading .setaim store
+stop
+
+cond
+*.veldx 0 !=
+*.spin 0 =
+*.refeye *.myeye !=
+*.eye5 0 !=
+start
+*.refveldx .dx store
+stop
+
+'shoot at enemy
+'******************
+cond
+*.eye5 5 >
+*.eye5 45 <=
+*.refeye *.myeye !=
+start
+200 *.eye5 div 3 add -1 mult .shootval store
+-6 .shoot store
+.venomcounter inc
+stop
+
+'cond
+'*.eye5 45 >
+'*.refeye *.myeye !=
+'*.refpoison 0 =
+'start
+'20 .shootval store
+'-1 .shoot store
+'stop
+
+cond
+*.shdn 0 <
+start
+.backshot inc
+stop
+
+cond
+*.eye5 55 >
+*.refeye *.myeye !=
+*.refage 0 >
+*.newmom 0 =
+start
+50 .shootval store
+-6 .shoot store
+.venomcounter inc
+stop
+
+cond
+*.venomcounter 20 >
+start
+-3 .shoot store
+50 .shootval store
+0 .venomcounter store
+stop
+
+
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+'delete ties
+'*********
+cond
+*.numties 0 >
+*.tiepres 1 =
+start
+1 .deltie store
+stop
+
+'Poison
+'*********
+cond
+*.poison 200 <
+start
+20 .strpoison store
+stop
+
+cond
+*.venom 200 <
+start
+20 .strvenom store
+stop
+
+'Leach
+'********
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+.tieval .tieloc store
+'1000 .tieval store
+stop
+
+cond
+*.heading 1256 >
+start
+*.heading 1256 sub .heading store
+stop
+
+cond
+*.heading 0 <
+start
+*.heading 1256 add heading store
+stop
+
+end

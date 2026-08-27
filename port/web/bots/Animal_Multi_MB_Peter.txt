@@ -1,0 +1,82 @@
+'Animal Multi
+'made by Peter
+
+def head 50
+
+'Gene 1 Food Finder
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.head 0 !=
+*.multi 1 =
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+'Gene 2 Eat Food
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+'*.refeye *.myeye !=
+*.head 0 !=
+*.multi 1 =
+start
+-1 .shoot store
+*.refvelup .up store
+stop
+
+'Gene 3 Avoiding Family
+cond
+*.multi 1 =
+*.head 0 !=
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+'Gene 4 Duplicate
+cond
+*.numties 0 =
+*.robage 0 !=
+start
+50 .repro store
+.head inc
+stop
+
+'Gene 5 Recombine
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+'Gene 6 Splits.
+cond
+*.nrg 30000 >
+start
+.deltie inc
+stop
+
+'Gene 7 Multibot control center
+cond
+*.multi 1 = or
+start
+'*.eye5 .tout1 store
+50 .sharenrg store
+1 .fixlen store
+100 .stifftie store
+628 .fixang store
+*.aimright .tout1 store
+stop
+
+'Gene 8 Body follows
+cond
+*.head 0 =
+start
+*.tiepres .readtie store
+*.tin1 .aimright store
+stop
+
+end

@@ -1,0 +1,138 @@
+'Teriyaki
+'By: Spike43884
+'Taste like chicken - Both .sexrepro and
+'.repro in nessisary circumstances for
+'amazing survival, will poop on enemies.
+'Really aggressive, and quite energy efficient in current sims, though personally
+'I cant run the sims for to long w/ this in as it starts to lag the sims a bit!
+'Firing backwards bug fixed by SHADOWGOD2
+
+' Gene 1 Some stuff to do with poison
+
+cond
+ *.robage 0 =
+start
+ 2 rnd 498 mult 491 sub 1 floor .ploc store
+ 0 *.ploc .eye5 sub sgn 1 add mult
+ -50 *.ploc .up sub sgn -1 mult 1 add mult add
+ -2 *.ploc .shoot sub sgn abs -1 mult 1 add mult add
+ .pval store
+stop
+
+' Gene 2 Food Finder
+cond
+ *.eye5 0 >
+ *.eye4 0 > or
+ *.eye6 0 > or
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 40 add .up store
+stop
+
+' Gene 3 Mate Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye =
+ *.nrg 15000 >
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 4 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ 0 .aimshoot store
+ 0 .backshoot store
+1 rnd 5 mult 6 sub .shoot store
+ -6 .shootval store
+ *.refvelup .up store
+stop
+
+' Gene 5 Avoiding Family
+cond
+ *.eye5 0 = 
+ *.refeye *.myeye = or
+ *.refnrg 15000 <
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 6 DONT EAT ME. I DONT TASTE GOOD!
+cond
+ *.poison 500 <
+start
+ 50 .strpoison store
+stop
+
+
+' Gene 8 Shoot Sperm
+cond
+ *.eye5 50 >
+ *.refeye *.myeye =
+ *.refnrg 15000 >
+start
+ 0 .aimshoot store 
+-8 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 9 Reproduce
+cond
+ *.nrg 15000 >
+ *.fertilized 0 >
+start
+ 10 .sexrepro store 
+stop
+
+' Gene 10 Reproduce 2
+cond
+ *.nrg 30000 > 
+start
+ 10 .repro store
+stop
+
+' Gene 11 Poop on others Waste
+cond
+ *.eye5 0 >
+ *.eye4 0 > or
+ *.eye3 0 > or
+ *.refeye *.myeye !=
+ *.waste 20 > and
+start
+ *.refveldx .dx store
+ *.refvelup 40 add .up store
+stop
+
+' Gene 12 Poop on others Continuted
+cond
+ *.waste 50 >
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ -4 .shoot store
+ *.waste .shootval store
+stop
+
+' Gene 13 Nobody to poop on CONSTIPATION Waste
+cond
+ *.waste 100 >
+start
+ 1 .backshot store
+ -4 .shoot store
+ *.waste .shootval store
+stop
+
+' Gene 14 OUCH! Nobody likes a bully.
+cond
+ *.shflav 0 !=
+ *.shflav -2 !=
+ *.shflav -8!=
+start
+ *.shang .setaim store
+stop
+
+end

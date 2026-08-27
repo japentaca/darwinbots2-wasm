@@ -1,0 +1,288 @@
+' Tortuca Mechanica (mechanical tortoise) by Eight
+'
+' has two eyes and sees without using eye5
+' reproduction in cycles, less active with age
+' breeding curve ensures plenty of little ones
+' eats to grow large and conserve energy
+' lives a very long time!
+
+
+'see pal
+cond
+*55 0 >
+*.refaimdx *.myaimdx =
+*.refaimsx *.myaimsx =
+start
+60 .aimdx store
+stop
+
+'tasty!
+cond
+*55 2 >
+*.refaimdx *.myaimdx !=
+*.refaimsx *.myaimsx !=
+*.refup 0 !=
+start
+-1 .shoot store
+*.mass 2 add .up store
+stop
+
+'blind!
+cond
+*55 5 >
+*.refaimdx *.myaimdx !=
+*.refaimsx *.myaimsx !=
+*.refup 0 !=
+start
+10 .strvenom store
+10 .venval store
+505 .venloc store
+-3 .shoot store
+1 55 store
+stop
+
+'run if hurt
+cond
+*.pain 100 >
+start
+*.maxvel *.vel sub .dn store
+stop
+
+'reach
+cond
+*.eye4 50 <
+*.eye6 50 <
+*.refup 0 =
+start
+*.mass 1 add .up store
+stop
+
+'plod
+cond
+*55 0 =
+*44 50 <
+*44 0 >
+start
+*.mass 1 add .up store
+stop
+
+'plants!
+cond
+*55 0 >
+*.refup 0 =
+start
+-1 .shoot store
+stop
+
+'freeze
+cond
+*.eye4 50 >
+*.refaimsx *.myaimsx !=
+*.refaimdx *.myaimdx !=
+*.refup 0 =
+start
+1 .fixpos store
+stop
+
+'freeze
+cond
+*.eye6 50 >
+*.refaimsx *.myaimsx !=
+*.refaimdx *.myaimdx !=
+*.refup 0 =
+start
+1 .fixpos store
+stop
+
+'unfreeze
+cond
+*55 0 >
+*.fixed 1 =
+start
+.fixpos dec
+stop
+
+'conscious
+cond
+*.robage 1 =
+start
+1 44 store
+1 45 store
+stop
+
+'beat
+cond
+*44 0 =
+start
+150 44 store
+*.body 66 store
+*.robage *66 add 67 store
+*67 3 div 68 store
+stop
+
+'tick
+cond
+*44 1 =
+*45 0 >
+start
+45 dec
+stop
+
+'tock
+cond
+*45 0 =
+start
+2 45 store
+stop
+
+'time
+cond
+*44 0 >
+start
+44 dec
+stop
+
+'detected
+cond
+*.eye4 *.eye6 !=
+start
+55 inc
+stop
+
+'nothing
+cond
+*55 0 >
+*.eye4 0 =
+*.eye6 0 =
+start
+0 55 store
+stop
+
+'left
+cond
+*55 0 =
+*45 1 =
+*44 70 >
+start
+10 .aimsx store
+*.mass .sx store
+stop
+
+cond
+*.eye4 *.eye6 >
+start
+10 .aimsx store
+stop
+
+cond
+*55 0 =
+*.eye1 *.eye9 >
+start
+60 .aimsx store
+stop
+
+'right
+cond
+*55 0 =
+*45 2 =
+*44 70 >
+start
+10 .aimdx store
+*.mass .dx store
+stop
+
+cond
+*.eye6 *.eye4 >
+start
+10 .aimdx store
+stop
+
+cond
+*55 0 =
+*.eye9 *.eye1 >
+start
+60 .aimdx store
+stop
+
+'body
+cond
+*.nrg *.body >
+start
+50 .strbody store
+stop
+
+'body
+cond
+*.nrg 1000 <
+*.body 500 >
+start
+100 .fdbody store
+stop
+
+'shell
+cond
+*.nrg 1000 >
+*.shell 20 <
+start
+100 .mkshell store
+stop
+
+'waste
+cond
+*.waste 100 >
+start
+100 .shootval store
+-4 .shoot store
+stop
+
+'feel
+cond
+*55 0 =
+*.shdn 0 !=
+start
+628 .aimdx store
+stop
+
+'feel
+cond
+*55 0 =
+*.shsx 0 !=
+start
+200 .aimsx store
+stop
+
+'feel
+cond
+*55 0 =
+*.shdx 0 !=
+start
+200 .aimdx store
+stop
+
+' tie poison
+cond
+*.nrg *.poison <
+*.nrg 1000 >
+start
+453 .ploc store
+100 .strpoison store
+stop
+
+'repro
+cond
+*.robage *68 !%=
+*.body 2000 >
+start
+50 .repro store
+stop
+
+'repro
+cond
+*.robage 10000 >
+*55 0 >
+start
+30 .repro store
+stop
+
+
+end

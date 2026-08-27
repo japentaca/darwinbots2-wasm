@@ -1,0 +1,62 @@
+'Tiebot shall only communicate via the tie. Also, it can do stuff blind.
+
+'Delete birth tie and zoom a bit away
+'Set up identity
+cond
+*.robage 0 =
+start
+.deltie inc
+100 .up store
+50 .tout1 store
+stop
+
+'OK,so I am not a baby. Make some ties.
+cond
+*.robage 10 >
+*.numties 0 = 
+start
+20 .up store
+.tie inc    
+stop
+
+'If I tied to a conspec, break the tie and turn away
+cond
+*.tin1 *.tout1 =
+*.numties 1 =
+start
+.deltie inc
+123 .aimsx store
+stop
+
+'FEED (on veggie body)
+cond
+*.numties 0 >
+*.tin1 *.tout1 !=
+start
+-6 .tieloc store
+-50 .tieval store 
+*.tiepres .tienum store
+stop
+
+'If I can, create the childs
+cond
+*.nrg 5000 >
+start
+314 .aimdx store
+50 .repro store
+314 .aimsx store
+stop
+
+'If something is hurting me, break all ties
+cond
+*.pain 0 >
+start
+*.tiepres .deltie
+50 .dn store
+stop
+
+'Metabolism
+start
+*.nrg *.body 10 mult add 20 div *.body sub 1 floor .strbody store
+*.body *.nrg *.body 10 mult add 20 div sub 0 floor 30000 *.nrg sub 10 div ceil  .fdbody store
+stop

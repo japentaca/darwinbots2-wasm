@@ -1,0 +1,149 @@
+'*************************
+'* Sneaker Cannibalistic *
+'*                       *
+'*   Made by Testlund    *
+'*   in September 2014.  *
+'*                       *
+'*************************
+
+cond
+ *.robage 0 =
+start
+ 628 .aimdx store
+stop
+
+cond
+ *.robage 128 %=
+start
+  64 .up store
+stop
+
+cond
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.shang sub .setaim store
+ *.maxvel .up store
+stop
+
+cond
+ *.eye5 0 >
+ *.reftype 1 !=
+ *.refshoot 0 =
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.refvelup 32 add .up store
+ -6 .shoot store
+stop
+
+cond
+ *.eye5 0 >
+ *.reftype 1 !=
+ *.refbody *.body <
+ *.refbody *.body !%=
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.refvelup 16 add .up store
+ 16 .shootval store
+ -6 .shoot store
+stop
+
+cond
+ *.nrg *.body >
+start
+ 10 .strbody store
+stop
+
+cond
+ *.eye1 *.eye5 >
+start
+ -100 .aimright store
+stop
+
+cond
+ *.eye9 *.eye5 >
+start
+ 100 .aimright store
+stop
+
+cond
+ *.nrg 32 >
+ *.body *.nrg >
+start
+ 32 rnd .aimsx store
+ 32 rnd .aimdx store
+ .up inc
+stop
+
+cond
+ *.eye1 0 >
+ *.reftype 1 =
+start
+ 157 .aimright store
+stop
+
+cond
+ *.eye9 0 >
+ *.reftype 1 =
+start
+ -157 .aimright store
+stop
+
+cond
+ *.edge 0 >
+start
+ 64 rnd .aimdx store
+stop
+
+cond
+ *.nrg 2000 %=
+ *.body 2000 %=
+start
+ 50 .repro store
+ 628 .aimdx store
+stop
+
+cond
+ *.nrg 4000 %=
+ *.body 4000 %=
+start
+ 50 .repro store
+ 628 .aimdx store
+stop
+
+cond
+ *.nrg 8000 %=
+ *.body 8000 %=
+start
+ 50 .repro store
+ 628 .aimdx store
+stop
+
+cond
+ *.nrg 16000 %=
+ *.body 16000 %=
+start
+ 50 .repro store
+ 628 .aimdx store
+stop
+
+cond
+ *.nrg 32000 %=
+ *.body 32000 %=
+start
+ 50 .repro store
+ 628 .aimdx store
+stop
+
+cond
+ *.eyef 0 >
+ *.refshoot *.myshoot >=
+ *.refbody *.body >
+start
+ 628 .aimdx store
+ *.maxvel 64 add .dn store
+stop
+
+end

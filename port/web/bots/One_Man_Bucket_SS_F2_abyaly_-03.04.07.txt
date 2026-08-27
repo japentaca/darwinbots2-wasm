@@ -1,0 +1,254 @@
+'One Man Bucket (Extended)
+'Single Store bot by abyaly
+'In expanded form
+'For version 2.43
+'03-04-07
+
+
+
+
+
+'I probably haven't optimized several of 
+'these values, but they aren't that interesting
+'
+'Memloc and value for conspec ident
+def mem 941
+def id 3211
+'Amount of waste to accumulate before expelling it
+def wasteval 1000
+'attack distance
+def eyerange 30
+'age for non-initialization actions
+'(lowering this number without removing init 
+'actions may cause strange things to happen)
+def startage 4
+'amount of shell to make
+def shellsize 300
+'amount of energy to gain before making shell
+def shellthres 700
+'eye width for eye5 placed during init.
+def eyewidth 140
+
+cond
+*.robage 0 =
+start
+.id .tie store
+stop
+
+cond
+*.robage 1 =
+start
+.id .deltie store
+stop
+
+cond
+*.robage 2 =
+start
+.id .mem store
+stop
+
+cond
+*.robage 3 =
+start
+.mem .memloc store
+stop
+
+cond
+*.robage 4 =
+start
+.eyewidth .eye5width store
+stop
+
+cond
+*.robage .startage >
+*.paralyzed 0 >
+*.nrg 50 >
+start
+99 .repro store
+stop
+
+cond
+*.robage .startage >
+*.paralyzed 0 >
+*.nrg 50 <=
+start
+*.maxvel .dn store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell >
+*.nrg 500 >
+*.paralyzed 0 =
+start
+100 .mkshell store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval >
+*.shootval *.waste =
+start
+-4 .shoot store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval >
+*.shootval *.waste !=
+start
+*.waste .shootval store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 .eyerange >
+*.memval .id !=
+*.refage 2 >
+*.refvelup 5 >=
+start
+*.refvelup .up store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 .eyerange >
+*.memval .id !=
+*.refage 2 >
+*.refvelup 5 <
+*.refxpos *.refypos angle *.aim !=
+*.robage 2 mod 1 =
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 .eyerange >
+*.memval .id !=
+*.refage 2 >
+*.refvelup 5 <
+*.refxpos *.refypos angle *.aim =
+*.robage 2 mod 1 != or
+start
+-6 .shoot store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 .eyerange <=
+*.eye5 0 >
+*.memval .id !=
+*.refage 2 >
+*.refxpos *.refypos angle *.aim !=
+*.robage 2 mod 1 =
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 .eyerange <=
+*.eye5 0 >
+*.memval .id !=
+*.refage 2 >
+*.refxpos *.refypos angle *.aim =
+*.robage 2 mod 1 != or
+*.refvelup -5 >=
+start
+10 .up store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 0 >
+*.memval .id =
+*.velscalar 0 >
+*.numties 0 != or
+*.robage 20 mod 0 != or
+start
+300 .aimdx store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.eye5 0 >
+*.memval .id =
+*.velscalar 0 =
+*.numties 0 =
+*.robage 20 mod 0 =
+start
+100 .dn store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.nrg 1000 <
+*.eye5 0 =
+start
+300 .aimdx store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.nrg 1000 >=
+*.body 1000 <
+*.eye5 0 =
+start
+100 .strbody store
+stop
+
+cond
+*.robage .startage >
+.shellsize *.shell <=
+*.nrg .shellthres <= or
+*.paralyzed 0 =
+*.waste .wasteval <=
+*.nrg 1000 >=
+*.body 1000 >=
+*.eye5 0 =
+start
+50 .repro store
+stop

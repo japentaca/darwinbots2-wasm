@@ -1,0 +1,417 @@
+' PY's Superbot
+' Destinatus Preliator Virusbot
+' Thought I would try a few custom labels
+' Uses a braking system so it doesn't ram veggies
+' A few other new ideas in here too
+' Uses a bit of poison but no venom (this time)
+' More or less the same as DP but with viruses
+
+def spin 65
+def rotate 66
+def timer 67
+def newmom 68
+def rpoint 69
+def brpoint 70
+
+' Virus!! nasty!
+cond
+*.myeye 59 !=
+start
+1 .delgene store
+stop
+
+
+' Find the food
+cond
+*.eye1 *.eye3 >
+*.eye1 *.eye5 >
+*.eye1 *.eye7 >
+*.eye1 *.eye9 >
+start
+mult mult
+150 *.eye1 sub 
+150 *.eye1 sub 20 div 
+.rotate inc
+stop
+
+cond
+*.eye9 *.eye7 >
+*.eye9 *.eye5 >
+*.eye9 *.eye3 >
+*.eye9 *.eye1 >
+start
+mult mult
+-150 *.eye1 sub 
+-150 *.eye1 sub 20 div 
+.rotate inc
+stop
+
+cond
+*.eye3 *.eye1 >
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*.eye3 *.eye9 >
+start
+mult mult
+100 *.eye1 sub 
+100 *.eye1 sub 15 div 
+.rotate inc
+stop
+
+cond
+*.eye7 *.eye9 >
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*.eye7 *.eye1 >
+start
+mult mult
+-100 *.eye1 sub 
+-100 *.eye1 sub 15 div 
+.rotate inc
+stop
+
+cond
+*.eye6 *.eye4 !=
+start
+mult mult
+*.eye4 *.eye6 sub 
+*.eye4 *.eye6 sub 8 div 
+.rotate inc
+stop
+
+' set tag if I see a friend
+cond
+*.refeye *.myeye =
+start
+.spin inc
+stop
+
+' unset tag if I see an enemy
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+*.spin 0 !=
+start
+0 .spin store
+stop
+
+' increment tag while non zero. Allows rotation
+cond
+*.spin 61 <
+*.spin 0 >
+start
+.spin inc
+mult mult
+150 
+0
+.rotate inc
+stop
+
+'decrement shot response timer
+cond
+*.timer 0 >
+start
+.timer dec
+stop
+
+' What if I get shot?
+' **********************
+cond
+*.shdx -1 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+-314
+0
+.rotate inc
+5 .timer store
+stop
+
+cond
+*.shsx -1 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+314
+0
+.rotate inc
+5 .timer store
+stop
+
+cond
+*.shdn -1 =
+start
+1 .backshoot store
+-6 .shoot store
+stop
+
+cond
+*.shdx -6 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+-314
+0
+.rotate inc
+5 .timer store
+100 .strbody store
+stop
+
+cond
+*.shsx -6 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+314
+0
+.rotate inc
+5 .timer store
+100 .strbody store
+stop
+
+cond
+*.shdn -6 =
+*.timer 0 =
+start
+628
+0
+.rotate inc
+5 .timer store
+100 .strbody store
+stop
+
+cond
+*.shup -6 =
+start
+100 .strbody store
+stop
+
+' Had enough spinning time to reset that pesky refeye thingy!
+cond
+*.spin 60 >
+start
+0 .spin store
+5 .refeye store
+stop
+
+' I'm a new mommy so I had better spin back away from Junior
+cond
+*.newmom 0 >
+start
+mult mult 628 0
+.rotate inc
+.newmom dec
+stop
+
+' Loadsa Energy. Store some away for Ron. (Late Ron that is)
+cond
+*.nrg 1000 >
+start
+10 .strbody store
+stop
+
+' OW! Energy TOO low! feed on those reserves a bit
+cond
+*.nrg 300 <
+start
+100 .fdbody store
+stop
+
+' Make a baby. Yeah! I'm gonna be a parent :)
+cond
+*.nrg *.rpoint >
+*.body *.brpoint >
+start
+30 .repro store
+mult mult 628 0
+.rotate inc
+.newmom inc
+stop
+
+' Shoot my mom to cut the cord
+' Then set my custom poison and counters
+cond
+*.robage 0 =
+start
+.tie inc
+.shoot .ploc store
+2000 .rpoint store
+200 .brpoint store
+stop
+
+' Begone damned umbilical cord!
+cond 
+*.robage 1 =
+start
+.deltie inc
+stop
+
+
+' Giddy up thar!!
+' *****************
+
+' Fed up with spinning. Move now!
+cond
+*.eye5 0 =
+*.vel 20 <
+*.spin 0 =
+*.newmom 0 =
+start
+*.mass 2 add .up store
+stop
+
+' Move if I see something in the distance
+cond
+*.eye5 0 >
+*.eye5 50 <
+*.vel *.maxvel <
+*.spin 0 =
+*.newmom 0 =
+start
+*.maxvel *.vel sub 2 sub .up store
+stop
+
+' Increment my counters :)
+cond
+start
+.rpoint inc
+.brpoint inc
+stop
+
+' slow down if I see something close
+cond
+*.eye5 50 >
+*.eye5 90 <
+*.vel *.maxvel <
+*.vel 0 !%=
+*.newmom 0 =
+start
+*.vel -1 mult 2 div .up store
+stop
+
+' Shoot non-poisonous bots with -1 shot
+cond
+*.robage 0 >
+*.eye5 30 > 
+*.spin 0 =
+*.refpoison 0 =
+*.newmom 0 =
+start
+-1 .shoot store
+stop
+
+' Shoot poisonous bots with a -6 shot
+cond
+*.robage 0 >
+*.eye5 30 >
+*.spin 0 =
+*.refpoison 0 >
+*.newmom 0 =
+start
+-6 .shoot store
+stop
+
+' Shoot that virus
+cond
+*.robage 0 >
+*.eye5 20 >
+*.spin 0 =
+*.newmom 0 =
+*.vtimer 1 =
+start
+40 .vshoot store
+stop
+
+' Make a virus
+cond
+*.vtimer 0 =
+start
+1 .mkvirus store
+stop
+
+' Attempt to identify someone trying to feed on me through a tie
+cond
+*.tiepres 0 !=
+start
+*.tiepres .readtie store
+.tieloc .tmemloc store
+stop
+
+' The good old leach gene, with a twist
+cond
+*.tiepres 0 !=
+*.tmemval -1 =
+start
+*.tiepres .tienum store
+1000 .tieval store
+.tieval .tieloc store
+stop
+
+' What about a tie without feeding eh?
+' We'll just delete that one
+cond
+*.tiepres 0 !=
+*.tmemval -1 !=
+*.tmemval 0 !=
+start
+*.tiepres .deltie store
+stop
+
+' delete accidental tie to conspec
+cond
+*.numties 0 >
+*.trefeye *.myeye =
+start
+*.tiepres .delti store
+stop
+
+' Use up all those stored rotations but only if the tag is set
+cond
+*.rotate 0 >
+start
+.sx store
+.aimsx store
+0 .rotate store
+stop
+
+' NO! You can't make me turn now! I'm still eating
+cond
+*.pleas 0 >
+start
+0 .sx store
+stop
+
+cond
+*.shell 100 <
+start
+10 .mkshell store
+stop
+
+' Let's store a bit of poison 
+cond
+*.poison 1000 <
+*.nrg 200 >
+start
+20 .strpoison store
+stop
+
+'chameleon just for the heck of it
+cond
+*.in1 *.out1 !=
+start
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+'unfix also just in case
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+end

@@ -1,0 +1,129 @@
+'Topic: I found something cool  
+'Shen
+' Triangulus Versabundus
+'
+' An example of custom variables
+' Based on PYs Hexagonis
+' Making a Custom Variable is easy. 
+' At the start of the DNA type 'def VarName MemoryLocation'.
+' To address it use normal label syntax. 
+' *.VarName for the value and .VarName for the Memory location it represents
+' It will show as the MemLoc number in game though, so remember what you assign it to!
+' - Custom Variable -
+' *.State is to tell a bot what stage of building the MB its at.
+def State 50
+
+
+' -=- Nav -=-
+
+' - Spin -
+cond
+*.State 2 =
+start
+40 .aimdx store
+stop
+
+' - Move Towards Food -
+cond
+*.eye5 0 >
+*.eye5 50 <
+*.refeye *.myeye !=
+*.State 2 =
+*.multi 1 =
+start
+5 .up store
+stop
+
+' - Avoid Freinds -
+cond
+*.eye5 30 >
+*.refeye *.myeye =
+*.State 2 =
+*.multi 1 =
+start
+-5 .up store
+stop
+
+' - Eat -
+cond
+*.eye5 20 >
+*.refeye *.myeye !=
+*.State 2 =
+*.multi 1 =
+start
+-1 .shoot store
+stop
+
+' - Share Nrg -
+cond
+*.multi 1 =
+*.nrg 100 >
+*.trefnrg *.nrg !%=
+start
+50 .sharenrg store
+stop
+
+' -=- Reproduction Loop -=-
+
+' - Bad Bot -
+cond
+*.multi 1 =
+*.numties 2 <
+start
+1 .deltie store
+20 .up store
+stop
+
+' - Lone Bot - (This might be screwing up)
+cond
+*.numties 0 =
+*.vel 0 =
+*.State 2 =
+*.eye5 30 <
+start
+0 .State store
+1 .fixpos store
+stop
+
+' - Set Angle - (Cant turn this gene off or it screws up, its a big drain on nrg, any ideas? )
+cond
+*.multi 1 =
+*.State 2 =
+start
+1 .tienum store
+120 .fixlen store
+628 .fixang store
+35 .stifftie store
+'3 .State store
+0 .fixpos store
+stop
+
+' - Tie to Child -
+cond
+*.State 1 =
+start
+1 .tie store
+1 .readtie store
+2 .State store
+stop
+
+' - Repro -
+cond
+*.State 0 =
+'*.nrg 200 >
+start
+33 .repro store
+210 .aimdx store
+1 .State store
+stop
+
+' - Start Repro Loop -
+cond
+*.State 2 =
+*.nrg 15000 >
+start
+1 .deltie store
+stop
+
+- End DNA -
+end

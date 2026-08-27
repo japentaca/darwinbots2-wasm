@@ -1,0 +1,138 @@
+'Alga Reed (Pondmode Plant)
+'Good little floater, even has a head.
+'By Spike43884
+'-------------------------------------------
+'Derived from Alga_Minimalis_Chloroplastus
+'Your code management is terrible though botsareus, so long and hard to
+'comprehend!
+
+def head 50
+def float 51
+
+
+'Gene Reproduction
+cond
+*.nrg 2000 >
+*.numties 1 =<
+*.head 0 =
+*.robage 2 =
+start
+40 .repro store
+stop 
+
+
+'Gene Recombine
+cond
+*.robage 0 =
+start
+1 .tie store
+stop
+
+
+'Gene Head Specification
+cond
+*.robage 0 !=
+*.numties 0 =
+start
+1 .head store
+stop
+
+
+'Gene 1st reproduction
+cond
+*.numties 0 =
+*.head 1 =
+*.nrg 2000 >
+*.robage 15 =
+start
+50 .repro store
+stop
+
+
+'Gene Head Sharing
+cond
+*.head 1 =
+*.multi 1 =
+start
+50 .sharenrg store
+stop
+
+
+'Gene Body Sharing (and body tielengths)
+cond
+*.head 0 =
+*.multi 1 =
+start
+50 .sharnrg store
+20 .fixlen store
+90 .stifftie store
+stop
+
+
+'Gene head tielength override
+cond
+*.head 1 =
+*.multi 1 =
+start
+200 .fixlen store
+100 .stifftie store
+314 .setaun store
+628 .fixang store
+stop
+
+
+'Gene Bouyancy
+cond
+*.head 1 =
+start
+ *.float .setboy store
+stop
+
+
+'Gene Setting float (Specifys a rough range for bouyancy to work from)
+cond
+start
+25000 4999 rnd add .float store
+stop
+
+
+'Gene Tell our bouyancy to the body
+cond
+*.head 1 =
+start
+*.rdboy .tout1 store
+stop
+
+
+'Gene Follow the head a bit.
+cond
+*.head 0 =
+start
+*.tout1 *.rdboy 10 sub .setboy store
+stop
+
+
+'Gene Chloroplasts
+cond
+*.nrg 1000 >
+*.nrg 2000 <
+*.robage 0 !=
+*.robage 1 !=
+start
+100 .mkchlr store
+stop
+
+
+'Gene Corpse Feeding
+cond
+*.nrg 0 =
+*.eye5 0 != and
+*.reftype 0 = and
+start
+6 .shoot store
+stop
+
+
+
+
+end

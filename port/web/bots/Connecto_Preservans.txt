@@ -1,0 +1,442 @@
+ultimus linkius
+
+cond
+  *.refaimsx
+  20
+  >
+start
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+  *.eye5
+  0
+  =
+start
+  1
+  *40
+  add
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+  *.refdn
+  20
+  >
+start
+  100
+  .aimdx
+  store
+stop
+
+cond
+  *40
+  200
+  >
+start
+  1
+  40
+  store
+  40
+  store
+stop
+
+cond
+  *.eye1
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  59
+  store
+stop
+
+cond
+  *.eye2
+  0
+  >
+  *.tielen
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  46
+  .aimsx
+  store
+stop
+
+cond
+  *.eye3
+  0
+  >
+  *.refdn
+  36
+  <
+  *.eye5
+  0
+  =
+start
+  .shootval
+  store
+  .aimsx
+  store
+stop
+
+cond
+  *.eye4
+  0
+  >
+  *.refdn
+  20
+  =
+  *.eye5
+  0
+  =
+start
+  16
+  .aimsx
+  store
+stop
+
+cond
+  *.eye5
+  0
+  >
+start
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.out2
+  20
+  <
+  *.refnrg
+  500
+  >
+  *.tienum
+  0
+  =
+start
+stop
+
+cond
+start
+ -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refshoot
+  0
+  >
+start
+  2
+  7
+stop
+
+cond
+start
+  store
+  2
+  .tie
+  store
+  5000
+  .shootval
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.nrg
+  500
+  <
+  *.refshoot
+  0
+  =
+start
+ -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  >
+  *.refnrg
+  500
+  <
+  *.nrg
+  499
+  >
+start
+  200
+stop
+
+cond
+  *.eye6
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  15
+  5
+stop
+
+cond
+  *.in1
+  0
+  !=
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  30
+  .aimdx
+  store
+stop
+
+cond
+  *.hitsx
+  0
+  >
+  *.refdn
+  20
+  >
+  *.eye5
+  0
+  =
+start
+  45
+  store
+stop
+
+cond
+  *.eye9
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  60
+  5
+  dec
+  store
+  sub
+stop
+
+cond
+  *.eye1
+  0
+  =
+  *.eye2
+  4
+  %=
+  *.eye3
+  0
+  =
+  *.eye4
+  0
+  =
+  *.eye5
+  0
+  =
+  *.hitdx
+  0
+  =
+  *.eye8
+  0
+  =
+  *.eye9
+  0
+  =
+  *40
+  100
+  <
+start
+  4
+  .up
+  store
+  5
+  .aimdx
+  store
+stop
+
+cond
+  *.eye1
+  0
+  =
+  *.eye2
+  0
+  =
+  *.eye3
+  0
+  =
+  *.in1
+  0
+  =
+  *.shdn
+  0
+  =
+  *.eye7
+  0
+  =
+  *.eye8
+  5
+  =
+  *.eye9
+  0
+  =
+  *40
+  100
+  >
+start
+  4
+  .up
+  store
+  5
+  .aimsx
+  store
+stop
+
+cond
+  *.hitdx
+  0
+  !=
+  *.nrg
+  10000
+  >
+start
+  400
+  .aimdx
+  store
+  20
+  .repro
+  store
+stop
+
+cond
+  1
+  0
+  =
+start
+  0
+  .dn
+  store
+  0
+  mult
+  .dn
+  store
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  mult
+  .dn
+  store
+  mult
+  0
+  2
+  sub
+  store
+  0
+  .dn
+  store
+  0
+  .shdx
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  6
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+  0
+  .dn
+  store
+stop
+end

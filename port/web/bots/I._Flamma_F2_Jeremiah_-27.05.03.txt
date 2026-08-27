@@ -1,0 +1,290 @@
+' immortalis flamma
+' ( IMMORTAL FIRE )
+' "I_Fire" for short
+'
+' Jeremiah Martell
+' May 27, 2003
+'
+' <a href="http://inlovewithGod.com" target="_blank">http://inlovewithGod.com</a>
+'
+' 1) Doesnt attack other I_Fire bots
+' 2) *QUICKLY* reproduces and kills all
+'    other bots, even when outnumbered
+'    20-1 at beginning of the simulation.
+'    2 I_Fire pitted against 20 Robottus
+'    Fisannis and 20 Turneria Preservans
+'    (greenpeace), I_Fire wins. 
+
+
+'******************
+'* SETUP          *
+'******************
+
+' out1 and out2 are used to identify
+' this bot as an I_Fire
+' position 50 is used for the searching
+' pattern
+
+cond
+  *40
+  0
+  =
+start
+  1
+  40
+  store
+  13
+  .out1
+  store
+  46
+  .out2
+  store
+  1
+  50
+  store
+stop
+
+
+
+
+
+'******************
+'* REPRODUCTION   *
+'******************
+
+' The turns before and after reproduction
+' were added to keep the newly spawned
+' I_Fire and the parent from getting in
+' each other's way. Though Im not sure if
+' its the best solution yet...
+
+cond
+  *.nrg
+  6000
+  >
+start
+  300
+  .aimsx
+  store
+  50
+  .repro
+  store
+  600
+  .aimdx
+  store
+stop
+
+
+
+
+
+'******************
+'* MOVEMENT       *
+'******************
+
+' AIM
+
+cond
+  *.eye1
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  80
+  .aimsx
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye4
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  40
+  .aimsx
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye9
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  80
+  .aimdx
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye6
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  40
+  .aimdx
+  store
+  5
+  .up
+  store
+stop
+
+' FIRE (TRY TO KEEP DISTANCE)
+
+cond
+  *.eye5
+  10
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  46
+  !=
+start
+  3
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  10
+  >
+  *.eye5
+  50
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  46
+  !=
+start
+  3
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  50
+  >
+  *.eye5
+  90
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  46
+  !=
+start
+  2
+  .up
+  store
+ -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  90
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  46
+  !=
+start
+ -1
+  .shoot
+  store
+stop
+
+' STEER CLEAR OF OTHER I_FIREs
+
+cond
+  *.eye5
+  30
+  >
+  *.in1
+  13
+  =
+  *.in2
+  46
+  =
+start
+  300
+  .aimdx
+  store
+stop
+
+' SEARCH PATTERN
+
+cond
+  *.eye1
+  0
+  =
+  *.eye3
+  0
+  =
+  *.eye5
+  0
+  =
+  *.eye7
+  0
+  =
+  *.eye9
+  0
+  =
+start
+  *50
+  .aimdx
+  store
+  50
+  inc
+  5
+  .up
+  store
+stop
+
+cond
+  *50
+  60
+  >
+start
+  -60
+  50
+  store
+stop
+
+
+
+'******************
+'* END            *
+'******************
+
+
+end

@@ -1,0 +1,108 @@
+'DIVERSA REFLEXUM
+'Made by Trimalchio
+'for F3 League
+
+
+'====Sync====
+cond
+start
+  9 .timer store
+  .delgene inc
+stop
+
+
+'====Birth====
+cond
+  *.numties 0 >
+start
+  9999 rnd .out4 store
+  .in4 .memloc store
+  *.timer .out3 store
+  .deltie inc
+  300 .eye5width store
+stop
+
+
+'====Repro====
+cond
+  *.nrg 2000 >
+  *.eye5 0 =
+  *.out1 0 =
+  *.robage 0 >
+start
+  25 .repro store
+stop
+
+
+'====Combat====
+cond
+  *.eye5 0 >
+  *.refage 0 >
+start
+
+'----Friend----
+  *.in3 *.timer =
+    *.in1 *.out1 store
+    *.in2 *.out2 store
+    *.refveldx sgn 30 mult .dx store
+    .dx inc
+
+'----Enemy----
+  not
+    *.refxpos .out1 store
+    *.refypos .out2 store
+    300 .eye5width store
+
+'----Tactics----
+    2425 *.refveldx dup mult sub sqr dup
+    *.refveldn add 10 mult *.out1 *.out2 dist > and
+      *.xpos add *.ypos *.refveldx sub angle .aimshoot store
+      *.body *.refbody sub 50 div .up store
+      25 .shootval store
+      .shoot dec
+      *.refnrg 700 > and
+        -6 .shoot store
+        *.velsx 2 div .dx store
+        *.veldn .up store
+
+'----Retreat----
+  *.memval *.out4 =
+    -100 .up store
+stop
+
+
+'====Search====
+cond
+start
+  .out3 inc
+
+'----Spin and search----
+  *.out1 0 =
+    490 .aimdx store
+    *.eye5width 50 add 2 div .eye5width store
+
+'----Follow target----
+  not
+    *.out1 *.out2 angle .setaim store
+    *.up 30 add .up store
+    *.eye5 0 = *.in3 *.timer = or and
+      0 .out1 store
+stop
+
+
+'====Body====
+
+'----Grow----
+cond
+  *.nrg *.body 200 add >
+start
+  100 .strbody store
+stop
+
+'----Shrink----
+cond
+  *.nrg *.body <
+start
+  100 .fdbody store
+stop
+end

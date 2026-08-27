@@ -1,0 +1,429 @@
+def turnfactor 972
+def reprothreshold 971
+def speedlimit 973
+def reproshare 974
+def mymaxvenom 975
+def mymaxpoison 976
+def mymaxslime 977
+def mymaxshell 978
+def mymaxenergy 979
+def friendcooldown 980
+def reprocooldown 51
+def avoidfriend 52
+def cloakmemloc 53
+def comebacks 54
+def imasettler 983
+def mybodyfeed 981
+def myshootrange 982
+def myshootpower 984
+def xfoodlocation 985
+def yfoodlocation 986
+
+cond
+*.shell 1999 >
+start
+*.numties 0 !=
+*.tiepres .deltie store
+
+*.totalbots *.totalmyspecies 4 mult >
+-10 .mkshell store
+stop
+
+cond
+*.shell 2000 <
+start
+1 1 =
+*.tiepres .tienum store
+.memloc .memloc store
+*.memval .memloc *.cloakmemloc sgn mult store
+*.memval .cloakmemloc store
+*.memval *.cloakmemloc *.cloackmemloc sgn mult store
+*.dnalen 999 store
+.shoot .ploc store
+*.avoidfriend 1 sub .avoidfriend store
+*.myshootpower 10 mult *.veldx div .shootval store
+0 .focuseye store
+
+95 .eye1width *.robage 9 mod add store 
+-700 .eye1dir store
+-515 .eye2dir store
+-335 .eye3dir store
+-165 .eye4dir store
+0 .eye5dir store
+165 .eye6dir store
+335 .eye7dir store
+515 .eye8dir store
+700 .eye9dir store
+
+*.pleas 500 >
+*.xpos .xfoodlocation store
+*.ypos .yfoodlocation store
+-2 .comebacks store
+
+*.robage 6 =
+*.reproshare 0 = and
+10 .turnfactor store
+3 .reprothreshold store
+200 .speedlimit store
+50 .reproshare store
+100 .comebacks store
+
+*.robage 12 =
+*.mymaxenergy 0 = and
+90 .mymaxvenom store
+110 .mymaxpoison store
+1000 .mymaxslime store
+100 .mymaxshell store
+10000 .mymaxenergy store
+
+*.robage 17 =
+*.myshootpower 0 = and
+30 .friendcooldown store
+0 .imasettler store
+-900 .mybodyfeed store
+40 .myshootrange store
+100 .myshootpower store
+
+*.robage 21 =
+10 rnd 1 = and
+*.reprothreshold 2 rnd 1 sub add 0 floor 6 ceil .reprothreshold store
+
+*.robage 21 =
+*.turnfactor 10 rnd 5 sub add 1 floor 50 ceil .turnfactor store
+*.speedlimit 10 rnd 5 sub add 5 floor .speedlimit store
+*.reproshare 10 rnd 5 sub add 1 floor .reproshare store
+*.mymaxvenom 50 rnd 25 sub add .mymaxvenom store
+*.mymaxpoison 50 rnd 25 sub add .mymaxpoison store
+*.mymaxslime 50 rnd 25 sub add .mymaxslime store
+*.mymaxshell 50 rnd 25 sub add .mymaxshell store
+*.mymaxenergy 500 rnd 250 sub add 500 floor .mymaxenergy store
+*.friendcooldown 4 rnd 2 sub add 1 floor .friendcooldown store
+*.imasettler 10 rnd 5 sub add 1 floor .imasettler store
+*.mybodyfeed 50 rnd 25 sub add -100 ceil .mybodyfeed store
+*.myshootrange 4 rnd 2 sub add 1 floor .myshootrange store
+*.myshootpower 4 rnd 2 sub add 1 floor .myshootpower store
+
+*.refeye *.in3 =
+0 .out4 store
+0 .out5 store
+
+*.trefeye *.myeye =
+*.trefage 20 > and
+*.robage 20 > and
+*.reprocooldown 0 = and
+*.tiepres .deltie store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+100 rnd 50 sub .aimdx store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye1 0 > and
+-650 *.aim add *.veldx add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye2 *.eye1 > and
+-470 *.aim add *.veldx add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye3 *.eye2 > and
+*.eye3 *.eye1 > and
+-290 *.aim add *.veldx add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye4 *.eye3 > and
+*.eye4 *.eye2 > and
+*.eye4 *.eye1 > and
+-140 *.aim add *.veldx 2 div add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye6 *.eye4 > and
+*.eye6 *.eye3 > and
+*.eye6 *.eye2 > and
+*.eye6 *.eye1 > and
+140 *.aim add *.veldx 2 div add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye7 *.eye6 > and
+*.eye7 *.eye4 > and
+*.eye7 *.eye3 > and
+*.eye7 *.eye2 > and
+*.eye7 *.eye1 > and
+290 *.aim add *.veldx add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye8 *.eye7 > and
+*.eye8 *.eye6 > and
+*.eye8 *.eye4 > and
+*.eye8 *.eye3 > and
+*.eye8 *.eye2 > and
+*.eye8 *.eye1 > and
+470 *.aim add *.veldx add .setaim store
+
+*.eye5 0 =
+*.avoidfriend 1 < and
+*.reprocooldown 0 = and
+*.eye9 *.eye8 > and
+*.eye9 *.eye7 > and
+*.eye9 *.eye6 > and
+*.eye9 *.eye4 > and
+*.eye9 *.eye3 > and
+*.eye9 *.eye2 > and
+*.eye9 *.eye1 > and
+650 *.aim add *.veldx add .setaim store
+
+*.refeye *.myeye =
+*.refeye *.in3 = and
+*.in4 0 = and
+*.refage 0 > and
+*.friendcooldown .avoidfriend store
+*.aim 300 rnd 150 sub add .setaim store
+
+'If nothing around, return to feed area
+*.eye5 0 =
+*.xfoodlocation 0 != and
+*.yfoodlocation 0 != and
+50 *.comebacks abs mult rnd 1 < and
+*.xfoodlocation *.yfoodlocation angle 100 rnd add 50 sub .setaim store
+*.comebacks 1 add .comebacks store
+
+*.refeye *.myeye !=
+*.refage 0 != and
+*.eye5 80 < and
+*.veldx abs 10 > and
+*.veldx .aimshoot store
+
+*.robage 20 >
+*.reprocooldown 0 = and
+*.speedlimit *.velup sub 5 floor *.mass mult .up store
+
+*.refeye *.myeye !=
+*.in3 *.myeye != and
+*.eye5 0 != and
+*.refage 0 > and
+*.robage 13 > and
+*.reprocooldown 7 < and
+*.refxpos *.refypos angle *.velsx 70 ceil -70 floor sub .setaim store
+*.revelup 0 floor 2 mult .up store
+*.refveldx .dx store
+1 .dn *.refveldn sgn 0 floor mult store
+1 .tie *.eye5 100 ceil 40 sub sgn 0 floor mult store
+1 .fixpos *.eye5 90 sub sgn 0 floor mult store
+*.refxpos .out4 store
+*.refypos .out5 store
+
+
+*.eye5 80 >
+*.refeye *.myeye != and
+*.refage 0 > and
+*.refvelup .up store
+
+*.fixed 1 =
+0 .fixpos store
+
+1 1 =
+.fixpos .vloc store
+1 .venval store
+
+*.eye5 1 >
+*.mass 1 > or
+-3 .shoot store
+
+*.eye5 *.myshootrange >
+*.refeye *.myeye != and
+*.refeye 1 floor *.in3 != and
+*.refage 0 != and
+*.myshootpower .shootval store
+-6 .shoot store
+-1 .shoot *.refnrg *.refbody 5 mult sub sgn 0 floor mult store
+-6 .shoot *.refpoison sgn mult store
+
+*.refaim *.aim sub abs 600 %=
+*.refeye *.myeye != and
+*.refage 0 != and
+*.eye5 35 > and
+*.aim .venval store
+.setaim .vloc store
+-3 .shoot store
+
+*.refeye *.myeye !=
+*.refage 0 != and
+*.eye5 35 > and
+*.refdn 20 > and
+.fixpos .venval store
+1 .vloc store
+-3 .shoot 1 rnd mult store
+
+*.numties 0 >
+.tieval .tieloc store
+1000 .tieval store
+100 .fixlen store
+100 .tielen store
+40 .stifftie store
+
+1 1 =
+*.reprocooldown 1 sub 0 floor .reprocooldown store
+.shoot .ploc store
+972 *.timer abs 15 mod add .out1 store
+972 *.timer abs 15 mod add * .out2 store
+*.myeye .out3 store
+100 .shareslime store
+
+*.refeye *.myeye =
+*.refeye *.in3 = and
+*.refage *.robage > and
+*.robage 21 > and
+*.in1 971 > and
+*.in2 *.in1 store
+*.in2 10 rnd 5 sub add *.in1 *.in1 985 sub sgn 0 floor mult store
+
+*.reprocooldown 0 =
+*.robage 21 > and
+-6 .tieloc store
+-1 .tieloc *.refnrg *.mybodyfeed 3 mult sub sgn 0 floor mult store
+*.mybodyfeed .tieval store
+99 .sharenrg store
+100 .shareslime store
+1 .sharewaste store
+
+*.numties 0 >
+*.reprocooldown 0 = and
+*.robage 21 > and
+*.refvelscalar 10 > and
+.fixpos .tieloc store
+1 .tieval store
+
+*.numties 0 >
+*.reprocooldown 0 = and
+*.robage 21 > and
+*.trefvel 0 > and
+.fixpos .tieloc store
+1 .tieval store
+
+*.numties 0 >
+*.reprocooldown 0 = and
+*.robage 21 > and
+*.refaim *.aim sub abs 600 %= and
+.shoot .tieloc store
+-2 .tieval store
+
+*.mymaxvenom *.venom >
+*.nrg *.mymaxvenom 5 mult > and
+10 .strvenom store
+
+*.mymaxpoison *.poison >
+*.nrg *.mymaxpoison 5 mult > and
+10 .mkpoison store
+
+*.eye5 30 <
+*.mass *.reprothreshold > and
+*.nrg *.mymaxenergy > and
+1200 rnd .setaim store
+*.reproshare .repro store
+20 .reprocooldown store
+
+*.totalmyspecies *.imasettler <
+*.eye5 30 < and
+*.body *.mymaxenergy 10 div > and
+*.nrg *.mymaxenergy > and
+1200 rnd .setaim store
+50 .repro store
+20 .reprocooldown store
+
+*.nrg *.mymaxenergy >
+*.body 30500 < and
+100 .strbody store
+
+*.body 30000 >
+*.nrg 30000 > and
+100 .mkshell store
+100 .mkslime store
+100 .mkpoison store
+100 .mkvenom store
+
+*.nrg *.mymaxenergy <
+*.body 50 > and
+100 .fdbody store
+
+*.nrg 100 <
+*.body 50 < and
+10 .fdbody store
+
+*.waste 100 >
+*.waste .shootval store
+-4 .shoot store
+
+*.waste 0 >
+*.eye5 0 = and
+*.waste .shootval store
+-4 .shoot store
+
+*.trefshell *.shell 90 div >
+99 .shareshell store
+
+*.mymaxslime *.slime >
+*.nrg *.mymaxslime 5 mult > and
+10 .mkslime store
+
+*.mymaxshell *.shell >
+*.nrg *.mymaxshell 5 mult > and
+10 .mkshell store
+
+*.edge 1 =
+*.refeye *.myeye = and
+*.aim 10 add .setaim store
+
+*.edge 1 =
+*.refage 0 = and
+*.aim 10 sub .setaim store
+
+*.reftype 1 =
+*.aim 10 add .setaim store
+
+*.refeye *.in3 =
+*.refeye *.myeye = and
+*.eye5 30 < and
+*.in4 0 != and
+*.in5 0 != and
+*.in4 500 rnd 250 sub add *.in5 500 rnd 250 sub add angle .setaim store
+
+*.refeye *.in3 =
+*.refeye *.myeye and
+*.in4 0 = and
+*.in5 0 = and
+*.eye5 60 > and
+150 .aimdx store
+
+*.refeye *.myeye =
+*.refeye *.in3 = and
+600 rnd 300 add .aimshoot store
+
+*.eye5 *.myshootrange 2 mult 3 div <
+300 rnd 150 sub .aimshoot store
+
+*.eye5 150 >
+*.refeye *.myeye != and
+1 .dn store
+
+1 1 =
+0 .refeye store
+0 .in2 store
+0 .in1 store
+0 .refage store
+0 .refveldx store
+*.thisgene 1 add .delgene store
+stop

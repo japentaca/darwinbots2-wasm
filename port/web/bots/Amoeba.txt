@@ -1,0 +1,69 @@
+cond
+ *.robage 0 =
+start
+ 2468 .out1 store
+ 2468 .tout1 store
+stop
+
+cond
+start
+ .tie inc
+ *.nrg 3 div *.body sub dup .strbody store - .fdbody store
+ .tout4 *.tout4 sgn mult dec
+ 2 .up store
+stop
+
+cond
+ *.tin1 *.tout1 !=
+ *.trefnrg 0 >
+start
+ -1 .tieloc store
+ -1000 .tieval store
+stop
+
+cond
+ *.eye5 0 !=
+ *.out1 *.in1 !=
+start 
+ *.refxpos .tout2 store
+ *.refypos .tout3 store
+ 10 .out4 store
+stop
+
+cond
+ *.tout4 0 =
+start
+ 0 .tout2 store
+ 0 .tout3 store
+stop
+
+cond
+ *.tin1 *.tout1 =
+ *.tin2 0 !=
+ *.tin3 0 !=
+start
+ *.tin4 .tout4 store
+ *.tin2 .tout2 store
+ *.tin3 .tout3 store
+stop
+
+cond
+ *.tout2 0 !=
+ *.tout3 0 !=
+start
+ *.tout2 *.tout3 angle .setaim store
+stop
+
+cond
+ *.refnrg 0 >
+ *.eye5 40 >
+ *.in1 *.out1 !=
+start
+ -6 .shoot store
+stop
+
+cond
+ *.nrg 350 >
+start
+ 50 .repro store
+stop

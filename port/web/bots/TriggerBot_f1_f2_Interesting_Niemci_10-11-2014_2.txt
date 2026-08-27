@@ -1,0 +1,155 @@
+def feeding 21
+
+def foundmemloc 22
+def reqmemval 23
+
+def counter 24
+
+
+
+'=========
+'Conspec
+'=========
+'The conspec is based on ties
+'the memloc is thus *.tmemloc
+'It checks if the tmemloc is the same as the total species pop
+
+cond
+*.robage 0 =
+start
+.totalmyspecies .tmemloc store
+stop
+
+cond
+*.feeding 0 =
+start
+.tie inc
+stop
+
+cond
+*.tmemval *.totalmyspecies =
+start
+*.feeding 0 =
+*.tiepres .tienum store
+.deltie inc
+*.refxpos *.refypos angle 280 add .setaim store
+10 *.velup sub .up store
+clearbool
+*.feeding 1 =
+*.tiepres .tienum store
+.deltie inc
+*.refxpos *.refypos angle 280 add .setaim store
+0 .feeding store
+stop
+
+cond
+*.eyef 0 =
+start
+'*.robage .eye5dir store
+30 rnd *.aim add .setaim store 
+0 .feeding store
+stop
+
+'else
+*.robage -628 floor 628 ceil .eye5dir =
+0 .eye5dir store
+stop 
+
+'==========================================
+'Feeding
+
+'If it looks interesting, head towards it
+cond
+*.eyef 0 >
+*.tmemval *.totalmyspecies !=
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos dist 300 div *.maxvel mult *.refvel add 0 floor *.maxvel ceil .up store
+3300 10 div inc
+*.veldx .sx store
+1 .feeding store
+-6 dup - ++ store
+stop
+
+'==========================================================================================================
+
+
+'============
+'Body Managment
+'============
+cond
+*.body 31000 <
+*.nrg 1000 >
+start
+100 .strbody store
+stop
+
+'body to energy
+cond
+*.nrg 500 <
+start
+100 .fdbody store
+stop
+
+cond
+*.nrg 8000 >
+start
+15 .strpoison store
+stop
+
+cond
+*.waste 50 >
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+'==========
+'Repro
+
+cond
+*50 1 =
+start
+628 *.aim add .setaim store
+0 50 store
+stop
+
+cond
+*.nrg 1000 >
+*.body 500 >
+*.eye5 50 <
+start
+628 *.aim add .setim store 
+51 .repro store
+1 50 store
+stop
+
+'========
+
+'Defences
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.delgene 0 !=
+start
+0 .delgene store
+stop
+
+cond
+*.shoot -2 =
+start
+0 .shoot store
+0 .shootval store
+stop
+
+cond
+*.paralyzed 0 >
+start
+0 .mkshell store 
+0 .shootval store
+stop

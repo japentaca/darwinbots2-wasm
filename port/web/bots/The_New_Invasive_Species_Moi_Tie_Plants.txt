@@ -1,0 +1,177 @@
+cond
+*.robage 1 =
+start
+*51 inc
+51 .tie store
+stop
+
+cond
+*.refnrg 4500 >
+*40 3 <
+start
+70 .repro store
+40 inc
+stop
+
+cond
+*.robage 20 =
+*.numties 0 >
+start
+*51 .readtie store
+40 .stifftie store
+50 .fixlen store
+1 52 store
+stop
+
+cond
+*.numties 0 >
+*.eyef 80 >
+start
+*.maxvel -1 mult .up .vel store
+stop
+
+cond
+*.rdboy 0 *.numties add =
+start
+*.setboy inc
+stop
+
+cond
+1 *52 =
+start
+50 .sharenrg store
+50 .sharewaste store
+stop
+
+cond
+*40 2 >
+*.eyef 0 !=
+start
+*51 .readtie store
+*.tieang .setaim store
+-60 .sexrepro store
+-8 .shoot store
+stop
+
+cond
+*303 1 =
+start
+60 .sexrepro store
+.out2 inc
+stop
+
+cond
+*.pain 0 <
+*.refeye *.in1 !=
+*.body 500 >
+start
+*.body 4 div .shootval store
+-6 .shoot store
+stop
+
+cond
+*.eyef 0 %=
+*.pain 3 <
+start
+12 rnd add .up .vel store
+stop
+
+'memory functions
+
+cond
+*.tin2 0 > or
+*.in3 0 >
+start
+*.nrg 10 div .strbody store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres 52 store
+*52 .readtie store
+stop
+
+cond
+*52 *.readtie =
+start
+.vel .tmemloc store
+*.vel .tmemval store
+stop
+
+cond
+*52 *.numties >
+start
+0 52 store
+stop
+
+cond
+*.refeye *.myeye !=
+*.eyef 0 >
+start
+*.eyef .tout4 store
+stop
+
+cond
+*.tin4 *.eyef >
+start
+*.maxvel rnd 1 .vel store
+stop
+
+'eye stuff
+
+cond
+*.out1 *.myeye !=
+start
+*.myeye .out1 store
+stop
+
+cond
+*.eyef 0 >
+*.in1 *.refeye !=
+start
+*.nrg 4 div .shootval store
+-1 shoot store
+stop
+
+cond
+*.eyef 0 >
+*.in1 *.refeye !=
+start
+*.refxpos *.refypos angle .setaim store
+-30 *.eyef add .dn .vel store
+stop
+
+cond
+*.eyef 0 >
+*.in1 *.refeye =
+start
+*.refxpos *.refypos angle .setaim store
+.tie inc
+2 *.aim add .setaim store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+*.pain 10 >
+start
+1256 *.shang sub .aimshoot store
+160 .shootval store
+*.setaim .shoot store
+0 .shflav store
+stop
+
+cond
+*.nrg 700 >
+start
+*.genes rnd 1 .mkvirus store
+stop
+
+cond
+*.vtimer 1 =
+start
+70 .vshoot store
+stop
+
+end

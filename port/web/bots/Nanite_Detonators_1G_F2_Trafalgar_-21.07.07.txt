@@ -1,0 +1,60 @@
+'Nanite Detonators.txt compiled by PyBot V1 from Nanite Detonators.pyr.
+ 'The premise behind this is simple: Put all your energy into reproducing, spreading out, and destroying all non-self.
+ 'These bots never consume any energy from any veggies or other bots - all their fuel comes from their starting energy and body (and from being extremely energy-efficient).
+ 'These bots use an instakill tie attack (tie and set tienum, and then next cycle set the enemy's strpoison to 10000). A bot can theoretically delete or block the tie (at least, it looked like some bots were deleting them, although my attempts to do so didn't seem to work - blocking with slime works better, but isn't 100% reliable), or try to disintegrate anyone who ties to you. However, even if you do those things, you'll still eventually get killed sooner or later. Of course, if you tricked the bot's friend-or-foe and went into hibernation for several thousand cycles, you could win. (Or you could just wait long enough for the remaining nanites to go into low-energy hibernation, and then you could stay away from the remaining nanites while eating veggies.)
+ 'The first version of this didn't use fdbody - It only got up to 150 bots, and ran much faster (chiefly for that reason). Unfortunately, it was unable to beat Etch, so I revised it.
+ 'The Friend or Foe code on this bot is rather simple, mainly to keep lag down as much as possible. It stores an ID in a memory address, and uses memloc/memval to make sure other bots have the same value there. If they do, they are ignored.
+ 'The scary thing is that when I tested a modified Guardian which had 995 set to the nanite detonator ID#, Guardian still lost.
+ 
+ 'def myid at 995
+ def myid 995
+ 'if ():
+ cond
+ 
+ start
+ '    #Initial setup, and corrections in case something else manages to change them
+ '    tmemloc = &myid
+ .myid dup *.tmemloc sub sgn abs .tmemloc mult store
+ '    memloc = &myid
+ .myid dup *.memloc sub sgn abs .memloc mult store
+ '    myid = 2374
+ 2374 dup *.myid sub sgn abs .myid mult store
+ '    eye5width = 1221
+ 1221 dup *.eye5width sub sgn abs .eye5width mult store
+ '    #Turn around to face forward
+ '    setaim when (robage==1) = (aim+630)
+ *.aim 630 add dup *.setaim sub sgn abs *.robage 1 sub sgn abs - ++ & .setaim mult store
+ '    #Accelerate - this is scaled down as we run low on energy.
+ '    up when ((robage>0) and (nrg>25)) ++
+ .up *.robage 0 sub sgn 0 floor *.nrg 25 sub sgn 0 floor & mult inc
+ '    up when ((robage>0) and (nrg>50)) ++
+ .up *.robage 0 sub sgn 0 floor *.nrg 50 sub sgn 0 floor & mult inc
+ '    up when ((robage>0) and (nrg>75)) ++
+ .up *.robage 0 sub sgn 0 floor *.nrg 75 sub sgn 0 floor & mult inc
+ '    up when ((robage>0) and (nrg>100)) ++
+ .up *.robage 0 sub sgn 0 floor *.nrg 100 sub sgn 0 floor & mult inc
+ '    #disable-storecheck
+ '    #Consume body as fuel, which has the pleasant side effects of making us harder to hit, and making us accelerate faster
+ '    fdbody when (body>1) = body-1
+ *.body 1 sub .fdbody *.body 1 sub sgn 0 floor mult store
+ '    #We wait to reproduce until we're moving at a decent speed. This helps disperse us faster.
+ '    repro when ((nrg>150) and (velscalar>20)) = 50
+ 50 .repro *.nrg 150 sub sgn 0 floor *.velscalar 20 sub sgn 0 floor & mult store
+ '    #Tying magic - only tie to non-self, don't tie to newly born bots, don't tie when we're newly born, and don't tie when we are already tied to someone (other than a child)
+ '    tie when ((eye5>0) and (memval!=2374) and (robage>2) and (refage>2) and (tiepres==0)) = rnd(30000)
+ 30000 rnd .tie *.eye5 0 sub sgn 0 floor *.memval 2374 sub sgn abs & *.robage 2 sub sgn 0 floor & *.refage 2 sub sgn 0 floor & *.tiepres 0 sub sgn abs - ++ & mult store
+ '    #Set tienum appropriately
+ '    tienum when (tiepres!=0) = tiepres
+ *.tiepres .tienum *.tiepres 0 sub sgn abs mult store
+ '    tienum when (tie!=0) = tie
+ *.tie .tienum *.tie 0 sub sgn abs mult store
+ '    #enable-storecheck
+ '    #Disintegrate! We do the tmemval check here because it is possible for a bot to try to tie to an enemy on the same cycle that another bot is disintegrating that enemy, with the result being that the first bot ties to another nearby bot (generally a friendly) instead.
+ '    tieloc when ((tiepres!=0) and (tmemval!=2374)) = &strpoison
+ .strpoison dup *.tieloc sub sgn abs *.tiepres 0 sub sgn abs *.tmemval 2374 sub sgn abs & & .tieloc mult store
+ '    tieval when ((tiepres!=0) and (tmemval!=2374)) = 10000
+ 10000 dup *.tieval sub sgn abs *.tiepres 0 sub sgn abs *.tmemval 2374 sub sgn abs & & .tieval mult store
+ '    #Delete accidental ties to friendlies. (Perhaps not really necessary - we seem to do fairly fine without this)
+ '    deltie when ((tiepres!=0) and (tmemval!=2374)) = tiepres
+ *.tiepres dup *.deltie sub sgn abs *.tiepres 0 sub sgn abs *.tmemval 2374 sub sgn abs & & .deltie mult store
+ stop

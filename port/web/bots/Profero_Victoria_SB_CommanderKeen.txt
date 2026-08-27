@@ -1,0 +1,34 @@
+cond
+start
+*.thisgene .mkvirus store
+.vshoot inc
+-2 .shoot store
+10 .repro store
+600 .aimdx store
+0 .delgene store
+1 .sharenrg store
+.tie inc
+stop
+
+start
+0 .repro store
+0 .shoot store
+99 .sharenrg store
+1200 .eye5 store
+stop
+
+cond
+*.nrg 200 >
+start
+50 .repro store
+20 *.body sub .strbody store
+50 rnd .up store
+50 rnd .dx store
+stop
+
+cond
+*.trefeye *.myeye !=
+start
+.fdbody .tieloc store
+.tieval inc
+stop

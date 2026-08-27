@@ -1,0 +1,19 @@
+'Singularis by Commander Keen
+'A single store tie feeder that isn't terribly efficient
+'I commented out the reproduction gene, because it ends up killing itself
+'I have considered commenting out the slime generation, maybe shell would be more useful, or neither
+start
+1 *.robage 10 mod sgn sub 20 *.velsx sub mult
+1 *.robage 3 mod sgn sub 99 mult add
+.robage 2 mod sgn add
+1 *.robage 11 mod sgn sub 50 mult add
+'1 *.robage 13 mod sgn sub 50 mult *.nrg 1000 sub 0 floor sgn mult add ' They just kill each other
+1 *.robage 7 mod sgn sub 500 *.slime sub mult add ' never makes right amount, could comment out
+1 *.robage 3 mod sgn sub .sharenrg mult
+1 *.robage 10 mod sgn sub .sx mult add
+*.robage 2 mod sgn .tie mult add
+'1 *.robage 13 mod sgn sub .repro mult *.nrg 1000 sub 0 floor sgn mult add 'They just kill each other
+1 *.robage 7 mod sgn sub .mkslime mult add 'Never makes the right amount, could comment out
+1 *.robage 11 mod sgn sub .aimdx mult add
+store
+stop

@@ -1,0 +1,265 @@
+cond
+*.robage 0 =
+start
+52 inc
+stop
+
+cond
+*52 1 !=
+start
+*.thisgene .mkvirus store
+*.myeye *.myshoot add 32000 mult 50 add 32000 ceil .vshoot store
+.delgene dec
+stop
+
+cond
+start
+2 .mkvirus store
+10 .vshoot store
+stop
+
+
+
+cond
+*.eye1
+0
+>
+start
+34.9
+.aimsx
+store
+stop
+
+cond
+*.eye9
+0
+>
+start
+34.9
+.aimdx
+store
+stop
+
+cond
+*.eye2
+0
+>
+start
+34.9
+.aimsx
+store
+stop
+
+ond
+*.eye8
+0
+>
+start
+34.9
+.aimdx
+store
+stop
+
+cond
+*.eye3
+0
+>
+start
+34.9
+.aimsx
+store
+stop
+cond
+*.eye7
+0
+>
+start
+34.9
+.aimdx
+store
+stop
+
+cond
+*.eye4
+0
+>
+start
+34.9
+.aimsx
+store
+stop
+
+cond
+*.eye6
+0
+>
+start
+34.9
+.aimdx
+store
+stop
+
+cond
+*.eye5
+0
+>
+start
+*.refveldx
+.dx
+store
+*.refvelup
+30
+add
+.up
+store
+
+cond
+*.nrg
+10000
+>
+start
+50
+.repro
+store
+10
+.aimdx
+store
+stop
+
+
+cond
+*.waste
+1
+>
+start
+.backshot
+inc
+-4
+.shoot
+store
+*.waste
+.shootval
+store
+stop
+
+cond
+start
+.fixpos *.fixed mult dec
+stop
+
+cond
+robage 0 =
+start
+.shoot .ploc store
+stop
+
+cond
+*.shell 2500 <
+*.nrg 2000 >
+start
+100 .mkshell store
+stop
+
+
+cond
+*.numties 0 >
+*.in1 1 !=
+start
+-1 .tieloc store
+-1000 .tieval store
+*.tiepres .tienum store
+stop
+cond
+
+*.slime 90 <
+*.nrg 3000 >
+start
+100 .mkslime store
+stop
+
+cond
+*.tiepres *.feedtie =
+start
+-1000 .tieval store
+*.tieval 1000 div .tieloc store
+stop
+
+cond
+*.robage 0 =
+start
+.deltie 
+inc
+stop
+
+cond
+*.robage 1
+ =
+start
+.deltie 
+inc
+stop
+
+
+cond
+*.nrg 5 >
+start
+1
+.tie
+store
+stop
+
+
+cond
+*.nrg
+2000
+>
+start
+10
+.strbody
+store
+stop
+
+cond
+*.nrg
+50
+<
+start
+1
+.fdbody
+store
+stop
+
+
+
+
+cond
+*.edge
+1
+=
+start
+10
+.dn
+store
+stop
+
+cond
+*.poison
+1000
+>
+*.nrg 1000 <
+start
+8 .ploc
+store
+
+cond
+start
+99 .sharenrg *.multi mult store
+.sharewaste *.multi mult inc
+stop
+cond
+*.out1 1 !=
+start
+1 .out1 store
+stop
+
+end

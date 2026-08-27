@@ -1,0 +1,105 @@
+'By spike43884
+'Reasonably powerful, but cannot destroy fruitflies
+'Also good at energy consumption...
+'Don't believe the virus is being triggered, not sure why
+
+
+def antivirus 976
+
+
+'Gene 0 Anti-Virus
+cond
+*.robage 0 =
+start
+2000 .antivirus store
+stop
+
+
+'Gene 1 Virus Creation
+cond
+ *.vtimer = 0
+ 2000 *.antivirus !=
+start
+ *.thisgene .mkvirus store
+ *.tiepres .deltie store
+ 0 .shoot store
+ 0 .repro store
+stop
+
+cond
+ *.vtimer = 0
+ 2000 *.antivirus =
+start
+ 2 .mkvirus store
+stop
+
+
+' Gene 2 Food Finder
+cond
+ *.eye4 2 >
+ *.eye5 0 >
+ *.eye6 2 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+
+' Gene 3 Eat Food
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-1 .shoot store
+-6 .shoot store
+60 .vshoot store
+ *.refvelup .up store
+stop
+
+
+' Gene 4 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+
+'Gene 5 Recombine
+cond
+ *.robage 0 =
+start
+ .tie inc
+stop
+
+
+'Gene 6 Tie Angles
+cond
+ *.robage 20 =
+start
+ 418 *.numties mult .fixang store
+stop
+
+
+' Gene 7 Reproduce
+cond
+ *.nrg 10000 >
+start
+ 50 .repro store
+stop
+
+
+
+'Gene 8 Brain
+cond
+ *.multi 1 = 
+start
+ 49 .sharenrg store
+ 15 .fixlen store
+ 75 .stifftie store
+stop
+
+
+end

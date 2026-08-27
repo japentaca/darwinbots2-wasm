@@ -1,0 +1,217 @@
+'Aura
+ 'Antisocial F1/F2 bot by abyaly
+ 'Uses one very large eye
+ 
+ def bornaim 941
+ def IDcheck 946
+ def enemy 947
+ def ID 1234
+ 
+ cond
+ start
+ 
+ 314 .setaim *.robage 1 sub sqr sgn mult store
+ .out5 inc
+ 
+ *.in5 *.in4 add *.memval add *.refage 10000 mod sub .ID sub sgn abs 
+ *.in5 *.in4 add *.memval add *.refage 10000 mod sub .ID sub 1 add sgn abs mult .enemy store
+ 
+ .aimdx inc
+ 
+ '**************************************************************
+ 'avoid conspecs
+ '**************************************************************
+ *.refxpos *.xpos sub *.refveldx add 10 *.nrg 20 div ceil 5 floor mult
+ *.refypos *.ypos sub *.refveldn add dup mult *.refxpos *.xpos sub *.refveldx add dup mult add sqr div 
+ .sx 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.numties 0 sub sgn abs 1 sub abs mult
+   *.enemy 0 sub sgn abs 1 sub abs mult
+ store
+ 
+ *.refypos *.ypos sub *.refveldn add 10 *.nrg 20 div ceil 5 floor mult
+ *.refypos *.ypos sub *.refveldn add dup mult *.refxpos *.xpos sub *.refveldx add dup mult add sqr div
+ .up 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.numties 0 sub sgn abs 1 sub abs mult
+   *.enemy 0 sub sgn abs 1 sub abs mult
+ store
+ 
+ '**************************************************************
+ 'eat/chase
+ '**************************************************************
+ 
+ -6 3 4 add 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refxpos *.refypos dist 150 div -1 mult .shootval 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refxpos *.refveldx *.veldx add 2 mult add
+ *.refypos *.refveldn *.velup add 2 mult add
+ angle - *.aim add .aimshoot 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refveldx *.refveldx *.refxpos *.xpos sub mult
+ *.refveldn *.refypos *.ypos sub mult add
+ *.refxpos *.xpos sub dup mult
+ *.refypos *.ypos sub dup mult add div
+ *.refxpos *.xpos sub mult sub .dx 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refveldn *.refveldx *.refxpos *.xpos sub mult
+ *.refveldn *.refypos *.ypos sub mult add
+ *.refxpos *.xpos sub dup mult
+ *.refypos *.ypos sub dup mult add div
+ *.refypos *.ypos sub mult sub .dn 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refxpos *.xpos sub 97 *.eyef sub 40 ceil mult
+ *.refypos *.ypos sub dup mult *.refxpos *.xpos sub dup mult add sqr div - .sx 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ *.refypos *.ypos sub 97 *.eyef sub 40 ceil mult
+ *.refypos *.ypos sub dup mult *.refxpos *.xpos sub dup mult add sqr div - .up 
+   *.robage 1 sub sqr sgn mult
+   *.eyef 0 sub sqr sgn mult
+   *.enemy 0 sub sqr sgn mult
+ store
+ 
+ '**************************************************************
+ 'misc
+ '**************************************************************
+ 'ties
+ *.tiepres .deltie 
+   *.robage 1 sub sqr sgn mult
+   *.numties 0 sub sqr sgn mult
+ store
+ 
+ 'body & nrg
+ *.nrg *.body sub 2 div 10 mult .strbody 
+   *.nrg *.body sub sqr sgn mult
+ store
+ *.body *.nrg sub 2 div .fdbody 
+   *.body *.nrg sub sqr sgn mult
+ store
+ 
+ 'shell
+ *.body *.shell sub 0 floor .mkshell 
+   *.body *.shell sub sgn abs mult
+ store
+ 
+ 'waste
+ -4 3 4 add 
+   *.waste 100 sub sqr sgn mult
+ store
+ *.waste .shootval 
+   *.waste 100 sub sqr sgn mult
+ store
+ 
+ 'antiviral
+ .delgene inc
+ .delgene inc
+ 
+ '**************************************************
+ 'repro1
+ '**************************************************
+ 4 rnd 100 mult *.bornaim add .setaim 
+   *.robage 1 sub sqr sgn mult
+   *.eyef sgn 1 sub abs mult
+ store 
+ 
+ 4 rnd 100 mult *.bornaim add .bornaim 
+   *.robage 1 sub sqr sgn mult
+   *.eyef sgn 1 sub abs mult
+ store
+ 
+ 50 .repro 
+   *.robage 1 sub sqr sgn mult
+   *.eyef sgn 1 sub abs mult
+ store
+ 
+ '**************************************************
+ 'repro2
+ '**************************************************
+ 4 rnd 100 mult *.bornaim add .setaim 
+   *.robage 1 sub sqr sgn mult
+   60 *.eyef sub sqr sgn mult
+   *.nrg 10000 sub sqr sgn mult
+   *.body 10000 sub sqr sgn mult
+ store 
+ 
+ 4 rnd 100 mult *.bornaim add .bornaim 
+   *.robage 1 sub sqr sgn mult
+   60 *.eyef sub sqr sgn mult
+   *.nrg 10000 sub sqr sgn mult
+   *.body 10000 sub sqr sgn mult
+ store
+ 
+ 50 .repro 
+   *.robage 1 sub sqr sgn mult
+   60 *.eyef sub sqr sgn mult
+   *.nrg 10000 sub sqr sgn mult
+   *.body 10000 sub sqr sgn mult
+ store
+ 
+ '**************************************************
+ 'born
+ '**************************************************
+ 1 .tie *.robage sgn 1 sub abs mult store
+ 1220 .eye1width *.robage sgn 1 sub abs mult store
+ 1220 .eye2width *.robage sgn 1 sub abs mult store
+ 1220 .eye3width *.robage sgn 1 sub abs mult store
+ 1220 .eye4width *.robage sgn 1 sub abs mult store
+ 1220 .eye5width *.robage sgn 1 sub abs mult store
+ 1220 .eye6width *.robage sgn 1 sub abs mult store
+ 1220 .eye7width *.robage sgn 1 sub abs mult store
+ 1220 .eye8width *.robage sgn 1 sub abs mult store
+ 1220 .eye9width *.robage sgn 1 sub abs mult store
+ 9 rnd 4 sub .focuseye *.robage sgn 1 sub abs mult store
+ 
+ .IDcheck .memloc 
+   *.memloc .IDcheck sub sgn abs mult
+ store
+ 
+ 500 rnd .IDcheck *.robage sgn 1 sub abs mult store
+ 500 rnd .out4 *.robage sgn 1 sub abs mult store
+ 
+ .ID *.IDcheck sub *.out4 sub .out5 1 add .out5 
+   *.robage sgn 1 sub abs mult 
+ store
+ 
+ *.aim 628 add 1256 mod .bornaim 
+   *.robage sgn 1 sub abs mult 
+ store
+ 
+ 1 .deltie 
+   *.robage 1 sub abs sgn 1 sub abs mult
+ store
+ 
+ '**************************************************
+ 'ID correction
+ '**************************************************
+ .ID *.IDcheck sub *.out4 sub *.robage 10000 mod add .out5 
+   *.out5 *.out4 *.IDcheck add add *.robage 10000 mod sub .ID sub sgn abs mult
+ store
+ 
+ stop

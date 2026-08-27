@@ -1,0 +1,134 @@
+'Topic: My first bot
+'Luke26
+
+'Speedy Turtle 1.0
+
+' My first bot (made by Luke26)
+' Inspired by Simplebot 
+' It turns around if hit and makes shell
+
+'*****************************
+'Identify gene & tie to parent
+
+cond
+*.robage 0 =
+start
+78 .out1 store
+13 .out2 store
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond
+*.vel 40 <
+*.numties 0 =
+start
+40 *.vel sub .up store
+stop
+
+'World ends here!
+
+cond
+*.edge 1 =
+start
+mult
+628
+stop
+
+cond
+*.eye1 *.eye5 >
+start
+mult
+52
+stop
+
+cond
+*.eye9 *.eye5 >
+start
+mult
+-52
+stop
+
+cond
+*.eye3 *.eye5 >
+start
+mult
+26
+stop
+
+cond
+*.eye7 *.eye5 >
+start
+mult
+-26
+stop
+
+cond
+*.eye5 40 >
+*.in1 78 !=
+start
+-1 .shoot store
+stop
+
+'Who is shooting ??
+'Turn around if you don't face opponent yet
+'Wear armour
+
+cond
+*.pain 120 >
+*.shup -1 !=
+*.shup -3 !=
+*.shell 50 <
+start
+100 *.shell sub .mkshell store
+mult
+628
+stop
+
+'Avoid my family
+
+cond
+*.in1 78 =
+*.in2 13 =
+*.eye5 0 !=
+start
+mult
+628
+stop
+
+cond
+*50 0 >
+start
+mult 628
+50 dec
+stop
+
+'Nec Hercules contra plures..
+
+cond
+*.nrg 3000 >
+start
+50 .repro store
+mult 628
+50 inc
+stop
+
+' I'm poisonous turtle  
+
+cond
+*.waste 10 >
+*.poison 30 <
+start
+*.waste .strpoison store
+stop
+
+cond
+start
+.aimsx store
+stop
+end

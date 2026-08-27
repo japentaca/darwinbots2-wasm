@@ -1,0 +1,57 @@
+'Ameoba
+
+*.construction
+
+cond
+ *.numties 0 =
+ *.robage 7 <
+start
+ 0 .timer store
+stop
+
+cond
+ *.robage 0 =
+ *.timer 5 <
+start
+ 83 *.timer 1 add 3 mult sub .repro store
+stop
+
+cond
+ *.robage 0 =
+ *.timer 6 <
+start
+  425 .aimsx store
+stop
+
+cond
+ *.robage 1 =
+ *.timer 7 <
+start
+  1 .tie store
+stop
+
+cond
+ *.multi 1 =
+start
+ 1 .tienum store
+ 20 .stifftie store
+ 100 .fixlen store
+ 50 .sharenrg store
+ -836 .tieang store
+stop
+
+cond
+ *.eye5 0 =
+ *.myeye *.refeye = or
+ *.multi 1 =
+start
+ *.veldx 10 <
+ 5 .dx store
+ dropbool
+ 1 .up store
+ *.timer 1256 mod %=
+ 30 up store
+ dropbool
+stop
+ 
+end

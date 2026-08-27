@@ -1,0 +1,33 @@
+'Snap Tiebot
+'uses tie snapping to move
+cond
+start
+
+'dnalen conspec id
+.dnalen .tmemloc .dnalen *.tmemloc sub sgn abs mult store
+
+'rnd tieing
+.tie 1 rnd mult inc
+
+'rnd turning
+314 rnd .aimdx store
+
+'reproduction is somewhat uncontrolled, by product of it's snap-tie movement strategy
+50 .repro *.numties sgn -- - mult store
+
+'Snaps the tie, allowing the bot to move
+10000 .fixlen *.numties sgn mult store
+
+'body managment
+
+ *.nrg 3 div *.body sub dup .strbody swap sgn sqr mult store
+ *.body *.nrg 3 div sub dup .fdbody swap sgn sqr mult store
+
+
+'uses tied body feeding and sharenrg
+
+-6 .tieloc *.tmemval *.tmemloc * sub sgn abs mult *.trefage sgn mult store
+-1000 .tieval *.tmemval *.tmemloc * sub sgn abs mult *.trefage sgn mult store
+
+100 .sharenrg *.numties sgn mult store
+stop

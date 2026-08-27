@@ -1,0 +1,37 @@
+' Smarter Algae verson Follow!
+' Kind of a multibot, tries to protect itself from ties by bonding to all its family...
+' Kind of wimpy, too.
+' This version tries to meet with other members of its species.
+cond
+  *.refeye *.myeye =
+start
+  .tie inc
+stop
+
+cond
+  *.robage 0 =
+start
+  .tie inc
+  100 .stifftie store
+stop
+
+cond
+  *.robage 1 =
+start
+  .deltie inc
+stop
+
+cond
+start
+  *.xpos *.ypos angle .setaim store
+  20 .up store
+stop
+
+cond 
+  *.nrg 4000 >
+  *.eye5 30 <
+start
+  50 .repro store
+stop
+
+end

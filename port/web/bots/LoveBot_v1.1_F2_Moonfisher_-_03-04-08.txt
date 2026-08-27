@@ -1,0 +1,889 @@
+'Lovebot (F2) : 03-04-08
+'Make love not war !
+'v0.02
+'Would probably be more effective in combat as a single gene
+'But this way is more fun.
+'Sometimes causes a crash in 2.43.1e.
+'May rarely cause a crash in 2.43.1f
+
+def keyval 55
+def repspin 56
+def keyloc 110
+
+def birthkey 971
+def birthx 972
+def birthy 973
+
+'Origkey must be first, slavekey must be last, interval must be 6
+def origkey 1234
+def algekey 1240
+def slavekey 1246
+
+cond
+*.robage 2 <
+*.nrg 3000 %=
+*.nrg 2980 >
+*.body 1000 =
+*.totalmyspecies 6 <
+*.totalbots 21 <
+start
+.origkey .birthkey store
+.origkey .keyval store
+stop
+
+cond
+*.robage 0 =
+start
+*.tiepres .deltie store
+.sexrepro .vloc store
+99 .venval store
+100 .eye5width store
+.shoot .memloc store
+stop
+
+cond
+*.fixpos 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.body 100 <
+*.nrg 500 >
+start
+100 .strbody store
+stop
+
+cond
+*.body 50 >
+*.nrg 100 <
+start
+100 .fdbody store
+stop
+
+cond
+*.body 20 >
+*.nrg 50 <
+*.keyval .origkey =
+start
+100 .fdbody store
+stop
+
+cond
+*.venom 50 <
+*.nrg 100 >
+start
+10 .strvenom store
+stop
+
+cond
+*.shell 200 <
+*.nrg 200 >
+start
+10 .mkshell store
+stop
+
+cond
+*.shell 30 <
+*.nrg 100 >
+start
+60 *.shell sub .mkshell store
+stop
+
+cond
+*.shell 500 <
+*.nrg 1000 >
+*.robage 20 >
+*.keyval .algekey =
+start
+500 *.shell sub .mkshell store
+stop
+
+
+'------------------------------------------- excalibur eyes
+
+cond
+'*.memval *.refage .origkey add 3 sub <=
+'*.memval *.refage .slavekey add 3 add >= or
+*.eye5 0 =
+*.eye1 *.eye9 !=
+*.eye1 *.eye5 >
+*.eye9 *.eye5 > or
+start
+'*.eye1 *.eye9 sub sgn 139 mult .aimsx store
+*.eye1 *.eye9 sub sgn 139 mult *.aim sub .setaim store
+stop
+
+cond
+'*.memval *.refage .origkey add 3 sub <=
+'*.memval *.refage .slavekey add 3 add >= or
+*.eye5 0 =
+*.eye2 *.eye8 !=
+*.eye2 *.eye5 >
+*.eye8 *.eye5 > or
+start
+'*.eye2 *.eye8 sub sgn 104 mult .aimsx store
+*.eye2 *.eye8 sub sgn 104 mult *.aim sub .setaim store
+stop
+
+cond
+'*.memval *.refage .origkey add 3 sub <=
+'*.memval *.refage .slavekey add 3 add >= or
+*.eye5 0 =
+*.eye7 *.eye3 !=
+*.eye3 *.eye5 >
+*.eye7 *.eye5 > or
+start
+'*.eye3 *.eye7 sub sgn 70 mult .aimsx store
+*.eye3 *.eye7 sub sgn 70 mult *.aim sub .setaim store
+stop
+
+cond
+'*.memval *.refage .origkey add 3 sub <=
+'*.memval *.refage .slavekey add 3 add >= or
+*.eye5 0 =
+*.eye6 *.eye4 !=
+*.eye4 *.eye5 >
+*.eye6 *.eye5 > or
+start
+'*.eye4 *.eye6 sub sgn 35 mult .aimsx store
+*.eye4 *.eye6 sub sgn 35 mult *.aim sub .setaim store
+stop
+
+'-------------------------------
+
+
+
+cond
+*.eyef 0 =
+*.robage 20 mod 10 <
+start
+20 .up store
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.eyef 0 =
+*.robage 20 mod 10 >=
+start
+*.aim 120 add .setaim store
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub >
+*.memval *.refage .slavekey add 3 add <
+*.robage 20 mod 10 <
+start
+10 .dx store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub >
+*.memval *.refage .slavekey add 3 add <
+*.robage 20 mod 10 >=
+start
+*.aim 120 add .setaim store
+stop
+
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 10 div 20 sub 0 floor *.refvelup add .up store
+*.refveldx .dx store
+*.refxpos .birthx store
+*.refypos .birthy store
+stop
+
+cond
+*.shoot -2 =
+start
+*.refveldx 30 add .dx store
+stop
+
+cond
+*.poisoned 0 !=
+start
+0 .up store
+*.refvelup 50 add .dn store
+stop
+
+cond
+*.pain 50 >
+*.shflav -2 != 
+*.shflav 0 != 
+start
+*.pain .dx store
+stop
+
+cond
+*.body 100 >=
+*.nrg 500 >=
+*.repspin 0 =
+start
+1 .repspin store
+stop
+
+cond
+*.body 100 >=
+*.nrg 500 >=
+*.repspin 0 >
+*.repspin 6 <
+start
+*.aim 341 add .setaim store
+52 .repro store
+.repspin inc
+stop
+
+cond
+*.repspin 5 >
+*.robage 20 mod 0 =
+start
+0 .repspin store
+stop
+
+cond
+*.robage 1 =
+start
+*.birthx *.birthy angle .setaim store
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.robage 6 < 
+*.robage 1 >
+*.memval *.refage .origkey add 3 sub >
+*.memval *.refage .slavekey add 3 add < and
+*.eyef 0 = or
+start
+*.aim 341 add .setaim store
+stop
+
+cond
+*.shflav -2 =
+*.keyval .origkey =
+start
+1 .fixpos store
+stop
+
+cond
+*.shflav 0 !=
+start
+0 .shflav store
+stop
+
+cond
+*.body 300 >
+start
+3000 .fdbody store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.robage 3 mod 0 =
+start
+-3 .shoot store
+0 .shootval store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.robage 3 mod 1 =
+start
+-8 .shoot store
+0 .shootval store
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.robage 3 mod 2 =
+*.refbody 100 >
+*.refnrg 300 >
+*.robage 9 mod 2 =
+start
+.sexrepro .shoot store
+99 .shootval store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.robage 3 mod 2 =
+*.refbody 100 >
+*.refnrg 300 >
+*.robage 9 mod 5 =
+start
+.setaim .shoot store
+*.refaim 341 add .shootval store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.robage 3 mod 2 =
+*.refbody 100 >
+*.refnrg 300 >
+*.robage 9 mod 8 =
+start
+.aimsx .shoot store
+341 .shootval store
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.refbody 1000 >
+*.refnrg 1000 >
+*.refshell 0 =
+*.robage 300 >
+*.robage 15 mod 11 >
+*.eyef 0 >
+*.keyval .origkey =
+start
+-6 .shoot store
+0 .shootval store
+
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.memval *.refage .origkey add 3 sub <=
+*.memval *.refage .slavekey add 3 add >= or
+*.eyef 0 >
+*.refshoot 0 =
+*.refeye 0 = 
+*.refshell 0 = 
+*.refpoison 0 =
+*.refvenom 0 =
+*.memval 0 =
+*.keyval .origkey =
+*.robage 5 >
+start
+-1 .shoot store
+*.nrg 20 div 10 ceil .shootval store
+stop
+
+cond
+*.memval *.refage .algekey add 3 sub >
+*.memval *.refage .algekey add 3 add <
+*.refbody 1000 >
+*.refnrg 1000 >
+*.refshell 0 =
+*.robage 300 >
+*.eyef 0 >
+*.keyval .origkey =
+*.robage 5 >
+start
+-6 .shoot store
+0 .shootval store
+stop
+
+
+cond
+*.numties 0 >
+*.robage 0 >
+start
+*.tiepres .tienum store
+40 .stifftie store
+1 .tielen store
+99 .sharenrg store
+.tieval .tieloc store
+1000 .tieval store
+*.trefxpos *.trefypos angle .setaim store
+0 .focuseye store
+*.tiepres .deltie store
+stop
+
+cond
+*.strbody 0 <
+start
+0 .strbody store
+
+ -2
+ .shoot
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+ 31999
+ .shootval
+ *.robage 5 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ mult
+ store
+
+stop
+
+cond
+*.repro 52 !=
+*.repro 0 !=
+start
+0 .repro store
+stop
+
+cond
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+stop
+
+cond
+*.vtimer 0 !=
+start
+1 .vshoot store
+stop
+
+
+cond
+start
+
+
+'-----------------------------------------------------------------------------
+
+ *.birthkey
+ .keyval
+ *.robage 0 sub dup div 1 sub abs
+ mult
+ store
+
+ .keyloc 1 rnd add
+ .memloc
+ *.robage 0 sub dup div 1 sub abs
+ mult
+ store
+
+ .keyloc 1 rnd add
+ .tmemloc
+ *.robage 0 sub dup div 1 sub abs
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+
+ .slavekey
+ .keyval
+ *.robage 2 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .slavekey sub dup div
+ mult
+ *.nrg 1000 sub -1 mult sqr dup div
+ mult
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+ .algekey
+ .keyval
+ *.robage 2 sub sqr dup div
+ *.keyval .origkey sub dup div
+ mult
+ *.keyval .algekey sub dup div
+ mult
+ *.nrg 1000 sub sqr dup div
+ mult
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+ 100
+ .up
+ *.shflav -2 sub dup div 1 sub abs
+ *.keyval .origkey sub dup div
+ mult
+ mult
+ store
+
+'-----------------------------------------------------------------------------
+
+ 0
+ .shoot
+ *.keyval .origkey sub dup div
+ *.shoot -1 sub dup div 1 sub abs
+ *.shoot -6 sub dup div 1 sub abs 
+ add sgn
+ mult
+ mult
+ store
+
+ 0
+ .shootval
+ *.keyval .origkey sub dup div
+ *.shoot -1 sub dup div 1 sub abs
+ *.shoot -6 sub dup div 1 sub abs 
+ add sgn
+ mult
+ mult
+ store
+
+
+
+'-----------------------------------------------------------------------------
+
+
+ 0
+ .shoot
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .slavekey add 3 add sub -1 mult sqr dup div
+ mult
+ mult
+ store
+
+
+ 0
+ .shootval
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .slavekey add 3 add sub -1 mult sqr dup div
+ mult
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+ -2
+ .shoot
+ *.keyval .origkey sub dup div
+ *.robage 3000 sub sqr dup div
+ mult
+ mult
+ store
+
+
+ 31999
+ .shootval
+ *.keyval .origkey sub dup div
+ *.robage 3000 sub sqr dup div
+ mult
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+ *.refxpos *.refypos angle
+ .setaim
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ *.refxpos *.xpos sub abs *.refypos *.ypos sub abs pyth 10 div 20 sub 0 floor *.refvelup add
+ .up
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ *.refveldx
+ .dx
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ 0
+ .dn
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ 0
+ .sx
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ 0
+ .aimsx
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ 0
+ .aimdx
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ -2
+ .shoot
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+ *.eyef 50 sub 0 floor 50 ceil
+ .shootval
+ *.memval *.refage .origkey add 3 sub sub sqr dup div
+ *.memval *.refage .origkey add 3 add sub -1 mult sqr dup div
+ mult
+ *.keyval .slavekey sub dup div 1 sub abs
+ *.robage 3000 sub sqr dup div
+ mult
+ *.keyval .algekey sub dup div 1 sub abs
+ add sgn
+ mult
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+ *.robage *.keyval add
+ .keyloc
+ *.genes *.thisgene sub dup div 1 sub abs
+ mult
+ store
+
+ *.robage *.keyval add
+ .keyloc 1 add
+ *.genes *.thisgene sub dup div 1 sub abs
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+
+ *.thisgenes 1 add
+ .delgene
+ *.genes *.thisgene sub sqr dup div
+ mult
+ store
+
+
+'-----------------------------------------------------------------------------
+
+stop
+
+end

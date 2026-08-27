@@ -1,0 +1,228 @@
+'BodySnatcher
+'Made by k0zm0
+'9.jan.05
+'Made for DB v2.34
+
+def alert 50
+
+cond
+0 *.refeye =
+*.eye5 0 >
+*.vtimer 0 =
+start
+4 .mkvirus store
+100 .vshoot store
+stop
+
+cond
+*.myeye *.refeye !=
+*.eye5 0 >
+*.vtimer 0 =
+start
+3 .mkvirus store
+100 .vshoot store
+stop
+
+cond
+*.nrg 5000 <
+start
+100 .fdbody store
+stop
+
+cond
+*.nrg 4999 >
+start
+100 .strbody store
+stop
+
+cond
+*.kills 20 >
+*.body 10000 >
+start
+50 .repro store
+stop
+
+cond
+*.nrg 5000 >
+*.eye5 30 >
+*.myeye *.refeye !=
+start
+-6 .shoot store
+stop
+
+cond
+*.nrg 4000 <
+*.eye5 30 >
+*.myeye *.refeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*.alert 0 !=
+*.eye5 0 =
+start
+*.shang .setaim store
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye1 *.eye3 >
+*.eye1 *.eye7 >
+start
+100 .aimsx store
+stop
+
+cond
+*.eye9 *.eye5 >
+*.eye9 *.eye7 >
+*.eye9 *.eye3 >
+start
+100 .aimdx store
+stop
+
+cond
+*.eye3 *.eye5 >
+*.eye3 *.eye4 >
+*.eye3 *.eye7 >
+start
+45 .aimsx store
+stop
+
+cond
+*.eye7 *.eye5 >
+*.eye7 *.eye6 >
+*.eye7 *.eye3 >
+start
+45 .aimdx store
+stop
+
+cond
+*.eye4 *.eye5 >
+*.eye4 *.eye6 >
+start
+25 .aimsx store
+stop
+
+cond
+*.eye6 *.eye5 >
+*.eye6 *.eye4 >
+start
+25 .aimdx store
+stop
+
+cond
+start
+*.maxvel *.vel sub 4 div .up store
+stop
+
+cond
+*.eye5 35 >
+*.fixed 0 =
+start
+1 .fixpos store
+stop
+
+cond
+*.eye5 40 <
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye =
+start
+*.refaim .setaim store
+stop
+
+cond
+*.robage 10 >
+*.numties 0 >
+*.tiepres 1 =
+start
+1 .deltie store
+stop
+
+cond
+*.numties 0 >
+start
+*.tiepres .tienum store
+.tieval .tieloc store
+1000 .tieval store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.in1 *.out1 !=
+start
+*.in1 .out1 store
+*.in1 .alert store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye !=
+*.refeye 0 !=
+*.refshoot 0 =
+*.reftie 0 !=
+start
+2 .out1 store
+2 .alert store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye !=
+*.refeye 0 !=
+*.refshoot 0 !=
+*.reftie 0 =
+start
+1 .out1 store
+1 .alert store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye !=
+*.refeye 0 !=
+*.refshoot 0 !=
+*.reftie 0 !=
+start
+3 .out1 store
+3 .alert store
+stop
+
+cond
+*.body 5000 >
+*.waste 100 >
+*.eye5 0 >
+start
+*.waste .shootval store
+-4 .shoot store
+stop
+
+cond
+*.alert 1 =
+*.body 2000 >
+start
+200 *.shell sub .mkshell store
+stop
+
+cond
+*.alert 2 =
+*.body 2000 >
+start
+200 *.slime sub .mkslime store
+stop
+
+cond
+*.alert 3 =
+*.body 2000 >
+start
+200 *.slime sub .mkslime store
+200 *.shell sub .mkshell store
+stop
+end

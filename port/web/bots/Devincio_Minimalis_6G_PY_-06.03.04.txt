@@ -1,0 +1,69 @@
+'Devincio_Minimalis
+' *** Tie Hunter for Short_Bot league***
+'Son of HDV for V2.15
+'Dreadfully inefficient but kicks ass in a fight
+'Modified for V3.0
+'***********************
+
+'reproduce 
+'***********
+cond
+*.nrg 5000 > 
+*.eye5 0 =
+start
+20 .repro store
+628 .aimdx store
+stop
+
+'turn towards food
+'*************************
+cond
+start
+*.eye9 *.eye1 sub 4 mult .aimdx store
+40 *.vel sub .up store
+200 *.slime sub .mkslime store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye6 *.eye4 sub .aimdx store
+stop
+
+
+'avoid other conspecifics
+'****************************
+cond
+*.refeye *.myeye =
+*.eye5 20 >
+start
+628 .aimsx store
+stop
+
+'attack an enemy
+'********************
+cond
+*.eye5 30 >
+*.eye6 *.eye4 %=
+*.refeye *.myeye !=
+start
+1000 rnd 50 store
+*50 .tie store
+0 .aimdx store
+*50 .readtie store
+.mkslime .shoot store
+-100 .shootval store
+stop
+
+'Feed
+'******
+cond 
+*.numties 0 >
+*.trefeye *.myeye !=
+start
+*.tiepres .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+end

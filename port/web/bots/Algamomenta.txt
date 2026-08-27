@@ -1,0 +1,106 @@
+'Algamomenta (Veggie)
+'By Spike43884
+
+
+def count 175
+
+
+'Gene 1 Chloroplast Making
+cond 
+ *.chlr *.light <
+start
+200 .mkchlr store
+stop
+
+
+'Gene 2 Virus Defences
+cond 
+*.waste 5000 <
+start
+*.nrg 400 div .mkslime store
+stop
+
+
+'Gene 3 Reproduction (Normal)
+cond
+ *.nrg 3000 >
+ *.count 3 <
+start
+ 30 .repro store
+ 20 .aimdx store
+ 10 rnd 2 rnd 1 add mult 5 add .dn store
+ *.count 1 add .count store
+stop
+
+
+'Gene 4 Reproduction (Cancerous)
+cond
+ *.count 3 =
+ *.nrg 300 >
+start
+ 0 .count store
+ 10 .repro store
+ 15 .repro store
+ 20 .repro store
+ 25 .repro store
+ 1 .fixpos store
+stop
+
+
+'Gene 5 Tie Destruction
+cond
+ *.robage 1 =
+start
+ .deltie inc
+stop
+
+
+'Gene 6 Coagulation
+cond
+ *.refties *.myties =
+start
+ .tie inc
+ *.tiepres .tienum
+stop
+
+
+'Gene 7 Tie Handling
+cond
+ *.numties 0 !=
+start
+ 90 .stifftie store
+ 300 rnd 1 rnd 1 add mult 1 rnd 1 add div .fixlen store
+ *.numties 20 mult 5 rnd 1 add mult 2 rnd 1 add div .fixang store
+stop
+
+
+'Gene 8 Old Age, Poisoning or Pain
+cond
+ *.robage 1500 >
+ *.poisoned 0 !=
+ *.poisoned 0 != and or
+ *.pain 100 > or
+start
+ 5 .repro store
+ 10 .repro store
+ 15 .repro store
+ 20 .repro store
+ 25 .repro store
+ 30 .repro store
+ 35 .repro store
+ 40 .repro store
+ 45 .repro store
+ 50 .repro store
+ 55 .repro store
+ 60 .repro store
+ 65 .repro store
+ 70 .repro store
+ 75 .repro store
+ 80 .repro store
+ 85 .repro store
+ 90 .repro store
+ 95 .repro store
+stop
+
+
+end

@@ -1,0 +1,48 @@
+cond
+ *.eye5 50 >
+ *.reftype 0 =
+ *.memval *68 !=
+start
+ *.refveldx .dx store
+ -1 .shoot store
+ .hit 0 store
+ *.numties .deltie store
+stop
+
+cond
+ *.eye5 50 <
+start
+ *.maxvel *.vel sub .up store
+ 314 rnd .aimdx *.edge mult store
+ *.numties .deltie store
+stop
+
+cond
+ *.eye5 50 <
+ *.body 2000 >
+start
+50 .repro store
+300 .aimdx store
+stop
+
+cond
+ *.eye1 0 >
+start
+ 60 .aimsx store
+stop
+
+cond
+ *.eye9 0 >
+start
+ 60 .aimdx store
+stop
+
+cond
+*.robage 0 =
+start
+68 .memloc store
+101 68 store
+300 .aimsx store
+stop
+
+end
