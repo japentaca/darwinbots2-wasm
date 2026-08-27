@@ -34,6 +34,19 @@
      (toroidal/cilindros), tamaños del slider original, física del medio con
      los presets exactos de OptionsForm, luz/día/noche, decay, energía y
      restricciones. Ids y semántica en wasm/dbcore_api.cpp (db_sim_set_opt).
+   - Etapa E2: los toggles del menú View del original (todos arrancan
+     activados, como en MDIForm1.frm) — destellos de impacto de shots
+     (DrawShots, main.frm:953-971, paleta FlashColor de main.frm:397-404),
+     rejilla de visión del bot seleccionado (main.frm:1017-1060; la
+     matemática de visión la vuelca db_sim_dump_focus del core, aquí solo
+     la geometría de dibujo literal del fuente), vectores de movimiento
+     (DrawRobAim, main.frm:743-829) y gauges de recursos (DrawRobPer,
+     main.frm:624-712). Selección por clic transcrita de whichrob
+     (main.frm:1590-1614) con dos adaptaciones de host documentadas en
+     whichrob() abajo. Inspector con db_sim_bot_text + nrg/body/edad.
+     La "pluma invertida" (vbNotMergePen) del arco de ojo que ve se
+     aproxima con un trazo sólido vs. tenue: es un truco de pluma GDI sin
+     equivalente en Canvas.
 -->
 <style>
   :root { color-scheme: dark; }
@@ -48,6 +61,8 @@
     padding: 8px 12px; background: #131826; border-bottom: 1px solid #232a3d;
   }
   header .group { display: flex; gap: 6px; align-items: center; }
+  #view-toggles label { color: #93a4c2; font-size: 12px; cursor: pointer;
+                        user-select: none; white-space: nowrap; }
   header .sep { width: 1px; height: 22px; background: #232a3d; }
   button, select, input[type=number] {
     background: #1c2333; color: #dfe6f2; border: 1px solid #2e3a55;
@@ -122,6 +137,13 @@
     <input type="number" id="seed" value="1234">
   </div>
   <div class="sep"></div>
+  <div class="group" id="view-toggles" title="Menú View del original (todos activados por defecto, como en MDIForm1)">
+    <label><input type="checkbox" id="tg-impacts" checked> impactos</label>
+    <label><input type="checkbox" id="tg-vision" checked> visión</label>
+    <label><input type="checkbox" id="tg-vectors" checked> vectores</label>
+    <label><input type="checkbox" id="tg-gauges" checked> gauges</label>
+  </div>
+  <div class="sep"></div>
   <div class="group">
     <button id="btn-save">Guardar sim</button>
     <button id="btn-load">Cargar sim</button>
@@ -134,6 +156,20 @@
 <main>
   <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas></div>
   <aside>
+    <h2>Inspector de bot</h2>
+    <div id="insp-none" style="color:#5c6b88;font-size:12px">
+      clic en un bot del campo para seleccionarlo</div>
+    <div id="inspector" style="display:none">
+      <div class="row" style="justify-content:space-between">
+        <span id="insp-head" style="font-variant-numeric:tabular-nums"></span>
+        <span>
+          <button id="insp-refresh" title="Releer el ADN (db_sim_bot_text)">↻ ADN</button>
+          <button id="insp-close" title="Deseleccionar">✕</button>
+        </span>
+      </div>
+      <textarea id="insp-text" readonly spellcheck="false"
+                style="height:150px" placeholder="ADN del bot…"></textarea>
+    </div>
     <h2>Opciones de sim</h2>
     <div id="opts-panel"></div>
     <h2>Sembrar especie</h2>
@@ -504,6 +540,13 @@ worker.onmessage = (e) => {
       log(msg.msg);
       updateStats();
       break;
+    case 'bot-text':
+      // ADN del bot seleccionado (db_sim_bot_text); si murió entre el
+      // pedido y la respuesta llega texto vacío.
+      if (msg.n === selBot)
+        document.getElementById('insp-text').value =
+          msg.text || '(el bot ya no existe)';
+      break;
     case 'saved': {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([msg.bytes]));
@@ -546,16 +589,79 @@ function updateStats() {
 }
 
 // ---- Render (layout del frame: ver cabecera de worker.js) -----------------
+// PI del original (Common.bas:19, Single): la geometría de dibujo de la
+// rejilla de visión se transcribe con la misma constante.
+const PIv = 3.14159265;
+
+// Paleta FlashColor (main.frm:397-404): destello por tipo de shot.
+const FLASH_COLORS = {
+  '-1': '#ff0000',  // vbRed     robo de nrg
+  '-2': '#ffffff',  // vbWhite   shot de nrg
+  '-3': '#0000ff',  // vbBlue    venom
+  '-4': '#00ff00',  // vbGreen   waste
+  '-5': '#ffff00',  // vbYellow  poison
+  '-6': '#ff00ff',  // vbMagenta robo de body
+  '-7': '#00ffff',  // vbCyan    virus
+};
+
+// Estado de selección (robfocus) y datos de hit-test del último frame.
+let selBot = 0;
+let lastScale = 1;
+let hitBots = new Float32Array(0);  // [idx, x, y, radius] × n (twips)
+let hitCount = 0;
+
+const tgImpacts = document.getElementById('tg-impacts');
+const tgVision = document.getElementById('tg-vision');
+const tgVectors = document.getElementById('tg-vectors');
+const tgGauges = document.getElementById('tg-gauges');
+
+// Gauges de recursos (DrawRobPer, main.frm:624-712): anillos concéntricos
+// [campo del registro de bot, radio relativo, color]; porcentaje = val/32000
+// con tope 0.99 y umbral > 0.5 — salvo Vtimer (val/100) y cloroplastos
+// (tope 0.98, umbral > 0), como en el fuente.
+const GAUGES = [
+  [5,  0.95, '#ffffff'],  // nrg      vbWhite
+  [8,  0.90, '#ff00ff'],  // body     vbMagenta
+  [9,  0.85, '#00ff00'],  // waste    vbGreen
+  [10, 0.80, '#0000ff'],  // venom    vbBlue
+  [11, 0.75, '#ff0000'],  // shell    vbRed
+  [12, 0.70, '#000000'],  // slime    vbBlack
+  [13, 0.65, '#ffff00'],  // poison   vbYellow
+  [14, 0.60, '#00ffff'],  // Vtimer   vbCyan (val/100)
+  [15, 0.55, '#00ff00'],  // chloroplasts vbGreen (tope 0.98)
+];
+
+// Flecha de vector de movimiento (DrawRobAim, main.frm:758-829): línea
+// base→vol y punta de flecha en vol + d·15 con lados ±perp·10 (twips).
+function drawArrow(bx, by, dx, dy, mag, px, py, s) {
+  const vx = bx + dx * mag, vy = by + dy * mag;
+  const tx = vx + dx * 15, ty = vy + dy * 15;
+  const a1x = vx + px * 10, a1y = vy + py * 10;
+  const a2x = vx - px * 10, a2y = vy - py * 10;
+  ctx.beginPath();
+  ctx.moveTo(bx * s, by * s); ctx.lineTo(vx * s, vy * s);
+  ctx.moveTo(a1x * s, a1y * s); ctx.lineTo(tx * s, ty * s);
+  ctx.lineTo(a2x * s, a2y * s); ctx.lineTo(a1x * s, a1y * s);
+  ctx.stroke();
+}
+
 function draw(v) {
   const W = v[0], Hh = v[1];
   const nB = v[2], nS = v[3], nT = v[4], nO = v[5], nP = v[6];
+  const focus = v[7];
   const oBots = 8;
-  const oShots = oBots + nB * 8;
-  const oTies = oShots + nS * 6;
+  const oShots = oBots + nB * 20;
+  const oTies = oShots + nS * 9;
   const oObs = oTies + nT * 5;
   const oTps = oObs + nO * 5;
+  const oFocus = oTps + nP * 7;
   const s = Math.min(canvas.width / W, canvas.height / Hh);
+  lastScale = s;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // hit-test para whichrob(): retener [idx, x, y, r] antes de devolver el búfer
+  if (hitBots.length < nB * 4) hitBots = new Float32Array(nB * 4 + 256);
+  hitCount = nB;
 
   // obstáculos
   for (let i = 0; i < nO; i++) {
@@ -587,22 +693,48 @@ function draw(v) {
   }
   ctx.lineWidth = 1;
 
-  // shots
+  // shots — DrawShots (main.frm:953-971): flash + toggle → destello de un
+  // frame en opos (círculo lleno, radio 20 twips, paleta FlashColor; tipos
+  // fuera de -1..-7 en negro); si no, el shot normal como trazo.
+  const impacts = tgImpacts.checked;
   for (let i = 0; i < nS; i++) {
-    const o = oShots + i * 6;
-    ctx.strokeStyle = vbColorToCss(v[o + 4]);
-    ctx.beginPath();
-    ctx.moveTo(v[o] * s, v[o + 1] * s);
-    ctx.lineTo((v[o] - v[o + 2] * 0.6) * s, (v[o + 1] - v[o + 3] * 0.6) * s);
-    ctx.stroke();
+    const o = oShots + i * 9;
+    if (v[o + 6] && impacts) {
+      const st = v[o + 5];
+      ctx.fillStyle = (st < 0 && st >= -7) ? FLASH_COLORS[st] : '#000000';
+      ctx.beginPath();
+      ctx.arc(v[o + 7] * s, v[o + 8] * s, Math.max(20 * s, 2), 0, PIv * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = vbColorToCss(v[o + 4]);
+      ctx.beginPath();
+      ctx.moveTo(v[o] * s, v[o + 1] * s);
+      ctx.lineTo((v[o] - v[o + 2] * 0.6) * s, (v[o + 1] - v[o + 3] * 0.6) * s);
+      ctx.stroke();
+    }
   }
 
   // bots
+  const gauges = tgGauges.checked;
+  const vectors = tgVectors.checked;
   for (let i = 0; i < nB; i++) {
-    const o = oBots + i * 8;
-    const x = v[o + 1] * s, y = v[o + 2] * s, r = Math.max(v[o + 3] * s, 1.2);
+    const o = oBots + i * 20;
+    const wx = v[o + 1], wy = v[o + 2], wr = v[o + 3];
+    const x = wx * s, y = wy * s, r = Math.max(wr * s, 1.2);
     const flags = v[o + 7];
     const corpse = flags & 4;
+    const h = i * 4;
+    hitBots[h] = v[o]; hitBots[h + 1] = wx; hitBots[h + 2] = wy;
+    hitBots[h + 3] = wr;
+
+    // anillo de foco (DrawRobPer: robfocus → círculo blanco a radio×1.2)
+    if (v[o] === focus) {
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.2, 0, PIv * 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+    }
+
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fillStyle = corpse ? '#555' : vbColorToCss(v[o + 6]);
@@ -616,8 +748,168 @@ function draw(v) {
     ctx.lineTo(x + Math.cos(aim) * r, y - Math.sin(aim) * r);
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.stroke();
+
+    // gauges de recursos (DrawRobPer): arcos desde 0, antihorarios en el
+    // sistema del form (y hacia abajo) — en canvas, ángulo negativo.
+    if (gauges) {
+      for (const [f, rr, col] of GAUGES) {
+        const val = v[o + f];
+        let pct;
+        if (f === 14) {                       // Vtimer: /100, umbral > 0
+          if (!(val > 0)) continue;
+          pct = Math.min(val / 100, 0.99);
+        } else if (f === 15) {                // cloroplastos: umbral > 0, tope 0.98
+          if (!(val > 0)) continue;
+          pct = Math.min(val / 32000, 0.98);
+        } else {
+          if (!(val > 0.5)) continue;
+          pct = Math.min(Math.min(val / 32000, 1), 0.99);
+        }
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(r * rr, 0.5), 0, -pct * PIv * 2, true);
+        ctx.strokeStyle = col;
+        ctx.stroke();
+      }
+    }
+
+    // vectores de movimiento (DrawRobAim; solo bots no-cadáver): flechas de
+    // .lastup/.lastdown/.lastleft/.lastright con clamp ±1000, color del bot.
+    if (vectors && !corpse) {
+      ctx.strokeStyle = corpse ? '#777' : vbColorToCss(v[o + 6]);
+      const dfx = Math.cos(aim), dfy = -Math.sin(aim);            // adelante
+      const dlx = Math.cos(aim - PIv / 2), dly = -Math.sin(aim - PIv / 2);
+      const drx = Math.cos(aim + PIv / 2), dry = -Math.sin(aim + PIv / 2);
+      const clamp = (n) => Math.max(-1000, Math.min(1000, n));
+      const up = clamp(v[o + 16]), down = clamp(v[o + 17]);
+      const left = clamp(v[o + 18]), right = clamp(v[o + 19]);
+      if (up !== 0)
+        drawArrow(wx + dfx * wr, wy + dfy * wr, dfx, dfy, up, dlx, dly, s);
+      if (down !== 0)
+        drawArrow(wx - dfx * wr, wy - dfy * wr, -dfx, -dfy, down, dlx, dly, s);
+      if (left !== 0)
+        drawArrow(wx + dlx * wr, wy + dly * wr, dlx, dly, left, dfx, dfy, s);
+      if (right !== 0)
+        drawArrow(wx + drx * wr, wy + dry * wr, drx, dry, right, dfx, dfy, s);
+    }
+  }
+
+  // rejilla de visión del bot con foco (main.frm:1017-1060, transcrita con
+  // los valores por ojo de db_sim_dump_focus; ver la cabecera del archivo).
+  if (focus > 0) {
+    const f = oFocus;
+    updateInspectorLive(focus, v[f + 5], v[f + 6], v[f + 7]);
+    if (tgVision.checked) drawVisionGrid(v, f, s);
+  } else if (selBot > 0) {
+    // el bot con foco murió: el worker apagó el foco — deseleccionar la UI
+    setSelection(0, false);
   }
 }
+
+// main.frm:1017-1060 — showVisionGrid: 9 arcos cian (encogidos a la
+// distancia vista cuando el ojo ve; el vbNotMergePen del original se
+// aproxima con trazo sólido vs. tenue) y el ojo con foco en rojo.
+function drawVisionGrid(v, f, s) {
+  const x = v[f] * s, y = v[f + 1] * s;
+  const aim = v[f + 2], radius = v[f + 3], focusIdx = v[f + 4];
+  const highest = aim + PIv / 4;
+  for (let a = 0; a <= 8; a++) {
+    const e = f + 8 + a * 4;
+    const dirOff = v[e], halfeye = v[e + 1], esd = v[e + 2], seen = v[e + 3];
+    let hi = highest - (PIv / 18) * a + dirOff + halfeye;
+    let low = hi - PIv / 18 - 2 * halfeye;
+    while (hi > PIv * 2) hi -= PIv * 2;
+    while (low > PIv * 2) low -= PIv * 2;
+    while (low < 0) low += PIv * 2;
+    while (hi < 0) hi += PIv * 2;
+    let length;
+    if (seen > 0) {
+      length = (1 / Math.sqrt(seen)) * (esd + radius) + radius;
+      if (length < 0) length = 0;
+    } else {
+      length = esd + radius + radius;
+    }
+    // VB6 Circle: ángulos antihorarios con y hacia abajo ⇒ en canvas, el
+    // ángulo va negado y el arco se recorre con anticlockwise = true.
+    // Argumentos negativos (-low, -hi) = radios dibujados en los extremos.
+    ctx.strokeStyle = seen > 0 ? '#00ffff' : 'rgba(0,255,255,0.35)';
+    ctx.lineWidth = seen > 0 ? 1.5 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.arc(x, y, Math.max(length * s, 0.001), -low, -hi, true);
+    ctx.closePath();
+    ctx.stroke();
+    if (a === focusIdx) {
+      ctx.strokeStyle = '#ff0000';
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(length * s, 0.001), -low, -hi, true);
+      ctx.stroke();
+    }
+  }
+  ctx.lineWidth = 1;
+}
+
+// ---- Selección de bot e inspector (E2) ------------------------------------
+// main.frm:1590-1614 — whichrob transcrito: candidato si el clic cae dentro
+// de la caja |dx| < r ∧ |dy| < r; gana el de menor distancia² al centro.
+// Adaptaciones de host (capa UI, fuera del contrato): (a) sin el piso
+// inicial de 10000 twips² del original (a nuestra escala de render lo haría
+// inclicable); (b) radio efectivo mínimo de 6px para bots subpixel.
+function whichrob(x, y) {
+  let best = 0, dist = Infinity;
+  const tol = 6 / lastScale;
+  for (let i = 0; i < hitCount; i++) {
+    const o = i * 4;
+    const r = Math.max(hitBots[o + 3], tol);
+    const dx = Math.abs(hitBots[o + 1] - x), dy = Math.abs(hitBots[o + 2] - y);
+    if (dx < r && dy < r) {
+      const pist = dx * dx + dy * dy;
+      if (pist < dist) { dist = pist; best = hitBots[o]; }
+    }
+  }
+  return best;
+}
+
+const inspectorEl = document.getElementById('inspector');
+const inspNoneEl = document.getElementById('insp-none');
+const inspHeadEl = document.getElementById('insp-head');
+const inspTextEl = document.getElementById('insp-text');
+
+function setSelection(n, askDna) {
+  selBot = n;
+  worker.postMessage({ t: 'select', n });
+  inspectorEl.style.display = n > 0 ? '' : 'none';
+  inspNoneEl.style.display = n > 0 ? 'none' : '';
+  if (n > 0) {
+    inspHeadEl.textContent = `bot #${n}`;
+    if (askDna) { inspTextEl.value = ''; worker.postMessage({ t: 'bot-text', n }); }
+  } else {
+    inspTextEl.value = '';
+  }
+}
+
+function updateInspectorLive(n, age, nrg, body) {
+  inspHeadEl.textContent =
+    `bot #${n} · edad ${age} · nrg ${nrg.toFixed(0)} · body ${body.toFixed(0)}`;
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (!hitCount && selBot === 0) return;
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+  setSelection(whichrob(px / lastScale, py / lastScale), true);
+});
+
+document.getElementById('insp-close').onclick = () => setSelection(0, false);
+document.getElementById('insp-refresh').onclick = () => {
+  if (selBot > 0) worker.postMessage({ t: 'bot-text', n: selBot });
+};
+
+// Con la sim pausada, cambiar un toggle debe repintar: 'select' con la
+// selección vigente hace que el worker publique un frame fresco.
+for (const tg of [tgImpacts, tgVision, tgVectors, tgGauges])
+  tg.addEventListener('change', () =>
+    worker.postMessage({ t: 'select', n: selBot }));
 
 // ---- Montaje de la sim ----------------------------------------------------
 function newSim() {

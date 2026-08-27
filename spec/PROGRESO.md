@@ -99,15 +99,16 @@ opcionales, si el usuario las pide:
 
 - **Plan de extensiones aprobado por el usuario (2026-08-26)**: cubrir el resto
   de la superficie funcional del original por etapas — ver `PLAN-EXTENSIONES.md`
-  (E1 escenario/física configurables ✅, E2 animaciones e inspección, E3
+  (E1 escenario/física configurables ✅, E2 animaciones e inspección ✅, E3
   formas/mazes/teleporters UI, E4 costes dinámicos ⚙ **capa core**, E5 modos de
   juego, E6 registro/análisis, E7 Internet, E8 extras). Orden recomendado:
-  E2 → E3 → E4 → resto. Hallazgo que lo ordena: el core ya implementa casi
+  E3 → E4 → resto. Hallazgo que lo ordena: el core ya implementa casi
   toda la configuración (toroidal incluido); el grueso es exponerla en wasm/UI.
 
 | Etapa | Estado | Nota |
 |---|---|---|
 | E1 · Escenario y física configurables | ✅ cerrada | **Capa host pura** (cero cambios en `port/core/`; suite intacta y verificada: 143/2962 en verde bajo wasm). API: `db_sim_set_opt`/`db_sim_get_opt` genéricos por id estable (tabla-contrato en `wasm/dbcore_api.cpp`; solo opciones CON consumidor real en el core — TidesOf/KillDistVegs/BlockedVegs/Diffuse/makeAllShapes* fuera por muertas). Página: panel "Opciones de sim" (`web/index.html`, generado de una tabla declarativa espejo) con forma del campo (toroidal/cilindros, en vivo), tamaños del slider original (fórmula exacta de `OptionsForm.frm:4075-4099`, F1 = 9237×6928), física del medio con los presets exactos de los combos del original (`OptionsForm.frm:4406-4453`), luz/día-noche/pondmode, decay/corpses, energía (intercambio, mareas, waste tóxico) y restricciones; los campos con id aplican EN VIVO (`{t:'setopt'}` del worker) y todos se reenvían al reiniciar. Verificado: smoke node de 52 checks (ida-y-vuelta de los 46 ids + toroidal compuesto + sim de 300 ticks con E1 activo) y en Chrome (panel, reset a 16000×12000 toroidal, sim viva a ciclo 52k, consola limpia). |
+| E2 · Animaciones e inspección de bots | ✅ cerrada | **Capa host pura** (cero cambios en `port/core/`; suite intacta y verificada: 143/2962 en verde en los tres modos). Los 4 toggles del menú View del original funcionando en la página (todos arrancan activados, como en `MDIForm1.frm`): **destellos de impacto** (`DrawShots` main.frm:953-971 + paleta `FlashColor` :397-404 — dump de shots ampliado 6→9 floats con `flash`+`opos`; el criterio de inclusión es el del fuente: flash sale siempre, stored no se dibuja), **rejilla de visión del bot seleccionado** (main.frm:1017-1060 — export nuevo `db_sim_dump_focus`: 8 floats de inspector + 9 ojos × [dirOffset, halfeyewidth normalizado con los While del fuente, EyeSightDistance del core (eyestrength incluido), valor visto]; la página compone hi/low/longitud con la fórmula literal, arcos cian encogidos a la distancia vista y ojo con foco `FocusEyeIndex` en rojo; la pluma invertida vbNotMergePen se aproxima con trazo sólido vs. tenue — decisión de host documentada), **vectores de movimiento** (`DrawRobAim` main.frm:758-829 — dump de bots ampliado 8→20 floats con recursos y `last*`; flechas con clamp ±1000 y puntas ±10/15 transcritas) y **gauges de recursos** (`DrawRobPer` main.frm:624-712 — 9 anillos concéntricos 0.95→0.55 con umbrales/topes del fuente, Vtimer/100 y cloroplastos 0.98). Selección por clic transcrita de `whichrob` (main.frm:1590-1614; 2 adaptaciones de host documentadas: sin el piso de 10000 twips² y radio efectivo mínimo de 6px) + inspector con `db_sim_bot_text` (mensaje `bot-text` del worker) y nrg/body/edad en vivo del bloque de foco del frame. Omitido por valor menor (punto 5 del plan): skins `DrawRobSkin` y monitor RGB `DrawMonitor`. Verificado: smoke node de 22 checks (strides nuevos, ojos vírgenes esd=1440 exacto, destellos con flash/opos en caza real, encogimiento, bot_text) y en Chrome (destellos −1 rojo/−2 blanco en el punto de impacto, abanico de 9 arcos, arcos encogidos con los 9 ojos viendo en campo denso, inspector vivo, toggles ciclados, consola limpia). |
 
 ---
 
@@ -340,3 +341,17 @@ opcionales, si el usuario las pide:
   original expuestas de punta a punta (API genérica por id + panel en la
   página, toroidal y tamaños del slider incluidos). Capa host pura; smoke
   node 52 checks + verificación en Chrome. Fuentes sin modificar.
+- **2026-08-27 (E2)** — Etapa E2 cerrada: animaciones e inspección de bots —
+  los 4 toggles del menú View del original en la página (destellos de impacto
+  de `DrawShots`, rejilla de visión de main.frm:1017-1060 con el export nuevo
+  `db_sim_dump_focus`, vectores de movimiento de `DrawRobAim`, gauges de
+  `DrawRobPer`), selección por clic (`whichrob` transcrito) e inspector con
+  `db_sim_bot_text` + nrg/body/edad en vivo. Volcados ampliados: bots 8→20
+  floats, shots 6→9 (flash+opos). Capa host pura (cero cambios en
+  `port/core/`); suite 143/2962 en verde en los tres modos, smoke node de
+  22 checks y verificación en Chrome (destellos en el punto de impacto,
+  arcos encogidos con caza real, inspector vivo, consola limpia). Omitidos
+  por valor menor: skins y monitor RGB (punto 5 del plan). Nota de la
+  verificación: los servidores `http.server` de sesiones anteriores seguían
+  vivos en el puerto 8000 sirviendo la página vieja — la demo se verificó
+  en el 8010. Fuentes sin modificar.

@@ -18,10 +18,16 @@
 //   {t:'save'}                             → {t:'saved', bytes, cycle}
 //   {t:'load', bytes}                      cargar sim binaria (transferido)
 //   {t:'teleporter'}                       alta de teleporter local
+//   {t:'select', n}                        bot con foco (0 = ninguno); su
+//                                          volcado de ojos/inspector viaja
+//                                          en cada frame (etapa E2)
+//   {t:'bot-text', n}                      → {t:'bot-text', n, text} con
+//                                          db_sim_bot_text (inspector)
 //   {t:'ack', buf}                         devuelve el búfer del último frame
 //
 // Protocolo (worker → página):
 //   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
+//   {t:'bot-text', n, text} ·
 //   {t:'frame', buf, stats:{cycle,bots,vegs,tps}}
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
@@ -31,9 +37,12 @@
 // página; con speed=0 el worker corre a fondo y publica cuando puede).
 //
 // Layout del frame (Float32Array):
-//   [0..7]  header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, 0
-//   después: bots nBots×8, shots nShots×6, ties nTies×5,
+//   [0..7]  header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, focus
+//           (focus = índice del bot seleccionado con volcado válido; 0 = no)
+//   después: bots nBots×20, shots nShots×9, ties nTies×5,
 //            obstáculos nObs×5, teleporters nTps×7
+//           y, si focus > 0, el bloque de foco: 44 floats de
+//           db_sim_dump_focus (inspector + 9 ojos, etapa E2)
 //   (mismos registros que db_sim_dump_* — ver wasm/dbcore_api.cpp)
 
 importScripts('../build-wasm/dbcore.js');
@@ -46,6 +55,7 @@ let running = false;
 let speed = 4;          // ticks por frame; 0 = máx
 let canPost = true;     // el frame anterior ya fue devuelto con 'ack'
 let wantFrame = false;  // hay estado nuevo pendiente de publicar
+let focusBot = 0;       // robfocus (E2): 0 = sin selección
 
 // ticks/segundo medidos (va en stats de cada frame)
 let tickCount = 0, tpsT = 0, tps = 0;
@@ -83,6 +93,8 @@ function bindApi() {
     dumpTies:      C('db_sim_dump_ties', 'number', ['number', 'number', 'number']),
     dumpObstacles: C('db_sim_dump_obstacles', 'number', ['number', 'number', 'number']),
     dumpTeleporters:C('db_sim_dump_teleporters', 'number', ['number', 'number', 'number']),
+    dumpFocus:     C('db_sim_dump_focus', 'number', ['number', 'number', 'number']),
+    botText:       C('db_sim_bot_text', 'number', ['number', 'number']),
     addTeleporter: C('db_sim_add_teleporter', 'number',
                      ['number','number','number','number','number','number','number','number','number','number']),
     save:          C('db_sim_save', 'number', ['number', 'number']),
@@ -95,7 +107,7 @@ function log(msg) { self.postMessage({ t: 'log', msg }); }
 
 // ---- Búferes de volcado en el heap C (crecen bajo demanda) ----------------
 const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
-                  obs: {p:0, cap:0}, tps: {p:0, cap:0} };
+                  obs: {p:0, cap:0}, tps: {p:0, cap:0}, focus: {p:0, cap:0} };
 
 function ensure(b, floatsNeeded) {
   if (b.cap >= floatsNeeded || floatsNeeded === 0) return;
@@ -123,7 +135,7 @@ function recycleFrameBuffer(buf) {
   if (buf instanceof ArrayBuffer && framePool.length < 2) framePool.push(buf);
 }
 
-// ---- Snapshot: 5 volcados del core → un solo búfer transferible -----------
+// ---- Snapshot: 6 volcados del core → un solo búfer transferible -----------
 function buildFrame() {
   const maxB = api.maxRobs(sim);
   const shotCap = api.shotsCap(sim);
@@ -131,32 +143,37 @@ function buildFrame() {
   const obsCap = api.numObstacles(sim);
   const tpCap = api.numTeleporters(sim);
 
-  ensure(scratch.bots, maxB * 8);
-  ensure(scratch.shots, shotCap * 6);
+  ensure(scratch.bots, maxB * 20);
+  ensure(scratch.shots, shotCap * 9);
   ensure(scratch.ties, tieCap * 5);
   ensure(scratch.obs, obsCap * 5);
   ensure(scratch.tps, tpCap * 7);
+  ensure(scratch.focus, 44);
 
   const nB = maxB > 0 ? api.dumpBots(sim, scratch.bots.p, maxB) : 0;
   const nS = shotCap > 0 ? api.dumpShots(sim, scratch.shots.p, shotCap) : 0;
   const nT = tieCap > 0 ? api.dumpTies(sim, scratch.ties.p, tieCap) : 0;
   const nO = obsCap > 0 ? api.dumpObstacles(sim, scratch.obs.p, obsCap) : 0;
   const nP = tpCap > 0 ? api.dumpTeleporters(sim, scratch.tps.p, tpCap) : 0;
+  // Foco (E2): si el bot murió, dumpFocus devuelve 0 y el foco se apaga.
+  const nF = focusBot > 0 ? api.dumpFocus(sim, focusBot, scratch.focus.p) : 0;
+  if (!nF) focusBot = 0;
 
-  const total = 8 + nB * 8 + nS * 6 + nT * 5 + nO * 5 + nP * 7;
+  const total = 8 + nB * 20 + nS * 9 + nT * 5 + nO * 5 + nP * 7 + nF * 44;
   const buf = takeFrameBuffer(total);
   const v = new Float32Array(buf);
   v[0] = api.fieldW(sim);
   v[1] = api.fieldH(sim);
   v[2] = nB; v[3] = nS; v[4] = nT; v[5] = nO; v[6] = nP;
-  v[7] = 0;
+  v[7] = nF ? focusBot : 0;
 
   let off = 8;
-  if (nB) { v.set(heapView(scratch.bots.p, nB * 8), off); off += nB * 8; }
-  if (nS) { v.set(heapView(scratch.shots.p, nS * 6), off); off += nS * 6; }
+  if (nB) { v.set(heapView(scratch.bots.p, nB * 20), off); off += nB * 20; }
+  if (nS) { v.set(heapView(scratch.shots.p, nS * 9), off); off += nS * 9; }
   if (nT) { v.set(heapView(scratch.ties.p, nT * 5), off); off += nT * 5; }
   if (nO) { v.set(heapView(scratch.obs.p, nO * 5), off); off += nO * 5; }
   if (nP) { v.set(heapView(scratch.tps.p, nP * 7), off); off += nP * 7; }
+  if (nF) { v.set(heapView(scratch.focus.p, 44), off); off += 44; }
   return buf;
 }
 
@@ -250,6 +267,7 @@ function loadSim(msg) {
   api.load(sim, p, bytes.length);
   M._free(p);
   running = false;
+  focusBot = 0;  // los slots de bot cambian al cargar
   log(`sim cargada (${bytes.length} bytes), ciclo ${api.cycle(sim)}, ` +
       `${api.totalRobots(sim)} bots`);
   postFrame();
@@ -260,8 +278,21 @@ self.onmessage = (e) => {
   switch (msg.t) {
     case 'reset':
       running = false;
+      focusBot = 0;
       resetSim(msg);
       break;
+    case 'select':
+      focusBot = msg.n | 0;
+      postFrame();  // con la sim pausada el foco tiene que verse igual
+      break;
+    case 'bot-text': {
+      const n = msg.n | 0;
+      const p = sim ? api.botText(sim, n) : 0;
+      let text = '';
+      if (p) { text = M.UTF8ToString(p); api.free(p); }
+      self.postMessage({ t: 'bot-text', n, text });
+      break;
+    }
     case 'run':
       running = !!msg.running;
       if (running) { tickCount = 0; tpsT = performance.now(); loop(); }

@@ -430,8 +430,12 @@ DB_EXPORT int db_sim_num_teleporters(void* h) { return S(h).numTeleporters; }
 // Volcados de estado para render (el JS solo presenta; nunca recalcula)
 // ---------------------------------------------------------------------------
 
-// 8 floats por bot existente:
-//   [indice, pos.x, pos.y, radius, aim, nrg, color RGB (Long BGR), flags]
+// 20 floats por bot existente (E2 amplia los 8 de M10 con los recursos de
+// los gauges de DrawRobPer, main.frm:624-712, y los last* de los vectores de
+// movimiento de DrawRobAim, main.frm:758-829):
+//   [indice, pos.x, pos.y, radius, aim, nrg, color RGB (Long BGR), flags,
+//    body, waste, venom, shell, slime, poison, Vtimer, chloroplasts,
+//    lastup, lastdown, lastleft, lastright]
 // flags: bit0 = Veg, bit1 = Fixed, bit2 = Corpse, bit3 = Multibot.
 // Devuelve cuantos bots escribio (como maximo max_bots).
 DB_EXPORT int db_sim_dump_bots(void* h, float* out, int max_bots) {
@@ -440,7 +444,7 @@ DB_EXPORT int db_sim_dump_bots(void* h, float* out, int max_bots) {
   for (int n = 1; n <= sim.MaxRobs && written < max_bots; ++n) {
     const db::Bot& b = sim.rob[n];
     if (!b.exist) continue;
-    float* r = out + written * 8;
+    float* r = out + written * 20;
     r[0] = static_cast<float>(n);
     r[1] = b.pos.x;
     r[2] = b.pos.y;
@@ -450,28 +454,90 @@ DB_EXPORT int db_sim_dump_bots(void* h, float* out, int max_bots) {
     r[6] = static_cast<float>(b.color);
     r[7] = static_cast<float>((b.Veg ? 1 : 0) | (b.Fixed ? 2 : 0) |
                               (b.Corpse ? 4 : 0) | (b.Multibot ? 8 : 0));
+    r[8] = b.body;
+    r[9] = b.Waste;
+    r[10] = b.venom;
+    r[11] = b.shell;
+    r[12] = b.Slime;
+    r[13] = b.poison;
+    r[14] = static_cast<float>(b.Vtimer);
+    r[15] = b.chloroplasts;
+    r[16] = static_cast<float>(b.lastup);
+    r[17] = static_cast<float>(b.lastdown);
+    r[18] = static_cast<float>(b.lastleft);
+    r[19] = static_cast<float>(b.lastright);
     ++written;
   }
   return written;
 }
 
-// 6 floats por shot vivo: [x, y, vel.x, vel.y, color, shottype].
+// 9 floats por shot: [x, y, vel.x, vel.y, color, shottype, flash, opos.x,
+// opos.y]. El criterio de inclusion es el de DrawShots (main.frm:953-971):
+// un shot con flash sale SIEMPRE (el destello de impacto se pinta en opos un
+// frame, hasta que updateshots lo limpie al tick siguiente); si no, sale si
+// existe y no esta almacenado (stored = virus guardado: invisible).
 DB_EXPORT int db_sim_dump_shots(void* h, float* out, int max_shots) {
   const db::Sim& sim = S(h);
   int written = 0;
   for (db::vb_long n = 1; n <= sim.maxshotarray && written < max_shots; ++n) {
     const db::Shot& s = sim.Shots[static_cast<std::size_t>(n)];
-    if (!s.exist) continue;
-    float* r = out + written * 6;
+    if (!s.flash && !(s.exist && !s.stored)) continue;
+    float* r = out + written * 9;
     r[0] = s.pos.x;
     r[1] = s.pos.y;
     r[2] = s.velocity.x;
     r[3] = s.velocity.y;
     r[4] = static_cast<float>(s.color);
     r[5] = static_cast<float>(s.shottype);
+    r[6] = s.flash ? 1.0f : 0.0f;
+    r[7] = s.opos.x;
+    r[8] = s.opos.y;
     ++written;
   }
   return written;
+}
+
+// E2 — volcado del bot con foco (robfocus): inspector + rejilla de vision de
+// main.frm:1017-1060. 8 floats de cabecera + 9 ojos x 4 = 44 floats:
+//   cabecera: [pos.x, pos.y, aim, radius, focusEyeIdx, age, nrg, body]
+//   por ojo a = 0..8: [dirOffset, halfeyewidth, esd, seen]
+//     dirOffset    = (mem(EYE1DIR+a) Mod 1256) / 200        (main.frm:1030)
+//     halfeyewidth = (mem(EYE1WIDTH+a) Mod 1256) / 400, normalizado con los
+//                    While de main.frm:1027-1029
+//     esd  = EyeSightDistance(AbsoluteEyeWidth(mem(EYE1WIDTH+a)), n) — la
+//            matematica de vision (eyestrength: pondmode/daytime) es del core
+//     seen = mem(EyeStart + a + 1) (el valor visto por el ojo a+1)
+//   focusEyeIdx = Abs(mem(FOCUSEYE) + 4) Mod 9 (FocusEyeIndex del core).
+// La pagina compone hi/low/longitud con la formula literal del fuente
+// (geometria de dibujo); aqui NO se recalcula nada que el core ya sepa.
+// Devuelve 1 si el bot existe (0: el foco murio — la pagina deselecciona).
+DB_EXPORT int db_sim_dump_focus(void* h, int n, float* out) {
+  db::Sim& sim = S(h);
+  if (n < 1 || n > sim.MaxRobs || !sim.rob[n].exist) return 0;
+  db::Bot& b = sim.rob[n];
+  out[0] = b.pos.x;
+  out[1] = b.pos.y;
+  out[2] = b.aim;
+  out[3] = b.radius;
+  out[4] = static_cast<float>(db::FocusEyeIndex(b.mem[db::addr::FOCUSEYE]));
+  out[5] = static_cast<float>(b.age);
+  out[6] = b.nrg;
+  out[7] = b.body;
+  const double kPi = static_cast<double>(db::PI);  // Common.bas:19 (Single)
+  for (int a = 0; a <= 8; ++a) {
+    float* e = out + 8 + a * 4;
+    double halfeye =
+        static_cast<double>(b.mem[db::addr::EYE1WIDTH + a] % 1256) / 400.0;
+    while (halfeye > kPi - kPi / 36.0) halfeye -= kPi;
+    while (halfeye < -kPi / 36.0) halfeye += kPi;
+    e[0] = static_cast<float>(
+        static_cast<double>(b.mem[db::addr::EYE1DIR + a] % 1256) / 200.0);
+    e[1] = static_cast<float>(halfeye);
+    e[2] = db::EyeSightDistance(
+        sim, db::AbsoluteEyeWidth(b.mem[db::addr::EYE1WIDTH + a]), n);
+    e[3] = static_cast<float>(b.mem[db::addr::EyeStart + 1 + a]);
+  }
+  return 1;
 }
 
 // 5 floats por tie: [x1, y1, x2, y2, type] (type 0 = elastica, 3 = dura).
