@@ -1,177 +1,122 @@
-# Prompt de continuación del port C++/WASM
+# PROMPT-CONTINUACION — arranque de sesión nueva (post-E1)
 
-Prompt de arranque autocontenido para continuar el desarrollo en una **sesión
-nueva** de Claude Code. Pegalo como primer mensaje, con el directorio de trabajo
-en la raíz del repo (`Darwinbots2-master/`). Se regenera con
-`/prompt-continuacion` al cerrar cada milestone o extensión; este refleja el
-estado **post-extensión Bestiary del foro** (2026-08-26): el port está completo,
-la capa web corre la sim en un Web Worker y sirve 545 bots del foro oficial como
-presets, y solo quedan extensiones opcionales.
+Prompt autocontenido para continuar el desarrollo del port C++/WASM en una
+**sesión nueva** de Claude Code. Pegarlo como primer mensaje, con el
+directorio de trabajo en la raíz del repo (`Darwinbots2-master/`). Se
+regenera con `/prompt-continuacion` al cerrar cada etapa; este refleja el
+estado tras cerrar la etapa E1 del plan de extensiones (2026-08-26).
 
 ## ↓ COPIAR DESDE AQUÍ ↓
 
-Estás en el repositorio del fuente original de DarwinBots 2.48.32 (Visual Basic 6).
+Continuá el desarrollo del port C++/WASM de DarwinBots 2.48.32.
 
-El proyecto: reimplementar el simulador desde cero — core en C++ compilado a WASM vía
-Emscripten, render 2D en web (decisión y salvaguardas de build en spec/PLAN.md).
-La especificación en spec/ está completa (Fase 0 + Bloques A, B y C cerrados) y es
-el contrato del port; spec/70-CASOS-DORADOS.md es la suite de verdad. Cuando haya que
-desambiguar algo, el fuente VB6 es la spec y los documentos de spec/ son su índice.
+**Contexto.** El original es un simulador de vida artificial en VB6
+(`Darwinbots2/`, 53 327 LOC, read-only). La especificación extraída vive en
+`spec/` y está **completa y cerrada**: es el contrato del port, con
+`spec/70-CASOS-DORADOS.md` como suite de verdad (~143 casos) y la regla de
+oro "el fuente es la spec" para desambiguar (el wiki no entra). Cuando un
+comportamiento del original es un bug, se replica tal cual (`[PROBABLE BUG]`).
 
-El port vive en port/ y **está completo y usable**: los 10 milestones están cerrados
-(core entero verificado en WASM, ningún stub abierto, Q07 verificada, capa de
-presentación web corriendo sobre él) y además hay dos extensiones opcionales
-cerradas: Rendimiento (la sim corre en un Web Worker) y Bestiary del foro (545 bots
-reales bajados del foro oficial, validados con el core y servidos como presets en la
-página).
+El port vive en `port/`: core C++20 de headers puros (`port/core/include/dbcore/`)
+sin dependencias de render, compilado nativo (gcc/clang) y a WASM (Emscripten);
+la presentación es una página web (`port/web/index.html` + `worker.js`) sobre la
+API C de `port/wasm/dbcore_api.cpp`. **El port del core está completo** (M1..M10
++ extensiones Rendimiento y Bestiary cerradas) y ahora se ejecuta el plan de
+extensiones de `spec/PLAN-EXTENSIONES.md`: el resto de la superficie funcional
+del original (UI/animaciones/opciones/modos), por etapas E1..E8.
 
-- M1 · Sustrato numérico (9182e8e): redondeo bancario, LCG de VB6, gasdev, stacks,
-  mod32000, handlers de la VM. Casos §1, §2, R-01..R-03.
-- M2 · VM y cargador (54d586e): ExecuteDNA completo y cargador de texto. Casos §3
-  (V-01..V-14).
-- M3 · Memoria y ciclo (39fd715): tabla de sysvars, esqueleto del tick,
-  sentidos/ties/shots/Reproduce/corpses. Casos §4 (M-01..M-12).
-- M4 · Física y visión (487c406): Physics.bas, buckets, visión completa,
-  swept-sphere de shots. Casos §5 (F-01..F-15) y R-05..R-07.
-- M5 · Formatos ida-y-vuelta (2bc58f8): bot de texto (gen epigenético, Hash ByRef)
-  y registro binario de bot. Casos §7 (FM-01..FM-07).
-- M6 · Catálogo de bugs (fe740a8..0121bd4): B-01..B-28 + B-30 como aserciones;
-  visión de formas, alimentación de shots, virus B3b, MakeStuff.
-- M7 · Mutaciones y reproducción sexual (de80e6c): NeoMutations.bas completo,
-  crossover/SexReproduce, herencia de Reproduce. B-29, B-31..B-35, R-09..R-11.
-- M8 · Mundo + formatos de sim (0037d27..c4fb772): economía vegetal, teleporters
-  (E/S sobre búferes outbox/inbox en memoria), obstacles, .dbo,
-  SaveSimulation/LoadSimulation, .mrate, y R-12 (orden global de RNG del tick).
-  El ciclo UpdateSim corre de punta a punta.
-- M9 · Build WASM, Q07 verificada (ef9b63d): la suite entera da verde idéntico en
-  tres modos — g++ 14.2 nativo, clang 19.1.7 nativo y WASM vía Emscripten 6.0.8
-  bajo node — sin una sola divergencia numérica. Presets reproducibles en
-  port/CMakePresets.json (native-gcc/native-clang/wasm).
-- M10 · Capa de presentación web (6e753ec): port/wasm/dbcore_api.cpp con la API
-  completa hacia JS — arranque del form transcrito de main.frm, opciones esenciales
-  (campo, Costs 0..70, MinVegs/repoblación, mutaciones on/off, StartChlr), especies
-  con la siembra de loadrobs completa, volcados para render (bots 8f / shots 6f /
-  ties 5f / obstáculos 5f / teleporters 7f), save/load de sim y .dbo sobre búferes,
-  SalvarobText, NewTeleporter transcrito y la E/S outbox/inbox de teleporters (el
-  host mueve los "archivos" .dbo entre sims). Decisiones de capa host en la
-  cabecera del .cpp: búferes en vez de disco, SimGUID = 0, colores de especie del
-  lado de la página (Q01); .mrate no se exporta.
-- Ext · Rendimiento (e935f78): la sim corre entera en un Web Worker
-  (port/web/worker.js: dbcore.wasm + handle + ticks + volcados);
-  port/web/index.html queda solo con UI y render Canvas 2D. Cada frame viaja como
-  UN ArrayBuffer transferible (header + secciones bots/shots/ties/obstáculos/
-  teleporters) con ping-pong de búferes: cero basura por frame, nunca más de un
-  frame en vuelo. Velocidad "máx" (rebanadas ~12ms a fondo, 1 tick por vuelta);
-  stats con ticks/s, fps y costo de draw(); worker.onerror al registro de la
-  página. WebGL medido y descartado por innecesario: con ~2000 bots, draw() ≈ 4 ms
-  vs tick del core ≈ 160 ms — el cuello es la sim, no el render (port/README.md
-  §"Página web"). Protocolo de mensajes documentado en la cabecera de worker.js.
-  Cero cambios en port/core/, port/wasm/ y CMake.
-- Ext · Bestiary del foro (144e6e6): 545 bots del Bestiary de forum.darwinbots.com
-  (board 13 y sus 12 sub-boards) en port/web/bots/ + bots.json; el selector de
-  especies de la página los agrupa por sub-board y los Veggies siembran como
-  vegetales. Archivador reproducible en port/tools/bestiary/ (crawl → validación
-  con dbcore.wasm bajo node: alta de especie + fundador + 50 ticks → publicación de
-  un bot por tema; ver su README — los adjuntos del foro no son visibles para
-  invitados, solo entran los bots posteados como [code]). Capa host pura; sin
-  bots.json la página funciona igual.
-- Estado verificado: 143 casos / 2962 aserciones en verde en los tres modos de
-  build (nativo gcc re-corrido en esta máquina al regenerar este prompt).
-- Toolchain (todo instalado y documentado en port/README.md): g++ 14.2 y
-  clang 19.1.7 (MSYS2 ucrt64), CMake 4.0.1 + Ninja, emsdk en ~/emsdk
-  (Emscripten 6.0.8; el preset wasm necesita la variable de entorno
-  EMSDK=C:/Users/<usuario>/emsdk), node 24.
-- Línea base de los fuentes VB6: 02b20d7.
+**Estado actual** (verificado 2026-08-26):
+- Suite: **143 casos / 2962 aserciones en verde** en los tres modos (g++ 14.2,
+  clang 19.1.7, WASM/Emscripten 6.0.8 bajo node).
+- Milestones M1..M10 cerrados + Ext·Rendimiento (Web Worker) + Ext·Bestiary
+  (588 bots del foro como presets). Hashes recientes: M9 `ef9b63d`,
+  M10 `6e753ec`, Rendimiento `e935f78`, Bestiary `144e6e6`/`d52d9c4`.
+  Línea base de fuentes VB6: `02b20d7`.
+- **Etapa E1 cerrada** (escenario y física configurables, capa host):
+  `db_sim_set_opt`/`db_sim_get_opt` por id estable en `wasm/dbcore_api.cpp`
+  (46 ids con consumidor real en el core: toroidal/cilindros, física del
+  medio con los presets exactos de `OptionsForm.frm:4406-4453`, luz y
+  día/noche, decay, energía, restricciones) + panel "Opciones de sim" en
+  `web/index.html` (tabla declarativa espejo; los ids aplican en vivo vía
+  `{t:'setopt'}` del worker y se reenvían al reiniciar; tamaños del campo con
+  la fórmula del slider original, `OptionsForm.frm:4075-4099`).
+- CI en GitHub: `ci.yml` (suite en los tres modos + fuentes VB6 intactos) y
+  `pages.yml` (demo viva; compila el preset wasm y publica `port/web/`).
 
-Antes de nada, leé en este orden
+**Orden de lectura al arrancar:**
+1. `spec/PROGRESO.md` entero — fuente de verdad del estado (incluida la
+   corrección de premisa 2026-08-16: el EXE original compila CON chequeos;
+   errores 6/9/11 truncan el tick).
+2. `spec/PLAN-EXTENSIONES.md` — el plan por etapas vigente (la tarea sale de ahí).
+3. `port/README.md` — toolchain, build y estado por milestone.
+4. Los fuentes del original que la etapa toque (para E2: `main.frm:953-1140`).
 
-1. spec/PROGRESO.md — estado autoritativo, tabla de milestones y registro. Incluye
-   la corrección de premisa del 2026-08-16 (el EXE compila CON chequeos; los flags
-   =0 del .vbp son casillas sin marcar): invalida cualquier intuición de "wrap
-   silencioso". Su sección "Siguiente" lista las extensiones opcionales.
-2. port/README.md — los tres modos de build, el toolchain verificado, la API
-   completa de wasm/dbcore_api.cpp, la arquitectura Worker de la página web, el
-   Bestiary del selector y cómo servirla/abrirla.
-3. spec/PLAN.md §"Decisión de arquitectura del port" — las 5 salvaguardas de build
-   (obligatorias también para todo lo que se recompile a WASM).
-4. Los documentos de spec/ que toque la extensión elegida (p. ej. 50-MUNDO.md §5
-   para la capa torneo/Internet, 60-FORMATOS.md para formatos, 10-CICLO.md §1 para
-   el contrato core/presentación).
+**Reglas duras:**
+1. Los fuentes VB6 (`Darwinbots2/`) son read-only — verificable con
+   `git diff 02b20d7 -- Darwinbots2/` vacío.
+2. Para trabajo de **core** (`port/core/`), el ciclo es siempre: caso dorado
+   como test en rojo → implementación transcrita del fuente VB6 citado (no de
+   memoria, no del wiki) → verde → commit citando la sección de spec. Para
+   trabajo de **capa host** (wasm API/JS/HTML), el core no se toca: la suite
+   queda intacta por construcción y se verifica igual en verde; la
+   verificación de la etapa es smoke test bajo node + prueba en Chrome.
+3. Los `[PROBABLE BUG]` se replican tal cual; los sitios de error 6/9/11
+   llevan decisión de port documentada + registro en `VmDiag`/`SimDiag`.
+4. Salvaguardas numéricas de `PLAN.md`: redondeo bancario centralizado
+   (`vb_round64`/`vb_cint`/`vb_clng`), `float` estricto para `Single`, nada
+   de `-ffast-math`, `-ffp-contract=off` (sin FMA implícita), `-fwrapv` solo
+   como red.
+5. Al cerrar la etapa: actualizar `spec/PROGRESO.md` (tabla de etapas en
+   "Pendiente" + registro con fecha), commitear y regenerar este prompt con
+   `/prompt-continuacion`.
 
-Reglas duras
-
-1. Los fuentes VB6 (Darwinbots2/) son read-only. Verificable con
-   git diff 02b20d7 -- Darwinbots2/, que debe salir vacío.
-2. El ciclo es siempre: caso dorado transcrito como test en rojo → implementación
-   transcrita del fuente VB6 citado línea a línea (no de memoria, no del wiki) →
-   verde → commit citando la sección de la spec. (El trabajo de capa host — API
-   WASM, página web, worker, herramientas — no tiene casos dorados propios, pero
-   TODO lo que toque port/core/ sigue esta regla entera y la suite debe seguir en
-   verde en los tres modos tras cada cambio.)
-3. Los [PROBABLE BUG] se replican tal cual (regla 4 del brief); los sitios de
-   error 6/9/11 del original llevan decisión de port documentada por sitio +
-   registro en VmDiag/SimDiag (10-CICLO.md §14).
-4. Salvaguardas numéricas (PLAN.md): toda conversión float→int marcada por la spec
-   pasa por vb_round64/vb_clng/vb_cint (bancario centralizado); Single = float
-   estricto con casts explícitos; semántica VB6 ya replicada: 1/Single y Byte/100
-   dividen en Double, Long + Single promociona a Double, IIf/And/Choose evalúan
-   todos sus brazos (consumen RNG aunque el brazo no gobierne); nada de
-   -ffast-math; sin FMA implícita (-ffp-contract=off); -fwrapv solo como red. La
-   capa JS/render nunca recalcula física ni RNG: solo presenta lo que el core
-   vuelca (el worker incluido: solo llama a db_sim_* y empaqueta).
-5. Al cerrar un milestone o extensión: actualizar spec/PROGRESO.md (tabla del
-   port + sección "Siguiente" + registro con fecha) y commitear. Regenerar
-   spec/PROMPT-CONTINUACION.md con /prompt-continuacion.
-
-Compilar y correr los tests (presets de CMake; correr desde port/)
-
+**Build y tests** (desde `port/`; CMake ≥ 3.25):
+```
 cmake --preset native-gcc   && cmake --build --preset native-gcc   && build/dbtests
 cmake --preset native-clang && cmake --build --preset native-clang && build-clang/dbtests
 cmake --preset wasm         && cmake --build --preset wasm         && node build-wasm/dbtests.js
+```
+El preset `wasm` necesita `EMSDK` en el entorno (en esta máquina:
+`EMSDK=C:/Users/jntac/emsdk`; en bash: `export EMSDK=/c/Users/jntac/emsdk &&
+source "$EMSDK/emsdk_env.sh"`). Produce también `build-wasm/dbcore.js/.wasm`
+(la biblioteca de la página). La página se sirve con
+`cd port && python -m http.server 8000` → `http://localhost:8000/web/`.
+Compiladores: g++/clang de MSYS2 ucrt64, node 24.
 
-(El preset wasm requiere EMSDK en el entorno y produce además build-wasm/dbcore.js
-+ dbcore.wasm — la biblioteca que consumen el worker y la página. Los exe nativos
-linkean estático; no necesitan las DLL de MSYS2 en el PATH.)
+**La tarea: etapa E2 — animaciones e inspección de bots (capa host).**
+Según `spec/PLAN-EXTENSIONES.md` §E2, transcribir a la página las
+visualizaciones de `main.frm` que el original dibujaba. En orden:
 
-Correr la página web (la sim completa en el navegador, sobre un Web Worker)
+1. **Destellos de impacto de shots** (`DrawShots`, `main.frm:953-971` +
+   paleta `FlashColor`, `main.frm:397-404`): ampliar `db_sim_dump_shots`
+   (dbcore_api.cpp) con `flash` y `opos` (el core ya mantiene ambos:
+   `shots.hpp:645,712`) y pintar en `web/index.html` el círculo de un frame
+   por tipo — rojo robo de nrg (−1), blanco nrg (−2), azul veneno (−3),
+   verde waste (−4), amarillo poison (−5), magenta robo de body (−6), cian
+   virus (−7). Con toggle, como `displayShotImpactsToggle`.
+2. **Selección de bot + alcance de la vista** (`main.frm:1017-1060`,
+   `showVisionGridToggle`): clic en el canvas → bot más cercano; export
+   nuevo que vuelque por ojo `[dir efectiva (EYE1DIR), semiancho
+   (EYE1WIDTH), EyeSightDistance, valor visto]` (la matemática ya está en
+   `vision.hpp` — NO recalcular en JS más que la geometría de dibujo);
+   arcos cian, encogidos a la distancia vista con pluma invertida cuando el
+   ojo ve, y el ojo con foco (`FOCUSEYE`) en rojo. Doble uso: herramienta de
+   diagnóstico de visión.
+3. **Inspector de bot**: panel con `db_sim_bot_text` (ya existe) + nrg/body/
+   edad del bot seleccionado.
+4. **Vectores de movimiento y gauges** (menú View del original): flechas de
+   `vel` y barras nrg/body por bot, con sus toggles.
+5. (Opcional, valor menor) skins `DrawRobSkin` y monitor RGB `DrawMonitor`.
 
-cd port && python -m http.server 8000
-→ http://localhost:8000/web/
+Criterio de cierre E2: los toggles del menú View del original funcionando en
+la página; suite intacta en verde en los tres modos; smoke node de los
+exports nuevos; verificación en Chrome con consola limpia; PROGRESO.md
+actualizado y prompt regenerado.
 
-(El selector "Sembrar especie" incluye los 545 bots del Bestiary del foro,
-agrupados por sub-board. Ojo al verificar con un navegador automatizado: en un tab
-oculto el rAF no dispara y la sim se pausa sola por diseño del ping-pong — hay que
-traer el tab al frente.)
-
-Tu tarea
-
-El port está completo y las extensiones Rendimiento y Bestiary del foro están
-cerradas: no hay nada obligatorio pendiente. Preguntale al usuario qué extensión
-quiere encarar (o encarala si ya te la indicó en este mensaje). Las candidatas
-registradas en spec/PROGRESO.md §"Siguiente", todas capa host y opcionales:
-
-1. UI de sim — inspector de bot al click (la API ya expone db_sim_bot_text),
-   zoom/cámara sobre el Canvas, editor de opciones completo (la API llega hasta
-   Costs 0..70; la página hoy expone las esenciales), gráficas de población.
-2. Modo Internet/torneo — la E/S de teleporters entre sims ya funciona por búferes
-   (db_sim_tp_outbox_take / db_sim_tp_inbox_push, verificada entre dos sims bajo
-   node); faltaría el transporte que mueva los registros .dbo entre navegadores.
-   La capa ⚙ de torneo (50-MUNDO.md §5) quedó deliberadamente fuera del contrato
-   de fidelidad.
-3. Ampliar el Bestiary — con una cuenta del foro se podrían bajar también los
-   adjuntos .txt (hoy invisibles para invitados; el archivador de
-   port/tools/bestiary/ ya intenta dlattach y solo haría falta autenticar), que
-   cubrirían la mayoría de los Veggies y varios F1 históricos.
-
-Cualquiera de las tres es pura capa host (JS/HTML, dbcore_api.cpp o
-port/tools/): la regla 2 solo se activa si algo exige tocar port/core/. Tras
-cualquier cambio en port/core/ o en el CMake, la suite entera (143 casos / 2962
-aserciones) debe seguir en verde en los tres modos. Si la extensión toca la página
-web, respetá la arquitectura Worker: la página no llama a la API WASM directamente
-— todo pasa por el protocolo de mensajes de worker.js (documentado en su
-cabecera).
+Después de E2 siguen E3 (formas/mazes/teleporters UI) y E4 (costes dinámicos,
+**capa core** — pasos ⚙ 3/6-9 de `Master.bas`, con familia de casos dorados
+nueva); ver `spec/PLAN-EXTENSIONES.md`.
 
 ## ↑ COPIAR HASTA AQUÍ ↑
 
-Recordatorio: regenerar este archivo con `/prompt-continuacion` al cerrar cada
-milestone o extensión.
+Regenerar este archivo con `/prompt-continuacion` al cerrar cada etapa.
