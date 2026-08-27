@@ -3,8 +3,9 @@
 // esta capa solo llama a funciones del core y copia bytes/floats hacia el
 // host; no recalcula fisica ni consume RNG por su cuenta (las unicas
 // extracciones de RNG que origina — posicion de fundadores, posicion de
-// teleporters nuevos, Randomize — son las mismas que hacia la UI de VB6 en
-// loadrobs / NewTeleporter / startloaded, transcritas y citadas).
+// teleporters nuevos, Randomize, y desde E3 las posiciones/aperturas de
+// formas y mazes — son las mismas que hacia la UI de VB6 en loadrobs /
+// NewTeleporter / startloaded / Obstacles.bas, transcritas y citadas).
 //
 // Decisiones de capa host (fuera del contrato de fidelidad, M10 punto 3):
 //  - Teleporters: el original movia archivos .dbo por disco entre sims
@@ -616,6 +617,300 @@ DB_EXPORT int db_sim_dump_teleporters(void* h, float* out, int max_tp) {
 DB_EXPORT int db_sim_add_obstacle(void* h, float x, float y, float w,
                                   float hgt, int color) {
   return db::NewObstacle(S(h), x, y, w, hgt, color);
+}
+
+// ---------------------------------------------------------------------------
+// E3 — menu Objects (spec/PLAN-EXTENSIONES.md §E3): formas, mazes y borrado
+// de teleporters. Transcripciones de Obstacles.bas / ObstacleForm.frm /
+// Teleport.bas. El RNG de posiciones y aperturas consume el MISMO flujo del
+// LCG de la sim que consumia la UI del original (igual que la posicion de
+// db_sim_add_teleporter); los colores siguen siendo decision del host (B7-5,
+// Q01): estos exports crean con color 0 y la pagina recolorea con
+// db_sim_obstacle_set_color.
+// ---------------------------------------------------------------------------
+
+// ChangeAllObstacleColor escribia el color directo (Obstacles.bas:298-308);
+// aqui por indice: la paleta la decide la pagina tras cada alta.
+DB_EXPORT void db_sim_obstacle_set_color(void* h, int i, int color) {
+  db::Sim& sim = S(h);
+  if (i < 1 || i > sim.numObstacles) return;
+  sim.Obstacles[static_cast<std::size_t>(i)].color = color;
+}
+
+// ObstacleForm.frm:457-465 — MakeShape_Click ("New Shape..."): posicion
+// sorteada con Random (2 extracciones), tamano = fraccion del campo
+// (defaultWidth/defaultHeight; main.frm:1321-1322 los inicia en 0.2).
+DB_EXPORT int db_sim_make_shape(void* h, float defaultWidth,
+                                float defaultHeight) {
+  db::Sim& sim = S(h);
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  const db::vb_single randomX =
+      static_cast<db::vb_single>(
+          db::Random(0.0, static_cast<double>(FW), *sim.rndy)) -
+      FW * (defaultWidth / 2.0f);
+  const db::vb_single randomy =
+      static_cast<db::vb_single>(
+          db::Random(0.0, static_cast<double>(FH), *sim.rndy)) -
+      FH * (defaultHeight / 2.0f);
+  return db::NewObstacle(sim, randomX, randomy, FW * defaultWidth,
+                         FH * defaultHeight);
+}
+
+// Obstacles.bas:229-268 — AddRandomObstacles(n) ("Add Ten Random Shapes"
+// llama con 10, MDIForm1.frm:1115-1117): 4 extracciones Rnd crudas por
+// forma (posicion y tamano), desplazamiento a izquierda/arriba y recorte al
+// campo. Devuelve 0 o -1 (tope de 1000), como el original.
+DB_EXPORT int db_sim_add_random_obstacles(void* h, int n, float defaultWidth,
+                                          float defaultHeight) {
+  db::Sim& sim = S(h);
+  if (n < 1) return -1;
+  auto& rnd = *sim.rndy;
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  int i = 0;
+  while (i != -1 && n > 0) {
+    db::vb_single randomX = rnd() * FW;
+    db::vb_single randomy = rnd() * FH;
+    db::vb_single RandomWidth = rnd() * FW * defaultWidth;
+    db::vb_single RandomHeight = rnd() * FH * defaultHeight;
+    randomX = randomX - FW * (defaultWidth / 2.0f);
+    randomy = randomy - FH * (defaultHeight / 2.0f);
+    if (randomX < 0.0f) randomX = 0.0f;
+    if (randomy < 0.0f) randomy = 0.0f;
+    if (randomX + RandomWidth > FW) RandomWidth = FW - randomX;
+    if (randomy + RandomHeight > FH) RandomHeight = FH - randomy;
+    i = db::NewObstacle(sim, randomX, randomy, RandomWidth, RandomHeight);
+    n = n - 1;
+  }
+  return (i == -1 || n != 0) ? -1 : 0;
+}
+
+// Obstacles.bas:286-296 — DeleteObstacle: desplaza el resto una posicion
+// hacia abajo. El original lee Obstacles(numObstacles+1) — un registro en
+// blanco del array fijo de 1000; aqui se garantiza el hueco. Los indices del
+// compactador (leftCompactor/rightCompactor) NO se ajustan, como en el
+// original (quedan apuntando a registros movidos o borrados).
+DB_EXPORT void db_sim_delete_obstacle(void* h, int i) {
+  db::Sim& sim = S(h);
+  if (i < 1 || i > sim.numObstacles || sim.numObstacles == 0) return;
+  if (static_cast<int>(sim.Obstacles.size()) <= sim.numObstacles + 1)
+    sim.Obstacles.resize(static_cast<std::size_t>(sim.numObstacles) + 2);
+  for (int j = i; j <= sim.numObstacles; ++j)
+    sim.Obstacles[static_cast<std::size_t>(j)] =
+        sim.Obstacles[static_cast<std::size_t>(j) + 1];
+  sim.Obstacles[static_cast<std::size_t>(sim.numObstacles)].exist = false;
+  sim.numObstacles -= 1;
+}
+
+// Obstacles.bas:277-284 — DeleteAllObstacles. leftCompactor/rightCompactor
+// quedan como esten (el original tampoco los limpia; MoveObstacles seguiria
+// moviendo los registros apagados si eran compactors — replicado tal cual).
+DB_EXPORT void db_sim_delete_all_obstacles(void* h) {
+  db::Sim& sim = S(h);
+  for (int i = 1; i <= sim.numObstacles; ++i)
+    sim.Obstacles[static_cast<std::size_t>(i)].exist = false;
+  sim.numObstacles = 0;
+}
+
+// Obstacles.bas:310-320 — DeleteTenRandomObstacles: 10 sorteos Random(1,
+// numObstacles) SIEMPRE que hubiera al menos una forma al entrar (si se
+// vacia a mitad, los sorteos restantes consumen RNG y DeleteObstacle los
+// descarta, como en el original).
+DB_EXPORT void db_sim_delete_ten_random_obstacles(void* h) {
+  db::Sim& sim = S(h);
+  if (sim.numObstacles <= 0) return;
+  for (int i = 1; i <= 10; ++i)
+    db_sim_delete_obstacle(
+        h, static_cast<int>(db::Random(
+               1.0, static_cast<double>(sim.numObstacles), *sim.rndy)));
+}
+
+// --- Mazes (Obstacles.bas:45-181). corridor/wall = mazeCorridorWidth /
+// mazeWallThickness, estado de la UI del original (defaults 500 y 50,
+// MDIForm1.frm:2464-2465) que aqui viaja como parametro desde la pagina.
+// Cada export devuelve cuantas formas creo.
+
+// Obstacles.bas:45-59 — DrawHorizontalMaze: lineas de muros verticales con
+// una apertura sorteada (Random, 1 extraccion por linea).
+DB_EXPORT int db_sim_maze_horizontal(void* h, int corridor, int wall) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  const db::vb_single cw = static_cast<db::vb_single>(corridor);
+  const db::vb_single wt = static_cast<db::vb_single>(wall);
+  const int numOfLines =
+      static_cast<int>(db::vb_round64(static_cast<double>(
+          FW / static_cast<db::vb_single>(corridor + wall)))) -
+      1;
+  for (int i = 1; i <= numOfLines; ++i) {
+    const db::vb_long Opening =
+        db::Random(0.0, static_cast<double>(FH - cw), *sim.rndy);
+    db::NewObstacle(sim, static_cast<db::vb_single>(i) * (cw + wt), -100.0f,
+                    wt, static_cast<db::vb_single>(Opening));
+    if (static_cast<double>(Opening) + corridor <
+        static_cast<double>(FH) + 100.0)
+      db::NewObstacle(sim, static_cast<db::vb_single>(i) * (cw + wt),
+                      static_cast<db::vb_single>(Opening) + cw, wt,
+                      FH + 100.0f - static_cast<db::vb_single>(Opening) - cw);
+  }
+  return sim.numObstacles - before;
+}
+
+// Obstacles.bas:61-75 — DrawVerticalMaze (simetrico al horizontal).
+DB_EXPORT int db_sim_maze_vertical(void* h, int corridor, int wall) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  const db::vb_single cw = static_cast<db::vb_single>(corridor);
+  const db::vb_single wt = static_cast<db::vb_single>(wall);
+  const int numOfLines =
+      static_cast<int>(db::vb_round64(static_cast<double>(
+          FH / static_cast<db::vb_single>(corridor + wall)))) -
+      1;
+  for (int i = 1; i <= numOfLines; ++i) {
+    const db::vb_long Opening =
+        db::Random(0.0, static_cast<double>(FW - cw), *sim.rndy);
+    db::NewObstacle(sim, -100.0f, static_cast<db::vb_single>(i) * (cw + wt),
+                    static_cast<db::vb_single>(Opening), wt);
+    if (static_cast<double>(Opening) + corridor <
+        static_cast<double>(FW) + 100.0)
+      db::NewObstacle(sim, static_cast<db::vb_single>(Opening) + cw,
+                      static_cast<db::vb_single>(i) * (cw + wt),
+                      FW + 100.0f - static_cast<db::vb_single>(Opening) - cw,
+                      wt);
+  }
+  return sim.numObstacles - before;
+}
+
+// Obstacles.bas:78-108 — DrawCheckerboardMaze: rejilla de bloques cuadrados
+// centrada en el campo. Sin RNG. Solo usa mazeCorridorWidth.
+DB_EXPORT int db_sim_maze_checkerboard(void* h, int corridor) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  const db::vb_single cw = static_cast<db::vb_single>(corridor);
+  const db::vb_single blockWidth = db::Min(5000.0f, FW / 10.0f);
+  const db::vb_single numBlocksAcross =
+      std::floor(FW / (blockWidth + cw));  // Int() sobre Single
+  const db::vb_single acrossGap =
+      (numBlocksAcross * (blockWidth + cw) + cw - FW) / 2.0f;
+  const db::vb_single numBlocksDown = std::floor(FH / (blockWidth + cw));
+  const db::vb_single downGap =
+      (numBlocksDown * (blockWidth + cw) + cw - FH) / 2.0f;
+  for (int i = 0; i <= static_cast<int>(numBlocksAcross) - 1; ++i)
+    for (int j = 0; j <= static_cast<int>(numBlocksDown) - 1; ++j) {
+      const db::vb_single x = static_cast<db::vb_single>(i) * blockWidth +
+                              static_cast<db::vb_single>(i + 1) * cw -
+                              acrossGap;
+      const db::vb_single y = static_cast<db::vb_single>(j) * blockWidth +
+                              static_cast<db::vb_single>(j + 1) * cw - downGap;
+      db::NewObstacle(sim, x, y, blockWidth, blockWidth);
+    }
+  return sim.numObstacles - before;
+}
+
+// Obstacles.bas:110-127 — DrawPolarIceMaze: 9 bloques identicos apilados
+// (medio campo, centrados) y ENCIENDE la deriva en ambos ejes con
+// shapeDriftRate = 20 (la pagina relee los ids 83/84/85 tras llamar).
+DB_EXPORT int db_sim_maze_polar_ice(void* h) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single blockWidth = sim.opts.FieldWidth / 2.0f;
+  const db::vb_single blockHeight = sim.opts.FieldHeight / 2.0f;
+  for (int i = 0; i <= 8; ++i)
+    db::NewObstacle(sim, blockWidth / 2.0f, blockHeight / 2.0f, blockWidth,
+                    blockHeight);
+  sim.opts.allowHorizontalShapeDrift = true;
+  sim.opts.allowVerticalShapeDrift = true;
+  sim.opts.shapeDriftRate = 20;
+  return sim.numObstacles - before;
+}
+
+// Obstacles.bas:129-144 — InitTrashCompactorMaze: dos muros laterales que
+// avanzan con vel.x = ±shapeDriftRate*0.1 (TrashCompactorMove del core los
+// rebota). Si el array esta lleno el original indexaba Obstacles(-1) —
+// error 9 que abortaba el handler; aqui la asignacion de vel se omite para
+// el indice invalido (decision de capa host, sin efecto en el core).
+DB_EXPORT int db_sim_maze_trash_compactor(void* h) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single blockWidth = 1000.0f;
+  const db::vb_single blockHeight =
+      static_cast<db::vb_single>(static_cast<double>(sim.opts.FieldHeight) * 1.2);
+  sim.leftCompactor = db::NewObstacle(
+      sim, -blockWidth + 1.0f,
+      static_cast<db::vb_single>(static_cast<double>(sim.opts.FieldHeight) * -0.1),
+      blockWidth, blockHeight);
+  sim.rightCompactor = db::NewObstacle(
+      sim, sim.opts.FieldWidth - 1.0f,
+      static_cast<db::vb_single>(static_cast<double>(sim.opts.FieldHeight) * -0.1),
+      blockWidth, blockHeight);
+  if (sim.leftCompactor > 0)
+    sim.Obstacles[static_cast<std::size_t>(sim.leftCompactor)].vel.x =
+        static_cast<db::vb_single>(sim.opts.shapeDriftRate * 0.1);
+  if (sim.rightCompactor > 0)
+    sim.Obstacles[static_cast<std::size_t>(sim.rightCompactor)].vel.x =
+        static_cast<db::vb_single>(-(sim.opts.shapeDriftRate * 0.1));
+  return sim.numObstacles - before;
+}
+
+// Obstacles.bas:158-181 — DrawSpiral: anillos concentricos rectangulares
+// con la boca desplazada (4 muros por vuelta). Sin RNG.
+DB_EXPORT int db_sim_maze_spiral(void* h, int corridor, int wall) {
+  db::Sim& sim = S(h);
+  const int before = sim.numObstacles;
+  const db::vb_single FW = sim.opts.FieldWidth, FH = sim.opts.FieldHeight;
+  const db::vb_single cw = static_cast<db::vb_single>(corridor);
+  const db::vb_single wt = static_cast<db::vb_single>(wall);
+  const int numOfHorzLines =
+      static_cast<int>(db::vb_round64(static_cast<double>(
+          FH / static_cast<db::vb_single>(corridor + wall)))) -
+      1;
+  const int numOfVertLines =
+      static_cast<int>(db::vb_round64(static_cast<double>(
+          FW / static_cast<db::vb_single>(corridor + wall)))) -
+      1;
+  int numOfLines =
+      numOfHorzLines < numOfVertLines ? numOfHorzLines : numOfVertLines;
+  if ((numOfLines % 2) != 0) numOfLines = numOfLines - 1;
+  for (int i = 1; i <= numOfLines / 2; ++i) {
+    const db::vb_single fi = static_cast<db::vb_single>(i);
+    db::NewObstacle(sim, static_cast<db::vb_single>(i - 1) * cw, fi * cw,
+                    FW - cw * static_cast<db::vb_single>(2 * (i - 1) + 1), wt);
+    db::NewObstacle(
+        sim, fi * cw, FH - cw * fi,
+        static_cast<db::vb_single>(
+            static_cast<double>(FW) -
+            (static_cast<double>(cw) * 2.0 * static_cast<double>(fi) -
+             static_cast<double>(wt))),
+        wt);
+    db::NewObstacle(sim, FW - cw * fi, fi * cw, wt,
+                    FH - cw * static_cast<db::vb_single>(2 * i));
+    db::NewObstacle(sim, fi * cw, static_cast<db::vb_single>(i + 1) * cw, wt,
+                    FH - cw * static_cast<db::vb_single>(2 * i + 1));
+  }
+  return sim.numObstacles - before;
+}
+
+// Teleport.bas:146-155 — DeleteTeleporter: desplaza el resto una posicion;
+// el ultimo slot conserva sus datos con exist = False, como el original. El
+// guard de rango es de capa host (el original delegaba en el llamador).
+DB_EXPORT void db_sim_delete_teleporter(void* h, int i) {
+  db::Sim& sim = S(h);
+  if (sim.numTeleporters <= 0) return;
+  if (i < 1 || i > sim.numTeleporters) return;
+  for (int x = i + 1; x <= sim.numTeleporters; ++x)
+    sim.Teleporters[static_cast<std::size_t>(x) - 1] =
+        sim.Teleporters[static_cast<std::size_t>(x)];
+  sim.Teleporters[static_cast<std::size_t>(sim.numTeleporters)].exist = false;
+  sim.numTeleporters -= 1;
+}
+
+// Teleport.bas:137-145 — DeleteAllTeleporters.
+DB_EXPORT void db_sim_delete_all_teleporters(void* h) {
+  db::Sim& sim = S(h);
+  for (int i = 1; i <= sim.numTeleporters; ++i)
+    sim.Teleporters[static_cast<std::size_t>(i)].exist = false;
+  sim.numTeleporters = 0;
 }
 
 // Teleport.bas:60-105 — NewTeleporter(PortIn, PortOut, Height, Internet),

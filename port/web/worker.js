@@ -18,6 +18,15 @@
 //   {t:'save'}                             → {t:'saved', bytes, cycle}
 //   {t:'load', bytes}                      cargar sim binaria (transferido)
 //   {t:'teleporter'}                       alta de teleporter local
+//   {t:'shape', dw, dh}                    E3: "New Shape..." (fracciones
+//                                          de campo, default 0.2)
+//   {t:'shapes-add10', dw, dh}             E3: Add Ten Random Shapes
+//   {t:'shapes-del10'}                     E3: Delete 10 Random Shapes
+//   {t:'shape-del', n}                     E3: borrar la forma n (clic)
+//   {t:'shapes-clear'}                     E3: Delete All Shapes
+//   {t:'maze', kind, corridor, wall}       E3: kind = h|v|spiral|checker|
+//                                          polar|trash (Obstacles.bas:45-181)
+//   {t:'tp-del', n} · {t:'tp-clear'}       E3: borrar teleporter(s)
 //   {t:'select', n}                        bot con foco (0 = ninguno); su
 //                                          volcado de ojos/inspector viaja
 //                                          en cada frame (etapa E2)
@@ -28,6 +37,9 @@
 // Protocolo (worker → página):
 //   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
 //   {t:'bot-text', n, text} ·
+//   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
+//                                          polar ice enciende la deriva) —
+//                                          la página actualiza su panel
 //   {t:'frame', buf, stats:{cycle,bots,vegs,tps}}
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
@@ -97,6 +109,21 @@ function bindApi() {
     botText:       C('db_sim_bot_text', 'number', ['number', 'number']),
     addTeleporter: C('db_sim_add_teleporter', 'number',
                      ['number','number','number','number','number','number','number','number','number','number']),
+    // E3 — menú Objects (transcripciones en wasm/dbcore_api.cpp)
+    makeShape:     C('db_sim_make_shape', 'number', ['number','number','number']),
+    addRandObs:    C('db_sim_add_random_obstacles', 'number', ['number','number','number','number']),
+    delObstacle:   C('db_sim_delete_obstacle', null, ['number','number']),
+    delAllObs:     C('db_sim_delete_all_obstacles', null, ['number']),
+    delTenObs:     C('db_sim_delete_ten_random_obstacles', null, ['number']),
+    obsColor:      C('db_sim_obstacle_set_color', null, ['number','number','number']),
+    mazeH:         C('db_sim_maze_horizontal', 'number', ['number','number','number']),
+    mazeV:         C('db_sim_maze_vertical', 'number', ['number','number','number']),
+    mazeSpiral:    C('db_sim_maze_spiral', 'number', ['number','number','number']),
+    mazeChecker:   C('db_sim_maze_checkerboard', 'number', ['number','number']),
+    mazePolar:     C('db_sim_maze_polar_ice', 'number', ['number']),
+    mazeTrash:     C('db_sim_maze_trash_compactor', 'number', ['number']),
+    delTeleporter: C('db_sim_delete_teleporter', null, ['number','number']),
+    delAllTps:     C('db_sim_delete_all_teleporters', null, ['number']),
     save:          C('db_sim_save', 'number', ['number', 'number']),
     load:          C('db_sim_load', null, ['number', 'number', 'number']),
     free:          C('db_free', null, ['number']),
@@ -104,6 +131,16 @@ function bindApi() {
 }
 
 function log(msg) { self.postMessage({ t: 'log', msg }); }
+
+// Colores de las formas nuevas (índices from+1..numObstacles): decisión de
+// host (B7-5/Q01 — el original sorteaba Rnd*65536+Rnd*255+Rnd con Rnd crudo;
+// aquí la paleta es de la página y Math.random NO toca el RNG de la sim).
+function recolorObstacles(from) {
+  const n = api.numObstacles(sim);
+  for (let i = from + 1; i <= n; i++)
+    api.obsColor(sim, i, Math.floor(Math.random() * 0x1000000));
+  return n - from;
+}
 
 // ---- Búferes de volcado en el heap C (crecen bajo demanda) ----------------
 const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
@@ -328,6 +365,69 @@ self.onmessage = (e) => {
       postFrame();
       break;
     }
+    // ---- E3: menú Objects (shapes / mazes / teleporters) ----
+    case 'shape': {
+      const before = api.numObstacles(sim);
+      const i = api.makeShape(sim, +msg.dw, +msg.dh);
+      recolorObstacles(before);
+      log(i > 0 ? `forma #${i} creada` : 'tope de formas (1000) alcanzado');
+      postFrame();
+      break;
+    }
+    case 'shapes-add10': {
+      const before = api.numObstacles(sim);
+      api.addRandObs(sim, 10, +msg.dw, +msg.dh);
+      log(`+${recolorObstacles(before)} formas aleatorias ` +
+          `(${api.numObstacles(sim)} en total)`);
+      postFrame();
+      break;
+    }
+    case 'shapes-del10':
+      api.delTenObs(sim);
+      log(`borradas 10 al azar; quedan ${api.numObstacles(sim)} formas`);
+      postFrame();
+      break;
+    case 'shape-del':
+      api.delObstacle(sim, msg.n | 0);
+      postFrame();
+      break;
+    case 'shapes-clear':
+      api.delAllObs(sim);
+      log('todas las formas borradas');
+      postFrame();
+      break;
+    case 'maze': {
+      const before = api.numObstacles(sim);
+      const cw = msg.corridor | 0, wt = msg.wall | 0;
+      let n = 0;
+      switch (msg.kind) {
+        case 'h':       n = api.mazeH(sim, cw, wt); break;
+        case 'v':       n = api.mazeV(sim, cw, wt); break;
+        case 'spiral':  n = api.mazeSpiral(sim, cw, wt); break;
+        case 'checker': n = api.mazeChecker(sim, cw); break;
+        case 'polar':   n = api.mazePolar(sim); break;
+        case 'trash':   n = api.mazeTrash(sim); break;
+      }
+      recolorObstacles(before);
+      // DrawPolarIceMaze enciende la deriva (Obstacles.bas:123-125): la
+      // página relee los ids 83/84/85 para que el panel lo refleje.
+      if (msg.kind === 'polar')
+        self.postMessage({ t: 'opts', vals: { 83: api.getOpt(sim, 83),
+                                              84: api.getOpt(sim, 84),
+                                              85: api.getOpt(sim, 85) } });
+      log(`maze ${msg.kind}: +${n} formas`);
+      postFrame();
+      break;
+    }
+    case 'tp-del':
+      api.delTeleporter(sim, msg.n | 0);
+      postFrame();
+      break;
+    case 'tp-clear':
+      api.delAllTps(sim);
+      log('todos los teleporters borrados');
+      postFrame();
+      break;
     case 'ack':
       recycleFrameBuffer(msg.buf);
       canPost = true;

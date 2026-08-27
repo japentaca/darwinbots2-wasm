@@ -47,6 +47,18 @@
      La "pluma invertida" (vbNotMergePen) del arco de ojo que ve se
      aproxima con un trazo sólido vs. tenue: es un truco de pluma GDI sin
      equivalente en Canvas.
+   - Etapa E3: menú Objects del original — panel "Objetos" con formas
+     (New Shape / Add Ten / Delete 10 / Delete All, ObstacleForm.frm y
+     MDIForm1.frm:1115-1148,1186), los 6 mazes (Obstacles.bas:45-181,
+     transcritos en wasm/dbcore_api.cpp con el RNG de la sim) y teleporters
+     (hilight/delete/delete-all, Teleport.bas + MDIForm1.frm:1174-1184).
+     Selección por clic con la prioridad de Form_MouseDown (main.frm:
+     1856-1884): bot → teleporter → obstáculo; whichTeleporter
+     (Teleport.bas:466-477) y whichobstacle (Obstacles.bas:555-567)
+     transcritos abajo. Adaptación de host: el clic selecciona UNA sola
+     cosa y el clic en vacío deselecciona todo (el original dejaba foci
+     viejos vivos para el drag, que aquí no está). Los colores de formas
+     los sortea el worker con su paleta (B7-5/Q01: el color es del host).
 -->
 <style>
   :root { color-scheme: dark; }
@@ -172,6 +184,56 @@
     </div>
     <h2>Opciones de sim</h2>
     <div id="opts-panel"></div>
+    <h2>Objetos (menú Objects)</h2>
+    <details class="optgrp"><summary>Formas (shapes)</summary>
+      <div class="optrows">
+        <label>Tamaño default (fracción del campo)</label>
+        <span><input type="number" id="obj-dw" value="0.2" step="0.05" min="0.01" max="1" style="width:60px">
+              × <input type="number" id="obj-dh" value="0.2" step="0.05" min="0.01" max="1" style="width:60px"></span>
+        <span class="full row">
+          <button id="btn-shape">Nueva forma</button>
+          <button id="btn-shapes-add10">+10 al azar</button>
+          <button id="btn-shapes-del10">−10 al azar</button>
+        </span>
+        <span class="full row">
+          <button id="btn-shape-del" disabled>Borrar seleccionada</button>
+          <button id="btn-shapes-clear">Borrar todas</button>
+        </span>
+      </div>
+    </details>
+    <details class="optgrp"><summary>Mazes</summary>
+      <div class="optrows">
+        <label for="obj-cw">Pasillo (mazeCorridorWidth)</label>
+        <input type="number" id="obj-cw" value="500" step="50">
+        <label for="obj-wt">Muro (mazeWallThickness)</label>
+        <input type="number" id="obj-wt" value="50" step="10">
+        <span class="full row">
+          <button data-maze="h">Horizontal</button>
+          <button data-maze="v">Vertical</button>
+          <button data-maze="spiral">Espiral</button>
+        </span>
+        <span class="full row">
+          <button data-maze="checker">Checkerboard</button>
+          <button data-maze="polar">Polar Ice</button>
+          <button data-maze="trash">Trash Compactor</button>
+        </span>
+        <span class="full" style="color:#5c6b88;font-size:11px">
+          Suman formas al campo actual (defaults del original: 500 / 50;
+          Polar Ice enciende la deriva a tasa 20).</span>
+      </div>
+    </details>
+    <details class="optgrp"><summary>Teleporters</summary>
+      <div class="optrows">
+        <span class="full row">
+          <label><input type="checkbox" id="tg-tphl" checked>
+            resaltar (Hilight Teleporters)</label>
+        </span>
+        <span class="full row">
+          <button id="btn-tp-del" disabled>Borrar seleccionado</button>
+          <button id="btn-tp-clear">Borrar todos</button>
+        </span>
+      </div>
+    </details>
     <h2>Sembrar especie</h2>
     <div class="row">
       <select id="preset">
@@ -339,6 +401,17 @@ const OPT_GROUPS = [
     { id: 70, label: 'Deshabilitar ties', bool: true, def: false },
     { id: 71, label: 'Sin repro asexual (no repob.)', bool: true, def: false },
     { id: 72, label: 'Nadie puede fijarse', bool: true, def: false },
+  ]},
+  // E3: los ids 80-85 existían en la API desde E1; aquí se exponen junto al
+  // panel de objetos. Defaults = SimOptsT del core (todo apagado). Polar Ice
+  // enciende 83/84/85 desde el core y el worker lo refleja aquí ({t:'opts'}).
+  { name: 'Formas (visión y deriva)', items: [
+    { id: 80, label: 'Los bots ven las formas', bool: true, def: false },
+    { id: 81, label: 'Transparentes a la visión', bool: true, def: false },
+    { id: 82, label: 'Absorben shots', bool: true, def: false },
+    { id: 84, label: 'Deriva horizontal', bool: true, def: false },
+    { id: 83, label: 'Deriva vertical', bool: true, def: false },
+    { id: 85, label: 'Tasa de deriva (shapeDriftRate)', def: 0 },
   ]},
 ];
 
@@ -540,6 +613,16 @@ worker.onmessage = (e) => {
       log(msg.msg);
       updateStats();
       break;
+    case 'opts':
+      // E3: opciones que cambió el core (Polar Ice enciende la deriva,
+      // Obstacles.bas:123-125) — reflejarlas en el panel.
+      for (const id in msg.vals) {
+        const el = document.getElementById('o-' + id);
+        if (!el) continue;
+        if (el.type === 'checkbox') el.checked = !!msg.vals[id];
+        else el.value = msg.vals[id];
+      }
+      break;
     case 'bot-text':
       // ADN del bot seleccionado (db_sim_bot_text); si murió entre el
       // pedido y la respuesta llega texto vacío.
@@ -609,11 +692,22 @@ let selBot = 0;
 let lastScale = 1;
 let hitBots = new Float32Array(0);  // [idx, x, y, radius] × n (twips)
 let hitCount = 0;
+// E3: obstaclefocus / teleporterFocus (índices del core; el volcado es
+// contiguo 1..num, así que fila+1 = índice) y sus cajas del último frame.
+let selObstacle = 0, selTeleporter = 0;
+let hitObs = new Float32Array(0);   // [x, y, w, h] × nO (twips)
+let hitObsCount = 0;
+let hitTps = new Float32Array(0);   // [x, y, w, h] × nP (twips)
+let hitTpCount = 0;
 
 const tgImpacts = document.getElementById('tg-impacts');
 const tgVision = document.getElementById('tg-vision');
 const tgVectors = document.getElementById('tg-vectors');
 const tgGauges = document.getElementById('tg-gauges');
+// E3: HighLightTeleportersMenu (arranca marcado, MDIForm1.frm:2467-2468).
+// En el original era un flag por teleporter puesto/quitado en bloque; aquí
+// es un toggle global de render — mismo efecto visible.
+const tgTpHl = document.getElementById('tg-tphl');
 
 // Gauges de recursos (DrawRobPer, main.frm:624-712): anillos concéntricos
 // [campo del registro de bot, radio relativo, color]; porcentaje = val/32000
@@ -663,22 +757,67 @@ function draw(v) {
   if (hitBots.length < nB * 4) hitBots = new Float32Array(nB * 4 + 256);
   hitCount = nB;
 
-  // obstáculos
+  // E3: si la selección quedó fuera de rango (borrado, reset, load), apagarla
+  if (selObstacle > nO) setObsSelection(0);
+  if (selTeleporter > nP) setTpSelection(0);
+
+  // obstáculos — hit-test para whichobstacle: retener [x, y, w, h]
+  if (hitObs.length < nO * 4) hitObs = new Float32Array(nO * 4 + 64);
+  hitObsCount = nO;
   for (let i = 0; i < nO; i++) {
     const o = oObs + i * 5;
+    const h4 = i * 4;
+    hitObs[h4] = v[o]; hitObs[h4 + 1] = v[o + 1];
+    hitObs[h4 + 2] = v[o + 2]; hitObs[h4 + 3] = v[o + 3];
     ctx.fillStyle = vbColorToCss(v[o + 4]);
     ctx.globalAlpha = 0.6;
     ctx.fillRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
     ctx.globalAlpha = 1;
   }
+  // DrawObstacles (Obstacles.bas:220-222): la forma con foco lleva un marco
+  // blanco a ±2 twips.
+  if (selObstacle > 0 && selObstacle <= nO) {
+    const o = oObs + (selObstacle - 1) * 5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.strokeRect((v[o] - 2) * s, (v[o + 1] - 2) * s,
+                   (v[o + 2] + 4) * s, (v[o + 3] + 4) * s);
+  }
 
-  // teleporters
+  // teleporters — hit-test para whichTeleporter: retener [x, y, w, h]
+  if (hitTps.length < nP * 4) hitTps = new Float32Array(nP * 4 + 32);
+  hitTpCount = nP;
+  const tpHl = tgTpHl.checked;
   for (let i = 0; i < nP; i++) {
     const o = oTps + i * 7;
+    const h4 = i * 4;
+    hitTps[h4] = v[o]; hitTps[h4 + 1] = v[o + 1];
+    hitTps[h4 + 2] = v[o + 2]; hitTps[h4 + 3] = v[o + 3];
     ctx.strokeStyle = vbColorToCss(v[o + 4]);
     ctx.setLineDash([4, 3]);
     ctx.strokeRect(v[o] * s, v[o + 1] * s, v[o + 2] * s, v[o + 3] * s);
     ctx.setLineDash([]);
+    // DrawTeleporters (Teleport.bas:267-281): highlight = círculo en
+    // (x+W/2, y+H/3) de radio W*0.6, color por tipo (Ifs sucesivos: el
+    // último que aplica gana — In verde, Out rojo, local amarillo,
+    // Internet azul); el teleporter con foco, blanco a W*0.7.
+    const cx = (v[o] + v[o + 2] / 2) * s, cy = (v[o + 1] + v[o + 3] / 3) * s;
+    if (tpHl) {
+      const fl = v[o + 5];
+      let hl = '#00ff00';               // In → vbGreen
+      if (fl & 2) hl = '#ff0000';       // Out → vbRed
+      if (fl & 4) hl = '#ffff00';       // local → vbYellow
+      if (fl & 8) hl = '#0000ff';       // Internet → vbBlue
+      ctx.strokeStyle = hl;
+      ctx.beginPath();
+      ctx.arc(cx, cy, v[o + 2] * 0.6 * s, 0, PIv * 2);
+      ctx.stroke();
+    }
+    if (i + 1 === selTeleporter) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy, v[o + 2] * 0.7 * s, 0, PIv * 2);
+      ctx.stroke();
+    }
   }
 
   // ties (debajo de los bots)
@@ -892,12 +1031,52 @@ function updateInspectorLive(n, age, nrg, body) {
     `bot #${n} · edad ${age} · nrg ${nrg.toFixed(0)} · body ${body.toFixed(0)}`;
 }
 
+// Teleport.bas:466-477 — whichTeleporter: primer teleporter (ascendente)
+// cuya caja contiene el punto.
+function whichTeleporter(x, y) {
+  for (let t = 0; t < hitTpCount; t++) {
+    const o = t * 4;
+    if (x >= hitTps[o] && x <= hitTps[o] + hitTps[o + 2] &&
+        y >= hitTps[o + 1] && y <= hitTps[o + 1] + hitTps[o + 3]) return t + 1;
+  }
+  return 0;
+}
+
+// Obstacles.bas:555-567 — whichobstacle: recorre DESCENDENTE (gana la
+// última forma dibujada, la que queda encima).
+function whichobstacle(x, y) {
+  for (let t = hitObsCount - 1; t >= 0; t--) {
+    const o = t * 4;
+    if (x >= hitObs[o] && x <= hitObs[o] + hitObs[o + 2] &&
+        y >= hitObs[o + 1] && y <= hitObs[o + 1] + hitObs[o + 3]) return t + 1;
+  }
+  return 0;
+}
+
+function setObsSelection(n) {
+  selObstacle = n;
+  document.getElementById('btn-shape-del').disabled = !(n > 0);
+}
+function setTpSelection(n) {
+  selTeleporter = n;
+  document.getElementById('btn-tp-del').disabled = !(n > 0);
+}
+
+// Form_MouseDown (main.frm:1856-1884): prioridad bot → teleporter →
+// obstáculo. Adaptación de host: el clic deja UNA sola selección viva y el
+// clic en vacío deselecciona todo (ver cabecera del archivo).
 canvas.addEventListener('mousedown', (e) => {
-  if (!hitCount && selBot === 0) return;
   const rect = canvas.getBoundingClientRect();
   const px = (e.clientX - rect.left) * (canvas.width / rect.width);
   const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-  setSelection(whichrob(px / lastScale, py / lastScale), true);
+  const wx = px / lastScale, wy = py / lastScale;
+  const n = whichrob(wx, wy);
+  let tp = 0, obs = 0;
+  if (n === 0) tp = whichTeleporter(wx, wy);
+  if (n === 0 && tp === 0) obs = whichobstacle(wx, wy);
+  setTpSelection(tp);
+  setObsSelection(obs);
+  setSelection(n, n > 0);  // postea 'select' → frame fresco aun en pausa
 });
 
 document.getElementById('insp-close').onclick = () => setSelection(0, false);
@@ -955,6 +1134,8 @@ document.getElementById('btn-step').onclick = () =>
   worker.postMessage({ t: 'step' });
 document.getElementById('btn-reset').onclick = () => {
   setRunning(false);
+  setObsSelection(0);
+  setTpSelection(0);
   newSim();
 };
 document.getElementById('btn-seed').onclick = seedFromForm;
@@ -1002,6 +1183,51 @@ document.getElementById('file-load').onchange = async (e) => {
 
 document.getElementById('btn-teleporter').onclick = () =>
   worker.postMessage({ t: 'teleporter' });
+
+// ---- E3: panel Objetos (menú Objects del original) -------------------------
+function shapeDefaults() {
+  return { dw: parseFloat(document.getElementById('obj-dw').value) || 0.2,
+           dh: parseFloat(document.getElementById('obj-dh').value) || 0.2 };
+}
+document.getElementById('btn-shape').onclick = () =>
+  worker.postMessage({ t: 'shape', ...shapeDefaults() });
+document.getElementById('btn-shapes-add10').onclick = () =>
+  worker.postMessage({ t: 'shapes-add10', ...shapeDefaults() });
+document.getElementById('btn-shapes-del10').onclick = () => {
+  setObsSelection(0);  // los índices se desplazan (DeleteObstacle)
+  worker.postMessage({ t: 'shapes-del10' });
+};
+document.getElementById('btn-shape-del').onclick = () => {
+  // DeleteShape_Click (MDIForm1.frm:1141-1147): borra y apaga el foco.
+  if (selObstacle > 0) {
+    worker.postMessage({ t: 'shape-del', n: selObstacle });
+    setObsSelection(0);
+  }
+};
+document.getElementById('btn-shapes-clear').onclick = () => {
+  setObsSelection(0);
+  worker.postMessage({ t: 'shapes-clear' });
+};
+document.querySelectorAll('[data-maze]').forEach((b) => b.onclick = () =>
+  worker.postMessage({
+    t: 'maze', kind: b.dataset.maze,
+    corridor: parseInt(document.getElementById('obj-cw').value, 10) || 500,
+    wall: parseInt(document.getElementById('obj-wt').value, 10) || 50,
+  }));
+document.getElementById('btn-tp-del').onclick = () => {
+  // DeleteTeleporterMenu_Click (MDIForm1.frm:1174-1180).
+  if (selTeleporter > 0) {
+    worker.postMessage({ t: 'tp-del', n: selTeleporter });
+    setTpSelection(0);
+  }
+};
+document.getElementById('btn-tp-clear').onclick = () => {
+  setTpSelection(0);
+  worker.postMessage({ t: 'tp-clear' });
+};
+// El toggle de highlight solo cambia el render: repintar con un 'select'.
+tgTpHl.addEventListener('change', () =>
+  worker.postMessage({ t: 'select', n: selBot }));
 
 // ---- Arranque -------------------------------------------------------------
 buildOptsPanel();
