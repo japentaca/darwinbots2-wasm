@@ -154,6 +154,7 @@
     <label><input type="checkbox" id="tg-vision" checked> visión</label>
     <label><input type="checkbox" id="tg-vectors" checked> vectores</label>
     <label><input type="checkbox" id="tg-gauges" checked> gauges</label>
+    <label title="E5: el bot con foco (y los resaltados) apuntan al puntero; flechas = motor, espacio = disparo"><input type="checkbox" id="pb-on"> Player Bot</label>
   </div>
   <div class="sep"></div>
   <div class="group">
@@ -259,7 +260,7 @@
 </main>
 
 <footer>
-  DarwinBots 2.48.32 · core C++→WASM (143 casos dorados en verde) · la sim corre
+  DarwinBots 2.48.32 · core C++→WASM (165 casos dorados en verde) · la sim corre
   en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
 </footer>
 
@@ -397,6 +398,21 @@ const OPT_GROUPS = [
     { id: 63, label: 'Comer veg: fracción a body', def: 0.75 },
     { id: 64, label: 'Mareas (ciclos; 0 = off)', def: 0 },
   ]},
+  // E5: modos de juego (tab "Restart and League" de OptionsForm.frm +
+  // F1Mode.bas). Los ids 90-101 van a Sim/F1State via db_sim_set_opt; el
+  // worker corre las rondas (StartAnotherRound) y reporta el contest en
+  // las stats de cada frame.
+  { name: 'Modos de juego (F1 / rondas)', items: [
+    { id: 90, label: 'Reiniciar ronda sin heterótrofos', bool: true, def: false },
+    { id: 91, label: 'Modo F1 (contest de especies)', bool: true, def: false },
+    { id: 97, label: 'Rondas mínimas (MinRounds)', def: 5 },
+    { id: 98, label: 'Tope de rondas ganadas (0 = off)', def: 0 },
+    { id: 99, label: 'Tope de ciclos por ronda (0 = off)', def: 0 },
+    { id: 100, label: 'Población máx por especie (0 = off)', def: 0 },
+    { id: 93, label: 'Descalificación', sel: [[0, 'off'],
+        [1, 'nivel 1 (ties/virus)'], [2, 'nivel 2 (todo)']], def: 0 },
+    { btn: 'btn-f1start', label: 'Arrancar contest (censo de especies)' },
+  ]},
   // E4: costes dinámicos (CostsForm.frm, tab "Dynamic Costs"; índices de
   // SimOptions.bas:28-39). Los items con `cost:` viajan por db_sim_set_cost
   // (índice VB6 crudo). Defaults = MDIForm1.frm:2482-2484 (sensibilidad 50,
@@ -486,6 +502,10 @@ function buildOptsPanel() {
         </select>`;
     }
     for (const it of g.items) {
+      if (it.btn) {  // E5: boton suelto dentro del grupo
+        html += `<span></span><button id="${it.btn}">${it.label}</button>`;
+        continue;
+      }
       const at = it.id !== undefined ? `data-id="${it.id}"`
                : it.cost !== undefined
                  ? `data-cost="${it.cost}"${it.on !== undefined ? ` data-on="${it.on}"` : ''}`
@@ -670,6 +690,14 @@ worker.onmessage = (e) => {
         document.getElementById('insp-text').value =
           msg.text || '(el bot ya no existe)';
       break;
+    case 'stopped':
+      // E5: el core pidió parar (Form1.Active = False del original) —
+      // fin de contest/evo/test.
+      setRunning(false);
+      break;
+    case 'f1-over':
+      log(`🏆 Contest terminado: gana ${msg.winner}`);
+      break;
     case 'saved': {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([msg.bytes]));
@@ -709,10 +737,19 @@ function updateStats() {
   // CostX redondeado a 5 como el panel de la barra de estado del original
   // (MDIForm1.frm:3051); solo sale si difiere de 1 para no ensuciar.
   const cx = stats.costx !== undefined && Math.round(stats.costx * 1e5) / 1e5;
+  // E5: estado del contest F1 (Contest_Form del original, en una línea).
+  let f1 = '';
+  if (stats.f1) {
+    f1 = ` · F1 ronda ${stats.f1.contests + 1}/${stats.f1.minrounds}: ` +
+         stats.f1.sp.map((s) => `${s.name} ${s.pop}🤖 ${s.wins}🏅`)
+           .join(' vs ') +
+         (stats.f1.over ? ' · TERMINADO' : '');
+    if (stats.f1.restarts) f1 += ` · restarts ${stats.f1.restarts}`;
+  }
   statsEl.textContent =
     `ciclo ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
     ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms` +
-    (cx !== false && cx !== 1 ? ` · CostX ${cx}` : '');
+    (cx !== false && cx !== 1 ? ` · CostX ${cx}` : '') + f1;
 }
 
 // ---- Render (layout del frame: ver cabecera de worker.js) -----------------
@@ -1134,6 +1171,53 @@ for (const tg of [tgImpacts, tgVision, tgVectors, tgGauges])
   tg.addEventListener('change', () =>
     worker.postMessage({ t: 'select', n: selBot }));
 
+// ---- E5: Player Bot Mode --------------------------------------------------
+// El estado (ratón en coords de mundo, teclas activas) viaja al worker y de
+// ahí al core (paso 13 del tick). El mapeo tecla→memloc es de host (el
+// original lo configura en frmPBMode); aquí un set fijo útil: flechas =
+// motor (.up/.dn/.sx/.dx a 40) y espacio = disparo (.shoot = −1).
+const tgPb = document.getElementById('pb-on');
+const PB_KEYS = [
+  { code: 'ArrowUp',    memloc: 1, value: 40 },   // .up (dirup)
+  { code: 'ArrowDown',  memloc: 2, value: 40 },   // .dn
+  { code: 'ArrowRight', memloc: 3, value: 40 },   // .dx
+  { code: 'ArrowLeft',  memloc: 4, value: 40 },   // .sx
+  { code: 'Space',      memloc: 7, value: -1 },   // .shoot = −1 (robo de nrg)
+];
+tgPb.addEventListener('change', () => {
+  const on = tgPb.checked;
+  worker.postMessage({ t: 'pb', on });
+  if (on) {
+    worker.postMessage({ t: 'pb-keys', keys: PB_KEYS.map((k) =>
+      ({ memloc: k.memloc, value: k.value, invert: false })) });
+    // Mouse_loc arranca en (0,0) = sin overwrite de aim (MDIForm1:1544).
+    worker.postMessage({ t: 'pb-mouse', x: 0, y: 0 });
+    log('Player Bot ON: clic para el foco; el bot apunta al puntero; ' +
+        'flechas = motor, espacio = disparo');
+  }
+});
+function pbKey(e, down) {
+  if (!tgPb.checked) return;
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const i = PB_KEYS.findIndex((k) => k.code === e.code);
+  if (i < 0) return;
+  e.preventDefault();
+  worker.postMessage({ t: 'pb-key', idx: i, active: down });
+}
+document.addEventListener('keydown', (e) => pbKey(e, true));
+document.addEventListener('keyup', (e) => pbKey(e, false));
+canvas.addEventListener('mousemove', (e) => {
+  if (!tgPb.checked) return;
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+  worker.postMessage({ t: 'pb-mouse', x: px / lastScale, y: py / lastScale });
+});
+canvas.addEventListener('mouseleave', () => {
+  if (tgPb.checked) worker.postMessage({ t: 'pb-mouse', x: 0, y: 0 });
+});
+
 // ---- Montaje de la sim ----------------------------------------------------
 function newSim() {
   const seed = parseFloat(document.getElementById('seed').value) || 0;
@@ -1183,6 +1267,12 @@ document.getElementById('btn-reset').onclick = () => {
   newSim();
 };
 document.getElementById('btn-seed').onclick = seedFromForm;
+// E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
+// vive en el panel dinámico (se construye en onReady): delegación.
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'btn-f1start')
+    worker.postMessage({ t: 'f1start' });
+});
 
 document.getElementById('speed').onchange = (e) =>
   worker.postMessage({ t: 'speed', n: parseInt(e.target.value, 10) });

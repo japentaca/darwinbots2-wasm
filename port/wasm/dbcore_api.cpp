@@ -206,7 +206,8 @@ DB_EXPORT void db_sim_set_start_chlr(void* h, int v) {
 //                    84 allowHorizontalShapeDrift · 85 shapeDriftRate
 
 DB_EXPORT void db_sim_set_opt(void* h, int id, double v) {
-  auto& o = S(h).opts;
+  db::Sim& s = S(h);
+  auto& o = s.opts;
   const bool b = (v != 0.0);
   const auto f = static_cast<db::vb_single>(v);
   const auto i16 = static_cast<db::vb_integer>(v);
@@ -260,12 +261,27 @@ DB_EXPORT void db_sim_set_opt(void* h, int id, double v) {
     case 83: o.allowVerticalShapeDrift = b; break;
     case 84: o.allowHorizontalShapeDrift = b; break;
     case 85: o.shapeDriftRate = i16; break;
+    // E5 - modos de juego (F1Mode.bas / gset / evo). El id 97 replica a
+    // OptionsForm.frm:2770 (optMinRounds = MinRounds al aplicar).
+    case 90: o.Restart = b; break;
+    case 91: o.F1 = b; break;
+    case 92: s.x_restartmode = static_cast<unsigned char>(v); break;
+    case 93: s.Disqualify = static_cast<unsigned char>(v); break;
+    case 94: s.hidePredCycl = i16; break;
+    case 95: s.LFOR = f; break;
+    case 96: s.intFindBestV2 = i16; break;
+    case 97: s.f1.MinRounds = i16; s.f1.optMinRounds = i16; break;
+    case 98: s.f1.Maxrounds = i16; break;
+    case 99: s.f1.MaxCycles = i32; break;
+    case 100: s.f1.MaxPop = i16; break;
+    case 101: s.f1.optMinRounds = i16; break;
     default: break;  // id desconocido: no-op (contrato tolerante)
   }
 }
 
 DB_EXPORT double db_sim_get_opt(void* h, int id) {
-  const auto& o = S(h).opts;
+  const db::Sim& s = S(h);
+  const auto& o = s.opts;
   switch (id) {
     case 1: return (o.Updnconnected && o.Dxsxconnected) ? 1 : 0;
     case 2: return o.Updnconnected ? 1 : 0;
@@ -315,6 +331,18 @@ DB_EXPORT double db_sim_get_opt(void* h, int id) {
     case 83: return o.allowVerticalShapeDrift ? 1 : 0;
     case 84: return o.allowHorizontalShapeDrift ? 1 : 0;
     case 85: return o.shapeDriftRate;
+    case 90: return o.Restart ? 1 : 0;
+    case 91: return o.F1 ? 1 : 0;
+    case 92: return s.x_restartmode;
+    case 93: return s.Disqualify;
+    case 94: return s.hidePredCycl;
+    case 95: return s.LFOR;
+    case 96: return s.intFindBestV2;
+    case 97: return s.f1.MinRounds;
+    case 98: return s.f1.Maxrounds;
+    case 99: return static_cast<double>(s.f1.MaxCycles);
+    case 100: return s.f1.MaxPop;
+    case 101: return s.f1.optMinRounds;
     default: return 0;
   }
 }
@@ -1047,5 +1075,150 @@ DB_EXPORT char* db_sim_bot_text(void* h, int n) {
   if (p) std::memcpy(p, s.c_str(), s.size() + 1);
   return p;
 }
+
+// ---------------------------------------------------------------------------
+// E5 - modos de juego: F1/rondas, eventos y Player Bot
+// ---------------------------------------------------------------------------
+
+// Arranque de contest: lo que StartSimul hace alrededor del core
+// (OptionsForm.frm:4778 ContestMode = TmpOpts.F1; main.frm:1337-1340
+// FindSpecies + F1count = 0 si ContestMode). Devuelve TotSpecies (0 si el
+// modo no quedo activo).
+DB_EXPORT int db_sim_f1_start(void* h) {
+  db::Sim& sim = S(h);
+  sim.f1.ContestMode = sim.opts.F1;
+  if (sim.f1.ContestMode) {
+    db::FindSpecies(sim);
+    sim.f1.F1count = 0;
+    // Adaptacion de host: con CERO especies de combate el original entraria
+    // en un loop de rondas vacias (Countpop:364 con SpeciesLeft = 0); aqui
+    // el contest no arranca hasta que haya censo.
+    if (sim.f1.TotSpecies == 0) sim.f1.ContestMode = false;
+    return sim.f1.TotSpecies;
+  }
+  return 0;
+}
+
+DB_EXPORT int db_sim_f1_contests(void* h) { return S(h).f1.Contests; }
+DB_EXPORT int db_sim_f1_totspecies(void* h) { return S(h).f1.TotSpecies; }
+DB_EXPORT int db_sim_f1_over(void* h) { return S(h).f1.Over ? 1 : 0; }
+DB_EXPORT int db_sim_f1_pop(void* h, int i) {
+  return (i >= 1 && i <= 20) ? S(h).f1.PopArray[i].population : 0;
+}
+DB_EXPORT int db_sim_f1_wins(void* h, int i) {
+  return (i >= 1 && i <= 20) ? S(h).f1.PopArray[i].Wins : 0;
+}
+// Nombre (realname) del slot i de PopArray. String malloc'd; db_free.
+DB_EXPORT char* db_sim_f1_name(void* h, int i) {
+  if (i < 1 || i > 20) return nullptr;
+  const std::string& s = S(h).f1.PopArray[i].SpName;
+  char* p = static_cast<char*>(std::malloc(s.size() + 1));
+  if (p) std::memcpy(p, s.c_str(), s.size() + 1);
+  return p;
+}
+DB_EXPORT int db_sim_restarts_count(void* h) {
+  return static_cast<int>(S(h).f1.ReStarts);
+}
+
+// El gate del loop del original (main.frm:2081 / OptionsForm:4805-4809):
+// el host lo lee, arranca otra ronda y lo limpia.
+DB_EXPORT int db_sim_start_another_round(void* h) {
+  return S(h).StartAnotherRound ? 1 : 0;
+}
+DB_EXPORT void db_sim_clear_start_another_round(void* h) {
+  S(h).StartAnotherRound = false;
+}
+
+// Restauracion del estado de modulo F1Mode entre rondas: en el original los
+// globales del modulo sobreviven al restart del mundo (StartSimul no los
+// toca; ResetContest solo corre con Contests = 0; FindSpecies preserva los
+// Wins por SLOT). El host del port reconstruye la sim por ronda y repone
+// esto antes de db_sim_f1_start.
+DB_EXPORT void db_sim_f1_restore(void* h, int contests, int minrounds,
+                                 int optminrounds, int over, int restarts) {
+  db::Sim& sim = S(h);
+  sim.f1.Contests = static_cast<db::vb_integer>(contests);
+  sim.f1.MinRounds = static_cast<db::vb_integer>(minrounds);
+  sim.f1.optMinRounds = static_cast<db::vb_integer>(optminrounds);
+  sim.f1.Over = (over != 0);
+  sim.f1.ReStarts = restarts;
+}
+DB_EXPORT void db_sim_f1_set_wins(void* h, int i, int wins) {
+  if (i >= 1 && i <= 20)
+    S(h).f1.PopArray[i].Wins = static_cast<db::vb_integer>(wins);
+}
+
+// Eventos del tick (GameEvents, sim.hpp): bitmask + ganador + lineas DQ.
+// El host los lee y los limpia con db_sim_events_clear.
+DB_EXPORT int db_sim_events(void* h) {
+  const db::GameEvents& e = S(h).events;
+  int m = 0;
+  if (e.sim_stop_requested) m |= 1 << 0;
+  if (e.evo_lost) m |= 1 << 1;
+  if (e.evo_won) m |= 1 << 2;
+  if (e.seed_round_done) m |= 1 << 3;
+  if (e.zb_restart) m |= 1 << 4;
+  if (e.zb_goodtest) m |= 1 << 5;
+  if (e.zb_ready_for_test) m |= 1 << 6;
+  if (e.zb_reset) m |= 1 << 7;
+  if (e.zb_passed) m |= 1 << 8;
+  if (e.zb_failed) m |= 1 << 9;
+  if (e.f1_round_over) m |= 1 << 10;
+  if (e.f1_single_species) m |= 1 << 11;
+  if (e.f1_limits_disabled) m |= 1 << 12;
+  if (!e.dq_log.empty()) m |= 1 << 13;
+  return m;
+}
+DB_EXPORT char* db_sim_events_winner(void* h) {
+  const std::string& s = S(h).events.f1_winner;
+  char* p = static_cast<char*>(std::malloc(s.size() + 1));
+  if (p) std::memcpy(p, s.c_str(), s.size() + 1);
+  return p;
+}
+// Drena las lineas de Disqualifications.txt acumuladas (una por linea).
+DB_EXPORT char* db_sim_events_dq(void* h) {
+  db::GameEvents& e = S(h).events;
+  std::string all;
+  for (const std::string& line : e.dq_log) {
+    all += line;
+    all += '\n';
+  }
+  e.dq_log.clear();
+  char* p = static_cast<char*>(std::malloc(all.size() + 1));
+  if (p) std::memcpy(p, all.c_str(), all.size() + 1);
+  return p;
+}
+DB_EXPORT void db_sim_events_clear(void* h) {
+  db::GameEvents& e = S(h).events;
+  std::vector<std::string> dq = std::move(e.dq_log);  // se drena aparte
+  e = db::GameEvents{};
+  e.dq_log = std::move(dq);
+}
+
+// Player Bot Mode (paso 13). El estado (raton, teclas) lo alimenta el host;
+// el campo `key` (tecla fisica) de frmPBMode es mapeo de host y no viaja.
+DB_EXPORT void db_sim_pb_on(void* h, int on) { S(h).pb.on = (on != 0); }
+DB_EXPORT void db_sim_pb_mouse(void* h, float x, float y) {
+  S(h).pb.Mouse_loc.x = x;
+  S(h).pb.Mouse_loc.y = y;
+}
+DB_EXPORT void db_sim_pb_clear_keys(void* h) { S(h).pb.keys.clear(); }
+DB_EXPORT int db_sim_pb_add_key(void* h, int memloc, int value, int invert) {
+  S(h).pb.keys.push_back({static_cast<db::vb_integer>(memloc),
+                          static_cast<db::vb_integer>(value), false,
+                          invert != 0});
+  return static_cast<int>(S(h).pb.keys.size()) - 1;
+}
+DB_EXPORT void db_sim_pb_key_active(void* h, int idx, int active) {
+  auto& keys = S(h).pb.keys;
+  if (idx >= 0 && idx < static_cast<int>(keys.size()))
+    keys[static_cast<std::size_t>(idx)].Active = (active != 0);
+}
+
+// robfocus ahora vive en el core (lo consumen el paso 13 y KillRobot).
+DB_EXPORT void db_sim_set_focus(void* h, int n) {
+  S(h).robfocus = static_cast<db::vb_integer>(n);
+}
+DB_EXPORT int db_sim_get_focus(void* h) { return S(h).robfocus; }
 
 }  // extern "C"
