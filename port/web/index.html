@@ -29,6 +29,11 @@
    - Teleporters: el botón crea uno LOCAL (entra y sale en esta sim); el
      movimiento de "archivos" .dbo entre sims vive en la API
      (db_sim_tp_outbox_take / db_sim_tp_inbox_push), no en esta página.
+   - Etapa E1 (spec/PLAN-EXTENSIONES.md): panel "Opciones de sim" con la
+     configuración del original que el core ya implementa — forma del campo
+     (toroidal/cilindros), tamaños del slider original, física del medio con
+     los presets exactos de OptionsForm, luz/día/noche, decay, energía y
+     restricciones. Ids y semántica en wasm/dbcore_api.cpp (db_sim_set_opt).
 -->
 <style>
   :root { color-scheme: dark; }
@@ -76,6 +81,16 @@
                       background: none; border-radius: 4px; cursor: pointer; }
   #log { font: 11px/1.5 ui-monospace, Consolas, monospace; color: #7d8fb0;
          white-space: pre-wrap; max-height: 130px; overflow-y: auto; }
+  details.optgrp { border: 1px solid #232a3d; border-radius: 4px;
+                   padding: 4px 8px; background: #0d1220; }
+  details.optgrp summary { cursor: pointer; color: #93a4c2; font-size: 12px;
+                           user-select: none; }
+  .optrows { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px;
+             align-items: center; margin-top: 6px; }
+  .optrows label { color: #8296b8; font-size: 12px; }
+  .optrows input[type=number] { width: 84px; padding: 2px 6px; }
+  .optrows select { padding: 2px 6px; }
+  .optrows .full { grid-column: 1 / -1; }
   footer { padding: 4px 12px; font-size: 11px; color: #5c6b88;
            background: #0d1119; border-top: 1px solid #1c2333; }
 </style>
@@ -119,6 +134,8 @@
 <main>
   <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas></div>
   <aside>
+    <h2>Opciones de sim</h2>
+    <div id="opts-panel"></div>
     <h2>Sembrar especie</h2>
     <div class="row">
       <select id="preset">
@@ -222,6 +239,203 @@ function vbColorToCss(c) {
   c = c | 0;
   const r = c & 0xff, g = (c >> 8) & 0xff, b = (c >> 16) & 0xff;
   return `rgb(${r},${g},${b})`;
+}
+
+// ---- Opciones de sim (etapa E1, spec/PLAN-EXTENSIONES.md) -----------------
+// La tabla de ids es contrato con db_sim_set_opt (wasm/dbcore_api.cpp).
+// Los campos con data-id se aplican EN VIVO al cambiarlos (el core los lee
+// cada tick, como el diálogo del original sobre una sim corriendo) y además
+// se reenvían todos al reiniciar. Los data-key (capa M10: economía vegetal,
+// mutaciones) y el tamaño/forma del campo aplican al reiniciar.
+// Defaults = los del core (sim.hpp SimOptsT) salvo los ya elegidos en M10.
+const OPT_GROUPS = [
+  { name: 'Física', preset: true, items: [
+    { id: 11, label: 'Velocidad máxima', def: 40 },
+    { id: 12, label: 'Fricción de motor (PhysMoving)', def: 0.66 },
+    { id: 13, label: 'Movimiento browniano', def: 0 },
+    { id: 14, label: 'Densidad del medio', def: 0 },
+    { id: 15, label: 'Viscosidad', def: 0 },
+    { id: 16, label: 'Fricción estática', def: 0 },
+    { id: 17, label: 'Fricción cinética', def: 0 },
+    { id: 18, label: 'Elasticidad de choques', def: 0 },
+    { id: 19, label: 'Gravedad Z (contra el suelo)', def: 0 },
+    { id: 20, label: 'Gravedad Y (hacia abajo)', def: 0 },
+    { id: 10, label: 'Sin inercia (ZeroMomentum)', bool: true, def: false },
+    { id: 21, label: 'Radios de bot fijos', bool: true, def: false },
+  ]},
+  { name: 'Luz y día/noche', items: [
+    { id: 33, label: 'Ciclo día/noche', bool: true, def: false },
+    { id: 34, label: 'Medio ciclo (ciclos)', def: 500 },
+    { id: 40, label: 'Sol aleatorio (SunOnRnd)', bool: true, def: false },
+    { id: 35, label: 'Sol ON bajo umbral de nrg', bool: true, def: false },
+    { id: 36, label: 'Umbral de encendido', def: 500000 },
+    { id: 37, label: 'Sol OFF sobre umbral', bool: true, def: false },
+    { id: 38, label: 'Umbral de apagado', def: 1000000 },
+    { id: 30, label: 'Pondmode (luz por profundidad)', bool: true, def: false },
+    { id: 31, label: 'Intensidad de luz', def: 0 },
+    { id: 32, label: 'Gradiente de profundidad', def: 1.02 },
+  ]},
+  { name: 'Muerte y decay', items: [
+    { id: 50, label: 'Cadáveres (corpses)', bool: true, def: true },
+    { id: 51, label: 'Decay de body por ciclo', def: 0 },
+    { id: 52, label: 'Retraso del decay (ciclos)', def: 100 },
+    { id: 53, label: 'Tipo de decay', sel: [[0, 'sin shot'], [2, 'shot waste'],
+                                            [3, 'shot nrg']], def: 0 },
+    { id: 54, label: 'No decaen shots de nrg', bool: true, def: false },
+    { id: 55, label: 'No decaen shots de waste', bool: true, def: false },
+    { id: 56, label: 'Waste tóxico desde', def: 400 },
+  ]},
+  { name: 'Energía y vegetales', items: [
+    { key: 'maxEnergy', label: 'Reparto solar por ciclo', def: 10 },
+    { key: 'minVegs', label: 'Repoblar bajo (cloroplastos)', def: 15 },
+    { key: 'repopAmount', label: 'Vegs por repoblación', def: 10 },
+    { key: 'repopCooldown', label: 'Ciclos entre repoblaciones', def: 10 },
+    { key: 'startChlr', label: 'Cloroplastos iniciales', def: 16000 },
+    { key: 'mutations', label: 'Mutaciones', bool: true, def: true },
+    { id: 60, label: 'Intercambio de nrg', sel: [[1, 'proporcional'],
+                                                 [0, 'fijo']], def: 1 },
+    { id: 61, label: 'Cantidad fija', def: 200 },
+    { id: 62, label: 'Proporción', def: 1 },
+    { id: 63, label: 'Comer veg: fracción a body', def: 0.75 },
+    { id: 64, label: 'Mareas (ciclos; 0 = off)', def: 0 },
+  ]},
+  { name: 'Restricciones', items: [
+    { id: 70, label: 'Deshabilitar ties', bool: true, def: false },
+    { id: 71, label: 'Sin repro asexual (no repob.)', bool: true, def: false },
+    { id: 72, label: 'Nadie puede fijarse', bool: true, def: false },
+  ]},
+];
+
+// Presets de física con los valores EXACTOS de los combos del original
+// (OptionsForm.frm:4406-4453): [Density, Viscosity, Static, Kinetic, Zg].
+const PHYS_PRESETS = {
+  fluido:  { 14: 1e-7, 15: 0.0005, 16: 0, 17: 0, 19: 0 },
+  solido:  { 14: 0, 15: 0, 16: 0.6, 17: 0.4, 19: 2 },
+  espacio: { 14: 0, 15: 0, 16: 0, 17: 0, 19: 0 },
+};
+
+// Tamaños del slider del original (OptionsForm.frm:4075-4099).
+function fieldSizeDims(n) {
+  if (n === 1) return [9237, 6928];
+  if (n <= 12) return [8000 * n, 6000 * n];
+  return [8000 * 12 * (n - 12) * 2, 6000 * 12 * (n - 12) * 2];
+}
+
+function buildOptsPanel() {
+  const panel = document.getElementById('opts-panel');
+  let sizeOpts = '<option value="0">personalizado</option>';
+  for (let n = 1; n <= 15; n++) {
+    const [w, h] = fieldSizeDims(n);
+    sizeOpts += `<option value="${n}">${n} · ${w}×${h}${n === 1 ? ' (F1)' : ''}</option>`;
+  }
+  let html = `
+  <details class="optgrp" open><summary>Campo y forma</summary>
+    <div class="optrows">
+      <label for="o-fsize">Tamaño (slider del original)</label>
+      <select id="o-fsize">${sizeOpts}</select>
+      <label>Ancho × alto</label>
+      <span><input type="number" id="o-fw" value="32000" style="width:72px">
+            × <input type="number" id="o-fh" value="32000" style="width:72px"></span>
+      <label for="o-shape">Bordes del mundo</label>
+      <select id="o-shape">
+        <option value="wall">cerrados (paredes)</option>
+        <option value="tor">toroidal</option>
+        <option value="h">cilindro horizontal (izq↔der)</option>
+        <option value="v">cilindro vertical (arr↔abajo)</option>
+      </select>
+      <span class="full" style="color:#5c6b88;font-size:11px">
+        El tamaño aplica al reiniciar; los bordes cambian en vivo.</span>
+    </div>
+  </details>`;
+  for (const g of OPT_GROUPS) {
+    html += `<details class="optgrp"><summary>${g.name}</summary><div class="optrows">`;
+    if (g.preset) {
+      html += `<label for="o-phys">Preset del medio</label>
+        <select id="o-phys">
+          <option value="">— elegir —</option>
+          <option value="fluido">fluido (agua)</option>
+          <option value="solido">sólido (superficie)</option>
+          <option value="espacio">espacio (nada)</option>
+        </select>`;
+    }
+    for (const it of g.items) {
+      const at = it.id !== undefined ? `data-id="${it.id}"` : `data-key="${it.key}"`;
+      const idn = 'o-' + (it.id !== undefined ? it.id : it.key);
+      html += `<label for="${idn}">${it.label}</label>`;
+      if (it.bool) {
+        html += `<input type="checkbox" id="${idn}" ${at} ${it.def ? 'checked' : ''}>`;
+      } else if (it.sel) {
+        html += `<select id="${idn}" ${at}>` + it.sel.map(([v, t]) =>
+          `<option value="${v}" ${v === it.def ? 'selected' : ''}>${t}</option>`)
+          .join('') + '</select>';
+      } else {
+        html += `<input type="number" id="${idn}" ${at} value="${it.def}" step="any">`;
+      }
+    }
+    html += '</div></details>';
+  }
+  panel.innerHTML = html;
+
+  // Tamaño: el select rellena W/H con la fórmula del original.
+  document.getElementById('o-fsize').onchange = (e) => {
+    const n = parseInt(e.target.value, 10);
+    if (n > 0) {
+      const [w, h] = fieldSizeDims(n);
+      document.getElementById('o-fw').value = w;
+      document.getElementById('o-fh').value = h;
+    }
+  };
+  // Bordes: en vivo (ids 2 y 3).
+  document.getElementById('o-shape').onchange = () => {
+    const [updn, dxsx] = shapeToOpts();
+    worker.postMessage({ t: 'setopt', id: 2, v: updn });
+    worker.postMessage({ t: 'setopt', id: 3, v: dxsx });
+  };
+  // Preset de física: rellena los campos y dispara sus 'change' (en vivo).
+  const phys = document.getElementById('o-phys');
+  if (phys) phys.onchange = (e) => {
+    const p = PHYS_PRESETS[e.target.value];
+    if (!p) return;
+    for (const id in p) {
+      const el = document.getElementById('o-' + id);
+      el.value = p[id];
+      el.dispatchEvent(new Event('change'));
+    }
+  };
+  // Cambios con id: en vivo.
+  panel.querySelectorAll('[data-id]').forEach((el) => {
+    el.addEventListener('change', () =>
+      worker.postMessage({ t: 'setopt', id: +el.dataset.id, v: optValue(el) }));
+  });
+}
+
+function optValue(el) {
+  if (el.type === 'checkbox') return el.checked ? 1 : 0;
+  return parseFloat(el.value) || 0;
+}
+
+function shapeToOpts() {
+  const s = document.getElementById('o-shape').value;
+  return [(s === 'tor' || s === 'v') ? 1 : 0, (s === 'tor' || s === 'h') ? 1 : 0];
+}
+
+// Recoge TODO el panel para el reset (los ids también: así el estado de la
+// sim nueva coincide con lo que el panel muestra).
+function collectOptions() {
+  const named = {}, opts = {};
+  document.querySelectorAll('#opts-panel [data-key]').forEach((el) => {
+    named[el.dataset.key] = el.type === 'checkbox' ? el.checked : optValue(el);
+  });
+  document.querySelectorAll('#opts-panel [data-id]').forEach((el) => {
+    opts[+el.dataset.id] = optValue(el);
+  });
+  const [updn, dxsx] = shapeToOpts();
+  opts[2] = updn;
+  opts[3] = dxsx;
+  named.fieldW = parseFloat(document.getElementById('o-fw').value) || 32000;
+  named.fieldH = parseFloat(document.getElementById('o-fh').value) || 32000;
+  named.opts = opts;
+  return named;
 }
 
 // ---- Bestiary (bots bajados del foro, web/bots/) --------------------------
@@ -411,12 +625,9 @@ function newSim() {
   const alga = PRESETS.alga;
   worker.postMessage({
     t: 'reset', seed,
-    // Opciones de la demo (capa host): campo 32000², economía vegetal viva.
-    options: { fieldW: 32000, fieldH: 32000, minVegs: 15,
-               repopAmount: 10, repopCooldown: 10,
-               maxEnergy: 10,       // reparto de nrg por ciclo (feedvegs)
-               startChlr: 16000,    // default de la UI original (.gset)
-               mutations: true },
+    // Todo sale del panel de opciones (E1); los defaults reproducen la
+    // demo de M10 (campo 32000², economía vegetal viva).
+    options: collectOptions(),
     // Alga de arranque para que la repoblación tenga especie elegible.
     species: [{ dna: alga.dna, name: alga.name, veg: true, qty: alga.qty,
                 nrg: alga.nrg, color: cssToVbColor(alga.color) }],
@@ -501,6 +712,8 @@ document.getElementById('btn-teleporter').onclick = () =>
   worker.postMessage({ t: 'teleporter' });
 
 // ---- Arranque -------------------------------------------------------------
+buildOptsPanel();
+
 function onReady() {
   const p = PRESETS.animal;
   document.getElementById('dna').value = p.dna;

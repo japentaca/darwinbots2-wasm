@@ -174,6 +174,151 @@ DB_EXPORT void db_sim_set_start_chlr(void* h, int v) {
 }
 
 // ---------------------------------------------------------------------------
+// Opciones E1 por id estable (spec/PLAN-EXTENSIONES.md, etapa E1)
+// ---------------------------------------------------------------------------
+// Un solo par set/get genérico: double transporta todos los tipos VB6 en
+// juego y los bool viajan como 0/1. La tabla de ids es contrato con la
+// página (web/index.html la replica); ids nuevos se añaden al final de su
+// bloque, nunca se renumeran. Solo se exponen opciones CON consumidor real
+// en el core (verificado 2026-08-26; TidesOf/KillDistVegs/BlockedVegs/
+// Diffuse/makeAllShapes* quedan fuera por no tener consumidor).
+//
+//   Forma del campo   1 Toroidal (escribe también los dos ejes)
+//                     2 Updnconnected · 3 Dxsxconnected
+//   Física           10 ZeroMomentum · 11 MaxVelocity · 12 PhysMoving
+//                    13 PhysBrown · 14 Density · 15 Viscosity
+//                    16 CoefficientStatic · 17 CoefficientKinetic
+//                    18 CoefficientElasticity · 19 Zgravity · 20 Ygravity
+//                    21 FixedBotRadii
+//   Luz y ciclo      30 Pondmode · 31 LightIntensity · 32 Gradient
+//                    33 DayNight · 34 CycleLength · 35 SunUp
+//                    36 SunUpThreshold · 37 SunDown · 38 SunDownThreshold
+//                    39 SunThresholdMode · 40 SunOnRnd · 41 Daytime
+//   Muerte y decay   50 CorpseEnabled · 51 Decay · 52 Decaydelay
+//                    53 DecayType (0/1 sin shot, 2 waste, 3 nrg)
+//                    54 NoShotDecay · 55 NoWShotDecay · 56 BadWastelevel
+//   Energía          60 EnergyExType · 61 EnergyFix · 62 EnergyProp
+//                    63 VegFeedingToBody · 64 Tides (feedvegs; ciclos)
+//   Restricciones    70 DisableTies · 71 DisableTypArepro · 72 DisableFixing
+//   Formas           80 shapesAreVisable · 81 shapesAreSeeThrough
+//                    82 shapesAbsorbShots · 83 allowVerticalShapeDrift
+//                    84 allowHorizontalShapeDrift · 85 shapeDriftRate
+
+DB_EXPORT void db_sim_set_opt(void* h, int id, double v) {
+  auto& o = S(h).opts;
+  const bool b = (v != 0.0);
+  const auto f = static_cast<db::vb_single>(v);
+  const auto i16 = static_cast<db::vb_integer>(v);
+  const auto i32 = static_cast<db::vb_long>(v);
+  switch (id) {
+    case 1: o.Toroidal = b; o.Updnconnected = b; o.Dxsxconnected = b; break;
+    case 2: o.Updnconnected = b; break;
+    case 3: o.Dxsxconnected = b; break;
+    case 10: o.ZeroMomentum = b; break;
+    case 11: o.MaxVelocity = f; break;
+    case 12: o.PhysMoving = f; break;
+    case 13: o.PhysBrown = f; break;
+    case 14: o.Density = f; break;
+    case 15: o.Viscosity = f; break;
+    case 16: o.CoefficientStatic = f; break;
+    case 17: o.CoefficientKinetic = f; break;
+    case 18: o.CoefficientElasticity = f; break;
+    case 19: o.Zgravity = f; break;
+    case 20: o.Ygravity = f; break;
+    case 21: o.FixedBotRadii = b; break;
+    case 30: o.Pondmode = b; break;
+    case 31: o.LightIntensity = i16; break;
+    case 32: o.Gradient = f; break;
+    case 33: o.DayNight = b; break;
+    case 34: o.CycleLength = i16; break;
+    case 35: o.SunUp = b; break;
+    case 36: o.SunUpThreshold = i32; break;
+    case 37: o.SunDown = b; break;
+    case 38: o.SunDownThreshold = i32; break;
+    case 39: o.SunThresholdMode = i16; break;
+    case 40: o.SunOnRnd = b; break;
+    case 41: o.Daytime = b; break;
+    case 50: o.CorpseEnabled = b; break;
+    case 51: o.Decay = f; break;
+    case 52: o.Decaydelay = i32; break;
+    case 53: o.DecayType = static_cast<int>(v); break;
+    case 54: o.NoShotDecay = b; break;
+    case 55: o.NoWShotDecay = b; break;
+    case 56: o.BadWastelevel = i32; break;
+    case 60: o.EnergyExType = b; break;
+    case 61: o.EnergyFix = i16; break;
+    case 62: o.EnergyProp = f; break;
+    case 63: o.VegFeedingToBody = f; break;
+    case 64: o.Tides = i16; break;
+    case 70: o.DisableTies = b; break;
+    case 71: o.DisableTypArepro = b; break;
+    case 72: o.DisableFixing = b; break;
+    case 80: o.shapesAreVisable = b; break;
+    case 81: o.shapesAreSeeThrough = b; break;
+    case 82: o.shapesAbsorbShots = b; break;
+    case 83: o.allowVerticalShapeDrift = b; break;
+    case 84: o.allowHorizontalShapeDrift = b; break;
+    case 85: o.shapeDriftRate = i16; break;
+    default: break;  // id desconocido: no-op (contrato tolerante)
+  }
+}
+
+DB_EXPORT double db_sim_get_opt(void* h, int id) {
+  const auto& o = S(h).opts;
+  switch (id) {
+    case 1: return (o.Updnconnected && o.Dxsxconnected) ? 1 : 0;
+    case 2: return o.Updnconnected ? 1 : 0;
+    case 3: return o.Dxsxconnected ? 1 : 0;
+    case 10: return o.ZeroMomentum ? 1 : 0;
+    case 11: return o.MaxVelocity;
+    case 12: return o.PhysMoving;
+    case 13: return o.PhysBrown;
+    case 14: return o.Density;
+    case 15: return o.Viscosity;
+    case 16: return o.CoefficientStatic;
+    case 17: return o.CoefficientKinetic;
+    case 18: return o.CoefficientElasticity;
+    case 19: return o.Zgravity;
+    case 20: return o.Ygravity;
+    case 21: return o.FixedBotRadii ? 1 : 0;
+    case 30: return o.Pondmode ? 1 : 0;
+    case 31: return o.LightIntensity;
+    case 32: return o.Gradient;
+    case 33: return o.DayNight ? 1 : 0;
+    case 34: return o.CycleLength;
+    case 35: return o.SunUp ? 1 : 0;
+    case 36: return static_cast<double>(o.SunUpThreshold);
+    case 37: return o.SunDown ? 1 : 0;
+    case 38: return static_cast<double>(o.SunDownThreshold);
+    case 39: return o.SunThresholdMode;
+    case 40: return o.SunOnRnd ? 1 : 0;
+    case 41: return o.Daytime ? 1 : 0;
+    case 50: return o.CorpseEnabled ? 1 : 0;
+    case 51: return o.Decay;
+    case 52: return static_cast<double>(o.Decaydelay);
+    case 53: return o.DecayType;
+    case 54: return o.NoShotDecay ? 1 : 0;
+    case 55: return o.NoWShotDecay ? 1 : 0;
+    case 56: return static_cast<double>(o.BadWastelevel);
+    case 60: return o.EnergyExType ? 1 : 0;
+    case 61: return o.EnergyFix;
+    case 62: return o.EnergyProp;
+    case 63: return o.VegFeedingToBody;
+    case 64: return o.Tides;
+    case 70: return o.DisableTies ? 1 : 0;
+    case 71: return o.DisableTypArepro ? 1 : 0;
+    case 72: return o.DisableFixing ? 1 : 0;
+    case 80: return o.shapesAreVisable ? 1 : 0;
+    case 81: return o.shapesAreSeeThrough ? 1 : 0;
+    case 82: return o.shapesAbsorbShots ? 1 : 0;
+    case 83: return o.allowVerticalShapeDrift ? 1 : 0;
+    case 84: return o.allowHorizontalShapeDrift ? 1 : 0;
+    case 85: return o.shapeDriftRate;
+    default: return 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Especies y siembra
 // ---------------------------------------------------------------------------
 

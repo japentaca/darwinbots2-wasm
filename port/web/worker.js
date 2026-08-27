@@ -13,6 +13,8 @@
 //                                          (corre a fondo en rebanadas ~12ms)
 //   {t:'step'}                             un tick suelto
 //   {t:'seed-species', sp}                 sembrar especie del formulario
+//   {t:'setopt', id, v}                    opción E1 en vivo (tabla de ids
+//                                          en wasm/dbcore_api.cpp)
 //   {t:'save'}                             → {t:'saved', bytes, cycle}
 //   {t:'load', bytes}                      cargar sim binaria (transferido)
 //   {t:'teleporter'}                       alta de teleporter local
@@ -64,6 +66,8 @@ function bindApi() {
     setMaxEnergy:  C('db_sim_set_max_energy', null, ['number', 'number']),
     setMutations:  C('db_sim_set_mutations', null, ['number', 'number']),
     setStartChlr:  C('db_sim_set_start_chlr', null, ['number', 'number']),
+    setOpt:        C('db_sim_set_opt', null, ['number', 'number', 'number']),
+    getOpt:        C('db_sim_get_opt', 'number', ['number', 'number']),
     addSpecies:    C('db_sim_add_species', 'number',
                      ['number', 'string', 'string', 'number', 'number', 'number', 'number', 'number']),
     seedSpecies:   C('db_sim_seed_species', 'number', ['number', 'number', 'number']),
@@ -219,6 +223,8 @@ function resetSim(msg) {
   api.setMaxEnergy(sim, o.maxEnergy);
   api.setStartChlr(sim, o.startChlr);
   api.setMutations(sim, o.mutations ? 1 : 0);
+  // Opciones E1 por id (tabla en wasm/dbcore_api.cpp): {id: valor, ...}
+  if (o.opts) for (const id in o.opts) api.setOpt(sim, id | 0, +o.opts[id]);
   api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
   log(`sim nueva (seed ${msg.seed})`);
   for (const sp of msg.species) seedSpecies(sp);
@@ -271,6 +277,11 @@ self.onmessage = (e) => {
     case 'seed-species':
       seedSpecies(msg.sp);
       postFrame();
+      break;
+    case 'setopt':
+      // Cambio en vivo (el core lee las opciones cada tick; mismo efecto
+      // que el diálogo de opciones del original sobre una sim corriendo).
+      if (sim) api.setOpt(sim, msg.id | 0, +msg.v);
       break;
     case 'save':
       saveSim();

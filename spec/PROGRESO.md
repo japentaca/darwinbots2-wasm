@@ -97,7 +97,17 @@ opcionales, si el usuario las pide:
 
 ## Pendiente
 
-- (nada)
+- **Plan de extensiones aprobado por el usuario (2026-08-26)**: cubrir el resto
+  de la superficie funcional del original por etapas — ver `PLAN-EXTENSIONES.md`
+  (E1 escenario/física configurables ✅, E2 animaciones e inspección, E3
+  formas/mazes/teleporters UI, E4 costes dinámicos ⚙ **capa core**, E5 modos de
+  juego, E6 registro/análisis, E7 Internet, E8 extras). Orden recomendado:
+  E2 → E3 → E4 → resto. Hallazgo que lo ordena: el core ya implementa casi
+  toda la configuración (toroidal incluido); el grueso es exponerla en wasm/UI.
+
+| Etapa | Estado | Nota |
+|---|---|---|
+| E1 · Escenario y física configurables | ✅ cerrada | **Capa host pura** (cero cambios en `port/core/`; suite intacta y verificada: 143/2962 en verde bajo wasm). API: `db_sim_set_opt`/`db_sim_get_opt` genéricos por id estable (tabla-contrato en `wasm/dbcore_api.cpp`; solo opciones CON consumidor real en el core — TidesOf/KillDistVegs/BlockedVegs/Diffuse/makeAllShapes* fuera por muertas). Página: panel "Opciones de sim" (`web/index.html`, generado de una tabla declarativa espejo) con forma del campo (toroidal/cilindros, en vivo), tamaños del slider original (fórmula exacta de `OptionsForm.frm:4075-4099`, F1 = 9237×6928), física del medio con los presets exactos de los combos del original (`OptionsForm.frm:4406-4453`), luz/día-noche/pondmode, decay/corpses, energía (intercambio, mareas, waste tóxico) y restricciones; los campos con id aplican EN VIVO (`{t:'setopt'}` del worker) y todos se reenvían al reiniciar. Verificado: smoke node de 52 checks (ida-y-vuelta de los 46 ids + toroidal compuesto + sim de 300 ticks con E1 activo) y en Chrome (panel, reset a 16000×12000 toroidal, sim viva a ciclo 52k, consola limpia). |
 
 ---
 
@@ -318,3 +328,15 @@ opcionales, si el usuario las pide:
   Veggies 9→19, y donde un tema tiene adjunto se publica esa versión
   completa en vez del bloque de código citado). Capa host pura; la página
   no cambió.
+- **2026-08-26** — Plan ampliado a petición del usuario: `PLAN-EXTENSIONES.md`
+  (etapas E1..E8 con el resto de la superficie del original: opciones de
+  escenario con forma toroidal y tamaños, física configurable, animaciones
+  de main.frm, mazes, costes dinámicos ⚙, modos de juego, gráficas,
+  Internet). Inventario contra `SimOptions.bas`, `OptionsForm.frm` y los
+  menús de `MDIForm1.frm`; verificado qué está ya en el core (toroidal:
+  `physics.hpp:503,518`) y qué es hueco real (pasos ⚙ 3/6-9/13/22-25).
+  Fuentes sin modificar.
+- **2026-08-26 (E1)** — Etapa E1 cerrada: opciones de escenario y física del
+  original expuestas de punta a punta (API genérica por id + panel en la
+  página, toroidal y tamaños del slider incluidos). Capa host pura; smoke
+  node 52 checks + verificación en Chrome. Fuentes sin modificar.
