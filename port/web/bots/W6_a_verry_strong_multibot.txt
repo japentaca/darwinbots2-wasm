@@ -1,0 +1,500 @@
+' confidential
+' 
+'
+'                             Super multibot codename w6.txt
+'
+' w6 a deadly experiment it is still a code name
+' A genome which uses some advanced strategies
+' It is deadly, so wear protected clothing all times.
+'
+' Still the bot lacks complex head construction or good eyes.
+' Doesnt move optimal, but it shoots like a goalkeeper
+' Indepent of its travel direction it aims at enemies who are in range
+' This can even attack multiple enemies at once, as if it feels them nearby.
+' In fact it might not even turn his head (heading) to kill you..
+'
+' It does use poison, sometimes venom, but no tie feeding on others
+' Also it doesnt use viruses, so its a fairly fair.
+' there will become a w7 also later... even more deadly.
+' 
+' It has a special form of birth control to deal with various
+' enemies, for example it has a high and slow birth rate.
+' usualy it breaths slowly growing big while other multiply
+' While they multiply it invests in becoming powerfull 
+' But that is depending on its environments population ratio.
+' 
+' It can form bigberta supperkillers, who will be not fast
+' Dough they're good in reproducing. And seeding the environment
+' Overall its more a tactical bot, as it uses various tactics
+'
+' It has a huge genome, for its tactics
+' As I wanted its population to be more adaptive.
+' Now its verry dependant on its environment.
+' in some situations you'll see big berta's multibots
+' Other times you'll rarely see them team together.
+' Rarely it fires a tie to a algea an error, its not a batery bot (bad aiming).
+' It depends much on population size, how it will look like
+' A big bot connected killer swarm
+' or hundreds of small ones who connect less often.
+' And only a few might re-populate and still win the battle.
+'
+'
+' I wanted to defeat snakebot (thats the best looking bot i think)
+' Then i tried it with other bots 
+' And i noticed it does defeat many other multi bots
+' To name a few, Seasnake, Hexagonis, Tribolis, Helios, etc
+'  
+' So pleace note your multibot if it outperforms w6.
+'
+'
+' by Peterb
+
+
+
+
+
+
+
+def e5x 50
+def e5o 51
+def efox 52
+def efxo 53
+def bullit 54
+def firetie 55
+def lookat 56
+def deadly 57
+def ifeelpain 85
+def etarget 61
+def ebrotA 62
+def ebrotB 63
+def bigberta 64
+def etemp 65
+def remotenrg 66
+def 67 enemy
+def 68 lookat
+def 69 center
+def 70 minmass
+def 71 waitforborn
+def 72 highspeed
+
+
+'--------------------doesnt do anything yet (perhaps use in w7) -------- - - 
+def targetx 73
+def targety 74
+
+'Specifies tie to be read, uses the newest one in this example, 
+'change this if you want to pick were it is read from
+start
+*.tiepres .readtie store
+stop
+
+'Check for target and store position to be read
+start
+*.refeye *.myeye !=
+*.eye5 0 != and
+*.refxpos .tout1 store
+*.refypos .tout2 store
+stop
+
+'Check for target position every ten cycles
+start
+*.robage 10 mod 0 =  'Every ten cycles this will return true
+*.tin1 .targetx store
+*.tin2 .targety store
+stop
+
+'----------------------------------------------------------------------------
+
+
+cond
+start
+.fixpos *.fixed mult dec
+
+
+' MATH USED INSIDE BOT ==========================================================
+'
+*.body 1000 div .etemp store
+*.nrg 1000 div *.etemp add .etemp store
+*.shell 1000 div *.etemp add .bigberta store
+*.pain *.ifeelpain .ifeelpain add
+*.ifeelpain 20 sub .ifeelpain store
+*.refnrg 2 div .remotenrg store
+
+*.eye5 sgn 1 .e5x store
+*.eye5 sgn 1 sub abs .e5o store
+*.refeye *.myeye sub abs sgn .efox store
+*.efox 1 sub abs .efxo store
+*.numties inc .out3 store
+*.in3 3 sub *.in3 mult sgn -1 mult 0 floor .firetie store
+   '0    -3     0        0   0         0   (algea)
+   '1    -2    -2       -1   1         1   (single bot)
+   '2    -1    -2       -1   1         1   (end of rope)
+   '3     0     0        0   0         0   (midle of rope)
+   '4     1     4        1  -1         0   (wrong input)
+
+-1 .bullit store
+580 .eye5width store
+
+stop
+
+cond 
+*.robage 5 mod  3 =
+*.ifeelpain 60 >
+*.nrg 600 >
+start
+-3 .bullit store
+.mrepro .vloc store
+40 .venval store
+.aim .ploc store
+stop
+
+cond
+*.robage 20 mod 19 =
+*.ifeelpain 60 >
+start
+-3 .bullit store
+.strbody .vloc store
+*.refnrg 10 div .venval store
+.eye5 .ploc store
+stop
+
+cond
+*.robage 20 mod 9 =
+*.ifeelpain 60 >
+start
+-3 .bullit store
+.backshot .vloc store
+1 .venval store
+.aimshoot .ploc store
+stop
+
+
+' a great shooting gene always hits enemy inside this bot
+' independant of travel direction
+
+cond
+*.refeye *.myeye !=
+*.eye5 1 >
+start
+*.refxpos *.refypos angle .etarget  store
+1256 *.aim sub *.etarget add .etarget store
+1256 *.etarget sub .etarget store
+*.etarget .aimshoot store
+*.bullit .shoot store
+1 .fixpos store
+stop
+
+cond
+*.eye5 10 <
+*.robage 10 >
+start 
+0 .fixpos store
+*.velup sgn 1 add sgn .etemp store
+'1 .etemp store
+*.body sqr 2 div 3 add *.etemp mult 1 floor .up store
+580 *.eye5dir add .eye5dir store
+stop
+
+cond
+*.numties 2 <
+'*.eye5 10 <
+start 
+580 .eye5width store
+*.ekill *.efox mult 1 sub abs .etemp store
+*.eye9 *.eye8 add *.eye7 floor 2 mult *.eye6 floor .ebrotA store
+*.eye1 *.eye2 add *.eye3 floor 2 mult *.eye4 floor .ebrotB store
+*.ebrotA *.ebrotB sub .aimdx store
+*.aim 1 add .tout4 store
+stop
+
+cond
+*.firetie 1 =
+*.refeye *.myeye =
+*.nrg 2 div *.remotenrg %=
+start
+.tie inc
+stop
+
+cond
+*.refeye *.myeye =
+start
+580 *.eye5dir add .eye5dir store
+stop
+
+cond
+*.eye5 32000 =
+*.nrg 150 >
+start
+100 .dn store
+stop
+
+'====================multibot part and tactics birth
+
+cond
+*.totalmyspecies 12 <
+*.numties 2 <
+*.nrg 400 >
+*.body 1000 >
+*.eye5 0 =
+start
+350 .mkshell store
+stop
+
+cond
+*.totalmyspecies 12 <
+*.bigberta 1 >
+start
+*.tiepres .deltie store
+stop
+
+
+cond
+*.nrg 5000 >
+*.numties 2 <
+*.eye5 3 <
+*.shell 300 >
+*.totalbots *.totalmyspecie sub *.totalmyspecies > 
+*.robage 200 mod 199 =
+start
+70 .repro store
+stop
+
+cond
+*.totalbots *.totalmyspecies sub 200 >
+*.numties 2 <
+*.nrg 300 >
+*.nrg 2000 <
+*.body 50 >
+start
+50 .repro store
+*.tiepres .deltie store
+stop
+
+cond
+*.robage 2 =
+*.totalbots *.totalmyspecies sub 200 >
+start
+*.tiepress .deltie store
+.60 up store
+2 rnd .deadly
+stop
+
+cond
+*.numties  2 >
+start
+*.tiepres .deltie store
+stop
+
+
+'- bigberta offsping seeding . . . .
+cond
+
+*.bigberta 100 >
+*.robage 34 mod 33 =
+start
+628 .aimsx store
+1 .repro store
+*.tiepres .deltie store
+stop
+
+'- become bigberta . . . . . . . . .
+cond
+*.nrg 31900 >
+*.shell 31911 <
+start
+33 .mkshell store
+stop
+
+cond
+*.nrg 31900 >
+*.shell 31911 >
+*.body 31911 <
+start
+33 .strbody store
+stop
+
+'- - - - - - -  - - - - - -multibot tie management- -- - - - - -- - -- 
+cond
+*.nrg 5000 >
+*.numties 2 <
+*.eye5 3 <
+*.shell 300 >
+*.totalbots *.totalmyspecie sub *.totalmyspecies > 
+*.robage 200 mod 199 =
+start
+70 .repro store
+stop
+
+cond
+*.robage 0 =
+start
+1 .dn store
+.tie inc
+580 .eye5width store
+stop
+
+cond
+*.robage 1 =
+*.nrg 60 >
+start
+628 .aimdx store
+10 .strvenom store
+stop
+
+cond
+*.numties 1 >
+*.robage 20 >
+start
+2 .up store
+45 .stifftie store
+*.numties .out3 store
+*.tin4 .setaim store
+*.tin 1 add .tout4 store
+stop
+
+cond
+*.tin4 *.aim sub 3 =
+start
+*.tiepres .deltie store
+stop
+
+cond
+start
+85 *.numties mult .sharenrg *.multi mult store
+.sharewaste *.multi mult inc
+stop
+
+
+'- bigberta tactics . . . .
+cond
+*.body 32000 %=
+*.nrg 32000 %=
+*.shell 32000 %=
+*.robage 34 mod 33 =
+start
+628 .aimsx store
+1 .repro store
+*.tiepres .deltie store
+stop 
+
+cond
+*.nrg 31900 >
+*.shell 31911 <
+start
+33 .mkshell store
+stop
+
+stop
+cond
+*.nrg 31900 >
+*.shell 31911 >
+*.body 31911 <
+start
+33 .strbody store
+stop
+
+'- - - - - - split bot - - - - - 
+cond
+*.poison 3000 >
+*.body 1000 <
+start
+*.numties .deltie store
+90 .repro store
+stop
+
+
+'=============spread energy over the ties and make posion etc
+
+cond
+*.multi 1 =
+*.nrg 3500 >
+start
+*.tiepres .tienum store
+-1 .tieloc store
+100 .tieval store
+10 .up store
+1 .strpoison store
+1 .mkshell store
+stop
+
+'gene 12
+cond
+*.multi 1 =
+*.body 850 >
+*.robage 600 div *.body >
+*.nrg 100 >
+start
+*.tiepres .tienum store
+-6 .tieloc store
+10 .tieval store
+5 .up store
+stop
+
+'============== house keeping
+cond
+*.pain 60 >
+*.body 10 >
+*.nrg 200 >
+*.poison 40 <
+start
+40 .strpoison store
+stop
+
+cond
+*.numties 0 >
+*.nrg 500 >
+start
+'10 .mkshell store
+10 .shareshell store
+stop
+
+cond
+*.numties 0 >
+start
+50 .shareshell store
+stop
+
+'geting waste out, but dont fire it at friends.
+'since I usualy auto aim at others, it is required
+cond
+*.waste 100 >
+start
+1 *.efox sub 314 mult *.etemp store
+*.aimshoot *.etemp add .aimshoot store
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+stop
+
+cond
+*.nrg 100 <
+start
+0 .up store
+70 .fdbody store
+stop
+
+cond
+*.poison 30 <
+*.nrg 600 >
+start
+15 .strpoison store
+stop
+
+cond
+*.venom 15 <
+*.nrg 600 >
+start
+15 .strvenom store
+stop
+
+cond
+*.please 12 >
+start
+2 .strvenomm store
+2 .strpoison store
+stop

@@ -32,17 +32,23 @@ start
  200 .eye9width store
  -300 .eye9dir store
 
- *.121 1 =
+cond
+ *.shell 500 <
+start
+ 100 .mkshell store
 stop
 
 cond
- *.nrg 3500 >
+ *.body 1000 <
 start
  100 .strbody store
- *.body 10000  >
- 10 .repro store
 stop
 
+cond
+ *.body 10000 >
+start
+ 10 .repro store
+stop
 
 ' TARGETTING ENEMY
 
@@ -190,6 +196,7 @@ start
 stop
 
 cond
+ *.refpoison 0 >
  *.refeye *.myeye !=
  *.eye5 7 >
 start
@@ -197,8 +204,23 @@ start
  *.refxpos *.refypos angle *.refaim *.refvel mult 40 *.refxpos *.xpos sub 2 pow *.refypos *.ypos sub 2 pow add sqr div mult 60 *.focuseye mult mult .aimdx store
  *.refxpos *.refypos angle `(*.refaim *.aim sub abs mult) .aimshoot store
  -8 .shootval store
- *.refshell sgn -1 add 5 mult -1 add .shoot store
+ -6 .shoot store 
  *.refvelup .up store
+stop
+
+cond
+ *.refpoison 0 =
+ *.refeye *.myeye !=
+ *.eye5 7 >
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refxpos *.refypos angle *.refaim *.refvel mult 40 *.refxpos *.xpos sub 2 pow *.refypos *.ypos sub 2 pow add sqr div mult 60 *.focuseye mult mult .aimdx store
+ *.refxpos *.refypos angle `(*.refaim *.aim sub abs mult) .aimshoot store
+ -8 .shootval store
+ *.refshell sgn -1 add 5 mult -1 add .shoot store 
+ *.refvelup .up store
+stop
+
 stop
 
 cond
@@ -212,8 +234,11 @@ stop
 cond
  *.refeye *.myeye =
 start
- 140
+ 624
  .aimdx
+ store
+ 40
+ .up
  store
 stop
 

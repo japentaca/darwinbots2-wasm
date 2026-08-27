@@ -1,333 +1,406 @@
-'T3 multibot
-'
-'
+' Seasnake 1.0
+' Author:  EricL
+' A segmented multibot
 
-def bodypart 50
-'0 limb 1
-'1 head
-'2 limb 2
-def split 52
-def lonely 54
+' Out variables
+' These are broadcast to everyone
+def linkstate 800
+def mynumexposed 801
+def mychain 802
 
-'identity
-cond
-  *.robage 0 =
+'Tie variables
+'These are broadcast via ties
+def targetx 415    ' .tout6
+def targety 416    '.tout7
+
+'tout1 is mychain
+'tout2 is mynum
+'tout3 is my linkstate
+
+' Private Variables
+'These are private to this bot only
+def justreproduced 50
+def mynum 51
+def mylastx 52
+def mylasty 53
+def myvelx 54
+def myvely 55
+
+'Begin coding region
 start
-  41 .out1 store
-  0 .out2 store
-  .tie inc
-  .shoot .ploc store
-  -2 .pval store
+
+'Initialization
+'Anti info shot logic
+0 .fixpos store
+0 .focuseye store
+
+'Set my unique number
+clearbool
+*.robage 0 =
+*971 0 = and
+-30000 32000 rnd .mynum store
+
+'My unique number is one les than my parent if birthed
+*.robage 0 =
+*.971 0 != and
+*.971 dec .mynum store
+
+'Always set a bunch of stuff
+clearbool
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+*.mynum .readtie store
+*.mynum .tienum store
+*.mynum .971 store
+*.mychain .tout1 store
+*.mynum .tout2 store
+*.linkstate .tout3 store
+*.mynum .mynumexposed store
+*.xpos *.mylastx sub .myvelx store
+*.ypos *.mylasty sub .myvely store
+
+'Tie Feeding Defense
+.tieval .tieloc store
+1000 .tieval store
+
+'Set my chain number if part of a caterpiller
+'If the head or alone, use my number for the chain number for both sight and ties
+clearbool
+*.linkstate 0 = 
+*.linkstate 3 = or
+*.mynum .mychain store
+*.mynum .tout1 store
+0 .eye5dir store
+
+'If the tail or in the middle, set my chain number from the guy ahead of me for both sight and ties
+'Then set my number to one less than the guy in front of me. 
+*.linkstate 1 =
+*.linkstate 2 = or
+*.tin1 .mychain store
+*.tin1 .tout1 store
+*.tin6 .targetx store
+*.tin7 .targety store
+
+*.linkstate 1 =
+*.linkstate 2 = or
+*.tin2 1 sub .mynumexposed store
+*.tin2 1 sub .tout2 store
+
+
+'Get rid of the birth tie
+clearbool
+*.robage 1 =
+*.mynum .tie store
+
+clearbool
+*.robage 2 = 
+*.tin1 *.mynumexposed <= and
+.deltie inc
+100 .up store
+
+'Movement
+clearbool
+*.eye5 0 =
+*.linkstate 0 = 
+*.linkstate 3 = or  and
+10 .up store
+20 rnd 10 sub .aimdx store
+
+'Find Conspecs
+clearbool
+*.eye5 0 >
+*.memval *.dnalen = and
+*.linkstate 1 != and
+*.linkstate 2 != and
+*.in2 *.mynumexposed > and
+*.in1 2 != and
+*.in1 3 != and
+*.in2 *.mychain != and
+*.robage 2 > and
+*.justreproduced 0 = and
+*.refxpos *.refypos angle .setaim store
+*.refveldx *.body mult 1000 div .dx store
+*.refvelup 11 add .up store
+
+'Find Prey
+clearbool
+*.eye5 0 >
+*.memval *.dnalen != and
+*.robage 2 > and
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+*.refvelup 10 add .up store
+35 .eye5width store
+
+'Look away from your own cells
+clearbool
+*.linkstate 3 =
+*.mychain *.in3 =  
+*.mychain *.in3 !=
+*.in3 0 != and
+*.in2 *.mynum <= and or  and
+*.justreproduced 0 = and
+*.setaim 314 1 rnd mult 157 sub add .setaim store
+0 .eye5width store
+
+'Body Management
+'Increase body if body is less than 90% of nrg level
+clearbool
+*.body 100 mult *.nrg 9 mult <
+100 .strbody store
+
+'Release body if body is greater than 110% of nrg
+*.body 100 mult *.nrg 11 mult >
+100 .fdbody store
+
+'Waste removal
+clearbool
+*.waste 100 >
+*.waste .shootval store
+314 .aimshoot store
+-4 .shoot store
+
+'Slime Production
+clearbool
+*.nrg 5000 >
+*.slime 100 < and
+10 .mkslime store
+
+'Shell Production
+*.nrg 5000 >
+*.shell 1000 < and
+10 .mkshell store
+
+'Antivirus
+clearbool
+*.thisgene 1 !=
+1 .delgene store
+*.thisgene 1 = 
+*.genes 1 > and
+2 .delgene store
+
+'Set the linksate
+clearbool
+*.numties 0 =
+0 .linkstate store
+*.numties 1 =
+*.tmemval *.dnalen = and
+*.linkstate 2 =
+*.linkstate 0 = or and
+*.tiepres *.mynum = and
+1 .linkstate store
+*.numties 2 =
+*.justreproduced 0 = and
+*.tmemval *.dnalen = and
+*.linkstate 3 =
+*.linkstate 1 = or and
+2 .linkstate store
+*.numties 1 = 
+*.robage 2 > and
+*.linkstate 0 = 
+*.tiepres *.mynum != and
+'This is the case where the head gets shot off.  The guy behind is still linkstate 2 but the tie ahead is gone
+*.linkstate 2 = 
+*.trefxpos 0 =  and or and
+3 .linkstate store
+
+'Too many ties or other tie problems
+clearbool
+*.numties 2 >
+*.linkstate 3 = 
+*.numties 1 > and or
+*.linkstate 1 =
+*.numties 1 > and or
+*.linkstate 0 =
+*.numties 0 > and or
+*.numties 1 =
+*.linkstate 1 !=
+*.linkstate 3 != and and or 
+*.numties 1 =
+*.linkstate 1 =
+*.tiepres *.mynum != and and or 
+
+*.numties 1 =
+*.linkstate 2 = and or 
+
+*.numties 1 =
+*.linkstate 3 = and 
+*.tiepres *.mynum = and or 
+
+'*.linkstate 3 =
+'*.tin2 *.mynumexposed > and or 
+
+*.linkstate 3 = 
+*.tin3 3 = and or
+
+'Delete ties from non-conspecs
+*.tmemval 0 != 
+*.tmemval *.dnalen != and or
+*.tiepres .deltie store
+
+'tie to conspec
+clearbool
+*.linkstate 0 =
+*.linkstate 3 = or 
+*.eye5 0 > and
+*.memval *.dnalen = and
+*.in3 *.mynumexposed > and
+*.in1 0 = 
+*.in1 1 = 
+*.refmulti 0 != and or and
+*.in3 *.mychain != and
+*.mynum .tie store
+
+'follow the leader
+clearbool
+*.linkstate 1 =
+*.linkstate 2 = or
+*.tin1 *.mychain = and
+*.trefxpos *.trefypos angle .setaim store
+*.trefup .up store
+*.trefdn .dn store
+
+'Tie too long
+clearbool
+*.tielen 100 >
+*.linkstate 1 =
+*.linkstate 2 = or and
+*.up 10 add .up store
+
+'Dampen wild swings
+clearbool
+*.linkstate 3 !=
+*.trefvelyoursx *.velsx sub abs 10 > and
+*.velsx -1 mult .sx store
+
+'Tie too short
+clearbool
+*.tielen -50 <
+*.tielen 0 != and
+*.linkstate 1 =
+*.linkstate 2 = or and
+*.dn 20 add .dn store
+
+'Keep the tie angle freely rotating
+'And set the tie length and stiffness
+clearbool
+*.multi 0 >
+*.linkstate 1 = 
+*.linkstate 2 = or and
+*.mynum .tienum store
+-1 .fixang store
+25 .fixlen store
+100 .stifftie store
+
+'Aim eyes to the rear for the last guy in the chain
+clearbool
+*.linkstate 1 = 
+628 .eye5dir store
+628 .eye5width store
+
+'Aim eyes to the sides for the middle nodes, alternating them side to side
+*.linkstate 2 =
+*.mynum 2 mod 628 mult -314 add 628 *.robage 2 mod mult add .eye5dir store
+200 .eye5width store
+
+'The head looks ahead as do lone bots
+*.linkstate 3 =
+*.linkstate 0 = or
+0 .eye5dir store
+
+'Target Aquisition
+clearbool
+0 .targetx store
+0 .targety store
+*.eye5 0 =
+*.tin6 *.tin7 dist 1000 < and
+*.tin6 .targetx store
+*.tin7 .targety store
+
+*.eye5 0 >
+*.memval *.dnalen != and
+*.in3 *.mychain != and
+*.reftype 0 = and 
+*.refxpos .targetx store
+*.refypos .targety store
+
+'Head Shooting
+clearbool
+*.linkstate 3 = 
+100 .shoot store
+
+'Aiming
+clearbool
+*.targetx 0 != 
+*.linkstate 3 != and
+*.targetx *.myvelx 2 mult sub .targetx store
+*.targety *.myvely 2 mult sub .targety store
+*.targetx *.targety angle 1256 add 1256 mod *.aim sub .eye5dir store
+35 .eye5width store
+
+'Shooting 
+'When we see something
+clearbool
+*.eye5 10 >
+*.memval *.dnalen != and
+*.in2 *.mychain != and
+*.eye5dir -1 mult .aimshoot store
+-6 .shoot store
+
+'Power up shots for things close up
+*.eye5 20 <
+1 .shootval store
+*.eye5 20 >=
+ 5 .shootval store
+
+'Shooting 
+'When we touch something
+clearbool
+*.eye5 0 =
+*.refxpos 0 != and
+*.memval *.dnalen != and
+*.in2 *.mychain != and
+*.refxpos *.refypos angle -1 mult .aimshoot store
+-6 .shoot store
+ 17 .shootval store
+
+'Sharing
+clearbool
+*.mynum .tienum store
+50 .sharenrg store
+50 .shareshell store
+50 .shareslime store
+100 .sharewaste store
+
+'Reproduction
+clearbool
+*.justreproduced 5 =
+*.setaim 628 add .setaim store
+
+*.justreproduced 0 >
+.justreproduced dec
+
+clearbool
+*.nrg 5000 >=
+*.body 500 >= and
+*.linkstate 0 = 
+*.linkstate 1 = or and
+50 .repro store
+*.setaim 628 add .setaim store
+5 .justreproduced store
+
+'Make sure tie operations operate on the tie this node created
+clearbool
+*.tiepres *.mynum !=
+*.mynum .tiepres store
+*.mynum .tienum store
+
+'Store the postion for the next cycle
+clearbool
+*.xpos .mylastx store
+*.ypos .mylasty store
+
 stop
+end
 
-'antistuck
-cond
-  *.vel 0 =
-  *.numties 0 =
-  *.multi 0 =
-start
-  314 rnd .aimdx store
-  30 .dn store
-  .lonely inc
-stop
-
-cond
-  *.lonely 3 >
-start
-  *.tiepres .deltie store
-  70 .up store
-  0 .bodypart store
-  0 .split store
-  0 .out2 store
-  0 .lonely store
-stop
-  
-
-'split
-cond
-  *.nrg 20000 >
-start
-  *.tiepres .deltie store
-  1256 rnd .aimdx store
-  70 .up store
-  0 .bodypart store
-  0 .split store
-  0 .out2 store
-  0 .lonely store
-stop
-
-'duplicate
-cond
-  *.numties 0 =
-  *.robage 5 mod 0 =
-  *.robage 0 !=
-  *.bodypart 0 =
-  *.eye5 60 <
-start
-  50 .repro store
-  .bodypart inc
-stop
-
-
-'head
-'form limb 2
-cond
-  *.bodypart 1 =
-  *.multi 1 =
-  *.tiepres 1 =
-  *.robage 21 mod 0 =
-  *.split 0 =
-start
-  418 .aimdx store
-  50 .repro store
-  .split inc
-  3 .out2 store
-stop
-
-
-'limb 1
-'turn into limb 2
-cond
-  *.robage 1 =
-  *.in2 3 =
-start
-  2 .bodypart store
-stop
-
-'virus
-cond
-  *.bodypart 0 =
-  *.multi 1 =
-  *.nrg 1500 >=
-  *.vtimer 0 =
-start
-  *.thisgene 1 add .mkvirus store
-  100 .vshoot store
-stop
-
-cond
-  *.out1 41 !=
-start
-  *.thisgene .mkvirus store
-  200 .vshoot store
-  1 .fixpos store
-  -2 .shoot store
-stop
-
-'shell
-cond
-  *.bodypart 0 =
-  *.multi 1 =
-  *.nrg 4500 >
-  *.shell 150 <
-  *.body 500 >
-start
-  100 .mkshell store
-stop
-
-'slime
-cond
-  *.bodypart 0 =
-  *.multi 1 =
-  *.nrg 4500 >
-  *.slime 150 <
-  *.body 500 >
-start
-  100 .mkslime store
-stop
-
-'poison l1
-cond
-  *.bodypart 0 =
-  *.multi 1 =
-  *.nrg 3500 >
-  *.poison 2000 <
-  *.body 500 >
-start
-  100 .strpoison store
-stop
-
-
-
-'limb 2
-'waste
-cond
-  *.bodypart 2 =
-  *.multi 1 =
-  *.waste 200 >=
-  *.in1 41 !=
-start
-  -4 .shoot store
-  *.waste .shootval store
-stop
-
-'poison l2
-cond
-  *.bodypart 2 =
-  *.multi 1 =
-  *.nrg 3500 >
-  *.poison 2000 <
-  *.body 500 >
-start
-  100 .strpoison store
-stop
-
-'multibotness
-'l1
-cond
-  *.multi 1 =
-  *.bodypart 0 =
-start
-  50 .sharenrg store
-  50 .shareshell store
-  50 .shareslime store
-  1 .fixlen store
-  100 .stifftie store
-  628 .fixang store
-stop
-
-cond
-  *.multi 1 =
-  *.bodypart 0 =
-  *.waste 400 >=
-start
-  1 .sharewaste store
-stop
-
-'head
-cond
-  *.multi 1 =
-  *.bodypart 1 =
-start
-  33 .sharenrg store
-  33 .shareshell store
-  33 .shareslime store
-  1 .fixlen store
-  100 .stifftie store
-  628 .fixang store
-stop
-
-'limb2
-cond
-  *.multi 1 =
-  *.bodypart 2 =
-start
-  50 .sharenrg store
-  50 .shareshell store
-  50 .shareslime store
-  99 .sharewaste store
-  1 .fixlen store
-  100 .stifftie store
-  942 .fixang store
-stop
-
-
-
-'GROW
-cond
-  *.nrg 4000 >
-  *.body 600 <
-start
-  100 .strbody store
-stop
-
-'STARVE
-cond
-  *.nrg 1000 <
-  *.body 40 >
-start
-  100 .fdbody store
-stop
-
-cond
-  *.nrg 30000 <
-  *.body 620 >
-start
-  100 .fdbody store
-stop
-
-'search
-'push
-cond
-  *.bodypart 1 =
-  *.multi 1 =
-  *.vel 6 <=
-  *.eye5 0 =
-  *.in1 41 = or
-start
-  50 .up store
-stop
-
-'spin
-cond
-  *.vel 18 >=
-  *.multi 1 =
-  *.bodypart 1 =
-  *.eye5 0 =
-  *.in1 41 = or
-start
-  314 rnd .aimdx store
-stop
-
-'find
-cond
-  *.eye5 0 >
-  *.in1 41 !=
-  *.bodypart 1 =
-  *.multi 1 =
-start
-  *.refveldx .dx store
-  *.refvelup 30 add .up store
-stop
-
-
-'eat
-'head
-cond
-  *.eye5 50 >
-  *.in1 41 !=
-  *.multi 1 =
-  *.bodypart 1 =
-  *.refbody 400 <
-start
-  -1 .shoot store
-  8 .shootval store
-  *.refvelup .up store
-stop
-
-cond
-  *.eye5 50 >
-  *.in1 41 !=
-  *.multi 1 =
-  *.bodypart 1 =
-  *.refbody 400 >=
-start
-  -6 .shoot store
-  8 .shootval store
-  *.refvelup .up store
-stop
-
-'limbs
-cond
-  *.eye5 50 >
-  *.in1 41 !=
-  *.multi 1 =
-  *.bodypart 1 !=
-  *.refbody 400 <
-start
-  -1 .shoot store
-  8 .shootval store
-stop
-
-cond
-  *.eye5 50 >
-  *.in1 41 !=
-  *.multi 1 =
-  *.bodypart 1 !=
-  *.refbody 400 >=
-start
-  -6 .shoot store
-  8 .shootval store
-stop
-
-end  

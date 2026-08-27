@@ -1,0 +1,130 @@
+ 0
+ cond
+ *.shup 0 !=
+ *.shdn 0 !=
+ or
+ *.shdx 0 !=
+ or
+ *.shsx -4 !=
+ true
+ start
+ 60 .aimright store
+ 50
+
+ cond
+ *.numties 0 >
+ start
+
+
+ cond
+ stop
+ store
+ 300 99 *.chlr *.availability <
+
+ start
+ 152 .mkchlr store
+ stop
+
+ start
+ 10 *100 sub sgn abs 100 mult store
+ 100 313 *.nrg *.body 10 div *100 mult sub sgn 0 floor *-409 mult store
+ 100 312 *.body 10 div 0 *.refnrg floor mult *.body 100 sub sgn 0 floor mult store
+ stop
+ *.eye5 40 >
+ *.numties 3 <
+
+ start
+ 1 .tie store
+ stop
+
+ cond
+ *.multi 1 =
+ start
+ 99 .sharenrg store
+ 99 .shareslime store
+ 99 .shareshell store
+ *.numties
+
+ cond
+ stop
+ inc
+ 831 10 >
+
+ start
+ -1 .tieloc store
+ -1000 .tieval store
+ *55 .tienum store
+ stop
+ *.refeye 5 =
+
+ start
+ 180 .aimleft store
+ stop
+
+
+
+
+cond
+  *.nrg
+  20000
+  >
+start
+  50
+  .repro
+  store
+  1
+  972
+  store
+stop
+
+cond
+  *972
+  1
+  =
+start
+  50
+  .repro
+  store
+stop
+
+
+cond
+  *.nrg
+  3000
+  <
+start
+  0
+  972
+  store
+stop
+
+
+cond
+*.multi 1 =
+*.nrg *.trefnrg !%=
+start
+41 .sharenrg store
+stop
+
+cond
+*.waste 100 >
+start
+1 .sharewaste store
+stop
+
+clearbool
+*.mynum .tienum store
+50 .sharenrg store
+50 .shareshell store
+50 .shareslime store
+100 .sharewaste store
+
+
+cond
+*.refeye *.refshoot add *.refup add *.refshell add *997 !=
+start
+*.refeye *.refshoot add *.refup add *.refshell add 997 store
+stop
+
+
+

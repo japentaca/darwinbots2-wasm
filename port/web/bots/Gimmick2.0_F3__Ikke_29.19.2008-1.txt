@@ -1,0 +1,551 @@
+'Imitation is the first step in learning. I started with commenting a version of Defence
+'Every bot has its gimmicks. I have taken the best and added my own.
+'Since it beats all other F3 bots, I'll post it to raise the bar.
+'Most (practically all) are not mine so neither is the credit
+
+def toten 990
+def lead 987
+def IFFF 986
+def friend 981
+def food 982
+def foe 983
+'def tiespace 989
+
+'-------------to do every turn
+
+start
+
+'rotate poison and venom target
+'*.robage 2 mod 0 =
+'what to infect with poison
+'.shoot .ploc store
+'what loaction to use venom on (shoot)
+'.shoot .vloc store
+'what to store in that location (shoot energy shots)
+'-2 .venval store
+
+'*.robage 2 mod 1 =
+'what to infect with poison
+'.setaim .ploc store
+'what loaction to use venom on (shoot)
+'.shoot .vloc store
+'what to store in that location (shoot energy shots)
+'-2 .venval store
+
+stop
+
+'-----------Identify friend foe or food
+
+cond
+'nothing to identify
+*.eyef 0 =
+start
+0 .IFFF store
+stop
+
+'I see a friend
+cond
+*.eyef 0 >
+'conspecs
+*.memval *.dnalen =
+*.refeye *.myeye sub *.refage mult *.robage mult 0 = and 
+'easiest way to kill spinner w/o copying it's conspec
+*.in9 0 = and
+start
+.friend .IFFF store
+stop
+
+'not us so them
+cond
+*.eyef 0 >
+'conspecs
+*.memval *.dnalen =
+*.refeye *.myeye sub *.refage mult *.robage mult 0 = and 
+'easiest way to kill spinner w/o copying it's conspec
+*.in9 0 *.refage mult *.robage mult = and not
+
+start
+'them falls in two categories: food and foe. Food has *.refeye 0
+.food *.refeye sgn add .IFFF store
+'reset if nothing is seen
+stop
+'-----------------search
+cond
+*.eyef 0 =
+*.IFFF .friend = or
+start
+0 .out1 store
+0 .out2 store
+'continue on current heading add 1 to avoid getting stuck
+*.velscalar 0 =
+100 .up store
+not
+*.velup 25 mult *.velscalar div .up store
+*.veldx 25 mult *.velscalar div .dx store
+stop
+
+
+cond
+'no food here
+  *.eye1 0 =
+  *.eye2 0 = and
+  *.eye3 0 = and
+  *.eye4 0 = and
+  *.eye5 0 = and
+  *.eye6 0 = and
+  *.eye7 0 = and
+  *.eye8 0 = and
+  *.eye9 0 = and 
+  *.IFFF .friend =
+  *.in1 0 = and
+  *.in2 0 = and
+  or
+start
+'no food so no output
+0 .out1 store
+0 .out2 store
+314 .aimright store
+stop
+
+cond
+'one of mine
+*.eyef 0 >
+*.IFFF .friend =
+'is telling me where to go
+*.in1 0 !=
+*.in2 0 != or and
+start
+'go there
+*.in1 *.in2 angle .setaim store
+*.in1 *.in2 dist 500 div *.maxvel mult *.refvel add 0 floor *.maxvel ceil .up store
+*.refveldx .dx store
+'and tell the rest where to go
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+'avoid friend when not getting shot
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.in1 0 =
+*.in2 0 = and
+*.IFFF .friend =
+*.refage 0 >
+*.eyef 0 >
+*.shflav 0 =
+*.shflav -2 = or
+start
+*.refxpos *.refypos angle 280 add .setaim store
+stop
+
+'---------------Waste Removal. 
+'Done here so it can be overwritten by more urgent shots
+cond
+*.waste 100 >=
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+'-------------------move focuseye to next target
+'eye4
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye4 0 >
+*.eye4 *.eye3 >=
+*.eye4 *.eye2 >=
+*.eye4 *.eye1 >=
+*.eye4 *.eye6 >=
+*.eye4 *.eye7 >=
+*.eye4 *.eye8 >=
+*.eye4 *.eye9 >=
+start
+*.aim 35 add .setaim store
+stop
+
+'eye6
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye6 0 >
+*.eye6 *.eye4 >
+*.eye6 *.eye7 >=
+*.eye6 *.eye8 >=
+*.eye6 *.eye9 >=
+*.eye6 *.eye1 >=
+*.eye6 *.eye2 >=
+*.eye6 *.eye3 >=
+start
+*.aim -35 add .setaim store
+stop
+
+'eye3
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye3 0 >
+*.eye3 *.eye4 >
+*.eye3 *.eye6 >
+*.eye3 *.eye2 >=
+*.eye3 *.eye1 >=
+*.eye3 *.eye7 >=
+*.eye3 *.eye8 >=
+*.eye3 *.eye9 >=
+start
+*.aim 70 add .setaim store
+stop
+
+'eye7
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye7 0 >
+*.eye5 0 =
+*.eye7 *.eye4 >
+*.eye7 *.eye6 >
+*.eye7 *.eye3 >
+*.eye7 *.eye2 >=
+*.eye7 *.eye1 >=
+*.eye7 *.eye8 >=
+*.eye7 *.eye9 >=
+start
+*.aim -70 add .setaim store
+stop
+
+'eye2
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye2 0 >
+*.eye5 0 =
+*.eye2 *.eye4 >
+*.eye2 *.eye3 >
+*.eye2 *.eye7 >
+*.eye2 *.eye6 >
+*.eye2 *.eye1 >=
+*.eye2 *.eye9 >=
+*.eye2 *.eye8 >=
+start
+*.aim 105 add .setaim store
+stop
+
+'eye8
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye8 0 >
+*.eye5 0 =
+*.eye8 *.eye2 >
+*.eye8 *.eye3 >
+*.eye8 *.eye4 >
+*.eye8 *.eye7 >
+*.eye8 *.eye6 >
+*.eye8 *.eye1 >=
+*.eye8 *.eye9 >=
+start
+*.aim -105 add .setaim store
+stop
+
+'eye1 
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye1 0 >
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >=
+start
+*.aim 140 add .setaim store
+stop
+
+'eye9
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye9 0 >
+*.eye9 *.eye1 >
+*.eye9 *.eye2 >
+*.eye9 *.eye8 >
+*.eye9 *.eye7 >
+*.eye9 *.eye6 >
+*.eye9 *.eye4 >
+*.eye9 *.eye3 >
+start
+*.aim -140 add .setaim store
+stop
+'----------------------fight
+cond
+'we see something
+*.eyef 0 >
+'it is not our own
+*.IFFF .friend !=
+'we are not under the influence
+*.paralyzed 0 =
+*.poisoned 0 =
+0 0 0 0 0 0 0
+start
+'aim in the right direction
+*.refxpos *.refypos dist *.refvelup add *.xpos add
+'provides one leg
+'angular speed
+*.ypos *.refvelsx add
+'provides the other leg
+'take the angle between the two:
+angle
+'gives an approximation of your lead
+'add the angle between you and your target
+*.refxpos *.refypos angle add
+'gives the absolute direction you should face
+.setaim store
+
+
+'I am chasing you so catch up
+*.refxpos *.refypos dist 30 sub 500 div *.maxvel mult *.refvel *.vel *.refeye sgn mult sub 1 mult add .up store
+'match speed in x direction
+*.refveldx .dx store
+
+'you are no veggie
+*.IFFF .foe =
+'so I shout for help
+*.refxpos .out1 store
+*.refypos .out2 store
+
+'if I can hit you
+*.eyef *.refveldx 400 mult *.refbody div 4 add > 
+'dupbool
+'ties 
+'*.numties 0 = and
+'*.IFFF .foe = and
+'*.tiespace .tie store
+'*.tiespace .readtie store
+'dropbool
+
+'shoot (body) shot
+-6 .shoot store
+'modify shot strength 32 seems to be an empirical optimum
+32 .shootval store
+'*.nrg *.refbody mult *.refxpos *.refypos dist div 1 floor 64 ceil .shootval store
+'if it is better to hunt energy
+*.refnrg *.refbody <
+*.refpoison *.refshell < or
+-1 .shoot store
+'if you have poison
+'*.refpoison 0 >
+'strip you of it by use of my venom
+'-3 .shoot store
+'15 .shootval store
+'.strpoison .vloc store
+'-1000 .venval store
+
+'shoot in the right direction
+1600 *.refvelsx 2 pow sub sqr *.xpos add
+'provides one leg ()
+'angular speed 
+*.ypos *.refvelsx add 
+'provides the other leg
+'take the angle between the two:
+angle .lead store
+'gives an approximation of your lead
+*.refvelsx *.velsx <
+1256 *.lead sub .lead store
+dropbool
+*.lead .aimshoot store
+'executes the aim
+stop
+
+'inject through tie
+'cond
+'*.numties 0 >
+'*.tin9 0 !=
+'*.trefage 0 !=
+'start
+'-3 .tieloc store
+'6 .tieval store
+
+'*.trefshell *.trefpoison >
+'.mkshell .vloc store
+'-1000 .venval store
+'*.trefshell *.trefpoison <=
+'*.trefpoison 0 > and 
+'.strpoison .vloc store
+'-1000 .venval store
+'*.trefpoison 0 = 
+'.shoot .vloc store
+'-2 .venval store
+stop
+
+'----------------flight
+cond
+'flee criterion:
+'1 too big
+*.refbody 10 mult *.refnrg add 2 div *.body 10 mult *.nrg add >
+*.refeye 0 > and
+'2 hit too much
+*.pain 300 *.nrg 5000 div add > or
+'3 under the influence
+*.poisoned 0 != or
+*.paralyzed 0 != or
+'4 being targetted
+*.eyef 0 >
+*.IFFF .foe =
+*.refaim *.refxpos *.refypos angle sub abs 15 < and
+start
+'I see a bad guy
+*.eyef 0 >
+*.IFFF .foe = and
+*.refeye 0 > and
+
+*.refveldx *.veldx sub sgn -250 mult .sx store
+'aim in the right direction
+*.refxpos *.refypos dist *.refvelup add *.xpos add
+'provides one leg
+'angular speed
+*.ypos *.refvelsx add
+'provides the other leg
+'take the angle between the two:
+angle
+'gives an approximation of your lead
+'add the angle between you and your target
+*.refxpos *.refypos angle add
+'gives the absolute direction you should face
+.setaim store
+
+'I don't see a bad guy (but still have to evade)
+not
+'but am hit by a shot that is not zero or energy 
+*.shflav 0 !=
+*.shflav -2 != and and
+'turn to where it came from
+*.shang .aimdx store
+250 .sx store
+0 0 0 0 0 0 0
+stop
+
+'---------------------fire back
+cond
+'if hit by a shot that is not zero or energy 
+*.shflav 0 !=
+*.shflav -2 != and
+'not under the influence
+*.paralyzed 0 =
+*.poisoned 0 = and
+'no one in sight
+*.eyef 0 =
+'or we are having lunch
+*.refeye 0 = or
+'or we see one of our own
+*.IFFF .friend = 
+*.shang 15 > 
+*.shang 1240 < and 
+not and
+or and
+
+start
+' Aim where the shot came from
+*.shang .aimshoot store
+'shoot -6 shot
+-6 .shoot store
+'boost power
+8 .shootval store
+'reset trigger
+0 .shflav store
+' turn toward enemy
+*.shang .aimdx store
+stop
+
+
+'----------------reproduce
+cond
+*.eyef 0 =
+'don't look at body or energy but at the combo
+'older versions were full of energy but were stopped from reproducing because it could not be converted fast enough
+'*.body 15 mult *.nrg add *.totalbots 10 sub 2 mult mult *.totalmyspecies 3 mult div *.toten >
+*.body 15 mult *.nrg add *.toten >
+'cap the pop at 2:1 ratio (assumes 10 veggies)
+*.totalmyspecies 3 mult *.totalbots 10 sub 2 mult <
+start
+50 .repro store
+314 .aimright store
+'*.toten 12 mult 10 div .toten 30000 ceil store
+stop
+
+
+'--------------------birth
+cond
+*.robage 0 =
+start
+'store dna length for conspec
+.dnalen .memloc store
+'cut tie
+.deltie inc
+'turn away
+314 .aimright store
+'define energy size
+5000 .toten store
+'what to infect with poison
+'.shoot .ploc store
+'100 rnd 2 add .tiespace store
+stop
+
+'---------------------replenishment
+'store energy in body
+cond
+'more energy than body
+*.nrg *.body >
+start
+100 .strbody store
+stop
+
+'revert body to energy
+cond
+*.nrg 600 <
+*.body *.nrg 100 add > or
+start
+100 .fdbody store
+stop
+
+'cond
+'if poison level below minimum
+'*.poison 50 <
+'*.nrg 500 > and
+'*.shflav -1 = or
+'start
+'replenish poison back to 200
+'50 *.poison sub .strpoison store
+'stop
+
+'cond
+'if shell level below minimum
+'*.shell 50 <
+'*.nrg 500 > and
+'*.shflav -6 = or
+'*.shflav -3 = or
+'start
+'replenish shell back to 200
+'50 *.shell sub .mkshell store
+'stop
+
+'cond
+'*.venom 50 <
+'*.nrg 500 >
+'start
+'250 *.venom sub .strvenom store
+'stop
+
+'cond
+'*.slime 200 <
+'*.nrg 500 >
+'start
+'200 *.slime sub .mkslime store
+'stop

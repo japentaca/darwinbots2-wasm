@@ -84,6 +84,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,1065.0.html"
  },
  {
+  "file": "Ann_F1_Darwinbots_Botsareus.txt",
+  "name": "Ann(F1)(Darwinbots_Botsareus)",
+  "board": "F1 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6562.0.html"
+ },
+ {
   "file": "Anon_Terifica_daynight_F1_PY_-20.04.04.txt",
   "name": "Anon Terifica daynight (F1)(PY)-20.04.04",
   "board": "F1 bots",
@@ -110,6 +117,13 @@
   "board": "F1 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,20.0.html"
+ },
+ {
+  "file": "ARCM_s_Revenge_F1_Spork22_2-5-2015.txt",
+  "name": "ARCM's Revenge (F1) (Spork22)2-5-2015",
+  "board": "F1 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6754.0.html"
  },
  {
   "file": "Assimilator_F1_k0zm0_-23.12.03.txt",
@@ -173,6 +187,13 @@
   "board": "F1 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6623.0.html"
+ },
+ {
+  "file": "Chaotic_Swarms_F1_SA_05-05-2008.txt",
+  "name": "Chaotic Swarms (F1) (SA) (05-05-2008)",
+  "board": "F1 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2741.0.html"
  },
  {
   "file": "Cheatbot_Mk1_F1_PY_-10.02.04.txt",
@@ -1316,6 +1337,20 @@
   "url": "http://forum.darwinbots.com/index.php/topic,1876.0.html"
  },
  {
+  "file": "Gimmic_2.0.txt",
+  "name": "Gimmic 2.0",
+  "board": "F2 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3043.0.html"
+ },
+ {
+  "file": "Gimmick1.0_F2_Ikke_11.6.2008.txt.txt",
+  "name": "Gimmick1.0(F2)(Ikke)11.6.2008.txt",
+  "board": "F2 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3013.0.html"
+ },
+ {
   "file": "Glacies_Draconis_F2_Shen_-28.07.04.txt",
   "name": "Glacies Draconis (F2)(Shen)-28.07.04",
   "board": "F2 bots",
@@ -1981,6 +2016,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,3083.0.html"
  },
  {
+  "file": "Gimmick2.0_F3__Ikke_29.19.2008-1.txt",
+  "name": "Gimmick2.0_F3__Ikke_29.19.2008-1",
+  "board": "F3 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6360.0.html"
+ },
+ {
   "file": "Gnat_F3_MysticalDumpling_29.4.14.txt",
   "name": "Gnat(F3)(MysticalDumpling)29.4.14",
   "board": "F3 bots",
@@ -2023,11 +2065,25 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2967.0.html"
  },
  {
+  "file": "Slam_Funk1.1_F3_Ta-183_-4.26.09.txt",
+  "name": "Slam_Funk1.1(F3)(Ta-183)-4.26.09",
+  "board": "F3 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3130.0.html"
+ },
+ {
   "file": "Slam_Funk2.0_F3_Ta-183_-4.26.09.txt",
   "name": "Slam_Funk2.0(F3)(Ta-183)-4.26.09",
   "board": "F3 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3131.0.html"
+ },
+ {
+  "file": "Slam_Funk2.1_F3_Ta-183_-5.27.09.txt",
+  "name": "Slam_Funk2.1(F3)(Ta-183)-5.27.09",
+  "board": "F3 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3168.0.html"
  },
  {
   "file": "Sneaker_Cannibalistic_F3_Testlund_9-12-2014.txt",
@@ -2063,6 +2119,13 @@
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2547.0.html"
+ },
+ {
+  "file": "1_6.txt",
+  "name": "1",
+  "board": "Short bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2133.0.html"
  },
  {
   "file": "Mk2_Aggressive_Dwarfs_Spike43884_F1_SB_09-11-2014.txt",
@@ -2513,6 +2576,20 @@
   "url": "http://forum.darwinbots.com/index.php/topic,1927.0.html"
  },
  {
+  "file": "Chaotic_Swarm_v_2.0_MB_CB.txt",
+  "name": "Chaotic Swarm v 2.0 (MB CB)",
+  "board": "Multi-Bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2769.0.html"
+ },
+ {
+  "file": "Chaotic_Swarm_ver_1.2_MB_SA.txt",
+  "name": "Chaotic Swarm ver 1.2 (MB)(SA)",
+  "board": "Multi-Bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2759.0.html"
+ },
+ {
   "file": "Coloniser_MB_Spike43884_10-25-2014.txt",
   "name": "Coloniser(MB)(Spike43884)10-25-2014",
   "board": "Multi-Bots",
@@ -2821,11 +2898,39 @@
   "url": "http://forum.darwinbots.com/index.php/topic,119.0.html"
  },
  {
+  "file": "Alga_Cohesum_V_Elite_-01.06.06.txt",
+  "name": "Alga Cohesum (V)(Elite)-01.06.06",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1374.0.html"
+ },
+ {
   "file": "Alga_minimalis_3.0.txt",
   "name": "Alga minimalis 3.0",
   "board": "Veggies",
   "veg": true,
   "url": "http://forum.darwinbots.com/index.php/topic,6568.0.html"
+ },
+ {
+  "file": "Alga_Sparsi_V_Elite_-01.06.06.txt",
+  "name": "Alga Sparsi (V)(Elite)-01.06.06",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1373.0.html"
+ },
+ {
+  "file": "Alga_Substantis_V_Frankle_-18.12.06.txt",
+  "name": "Alga Substantis (V)(Frankle)-18.12.06",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1806.0.html"
+ },
+ {
+  "file": "Alga_Branchious_v0.9_Veggie_Panda_14121009.txt",
+  "name": "Alga_Branchious v0.9(Veggie)(Panda)(14121009)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3245.0.html"
  },
  {
   "file": "Algamomenta.txt",
@@ -2842,6 +2947,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6609.0.html"
  },
  {
+  "file": "Caterpillar_Chloroplastus_Veggie_spork22.txt",
+  "name": "Caterpillar Chloroplastus(Veggie)spork22",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6418.0.html"
+ },
+ {
   "file": "Chloroplastus.txt",
   "name": "Chloroplastus",
   "board": "Veggies",
@@ -2856,11 +2968,39 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6610.0.html"
  },
  {
+  "file": "Feeder_Veggie_Veggie_RStonepeak_-_06.08.14.txt",
+  "name": "Feeder Veggie (Veggie)(RStonepeak) - 06.08.14",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6465.0.html"
+ },
+ {
+  "file": "Gardener_veggie_V_PY_-03.05.06.txt",
+  "name": "Gardener veggie (V)(PY)-03.05.06",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1302.0.html"
+ },
+ {
+  "file": "Hexagonis_2_Chloroplastus_Veggie_spork22.txt",
+  "name": "Hexagonis 2 Chloroplastus(Veggie)(spork22)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6385.0.html"
+ },
+ {
   "file": "Plankton_Kinetic_MBVeggie.txt",
   "name": "Plankton Kinetic (MBVeggie)",
   "board": "Veggies",
   "veg": true,
   "url": "http://forum.darwinbots.com/index.php/topic,2781.0.html"
+ },
+ {
+  "file": "Plankton_Kinetic_MBVeggie_2.txt",
+  "name": "Plankton Kinetic (MBVeggie)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,2773.0.html"
  },
  {
   "file": "Pollinating_Plant_evoveggie_MysticalDumpling_29.4.14.txt",
@@ -2877,6 +3017,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2063.0.html"
  },
  {
+  "file": "Show_No_Mercy_Veggie_Spork22.txt",
+  "name": "Show No Mercy (Veggie)(Spork22)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6755.0.html"
+ },
+ {
   "file": "Tier_Divider_Schoolans_Planty2_Vegy_Spork22_9-28-2014.txt",
   "name": "Tier Divider Schoolans Planty2(Vegy)(Spork22)9-28-2014",
   "board": "Veggies",
@@ -2884,7 +3031,7 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6569.0.html"
  },
  {
-  "file": "1_6.txt",
+  "file": "1_7.txt",
   "name": "1",
   "board": "Interesting behaviour bots",
   "veg": false,
@@ -2968,6 +3115,20 @@
   "url": "http://forum.darwinbots.com/index.php/topic,3038.0.html"
  },
  {
+  "file": "Biff_Invasive.txt",
+  "name": "Biff Invasive",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6745.0.html"
+ },
+ {
+  "file": "Biff_Frankenstien_Bot_Spork22.txt",
+  "name": "Biff(Frankenstien Bot)(Spork22)",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6744.0.html"
+ },
+ {
   "file": "BlindBot_evo_interesting.txt",
   "name": "BlindBot[evo][interesting]",
   "board": "Interesting behaviour bots",
@@ -2980,6 +3141,13 @@
   "board": "Interesting behaviour bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3117.0.html"
+ },
+ {
+  "file": "Bot_v_1.1_no_fixpos.txt",
+  "name": "Bot v 1.1 no fixpos",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3075.0.html"
  },
  {
   "file": "Capsule_SB_MacadamiaNuts_-25.10.14.txt",
@@ -3094,6 +3262,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2804.0.html"
  },
  {
+  "file": "Hunter_Special_Follower.txt",
+  "name": "Hunter Special Follower",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3076.0.html"
+ },
+ {
   "file": "Incrumus.txt",
   "name": "Incrumus",
   "board": "Interesting behaviour bots",
@@ -3185,6 +3360,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,792.0.html"
  },
  {
+  "file": "Red_queen.txt",
+  "name": "Red queen",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3188.0.html"
+ },
+ {
   "file": "Sentinel3.txt",
   "name": "Sentinel3",
   "board": "Interesting behaviour bots",
@@ -3269,11 +3451,25 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6592.0.html"
  },
  {
+  "file": "Turbo_IB_F2_Abyaly_-04.05.06.txt",
+  "name": "Turbo (IB)(F2)(Abyaly)-04.05.06",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1306.0.html"
+ },
+ {
   "file": "Vox_Addo.txt",
   "name": "Vox Addo",
   "board": "Interesting behaviour bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3425.0.html"
+ },
+ {
+  "file": "WormII.txt",
+  "name": "WormII",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3040.0.html"
  },
  {
   "file": "Yojimbo_IBB_MacadamiaNuts_-25.10.14.txt",
@@ -3283,7 +3479,7 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6611.0.html"
  },
  {
-  "file": "1_7.txt",
+  "file": "1_8.txt",
   "name": "1",
   "board": "EcoSim Bots",
   "veg": false,
@@ -3304,11 +3500,18 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2851.0.html"
  },
  {
-  "file": "1_8.txt",
+  "file": "1_9.txt",
   "name": "1",
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6853.0.html"
+ },
+ {
+  "file": "4-d_Swarmer.txt",
+  "name": "4-d Swarmer",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2761.0.html"
  },
  {
   "file": "Animal_Minimalis_Amorous_EvoBot.txt",
@@ -3323,6 +3526,13 @@
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6332.0.html"
+ },
+ {
+  "file": "Another_strange_0-bot.txt",
+  "name": "Another strange 0-bot",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6259.0.html"
  },
  {
   "file": "BlueOnBlue_evolved_evo_F1_MysticalDumpling_20-2-14_2.txt",
@@ -3360,11 +3570,32 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2156.0.html"
  },
  {
+  "file": "Convergent_Spork22.txt",
+  "name": "Convergent (Spork22)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6807.0.html"
+ },
+ {
   "file": "Convergent_2.0_Spork22.txt",
   "name": "Convergent 2.0 (Spork22)",
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6808.0.html"
+ },
+ {
+  "file": "Doom_Comes_In_Eights_Evolved.txt",
+  "name": "Doom Comes In Eights(Evolved)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6751.0.html"
+ },
+ {
+  "file": "Everlivus_Influenzus_Evolved_spork22_Mutation.txt",
+  "name": "Everlivus Influenzus Evolved (spork22) (Mutation)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6790.0.html"
  },
  {
   "file": "Everlivus_Influenzus_F1_EVO_Spork22_5.23.2014_2.txt",
@@ -3423,6 +3654,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,3166.0.html"
  },
  {
+  "file": "Gerbal3_Spork22_Evolved_bots.txt",
+  "name": "Gerbal3(Spork22)(Evolved bots)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6761.0.html"
+ },
+ {
   "file": "Hive_Moonfisher_Darwinbots_F1_4-25-2016.txt",
   "name": "Hive(Moonfisher_Darwinbots)(F1)4-25-2016",
   "board": "Mutations",
@@ -3444,11 +3682,25 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6321.0.html"
  },
  {
+  "file": "Loopdaloops_spork22.txt",
+  "name": "Loopdaloops(spork22)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6742.0.html"
+ },
+ {
   "file": "Mr._Magoo_Mutated.txt",
   "name": "Mr. Magoo Mutated",
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2785.0.html"
+ },
+ {
+  "file": "Mutated_bot.txt",
+  "name": "Mutated bot",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1377.0.html"
  },
  {
   "file": "Mutation_from_evolve-2_x_series.txt",
@@ -3491,6 +3743,13 @@
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6814.0.html"
+ },
+ {
+  "file": "Weird_zerobot.txt",
+  "name": "Weird zerobot",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6235.0.html"
  },
  {
   "file": "Zer0Bot.txt",
@@ -3619,7 +3878,7 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6337.0.html"
  },
  {
-  "file": "1_9.txt",
+  "file": "1_10.txt",
   "name": "1",
   "board": "Untagged bots",
   "veg": false,
@@ -3645,6 +3904,13 @@
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2274.0.html"
+ },
+ {
+  "file": "Battlestar_bot_04-27-08.txt",
+  "name": "Battlestar bot 04-27-08",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2699.0.html"
  },
  {
   "file": "Cool_Mutations_to_Singula_Haloculus_Animal_Mimalis_F1_I_thin.txt",
@@ -3680,6 +3946,13 @@
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3438.0.html"
+ },
+ {
+  "file": "Evolve_II.txt",
+  "name": "Evolve II",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3369.0.html"
  },
  {
   "file": "Evolved_BlueOnBlue_Evolved_F2_F1_evo_MysticalDumpling_21-2-1_3.txt",
@@ -3745,6 +4018,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6258.0.html"
  },
  {
+  "file": "Preying_Plankton.txt",
+  "name": "Preying Plankton",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2796.0.html"
+ },
+ {
   "file": "Przykro_2.0_Vexator_F3_MysticalDumpling_1.3.14.txt",
   "name": "Przykrość 2.0 [Vexator](F3)(MysticalDumpling)1.3.14",
   "board": "Untagged bots",
@@ -3766,6 +4046,13 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2512.0.html"
  },
  {
+  "file": "Slimy_Veg_Original.txt",
+  "name": "Slimy_Veg (Original)",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6276.0.html"
+ },
+ {
   "file": "Smarter_algae.txt",
   "name": "Smarter algae",
   "board": "Untagged bots",
@@ -3785,6 +4072,13 @@
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6279.0.html"
+ },
+ {
+  "file": "sporebot.txt",
+  "name": "sporebot",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3419.0.html"
  },
  {
   "file": "Sporyx_V_0.4.txt",
@@ -3813,5 +4107,12 @@
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3030.0.html"
+ },
+ {
+  "file": "W6_a_verry_strong_multibot.txt",
+  "name": "W6    a verry strong multibot",
+  "board": "Untagged bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3052.0.html"
  }
 ]

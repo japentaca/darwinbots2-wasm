@@ -1,7 +1,5 @@
-'Added "0 .aimsx store" to gene 13
-
 'Excalibur 1.11
-'designed for db 2.42.9
+'designed for db 4.42.9
 'by Light
 '30/10/06
 

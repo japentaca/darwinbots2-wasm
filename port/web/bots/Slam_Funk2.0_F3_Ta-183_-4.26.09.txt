@@ -1,9 +1,452 @@
+'Slam Funk 2.0 
+'Second Generation of Slam Funk
+'Vastly improved communication and decision making.
+'Can now differentiate between enemy and food
+'And effectively relay information.
+'Has improved diagnostics routines and retreat capability.
+
+
+'CHANGELOG
+'Ver 2.00
+'	Initial Build
+'
+
+'Communication
+def txpos 50
+def typos 51
+'Identification Friend Foe or Food
+def IFFF 52
+def notarget 53
+def friend 54
+def food 55
+def foe 56
+'Secure Conspec Constants
+def algaminimalis 57
+'Situational Awareness
+def situation 58
+def nothing 59
+def eating 60
+def fighting 61
+'Condition
+def health 62
+def fine 63
+def injured 64
+def dying 65
+def intox 66
+'Other Variables
 def lead 987
 
+'-------- CONSTANT INITIALIZATION --------
+
+cond
+*.robage 0 =
+start
+.dnalen .memloc store
+'Communication
+0 .txpos store
+0 .typos store
+'Identification Friend Foe or Food
+0 .IFFF store
+0 .notarget store
+1 .friend store
+2 .food store
+3 .foe store
+'Secure Conspec Constants
+13 .algaminimalis store
+'Situational Awareness
+0 .situation store
+0 .nothing store
+1 .eating store
+2 .fighting store
+'Condition
+0 .health store
+1 .fine store
+2 .injured store
+3 .dying store
+4 .intox store
+stop
+
+'-------- MAINTINENCE: Health --------
+
+'Health Indication -Fine
+cond
+*.nrg 2000 >
+*.body 1500 > and
+*.poisoned 0 = and
+*.paralyzed 0 = and
+start
+*.fine .health store
+stop
+
+'Health Indication -Injured
+cond
+*.pain 300 >
+*.nrg 1000 > and
+*.nrg 2000 < and
+*.body 1500 < and
+*.poisoned 0 = and
+*.paralyzed 0 = and
+start
+*.injured .health store
+stop
+
+'Health Indication -Dying
+cond
+*.nrg 1000 <
+*.body 1000 < and
+start
+*.dying .health store
+stop
+
+'Health Indication -Intoxicated
+cond
+*.poisoned 1 = 
+*.paralyzed 1 = or
+start
+*.intox .health store
+stop
+
+'-------- MAINTINENCE: Energy Birthties And Other Constants --------
+
+' Get rid of birth tie
+cond
+*.robage 0 =
+start
+ .deltie inc
+stop
+
+'Body storage
+cond
+*.nrg *.body >
+start
+100 .strbody
+stop
+
+'Body feeding
+cond
+*.nrg *.body <
+start
+100 .fdbody
+stop
+
+
+'-------- IDENTIFICATION FRIEND FOE OR FOOD --------
+
+'Can't see shit, captian
+cond
+*.eye1 0 =
+*.eye2 0 = and
+*.eye3 0 = and
+*.eye4 0 = and
+*.eye5 0 = and
+*.eye6 0 = and
+*.eye7 0 = and
+*.eye8 0 = and
+*.eye9 0 = and
+start
+*.nothing .situation store
+*.notarget .IFFF store
+stop
+
+'Friendly Bot
+cond
+*.eyef 0 >
+*.refeye *.myeye = and
+*.health *.intox != and
+start
+*.nothing .situation store
+*.friend .IFFF store
+stop
+
+'Food
+cond
+*.memval *.algaminimalis =
+*.refeye *.myeye != and
+*.health *.intox != and
+start
+*.eating .situation store
+*.food .IFFF store
+*.refxpos .txpos store
+*.refypos .typos store
+stop
+
+'Foe
+cond
+*.refshoot 0 >
+*.refkills 0 > or
+*.eyef 0 > and
+*.refeye *.myeye != and
+*.health *.intox != and
+start
+*.fighting .situation store
+*.foe .IFFF store
+*.refxpos .txpos store
+*.refypos .typos store
+stop
+
+'-------- VISION --------
+'NOTE: Original vision system taken from Slam Funk1.01c. 
+'Replaced with vision system from Gimmick 2.0
+
+'Targeting genes.
+
+'eye4
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye4 0 >
+*.eye4 *.eye3 >=
+*.eye4 *.eye2 >=
+*.eye4 *.eye1 >=
+*.eye4 *.eye6 >=
+*.eye4 *.eye7 >=
+*.eye4 *.eye8 >=
+*.eye4 *.eye9 >=
+start
+*.aim 35 add .setaim store
+stop
+
+'eye6
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye6 0 >
+*.eye6 *.eye4 >
+*.eye6 *.eye7 >=
+*.eye6 *.eye8 >=
+*.eye6 *.eye9 >=
+*.eye6 *.eye1 >=
+*.eye6 *.eye2 >=
+*.eye6 *.eye3 >=
+start
+*.aim -35 add .setaim store
+stop
+
+'eye3
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye3 0 >
+*.eye3 *.eye4 >
+*.eye3 *.eye6 >
+*.eye3 *.eye2 >=
+*.eye3 *.eye1 >=
+*.eye3 *.eye7 >=
+*.eye3 *.eye8 >=
+*.eye3 *.eye9 >=
+start
+*.aim 70 add .setaim store
+stop
+
+'eye7
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye7 0 >
+*.eye5 0 =
+*.eye7 *.eye4 >
+*.eye7 *.eye6 >
+*.eye7 *.eye3 >
+*.eye7 *.eye2 >=
+*.eye7 *.eye1 >=
+*.eye7 *.eye8 >=
+*.eye7 *.eye9 >=
+start
+*.aim -70 add .setaim store
+stop
+
+'eye2
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye2 0 >
+*.eye5 0 =
+*.eye2 *.eye4 >
+*.eye2 *.eye3 >
+*.eye2 *.eye7 >
+*.eye2 *.eye6 >
+*.eye2 *.eye1 >=
+*.eye2 *.eye9 >=
+*.eye2 *.eye8 >=
+start
+*.aim 105 add .setaim store
+stop
+
+'eye8
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye8 0 >
+*.eye5 0 =
+*.eye8 *.eye2 >
+*.eye8 *.eye3 >
+*.eye8 *.eye4 >
+*.eye8 *.eye7 >
+*.eye8 *.eye6 >
+*.eye8 *.eye1 >=
+*.eye8 *.eye9 >=
+start
+*.aim -105 add .setaim store
+stop
+
+'eye1 
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye1 0 >
+*.eye1 *.eye2 >
+*.eye1 *.eye3 >
+*.eye1 *.eye4 >
+*.eye1 *.eye6 >
+*.eye1 *.eye7 >
+*.eye1 *.eye8 >
+*.eye1 *.eye9 >=
+start
+*.aim 140 add .setaim store
+stop
+
+'eye9
+cond
+*.paralyzed 0 =
+*.poisoned 0 =
+*.eye5 0 =
+*.eye9 0 >
+*.eye9 *.eye1 >
+*.eye9 *.eye2 >
+*.eye9 *.eye8 >
+*.eye9 *.eye7 >
+*.eye9 *.eye6 >
+*.eye9 *.eye4 >
+*.eye9 *.eye3 >
+start
+*.aim -140 add .setaim store
+stop
+
+
+'-------- MOVEMENT --------
+
+'Follow friends
+cond
+*.eye5 0 >
+*.IFFF *.friend =
+*.situation *.nothing = and
+*.health *.intox != and
+start
+*.refveldx .dx store
+*.refvelUp 10 add .up store
+40 .aimdx store
+stop
+
+'Doing nothing
+cond
+*.situation *.nothing =
+start
+40 .up store
+stop
+
+'Eating/Fighting -Note; This is added as a patch to fix a bug where bots would stop moving a distance from a target.
+cond
+*.IFFF *.notarget !=
+*.IFFF *.friend != or
+*.eye5 0 > and
+*.eye5 60 < and
+start
+*.refveldx 40 add .dx store
+stop
+
+'-------- COMMUNICATION --------
+
+cond
+*.IFFF *.food =
+*.IFFF *.foe = or
+*.health *.intox != and
+start
+*.IFFF .out1 store
+*.txpos .out2 store
+*.typos .out3 store
+stop
+
+cond
+*.IFFF *.notarget =
+*.IFFF *.friend = or
+start
+*.IFFF .out1 store
+0 .out2 store
+0 .out3 store
+stop
+
+'Listen for signs of food, turn towards it if not doing anything more important
+cond
+*.in1 *.food =
+*.situation *.nothing = and
+*.health *.intox != and
+start
+*.in2 *.in3 angle .setaim store
+40 .up store
+*.eating .situation store
+stop
+
+'Listen for signs of trouble. Go fight if there is any and you're not hurt and busy eating.
+cond
+*.situation *.nothing =
+*.situation *.eating = or
+*.in1 *.foe = and
+*.health *.intox != and
+*.health *.dying != and
+*.health *.injured = not
+*.situation *.eating = not and and
+start
+*.in2 *.in3 angle .setaim store
+40 .up store
+*.fighting .situation store
+stop
+
+'-------- COMBAT --------
+
+'Retreating gene
+cond
+*.health *.injured =
+*.refnrg 1500 > and
+*.health *.dying = or
+*.IFFF *.foe = and
+*.eye5 0 > and
+start
+628 .aimdx store
+90 .up store
+stop
+
+'Retaliate to shot outside vision
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+10 .dx store
+1256 *.shang sub .setaim store
+0 .shflav store
+stop
+
+'Eating
+'NOTE: Added to enable faster, more accurate feeding against veggies. Test bots suffered from an inability to eat fast enough to survive against faster, top-teir bots.
 cond
 *.eye5 50 > 
 *.refeye *.myeye != and
-*.IFFF *.foe = and
+*.IFFF *.food and
+start
+16 .shootval store
+-6 .shoot store
+ *.refvelup .up store
+stop
+
+'Shooting gene. Accurately targets foe and decides what type of shot to use.
+'NOTE: As of SF2.0RC5, gene no longer activates on food. Seperate gene for eating is now used.
+cond
+*.eye5 50 > 
+*.refeye *.myeye != and
+*.IFFF *.foe= and
 start
 *.refxpos *.refypos dist *.refvelup add *.xpos add
 *.ypos *.refvelsx add
@@ -14,7 +457,7 @@ angle
 *.refveldx .dx store
 *.eyef *.refveldx 400 mult *.refbody div 4 add > 
 -6 .shoot store
-28 .shootval store
+32 .shootval store
 *.refnrg *.refbody <
 *.refpoison *.refshell < or
 -1 .shoot store
@@ -26,3 +469,20 @@ angle .lead store
 dropbool
 *.lead .aimshoot store
 stop
+
+'-------- REPRODUCTION --------
+
+cond
+*.health *.fine =
+*.nrg 3000 > and
+start
+60 .repro store
+314 .aimdx store
+stop
+
+'-------- OTHER --------
+
+
+
+
+end

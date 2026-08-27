@@ -1,348 +1,165 @@
-'Russian Babies (F1 League)
-'By Spike43884
-'Originally All Eyes V1.5
-'This bot goes into hibernation whilest waiting
-'Should reproduce in the face of danger...or food
-'Dev Info:
-'Hibernation Sys - TRUE
-'Hunting Sys - AllEyes
-'Corpsify - UNKNOWN
-'Confusion - TRUE
-'Retaliation Type - Babies
+'#generation: 9
+'#mutations: 8
 
-
-'Just some free variables
-def attack 50
-def hibernate 51
-def head 52
-def maxlen 53
-def minlen 54
-
-'Initilisation (TIELENX)
-start
-500 .maxlen *.maxlen 500 sub sgn 1 add mult store
-stop
-
-cond
-*.tielenx *.maxlen >
-start
-*.tinlenx 10 add *.tielenx store
-stop
-
-or
-
-def minlen 50
-def maxlen 500
-
-cond
-*.tielenx .maxlen >
-start
-*.tielenx 10 sub .tielenx store
-stop
-
-
-
-'Initialisation (EYES)
-cond
-*.robage 2 <
-start
- 135 .eye1width store
- 135 .eye2width store
- 135 .eye3width store
- 135 .eye4width store
- 15 .eye5width store
- 135 .eye6width store
- 135 .eye7width store
- 135 .eye8width store
- 135 .eye9width store
- 410 .eye1dir store
- 300 .eye2dir store
- 190 .eye3dir store
- 80 .eye4dir store
- 0 .eye5dir store
- -80 .eye6dir store
- -190 .eye7dir store
- -300 .eye8dir store
- -410 .eye9dir store
- .aimsx .vloc store
- 128 .venval store
-stop
-
-
-
-' Gene 1 Initiate Hibernation (waiting)
-cond
-*.eye1 0 =
- *.eye2 0 = and
- *.eye3 0 = and
- *.eye4 0 = and
- *.eye5 0 = and
- *.eye6 0 = and
- *.eye7 0 = and
- *.eye8 0 = and
- *.eye9 0 = and
- *.refeye *.myeye = or
- *.nrg 3000 < and
- *.hibernate 0 = and  'KEY
-start
- 1 .hibernate store
-stop
-
-' Gene 1 Search (waiting)
-cond
-*.eye1 0 =
- *.eye2 0 = and
- *.eye3 0 = and
- *.eye4 0 = and
- *.eye5 0 = and
- *.eye6 0 = and
- *.eye7 0 = and
- *.eye8 0 = and
- *.eye9 0 = and
- *.refeye *.myeye = or
- *.nrg 3000 >= and
-start
- 10 rnd .aimdx store
-stop
-
-
-'Gene 2 Food Sighted 
-'*********************
-cond
-*.refeye *.myeye !=
-*.eyef 0 !=
-start
-1 .attack store
-stop
-
-cond
-*.refeye *.myeye =
-*.eyef 0 = or
-start
-0 .attack store
-stop
-
-cond
-*.eye1 0 >
-*.attack 0 =
-start
-550 .aimdx
-0 .hibernate store
-stop
-
-cond
-*.eye2 0 >
-*.attack 0 =
-start
-405 .aimdx
-0 .hibernate store
-stop
-
-cond
-*.eye3 0 >
-*.attack 0 =
-start
-260 .aimdx
-0 .hibernate store
-stop
-
-cond
-*.eye4 0 >
-*.attack 0 =
-start
-115 .aimdx
-0 .hibernate store
-stop
-
-cond
-*.eye6 0 >
-*.attack 0 =
-start
-115 .aimsx
-0 .hibernate store
-stop
-
-cond
-*.eye7 0 >
-*.attack 0 =
-start
-260 .aimsx
-0 .hibernate store
-stop
-
-cond
-*.eye8 0 >
-*.attack 0 =
-start
-405 .aimsx
-0 .hibernate store
-stop
-
-cond
-*.eye9 0 >
-*.attack 0 =
-start
-550 .aimsx
-0 .hibernate store
-stop
-'*********************
-
-
-' Gene 3 Chase Food
-cond
-*.eye5 0 >
- *.refeye *.myeye !=
-start
- *.refveldx .dx store
- *.refvelup 30 add .up store
-stop
-
-
-' Gene 4 Long Range Food Handling
-
-cond
- *.eye5 50 >
- *.refeye *.myeye !=
- *.refeye 0 >
- *.hibernate 0 =
-start
-1 rnd 2 mult 3 sub .shoot store
-216 .shootval store
-stop
-
-
-'Gene 5 Blind Retaliation
-cond
- *.hit 1 =
- *.eye5 40 > or
- *.refeye *.myeye !=
-start
-*.shang 90 sub .aimdx
-10 .repro store
-10 .repro store
-stop
-
-
-' Gene 6 Eat Food
-cond
- *.eye5 50 >
- *.refeye *.myeye !=
- *.hibernate 0 =
- *.refeye 0 =
- *.robage 0 !=
-start
--1 .shoot store
- *.refvelup .up store
-stop
-
-' Gene 7 Venom
-cond
- *.hibernate 0 =
- *.venom 50 <
-start
-10 .strvenom store
-stop
-
-' Gene 8 Avoiding Family
-cond
+ cond
  *.eye5 0 =
- *.refeye *.myeye = or
- *.hibernate 0 =
-start
- 314 rnd .aimdx store
-stop
+ start
+ 314 rnd .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  10  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  2 Begins at position  11  '''''''''''''''''''''''
+ cond
+ *.nrg 20000 >
+ start
+ 50 .repro store
+ 1 972
+''''''''''''''''''''''''  Gene:  2 Ends at position  20  '''''''''''''''''''''''
 
-' Gene 9 Duplicate
-cond
- *.robage 0 !=
- *.numties 0 =
- *.head 0 =
-start
- 1 .head store
-stop
+''''''''''''''''''''''''  Gene:  3 Begins at position  21  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  22  '''''''''''''''''''''''
+ store
+ *972 1 =
 
+''''''''''''''''''''''''  Gene:  4 Begins at position  27  '''''''''''''''''''''''
+ start
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  31  '''''''''''''''''''''''
 
-' Gene 10 Reproduce
-cond
- *.nrg 15000 >
- *.robage 3 > and 
-start
- 15 .repro store
-stop
+''''''''''''''''''''''''  Gene:  5 Begins at position  32  '''''''''''''''''''''''
+ cond
+ *.nrg 3000 <
+ start
+ 0 972 store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  40  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  6 Begins at position  41  '''''''''''''''''''''''
+ cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ start
+ -1 .shoot store
+ 1 .up store
+ *.refxpos *.refypos angle .setaim store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  60  '''''''''''''''''''''''
 
-' Gene 11 Reproduce for MB league
-cond
- *.numties 0 =
- *.robage 0 !=
-start
- 10 .repro store
-stop
+''''''''''''''''''''''''  Gene:  7 Begins at position  61  '''''''''''''''''''''''
+ cond
+ *.refkills *.kills >
+ *.refeye *.myeye =
+ start
+ *.refxpos *.refypos angle .setaim store
+ 1 .up store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  77  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  8 Begins at position  78  '''''''''''''''''''''''
+ cond
+ *.refkills *.kills >
 
-'*-*-*-*-*-*-*-*-*-*-*-*
+''''''''''''''''''''''''  Gene:  8 Ends at position  81  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  9 Begins at position  82  '''''''''''''''''''''''
+ cond
+ *.refvelscalar <=
+ *.hit 0 >
+ start
+ 1 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  92  '''''''''''''''''''''''
 
-' Core Fat Functions
-body
-cond
-*.nrg 1200 >
-*.nrg *.body 100 add >
-start
-100 .strbody store
-stop
+''''''''''''''''''''''''  Gene:  10 Begins at position  93  '''''''''''''''''''''''
+ cond
+ *.robage 5 mod 0 =
+ *.kills 0 >
+ start
+ 1 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  106  '''''''''''''''''''''''
 
-cond
-*.nrg 1000 <
-start
-100 .fdbody store
-stop
+''''''''''''''''''''''''  Gene:  11 Begins at position  107  '''''''''''''''''''''''
+ cond
+ *.robage 5 mod 0 =
+ *.kills 0 =
+ start
+ 0 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  120  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  12 Begins at position  121  '''''''''''''''''''''''
+ cond
+ *.kills *.refkills >
+ *.refeye *.myeye =
+ start
+ 1 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  132  '''''''''''''''''''''''
 
-' tie to parent
-cond
-*.robage 0 =
-start
-.tie inc
-stop
+''''''''''''''''''''''''  Gene:  13 Begins at position  133  '''''''''''''''''''''''
+ cond
+ *.reffixed 0 >
+ *.refeye *.myeye =
+ or
+ 1 .out1 store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  144  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  14 Begins at position  145  '''''''''''''''''''''''
+ cond
+ *.kills *.refkills >
+ *.refeye *.myeye =
+ *.in1 1 =
+ start
+ 0 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  159  '''''''''''''''''''''''
 
-' If MB Stuff
-cond
- *.multi 1 = or
- *.hibernate 0 = 
-start
- 50 .sharenrg store
- 500 .maxlen store
- 60 .stifftie store
-stop
+''''''''''''''''''''''''  Gene:  15 Begins at position  160  '''''''''''''''''''''''
+ cond
+ *.kills 0 >
+ start
+ -1117 10 dup *100 sub sgn abs 100 mult store
+ 100 313 *.nrg *.body 10 div *100 ++ mult sub sgn 0 floor mult store
+ 100 312 *.body 10 div *100 mult *.nrg sub sgn 0 floor mult *.body sub sgn 0 floor mult store
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  210  '''''''''''''''''''''''
 
-'Gene 13 MB communication
-cond
- *.eye5 0 !=
- *.head 1 =
-start
- *.eye5 .tout1 store
- *.aimdx .tout2 store
-stop
+''''''''''''''''''''''''  Gene:  16 Begins at position  211  '''''''''''''''''''''''
+ cond
+ *.robage 25 mod 0 =
+ *.kills 0 =
+ start
+ 628 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  224  '''''''''''''''''''''''
 
-cond
- *.tin1 0 !=
- *.head 0 =
-start
-*.tin2 .aimdx store
-stop
+''''''''''''''''''''''''  Gene:  17 Begins at position  225  '''''''''''''''''''''''
+ cond
+ *.refkills *.kills >
+ *.kills 0 >
+ start
+ -2 .shoot store
+ 1 .up store
+ *.refxpos *.refypos angle .setaim store
+ 0 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  247  '''''''''''''''''''''''
 
+''''''''''''''''''''''''  Gene:  18 Begins at position  248  '''''''''''''''''''''''
+ cond
+ *.refkills *.kills =
+ *.kills 0 >
+ start
+ -1 .shoot store
+ 1 .up store
+ *.refxpos *.refypos angle .setaim store
+ 0 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  270  '''''''''''''''''''''''
 
-'Finale Waste Disposal
-cond
-*.waste 100 >
-*.refeye 0 =
-*.reftie 0 =
-start
-*.waste .shootval store
--4 .shoot store
-stop
-
-end
+'#hash: 9|Z;|M3-xBZe))-`vM|?

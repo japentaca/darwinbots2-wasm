@@ -1,4 +1,4 @@
-'Spinner v1.3 (F2) 27-04-08
+'Spinner v1.3 (F2) x
 'by Moonfisher
 'Mostly a tweek of v1.2
 'Torpedoes improved

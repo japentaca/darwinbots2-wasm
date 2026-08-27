@@ -1,0 +1,1386 @@
+'Chaotic Swarmer; Rebuild .5
+'Removed the older 360 eye focus system for the single gene store of bac.
+
+'Individuality
+
+def botname .out1
+def bot1 970
+def bot2 971
+def bot3 972
+def bot4 973
+def bot5 974
+def bot6 975
+def bot7 976
+def bot8 977
+def bot9 978
+def bot10 979
+
+'Historical Info
+
+def bxpos 82
+def bypos 83
+def fxpos 80
+def fypos 81
+
+'Tie Info
+
+def readcounter 150
+def multimode 151
+def tiereader 60
+def multeyef 86
+def tsexrpro 88
+def multrefage 84
+def multrefvel 87
+def readreset 149
+def tiecounter 74
+
+'Attack/Defence
+
+def venomsel 76
+def stage 75
+def shotselect 40
+
+'Eye Info
+
+def newbot 50
+def memcounter 73
+
+'Welwordion's 360 Eyes/Initialization and Indientity
+'**********************
+
+cond
+*.robage 0 =
+start
+*.tiepres .deltie store
+9999 rnd 1 .botname store
+*.dnalen .out2 store
+420 .eye1dir store
+315 .eye2dir store
+210 .eye3dir store
+105 .eye4dir store
+-105 .eye6dir store
+-210 .eye7dir store
+-315 .eye8dir store
+-420 .eye9dir store
+105 .eye1width store
+105 .eye2width store
+105 .eye3width store
+105 .eye4width store
+105 .eye5width store
+105 .eye6width store
+105 .eye7width store
+105 .eye8width store
+105 .eye9width store
+.tie inc
+stop
+
+cond
+*.robage 21 =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.timer 2 mod 2 =
+*192 0 =
+*.eyef 0 =
+start
+-4 rnd 4 .focuseye store
+*.eyef .tout3 store
+stop
+
+'Individuality Genes
+'*******************
+
+'check species and bot name
+
+cond
+*.eyef 0 >
+*.in2 *.out2 =
+*.myeye *.refeye %=
+*.in1 *.bot1 != and
+*.in1 *.bot2 != and
+*.in1 *.bot3 != and
+*.in1 *.bot4 != and
+*.in1 *.bot5 != and
+*.in1 *.bot6 != and
+*.in1 *.bot7 != and
+*.in1 *.bot8 != and
+*.in1 *.bot9 != and
+*.in1 *.bot10 != and
+*.in1 *.out1 !=
+*.robage *.refage sub abs 15 <
+*.refeye 0 >
+start
+*.memcounter 969 add .memloc store
+*.memcounter 1 add .memcounter store
+stop
+
+'select a memory location for in4
+
+cond
+*.newbot 1 =
+*.memcounter 1 =
+*.bot1 0 =
+start
+*.in1 .bot1 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 2 =
+*.bot2 0 =
+start
+*.in1 .bot2 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 3 =
+*.bot3 0 =
+start
+*.in1 .bot3 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 4 =
+*.bot4 0 =
+start
+*.in1 .bot4 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 5 =
+*.bot5 0 =
+start
+*.in1 .bot5 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 6 =
+*.bot6 0 =
+start
+*.in1 .bot6 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 7 =
+*.bot7 0 =
+start
+*.in1 .bot7 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 8 =
+*.bot8 0 =
+start
+*.in1 .bot8 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 9 =
+*.bot9 0 =
+start
+*.in1 .bot9 store
+0 .newbot store
+stop
+
+cond
+*.newbot 1 =
+*.memounter 10 =
+*.bot10 0 =
+start
+*.in1 .bot10 store
+0 .newbot store
+stop
+
+'Turning Genes
+'****************
+
+'Turn to a veg
+
+cond
+*.numties 2 <
+*.robage 21 >
+*.eyef 0 >
+*.refeye 0 =
+*.refxpos *.refypos angle *.tieang !=
+start
+*.refxpos *.refypos angle .setaim store
+stop
+
+'turn towards an enemy
+
+cond
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.multi 0 =
+start
+105 *.focuseye mult .aimdx store
+stop
+
+'Turn to conspec
+
+cond
+*.numties 2 <
+*.robage 21 >
+*.eyef 0 >
+*.refeye *.myeye %=
+*.in2 *.out2 = or
+*.in1 *.bot1 = or
+*.in1 *.bot2 = or
+*.in1 *.bot3 = or
+*.in1 *.bot4 = or
+*.in1 *.bot5 = or
+*.in1 *.bot6 = or
+*.in1 *.bot7 = or
+*.in1 *.bot8 = or
+*.in1 *.bot9 = or
+*.in1 *.bot10 =
+*.in4 1 =
+*.refxpos *.refypos angle *.tieang !=
+*.tin1 0 !=
+*.stage 6 !=
+*.stage 3 !=
+*.in4 500 =
+start
+*.refxpos *.refypos angle .setaim store
+0 *.velup sub *.eyef sub *.fixpos mult -1 mult .up store
+0 .stage store
+stop
+
+'Movement Genes
+'****************
+
+'Move Forward for singlebot mode
+
+cond
+*.fixed 0 =
+*.out4 1 !=
+*.eyef 0 >
+*.eyef 80 <
+*.refeye *.myeye !=
+*.refxpos *.refypos angle *.tieang !=
+*.numties 0 = or
+*.multi 0 =
+start
+*.refxpos *.refypos angle -1 mult *.aim add
+1256 add 1256 mod
+dup dup dup dup dup 314 ceil swapint
+314 floor 942 ceil 314 sub sub swapint
+942 floor 942 sub add 2 div *.veldx sub .dx store
+628 ceil -1 mult 314 add swapint 
+628 floor 628 sub add 2 div *.velup sub .up store
+stop
+
+cond
+*.eyef 0 =
+*.fixed 0 =
+*.vel *.maxvel !=
+start
+*.maxvel *.vel sub .up store
+stop
+
+cond
+*.fixed 0 =
+*.refaim -1 mult *.aim =
+*.refvel -1 mult *.vel = or
+*.refeye *.myeye != and
+*.out1 *.in1 !=
+*.eyef 0 >
+*.mass 1 >
+*.refeye 0 !=
+start
+*.maxvel *.mass div *.vel sub .sx store
+*.refxpos *.refypos angle *.setaim store
+stop
+
+cond
+*.fixed 0 =
+*.refaim -1 mult *.aim =
+*.refvel -1 mult *.vel = or
+*.refeye *.myeye != and
+*.out2 *.in2 !=
+*.eye6 20 <
+*.eye7 20 <
+*.eye8 20 <
+*.eye9 20 <
+*.mass 1 >
+*.refeye 0 !=
+start
+*.maxvel *.mass mult *.vel sub .dx store
+*.refxpos *.refypos angle *.setaim store
+stop
+
+'Multi mode
+
+cond
+*.multi 0 >
+*.trefvel *.vel = or
+*.trefvel *.vel >
+start
+*.trefaim .setaim store
+*.maxvel *.vel sub .up store
+stop
+
+'Attack/Defensive Genes
+'*****************
+
+cond
+*.eyef 0 =
+*.refeye *.myeye = or
+*.refshoot 0 = or
+*.pain 0 <
+start
+942 *.shang sub .setaim store
+0 .shflav store
+.shoot .ploc store
+stop
+
+cond
+*.fixed 0 =
+*.refvel *.vel = or
+*.refeye *.myeye != and
+*.out2 *.in2 !=
+*.eyef 40 >
+*.refeye 0 !=
+*.refxpos *.refypos angle *.tieang !=
+*.multi 0 =
+start
+*.refxpos *.refypos angle .aimshot store
+*.nrg 4 *.pain add div .shootval store
+-1 .shoot store
+cond
+
+cond
+*.refaim *.aim !=
+*.refvel *.vel = or
+*.refeye *.myeye != and
+*.out2 *.in2 !=
+*.eyef 40 >
+*.eyef 90 <
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .aimshot store
+*.setaim .shootval store
+*.aim .shoot store
+cond
+
+cond
+*.refeye *.myeye != or
+*.in2 *.out2 != 
+*.eyef 40 >
+*.refeye 2 >
+*.in1 *.bot1 != 
+*.in1 *.bot2 != 
+*.in1 *.bot3 != 
+*.in1 *.bot4 != 
+*.in1 *.bot5 != 
+*.in1 *.bot6 != 
+*.in1 *.bot7 != 
+*.in1 *.bot8 != 
+*.in1 *.bot9 != 
+*.in1 *.bot10 !=
+*.multi 0 =
+start
+*.refxpos *.refypos angle .aimshot store
+100 *.body sub *.nrg add .shootval store
+-1 .shoot store
+stop
+
+'Create Venom and Poison
+
+cond
+*.nrg 6000 > and
+*.venom 20 <
+*.poison 20 <
+*.multi 0 =
+start
+*.nrg *.venom sub 7 div .strvenom store
+*.nrg *.poison sub 6 div .mkpoison store
+stop
+
+cond
+*.nrg 3000 >
+*.shell 1200 <
+*.multi 0 =
+start
+*.nrg 5 div .mkshell store
+stop
+
+'Used for Info Shots under certain conditions
+
+cond
+*.fixed 0 =
+*.eyef 40 >
+*.refeye *.myeye !=
+*.in1 *.out1 !=
+*.refkills *.kills >
+*.refeye 0 !=
+start
+*.refxpos *.refypos angle .aimshot store
+.fixpos .shootval store
+1 .shoot store
+*.refxpos .fxpos store
+*.refypos .fypos store
+stop
+
+'Disguise if mutated
+
+cond
+*.in2 *.dnalen !=
+*.in2 *.out2 !=
+*.refeye *.meye %=
+*.refeye 0 !=
+*.multi 0 =
+start
+*.in2 .out2 store
+stop
+
+'Memory Loactions 80-81
+'*******************
+
+'Return to a trapped enemy if in pain
+
+cond
+*.pain 100 >
+*.eyef 0 =
+*.numties 0 =
+*.robage 21 >
+*.fixpos 0 =
+*.fxpos 0 !=
+*.fypos 0 !=
+*90 0 =
+start
+*.fxpos *.fypos angle .setaim store
+1 90 store
+stop
+
+cond
+*.eyef 0 >
+*.eyef 80 <
+*90 1 =
+*.xpos *.fxpos %=
+*.ypos *.fypos %=
+start
+*.refxpos *.refypos angle .aimshot store
+*.refxpos *.refypos angle .setaim store
+*.nrg 3 div .shootval store
+-1 .shoot store
+stop
+
+
+'Tie Genes
+'****************
+
+'Tie to a veg in Multi Bot Mode
+
+cond
+*.eyef 50 >
+*.refeye 0 =
+*.multimode 0 >
+*.numties 1 =
+*.stage 5 = or
+start
+1 *.tiecounter add .tiecounter store
+*.tiecounter .tie store
+stop
+
+cond
+*.stage 6 !=
+*.trefeye 0 =
+*.multimode 0 >
+*.tielen 30 !=
+*.in4 5 !=
+start
+210 *.tienum mult .fixang store
+30 .fixlen store
+70 .stiftie store
+stop
+
+'Tie to conspec
+
+cond
+*.in4 3 =
+*.numties 2 <
+*.in2 *.out2 = or
+*.in1 *.bot1 = or
+*.in1 *.bot2 = or
+*.in1 *.bot3 = or
+*.in1 *.bot4 = or
+*.in1 *.bot5 = or
+*.in1 *.bot6 = or
+*.in1 *.bot7 = or
+*.in1 *.bot8 = or
+*.in1 *.bot9 = or
+*.in1 *.bot10 =
+*.in2 *.out2 =
+*.myeye *.refeye %=
+*.eyef 50 >
+*.refxpos *.refypos angle *.tieang !=
+start
+*.tiecounter 1 add .tiecounter store
+*.tiecounter .tie store
+300 *.aim add .setaim store
+stop
+
+cond
+*.eyef 40 >
+*.refeye 0 =
+*.numties 3 <
+*.refxpos *.refypos angle *.tieang !=
+start
+.tie inc
+*.tie .tiecounter store
+75 *.aim add .setaim store
+stop
+
+'Read Ties
+
+cond
+*.timer 5 *.numties *170 sub *171 *.tiepres add add sub abs 1 =
+*193 0 =
+start
+*.timer mod *.numties *.tiepres add .readtie store
+stop
+
+cond
+*.trefeye 0 =
+*170 0 =
+*.readtie *170 > or
+start
+*.readtie 170 store
+stop
+
+cond
+*.trefeye *.myeye =
+*171 0 =
+*.readtie *171 > or
+start
+*.readtie 171 store
+stop
+
+'Tell Veg that You're taken
+
+cond
+*.trefeye 0 =
+*.trefnrg 10 >
+start
+.tout1 .tieloc store
+5 .tieval store
+stop
+
+'set the paramaters for the veggie, ie distance and angle
+
+cond
+*.numties 0 > and
+*.trefeye 0 = and
+*.tielen 60 != or
+*.tieang 90 *.tienum add !=
+*.multi 0 =
+start
+*.readcounter .tienum store
+30 *.eyef sub mod *.timer .fixlen store
+90 mod *.tienum .fixang store
+40 .stifftie store
+stop
+
+'Feed from Veg
+
+cond
+*.trefeye 0 =
+start
+*.tiepres .readtie *.numties sgn mult store
+.tiepres .memloc *.robage -1 mult 1 add sgn mult store
+.numties .tmemloc *.robage -1 mult 1 add sgn mult store
+55 10 rnd add .tie *.refeye sgn -1 mult 1 add sgn mult *.eye5 45 sub sgn mult *.memval sgn -1 mult 1 add sgn mult *.robage sgn mult store
+628 .fixang *.numties sgn mult store
+200 .fixlen *.numties sgn mult store
+*.tiepres .tienum *.numties sgn mult store
+*.tiepres .readtie *.numties sgn mult store
+.fixpos .tieloc *.numties sgn mult *.treffixed mult store
+0 .tieval *.numties sgn mult *.treffixed mult store
+-1 .tieloc store
+-2000 .tieval store
+50 .sharewaste *.sharewaste sub *.multi mult store
+*.robage *.timer sub mod 10 193 store
+stop
+
+cond
+*.nrg *.trefnrg <
+*.nrg 1000 > and
+*.numties 0 >
+*.body 800 <
+*.multi 0 >
+*.trefeye *.myeye %=
+start
+40 .sharenrg *.multi mult store
+*.trefvel .multrefvel store
+*.tin3 .multeyef store
+stop
+
+'Delete Ties to enemies
+
+cond
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefeye 0 !=
+start
+*.tiepres *.tienum store
+*.trefaim *.aim sub .setaim store
+-1 .tieloc store
+-1000 .tieval store
+*.tiepres .deltie store
+0 .stage store
+stop
+
+cond
+*.tiepres *.readcounter !=
+*.numties 0 >
+*.trefeye *.myeye !=
+*.trefeye 0 !=
+start
+*.tiepres .tienum store
+-1 .tieval store
+-1000 .tieloc store
+50 .sharewaste *.multi mult store
+stop
+
+'leave multimode
+
+cond
+*43 2 >
+*.nrg 10000 >
+*.body 900 >
+*.numties 0 >
+start
+*.tiepres .deltie store
+0 .fixpos store
+0 .multimode store
+6 .tout1 store
+stop
+
+'Multibot Tie mode
+'*****************************
+
+cond
+*.numties 0 >
+*.trefeye *.myeye =
+*.multi 0 =
+*.stage 6 !=
+start
+*.readcounter .multimode store
+stop
+
+cond
+*.multimode 0 >
+*.multeyef *.eyef >
+*.stage 6 !=
+start
+*.multrefvel *.vel sub .dn store
+1 .multi store
+stop
+
+'Turn both bots to face 90 degrees out.
+
+cond
+*.multimode 0 >
+*.trefeye *.myeye %=
+*.trefeye 0 !=
+*.tielen 70 !=
+*.tieang 210 !=
+*.stage 6 !=
+start
+210 .fixang store
+70 .fixlen store
+70 .stiftie store
+stop
+
+
+'Command Interpretation
+'****************
+
+cond
+*.in4 7 =
+*.in2 *.out2 = or
+*.in1 *.bot1 = or
+*.in1 *.bot2 = or
+*.in1 *.bot3 = or
+*.in1 *.bot4 = or
+*.in1 *.bot5 = or
+*.in1 *.bot6 = or
+*.in1 *.bot7 = or
+*.in1 *.bot8 = or
+*.in1 *.bot9 = or
+*.in1 *.bot10 =
+*.in2 *.out2 =
+*43 3 <
+start
+50 .sexrepro store
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+-8 .shoot store
+*.refvel *.vel sub .dn store
+1 .fixpos store
+0 .multimode store
+7 .out5 store
+*43 1 add 43 store
+stop
+
+cond
+*.in2 *.out2 = or
+*.in1 *.bot1 = or
+*.in1 *.bot2 = or
+*.in1 *.bot3 = or
+*.in1 *.bot4 = or
+*.in1 *.bot5 = or
+*.in1 *.bot6 = or
+*.in1 *.bot7 = or
+*.in1 *.bot8 = or
+*.in1 *.bot9 = or
+*.in1 *.bot10 =
+*.in2 *.out2 =
+*.in5 7 =
+*.out4 7 =
+*43 3 <
+start
+0 .out4 store
+*43 1 add 43 store
+stop
+
+cond
+*.stage *.tout1 !=
+*.stage 5 != and
+start
+*.stage .tout1 store
+stop
+
+cond
+*.tin1 *.stage !=
+*.stage 5 != or
+*.stage 55 != and
+start
+*.tin1 .stage store
+stop
+
+cond
+*.robage *.trefage >
+start
+*.tin10 *.tout10 add .tout10 store
+*.tout10 .out10 store
+stop
+
+cond
+*.nrg 500 <
+*.body 150 <
+*.numties *.tiepres add 1 <
+*.out4 500 !=
+start
+500 .out4 store
+stop
+
+cond
+*.numties 0 > or
+*.tiepres 0 >
+*.out10 *.numties *.tiepres add != or
+*.tout10 *.numties *.tiepres add !=
+start
+*.numties *.tiepres add .out10 store
+*.out10 .tout10 store
+stop
+
+cond
+*.tin1 *.stage !=
+*.refeye *.myeye = or
+*.refeye 0 =
+*.robage *.trefage <
+*.tin1 9 !=
+*.numties 1 <
+*.stage 3 !=
+start
+*.tin1 .stage store
+0 .fixpos store
+*.numties .tout2 store
+stop
+
+cond
+*.robage *.trefage >
+*.numties *.tin2  >
+*.tin2 2 <
+*.kills 3 >
+start
+55 .tout1 store
+stop
+
+cond
+*.in2 *.out2 = or
+*.in1 *.bot1 = or
+*.in1 *.bot2 = or
+*.in1 *.bot3 = or
+*.in1 *.bot4 = or
+*.in1 *.bot5 = or
+*.in1 *.bot6 = or
+*.in1 *.bot7 = or
+*.in1 *.bot8 = or
+*.in1 *.bot9 = or
+*.in1 *.bot10 =
+*.in2 *.out2 =
+*.out5 7 =
+*.in4 7 =
+start
+0 .out5 store
+0 .out4 store
+stop
+
+'Stage 2: Swarm Mode
+'***************
+
+cond
+*.refeye 0 =
+*.refeye *.myeye = or
+*.trefeye *.myeye =
+*.stage 6 !=
+*.in6 42 !=
+*.stage 3 != or
+*.tin1 6 =
+*.stage 5 != or
+*.stage 55 !=
+start
+6 .stage store
+1 .out4 store
+6 .tout1 store
+0 .fixpos store
+stop
+
+'Swarm in a Circle:
+
+cond
+*.multi 0 >
+*466 0 >
+*.eye5 30 >
+*.eye5 80 <
+*.refeye *.myeye =
+*.in4 1 =
+*.numties 2 >
+*.nrg 3000 >
+*.stage 6 =
+start
+*.bxpos .bypos angle .setaim store
+*.refvel *.vel sub .up store
+1 .out4 store
+stop
+
+cond
+*.trefeye *.myeye =
+*.stage 6 =
+start
+*.mass *.robage mod *.body add .fixlen
+0 140 store
+*.in10 *.tin10 add mod *.numties *.tiepres add mod *.timer .fixang store
+60 .stifftie store
+*.trefvel *.vel sub .up store
+*.trefaim .aim store
+0 .fixpos store
+stop
+
+cond
+*.out4 1 =
+*.poison 150 <
+*.nrg 2000 <
+*.stage 6 =
+start
+*.nrg 9 div .mkpoison store
+*.eyef .ploc store
+stop
+
+cond
+*.multeyef *.eyef >
+*.stage 6 =
+start
+*.multvel *.vel sub .dn store
+stop
+
+'Stage 3-War
+'===================
+
+cond
+*.refeye *.myeye !=
+*.refeye 0 > and
+*.in1 *.bot1 != and
+*.in1 *.bot2 != and
+*.in1 *.bot3 != and
+*.in1 *.bot4 != and
+*.in1 *.bot5 != and
+*.in1 *.bot6 != and
+*.in1 *.bot7 != and
+*.in1 *.bot8 != and
+*.in1 *.bot9 != and
+*.in1 *.bot10 != and
+*.newbot 0 = or
+*.in2 *.out2 != or
+*.in1 *.out1 = and
+*.multi 0 > and
+*.kills 2 < or
+start
+42 .out6 store
+3 .tout1 store
+3 .stage store
+0 .fixpos store
+*.refxpos .out7 store
+*.refypos .out8 store
+*.refxpos *.tout8 store
+*.refypos *.tout9 store
+stop
+
+cond
+*.refeye *.myeye =
+*.in6 42 =
+*.robage *.refage >
+start
+*.in6 .out6 store
+3 .tout1 store
+3 .stage store
+*.in7 *.in8 angle mod *.refxpos *.refypos angle *.aim div .setaim store
+*.in7 .out7 store
+*.in8 .out8 store
+*.maxvel *.mass mult *.vel sub .up store
+stop
+
+cond
+*.stage 3 =
+*.eyef 0 =
+start
+0 192 store
+stop
+
+cond
+*.stage 3 =
+*.eyef 0 >
+*.refeye *.myeye !=
+*.refeye 0 >
+start
+*.maxvel *.vel sub .up store
+*.refxpos *.refypos angle .setaim store
+42 .out6 store
+*.refxpos .out7 store
+*.refypos .out8 store
+stop
+
+cond
+*.stage 3 =
+*.numties 0 >
+start
+-1 .tieloc store
+-800 .tieval store
+stop
+
+cond
+*.eyef 20 >
+*.refeye *.myeye != or
+*.in2 *.out2 !=
+*.refeye 0 >
+*.stage 3 =
+*.refaim *.aim -1 >< and
+start
+*.refvelsx *.velsx sub 1 add mod *.maxvel -1 rnd 1 mult .sx store
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.sx add *.refypos angle .aimshot store
+*.nrg 4 div .shootval store
+-1 .shoot store
+0 192 store
+stop
+
+cond
+*.tin1 3 =
+*.trefage *.robage >
+*.tin8 *.tin9 dist 40 <
+start
+3 .stage store
+3 .tout1 store
+42 .out6 store
+*.tin8 *.tin9 angle .setaim store
+*.tin8 *.tin9 angle .aimshot store
+*.nrg 5 div .shootval store
+*.tin8 .out7 store
+*.tin9 .out8 store
+stop
+
+cond
+*.in6 42 !=
+*.stage 3 =
+*.refeye *.myeye =
+*.robage *.refage <
+start
+1400 192 store
+stop
+
+cond
+*.eyef 30 >
+*.refeye *.myeye !=
+*.in1 *.out1 !=
+*.venom 0 >
+*.refeye 0 !=
+*.stage 3 =
+*.venomsel 0 = and
+start
+.venomsel inc
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+stop
+
+cond
+*.venomsel 1 =
+start
+728 .venloc store
+*.myeye .venval store
+-3 .shoot store
+stop
+
+cond
+*.venomsel 2 =
+start
+.shoot .venloc store
+-1 .venval store
+-3 .shoot store
+stop
+
+cond
+*.venomsel 3 =
+start
+.setaim .venloc store
+*.xpos *.ypos angle .venval store
+-3 .shoot store
+stop
+
+cond
+*.venomsel 4 =
+start
+0 .venomsel store
+stop
+
+cond
+*.stage 3 =
+*.refeye *.myeye = or
+*.refeye 0 = or
+*.eyef 0 = or 
+*.in2 *.out2 = and
+*.in6 42 !=
+start
+6 .stage store
+0 192 store
+stop
+
+'Stage 5 Genes: The Waiting trap
+'**********************
+
+cond
+*.kills *.robage div 4 mod 1 =
+*.nrg 6000 > and
+*.body 200 >
+start
+5 .stage store
+stop
+
+cond
+*.stage 5 =
+*.robage 26 =
+start
+9 140 store
+stop
+
+cond
+*.stage 5 =
+*.robage 25 = or
+*.nrg 5000 >
+start
+50 .repro store
+*.tiecounter 1 add .tiecounter store
+*.tiecounter .tie store
+stop
+
+'Wait for the tie to harden and then set the adolecesants memory
+
+cond
+*.stage 5 =
+*.multi 0 >
+start
+*.stage .tieloc store
+55 .tieval store
+70 .stifftie store
+stop
+
+cond
+*.trefeye *.myeye %=
+*.stage 5 =
+*.tielen 40 >
+start
+40 .fixlen store
+70 .stifftie store
+stop
+
+cond
+*.stage 5 =
+start
+.setaim .tieloc store
+*.aim .tieval store
+stop
+
+cond
+*.stage 5 =
+*.maxvel *.numties div *.vel !=
+start
+*.maxvel *.numties div *.vel .aim store
+stop
+
+cond
+*.stage 5 =
+*.numties 3 =
+*.xpos *.bxpos %=
+*.ypos .bypos %=
+*.robage 200 >
+*.kills 2 >
+start
+1 .fixpos store
+stop
+
+cond
+*.stage 5 =
+*.numties 3 =
+*.fixed 1 =
+*.trefeye 0 =
+*.kills 3 >
+start
+.fixpos .tieloc store
+1 .tieval store
+stop
+
+cond
+*.stage 5 =
+*.numties 3 =
+*.fixed 1 =
+*.trefeye *.myeye %=
+start
+50 .sharenrg *.multi mult store
+stop
+
+cond
+*.stage 5 !=
+*140 9 =
+start
+0 140 store
+stop
+
+'Stage 5-5 Instructions:
+'********************
+
+cond
+*140 9 !=
+*.numties 0 >
+*.trefeye *.myeye =
+*.multimode 0 =
+*.stage 55 =
+start
+*.readcounter .multimode store
+stop
+
+cond
+*140 9 !=
+*.multimode 0 >
+*.multeyef *.eyef >
+*.stage 55 =
+start
+*.multrefvel *.vel sub .dn store
+stop
+
+'Turn both bots to face 90 degrees out.
+
+cond
+*140 9 !=
+*.multimode 0 >
+*.trefeye *.myeye %=
+*.trefeye 0 !=
+*.tielen 70 !=
+*.tieang 210 !=
+*.stage 55 =
+start
+240 .fixang store
+70 .fixlen store
+70 .stiftie store
+stop
+
+cond
+*.stage 55 =
+*.trefeye *.myeye %=
+start
+*.trefvel *.vel sub .aim store
+55 .sharenrg *.multi mult store
+stop
+
+cond
+*.stage 55 =
+*.nrg 4000 >
+*.body 500 >
+*.eyef 0 =
+*.venom 100 <
+start
+*.nrg 6 div .strvenom store
+stop
+
+cond
+*.stage 55 =
+*.nrg 4000 >
+*.eyef 0 =
+*.poison 50 <
+start
+*.nrg 5 div .mkpoison store
+.eyef .ploc store
+stop 
+
+cond
+*.stage 55 =
+*.nrg 5000 >
+*.eyef 0 =
+*.poison 10 >
+*.venom 10 >
+start
+*.nrg 3 div .shootval store
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+-1 .shoot store
+stop
+
+cond
+*.stage 55 =
+*.kills 5 >
+start
+.stage .tieloc store
+0 .tieval store
+stop
+
+cond
+*.stage 55 =
+*.kills 5 >
+start
+.fixpos .tieloc store
+0 .tieval store
+0 .stage store
+stop
+
+'Dietary Genes
+'***************
+
+cond
+*.nrg 3000 >
+*.body 1000 < and
+start
+*.pleas 2 div .strbody store
+stop
+
+'Feed when hungry from body
+
+cond
+*.nrg 500 <
+*.body 0 >
+start
+*.body *.pain add 2 div .fdbody store
+stop
+
+'Reproductive Genes
+'****************
+
+cond
+*.fixed 0 !=
+*.nrg 6000 >
+*43 2 <
+start
+60 .repro store
+*43 1 add 43 store
+stop
+
+cond
+*.numties 2 <
+*.trefeye 0 =
+*.nrg 4000 >
+*43 2 >
+*43 4 < and
+*.multi 0 >
+start
+50 .repro store
+*43 1 add 43 store
+stop
+
+cond
+*.refeye *.myeye !=
+*.refeye 0 !=
+*.nrg 2000 >
+*43 5 <
+start
+50 .repro store
+*43 1 add 43 store
+stop
+
+'MultiMode Only
+
+cond
+*.multimode 0 >
+*.nrg 4000 >
+*.trefeye *.myeye = or
+*.refeye *.myeye =
+start
+*.multimode *.tienum store
+*.tieang .setaim store
+7 .out4 store
+stop
+
+'Reset Values
+'**************
+
+cond
+*.stage 3 =
+*.stage 6 = or
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond
+*.fixed 0 !=
+*.out4 7 != or
+*.out5 7 != or
+*.trefeye *.myeye !=
+*.vel 0 !=
+*.numties 0 = or
+start
+0 .fixpos store
+0 .stage store
+stop
+
+cond
+*.numties 0 >
+*.readcounter *.multimode >=
+*.trefeye 0 = and
+start
+0 .multimode store
+stop
+
+cond
+*192 0 !=
+*.eyef 0 =
+start
+0 192 store
+stop
+end

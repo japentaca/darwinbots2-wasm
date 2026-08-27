@@ -20,9 +20,14 @@ El paso 2 necesita `port/build-wasm/dbcore.js` compilado (preset `wasm`).
 
 ## Decisiones
 
-- El crawler solo toma los bloques `[code]` de la **primera página** de cada
-  tema (los adjuntos del foro no son visibles para invitados; con cuenta se
-  podría ampliar). Normaliza `&nbsp;`/zero-width, que rompen el tokenizador.
+- El crawler anónimo solo toma los bloques `[code]` de la **primera página**
+  de cada tema (los adjuntos del foro no son visibles para invitados).
+  Normaliza `&nbsp;`/zero-width, que rompen el tokenizador.
+- Los **adjuntos `.txt`** se cosechan aparte con la sesión del usuario en el
+  navegador (fetch dentro de una página del foro logueada, con pausas de
+  cortesía) y se fusionan en `bots_raw/` con `merge_atts.py` a partir del
+  volcado `bots_att_*.json`; `publish_bots.py` los prefiere sobre los
+  bloques de código del mismo tema.
 - Validación con el core, no con heurísticas: alta de especie + siembra del
   fundador (`db_sim_seed_species`), al menos un gen cerrado en el
   `db_sim_bot_text` resultante, y 50 ticks sin reventar.
@@ -35,5 +40,6 @@ El paso 2 necesita `port/build-wasm/dbcore.js` compilado (preset `wasm`).
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.
 
-Corrida del 2026-08-26: 607 candidatos extraídos, 607 válidos,
-545 publicados (uno por tema).
+Corrida del 2026-08-26: 607 candidatos de bloques de código + 146 adjuntos
+cosechados con sesión (753 candidatos, 753 válidos), 588 publicados (uno
+por tema).

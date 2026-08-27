@@ -1,12 +1,12 @@
-'NAME        : SexBot
-'BY        : d-EVO
-'CLASS        : IB
+'NAME		: SexBot
+'BY		: d-EVO
+'CLASS		: IB
 
 'Males compete for females
 'Females run away from males so only the strongest males can mate
 'Unmutated they will not inbreed
 'Dont handle mutations well
-'Make sure you start of with at least two females and 1 male,
+'Make sure you start of with at least to females and 1 male,
 'Females will grow bigger than males
 'Males don't feed
 

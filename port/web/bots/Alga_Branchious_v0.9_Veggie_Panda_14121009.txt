@@ -1,0 +1,169 @@
+'Alga_Branchious v0.9 - Not working perfectly yet.
+                     - Thanks to moonfisher for helping me with a few bugs
+					 - you can take any part of the code and do anything with any of it :)
+
+def parentbot 102
+def canfix 103
+def recordtime 104
+def timerepro 105
+def typelook 106
+def type 971
+def bot 972
+def parentx 973
+def parenty 974
+def mytree 975
+
+'(type)- 5 = trunk
+'        4 = major branch
+'        3 = minor branch
+'        2 = branch
+'        1 = leaf
+'        0 = seed
+
+'If I am the first bot / bot 0, then make me a tree and explain what tree number I am
+cond
+  *.robage 1 =
+  *.type 0 =
+start
+  6 .type store
+  1000 rnd .mytree store
+  1 .deltie store
+stop
+
+'4
+cond
+  *.robage 2 =
+start
+  .type dec
+  *.type 4 sub .fixpos store
+  *.bot .parentbot store
+stop
+
+'2
+cond
+  *.robage 3 =
+start
+  1000 rnd .bot store
+  *.type 1 add .typelook store
+stop
+
+cond
+  *.robage 3 =
+  *.type 5 =
+  *.tin1 *.parentbot !=
+  *.type 1 sub *.tin2 !=
+start
+  1 .deltie store
+stop
+
+'5
+cond
+  *.robage 50 >
+  *.refage 50 >
+  *.multi 0 =
+  *.in1 *.typelook =
+  *.in2 0 =
+  *.eye5 50 >
+  *.in3 *.mytree =
+  *.in4 *.parentbot =
+start
+  1 .tie store
+stop
+
+'6
+cond
+  *.numties 0 =
+  *.type 5 !=
+start
+  0 .fixpos store
+stop
+
+'7
+cond
+start
+  *.type .out1 store
+  *.mytree .out3 store
+  *.bot .out4 store
+  *.bot .tout1 store
+  *.type .tout2 store
+stop
+
+'8
+cond
+  *.numties 0 =
+start
+  0 .recordtime store
+  0 .canrepro store
+stop
+  
+'9
+cond
+  *.
+  *.multi 1 =
+start
+  *.tiepres .tienum store
+  *.type 20 mult 10 sub .sharenrg store
+  *.type 200 mult .fixlen store
+'  628 .fixang store
+  100 .stifftie store
+  314 .setaim store
+  100 .up store
+stop
+
+'10
+cond
+  *.multi 1 =
+  *.recordtime 0 =
+start
+  *.robage .canrepro store
+  1 .recordtime store
+stop
+
+'11
+cond
+  *.multi 1 =
+  *.canfix 300 add *.robage <=
+start
+  1 .fixpos store
+stop
+
+'13
+cond
+  *.fixed 1 =
+  *.timerepro 3 <
+  *.type 1000 mult *.nrg <
+  *.type 100 mult *.body <
+start
+  *.xpos .parentx store
+  *.ypos .parenty store
+  314 .aimsx store
+  *.type 10 mult *.type 2 mult sub .repro store
+  .timerepro inc
+stop
+  
+'14
+cond
+  *.multi 0 =
+  *.numties 0 =
+  *.type 5 !=
+start
+  *.parentx *.parenty angle .setaim store
+  15 .up store
+stop
+
+'15
+cond
+  *.type 1000 mult *.nrg >
+  *.type 100 mult *.body <
+start
+  100 .fdbody store
+stop
+
+'16
+cond
+  *.type 1000 mult *.nrg <
+  *.type 100 mult *.body >
+start
+  100 .strbody store
+stop
+end

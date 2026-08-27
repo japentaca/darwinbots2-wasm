@@ -1,13 +1,115 @@
+'Curved Veggie
+
+cond
+*.robage 0 =
+start
+.tie inc
+*.tiepres .out2 store
+32000 rnd 1 .out1 store
+stop
+
+cond
+cond
+*.tiepres 2 >
+*.numties 2 > xor
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.robage 21 >
+*.nrg 6000 > and
+*45 3 <
+*.numties 2 < xor xor
+start
+100 .mkpoison store
+50 .strvenom store
+.eyef .vloc store
+0 .venval store
+.shoot .ploc store
+50 .repro store
+160 *.aim add .setaim store
+*.repro *.repro div *45 add 45 store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+16 .shootval store
+0 .shflav store
+-5 .shoot store
+-3 .shoot store
+stop
+
+cond
+*.timer 10 mod 1 =
+start
+*.xpos .tout6 store
+*.ypos .tout7 store
+stop
+
+cond
+*.multi 1 =
+start
+25 .sharenrg *.multi mult store
+*.tout5 .out5 store
+*.tiepres .out2 store
+*.timer mod *.out2 .redtie store
+*.tout5 *.tielen mult 40 store
+*.out1 .tout1 store
+*.robage mod *.tin1 41 store
+*40 *41 div 8 mult *.xpos *.ypos angle mod *.trefxpos *.trefypos angle add div *.tout6 *.tout7 angle add .fixang store
+*.vel *.trefvel sub mod *.maxvel *.timer add mod 20 rnd 1 2 mult mod *.tin5 *.tielen mult *.mass mult *.eyef 50 sub mod 50 *.numties mult add .fixlen store
+45 .stifftie store .fixlen store
+45 .stifftie store
+stop
+
+cond
+*.eyef 0 >
+*.in1 0 !=
+*.refeye *.myeye =
+*.tiepres 2 <
+*.numties 2 < xor
+start
+.tie inc
+*.tiepres *.numties add .tout5 store
+20 *.tieang *.aim div mult sub .setaim store
+0 .tout10 store
+stop
+
+cond
+*.nrg 4000 <
+*.body 10 >
+start
+20 .fdbody store
+stop
+
+cond
+*.eyef 0 >
+*.refeye *.myeye !=
+*.refeye 0 >
+start
+*.refxpos *.refypos angle .setaim store
+*.nrg 4 div .shootval store
+-1 .shoot store
+stop
+
 cond
 *.readtie 0 >
 *.robage *.trefage <
-
 *.in5 .out5 > and
-
 *.tin5 *.tout5 > xor
 start
-
 *.tin5 *.tout5 store
-
 *.in5 .out5 store
 stop
+
+cond
+*.tout5 *.out5 <
+start
+*.out5 *.tout5 add .tout5 store
+stop
+
+end

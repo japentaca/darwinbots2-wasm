@@ -1,57 +1,88 @@
-'Ameoba
+'A simple Fractal (repeating patern) 
+'like a tree who splits its branches 
+'By PeterB
 
-*.construction
+'For some unknown reason dont make it a vegetable 
+'That doesnt endup with a nice shape, I dont know why that is.
+'So it has to be like animal.. perhaps a sea sponge or coral?
+'Dough i have not yet implemented feeding, or further reproducing.
+'As this is mainly to show others the code used, so others can use it too.  
+'and experiment with it.
+
+' I want to note.
+' That its intresting to see that DNA meets fractals trough the logic of DarwinBots
+' As we now fractals, also shape lots of what we see in nature.
+' See how little rules are required in genetic code
+' Maybe someone can make an advantage out of it, and make use of it like nature does.
+
+
+
+
+
+
+'--------------------------
+'most important part :
+
 
 cond
- *.numties 0 =
- *.robage 7 <
+*971 10 <
+*.robage  5 >
 start
- 0 .timer store
+971 inc
+20 .repro store
+1256 20 div .aimdx store
+stop
+
+
+
+'--------------------------
+'The parts below mainly deal with getting some distance from its parent.
+'Create a new .tie who will persist over time
+'And after the tye has been created it rotates.
+'I could have scripted it in less genes but that makes it harder to understand.
+
+
+cond
+*.robage = 0
+start
+*.tiepres .deltie store
+stop
+
+
+cond
+*.robage = 1
+start
+'*.tiepres .deltie store
+ *.nrg 5 mult 8 add .dn store
+stop
+
+
+cond
+*.robage = 4
+start
+.tie inc
+stop
+
+
+cond
+*.robage = 5
+start
+1256 3 div .aimdx store
+stop
+
+
+
+
+' its better to fix its pos for a second or it may move to much
+' it is not realy required to use this
+cond
+*.robage 15 =
+start
+.fixpos inc
 stop
 
 cond
- *.robage 0 =
- *.timer 5 <
+*.robage 15 =
 start
- 83 *.timer 1 add 3 mult sub .repro store
+.fixpos dec
 stop
-
-cond
- *.robage 0 =
- *.timer 6 <
-start
-  425 .aimsx store
-stop
-
-cond
- *.robage 1 =
- *.timer 7 <
-start
-  1 .tie store
-stop
-
-cond
- *.multi 1 =
-start
- 1 .tienum store
- 20 .stifftie store
- 100 .fixlen store
- 50 .sharenrg store
- -836 .tieang store
-stop
-
-cond
- *.eye5 0 =
- *.myeye *.refeye = or
- *.multi 1 =
-start
- *.veldx 10 <
- 5 .dx store
- dropbool
- 1 .up store
- *.timer 1256 mod %=
- 30 up store
- dropbool
-stop
- 
-end

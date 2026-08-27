@@ -1,0 +1,216 @@
+'Hexagonis by PY
+
+'A kind of ambitious experiment in making a 6-bot MB
+' Forms a circle when there is enough room
+' Often fails though
+
+' first robot stores value in 50 to identify itself
+' then reproduces
+cond
+*.numties 0 =
+*.robage 0 !=
+*.eye5 10 <
+*.nrg 100 >
+start
+3 50 store
+80 .repro store
+1 60 store
+stop
+
+' lone robot needs to move away from objects before breeding
+cond
+*.numties 0 =
+*.robage 0 !=
+*.eye5 10 >
+start
+-5 .up store
+stop
+
+' first robot rotates to face away from the circle
+cond
+*50 3 =
+*.robage 10 >
+start
+419 .aimsx store
+4 50 store
+stop
+
+cond
+*.numties 1 =
+*.robage 10 >
+*.eye5 40 >
+*50 1 !=
+start
+419 .aimsx store
+stop
+
+'dismantle a faulty structure
+cond
+*.robage 100 >
+*.numties 1 =
+*.multi 1 =
+start
+1 .deltie store
+stop
+
+' new baby ties to parent
+cond
+*.robage 0 =
+start
+1 .tie store
+1 .readtie store
+40 .stifftie store
+stop
+
+cond
+*.robage 1 =
+*50 1 !=
+start
+419 .aimsx store
+stop
+
+cond 
+*.robage 2 =
+start
+50 .memloc store
+stop
+
+' last robot ties to original parent.
+cond
+*.memval 4 =
+*.eye5 30 >
+*.numties 1 =
+start
+1 .tie store
+stop
+
+cond
+*.robage 2 =
+*.eye5 30 <
+*50 0 =
+*.memval 2 !=
+start
+80 .repro store
+stop
+
+cond
+*.robage 2 >
+*.robage 10 <
+*.numties 2 =
+*50 1 !=
+start
+415 .aimsx store
+1 50 store
+stop
+
+' Use some body reserves to stay alive
+cond
+*.nrg 500 <
+*.body 100 >
+start
+100 .fdbody store
+stop
+
+' Store body away in times of plenty
+cond
+*.nrg 5000 >
+*.body 100 <
+start
+100 .strbody store
+stop
+
+' Store body away when even more stuffed with energy
+cond
+*.nrg 10000 >
+*.body 1000 <
+start
+100 .strbody store
+stop
+
+cond
+*.nrg *.trefnrg >
+*.multi 1 =
+*.robage 30 >
+start
+50 .sharenrg store
+stop
+
+'Reproduce to form new hexagonis
+cond
+*.nrg 15000 >
+*.body 500 >
+*50 2 =
+*.numties 2 =
+start
+80 .repro store
+stop
+
+cond
+*.robage 1 >
+*.robage 10 <
+*.memval 2 =
+start
+1 .deltie store
+-10 .up store
+0 50 store
+stop
+
+
+' set tie angles to zero
+' set tie length  too
+cond
+*.multi 1 =
+*.robage 40 =
+start
+1 .tienum store
+628 .fixang store
+200 .fixlen store
+50 inc
+stop
+
+cond 
+*.eye5 20 >
+*.refaimsx *.myaimsx !=
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+cond
+*50 2 >
+*.eye5 40 <
+*.multi 1 =
+*.robage 30 >
+*.nrg 100 >
+*.pain 0 >
+start
+8 .up store
+stop
+
+cond
+*.multi 1 =
+*.numties 2 =
+*.nrg 1000 >
+start
+10 .mkslime store
+stop
+
+cond
+*.multi 1 =
+*.numties 2 =
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub 10 div .tieang store
+stop
+
+cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.light <
+ 100 .mkchlr store
+ clearbool
+ .fixpos inc
+ stop
+
+end

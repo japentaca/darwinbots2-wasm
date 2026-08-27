@@ -1,0 +1,277 @@
+'#name: I_Flamma.txt
+'#generation: 1
+'#mutations: 52
+
+cond
+  *40
+  0
+  =
+start
+  1
+  40
+  store
+  13
+  .out1
+  store
+ -158
+  13
+  *600
+  .out1
+  store
+  46
+  .out2
+  store
+  1
+  50
+  mult
+  store
+  1
+  *296
+  50
+  store
+stop
+
+cond
+  *.nrg
+  6021
+  >
+start
+  300
+  .aimsx
+  store
+  50
+  .trefxpos
+  store
+  *544
+  600
+  .aimdx
+  store
+stop
+
+cond
+  *.eye1
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  80
+  .tie
+  store
+  *559
+  5
+  *734
+  .up
+  store
+stop
+
+cond
+  *.eye1
+  10
+  >
+start
+  80
+  .tie
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye4
+  10
+  >
+  *.eye5
+  0
+  =
+start
+  190
+  40
+  6
+  *.trefage
+  store
+  5
+  1
+  div
+stop
+
+cond
+  *.eye5
+  0
+  =
+start
+  80
+  .aimdx
+  store
+  5
+  1
+  div
+  store
+stop
+
+cond
+  *.eye6
+  11
+  >
+  *.eye5
+  0
+  =
+start
+  40
+  sub
+  798
+  .aimdx
+  store
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  10
+  <
+  *.eye5
+  10
+  <
+  *.eye5
+  10
+  <
+  *.in1
+  13
+  !=
+start
+  3
+  .refvelup
+  store
+stop
+
+cond
+  *.eye5
+  10
+  >
+  *.eye5
+  50
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  46
+  !=
+start
+  3
+  .up
+  store
+  div
+  3
+  .up
+  store
+  3
+  .up
+  store
+ -136
+stop
+
+cond
+  *.eye5
+  50
+  >
+  *.eye5
+  90
+  <
+  *.in1
+  14
+  <
+  *.in2
+  46
+  !=
+start
+  2
+  .up
+  store
+ -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  90
+  <
+  *.in1
+  13
+  !=
+  *.in2
+  48
+  !=
+start
+ -1
+  7
+  297
+  store
+stop
+
+cond
+  *.eye5
+  30
+  >
+  *.in1
+  13
+  =
+  *.in2
+  46
+  =
+  *.in2
+  46
+  =
+start
+  300
+  .aimdx
+  store
+stop
+
+cond
+  *.eye1
+  0
+  =
+  *.eye3
+  0
+  =
+  *.eye5
+  0
+  =
+  *.eye7
+  0
+  =
+  *.eye9
+  0
+  =
+start
+  mult
+  675
+  *50
+  .aimdx
+  store
+  50
+  inc
+  5
+  .up
+  store
+stop
+
+cond
+  *.aimdx
+  60
+  >
+start
+ -60
+  div
+  50
+  store
+stop
+end
+
+'#hash: xiil|DB>D$x-xZFb#2m$

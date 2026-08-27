@@ -1,0 +1,222 @@
+'Slam Funk 1.0
+'Uses simple genes and a simple conspec
+'To survive at least against low level bots.
+'Heavily based on Animal Minimalis,
+'While very little of it was actually used.
+'Best feature includes a very good vision system.
+'It is able to follow its friends and break off to feed.
+
+'Raises number of .eyeX commands to make a slightly more secure conspec.
+cond
+start
+.eye5 .eye5 .eye5 .eye5 add add add add dup sub
+stop
+
+'Body storage gene.
+cond
+*.nrg 15000 >
+*.body 500 < and
+start
+500 .strbody
+stop
+
+'See nothing, start looking. I wasn't content to just have it spin.
+cond
+*eye5 0 =
+*.up 0 = and
+start
+20 .up store
+stop
+
+'Theres strength in numbers. This gene makes bots follow one another if they see a fellow 
+
+bot.
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refveldx .dx store
+*.refvelUp .up store
+30 .aimdx store
+stop
+
+'Targeting genes. If it spots food, it turns to it.
+
+cond
+start
+-1 .focuseye store
+stop
+
+'Eye4
+cond
+*.eye4 0 !=
+*.refeye *.myeye != and
+start
+5 .aimsx store
+stop
+
+cond
+start
+1 .focuseye store
+stop
+
+'Eye6
+cond
+*.eye6 0 !=
+*.refeye *.myeye != and
+start
+-5 .aimsx store
+stop
+
+cond
+start
+-2 .focuseye store
+stop
+
+'Eye3
+cond
+*.eye3 0 !=
+*.refeye *.myeye != and
+start
+15 .aimsx store
+stop
+
+cond
+start
+2 .focuseye store
+stop
+
+'Eye7
+cond
+*.eye7 0 !=
+*.refeye *.myeye != and
+start
+-15 .aimsx store
+stop
+
+cond
+start
+-3 .focuseye store
+stop
+
+'Eye2
+cond
+*.eye2 0 !=
+*.refeye *.myeye != and
+start
+35 .aimsx store
+stop
+
+cond
+start
+3 .focuseye store
+stop
+
+'Eye8
+cond
+*.eye8 0 !=
+*.refeye *.myeye != and
+start
+-35 .aimsx store
+stop
+
+cond
+start
+-4 .focuseye store
+stop
+
+'Eye1
+cond
+*.eye1 0 !=
+*.refeye *.myeye != and
+start
+40 .aimsx store
+stop
+
+
+cond
+start
+4 .focuseye store
+stop
+
+'Eye9
+cond
+*.eye9 0 !=
+*.refeye *.myeye != and
+start
+-40 .aimsx store
+stop
+
+cond
+start
+0 .focuseye store
+stop
+
+
+'Ass-shot gene. Tested it against basicswarmer, swarmers beat the snot out of my bots by 
+
+following them close behind so I stuck this in here.
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+8 .shootval store
+-6 .shoot store
+0 .shflav store
+stop
+
+
+
+'The shooting gene. It fires if the bot sighted fails the conspec check and is in range.
+cond
+*.eye5 40 >
+*.refeye *.myeye != and
+start
+8 .shootval store
+-6 .shoot store
+*.refvelup .up store
+stop
+
+'Reproduction gene. Gotta make mo' bots.
+cond
+*.body 500 >
+start
+40 .repro store
+314 .aimdx store
+stop
+
+'Poison gene, because dying sucks.
+cond
+ *.nrg 10000 >
+ *.poison 500 < and
+start
+ 50 .strpoison store
+stop
+
+'Shell is good. This gene creates shell.
+cond
+ *.nrg 10000 >
+ *.shell 250 < and
+start
+ 100 .mkshell store
+stop
+
+
+'Slime gene, just in case.
+cond
+ *.nrg 10000 >
+ *.slime 300 < and
+start
+ 100 .mkslime store
+stop
+
+'Obligatory anti-viral gene
+cond
+ *.mkvirus 0 !=
+start
+ *.mkvirus .delgene store
+stop
+
+
+end

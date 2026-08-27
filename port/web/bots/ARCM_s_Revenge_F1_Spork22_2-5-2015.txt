@@ -1,0 +1,75 @@
+Alga Reactum
+'Vegetable
+'
+'This plant will reproduce if it is  attacked.
+
+cond
+*.shup 0 != 
+*.shdn 0 != or
+*.shdx 0 != or
+*.shsx 0 != or
+'*.nrg 10000 > or
+start
+60 .aimdx store
+50 .repro store
+stop
+
+cond
+*.numties 0 >
+start
+99 .repro store
+stop
+
+cond 'new gene from Botsareus and Panda
+  *.chlr
+  *.light
+  <
+start
+160 .mkchlr store
+stop
+
+def nrgratio 100
+
+start
+
+10 dup *.nrgratio sub sgn abs .nrgratio mult store
+
+100 .strbody *.nrg *.body 10 div *.nrgratio ++ mult       sub sgn 0 floor mult store
+100 .fdbody        *.body 10 div *.nrgratio    mult *.nrg sub sgn 0 floor mult *.body 100 sub sgn 0 floor mult store
+
+stop
+
+'Gene six - the tie gene
+*.eye5 40 >
+*.numties 3 <
+start
+1 .tie store
+stop
+
+'Gene eight - the sucker gene
+cond
+*.multi 1 =
+start
+99 .sharenrg store
+99 .shareslime store
+99 .shareshell store
+.sharewaste inc
+stop
+
+'Gene 12 - the energy sucker gene
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+*55 .tienum store
+stop
+
+'Gene seven - the avoiding family gene
+*.refeye 5 =
+start
+180 .aimsx store
+stop
+
+
+end

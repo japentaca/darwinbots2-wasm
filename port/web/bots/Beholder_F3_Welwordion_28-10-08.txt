@@ -1,3 +1,7 @@
+
+def loc2 91
+def val2 92
+
 'initializing eye configuration
 
 cond

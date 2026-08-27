@@ -1,11 +1,10 @@
-'Name         :vegie Seeder
-'bye        :d-EVO
-'type        :vegie
+'Name 		:vegie Seeder
+'bye		:d-EVO
+'type		:vegie
 
 'average body size of 50 units 
 'average life span of 50 cycls
 'looks relly cool in a large environment and high max amount of vegies
-'kills itself after repro so it is difficuld to feed from
 
 cond
 *.robage 0 =

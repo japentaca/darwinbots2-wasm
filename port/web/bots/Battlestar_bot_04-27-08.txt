@@ -1,0 +1,273 @@
+'Battlestar
+'Galactica
+'version 0.01 apr27-08
+
+
+''''''''
+'Universal genes first.
+''''''''
+
+'almost Always use the 1/9 Eye movement
+cond
+*.out1 4 !=
+*.eye5 0 =
+*.eye1 0 > 
+*.eye9 0 > or
+start
+*.eye1 1 ceil
+*.eye9 1 ceil
+sub
+140 mult
+.aimsx store
+'upgrade
+*.eye8 *.eye2 sub *.eye7 add *.eye3 sub
+.aimdx store
+
+stop
+
+
+
+
+''''''''''''''''''''''''''
+'Find Food
+''''''''''''''''''''''''''
+cond
+*.out1 3 =
+*.out1 4 = or
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+
+*.refxpos *.refypos angle .setaim store
+stop
+
+cond
+*.out1 3 =
+*.eye5 60 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+*.refvelup .up store
+
+stop
+''''''''''''''''''''''''''
+'
+'turn away from mothership
+cond
+*.out1 3 =
+*.eye5 0 >
+*.in1 1 =
+*.in1 4 = or
+start
+400 .aimdx store
+stop
+
+'occasionally break flock
+cond
+*.robage 20 mod 1 =
+*.out1 3 =
+*.eye5 0 >
+*.in1 3 =
+start
+400 .aimdx store
+stop
+
+
+
+
+''''''''
+'Drone genes
+''''''''
+
+'Drunk Propulsion
+cond
+*.out1 3 =
+*.robage 2 >
+*.vel 50 <
+*.eye5 40 <
+start
+15 .up store
+'random turn
+10 rnd 5 sub .aimdx store
+stop
+
+
+'Best specimin finder
+cond
+*.out1 3 =
+*.in2 *.out2 >
+*.myeye *.refeye =
+start
+*.in2 .out2 store
+*.in3 .out3 store
+*.in4 .out4 store
+stop
+
+
+'Activate return sequence
+cond
+*.out1 3 =
+*.pleas 1 <
+*.nrg 1500 >
+start
+4 .out1 store
+stop
+
+'Return to shuttle
+cond
+*.out1 4 =
+start
+*.out3 *.out4 angle .setaim store
+5 .up store
+stop
+
+
+'Feed mothership
+cond *.out1 4 =
+*.eye5 70 >
+*.in3 *.out3 =
+*.in4 *.out4 =
+start
+*.nrg 2 div .shootval store
+-2 .shoot store
+stop
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''
+'GENE NUKER
+'''''''''''''''''''''''''''''''''''''''''''''''''
+cond
+*.out1 3 =
+*.robage 1 >
+start
+*.genes .delgene store
+stop
+'''''''''''''''''''''''''''''''''''''''''''''''''
+'/GENE NUKER
+'''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+'''''
+'Age1=Become a drone
+'''''
+cond
+*.robage 1 =
+*.nrg 3000 <
+start
+3 .out1 store
+'kill tie
+.tie *.robage 1 add mult inc .deltie inc
+'Rotate 180
+618 .aimdx store
+'best specimin settings
+*.in2 .out2 store
+*.in3 .out3 store
+*.in4 .out4 store
+
+*.body 10 mult 80 sub .fdbody store
+stop
+
+
+
+
+
+
+
+
+'''''
+'Become an independant
+'''''
+cond
+*.robage 1 =
+*.nrg 3000 >
+*.refeye *.myeye =
+start
+2 .out1 store
+stop
+
+
+
+
+
+
+'''''
+'Become a Mothership
+'''''
+cond
+*.robage 1 =
+*.nrg 3000 >
+*.refeye *.myeye !=
+start
+1 .out1 store
+.shoot .vloc store
+stop
+
+
+'''''''''''
+'Age2 Mothership setup
+'''''''''''
+cond
+*.out1 1 =
+*.robage 2 =
+start
+*.nrg .out2 store
+*.xpos .out3 store
+*.ypos .out4 store
+stop
+
+
+'''''
+'Mothership Conditioning - Stay in Shape
+'''''''''
+cond
+*.nrg 14500 >
+*.body 20000 <
+start
+100 .strbody store
+stop
+cond
+*.nrg 4000 <
+*.body 500 >
+start
+100 .fdbody store
+stop
+cond
+*.nrg 15000 >
+start
+50 .mkshell store
+5 .mkslime store
+50 .mkvirus store
+stop
+
+
+''''
+'Mothership guidance.  Stay on spot
+''''
+
+
+
+
+
+''''''''''''''''''''''''''''''''''''''
+cond
+*.nrg 3000 >
+*.robage 9 <
+start
+'1 .fixpos store
+
+stop
+
+cond
+*.nrg 30 mod 1 =
+*.robage 4 >
+*.out1 1 =
+*.totalbots *.totalmyspecies sub 3 mult <
+start
+*.nrg .out2 store
+1 .repro store
+300 rnd .aimdx store
+stop
+
+

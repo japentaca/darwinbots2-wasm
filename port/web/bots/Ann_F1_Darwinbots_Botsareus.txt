@@ -1,0 +1,1181 @@
+'#generation: 1
+'#mutations: 1
+
+ cond
+ 19 !%=
+ start
+ <<
+''''''''''''''''''''''''  Gene:  1 Ends at position  5  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  6  '''''''''''''''''''''''
+ start
+ 70 .eye1dir store
+ 175 .eye1width store
+ 0 .eye2dir store
+ 20 .eye2width store
+ -35 .eye3dir store
+ -20 .eye3width store
+ -40 .eye4dir store
+ 175 .eye4width store
+ 0 525 *.kills dup | overbool
+ =
+ *-891 clearbool
+ false
+ .maxvel store
+ 20 .eye5width store
+ 35 .eye6dir store
+ 35 .eye7dir store
+ -20 .eye7width store
+ .eye8dir store
+ 20 -75 .eye9dir store
+ 175 .eye9width store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  64  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  65  '''''''''''''''''''''''
+ cond
+ start
+ 994 inc
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  69  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  70  '''''''''''''''''''''''
+ cond
+ *.robage 4 start
+ 992 inc
+ 993 inc
+ -1 1 5 mult - add .shoot store
+ =
+ *.eye1 *.eye2 *.eye3 div 14 store
+ *.eye4 *.eye5 *.eye6 add
+''''''''''''''''''''''''  Gene:  4 Ends at position  96  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  97  '''''''''''''''''''''''
+ else
+ ceil *241 rnd
+''''''''''''''''''''''''  Gene:  5 Ends at position  100  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  101  '''''''''''''''''''''''
+ else
+
+''''''''''''''''''''''''  Gene:  6 Ends at position  101  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  102  '''''''''''''''''''''''
+ else
+ substore
+ 15 store
+ *.eye7 *.eye8 *.eye9 add add 3 div 16 ceil stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  115  '''''''''''''''''''''''
+ *-551 angle stop
+ *-374 store
+ stop
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  122  '''''''''''''''''''''''
+ cond
+ *993 *17 >
+ start
+ 0 993 store
+ 3 rnd 20 35 *.in9 add store
+ * 4 mult 22 * 4 2 pow mult 23 * 4 3 pow mult 24 * 4 4 pow mult 25 * *.tielen1 5 pow mult absstore
+ 26 * 4 6 pow mult add add add *.aim *229 *230 div 32000 mod 232 store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  182  '''''''''''''''''''''''
+ *.tielen3 anglecmp store
+ stop
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  187  '''''''''''''''''''''''
+ cond
+ *43 1 =
+ start
+ *.shareslime 233 store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  195  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  196  '''''''''''''''''''''''
+ cond
+ *43 2 =
+ start
+ *231 *232 mult
+''''''''''''''''''''''''  Gene:  10 Ends at position  203  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  204  '''''''''''''''''''''''
+ cond
+ *43 3 =
+ start
+ dupbool
+ inc
+ 32000 mod 233 store
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  215  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  216  '''''''''''''''''''''''
+ cond
+ *46 0 *.tin4 start
+ 13 *44 add add 32000 mod 234 store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  229  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  230  '''''''''''''''''''''''
+ cond
+ *46 1 =
+ start
+ *44 add * 13 *45 add * sub 32000 mod 234 *46 2 =
+
+''''''''''''''''''''''''  Gene:  13 Ends at position  248  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  14 Begins at position  249  '''''''''''''''''''''''
+ start
+ 13 *44 add * 13 *45 add * mult *.tieang mod 234 store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  263  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  264  '''''''''''''''''''''''
+ cond
+ *46 3 =
+ start
+ 13 * *.shoot *45 add * div 32000 234 store
+ *.eye7dir
+''''''''''''''''''''''''  Gene:  15 Ends at position  279  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  280  '''''''''''''''''''''''
+ cond
+ *49 0 =
+ start
+ *.refaimsx *47 add * 13 *48 add * add 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  298  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  299  '''''''''''''''''''''''
+ cond
+ *49 1 =
+ start
+ 13 *47 add * 13 *48 add * sub 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  317  '''''''''''''''''''''''
+ *49 2 =
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  321  '''''''''''''''''''''''
+ start
+ 13 *47 *.fixpos * 13 *48 add * mult *.out1 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  335  '''''''''''''''''''''''
+ *.dnalen *.mypoison 3 =
+
+''''''''''''''''''''''''  Gene:  19 Begins at position  340  '''''''''''''''''''''''
+ start
+ 13 *47 add * 13 *48 add * div 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  354  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  20 Begins at position  355  '''''''''''''''''''''''
+ cond
+ *52 start
+ 13 *50 add * *51 add * add 32000 mod 236 logx
+''''''''''''''''''''''''  Gene:  20 Ends at position  369  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  21 Begins at position  370  '''''''''''''''''''''''
+ else
+
+''''''''''''''''''''''''  Gene:  21 Ends at position  370  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  22 Begins at position  371  '''''''''''''''''''''''
+ start
+ ++ not
+ !~=
+ - store
+ stop
+''''''''''''''''''''''''  Gene:  22 Ends at position  377  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  23 Begins at position  378  '''''''''''''''''''''''
+ cond
+ *52 1 !=
+ stop
+''''''''''''''''''''''''  Gene:  23 Ends at position  382  '''''''''''''''''''''''
+ 13
+''''''''''''''''''''''''  Gene:  24 Begins at position  384  '''''''''''''''''''''''
+ start
+ 13 *47 add * 13 *48 add * sub 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  24 Ends at position  398  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  25 Begins at position  399  '''''''''''''''''''''''
+ cond
+ *49 2 *47 add * 13 *48 add * mult 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  414  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  26 Begins at position  415  '''''''''''''''''''''''
+ cond
+ cos 3 =
+ start
+ 13 *47 add * 13 *48 add * - -306 -314
+''''''''''''''''''''''''  Gene:  26 Ends at position  430  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  27 Begins at position  431  '''''''''''''''''''''''
+ else
+ sqr *-939 mod 235 store
+
+''''''''''''''''''''''''  Gene:  27 Ends at position  436  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  28 Begins at position  437  '''''''''''''''''''''''
+ cond
+ *52 0 =
+ start
+ 13 *50 * sub 32000 mod 228 store
+ stop
+''''''''''''''''''''''''  Gene:  28 Ends at position  450  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  29 Begins at position  451  '''''''''''''''''''''''
+ cond
+ *34 2 =
+ start
+ 13 *32 add * *.rmchlr *33 add * mult xor
+
+''''''''''''''''''''''''  Gene:  29 Ends at position  465  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  30 Begins at position  466  '''''''''''''''''''''''
+ cond
+ -872 *264 32000 mod 228 store
+ logx rndstore
+ xor
+ stop
+''''''''''''''''''''''''  Gene:  30 Ends at position  476  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  31 Begins at position  477  '''''''''''''''''''''''
+ cond
+ *.fixlen 3 =
+ start
+ 13 *32 add * 13 *33 add multstore
+ div 32000 mod 228 store
+ stop
+''''''''''''''''''''''''  Gene:  31 Ends at position  495  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  32 Begins at position  496  '''''''''''''''''''''''
+ cond
+ *37 0 =
+ *.stifftie add * 13 *36 add * add 32000 mod 229 store
+ stop
+''''''''''''''''''''''''  Gene:  32 Ends at position  512  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  33 Begins at position  513  '''''''''''''''''''''''
+ cond
+ *37 1 =
+ >=
+ dist dist swap *-253 -731 >> start
+ 13 *35 add * 13 *36 add * sub 32000 mod *.refdn add * 13 *21 add * add 32000 mod 222 store
+ stop
+''''''''''''''''''''''''  Gene:  33 Ends at position  548  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  34 Begins at position  549  '''''''''''''''''''''''
+ cond
+ *.vloc 13 *20 add * 13 *21 0 =
+ start
+ 13 *47 add * 13 *48 add * add 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  34 Ends at position  573  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  35 Begins at position  574  '''''''''''''''''''''''
+ cond
+ *49 add * 13 *21 *.tieang1 32000 mod 222 store
+ *.aim
+''''''''''''''''''''''''  Gene:  35 Ends at position  585  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  36 Begins at position  586  '''''''''''''''''''''''
+ cond
+ *25 0 =
+ start
+ 13 *23 add * 13 rndstore
+
+''''''''''''''''''''''''  Gene:  36 Ends at position  596  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  37 Begins at position  597  '''''''''''''''''''''''
+ start
+ abs <=
+ !=
+ >
+ *24 add * add 32000 *.delgene 223 store
+ stop
+''''''''''''''''''''''''  Gene:  37 Ends at position  610  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  38 Begins at position  611  '''''''''''''''''''''''
+ cond
+ *25 add * 13 *24 add * sub 32000 mod 223 store
+ stop
+''''''''''''''''''''''''  Gene:  38 Ends at position  624  '''''''''''''''''''''''
+ 2 =
+
+''''''''''''''''''''''''  Gene:  39 Begins at position  627  '''''''''''''''''''''''
+ start
+ 13 *23 add * 13 *24 add * mult 32000 mod 223 store
+ stop
+''''''''''''''''''''''''  Gene:  39 Ends at position  641  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  40 Begins at position  642  '''''''''''''''''''''''
+ cond
+ *25 * *.myvenom *51 add * add 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  40 Ends at position  654  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  41 Begins at position  655  '''''''''''''''''''''''
+ cond
+ *52 1 =
+ start
+ 13 *50 add * 13 *51 *.numties 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  41 Ends at position  671  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  42 Begins at position  672  '''''''''''''''''''''''
+ cond
+ *52 2 =
+ start
+ 13 *50 add * 13 *51 add mult 32000 mod *.sharechlr *52 3 =
+
+''''''''''''''''''''''''  Gene:  42 Ends at position  690  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  43 Begins at position  691  '''''''''''''''''''''''
+ start
+ 13 *50 add *51 add * div 32000 mod .strbody store
+ stop
+''''''''''''''''''''''''  Gene:  43 Ends at position  703  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  44 Begins at position  704  '''''''''''''''''''''''
+ cond
+ =
+ start
+ *234 *.waste add 32000 mod 237 store
+
+''''''''''''''''''''''''  Gene:  44 Ends at position  713  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  45 Begins at position  714  '''''''''''''''''''''''
+ cond
+ *53 1 =
+ start
+ *234 *235 sub 32000 add * sub 32000 mod 222 store
+ stop
+''''''''''''''''''''''''  Gene:  45 Ends at position  730  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  46 Begins at position  731  '''''''''''''''''''''''
+ cond
+ *22 2 =
+ 13 *20 add * 13 *21 add * mult 32000 mod 222 store
+ stop
+''''''''''''''''''''''''  Gene:  46 Ends at position  748  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  47 Begins at position  749  '''''''''''''''''''''''
+ cond
+ *22 *20 add 971 store
+ 27 * 28 * 4 mult 29 * 4 2 pow mult 30 * 4 pow mult 31 * *.tielen3 4 pow mult 32 * 4 5 pow mult 33 * 4 6 pow mult add add add 972 * 35 * 4 mult 36 * 4 2 pow mult 37 * 4 dropbool
+ logx floor -267 *376 3 *.trefbody mult pow mult 39 -1212
+''''''''''''''''''''''''  Gene:  47 Ends at position  819  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  48 Begins at position  820  '''''''''''''''''''''''
+ cond
+ << >
+ 5 pow mult 40 * 4 6 pow mult add add add add add add 973 store
+ 41 * 42 4 mult 43 * 4 2 pow mult 44 * 4 3 45 * 4 4 pow mult 46 * 4 5 pow mult 47 * 4 6 pow mult add add add add * 4 mult *.fdbody 2 pow mult 51 * pow mult 52 * 4 4 pow mult 53 * 4 5 pow mult *.eye2dir * 6 pow mult add add add add 975 store
+ 55 * 976 store
+ 17 * 243 mult 315 div .out1 store
+ stop
+''''''''''''''''''''''''  Gene:  48 Ends at position  923  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  49 Begins at position  924  '''''''''''''''''''''''
+ cond
+ *.robage 3 =
+ start
+ 971 * 4 mod 20 store
+ 20 * 971 substore
+ 4 971 divstore
+ 971 * 4 dist mod >=
+ drop sqr * over * & *22 add rnd *-375 !=
+ and
+ swap -159 *-893 .veldx negstore
+ 387 !=
+ ++ - mod 21 store
+ 21 substore
+ 4 971 divstore
+ 971 * mod 22 store
+ 22 * 971 substore
+ 4 971 divstore
+ 971 * 4 mod 23 store
+ 23 * 971 substore
+ 4 971 divstore
+ 971 * 4 * 971 substore
+ 4 971 divstore
+ 971 * 4 25 store
+ 25 * 971 4 971 divstore
+ 971 * 4 mod 26 store
+ 26 * 971 substore
+ .dx divstore
+ 972 * 4 mod 27 store
+ 27 * 972 substore
+
+''''''''''''''''''''''''  Gene:  49 Ends at position  1043  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  50 Begins at position  1044  '''''''''''''''''''''''
+ start
+ root add =
+ *.sun drop <=
+ -773 %=
+ not
+ 4 972 divstore
+ 972 * 4 mod 28 store
+ 28 * 972 substore
+ 4 972 divstore
+ 972 * 4 mod 29 store
+ 29 * .myeye substore
+ 4 972 divstore
+ 972 >
+ sqrstore
+ & clear clear !%=
+ clear * 4 mod 30 store
+ 30 *
+''''''''''''''''''''''''  Gene:  50 Ends at position  1097  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  51 Begins at position  1098  '''''''''''''''''''''''
+ cond
+ multstore
+ 972 *.velsx 4 972 divstore
+ 972 * 4 mod 31 store
+ 31 * 972
+''''''''''''''''''''''''  Gene:  51 Ends at position  1113  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  52 Begins at position  1114  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  52 Ends at position  1115  '''''''''''''''''''''''
+ dupbool
+ multstore
+
+''''''''''''''''''''''''  Gene:  53 Begins at position  1118  '''''''''''''''''''''''
+ start
+ -298 substore
+ 4 972 divstore
+ 972 * 4 mod 32 store
+ 32 * 972 substore
+ 4 972 divstore
+ *.refnrg * 33 store
+ 33 substore
+ 4 972 !~=
+ clear >=
+ >> *25 sqrstore
+ pow mult add add add add * 4 mult *.fdbody 2 pow mult 51 * pow mult 52 * 4 4 pow mult 53 * 4 5 pow mult *.eye2dir * 6 pow mult add add add add 975 store
+ 55 * 976 store
+ 17 * 243 mult 315 div .out1 store
+ stop
+''''''''''''''''''''''''  Gene:  53 Ends at position  1203  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  54 Begins at position  1204  '''''''''''''''''''''''
+ cond
+ *.robage 3 =
+ start
+ 971 * 4 mod 20 store
+ 20 * 971 substore
+ 4 971 divstore
+ 971 * 4 dist mod >=
+ drop sqr * over * & *22 add rnd *-375 !=
+ and
+ swap -159 *-893 .veldx negstore
+ 387 !=
+ ++ - mod 21 store
+ 21 substore
+ 4 971 divstore
+ 971 * mod divstore
+ 973 * 4 mod 34 store
+ 34 * 973 973 *.tin6 4 mod 35 store
+ 35 * 973 substore
+ 4 973 divstore
+ 973 * 4 mod 36 store
+ 36 * 973 substore
+ 4 973 divstore
+ 973 * 37 store
+ 37 * 973 973 * 4 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  54 Ends at position  1309  '''''''''''''''''''''''
+ *49 2 =
+
+''''''''''''''''''''''''  Gene:  55 Begins at position  1313  '''''''''''''''''''''''
+ start
+ 13 *47 *.fixpos * 13 *48 add * mult *.out1 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  55 Ends at position  1327  '''''''''''''''''''''''
+ *.dnalen *.mypoison 3 =
+
+''''''''''''''''''''''''  Gene:  56 Begins at position  1332  '''''''''''''''''''''''
+ start
+ 13 *47 add * 3
+''''''''''''''''''''''''  Gene:  56 Ends at position  1337  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  57 Begins at position  1338  '''''''''''''''''''''''
+ start
+ *225 *226 *.in3 32000
+''''''''''''''''''''''''  Gene:  57 Ends at position  1342  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  58 Begins at position  1343  '''''''''''''''''''''''
+ cond
+ *34 0 =
+ start
+ 13 *32 add * 13 *33 add * add 32000 mod 228 store
+ stop
+''''''''''''''''''''''''  Gene:  58 Ends at position  1361  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  59 Begins at position  1362  '''''''''''''''''''''''
+ cond
+ 1 =
+ start
+ 13 *32 add *33 add *35 sgn ceil
+''''''''''''''''''''''''  Gene:  59 Ends at position  1373  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  60 Begins at position  1374  '''''''''''''''''''''''
+ start
+ 13 *23 add * 13 *24 add * div 32000 *.shup 223 store
+ stop
+''''''''''''''''''''''''  Gene:  60 Ends at position  1388  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  61 Begins at position  1389  '''''''''''''''''''''''
+ cond
+ 0 start
+ 13 *.refpoison 13 *27 * *.sun 32000 mod 224
+''''''''''''''''''''''''  Gene:  61 Ends at position  1400  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  62 Begins at position  1401  '''''''''''''''''''''''
+ start
+ 13 *26 add * 13 *27 add * sub 32000 mod 224 store
+ stop
+''''''''''''''''''''''''  Gene:  62 Ends at position  1415  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  63 Begins at position  1416  '''''''''''''''''''''''
+ cond
+ *.shang
+''''''''''''''''''''''''  Gene:  63 Ends at position  1417  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  64 Begins at position  1418  '''''''''''''''''''''''
+ cond
+ *42 3 =
+ start
+ 13 *50 add * 13 *51 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  64 Ends at position  1433  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  65 Begins at position  1434  '''''''''''''''''''''''
+ cond
+ *52 2 =
+ start
+ 13 *50 *.treffixed * mod & substore
+ 38 * 973 substore
+ 4 973 divstore
+ 973 * 4 mod 39 store
+ 39 * 973 substore
+ 4 973 divstore
+ 973 * 4 mod * 973 substore
+ 4 973 4 mod 41 store
+ 41 * 974 substore
+ 4 974 divstore
+ 974 * 4 mod 42 store
+ 42 * 974 substore
+ 4 974 divstore
+ 974 mod 43 store
+ 43 * 974 * 4 mod 974 substore
+ 974 * 4 mod 45 store
+ 45 * 974 substore
+ 4 974 divstore
+ 974 * 4 mod 46 store
+ 46 * 974 substore
+ 4 974 divstore
+ 974 * 4 mod 47 store
+ 47 * 974 substore
+ 4 974 divstore
+ 975 * 4 mod 48 store
+ 48 substore
+ 4 975 divstore
+ 975 * .dx store
+ 49 * 975 substore
+ 4 .eye3 divstore
+ 975 * 4 mod 50 store
+ 50 * 975 substore
+ 4 975 divstore
+ 974 * 4 mod 51 store
+ 51 * 974 substore
+ 4 974 divstore
+ 975 * 4 mod 52 store
+ 52 * 975 substore
+ 4 975 divstore
+ 975 * 4 mod 53 store
+ 53 * 975 substore
+ 4 975 divstore
+ 975 54 store
+ 54 975 substore
+ 4 975 divstore
+ 976 * .sharechlr store
+ 977 * 17 store
+ stop
+''''''''''''''''''''''''  Gene:  65 Ends at position  1641  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  66 Begins at position  1642  '''''''''''''''''''''''
+ cond
+ =
+ *13 0 >
+ start
+ 13 17 addstore
+ stop
+''''''''''''''''''''''''  Gene:  66 Ends at position  1651  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  67 Begins at position  1652  '''''''''''''''''''''''
+ cond
+ *992 2 =
+ *13 0 <
+ start
+ 17
+''''''''''''''''''''''''  Gene:  67 Ends at position  1660  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  68 Begins at position  1661  '''''''''''''''''''''''
+ cond
+ *17 2 <
+ start
+ 1 17 *.hitup <=
+ dist store
+ stop
+''''''''''''''''''''''''  Gene:  68 Ends at position  1672  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  69 Begins at position  1673  '''''''''''''''''''''''
+ cond
+ *992 4 >
+ start
+ 0 992 *.nrg *.body add 2 div sub - 1 mult 959 div 13 store
+ 2 div 991 store
+ stop
+''''''''''''''''''''''''  Gene:  69 Ends at position  1697  '''''''''''''''''''''''
+ 43 abs divstore
+
+''''''''''''''''''''''''  Gene:  70 Begins at position  1701  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  70 Ends at position  1701  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  71 Begins at position  1702  '''''''''''''''''''''''
+ cond
+ *28 2 =
+ start
+ 13 *26 add * 13 *27 520 add * mult 32000 mod 224 store
+ stop
+''''''''''''''''''''''''  Gene:  71 Ends at position  1721  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  72 Begins at position  1722  '''''''''''''''''''''''
+ cond
+ =
+ start
+ 13 root over *26 add * 13 *27 add * div 32000 mod 224
+''''''''''''''''''''''''  Gene:  72 Ends at position  1738  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  73 Begins at position  1739  '''''''''''''''''''''''
+ start
+ *222 *223 dropbool
+ %=
+ * *.shell overbool
+ sub sgnstore
+ 236 add 32000 mod 225 store
+ *29 1 =
+
+''''''''''''''''''''''''  Gene:  73 Ends at position  1757  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  74 Begins at position  1758  '''''''''''''''''''''''
+ start
+ *222 *223 sub 32000 mod 225 store
+ stop
+''''''''''''''''''''''''  Gene:  74 Ends at position  1766  '''''''''''''''''''''''
+ substore
+ *.out8 *.refdn
+''''''''''''''''''''''''  Gene:  75 Begins at position  1770  '''''''''''''''''''''''
+ else
+ !=
+ addstore
+ 2 =
+
+''''''''''''''''''''''''  Gene:  75 Ends at position  1774  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  76 Begins at position  1775  '''''''''''''''''''''''
+ start
+ *222 *223 mult 32000 mod 225 store
+ stop
+''''''''''''''''''''''''  Gene:  76 Ends at position  1783  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  77 Begins at position  1784  '''''''''''''''''''''''
+ cond
+ *29 3 *.bodloss *.eye1width *222 *223 div 32000 *.tieloc 225 store
+ stop
+''''''''''''''''''''''''  Gene:  77 Ends at position  1796  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  78 Begins at position  1797  '''''''''''''''''''''''
+ cond
+ *30 0 =
+ start
+ *223 *224 add 32000 mod 226 store
+ stop
+''''''''''''''''''''''''  Gene:  78 Ends at position  1809  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  79 Begins at position  1810  '''''''''''''''''''''''
+ cond
+ =
+ start
+ *223 *224 sub 32000 mod 226 store
+ stop
+''''''''''''''''''''''''  Gene:  79 Ends at position  1820  '''''''''''''''''''''''
+ >
+ ++ - floorstore
+
+''''''''''''''''''''''''  Gene:  80 Begins at position  1825  '''''''''''''''''''''''
+ cond
+ 2 =
+ start
+ *223 *224 *.poisoned 32000 mod 226 *.refpoison stop
+''''''''''''''''''''''''  Gene:  80 Ends at position  1836  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  81 Begins at position  1837  '''''''''''''''''''''''
+ cond
+ *30 3 =
+ store
+ stop
+''''''''''''''''''''''''  Gene:  81 Ends at position  1842  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  82 Begins at position  1843  '''''''''''''''''''''''
+ cond
+ *37 2 =
+ start
+ 13 *35 add * *24 add * add 32000 *.delgene 223 store
+ stop
+''''''''''''''''''''''''  Gene:  82 Ends at position  1860  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  83 Begins at position  1861  '''''''''''''''''''''''
+ cond
+ *25 add * 13 *24 add * sub 32000 mod 223 store
+ stop
+''''''''''''''''''''''''  Gene:  83 Ends at position  1874  '''''''''''''''''''''''
+ 2 =
+
+''''''''''''''''''''''''  Gene:  84 Begins at position  1877  '''''''''''''''''''''''
+ start
+ 13 *23 add * 13 *24 add * mult 32000 mod 223 store
+ stop
+''''''''''''''''''''''''  Gene:  84 Ends at position  1891  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  85 Begins at position  1892  '''''''''''''''''''''''
+ cond
+ *25 * *.myvenom *51 add * add 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  85 Ends at position  1904  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  86 Begins at position  1905  '''''''''''''''''''''''
+ cond
+ *52 1 =
+ start
+ 13 *50 add * 13 *51 *.numties 13 *36 add * mult 32000 mod stop
+''''''''''''''''''''''''  Gene:  86 Ends at position  1924  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  87 Begins at position  1925  '''''''''''''''''''''''
+ cond
+ *37 13 *35 add * 13 *36 add * div 32000 mod 229 store
+ 0 =
+ start
+ 13 *38 add * *.myaimdx *.multi add * add 32000 mod 230 store
+ stop
+''''''''''''''''''''''''  Gene:  87 Ends at position  1956  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  88 Begins at position  1957  '''''''''''''''''''''''
+ cond
+ *40 1 =
+ start
+ 13 *38 add multstore
+ <=
+ * add * sub 32000 *.shootval 230 store
+ stop
+''''''''''''''''''''''''  Gene:  88 Ends at position  1975  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  89 Begins at position  1976  '''''''''''''''''''''''
+ cond
+ *40 2 =
+ start
+ 13 *38 add * 13 * mult store
+ stop
+''''''''''''''''''''''''  Gene:  89 Ends at position  1989  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  90 Begins at position  1990  '''''''''''''''''''''''
+ cond
+ *40 3 =
+ start
+ 13 *38 add * 13 *39 add * div 32000 mod 230 store
+ stop
+''''''''''''''''''''''''  Gene:  90 Ends at position  2008  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  91 Begins at position  2009  '''''''''''''''''''''''
+ cond
+ *41 0 =
+ start
+ *228 *229 add 32000 mod 231 store
+ stop
+''''''''''''''''''''''''  Gene:  91 Ends at position  2021  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  92 Begins at position  2022  '''''''''''''''''''''''
+ cond
+ *41 1 =
+ *229 sub 32000 mod 231 store
+ stop
+''''''''''''''''''''''''  Gene:  92 Ends at position  2032  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  93 Begins at position  2033  '''''''''''''''''''''''
+ cond
+ *41 2 =
+ start
+ *228 *229 mult 32000 mod .refaimsx store
+ stop
+''''''''''''''''''''''''  Gene:  93 Ends at position  2045  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  94 Begins at position  2046  '''''''''''''''''''''''
+ cond
+ *41 =
+ start
+ *228 *229 div 32000 mod 231 store
+ stop
+''''''''''''''''''''''''  Gene:  94 Ends at position  2057  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  95 Begins at position  2058  '''''''''''''''''''''''
+ cond
+ *42 0 =
+ start
+ *229 *230 add *.reftype mod 232 store
+ stop
+''''''''''''''''''''''''  Gene:  95 Ends at position  2070  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  96 Begins at position  2071  '''''''''''''''''''''''
+ cond
+ 232 mod *.tin4 mult *230 *229 start
+ =
+ 2 *42
+''''''''''''''''''''''''  Gene:  96 Ends at position  2081  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  97 Begins at position  2082  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  97 Ends at position  2083  '''''''''''''''''''''''
+ *42 1 =
+
+''''''''''''''''''''''''  Gene:  98 Begins at position  2087  '''''''''''''''''''''''
+ start
+ *229 *230 sub 32000 mod 232 store
+ *22 0 =
+
+''''''''''''''''''''''''  Gene:  98 Ends at position  2097  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  99 Begins at position  2098  '''''''''''''''''''''''
+ start
+ 13 =
+ *.eye5dir *223 *224 div 32000 mod 226 store
+ stop
+''''''''''''''''''''''''  Gene:  99 Ends at position  2109  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  100 Begins at position  2110  '''''''''''''''''''''''
+ cond
+ ^ ~ 554 dropbool
+ << *-175 *31 *225 *226 add 32000 mod 227 store
+ stop
+''''''''''''''''''''''''  Gene:  100 Ends at position  2125  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  101 Begins at position  2126  '''''''''''''''''''''''
+ cond
+ *31 1 =
+ start
+ *225 *226 sub 227 store
+ stop
+''''''''''''''''''''''''  Gene:  101 Ends at position  2136  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  102 Begins at position  2137  '''''''''''''''''''''''
+ cond
+ *31 2 =
+ start
+ *225 227 store
+ stop
+''''''''''''''''''''''''  Gene:  102 Ends at position  2145  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  103 Begins at position  2146  '''''''''''''''''''''''
+ cond
+ *31 6 pow mult add add add *.aim *229 *230 div 32000 sqr -834 78 ~=
+ true
+ 428 >
+ and
+ mod 232 store
+ stop
+''''''''''''''''''''''''  Gene:  103 Ends at position  2170  '''''''''''''''''''''''
+ *.tielen3 anglecmp store
+ stop
+
+''''''''''''''''''''''''  Gene:  104 Begins at position  2175  '''''''''''''''''''''''
+ cond
+ *43 1 =
+ start
+ *.shareslime 233 store
+ stop
+''''''''''''''''''''''''  Gene:  104 Ends at position  2183  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  105 Begins at position  2184  '''''''''''''''''''''''
+ cond
+ *43 2 =
+ start
+ *231 *232 mult
+''''''''''''''''''''''''  Gene:  105 Ends at position  2191  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  106 Begins at position  2192  '''''''''''''''''''''''
+ cond
+ *43 3 =
+ start
+ dupbool
+ inc
+ 32000 mod .eye5 store
+ stop
+''''''''''''''''''''''''  Gene:  106 Ends at position  2203  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  107 Begins at position  2204  '''''''''''''''''''''''
+ cond
+ *46 0 *.tin4 start
+ 13 *44 add add 32000 mod 234 store
+ stop
+''''''''''''''''''''''''  Gene:  107 Ends at position  2217  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  108 Begins at position  2218  '''''''''''''''''''''''
+ cond
+ *46 1 =
+ start
+ *44 add * 13 *45 add * sub 32000 mod 234 *46 2 =
+
+''''''''''''''''''''''''  Gene:  108 Ends at position  2236  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  109 Begins at position  2237  '''''''''''''''''''''''
+ start
+ 13 *44 add * 13 *45 add * mult *.tieang mod 234 store
+ stop
+''''''''''''''''''''''''  Gene:  109 Ends at position  2251  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  110 Begins at position  2252  '''''''''''''''''''''''
+ cond
+ *46 3 =
+ start
+ 13 * *.shoot *45 add * div 32000 234 store
+ *.eye7dir
+''''''''''''''''''''''''  Gene:  110 Ends at position  2267  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  111 Begins at position  2268  '''''''''''''''''''''''
+ cond
+ *49 0 =
+ start
+ *.refaimsx *47 add * 13 *48 add * add 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  111 Ends at position  2286  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  112 Begins at position  2287  '''''''''''''''''''''''
+ cond
+ *49 1 =
+ start
+ 13 *47 add * 13 *48 add * sub 32000 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  112 Ends at position  2305  '''''''''''''''''''''''
+ *49 2 =
+
+''''''''''''''''''''''''  Gene:  113 Begins at position  2309  '''''''''''''''''''''''
+ start
+ 13 *47 *.fixpos * 13 *48 add * mult *.out1 mod 235 store
+ stop
+''''''''''''''''''''''''  Gene:  113 Ends at position  2323  '''''''''''''''''''''''
+ *.dnalen *.mypoison 3 =
+
+''''''''''''''''''''''''  Gene:  114 Begins at position  2328  '''''''''''''''''''''''
+ start
+ 13 *47 add * 3
+''''''''''''''''''''''''  Gene:  114 Ends at position  2333  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  115 Begins at position  2334  '''''''''''''''''''''''
+ start
+ *225 *226 *.in3 32000
+''''''''''''''''''''''''  Gene:  115 Ends at position  2338  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  116 Begins at position  2339  '''''''''''''''''''''''
+ cond
+ *34 0 =
+ start
+ 13 *32 add * 13 *33 add * add 32000 mod 228 store
+ stop
+''''''''''''''''''''''''  Gene:  116 Ends at position  2357  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  117 Begins at position  2358  '''''''''''''''''''''''
+ cond
+ 1 =
+ start
+ 13 *32 add *33 add *35 sgn ceil
+''''''''''''''''''''''''  Gene:  117 Ends at position  2369  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  118 Begins at position  2370  '''''''''''''''''''''''
+ start
+ 13 *23 add * 13 *24 add * div 32000 *.shup 223 store
+ stop
+''''''''''''''''''''''''  Gene:  118 Ends at position  2384  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  119 Begins at position  2385  '''''''''''''''''''''''
+ cond
+ 0 start
+ 13 *.refpoison 13 *27 * *.sun 32000 mod 224
+''''''''''''''''''''''''  Gene:  119 Ends at position  2396  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  120 Begins at position  2397  '''''''''''''''''''''''
+ start
+ 13 *26 add * 13 *27 add * sub 32000 mod 224 store
+ stop
+''''''''''''''''''''''''  Gene:  120 Ends at position  2411  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  121 Begins at position  2412  '''''''''''''''''''''''
+ cond
+ *.shang
+''''''''''''''''''''''''  Gene:  121 Ends at position  2413  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  122 Begins at position  2414  '''''''''''''''''''''''
+ cond
+ *42 3 =
+ start
+ 13 *50 add * 13 *51 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  122 Ends at position  2429  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  123 Begins at position  2430  '''''''''''''''''''''''
+ cond
+ *52 2 =
+ start
+ 13 *50 *.treffixed * 13 *51 add * mult 32000 mod 236 store
+ stop
+''''''''''''''''''''''''  Gene:  123 Ends at position  2448  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  124 Begins at position  2449  '''''''''''''''''''''''
+ cond
+ *52 3 =
+ start
+ 13 *50 add *51 add * div 32000 mod
+''''''''''''''''''''''''  Gene:  124 Ends at position  2462  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  125 Begins at position  2463  '''''''''''''''''''''''
+ cond
+ *-378 floor *-76 *512 | .strbody store
+ stop
+''''''''''''''''''''''''  Gene:  125 Ends at position  2471  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  126 Begins at position  2472  '''''''''''''''''''''''
+ cond
+ *53 0 =
+ start
+ *234 *.waste add 32000 mod 237 store
+ stop
+''''''''''''''''''''''''  Gene:  126 Ends at position  2484  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  127 Begins at position  2485  '''''''''''''''''''''''
+ cond
+ *53 1 =
+ sub 32000 store
+ stop
+''''''''''''''''''''''''  Gene:  127 Ends at position  2492  '''''''''''''''''''''''
+ =
+
+''''''''''''''''''''''''  Gene:  128 Begins at position  2494  '''''''''''''''''''''''
+ start
+ *234 *235 mult 32000 mod 237 store
+ stop
+''''''''''''''''''''''''  Gene:  128 Ends at position  2502  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  129 Begins at position  2503  '''''''''''''''''''''''
+ cond
+ *53 3 =
+ start
+ *234 *.poisoned mod 237 store
+ stop
+''''''''''''''''''''''''  Gene:  129 Ends at position  2513  '''''''''''''''''''''''
+ *54 0 =
+
+''''''''''''''''''''''''  Gene:  130 Begins at position  2517  '''''''''''''''''''''''
+ start
+ 32000 stop
+''''''''''''''''''''''''  Gene:  130 Ends at position  2519  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  131 Begins at position  2520  '''''''''''''''''''''''
+ cond
+ *54 1 =
+ *54
+''''''''''''''''''''''''  Gene:  131 Ends at position  2524  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  132 Begins at position  2525  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  132 Ends at position  2526  '''''''''''''''''''''''
+ store
+ 238 mod 32000 -439 *-350 dupbool
+ xor
+ logx *.totalmyspecies %=
+ sub *236 *235 2 =
+
+''''''''''''''''''''''''  Gene:  133 Begins at position  2543  '''''''''''''''''''''''
+ start
+ *235 *236 mult 32000 mod 238 store
+ stop
+''''''''''''''''''''''''  Gene:  133 Ends at position  2551  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  134 Begins at position  2552  '''''''''''''''''''''''
+ cond
+ *54 3 =
+ start
+ *235 *236 div 32000 mod 238 store
+ stop
+''''''''''''''''''''''''  Gene:  134 Ends at position  2564  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  135 Begins at position  2565  '''''''''''''''''''''''
+ cond
+ *55 0 =
+ start
+ *237 *238 add 32000 mod 239 store
+ *.totalbots
+''''''''''''''''''''''''  Gene:  135 Ends at position  2577  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  136 Begins at position  2578  '''''''''''''''''''''''
+ cond
+ *55 1 =
+ start
+ *237 *238 sub 239 store
+ stop
+''''''''''''''''''''''''  Gene:  136 Ends at position  2588  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  137 Begins at position  2589  '''''''''''''''''''''''
+ cond
+ *55 2 =
+ start
+ *237 *238 32000 mod store
+ stop
+''''''''''''''''''''''''  Gene:  137 Ends at position  2599  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  138 Begins at position  2600  '''''''''''''''''''''''
+ cond
+ *55 3 =
+ start
+ *237 *238 div 32000 mod 239 store
+
+''''''''''''''''''''''''  Gene:  138 Ends at position  2611  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  139 Begins at position  2612  '''''''''''''''''''''''
+ cond
+ *17 65 <
+ start
+ 2 995 store
+ stop
+''''''''''''''''''''''''  Gene:  139 Ends at position  2620  '''''''''''''''''''''''
+ >
+
+''''''''''''''''''''''''  Gene:  140 Begins at position  2622  '''''''''''''''''''''''
+ start
+ 0 995
+''''''''''''''''''''''''  Gene:  140 Ends at position  2624  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  141 Begins at position  2625  '''''''''''''''''''''''
+ cond
+ *.robage 4 >
+ *994 4 >
+ start
+ *227 546 div *995 add .up store
+ *233 1370 div .dx store
+ *.eye6width 155 div * & .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  141 Ends at position  2652  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  142 Begins at position  2653  '''''''''''''''''''''''
+ cond
+ *.nrg 6000 >
+ start
+ 0 994 store
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  142 Ends at position  2664  '''''''''''''''''''''''
+ *994 4 <
+
+''''''''''''''''''''''''  Gene:  143 Begins at position  2668  '''''''''''''''''''''''
+ start
+ store
+ 9 .up store
+ stop
+''''''''''''''''''''''''  Gene:  143 Ends at position  2673  '''''''''''''''''''''''
+

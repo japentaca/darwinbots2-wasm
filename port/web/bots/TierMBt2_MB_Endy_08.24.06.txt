@@ -1,14 +1,9 @@
-'TierMBt2
-' Bot is a test model able to join with family members into either a line or triangle
-' When there's too many ties it'll deltie one of it's ties.
-' Bots are able to independently spin while being attached via use of .setaim
-
-
 cond
 *.robage 0 =
 start
 .numties .memloc store
 .tie inc
+'300 .tielen1 store
 stop
 
 cond

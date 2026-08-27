@@ -1,10 +1,6 @@
 'Bouncer
 'F3-league bot
-'It is a bot that bounces if it touches etches. If it comes close to walls, and even when near other boucers. I 
-
-think it could survive in a possible future coming 'special behaviour league' it works atleast decent in high 
-
-friction settings.
+'It is a bot that bounces if it touches etches. If it comes close to walls, and even when near other boucers. I think it could survive in a possible future coming 'special behaviour league' it works atleast decent in high friction settings.
 'Made by Peter.
 'Made 1-11-08.
 '

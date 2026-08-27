@@ -1,0 +1,32 @@
+' Alga Sparsi
+'
+' Spreads out across the field
+' rather than remaining in small
+' colonies
+
+cond
+ *.robage 0 =
+start
+ 0 .fixpos store
+ 32000 .tielen1 store
+ 32000 .tielen2 store
+stop
+
+cond
+ *.robage 5 >
+ *.velscalar 10 <
+ *.fixed 0 =
+start
+ 1 .fixpos store
+stop
+
+cond
+ *.fixed 1 =
+ *.nrg 4000 >
+ *.numties 0 =
+start
+ .repro inc
+ 1256 rnd .setaim *.eye5 sgn mult store
+stop
+
+end

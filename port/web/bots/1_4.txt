@@ -1,17 +1,17 @@
-'NAME         :BETA-AA
-'LEAGUE        :F2, SB
-'CREATOR    :d-EVO
+'NAME 		:BETA-AA
+'LEAGUE		:F2, SB
+'CREATOR	:d-EVO
 
 'BEHAVIOR
-'    If this bot sees a frienly that is tracking an enemy, The bot will aim at that enemy
-'    Unfoolable recognition system (well almost, cant think of a way to beat it(well I have but it wont be easy))
-'    It will reproduce out the back while feeding, offspring will help the mother if no enemys are behind
+'	If this bot sees a frienly that is tracking an enemy, The bot will aim at that enemy
+'	Unfoolable recognition system (well almost, cant think of a way to beat it(well i have but it wont be easy))
+'	It will reproduce out the back while feeding, offspring will help the mother if no enemys are behind
 
 'FACTS
-'    3 genes with 2 states (setting the bot, attacking and finding something to attack)
-'    most of the actions are controled through ratios. some of them are listed below
-'                    poison /shell is retio between body size and the current amount of poison /shell
-'                    How close it must be to feed from a target is determined by refveldx
+'	3 genes with 2 states (setting the bot, attacking and finding something to attack)
+'	most of the actions are controled through ratios. some of them are listed below
+'					poison /shell is retio between body size and the current amount of poison /shell
+'					How close it must be to feed from a target is determined by refveldx
 
 cond
   *.robage 0 =

@@ -1,0 +1,105 @@
+'#generation: 6
+'#mutations: 2
+
+ cond
+ *.robage 0 =
+ start
+ 1000 rnd 50 mod 0 =
+ 21 inc
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  14  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  15  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.availability <
+ 100
+''''''''''''''''''''''''  Gene:  2 Ends at position  33  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  34  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  35  '''''''''''''''''''''''
+ inc
+ 216 clearbool
+ store
+ 921 *21 1 =
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  44  '''''''''''''''''''''''
+ start
+ .fixpos dec
+ .deltie inc
+ *.body 20 >
+ *.body 20 sub 10 mult .fdbody store
+ *.body 20 <
+ *.nrg 300 >=
+ and
+ 100 .strbody store
+ clearbool
+ 20 .up store
+ 1000 .rmchlr store
+ *.eye5 0 >
+ *.refxpos *.refypos angle .setaim store
+ *.veldx .sx store
+ *.eye5 80 >
+ -8 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  93  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  94  '''''''''''''''''''''''
+ cond
+ *.nrg 18000 >
+ start
+ 50 .sexrepro store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  102  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  103  '''''''''''''''''''''''
+ cond
+ *.nrg 1 >
+ *40 420 !=
+ start
+ 35 .repro store
+ *.nrg .shootval store
+ abs -1 .shoot store
+ *.body .shootval store
+ -1 .shoot store
+ *0 .shootval store
+ -6 *.thisgene store
+ 7 1 sub xor
+ .mkvirus store
+ *.thisgene 1 add .mkvirus store
+ 676 .myeye store
+ 676 .memloc store
+ *.thisgene 1 sub .delgene store
+ .vshoot inc
+ *.nrg .vshoot store
+ 1 .mkvirus store
+ 10 .mrepro store
+ *51 .deltie store
+ 0 .eye4 store
+ 0 .vel store
+ 36 .setaim store
+ 1 .out1 store
+ 0 .in1 store
+ 0 .eye1 store
+ 0 .shell store
+ 0 .slime store
+ *.body .fdbody store
+ *.nrg .waste store
+ *51 .deltie store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  202  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  203  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ *.totalmyspecies 100 <=
+ start
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  214  '''''''''''''''''''''''
+
+'#hash: }vQ|Z9>3qpLSK$$_[4"P

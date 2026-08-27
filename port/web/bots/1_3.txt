@@ -596,7 +596,7 @@ clearbool
 
 '*****************Kill fruitfly and etch*********************
 'This section is dedicated to moonfisher, who will read it 
-'and immediately know what he needs to do to counter it 
+'and immediately know what he needs to do to counter it :)
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   *.numties 0 >
   *.robage 1 != and

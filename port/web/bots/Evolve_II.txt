@@ -1,0 +1,144 @@
+'�volve  II
+'
+'Advanced shooting and aiming
+'
+'mainly 2 gene bot with new mechinisms
+'
+' Gain or pain >> eat or not, and always shoot target 
+' simple repro gene more advaces will be added later
+' first other parts need to be tuned. (gain pain mechanics)
+'
+def direction 52
+def etarget 53
+def eyetemp 54     'left or right or not (1|-1|0)
+def shootnow 55
+def shootdist 56
+def temp 60
+def pleased 61
+def borring 62
+def missed 63
+def detect 64
+def nogain 65
+
+'GENE EAT ============================================
+'
+'Note this bot always tries to eat
+'It checks (still to improve) if eating was succesfull
+'Is it a Gain or Pain ?
+'So it wont keep shooting runing & spinning, if its out of reach
+'Or if it doesnt contain enough food.
+
+
+cond
+*.robage 30 >
+ *.eye5 0 >
+' *.in1 *.reproval !%=
+' *.in2 *.bigsmall !%=
+' *.refeye *.myeye !=
+
+start
+
+' 
+'*.refxpos *.refypos dist .edist store
+'*.eye5 30 sub sgn 1 add sgn .shootnow store 
+
+
+
+-32 *.eye5 div .shootval store
+-1 .shoot store
+*.sx 2 div .dx store
+
+
+*.refxpos *.refypos angle .setaim store
+-1 .shoot store
+ 
+0 .fixpos store
+
+ 'positive longer
+ 'negative smaller
+
+
+
+'after shooting move
+*.refvelup 20 add .up store
+
+
+'_______________________________________________________________________________
+' pain is more then gain counts as 1 times missed. ???..
+
+*.pain *.pleas sub sgn 1 add sgn 1 sub abs 3 mult *.missed add .missed store
+'  0      0     0   0     1   1    0    0    0
+'  7      0    -7  -1     0   0   -1    1    3
+'  0      7     7   1     2   1    0    0    0
+
+'no pain no gain missed + 1  
+*.pain sgn 1 sub abs .nogain store
+*.please sgn 1 sub abs *.nogain add sgn *.missed add .missed store
+
+'out of reach tried long enough now (150..??) .....
+
+
+*.missed 150 mod sgn 1 sub -628 mult .aimdx store
+*.missed 150 mod sgn 1 sub -1 mult .fixpos store
+
+
+
+'_______________________________________________________________________________
+stop
+
+
+
+
+'GENE MOVE====================================================================
+
+cond
+*.eye5 0 =
+*.robage 30 >
+start
+*.eye9 *.eye1 sub sgn .eyetemp store
+*.eyetemp 130 mult .aimdx store
+*.eyetemp abs -1 add abs 5 mult .up store
+*.eyetemp abs -1 add *.mass mult .dn store
+
+*.dx -2 div .dx store
+10 .up store
+
+'if eye eye4 or 6 see something fixpos turn
+*.eye6 *.eye4 sub sgn .borring store
+*.borring 35 mult .aimdx store
+*.eye6 *.eye4 add sgn abs .fixpos store
+   
+*.pain 1 sub abs .pain store
+
+
+*.eyetemp abs .detect store
+*.borring abs *.detect add sgn .detect store
+*.detect *.missed mult .missed store
+
+stop
+
+
+cond 
+*.nrg 32000 mod 0 =
+*.mass 4 mod 0 =
+start
+10 .repro store
+-700 .aimdx store
+10 .strbody store
+10 .mkshell store
+stop
+
+cond
+*.robage 30 <
+start
+*.tiepres .deltie store
+
+500 .dx store
+*.robage 5 sub sgn 1 add sgn 500 mult .dn store
+'1                 -1    0   0
+'5                  0    1   1
+'10                 1    2
+
+1 .aimdx store
+1 .strbody store
+stop

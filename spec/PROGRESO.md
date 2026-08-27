@@ -308,3 +308,13 @@ opcionales, si el usuario las pide:
   del Bestiary siembra como vegetal ×15. Nota de la verificación: en un
   tab oculto el rAF no dispara y la sim se pausa sola (por diseño del
   ping-pong; no es bug). Fuentes sin modificar.
+
+- **2026-08-26 (2)** — Bestiary ampliado con los adjuntos del foro (el
+  usuario inició sesión en Chrome y la cosecha corrió como fetch dentro de
+  una página del foro logueada, con pausas de cortesía; el volcado salió
+  por el portapapeles — Chrome bloquea downloads desde HTTP). 146 adjuntos
+  .txt nuevos fusionados con merge_atts.py; revalidación entera con el
+  core: 753/753 candidatos válidos → **588 bots publicados** (antes 545;
+  Veggies 9→19, y donde un tema tiene adjunto se publica esa versión
+  completa en vez del bloque de código citado). Capa host pura; la página
+  no cambió.

@@ -2,7 +2,7 @@
 'For DB 2.43.1L
 'Just a mashup of Lovebot behavior and a slightly modified Fruiflies.
 'It's kind of half ass, and it's not realy a work in progress.
-'This is just something to play with while .sexrepro is overpowered.
+'This is just something to toy around with while .sexrepro is overpowered.
 'It beats Saber, Fruitflies and EtchII. Haven't tested against any other bots, so tell me if you se it loose to something.
 'I think abyaly will be able to beat this one without much effort though, it doesn't realy kill Saber, it just outlasts it.
 'I did come up with one litle trick though, it's where the name comes from.

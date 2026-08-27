@@ -1,0 +1,226 @@
+
+
+def spin 65
+def rotate 66
+def timer 67
+def rpoint 69
+def brpoint 70
+
+cond
+*.robage 2 <
+start
+55 .out1 store
+stop
+
+' Find the food
+cond
+*.eye1 *.eye3 >
+*.eye1 *.eye5 >
+*.eye1 *.eye7 >
+*.eye1 *.eye9 >
+start
+mult mult
+150 *.eye1 sub 
+150 *.eye1 sub 20 div 
+.rotate inc
+stop
+
+cond
+*.eye9 *.eye7 >
+*.eye9 *.eye5 >
+*.eye9 *.eye3 >
+*.eye9 *.eye1 >
+start
+mult mult
+-150 *.eye1 sub 
+-150 *.eye1 sub 20 div 
+.rotate inc
+stop
+
+cond
+*.eye3 *.eye1 >
+*.eye3 *.eye5 >
+*.eye3 *.eye7 >
+*.eye3 *.eye9 >
+start
+mult mult
+100 *.eye1 sub 
+100 *.eye1 sub 15 div 
+.rotate inc
+stop
+
+cond
+*.eye7 *.eye9 >
+*.eye7 *.eye5 >
+*.eye7 *.eye3 >
+*.eye7 *.eye1 >
+start
+mult mult
+-100 *.eye1 sub 
+-100 *.eye1 sub 15 div 
+.rotate inc
+stop
+
+cond
+*.eye6 *.eye4 !=
+start
+mult mult
+*.eye4 *.eye6 sub 
+*.eye4 *.eye6 sub 8 div 
+.rotate inc
+stop
+
+' set tag if I see a friend
+cond
+*.in1 55 =
+start
+.spin inc
+stop
+
+' unset tag if I see a charge
+cond
+*.eye5 0 >
+*.in1 55 !=
+*.spin 0 !=
+start
+0 .spin store
+stop
+
+' increment tag while non zero. Allows rotation
+cond
+*.spin 61 <
+*.spin 0 >
+start
+.spin inc
+mult mult
+150 
+0
+.rotate inc
+stop
+
+'decrement shot response timer
+cond
+*.timer 0 >
+start
+.timer dec
+stop
+
+cond
+*.shsx -1 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+314
+0
+.rotate inc
+5 .timer store
+stop
+
+cond
+*.shdx -6 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+-314
+0
+.rotate inc
+5 .timer store
+stop
+
+cond
+*.shsx -6 =
+*.timer 0 =
+*.eye5 30 >
+*.spin 0 !=
+start
+314
+0
+.rotate inc
+5 .timer store
+stop
+
+cond
+*.shdn -6 =
+*.timer 0 =
+start
+628
+0
+.rotate inc
+5 .timer store
+stop
+
+' Had enough spinning time to reset that pesky in1 thingy!
+cond
+*.spin 60 >
+start
+0 .spin store
+5 .in1 store
+stop
+
+' TOO much body feed on those reserves a bit
+cond
+*.body 500 >
+start
+100 .fdbody store
+stop
+
+' Giddy up thar!!
+' *****************
+
+' Fed up with spinning. Move now!
+cond
+'*.eye5 0 =
+*.vel 20 <
+*.spin 0 =
+*.newmom 0 =
+start
+5 .up store
+stop
+
+' Increment my counters :)
+cond
+start
+.rpoint inc
+.brpoint inc
+stop
+
+' Shoot charges with -2 shot
+cond
+*.nrg 500 >
+*.eye5 30 > 
+*.spin 0 =
+start
+-2 .shoot store
+100 .shootval store
+stop
+
+' Shoot large charges with information shot
+cond
+*.in1 55 !=
+*.eye5 30 >
+*.spin 0 =
+*.refnrg 200 >
+start
+.mrepro .shoot store
+50 .shootval store
+stop
+
+' Use up all those stored rotations but only if the tag is set
+cond
+*.rotate 0 >
+start
+.sx store
+.aimsx store
+0 .rotate store
+stop
+
+'unfix also just in case
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+end

@@ -1,102 +1,264 @@
-'Evolved from zerobot in about a week to test my new mutation algorithms
-'Works best if you cap body at 2.5K in global setting cheating prevention and 
-'Enable delta2 mutations in global settings, then disable mutations species tab. (Alternatively you can select disable all mutations via the mutations tab.)
+'sexbau by Botsareus to test type b repro.
+'shipped with some junk dna
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+'vision setup
+cond
+*.robage 2 <
+start
+358 .eye0dir store
+538 .eye1dir store
+717 .eye2dir store
+897 .eye3dir store
+1076 .eye4dir store
+1435 .eye6dir store
+1614 .eye7dir store
+1794 .eye8dir store
+1973 .eye9dir store
+50 .eye0width store
+50 .eye1width store
+50 .eye2width store
+50 .eye3width store
+50 .eye4width store
+50 .eye5width store
+50 .eye6width store
+50 .eye7width store
+50 .eye8width store
+50 .eye9width store
+'cospec setup
+55 .out1 store
+'bouy setup
+10 .setboy store
+stop
+'I see something in a waird eye, lets turn so I see it with eye5
 
-'#generation: 41
-'#mutations: 2235
- *.fixang <
- *430 *.eye1width *.trefvelyourdx not
- 1 -16 *.aimleft ^ *.refbody .reftie store
- store
- *.shoot *.eye3 add floorstore
- <
- *.focuseye and
- and
- xor
- angle -5 *.dn pyth *.dx *.tin2 0 *.setboy * -5 stop
+cond
+*.eye1 0 >
+start
+556 .aimdx store
+stop
+cond
+*.eye9 0 >
+start
+-556 .aimdx store
+stop
 
- cond
- *.in7 -3 *.tmemval 11 angle dec
- store
- *.tin4 *.tin7 *.mydx dupbool
- logx *.ypos *.paralyzed *.tielen1 ~ *.memloc -12 add 1 and
- start
- clearbool
- substore
- *.vel .shoot dec
- *.ypos store
- *.refage ^ *.genes .in3 store
- *.in8 *.shup *.dx *.vel *31 add *.tie *.trefvelmysx *.memval
-''''''''''''''''''''''''  Gene:  1 Ends at position  78  '''''''''''''''''''''''
+cond
+*.eye2 0 >
+start
+417 .aimdx store
+stop
+cond
+*.eye8 0 >
+start
+-417 .aimdx store
+stop
 
-''''''''''''''''''''''''  Gene:  2 Begins at position  79  '''''''''''''''''''''''
- cond
- store
- >
- *.timer <
- *.refup *391 *.refveldn dist *33 addstore
- *.myeye *.tout4 *.myvenom *.tin5 .aimleft store
- store
- 837 *.venom rnd *.fixlen .aimleft store
- *.refsx 2 3 *.repro 5 *.eye8 *.eye1 *.focuseye -- -9 store
- *0 *.vtimer clearbool
- !~=
- *.tielen2 pow 24 !=
- swapbool
- *.trefage *.refvelup add .slime store
- %=
- *.refveldx drop *.shareshell *.sexrepro *.refpoison 7 *.ypos 1 27 27 * *.mkvenom *.trefsx ~ not
- >> substore
- ++ *.refbody *.repro *.eye7width -16 *.shareslime
-''''''''''''''''''''''''  Gene:  2 Ends at position  151  '''''''''''''''''''''''
+cond
+*.eye3 0 >
+start
+278 .aimdx store
+stop
+cond
+*.eye7 0 >
+start
+-278 .aimdx store
+stop
 
-''''''''''''''''''''''''  Gene:  3 Begins at position  152  '''''''''''''''''''''''
- cond
+cond
+*.eye4 0 >
+start
+139 .aimdx store
+stop
+cond
+*.eye6 0 >
+start
+-139 .aimdx store
+stop
 
-''''''''''''''''''''''''  Gene:  3 Ends at position  152  '''''''''''''''''''''''
+cond
+*.eye5 0 >
+start
+0 .aimdx store
+stop
 
-''''''''''''''''''''''''  Gene:  4 Begins at position  153  '''''''''''''''''''''''
- cond
- div angle *.mrepro <=
- *.poisoned div *.aimright 0 angle angle *.hitang pyth *.refup .velsx multstore
- *.tout4 store
- *.availability 301 *.setboy *.eye5
-''''''''''''''''''''''''  Gene:  4 Ends at position  174  '''''''''''''''''''''''
+'If conspec and not time to reproduce, then move -20
 
-''''''''''''''''''''''''  Gene:  5 Begins at position  175  '''''''''''''''''''''''
- cond
- 699 | -17 0 ~ .tin8 store
- *.mkshell *.refveldx *.eye7width -22 *.eye4width *.myup *.tin2 *.out9 or
- store
- *.eye3dir *.shell 768 store
- -11 0 add and
- 29 *.aimright 41 store
- 9 *.eye7width 2 !=
- 7 9 else
- .dn store
- mod *.mkvirus *.tin5 11
-''''''''''''''''''''''''  Gene:  5 Ends at position  217  '''''''''''''''''''''''
-''''''''''''''''''''''''  Gene:  6 Begins at position  218  '''''''''''''''''''''''
- start
- *.aimleft store
- sub store
- %=
- !=
- 1 *.trefaim %=
- xor
- *.mkvirus *.up *.chlr 12 *.dx -6 dup *.in2 store
- rndstore
- 0 !=
- .venom store
- .up store
- divstore
- --
-''''''''''''''''''''''''  Gene:  6 Ends at position  246  '''''''''''''''''''''''
-''''''''''''''''''''''''  Gene:  7 Begins at position  247  '''''''''''''''''''''''
- start
- cos 8 add <
- *.tout6 -- *.tout3 -10 mod angle >=
- *.out1''''''''''''''''''''''''  Gene:  7 Ends at position  259  '''''''''''''''''''''''
+cond
+55 *.in1 =
+*.body 3000 <
+start
+-20 .up store
+stop
 
-'#hash: Go%}Jum'p7.3^(6y;!Zj
-'#tag:zbstage386.txt                               
+'if not conspec and not time to reproduce, slowly move forward and shoot for food
+
+cond
+55 *.in1 !=
+*.body 3000 <
+start
+-6 .shoot store
+stop
+
+cond
+55 *.in1 !=
+*.body 3000 <
+start
+1 .up store
+stop
+
+'if conspec and time to reproduce, slowly move forward shoot sperm and sexreproduce
+'this gene will be amplifyed x8 and we distribute the male/female sex organs
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+-8 .shoot store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+50 .sexrepro store
+'store this until body is less then 3000
+1 999 store 
+stop
+
+cond
+55 *.in1 =
+*.body 3000 >
+start
+1 .up store
+stop
+
+'if robot already reproduced give some space
+
+cond
+*.body 3000 >
+*999 1 =
+55 *.in1 =
+0 *.sexrepro =
+start
+-20 .up store
+stop
+
+'resets special case
+
+cond
+*.body 3000 <
+start
+0 999 store
+stop
+
+cond
+*.edge 1 =
+start
+314 .setaim store
+20 .up store
+stop
+
+999
+998
+997
+996
+995
+994
+993
+992
+991
+990
+989
+988
+987
+986
+985
+984
+983
+982
+981
+980
+979
+978
+977
+976
+end

@@ -1,222 +1,102 @@
-'Slam Funk 1.0
-'Uses simple genes and a simple conspec
-'To survive at least against low level bots.
-'Heavily based on Animal Minimalis,
-'While very little of it was actually used.
-'Best feature includes a very good vision system.
-'It is able to follow its friends and break off to feed.
+'Evolved from zerobot in about a week to test my new mutation algorithms
+'Works best if you cap body at 2.5K in global setting cheating prevention and 
+'Enable delta2 mutations in global settings, then disable mutations species tab. (Alternatively you can select disable all mutations via the mutations tab.)
 
-'Raises number of .eyeX commands to make a slightly more secure conspec.
-cond
-start
-.eye5 .eye5 .eye5 .eye5 add add add add dup sub
-stop
+'#generation: 41
+'#mutations: 2235
+ *.fixang <
+ *430 *.eye1width *.trefvelyourdx not
+ 1 -16 *.aimleft ^ *.refbody .reftie store
+ store
+ *.shoot *.eye3 add floorstore
+ <
+ *.focuseye and
+ and
+ xor
+ angle -5 *.dn pyth *.dx *.tin2 0 *.setboy * -5 stop
 
-'Body storage gene.
-cond
-*.nrg 15000 >
-*.body 500 < and
-start
-500 .strbody
-stop
+ cond
+ *.in7 -3 *.tmemval 11 angle dec
+ store
+ *.tin4 *.tin7 *.mydx dupbool
+ logx *.ypos *.paralyzed *.tielen1 ~ *.memloc -12 add 1 and
+ start
+ clearbool
+ substore
+ *.vel .shoot dec
+ *.ypos store
+ *.refage ^ *.genes .in3 store
+ *.in8 *.shup *.dx *.vel *31 add *.tie *.trefvelmysx *.memval
+''''''''''''''''''''''''  Gene:  1 Ends at position  78  '''''''''''''''''''''''
 
-'See nothing, start looking. I wasn't content to just have it spin.
-cond
-*eye5 0 =
-*.up 0 = and
-start
-20 .up store
-stop
+''''''''''''''''''''''''  Gene:  2 Begins at position  79  '''''''''''''''''''''''
+ cond
+ store
+ >
+ *.timer <
+ *.refup *391 *.refveldn dist *33 addstore
+ *.myeye *.tout4 *.myvenom *.tin5 .aimleft store
+ store
+ 837 *.venom rnd *.fixlen .aimleft store
+ *.refsx 2 3 *.repro 5 *.eye8 *.eye1 *.focuseye -- -9 store
+ *0 *.vtimer clearbool
+ !~=
+ *.tielen2 pow 24 !=
+ swapbool
+ *.trefage *.refvelup add .slime store
+ %=
+ *.refveldx drop *.shareshell *.sexrepro *.refpoison 7 *.ypos 1 27 27 * *.mkvenom *.trefsx ~ not
+ >> substore
+ ++ *.refbody *.repro *.eye7width -16 *.shareslime
+''''''''''''''''''''''''  Gene:  2 Ends at position  151  '''''''''''''''''''''''
 
-'Theres strength in numbers. This gene makes bots follow one another if they see a fellow 
+''''''''''''''''''''''''  Gene:  3 Begins at position  152  '''''''''''''''''''''''
+ cond
 
-bot.
-cond
-*.eye5 0 >
-*.refeye *.myeye =
-start
-*.refveldx .dx store
-*.refvelUp .up store
-30 .aimdx store
-stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  152  '''''''''''''''''''''''
 
-'Targeting genes. If it spots food, it turns to it.
+''''''''''''''''''''''''  Gene:  4 Begins at position  153  '''''''''''''''''''''''
+ cond
+ div angle *.mrepro <=
+ *.poisoned div *.aimright 0 angle angle *.hitang pyth *.refup .velsx multstore
+ *.tout4 store
+ *.availability 301 *.setboy *.eye5
+''''''''''''''''''''''''  Gene:  4 Ends at position  174  '''''''''''''''''''''''
 
-cond
-start
--1 .focuseye store
-stop
+''''''''''''''''''''''''  Gene:  5 Begins at position  175  '''''''''''''''''''''''
+ cond
+ 699 | -17 0 ~ .tin8 store
+ *.mkshell *.refveldx *.eye7width -22 *.eye4width *.myup *.tin2 *.out9 or
+ store
+ *.eye3dir *.shell 768 store
+ -11 0 add and
+ 29 *.aimright 41 store
+ 9 *.eye7width 2 !=
+ 7 9 else
+ .dn store
+ mod *.mkvirus *.tin5 11
+''''''''''''''''''''''''  Gene:  5 Ends at position  217  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  218  '''''''''''''''''''''''
+ start
+ *.aimleft store
+ sub store
+ %=
+ !=
+ 1 *.trefaim %=
+ xor
+ *.mkvirus *.up *.chlr 12 *.dx -6 dup *.in2 store
+ rndstore
+ 0 !=
+ .venom store
+ .up store
+ divstore
+ --
+''''''''''''''''''''''''  Gene:  6 Ends at position  246  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  247  '''''''''''''''''''''''
+ start
+ cos 8 add <
+ *.tout6 -- *.tout3 -10 mod angle >=
+ *.out1''''''''''''''''''''''''  Gene:  7 Ends at position  259  '''''''''''''''''''''''
 
-'Eye4
-cond
-*.eye4 0 !=
-*.refeye *.myeye != and
-start
-5 .aimsx store
-stop
-
-cond
-start
-1 .focuseye store
-stop
-
-'Eye6
-cond
-*.eye6 0 !=
-*.refeye *.myeye != and
-start
--5 .aimsx store
-stop
-
-cond
-start
--2 .focuseye store
-stop
-
-'Eye3
-cond
-*.eye3 0 !=
-*.refeye *.myeye != and
-start
-15 .aimsx store
-stop
-
-cond
-start
-2 .focuseye store
-stop
-
-'Eye7
-cond
-*.eye7 0 !=
-*.refeye *.myeye != and
-start
--15 .aimsx store
-stop
-
-cond
-start
--3 .focuseye store
-stop
-
-'Eye2
-cond
-*.eye2 0 !=
-*.refeye *.myeye != and
-start
-35 .aimsx store
-stop
-
-cond
-start
-3 .focuseye store
-stop
-
-'Eye8
-cond
-*.eye8 0 !=
-*.refeye *.myeye != and
-start
--35 .aimsx store
-stop
-
-cond
-start
--4 .focuseye store
-stop
-
-'Eye1
-cond
-*.eye1 0 !=
-*.refeye *.myeye != and
-start
-40 .aimsx store
-stop
-
-
-cond
-start
-4 .focuseye store
-stop
-
-'Eye9
-cond
-*.eye9 0 !=
-*.refeye *.myeye != and
-start
--40 .aimsx store
-stop
-
-cond
-start
-0 .focuseye store
-stop
-
-
-'Ass-shot gene. Tested it against basicswarmer, swarmers beat the snot out of my bots by 
-
-following them close behind so I stuck this in here.
-cond
-*.shflav 0 !=
-*.shflav -2 !=
-start
-1256 *.shang sub .aimshoot store
-8 .shootval store
--6 .shoot store
-0 .shflav store
-stop
-
-
-
-'The shooting gene. It fires if the bot sighted fails the conspec check and is in range.
-cond
-*.eye5 40 >
-*.refeye *.myeye != and
-start
-8 .shootval store
--6 .shoot store
-*.refvelup .up store
-stop
-
-'Reproduction gene. Gotta make mo' bots.
-cond
-*.body 500 >
-start
-40 .repro store
-314 .aimdx store
-stop
-
-'Poison gene, because dying sucks.
-cond
- *.nrg 10000 >
- *.poison 500 < and
-start
- 50 .strpoison store
-stop
-
-'Shell is good. This gene creates shell.
-cond
- *.nrg 10000 >
- *.shell 250 < and
-start
- 100 .mkshell store
-stop
-
-
-'Slime gene, just in case.
-cond
- *.nrg 10000 >
- *.slime 300 < and
-start
- 100 .mkslime store
-stop
-
-'Obligatory anti-viral gene
-cond
- *.mkvirus 0 !=
-start
- *.mkvirus .delgene store
-stop
-
-
-end
+'#hash: Go%}Jum'p7.3^(6y;!Zj
+'#tag:zbstage386.txt                               

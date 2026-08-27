@@ -1,4 +1,6 @@
-cond
+'#generation: 30
+'#mutations: 4
+ cond
  *.nrg 1000 >=
  start
  .strvenom inc
@@ -26,3 +28,5 @@ cond
  .dn store
  stop
 ''''''''''''''''''''''''  Gene:  4 Ends at position  45  '''''''''''''''''''''''
+
+'#hash: H^A'<}6o0|:;51ymf]S6

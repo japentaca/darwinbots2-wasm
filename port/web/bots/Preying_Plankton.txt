@@ -1,0 +1,167 @@
+'Curved Veggie
+
+cond
+*.robage 4 =
+*.numties *.tiepres add 0 = xor
+start
+32000 rnd 1 971 store
+stop
+
+cond
+*.robage 0 =
+start
+.tie inc
+*.tiepres .out2 store
+32000 rnd 1 .out1 store
+*971 .out9 store
+stop
+
+
+cond
+*.tiepres 2 >
+*.numties 2 > xor
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.robage 21 >
+*.nrg 6000 > and
+*45 3 <
+*.numties 2 < xor xor
+start
+100 .mkpoison store
+50 .strvenom store
+.eyef .vloc store
+0 .venval store
+.shoot .ploc store
+50 .repro store
+160 *.aim add .setaim store
+*.repro *.repro div *45 add 45 store
+stop
+
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+1256 *.shang sub .aimshoot store
+16 .shootval store
+0 .shflav store
+-5 .shoot store
+-3 .shoot store
+stop
+
+cond
+*.timer 10 mod 1 =
+start
+*.xpos .tout6 store
+*.ypos .tout7 store
+stop
+
+cond
+*.multi 1 =
+start
+*.refeye *.myeye div 1 sub *.eyef mult .tout10 store
+25 .sharenrg *.multi mult store
+*.tout5 .out5 store
+*.tiepres .out2 store
+*.timer mod *.out2 .redtie store
+*.tout5 *.tielen mult 40 store
+*.out1 .tout1 store
+*.robage mod *.tin1 41 store
+*40 *41 div 8 mult *.xpos *.ypos angle mod *.trefxpos *.trefypos angle add div *.tout6 *.tout7 angle *.tin8 *.tin9 angle add add *.numties *.tiepres mult add .fixang store
+*.vel *.trefvel sub *.timer add mod 20 rnd 1 2 mult mod *.tin5 *.tielen mult *.mass mult *.eyef mod *.tin10 add *.numties *.tiepres add mult add .fixlen store
+45 .stifftie store .fixlen store
+45 .stifftie store
+stop
+
+cond
+*.multi 0 >
+*.in1 *.out1 !=
+*.in9 *.out9 != and
+*.refeye *.myeye =
+*.robage *.refage > and
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+50 .sexrepro store
+-8 .shoot store
+stop
+
+cond
+*.multi 0 >
+*.in1 *.out1 !=
+*.in9 *.out9 != and
+*.refeye *.myeye =
+*.robage *.refage < and
+start
+*.refxpos *.refypos angle .setaim store
+*.refxpos *.refypos angle .aimshot store
+-50 .sexrepro store
+stop
+
+cond
+*.eyef 0 >
+*.in1 0 !=
+*.refeye *.myeye =
+*.tiepres 2 <
+*.numties 2 < xor
+start
+.tie inc
+*.tiepres *.numties add .tout5 store
+20 *.tieang *.aim div mult sub .setaim store
+*.eyef .tout10 store
+stop
+
+cond
+*.nrg 4000 <
+*.body 10 >
+start
+20 .fdbody store
+stop
+
+cond
+*.refeye *.myeye =
+*.tieang *.refxpos *.refypos angle =
+start
+120 *.aim add .setaim store
+stop
+
+cond
+*.eyef 0 >
+*.refeye *.myeye !=
+*.refeye 0 >
+start
+*.refxpos *.refypos angle .setaim store
+*.nrg 4 div .shootval store
+-1 .shoot store
+stop
+
+cond
+*.readtie 0 >
+*.robage *.trefage <
+*.in5 .out5 > and
+*.tin5 *.tout5 > xor
+start
+*.eye1 *.eye2 add *.eye3 *.eye4 add add 4 div .tout8 store
+*.eye6 *.eye7 add *.eye8 *.eye9 add add 4 div .tout9 store
+*.tin5 *.tout5 store
+*.in5 .out5 store
+stop
+
+cond
+*.tout5 *.out5 <
+start
+*.out5 *.tout5 add .tout5 store
+stop
+
+cond
+*.vel *.trefvelscalar >
+*.nrg 3000 >
+*.body 20 >
+start
+30 .repro store
+*.repro *.repro div *45 add 45 store
+stop
+
+end

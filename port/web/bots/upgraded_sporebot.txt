@@ -1,44 +1,38 @@
-''''''''''''''''''''''''  Gene:  1 Begins at position  1  '''''''''''''''''''''''
- cond
- *.robage 100 *.eye5 0 0 dupbool
- start
- * ~ inc
- stop
-''''''''''''''''''''''''  Gene:  1 Ends at position  12  '''''''''''''''''''''''
 
-''''''''''''''''''''''''  Gene:  2 Begins at position  13  '''''''''''''''''''''''
- cond
- *.eye5 0 >
- start
- -1 .shoot store
- *.refveldx .dx store
- *587 100 add .up inc
- stop
-''''''''''''''''''''''''  Gene:  2 Ends at position  29  '''''''''''''''''''''''
+cond
+*.robage 100 <
+*.eye5 0 !> and
+start
+1000 .up store
+stop
 
-''''''''''''''''''''''''  Gene:  3 Begins at position  30  '''''''''''''''''''''''
- cond
- *.eye5 0 =
- *.robage 100 >
- and
- start
- 314 rnd .aimright store
- stop
-''''''''''''''''''''''''  Gene:  3 Ends at position  43  '''''''''''''''''''''''
+cond
+*.eye5 0 >
+start
+-1 .shoot store
+*.refveldx .dx store
+*.refvelup 100 add .up store
+stop
 
-''''''''''''''''''''''''  Gene:  4 Begins at position  44  '''''''''''''''''''''''
- cond
- <
- *.eye5 0 !=
- store
- 100 .dx store
- stop
-''''''''''''''''''''''''  Gene:  4 Ends at position  53  '''''''''''''''''''''''
+cond
+*.eye5 0 =
+*.robage 100 > and
+start
+314 rnd .aimdx store 
+stop
 
-''''''''''''''''''''''''  Gene:  5 Begins at position  54  '''''''''''''''''''''''
- cond
- *.nrg 10000 >
- start
- 10 .repro inc
- stop
-''''''''''''''''''''''''  Gene:  5 Ends at position  62  '''''''''''''''''''''''
+cond
+*.refage 100 <
+*.eye5 0 != and 
+start
+-15 .up store
+100 .dx store
+stop
+
+cond
+*.nrg 10000 >
+start
+10 .repro store
+stop
+
+end 

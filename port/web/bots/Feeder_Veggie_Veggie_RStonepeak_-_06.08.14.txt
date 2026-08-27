@@ -1,0 +1,107 @@
+'Feeder Veggie
+'Version 01-04
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Generates energy using chloroplasts
+'Grows a large body to maximise energy production
+'Periodically expels excess energy
+
+def dvlp 51
+def cycle 52
+
+'''''''''''''''''''' Childhood ''''''''''''''''''''
+'Grows the robot to maximise energy production
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''' Gene 1 ''''''''''
+'Maximizes chloroplast production
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 0 =
+	*.nrg 500 >
+	*.chlr 32000 <
+start
+	100 .mkchlr store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''' Gene 2 ''''''''''
+'Grows body mass if chloroplast has been produced
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 0 =
+	*.body 28000 <
+	*.nrg 1000 >
+start
+	100 .strbody store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''' Gene 3 ''''''''''
+'Robot has matured
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 0 =
+	*.chlr 32000 =
+	*.body 28000 >
+	*.nrg 16000 >
+start
+	1 .dvlp store
+	0 .cycle store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''''''''''''' Adulthood ''''''''''''''''''''
+'Repairs robot should it become injured
+'Expels excess energy when healthy
+'''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''' Gene 4 ''''''''''
+'Maintains safe energy levels
+'Tells robot to stop expelling energy
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 1 =
+	*.nrg 16000 <
+start
+	0 .cycle store
+	100 .fdbody store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''' Gene 5 ''''''''''
+'Produces chloroplasts should any be lost
+'Tells robot to stop expelling energy
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 1 =
+	*.chlr 32000 <
+start
+	0 .cycle store
+	100 .mkchlr store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''' Gene 6 ''''''''''
+'Tells robot to expel excess energy if healthy
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 1 =
+	*.cycle 0 =
+	*.nrg 32000 =
+	*.chlr 32000 =
+start
+	1 .cycle store
+stop
+''''''''''''''''''''''''''''
+
+'''''''''' Gene 7 ''''''''''
+'Expels excess energy
+'Rotates the robot to distribute evenly
+''''''''''''''''''''''''''''
+cond
+	*.dvlp 1 =
+	*.cycle 1 =
+start
+	-2 .shoot store
+	78 .aimdx store
+stop

@@ -7,7 +7,7 @@
 'v0.2 : Now addapts to it's oponent through natural selection.
 'It also beats most oponents a lot faster, but has a slightly harder time beating Etch II.
 'It's also now one gene and generaly shorter, planning to use it as a virus for an alge.
-'v0.21 : Now beats v0.1 
+'v0.21 : Now beats v0.1 :P
 
 def maxpop 1000
 def alge 13

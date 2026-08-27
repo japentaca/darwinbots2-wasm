@@ -1,6 +1,6 @@
-'Name         :Needle paraste
-'bye        :d-EVO
-'type        :IB
+'Name 		:Needle paraste
+'bye		:d-EVO
+'type		:IB
 
 'a parisite that feeds of its host untill enough energy is gained to reproduce many more needle parasite
 'looks like acupuncture needles in vegies

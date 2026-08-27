@@ -1,0 +1,60 @@
+' Alga substantis I
+'
+' Vegetable
+'
+' This bot stores energy into its body
+' during the day, and reproduces at
+' night.
+
+' If its daytime, and there's enough energy, build up the body
+' run around a bit, and don't get too big
+cond
+  *.daytime 1 =
+  *.nrg 5000 >
+  *.body 10000 <
+start
+  1000 .strbody store
+  45 rnd .aimdx store
+  10 .up store
+stop
+
+' If its nighttime, and there's not enough energy to reproduce, pull some out of body.
+cond
+  *.body 500 >
+  *.nrg 3500 <
+  *.daytime 0 =
+start
+  1000 .fdbody store
+stop
+
+' if its nighttime, and there's enough energy, reproduce lots of little babies so that they have a chance of surviving until morning
+cond
+  *.nrg 3000 >
+  *.daytime 0 =
+start
+  10 .repro store
+  15 .aimdx store
+stop
+
+' run around randomly at night, keep away from the baddies.
+cond
+  *.daytime 0 =
+start
+  45 rnd .aimsx store
+  10 .up store
+stop
+
+cond
+  *.nrg 500 <
+start
+  100 .fdbody store
+stop
+
+' If a add/del mutation or virus is detected, commit suicide
+cond
+  *.dnalen 87 !=
+  *.robage 0 !=
+start
+  1 .delgene store
+stop
+end

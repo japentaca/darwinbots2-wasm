@@ -1,4 +1,4 @@
-'This'n'That 1.01 (F2) (Peksa) 12.09.08
+'This'n'That 1.01 (F2) (Peksa) 12.05.08
 'By Peksa
 'Designed for 2.43.1k
 'This'n'That does little, but does it quite well. It's a very simple bot that has nothing fancy in it.
@@ -154,7 +154,7 @@ start
   -2 .venval store
   
  *.nrg 150 > dupbool dupbool
- *.poison 1000 < and
+  *.poison 1000 < and
   50 .strpoison store dropbool
   
  *.shell 500 < and

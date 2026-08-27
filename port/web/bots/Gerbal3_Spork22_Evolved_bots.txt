@@ -1,0 +1,210 @@
+'I build bridges that deliberately cause mass panic- Gerbal Herbaflerbin
+
+
+
+'#generation: 14
+'#mutations: 36
+
+ start
+ dup dup *.dn sub sgn abs 2 mult 10 div *.dn ++ mult sub sgn 0 floor mult store
+ 100 312 *.body 10 div *.dn mult *.nrg sub sgn 7 floor mult *.body 100 sub sgn 0 floor mult store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  42  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  43  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.availability <
+ 100 clearbool
+ .fixpos inc
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  65  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  66  '''''''''''''''''''''''
+ cond
+ *.nrg 18000 >
+ start
+ 50 293 store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  74  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  75  '''''''''''''''''''''''
+ start
+ 4 dup *100 sub sgn abs 100 mult store
+ 20 dup *101 sub sgn abs 111 over add 25044 217 *.eye1 600 mult sub div *.eye1width -17 div ++ mult 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye1width sgn - mult *.focuseye -4 sub sgn abs -- - mult *.eye1 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.maxvel -10 pow abs sub mult store
+ 25044 217 dropbool
+ 581 sub dup div *.eye2width -17 div ++ mult 5 ++ mult 3 div dup sgn swap *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye2width sgn - mult | *.focuseye -3 sub sgn abs -- - mult *.eye2 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub abs abs mult store
+ 25044 217 *.eye3 600 mult sub div div -17 *.eye3width ++ mult 5 mult 3 div dup *100 abs sgn mult add - *101 ceil - dup abs 8 mult *.eye3width sgn - mult *.focuseye -2 sub sgn abs -- - mult *.eye3 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 & sub sgn abs mult store
+ 25044 217 *.eye4 600 mult sub div div -17 *.eye4width ++ mult 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye4width sgn *.shoot mult *.focuseye ++ sgn abs -- - mult *.eye4 sgn mult dec
+ *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye5 600 mult sub div *.eye5width -17 div ++ mult 5 mult 3 div dup sgn abs *100 add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye5width sgn substore
+ - mult *.focuseye sgn abs -- - mult *.eye5 div mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 mult sub div *.eye6width -17 div ++ mult 5 dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye6width sgn - mult *.focuseye -- sgn abs -- - mult *.eye6 mult *.shoot mult *.shoot -3 sub sgn abs mult *.shootval -4 sub sgn abs mult store
+ 25044 217 *.eye7 600 mult sub div *.eye7width -17 div ++ 5 clear 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn mult -- *.eye7width sgn - mult *.focuseye 2 sub sgn abs -- - mult *.eye7 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn and
+ abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye8 600 -17 *.tielen1 div sub mult div 5 mult ++ mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye8width sgn 3 sub sgn abs -- - mult *.eye8 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot 217 sub -4 *.eye9 600 mult *.dn sub *.eye9width -17 div ++ >> mult 5 mult 3 div dup sgn abs add mult *100 - *101 ceil - dup *.shootval sub sgn abs 8 mult *651 add -- mult *.focuseye 4 sub sgn abs -- - mult *.eye9 sgn mult *.shoot sgn abs mult *.shoot -3 drop sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye1 600 mult sub div *.eye1width 80 div ++ div 14 add 14 div *-919 abs *100 mult add - *101 ceil - dup *.shootval sub dec
+ sgn abs 8 mult *.eye1width sgn mult *.focuseye -4 sgn abs -- - mult *.eye1 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye2 600 mult sub div *.eye2width 80 div ++ div 5 mult div dup sqr sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye2width sgn mult *.focuseye -3 sub sgn abs -- - mult *.eye2 sgn mult divstore
+ mult abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye3 600 mult sub div pow *.eye3width 80 div ++ sub div 5 mult mod *84 dup add - *101 ceil - dup *.shootval sub stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  809  '''''''''''''''''''''''
+ sgn abs 8 mult *.eye3width sgn mult *.focuseye -2 sub sgn abs -- - mult *.eye3 clear | *.shoot sgn *.shoot mult abs -3 sub -4 sub sgn abs mult store
+ 25044 217 *.eye4 600 mult div 80 *.eye4width div sub ++ div 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye4width <=
+ sgn mult *.focuseye ++ sgn abs -- - mult *.eye4 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 250 *.eye5 600 mult sgnstore
+ sub div ++ div 5 mult 3 div dup sgn *387 abs *100 mult add - *136 logx dropbool
+ dup *.shootval sub sgn abs 8 mult *.eye5width sgn mult *.focuseye sgn abs -- ~ mult *.eye5 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 sub mult 700 *.eye6 217 ++ div 80 *.eye6width div div 5 clear 3 div dup sgn abs <
+ mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye6width sgn mult *.focuseye -- sgn abs -- - mult *.eye6 sgn mult *.shoot sgn abs mult -3 sub sgn *.shoot mult abs -4 sub sgn 25044 217 *.eye7 600 mult sub *.eye7width 80 div ++ div 5 mult 3 div dup *100 abs sgn mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye7width sgn mult sub 2 *.focuseye sgn abs - mult *.eye7 sgn mult sgn abs mult *.shoot -3 sub sgn abs mult *.shoot sgn sub -4 abs mult store
+ 217 *.eye8 600 mult sub div *.eye8width 80 div ++ div 5 mult dup div 3 sgn abs *100 mult add - *101 ceil - dup *.shootval mult 8 abs sgn sub *.eye8width mod mult *.focuseye 3 sub sgn abs -- - mult *.eye8 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn * mult *.shoot -4 sub sgn abs mult store
+ 26313 230 *.eye9 600 mult sub div *.eye9width 80 div ++ div 5 mult 3 div dup sgn dup *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye9width sgn mult 4 sub sgn abs -- - mult *.eye9 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye1 600 mult sub div 5 mult 3 div dup sgn abs *100 mult *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye1width sgn abs -- -4 *.focuseye mult sub sgn abs -- - mult *.eye1 sgn mult *.shoot sgn abs 3 *.shoot -3 sub sgn -4 sub store
+ 25044 217 *.eye2 mult rnd div ~ 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult - mult *.focuseye -3 sub sgn - -- abs mult *.eye2 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 217 *.eye3 sub div 607 mult 5 mult 3 div dup add abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye3width sgn abs -- - mult *.focuseye -2 sub sgn abs -- - mult *.eye3 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn *.shoot -4 sub mult store
+ 25044 217 *.eye4 600 mult sub div 5 mult 3 div dup sgn abs *100 mult add - ceil - dup *.shootval sub sqr sgn abs 8 mult abs sgn *.eye4width -- - mult *.focuseye ++ sgn abs -- - mult *.eye4 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ !~=
+ 25044 217 *.eye5 600 mult sub div 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub sgn abs 8 mult *.eye5width sgn abs -- abs sgn *.focuseye mult - -- - mult *.eye5 sgn mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs dup 600 *.eye6 217 25160 dec
+ mult sub div 5 mult 3 div dup add mult *100 sgn - *101 - dup *.shootval sub sgn abs 8 mult *.eye6width sgn abs -- - mult *.focuseye -- sgn abs -- - mult *.eye6 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 abs sgn sub mult store
+ 25044 217 *.eye7 600 mult sub div 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub mult *.eye7width sgn abs -- - 2 sub sgn abs -- - mult *.eye7 sgn mult stop
+ *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 454 217 *.eye8 600 mult abs div 5 mult 3 dup - add *100 abs sgn *101 ceil dup *.shootval sub sgn abs 8 mult *.eye8width sgn abs -- - mult *.focuseye 3 sub sgn abs -- - mult *.eye8 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs mult *.shoot -4 sub sgn abs mult store
+ 25044 229 *.eye9 600 mult sub div 5 mult 3 div dup sgn abs *100 mult add - *101 ceil - dup *.shootval sub 485 sgn abs 8 sgn abs -- sub 4 *.focuseye mult - sgn abs -- - mult *.eye9 sgn mult *.shoot sgn abs mult *.shoot -3 sub sgn abs sub sgn abs mult store
+ stop
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  1735  '''''''''''''''''''''''
+ cond
+ *.robage 0 =
+ start
+ 988 rnd 50 mod 0 =
+ 21 inc
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  1748  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  1749  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.availability <
+ 100 .mkchlr store
+ clearbool
+ .fixpos inc
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  1773  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  1774  '''''''''''''''''''''''
+ cond
+ *21 1 =
+ else
+ | substore
+ .tieang4 inc
+ *.body 20 >
+ *.body 20 sub 10 mult .fdbody store
+ *.body 20 <
+ *.nrg 300 >=
+ and
+ 100 .strbody store
+ clearbool
+ 20 .up store
+ 1000 892 store
+ *.eye5 0 19 angle *.refypos *.refxpos >
+ store
+ *.veldx .sx store
+ *.eye5 80 >
+ -8 .shoot store
+
+''''''''''''''''''''''''  Gene:  7 Ends at position  1826  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  1827  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  1827  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  1828  '''''''''''''''''''''''
+ cond
+ *.robage 0 =
+ start
+ 988 rnd 50 mod 0 =
+ 21 inc
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  1841  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  1842  '''''''''''''''''''''''
+ cond
+ *.nrg 18000 >
+ start
+ 50 293 store
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  1850  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  1851  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ *.totalmyspecies floor !%=
+
+''''''''''''''''''''''''  Gene:  11 Ends at position  1857  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  1858  '''''''''''''''''''''''
+ cond
+ 54 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  1862  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  1863  '''''''''''''''''''''''
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ *.in1 77 !=
+ start
+ *.eye5 40 <
+ *.up 10 add .up store
+ not
+ *.refvelup 1 add .up store
+ true
+ *.refxpos *.refypos angle .setaim store
+ -1 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  1897  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  1898  '''''''''''''''''''''''
+ cond
+ *.nrg 20000 >
+ start
+ and
+ 50 .repro store
+ 1 972 store
+ >=
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  1911  '''''''''''''''''''''''
+ <
+ *972 1 =
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  1916  '''''''''''''''''''''''
+ start
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  1920  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  1921  '''''''''''''''''''''''
+ cond
+ *21 0 =
+ start
+ 618 rnd 618 rnd add rnd 101 floor .aimleft store
+ *.chlr *.availability <
+ 100 clearbool
+ .fixpos inc
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  1943  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  1944  '''''''''''''''''''''''
+ cond
+ *.nrg 3000 <
+ start
+ 0 972 store
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  1952  '''''''''''''''''''''''
+
+'#hash: 0&K?\X';V#zKi*=fD^Rz

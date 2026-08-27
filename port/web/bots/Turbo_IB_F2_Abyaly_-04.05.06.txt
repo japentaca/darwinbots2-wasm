@@ -1,0 +1,153 @@
+'Turbo by abyaly
+'Moves very fast by reproducing
+'Fully commented
+
+
+
+cond
+start
+
+'Birth Control
+'************************************************************
+.tie *.robage 0 sub dup div 1 sub abs mult inc
+.deltie *.robage 1 sub dup div 1 sub abs mult inc
+'************************************************************
+
+
+
+'*************************Navigation*************************
+'Search algorithm
+'Execution Conditions:
+'(Sum(*.eyeX) != 0) (*.eye5 == 0) (*.shdn == 0) (*.shdx == 0) (*.shsx == 0)
+'Action:
+'.aimdx = [-4(*.eye1)-3(*.eye2)-2(*.eye3)-*.eye4+*.eye6+2(*.eye7)+3(*.eye8)+4(*.eye9)]/Sum(*.eyeX)
+'************************************************************
+*.eye1 -4 mult *.eye2 -3 mult *.eye3 -2 mult *.eye4 -1 mult
+*.eye6 1 mult *.eye7 2 mult *.eye8 3 mult *.eye9 4 mult
+add add add add add add add add
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+add add add add add add add add div 34 mult
+  *.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+  add add add add add add add add dup div
+  *.eye5 sgn 1 sub dup div mult
+  *.shdn *.shdx *.shsx add add dup div 1 sub dup mult mult
+.aimdx mult store
+'************************************************************
+'Spin
+'Execution Conditions:
+'(Sum(*.eyeX) == 0) (*.shdn == 0) (*.shdx == 0) (*.shsx == 0)
+'Action:
+'.aimdx = 350
+'************************************************************
+350
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9
+  add add add add add add add add dup div 1 sub dup mult 
+  *.shdn *.shdx *.shsx add add dup div 1 sub dup mult mult
+.aimdx mult store
+'*************************Navigation Ends********************
+'Precision Aiming
+'Execution Conditions:
+'(*.robage > 0) (*.refeye != *.myeye) (*.refxpos *.refypos angle != *.aim)
+'(*.shdn == 0) (*.shdx == 0) (*.shsx == 0)
+'Action:
+'.setaim = *.refxpos *.refypos angle
+'************************************************************
+*.refxpos *.refypos angle .setaim 
+  *.robage sgn mult
+  *.refeye *.myeye sub dup div mult
+  *.refxpos *.refypos angle *.aim sub dup div mult
+  *.shdn *.shdx *.shsx add add dup div 1 sub dup mult mult
+  *.eye5 sgn mult
+store
+'************************************************************
+stop
+'Diffusion
+'************************************************************
+cond
+*.refeye *.myeye =
+*.eye5 0 >
+start
+10 .dx store
+314 .aimdx store
+stop
+'************************************************************
+'Self Cannibalism
+'************************************************************
+cond
+*.nrg 1000 <
+*.body 0 >
+start
+100 *.body ceil .fdbody store
+stop
+'************************************************************
+'Suicide Repro/Follow food
+'************************************************************
+cond
+*.eye5 0 >
+*.eye3 50 <
+*.eye5 40 <
+*.eye4 40 <
+*.eye6 40 <
+*.eye7 50 <
+*.nrg 4000 <
+*.refeye *.myeye !=
+start
+99 .repro store
+*.refvel .up store
+*.refveldx .dx store
+stop
+'************************************************************
+'Non-Suicidal Repro/Follow food
+'************************************************************
+cond
+*.refeye *.myeye !=
+*.eye5 0 >
+*.eye3 50 <
+*.eye5 40 <
+*.eye4 40 <
+*.eye6 40 <
+*.eye7 50 <
+*.nrg 3999 >
+start
+50 .repro store
+*.refvel .up store
+*.refveldx .dx store
+stop
+'************************************************************
+'About-Face at age 1
+'It isnt 0 so that the birth tie can sever
+'If you make the parent self-destruct after
+'suicidal repro this is no longer an issue
+'************************************************************
+cond
+*.robage 1 =
+start
+628 .aimdx store
+stop
+'************************************************************
+'Follow and attack food
+'************************************************************
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+16 .shootval store
+*.refvel .up -1 floor store
+*.refveldx .dx store
+stop
+'************************************************************
+'React to getting shot
+'************************************************************
+cond
+.shflav -1 =
+.shflav -6 = or
+*.shup 0 !=
+*.shdn 0 != or
+*.shdx 0 != or
+*.shsx 0 != or
+start
+*.shang 314 add .aimdx store
+stop
+'************************************************************
+end

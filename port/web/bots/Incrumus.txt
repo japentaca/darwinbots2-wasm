@@ -1,6 +1,6 @@
-'NAME        : Incrumus
-'CLASS        : 0 store, 0 dec
-'BY        : d-EVO
+'NAME		: Incrumus
+'CLASS		: 0 store, 0 dec
+'BY		: d-EVO
 
 cond
 *.numties 0 =

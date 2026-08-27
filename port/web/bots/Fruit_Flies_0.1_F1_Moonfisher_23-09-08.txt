@@ -1,8 +1,8 @@
-'Fruit Flies 0.1 (for DB2.43.1L)
+'Fruit Flies v0.1 (for DB2.43.1L)
 'By Moonfisher
 'A very simple tie feeder for F1.
 'Beats EtchII and everything else I've tried it on so far. So it should beat the current F1 league I think.
-'The reproduction gene is capped at 1000, if it's still too slow try 600-700, although that could change the results.
+'The reproduction gene is capped at 1000, if it's still too slow try 600, although that could change the results.
 'No fancy eyes or conspec or anything of that sort, just a very simple strategy.
 
 def alge 13

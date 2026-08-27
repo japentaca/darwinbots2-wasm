@@ -189,3 +189,4 @@ dropbool
 *.tienum dup *.lastTieNum != *.tienum 0 != and .lastTieNum store dropbool
 *.tiepres dup *.lastTiePres != .lastTiePres store dropbool
 stop
+

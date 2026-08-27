@@ -1,3 +1,19 @@
+'Spore Bot
+'Uses breaking of stirrtie to propel spores to new areas.
+
+'It will be a multibot (structure?) that will most likely be a pair.
+'Later versions might be batterrybots- might have larger degree of specification
+'Ex- Bertha defends a buch of small fertile bots and a tentacle that finds batteries (vegs)
+'to feed apon- v1.1 has no specification other than spore/core
+
+'By Magical Dumpling
+
+
+'Weirdly enough, the spore is not always fired...
+
+
+'V1 will be a bibot shotbot
+
 'mem
 def reproduced 40
 def type 41
@@ -69,7 +85,7 @@ start
 0 .type store
 stop 
 
-'Fling spores.
+'Fling spores. Might as well fix cores for now.
 cond
 *.type 1 =
 *.numties 1 >=
@@ -121,7 +137,6 @@ stop
    'Hunting Mech.
 '******************************************************
 'OCULUS III
-'Thanks, bacillus!
 start
 -4 *.eye1 *.eye9 sub sgn 0 floor mult *.eye1 *.eye8 sub sgn 0 floor mult *.eye1 *.eye7 sub sgn 0 floor mult *.eye1 *.eye6 sub sgn 0 floor
  mult *.eye1 *.eye5 sub sgn 0 floor mult *.eye1 *.eye4 sub sgn 0 floor mult *.eye1 *.eye3 sub sgn 0 floor

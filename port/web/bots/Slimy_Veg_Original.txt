@@ -1,0 +1,28 @@
+cond
+*.nrg 1000 >=
+start 
+.strvenom inc
+50 .repro store
+.aimsx inc
+.sexrepo store
+stop
+
+cond
+*.nrg 500 >
+start
+100 .mkslime store 
+stop
+
+cond
+*.myeye *.trefeye !=
+start
+*.trefxpos *.trefypos angle .setaim store
+-3 .shoot store
+stop
+
+cond
+*.robage 0 =
+start
+.dn .vloc store
+40 .venval store
+stop
