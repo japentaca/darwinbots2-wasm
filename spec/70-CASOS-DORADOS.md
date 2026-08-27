@@ -1869,3 +1869,157 @@ línea a línea contra el fuente al derivar cada caso.
 | 6 · RNG inyectado | R-01..R-12 |
 | 7 · formatos | FM-01..FM-07 |
 | sitios de error | §8 (10 sitios, cada uno con decisión de port) |
+
+---
+
+## 11. Familia E4 — costes dinámicos del tick (extensión E4, 2026-08-27)
+
+> Extensión de la suite acordada en `PLAN-EXTENSIONES.md §E4`: pasos 6-7 de
+> `10-CICLO.md §2` (`Master.bas:240-300`), hasta ahora fuera de contrato.
+> Los pasos ⚙ 3, 8, 9 y 22 (hidepred/evo, handicap, avrnrg) **no** entran:
+> su único consumidor es el modo evo (`usehidepred = x_restartmode = 4 Or 5`,
+> `Master.bas:53-54`; con `hidepred = False` — su valor fuera de ese modo —
+> todos son no-op), y van con E5 (modos de juego). `PopLimMethod`
+> (`SimOptions.bas:76`) queda documentado sin caso: **no tiene consumidor
+> vivo** — sus únicos usos son persistencia (`HDRoutines.bas:588/1159`,
+> `OptionsForm.frm:5127/5475`) y código comentado (`main.frm:2959-2960`,
+> `console.frm:482`); el port ya lo persiste como campo muerto.
+>
+> **Inventario RNG**: los pasos 6-7 no consumen `rndy` (cero extracciones;
+> los casos corren con RNG inyectado vacío y verifican consumo 0).
+>
+> **Estado nuevo**: `DynamicCountdown As Integer`, `CostsWereZeroed As
+> Boolean` y `PopulationLast10Cycles(10) As Integer` son globales de módulo
+> (`Master.bas:3-5`): arrancan en cero con el proceso, **no** los persiste
+> `SaveSimulation` ni los resetea `LoadSimulation` (`HDRoutines.bas` solo
+> guarda `SimOpts.oldCostX`, `:776/:1443`). Decisión de port: viven en `Sim`
+> (el original es mono-sim por proceso); cargar una sim en el port arranca
+> con ese estado limpio — divergencia documentada, el original arrastraba el
+> del proceso.
+>
+> **Decisión E4-D1 (quirk TmpOpts)**: `UpperRange`/`LowerRange` leen
+> `TmpOpts.Costs(57/58)` — la copia de la UI — en vez de `SimOpts.Costs`
+> (`Master.bas:262-263`), igual que el quirk de `Tides` (M8). En el port no
+> hay `TmpOpts`: se leen de `SimOpts.Costs`, equivalentes tras cada "OK" del
+> form de opciones.
+>
+> **Overflow**: `CurrentPopulation As Integer`; la suma con vegetales
+> (`Master.bas:246`) no puede exceder 32767 (total de bots ≤ `ROBARRAYMAX`
+> = 32000) — sitio de error 6 inalcanzable, sin registro.
+>
+> **El arranque ve población −1** (hallazgo del smoke E4): `loadrobs` deja
+> `totnvegsDisplayed = -1` "so the cost low water mark doesn't trigger"
+> (`main.frm:1508`, ya replicado en `db_sim_start` desde M10). El paso 6
+> del **primer** tick ve población −1 (con rango inferior 0 dispara un
+> ajuste a la baja) y el del segundo ve 0; la población real llega al
+> paso 6 en el tick 3 (publicación al comienzo de `UpdateBots` + retraso
+> de 2). Con `BOTNOCOSTLEVEL ≥ 0` el −1 SÍ dispara el cero-costes en el
+> primer tick — exactamente el bug que el default −1 de
+> `MDIForm1.frm:2483` esquiva ("fix a bug when running a veg only sim").
+
+### E4-01 · Paso 6: población y historial cada 10 ciclos — [ciclo]
+
+`Master.bas:240-252`. `CurrentPopulation = totnvegsDisplayed` (los contadores
+del ciclo **anterior**); `+ totvegsDisplayed` solo si
+`Costs(DYNAMICCOSTINCLUDEPLANTS=61) <> 0`. El historial se desplaza **solo**
+cuando `TotRunCycle Mod 10 = 0`: `P(i) = P(i-1)` para `i = 10..2` y
+`P(1) = CurrentPopulation` (`P(0)` existe y nunca se usa).
+
+- Setup: `totnvegsDisplayed = 7`, `totvegsDisplayed = 5`, historial
+  `P(1..10) = [1..10]`.
+- `TotRunCycle = 15` (Mod 10 ≠ 0): historial intacto.
+- `TotRunCycle = 20`, `Costs(61) = 0`: `P = [7,1,2,…,9]` (el 10 viejo cae).
+- `TotRunCycle = 20`, `Costs(61) = 1`: `P(1) = 12`.
+- RNG inyectado vacío: consumo 0.
+
+### E4-02 · Paso 7: `DynamicCountdown` con suelo −10 — [ciclo]
+
+`Master.bas:264-269`. Solo bajo `Costs(USEDYNAMICCOSTS=56) <> 0` (la UI
+escribe −1: `DynamicCosts.value * True`, `CostsForm.frm:1142`). Si
+`CurrentPopulation = P(10)`: `DynamicCountdown -= 1`, suelo en −10; si no:
+`= 10`. Con `Costs(56) = 0` el countdown no se toca.
+
+- `pop = P(10) = 30`, countdown −9 → −10; otra llamada → −10 (suelo).
+- `pop = 31 ≠ P(10) = 30` → countdown = 10.
+
+### E4-03 · Paso 7: ajuste del multiplicador, aritmética exacta — [ciclo]
+
+`Master.bas:271-291`. `AmountOff = pop − Costs(53)` (`Single`);
+`UpperRange = CSng(CDbl(Costs(57)) · 0.01 · Costs(53))` (el literal `0.01`
+es `Double`: producto en doble, asignación a `Single`); ídem `LowerRange`.
+Dispara si `(AmountOff > UpperRange And (P(10) < pop Or countdown ≤ 0)) Or
+(AmountOff < −LowerRange And (P(10) > pop Or countdown ≤ 0))`.
+`CorrectionAmount = AmountOff − UpperRange` (rama alta) o
+`Abs(AmountOff) − LowerRange` (rama baja), en `Single`. El ajuste:
+`Costs(54) += 0.0000001 · CorrectionAmount · Sgn(AmountOff) · Costs(55)`
+— `0.0000001` es literal `Double`: toda la cadena en doble
+(orden de factores del fuente), suma en doble, asignación a `Single`.
+Después `DynamicCountdown = 10`.
+
+- Setup: target `Costs(53) = 100`, upper `Costs(57) = 10`, lower
+  `Costs(58) = 10`, sensibilidad `Costs(55) = 50`, `Costs(56) = −1`,
+  `Costs(54) = 1`, `P(10) = 110`, `pop = 120`.
+- `UpperRange = 10`; `AmountOff = 20 > 10`; `P(10) = 110 < 120` → ajusta:
+  `Corr = 10`; `Costs(54) = CSng(1 + 0.0000001·10·1·50)` (= 1.00005 en
+  doble, redondeado a `Single`). Countdown = 10.
+- Rama baja simétrica: `pop = 80`, `P(10) = 90` → `Corr = 10`, `Sgn = −1`,
+  `Costs(54)` baja el mismo delta.
+- Dentro del rango (`pop = 105`): sin ajuste, `Costs(54)` intacto bit a bit.
+
+### E4-04 · Paso 7: estancamiento — la puerta del countdown — [ciclo]
+
+`Master.bas:271-272`. Población fuera de rango pero moviéndose en la
+dirección **correcta** (rama baja con `P(10) < pop`): no ajusta mientras
+`countdown > 0`; el countdown solo baja cuando `pop = P(10)` (clavada), así
+que la puerta `countdown ≤ 0` se abre tras 10+ ciclos de población
+congelada. Secuencia con `pop = P(10) = 40`, target 100, rangos 10%,
+countdown inicial 2: llamada 1 → countdown 1, sin ajuste; llamada 2 →
+countdown 0 → **ajusta** (rama baja, `Corr = Abs(−60) − 10 = 50`) y
+countdown = 10; llamada 3 → countdown baja a 9… sin ajuste (0 > … falso).
+Población recuperándose (`pop = 40, P(10) = 35`, countdown 5): rama baja
+exige `P(10) > pop` — falso — y countdown 4 > 0 → sin ajuste.
+
+### E4-05 · Paso 7: suelo en 0 salvo `ALLOWNEGATIVECOSTX = 1` exacto — [ciclo]
+
+`Master.bas:286-289`. Tras el ajuste, si `Costs(62) <> 1` y `Costs(54) < 0`
+→ `Costs(54) = 0`. Solo el valor **exactamente 1** (el checkbox de
+`CostsForm.frm:1081` escribe 0/1) permite negativos; 0.5 o −1 clampan.
+
+- `Costs(54) = 0.00001`, ajuste a la baja mayor que el valor → con
+  `Costs(62) = 0` queda 0; con `= 1` queda el negativo exacto del cálculo
+  en doble; con `= 0.5` queda 0.
+
+### E4-06 · Cero-costes de emergencia y reinstauración — [ciclo]
+
+`Master.bas:293-300`. **Fuera** del gate `USEDYNAMICCOSTS` — corre siempre.
+Si `pop < Costs(BOTNOCOSTLEVEL=52)` y `Costs(54) <> 0`: `CostsWereZeroed =
+True`, `oldCostX = Costs(54)`, `Costs(54) = 0`. `ElseIf pop >
+Costs(COSTXREINSTATEMENTLEVEL=59)` (estricto) y `CostsWereZeroed`:
+restaura `Costs(54) = oldCostX`, flag a `False`. Comparación
+`Integer < Single` (promoción, exacta en estos rangos).
+
+- `Costs(52) = 50`, `Costs(59) = 80`, `Costs(54) = 1.5`, `Costs(56) = 0`
+  (¡sin costes dinámicos!): `pop = 40` → zeroed (`oldCostX = 1.5`,
+  mult 0). `pop = 40` otra vez: mult ya es 0 → **no** re-zeroed
+  (`oldCostX` no se pisa). `pop = 80` (no estricto) → sigue en 0.
+  `pop = 81` → restaura 1.5, flag `False`.
+- Default de MDIForm (`Costs(52) = −1`, `MDIForm1.frm:2483`): `pop ≥ 0`
+  nunca dispara el cero-costes.
+
+### E4-07 · Integración: el tick usa el multiplicador ajustado — [integración]
+
+Los pasos 6-7 corren **antes** de `ExecRobs` (paso 10): el coste de ADN del
+mismo tick ya escala por el `Costs(54)` recién ajustado (`Costs.of(i) =
+v[i] · v[54]`, aplicado en cada fórmula — `31-ENERGIA.md §0.5`). Sim real
+con fundador no-vegetal, `NUMCOST` puesto y costes dinámicos apuntando a
+target 0 (upper/lower 0, sensibilidad grande para un delta visible):
+
+- Los contadores `*Displayed` se publican al **comienzo** de `UpdateBots`
+  (`Robots.bas:1497-1500`) con el conteo acumulado por las pasadas del tick
+  anterior; como el paso 6 corre antes de `UpdateBots`, el tick N ve el
+  conteo del tick N−2 (el fundador sembrado antes del tick 1 recién cuenta
+  como población en el paso 6 del tick 3).
+- El cargo por token del tick usa el multiplicador post-ajuste (verificado
+  contra el delta calculado a mano con la aritmética de E4-03).
+- El historial se desplaza exactamente en los ticks con
+  `TotRunCycle Mod 10 = 0`.
