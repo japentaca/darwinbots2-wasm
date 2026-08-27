@@ -411,7 +411,10 @@ struct Sim {
   vb_long TotalChlr = 0;
   bool StartAnotherRound = false;
 
-  std::vector<Specie> Specie;
+  // Tipo calificado: el miembro sombrea al struct (gcc >= 15 lo rechaza
+  // sin calificar, -Wchanges-meaning). El nombre viene del original
+  // (Dim Specie() As Specie) y se conserva.
+  std::vector<db::Specie> Specie;
 
   // Shots (Shots.bas:39-44). Índice 0 sin uso, como el original.
   std::vector<Shot> Shots = std::vector<Shot>(301);
