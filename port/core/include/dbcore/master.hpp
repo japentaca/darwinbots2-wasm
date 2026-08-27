@@ -79,8 +79,10 @@ inline void DynamicCostsStep(Sim& sim) {
   auto& C = sim.vm.costs.v;
 
   // Paso 6 (:240-252): población del ciclo ANTERIOR (contadores
-  // *Displayed, publicados al final del UpdateBots previo) e historial
-  // desplazado cada 10 ciclos. PopulationLast10Cycles(0) existe sin uso.
+  // *Displayed, publicados al COMIENZO de cada UpdateBots con el conteo de
+  // las pasadas del tick previo, Robots.bas:1497-1500 — este paso ve el
+  // conteo de hace 2 ticks) e historial desplazado cada 10 ciclos.
+  // PopulationLast10Cycles(0) existe sin uso.
   vb_integer CurrentPopulation =
       static_cast<vb_integer>(sim.totnvegsDisplayed);
   if (C[cost::DYNAMICCOSTINCLUDEPLANTS] != 0.0f)
