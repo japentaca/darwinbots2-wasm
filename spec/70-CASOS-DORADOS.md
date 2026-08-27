@@ -2023,3 +2023,127 @@ target 0 (upper/lower 0, sensibilidad grande para un delta visible):
   contra el delta calculado a mano con la aritmética de E4-03).
 - El historial se desplaza exactamente en los ticks con
   `TotRunCycle Mod 10 = 0`.
+
+---
+
+## 12. Familia E5 — modos de juego (extensión E5, 2026-08-27)
+
+> Extensión de la suite acordada en `PLAN-EXTENSIONES.md §E5`: la capa ⚙
+> torneo/evo que corre DENTRO del tick — paso 3 (hidepred/evo,
+> `Master.bas:52-201`), pasos 8-9/22 (handicap/avrnrg, `:302-330`/`:398-414`),
+> paso 13 (Player Bot, `:347-360`), paso 26 (modos 1/7/8/9, `:483-554`) —,
+> el módulo `F1Mode.bas` (FindSpecies/Countpop/dreason), sus ayudantes
+> (`calc_handycap` Evo.bas:729-739, `calculateZB` Evo.bas:686-727,
+> `fittest`/`score`/`InvestedEnergy` main.frm:2993-3090 tipo 0) y las ~15
+> guardas `Not (FName = "Base.txt" And hidepred)` sembradas por el ciclo
+> (DNA.bas:1252, Quads.bas:260/402, Robots.bas:1509-2875, Shots.bas:435/998,
+> Vegs.bas:161/178/215, Master.bas:366-385), que el port tenía documentadas
+> como no-op y ahora son reales (`BaseHidden` en `sim.hpp`). Todo vive en
+> `port/core/include/dbcore/gamemodes.hpp` (incluido al final de
+> `robots.hpp`).
+>
+> **Deslinde core/host (decisión E5)**: el core muta la sim exactamente como
+> el fuente (conteos, handicap, reposicionado de chasers, kills de MaxPop/
+> MaxCycles/dreason, boosts de mutarray de calculateZB, rondas F1) y
+> sustituye las acciones de UI/disco/proceso (Contest_Form, FileCopy,
+> restarter, logevo, MsgBox, salvarob) por **eventos** en `Sim.events`
+> (`GameEvents`: evo_won/lost, seed_round_done, zb_*, f1_round_over +
+> winner, dq_log, sim_stop_requested) que el host lee y limpia. Quedan
+> host (documentado, fuera del core): la carrera evo de `Evo.bas`
+> (Increase/Decrease_Difficulty, Next_Stage, scale_mutations, staging de
+> archivos — consumen RNG solo en el proceso moribundo, tras `restarter`),
+> la orquestación de liga (`MDIForm1.frm:2536-2790`, `populateladder`,
+> case 10/2/3/1 con FileCopy), y `Contest_Form.frm` entero (display).
+> `restarter` NO trunca el tick (`Common.bas:208`: shell + return) — los
+> eventos no abortan `UpdateSim`.
+>
+> **Inventario RNG**: el ÚNICO consumo de los pasos E5 es **1 rndy** al
+> alternar hidepred (`hidePredOffset = hidePredCycl / 3 * rndy`,
+> `Master.bas:198`); pasos 8/9/13/22/26, Countpop, FindSpecies, dreason,
+> fittest y calculateZB consumen 0 (asertado con RNG inyectado vacío).
+> `Reproduce` consume 1 rndy SIEMPRE (el tope del For de mutación de parto),
+> ya contabilizado desde M7 — E5-14 lo re-asserta.
+>
+> **Estado nuevo en `Sim`** (ninguno lo persiste `SaveSimulation`; en el
+> original viven con el proceso — gset o módulo): `hidePredCycl`, `LFOR`,
+> `stopflag`, `intFindBestV2` (=100, HDRoutines:863), `Disqualify` (=0,
+> gset), `zb_oldid`/`zb_oldMx` (Statics de calculateZB), `totnrgnvegs`
+> (Static de UpdateSim, `Master.bas:530`: ACUMULA entre rondas del modo 9 y
+> jamás se resetea — E5-08 lo asserta), `robfocus`, `F1State` (el módulo
+> F1Mode: PopArray(20), Contests, TotSpecies, MinRounds/optMinRounds,
+> Maxrounds, MaxCycles/optMaxCycles, MaxPop, SampFreq=10, Over, ReStarts,
+> statics oldpop1/2/setoldpop de Countpop), `PlayerBotState` (pbOn,
+> Mouse_loc, PB_keys sin el campo `key` — mapeo de host) y `GameEvents`.
+> `Bot.highlight` nuevo (Robots.bas:318; ningún formato lo persiste — el
+> `.highlight` de HDRoutines:2330 es el del Teleporter). `eye11`
+> (F1Mode.bas:31) y `FirstCycle` (:19) no tienen lector: fuera.
+> `ModeChangeCycles` ahora se incrementa en el paso 2 (`Master.bas:49`, el
+> port no lo hacía — solo lo persistía).
+>
+> **Sitio de error 9 nuevo**: `err9_pb_memloc` — Player Bot con
+> `PB_keys(i).memloc` fuera de `mem(0..1000)` (`Master.bas:354`; frmPBMode
+> no valida el rango). Decisión: registrar y no escribir.
+>
+> **Fuera de alcance con evidencia** (grep 2026-08-27):
+> - **Fudging** (`x_fudge`/`FudgeEyes`/`FudgeAll`, Senses.bas:236-240/275-290,
+>   Ties.bas:742-794): knob de Global.gset con default 0 = apagado; solo
+>   F1/modos especiales lo activan si el usuario lo pidió en el gset. Con el
+>   default el flujo RNG es idéntico. Documentado fuera (nota en senses.hpp/
+>   ties.hpp desde M4); si algún día entra, consume 1 rndy por canal fudgeado.
+> - **"Automatically tag by name"** (MDIForm1:1151-1171): InputBox + bucle
+>   que asigna `rob().tag` — utilidad de UI pura; el port ya expone tag por
+>   la API de texto de bot. Fuera del core.
+> - **Restriction Overwrites** (frmRestriOps.frm, `x_res_*`/`y_res_*` de
+>   Globals.bas:66-81): las variables solo se cargan del gset
+>   (HDRoutines:974-988) y alimentan `Specie.kill_mb`/`dq_kill` al cargar
+>   presets de liga/evo — el port ya tiene ambos campos por especie desde
+>   M8 (`master.hpp:429` los aplica al sembrar). La UI de presets .resp es
+>   host.
+>
+> **Quirks replicados**:
+> - Paso 8 corre gateado por `hidepred` BOT A BOT, no por `usehidepred`
+>   (`Master.bas:302-313`): una sim guardada con `hidepred = True` inyecta
+>   handicap aunque `x_restartmode = 0` (E5-06).
+> - El `GoTo Mode` (`:98-104`): con `LFOR = 150` y `Mutate < Base` bajo
+>   hidepred, resta 100 a ModeChangeCycles y reevalúa hasta caer bajo el
+>   umbral — sin alternar y sin RNG (E5-04).
+> - En el ciclo 1000000 el set de `stagnent` corre DESPUÉS del reset por
+>   conteo (`:74` vs `:90`): queda True aunque `Base > Mutate` (E5-03).
+> - `totnrgnvegs` acumula si el ciclo 1 del modo 9 se re-entra (E5-08).
+> - Countpop/MaxPop: `erase1/erase2` son negativos y los For `0 To -eraseN`
+>   corren SIEMPRE al menos una vez dentro del gate; `selectrobot` no se
+>   resetea entre vueltas (patrón B-02): con `erase2 = 0` la especie 2
+>   pierde su bot más pobre aunque no excediera MaxPop (E5-12).
+> - dreason (`F1Mode.bas:512-513`): `blank As String * 50` son 50 Chr(0) —
+>   el tag jamás asignado se omite; el tag ASIGNADO vacío (relleno de
+>   espacios) produce `()` (E5-10).
+> - `Left(FName, Len-4)` con nombres < 4 chars daría error 5 — inalcanzable
+>   (toda especie termina en .txt); el port trunca a "".
+> - Auto-forking (`NeoMutations.bas:190-215`): `SpeciationForkInterval` se
+>   usa como CONTADOR de nombres — se incrementa antes de nombrar
+>   `(N)Nombre`, se revierte si el registro está lleno (≥ 49) y el default
+>   del formato es 5000 (HDRoutines:1458), así que las especies nuevas
+>   nacen como `(5001)...` (E5-15; ya estaba transcrito en mutations.hpp
+>   desde M7 — E5 lo verifica contra el fuente y le pone caso).
+
+### E5-01 · calc_handycap: rampa hasta `hidePredCycl*8` — [evo]
+### E5-02 · Paso 3 fuera del modo evo es no-op (y paso 2 cuenta) — [ciclo]
+### E5-03 · Paso 3: conteo Base/Mutate, fin de evo, stagnent — [evo]
+### E5-04 · Paso 3: alternancia hidepred, aritmética del handicap, GoTo Mode — [evo]
+### E5-05 · Paso 3: shots ofensivos borrados y chasers reposicionados — [evo]
+### E5-06 · Pasos 8/9/22: handicap y avrnrg — [evo]
+### E5-07 · Guardas hidepred: el Base oculto queda congelado — [ciclo]
+### E5-08 · Paso 26: modo 1 (seeding) y modo 9 (test, Static) — [evo]
+### E5-09 · Paso 26 modos 7/8: fittest + calculateZB + restart — [evo]
+### E5-10 · dreason/Disqualify: descalificación de especie — [torneo]
+### E5-11 · F1: FindSpecies y las rondas de Countpop — [torneo]
+### E5-12 · F1: MaxPop mata a los más pobres (patrón B-02) — [torneo]
+### E5-13 · Restart: sin heterótrofos arranca otra ronda — [ciclo]
+### E5-14 · Paso 13: Player Bot Mode (aim/teclas/foco/herencia) — [ciclo]
+### E5-15 · Auto-forking: SpeciationForkInterval es un contador — [mutación]
+
+Los 15 casos viven en `port/tests/test_gamemodes.cpp` con el detalle de
+setup/aserciones en el propio test (valores recalculados a mano con la
+aritmética del fuente donde aplica). Suite tras E5: **165 casos / 3333
+aserciones** en verde en los tres modos, con mutation-check (alterar 1.2,
+la media 9:1 o el 1.15 rompe casos).

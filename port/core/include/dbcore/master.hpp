@@ -1,12 +1,14 @@
-// dbcore/master.hpp — el tick (Master.bas:23 UpdateSim) reducido al núcleo
-// de 10-CICLO.md §2: pasos 2, 4-5, 6-7 (costes dinámicos, E4), 10
-// (ExecRobs), 12 (EraseSenses), 14 (updateshots), 15 (opos), 16
-// (UpdateBots), 17 (actvel), 18-21 (obstáculos/teleporters/repoblación/
-// sol) y la matanza por presión de memoria (paso 24). Los pasos ⚙
-// (UI/torneo/evo/autosave — 3, 8-9, 11, 13, 22-23, 25-26) quedan fuera con
-// decisión documentada. También: la carga de bots a la simulación
-// (RobScriptLoad, Module1.bas:8-26; preparerob :29-55) y la siembra de
-// fundadores de loadrobs (main.frm:1516-1570) que M-08 ejercita.
+// dbcore/master.hpp — el tick (Master.bas:23 UpdateSim): pasos 2-10
+// (con 3 hidepred/evo y 8-9 handicap/avrnrg desde E5; 6-7 costes dinámicos
+// desde E4), 12 (EraseSenses), 13 (Player Bot, E5), 14 (updateshots), 15
+// (opos), 16 (UpdateBots), 17 (actvel), 18-21 (obstáculos/teleporters/
+// repoblación/sol), 22 (avrnrgEnd, E5), la matanza por presión de memoria
+// (paso 24) y 26 (modos restart, E5). Los pasos ⚙ restantes — 1 (F12), 11
+// (inspector), 23 (monitor RGB), 25 (autosave a disco) — son UI/infra de
+// host, fuera del core con decisión documentada. También: la carga de bots
+// a la simulación (RobScriptLoad, Module1.bas:8-26; preparerob :29-55) y la
+// siembra de fundadores de loadrobs (main.frm:1516-1570) que M-08 ejercita.
+// Los pasos E5 viven en gamemodes.hpp (vía robots.hpp).
 #pragma once
 
 #include "loader.hpp"
@@ -19,10 +21,11 @@ namespace db {
 inline void VegsRepopulate(Sim& sim);  // definida tras RobScriptLoadSim
 
 // DNA.bas:1245-1262 — ExecRobs (paso 10): ADN de todos los bots en orden de
-// índice. Gate: exist, no corpse, no DisableDNA (hidepred: capa torneo ⚙).
+// índice. Gate: exist, no corpse, no DisableDNA, no Base oculto (E5).
 inline void ExecRobs(Sim& sim) {
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist && !sim.rob[t].Corpse && !sim.rob[t].DisableDNA)
+    if (sim.rob[t].exist && !sim.rob[t].Corpse && !sim.rob[t].DisableDNA &&
+        !BaseHidden(sim, sim.rob[t]))
       ExecuteDNA(sim.vm, sim.rob[t]);
   }
 }
@@ -168,22 +171,14 @@ inline void UpdateSim(Sim& sim) {
   // el original, main.frm:1302; decisión de port en buckets.hpp).
   EnsureBuckets(sim);
 
-  // Paso 2: contadores de ciclo.
+  // Paso 2 (Master.bas:49-50): contadores de ciclo.
+  sim.evo.ModeChangeCycles += 1;
   sim.opts.TotRunCycle += 1;
 
-  // Paso 5 (contabilidad de energía, Master.bas:236-238): el display toma
-  // la celda del ciclo ANTERIOR (el índice aún no rotó) y después rota y
-  // pone a cero la celda nueva. feedvegs decide día/noche con este display.
-  sim.TotalSimEnergyDisplayed = sim.TotalSimEnergy[sim.CurrentEnergyCycle];
-  sim.CurrentEnergyCycle = sim.opts.TotRunCycle % 100;
-  sim.TotalSimEnergy[sim.CurrentEnergyCycle] = 0;
-
-  // Pasos 3, 8, 9 (y 22): hidepred/evo, handicap, avrnrg — ⚙ torneo.
-  // Único consumidor: el modo evo (usehidepred = x_restartmode = 4 Or 5,
-  // Master.bas:53-54); con hidepred = False (su valor fuera de ese modo)
-  // todos son no-op, incluidas las exclusiones "Base.txt And hidepred" de
-  // los pasos 15/17/19. Van con E5 (modos de juego) — decisión E4,
-  // 70-CASOS-DORADOS.md §11.
+  // Paso 3 (E5, Master.bas:52-201): lógica hidepred/evo — solo modos 4/5.
+  const bool usehidepred =
+      (sim.x_restartmode == 4 || sim.x_restartmode == 5);
+  HidePredStep(sim, usehidepred);
 
   // Paso 4 (Master.bas:203-233): oscilación de MutCurrMult, senoidal
   // (20^Sin) o escalón (16 / 1/16). Off por default (MutOscill = False).
@@ -212,10 +207,25 @@ inline void UpdateSim(Sim& sim) {
     }
   }
 
+  // Paso 5 (contabilidad de energía, Master.bas:236-238): el display toma
+  // la celda del ciclo ANTERIOR (el índice aún no rotó) y después rota y
+  // pone a cero la celda nueva. feedvegs decide día/noche con este display.
+  sim.TotalSimEnergyDisplayed = sim.TotalSimEnergy[sim.CurrentEnergyCycle];
+  sim.CurrentEnergyCycle = sim.opts.TotRunCycle % 100;
+  sim.TotalSimEnergy[sim.CurrentEnergyCycle] = 0;
+
   // Pasos 6-7 (E4, Master.bas:240-300): costes dinámicos — ANTES de
   // ExecRobs, así el cargo de ADN de este mismo tick ya escala por el
   // multiplicador recién ajustado.
   DynamicCostsStep(sim);
+
+  // Paso 8 (E5, Master.bas:302-313): handicap a los Mutate.txt (gateado
+  // por hidepred bot a bot, NO por usehidepred).
+  HandicapStep(sim);
+
+  // Paso 9 (E5, Master.bas:315-330): media de nrg pre-update.
+  double avrnrgStart = 0;
+  if (usehidepred) avrnrgStart = AvrnrgStartStep(sim);
 
   // Paso 10: el ADN.
   ExecRobs(sim);
@@ -226,21 +236,23 @@ inline void UpdateSim(Sim& sim) {
     if (sim.rob[t].exist && !sim.rob[t].DisableDNA) EraseSenses(sim, t);
   }
 
-  // Paso 13: Player Bot Mode — ⚙.
+  // Paso 13 (E5, Master.bas:347-360): Player Bot Mode.
+  PlayerBotStep(sim);
 
   // Paso 14: shots.
   updateshots(sim);
 
-  // Paso 15: opos = pos.
+  // Paso 15: opos = pos (E5: los Base ocultos no lo actualizan).
   for (int t = 1; t <= sim.MaxRobs; ++t)
-    if (sim.rob[t].exist) sim.rob[t].opos = sim.rob[t].pos;
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t]))
+      sim.rob[t].opos = sim.rob[t].pos;
 
   // Paso 16: UpdateBots (7 pasadas).
   UpdateBots(sim);
 
   // Paso 17: actvel (protege a los recién nacidos con opos = (0,0)).
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist) {
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
       if (!(sim.rob[t].opos.x == 0.0f && sim.rob[t].opos.y == 0.0f))
         sim.rob[t].actvel = VectorSub(sim.rob[t].pos, sim.rob[t].opos);
     }
@@ -255,7 +267,7 @@ inline void UpdateSim(Sim& sim) {
   // asignación a Long ocurre por vuelta del For).
   sim.AllChlr = 0;
   for (int t = 1; t <= sim.MaxRobs; ++t)
-    if (sim.rob[t].exist)
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t]))
       sim.AllChlr = static_cast<vb_long>(vb_round64(
           static_cast<double>(sim.AllChlr) +
           static_cast<double>(sim.rob[t].chloroplasts)));
@@ -272,10 +284,16 @@ inline void UpdateSim(Sim& sim) {
   // Paso 21 (Master.bas:396): el sol.
   feedvegs(sim, sim.opts.MaxEnergy);
 
-  // Pasos 22-25: torneo/UI/autosave — ⚙, fuera del core.
+  // Paso 22 (E5, Master.bas:398-414): media post-update y energydif.
+  if (usehidepred) AvrnrgEndStep(sim, avrnrgStart);
 
-  // Master.bas:429-465 — matanza por presión de memoria (paso 26).
+  // Pasos 23 (monitor RGB) y 25 (autosave a disco): UI/infra de host.
+
+  // Paso 24 (Master.bas:429-465): matanza por presión de memoria.
   MemoryPressureKill(sim);
+
+  // Paso 26 (E5, Master.bas:483-554): modos seeding/ZeroBot/test.
+  RestartModesStep(sim);
 }
 
 // Module1.bas:29-55 — preparerob: 6 extracciones de RNG (pos x/y, aim,

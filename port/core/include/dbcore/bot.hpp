@@ -240,6 +240,9 @@ struct Bot {
   unsigned char multibot_time = 0;
   unsigned char Chlr_Share_Delay = 0;
   unsigned char dq = 0;
+  bool highlight = false;  // E5 (Robots.bas:318): seleccion Player Bot; no
+                           // lo persiste ningun formato (el highlight de
+                           // HDRoutines:2330 es el del Teleporter)
 };
 
 }  // namespace db

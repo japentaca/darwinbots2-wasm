@@ -329,6 +329,85 @@ struct SimDiag {
                                  //   loopold+laststartmatch rebasa el array
                                  //   (Robots.bas:492-500 con listas clampadas).
                                  //   Decisión: registrar y cortar el matching.
+  int err9_pb_memloc = 0;        // sitio de error 9: Player Bot con
+                                 //   PB_keys(i).memloc fuera de mem(0..1000)
+                                 //   (Master.bas:354; frmPBMode no valida el
+                                 //   rango). Decisión: registrar y no escribir.
+};
+
+// ---- E5 · modos de juego ----------------------------------------------------
+
+// F1Mode.bas:4-9 — Type pop (PopArray(20), 1-based; el slot 0 existe sin uso).
+struct F1Pop {
+  std::string SpName;
+  vb_integer population = 0;
+  vb_integer Wins = 0;
+  vb_integer exist = 0;
+};
+
+// F1Mode.bas:12-36 — estado de módulo del modo F1/liga/restart. En el
+// original vive con el proceso (no lo persiste SaveSimulation); aquí vive en
+// Sim y una carga arranca limpio. robotA/robotB (nombres de archivo de liga)
+// y eye11 (declarado y jamás leído) son capa host / código muerto.
+// FirstCycle (F1Mode.bas:19) no tiene ningún lector en el fuente: fuera.
+struct F1State {
+  std::array<F1Pop, 21> PopArray{};
+  vb_single F1count = 0;       // contador de muestreo (Robots.bas:1503)
+  bool ContestMode = false;    // = TmpOpts.F1 al arrancar (OptionsForm:4778)
+  vb_integer Contests = 0;
+  vb_integer TotSpecies = 0;
+  vb_long ReStarts = 0;
+  vb_integer SampFreq = 10;    // "always 10" (OptionsForm.frm:4939)
+  bool Over = false;
+  vb_integer optMinRounds = 0;
+  vb_integer MinRounds = 0;
+  vb_integer Maxrounds = 0;
+  vb_long MaxCycles = 0;
+  vb_integer MaxPop = 0;
+  vb_long optMaxCycles = 0;
+  // StartAnotherRound (F1Mode.bas:32, gate del loop en main.frm:2081) ya
+  // existía como Sim.StartAnotherRound — se conserva allí.
+  // Statics de Countpop (F1Mode.bas:181-183).
+  vb_integer oldpop1 = 0, oldpop2 = 0;
+  bool setoldpop = false;
+};
+
+// Globals.bas:7-16 — Player Bot Mode: estado que la UI alimenta (teclas y
+// ratón). El campo key (tecla física) es mapeo de host; el core solo consume
+// memloc/value/Active/Invert (Master.bas:353-355).
+struct PBKey {
+  vb_integer memloc = 0;
+  vb_integer value = 0;
+  bool Active = false;
+  bool Invert = false;
+};
+struct PlayerBotState {
+  bool on = false;       // MDIForm1.pbOn.Checked
+  Vector Mouse_loc{};    // (0,0) = sin ratón (MDIForm1:1544-1545)
+  std::vector<PBKey> keys;
+};
+
+// E5 — eventos que el tick levanta hacia la capa host. Sustituyen las
+// acciones del original que tocan UI/disco/proceso (Contest_Form, FileCopy,
+// restarter, logevo, MsgBox): el core muta la sim exactamente como el fuente
+// y deja aquí la señal; el host la lee y la limpia (no se auto-borran).
+struct GameEvents {
+  bool sim_stop_requested = false;  // Form1.Active = False en el original
+  bool evo_lost = false;            // paso 3: Mutate_count = 0 (UpdateLostEvo)
+  bool evo_won = false;             // paso 3: Base_count = 0 (UpdateWonEvo)
+  vb_integer evo_won_best = 0;      //   argumento Form1.fittest del original
+  bool seed_round_done = false;     // paso 26, modo 1: ciclo 2000
+  bool zb_restart = false;          // paso 26, modos 7/8: Mutate_count = 0
+  bool zb_goodtest = false;         // calculateZB: rama ×1.15 (logevo GoodTest)
+  bool zb_ready_for_test = false;   // calculateZB: rama ×1.75 → ZBreadyforTest
+  bool zb_reset = false;            // calculateZB: rama logevo "Reset"
+  bool zb_passed = false;           // paso 26, modo 9: ZBpassedtest
+  bool zb_failed = false;           // paso 26, modo 9: ZBfailedtest
+  bool f1_round_over = false;       // Countpop: ganador declarado (Over)
+  std::string f1_winner;            //   nombre del ganador
+  bool f1_single_species = false;   // FindSpecies: TotSpecies = 1
+  bool f1_limits_disabled = false;  // FindSpecies: > 2 especies con límites
+  std::vector<std::string> dq_log;  // dreason: líneas de Disqualifications.txt
 };
 
 struct Sim {
@@ -357,6 +436,25 @@ struct Sim {
   unsigned char x_restartmode = 0;
   bool y_normsize = false;
   vb_integer curr_dna_size = 0;
+
+  // E5 — globales runtime de los modos de juego. Ninguno lo persiste
+  // SaveSimulation: en el original viven con el proceso (gset o módulo).
+  // Defaults = los del módulo VB6 recién arrancado (o el default del gset
+  // donde HDRoutines los fija antes de leer el archivo, citado).
+  vb_integer hidePredCycl = 0;   // Globals.bas:111 (el gset de evo lo puebla)
+  vb_single LFOR = 0;            // Globals.bas:114
+  bool stopflag = false;         // Master.bas:17
+  vb_integer intFindBestV2 = 100;  // Globals.bas:29; HDRoutines.bas:863
+  unsigned char Disqualify = 0;  // Globals.bas:92 (gset; 0 = sin DQ)
+  vb_long zb_oldid = 0;          // Static oldid de calculateZB (Evo.bas:689)
+  double zb_oldMx = 0;           // Static oldMx (Evo.bas:690)
+  double totnrgnvegs = 0;        // Static de UpdateSim (Master.bas:530):
+                                 //   NUNCA se resetea — acumula entre rondas
+                                 //   del modo 9 dentro del mismo proceso
+  vb_integer robfocus = 0;       // Globals: bot con foco (Player Bot/ZB)
+  F1State f1;
+  PlayerBotState pb;
+  GameEvents events;
 
   // rob(): el índice 0 existe y no se puebla (10-CICLO.md §8). Arranca con
   // UBound=500 y crece de a 100 (posto, Robots.bas:2925-2948).
@@ -468,6 +566,33 @@ struct Sim {
 };
 
 // ---- utilidades compartidas del ciclo ----
+
+// E5 — la exclusión `rob(t).FName = "Base.txt" And hidepred` que el modo evo
+// (x_restartmode 4/5) siembra por todo el ciclo (Master.bas:366 y ~15 sitios
+// más: DNA.bas:1252, Quads.bas:260/402, Robots.bas, Shots.bas, Vegs.bas):
+// con hidepred los depredadores Base quedan congelados e invisibles. Fuera
+// del modo evo hidepred es False y el filtro es no-op.
+inline bool BaseHidden(const Sim& sim, const Bot& b) {
+  return sim.evo.hidepred && b.FName == "Base.txt";
+}
+
+// E5 — adelantadas de gamemodes.hpp (las llaman robots/ties/shots/
+// mutations, que se incluyen antes; la definición llega con gamemodes.hpp
+// al final de robots.hpp).
+inline void dreason(Sim& sim, std::string Name, std::string tag,
+                    const std::string& reason);  // ByVal como el original
+inline void Countpop(Sim& sim);
+
+// E5 — el par de lineas Disqualify que el fuente repite tras cada accion
+// prohibida (Robots.bas:927-929 y gemelos): bajo F1/seeding con
+// Disqualify = 2 la accion descalifica a la especie entera (dreason);
+// fuera de F1, un bot con dq = 1 (restriccion de especie) muere "safe kill".
+inline void DisqualifyAction(Sim& sim, int n, const char* reason) {
+  if ((sim.opts.F1 || sim.x_restartmode == 1) && sim.Disqualify == 2)
+    dreason(sim, sim.rob[n].FName, sim.rob[n].tag, reason);
+  if (!sim.opts.F1 && sim.rob[n].dq == 1 && sim.Disqualify == 2)
+    sim.rob[n].Dead = true;
+}
 
 // Gauss sobre el gasdev global del motor (los operadores de mutación y las
 // derivas Delta2 consumen por aquí; la caché Static vive en sim.gasdev).
