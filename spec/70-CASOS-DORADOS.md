@@ -2251,11 +2251,45 @@ casos).
 | **E6-01** | El gate de `ga()`: sin foco ni consola el array **ni se dimensiona**; con foco (o `consoleOpen`) sale `ReDim ga(genenum)` = índices 0..genenum, y solo el gen de condición verdadera queda marcado. Se rehace en cada ciclo (no se pega). | `DNA.bas:75-82`, `:152` |
 | **E6-02** | El cuerpo **sin stores** marca igual: el único marcado posible es el del epílogo de `start`/`else`/`stop`, leyendo `CurrentFlow` ANTES del `CLEAR` (el fix de Botsareus 3/24/2012 contra "cualquier gen else mostraba activación"). | `DNA.bas:1179-1183` |
 | **E6-03** | `dbgstring`: `"<CRLF>" & valor & " at position " & a`, con `True`/`False` para `debugbool` (no −1/0) y el índice del token como posición; se vacía al empezar cada `ExecuteDNA` y **no** depende del gate de `ga()`. | `DNA.bas:86`, `:539-561`, `:119` |
-| **E6-04** | `AddRecord` disparado por `KillRobot`: gate `DeadRobotSnp`, exclusión `SnpExcludeVegs`, cabeceras **una sola vez** (`If Dir(path) = ""`), un registro por muerte con sus 14 columnas, y la guarda `DnaLen = 1` que corre **después** de abrir los archivos (crea cabeceras, no deja registro). | `Robots.bas:2971-2977`, `Database.bas:89-147` |
+| **E6-04** | `AddRecord` disparado por `KillRobot`: gate `DeadRobotSnp`, exclusión `SnpExcludeVegs`, cabeceras **una sola vez** (`If Dir(path) = ""`), un registro por muerte con sus 14 columnas, la guarda `DnaLen = 1` que corre **después** de abrir los archivos (crea cabeceras, no deja registro) y el **slot fantasma 0**: `MemoryPressureKill` llama a `KillRobot(0)` con el `selectrobot` que nunca se resetea ([PROBABLE BUG] A1-3/B-02) y `rob(0)` tiene `DnaLen = 0`, así que la guarda no lo salva y sale una fila con AbsNum 0 cuyo *Fitness* suma la descendencia de TODO fundador (`parent = 0`) — replicado. | `Robots.bas:2971-2977`, `Database.bas:89-147` |
 | **E6-05** | `Snapshot` de los vivos: cabecera, recorrido por slot con el filtro `exist And DnaLen > 1`, el `.snp` idéntico con y sin historial de mutaciones, y los muertos fuera. | `Database.bas:19-87` |
 | **E6-06** | La columna *Fitness* es la fórmula de `fittest` con `TotalOffspring` arrancando en **1**: `(TotalOffspring ^ sPopulation) * (s ^ sEnergy)` con `s = score(rn,1,10,0) + nrg + body*10` propagando en Double término a término, ponderada por `intFindBestV2`. | `Database.bas:49-57`, `main.frm:2996-3010` |
 
 Los seis casos viven en `port/tests/test_registro.cpp`. Suite tras E6:
-**172 casos / 3461 aserciones** en verde en los tres modos, con
+**172 casos / 3465 aserciones** en verde en los tres modos, con
 mutation-check (quitar el marcado del epílogo, mover la guarda `DnaLen = 1`
 o borrar el recorte del `vbCrLf` sobrante rompe casos).
+
+### 13.1 Hallazgos de la capa host (gráficas, sin caso dorado)
+
+El aparato de gráficas es capa host (`main.frm` es el form) y se verifica con
+smoke test bajo node, no con casos dorados; estos tres hallazgos quedan
+anotados en `wasm/dbcore_api.cpp` junto a la transcripción:
+
+1. **`Dim l, ll As Long`** (`main.frm:2387`) declara `l` como **Variant** y
+   solo `ll` como Long — la distancia genética (`l = OldGD`,
+   `l = DoGeneticDistance(...) * 1000`) conserva su parte decimal. Truncarla
+   a Long, como hacía la primera transcripción, achata el gráfico 13/15.
+   Corregido en la revisión de rama.
+2. **La guarda de promedios de la rama "todos los gráficos"**
+   (`main.frm:2450`) es `If dati(p, POPULATION_GRAPH) <> 0` con el `p` que
+   quedó del bucle de bots (la última especie vista), no con el `p` del bucle
+   de promedios que viene justo debajo. Inocuo en la práctica (con un solo
+   bot vivo siempre es ≠ 0; con la sim vacía `p = 0` y el bloque se salta
+   entero), pero es un `[PROBABLE BUG]` estructural.
+3. **`CalcStats` muta el bot**: `GenMut` y `OldGD` (`main.frm:2836`/`:2855`)
+   son la "moneda" que evita recalcular la distancia genética en cada punto.
+   Abrir el gráfico 13 los reescribe. No cambia la trayectoria de la
+   simulación (nadie más los lee; solo `mutate` decrementa `GenMut`,
+   `NeoMutations.bas:224`), pero **sí** cambia lo que un `SaveSimulation`
+   posterior escriba: los dos campos se persisten.
+
+Cuatro divergencias más, todas con decisión de port anotada: el `Round(…, 2)`
+de `ENERGY_SPECIES` existe en la rama 0 y no en la rama de un solo gráfico
+(y el `Round(…, 4)` del CostX, al revés) — se replican tal cual; la división
+`(.LastMut + .Mutations) / .DnaLen` no tiene guarda en el fuente (error 11
+con `DnaLen = 0`) y aquí se salta el sumando; el `SubSpeciesNumber` de
+`main.frm:2432-2437` es código muerto y no se transcribe; y el `On Error GoTo
+bypass` de `RedrawGraph` se traga el redibujo entero una vez cada 1001 puntos
+(con `Pivot = 0`, `ReorderSeries` indexa `data(-1)`) — replicado en el chart
+de la página.

@@ -1534,8 +1534,12 @@ class Chart {
     let k = 0;
     while (k < this.maxSeries && this.serName[k] !== name && k < MaxItems) k += 1;
     if (this.serName[k] !== name || k === MaxItems) {
-      // El color lo decide la especie; si no está en la lista (o es el
-      // gráfico 10) el original sortea RGB(Random(100,255) ×3).
+      // El color sale de SimOpts.Specie(i).color (grafico.frm:3745-3755).
+      // Para el gráfico 10 (series fijas) el original sortea
+      // RGB(Random(100,255) ×3); para una especie que no está en la lista
+      // busca en InternetSpecies y, si tampoco está, NO crea la serie —
+      // esa rama es de la capa Internet (etapa E7), así que aquí también
+      // cae en el color al azar (decisión de host).
       const c = (color >= 0) ? color : randSeriesColor();
       this.addSeries(name, c);
       k = this.maxSeries - 1;

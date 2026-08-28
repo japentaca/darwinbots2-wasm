@@ -1469,6 +1469,10 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
   };
   // La distancia genetica "selectiva" (main.frm:2497-2540 y :2810-2871). OJO:
   // consume la moneda GenMut y cachea en OldGD — muta el bot.
+  // OJO con `Dim l, ll As Long` (main.frm:2387): en VB6 eso declara `l` como
+  // VARIANT y solo `ll` como Long. `l` guarda el Single con su parte
+  // decimal — no truncar. `copyl` si es Single (:2513; su Dim dentro del
+  // bucle no importa: el fuente le asigna 0 antes de usarlo).
   auto geneticDistance = [&](int g) {
     const int last0 = FlexLast(nomi);
     for (int q = 1; q <= last0; ++q) dati.at(q, g) = 0;
@@ -1477,8 +1481,8 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
       if (!(b.exist && !b.Corpse)) continue;
       p = FlexPosition(b.FName, nomi);
       if (b.GenMut > 0) {
-        const db::vb_long l = static_cast<db::vb_long>(b.OldGD);
-        if (l > dati.at(p, g)) dati.at(p, g) = static_cast<db::vb_single>(l);
+        const db::vb_single l = b.OldGD;
+        if (l > dati.at(p, g)) dati.at(p, g) = l;
       } else {
         b.GenMut = static_cast<db::vb_single>(
             static_cast<double>(b.DnaLen) / db::GeneticSensitivity);
@@ -1486,9 +1490,8 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
         for (int x = n + 1; x <= sim.MaxRobs; ++x) {
           const db::Bot& o = sim.rob[x];
           if (o.exist && !o.Corpse && o.FName == b.FName && o.GenMut == 0) {
-            const db::vb_long l = static_cast<db::vb_long>(
-                db::DoGeneticDistance(sim, n, x) * 1000);
-            if (l > copyl) copyl = static_cast<db::vb_single>(l);
+            const db::vb_single l = db::DoGeneticDistance(sim, n, x) * 1000.0f;
+            if (l > copyl) copyl = l;
           }
         }
         if (copyl > dati.at(p, g)) dati.at(p, g) = copyl;
@@ -1517,6 +1520,9 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
         dati.at(p, DNALENGTH_GRAPH) += b.DnaLen;
         dati.at(p, DNACOND_GRAPH) =
             static_cast<db::vb_single>(dati.at(p, DNACOND_GRAPH) + b.condnum);
+        // El fuente divide por .DnaLen sin guarda: con DnaLen = 0 lanzaba
+        // error 11 y truncaba el redibujo. Decision de port: saltar el
+        // sumando (es texto de grafico, nunca simulacion).
         if (b.DnaLen != 0)
           dati.at(p, MUT_DNALENGTH_GRAPH) = static_cast<db::vb_single>(
               static_cast<double>(dati.at(p, MUT_DNALENGTH_GRAPH)) +
@@ -1539,6 +1545,8 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
           dati.at(p, SPECIESDIVERSITY_GRAPH) += 1;
         }
         if (!b.Corpse) {
+          // El fuente calcula aqui `SubSpeciesNumber` (main.frm:2432-2437) y
+          // no lo usa nadie: codigo muerto, no se transcribe.
           int p_reclev = 0;  // FindGenerationalDistance
           ScoreDepth(sim, t, 1, 500, p_reclev);
           if (p_reclev > dati.at(p, GENERATION_DIST_GRAPH))
@@ -1716,11 +1724,11 @@ void CalcStats(db::Sim& sim, std::vector<std::string>& nomi, Dati& dati,
         for (int x = t + 1; x <= sim.MaxRobs; ++x) {
           if (sim.rob[x].exist && !sim.rob[x].Corpse &&
               sim.rob[x].FName == sim.rob[t].FName) {
-            const db::vb_long l = static_cast<db::vb_long>(
-                db::DoGeneticDistance(sim, t, x) * 1000);
+            // `l` es Variant (main.frm:2387): conserva la parte decimal.
+            const db::vb_single l =
+                db::DoGeneticDistance(sim, t, x) * 1000.0f;
             if (l > dati.at(p, GENETIC_SIMPLE_GRAPH))
-              dati.at(p, GENETIC_SIMPLE_GRAPH) =
-                  static_cast<db::vb_single>(l);
+              dati.at(p, GENETIC_SIMPLE_GRAPH) = l;
           }
         }
       }

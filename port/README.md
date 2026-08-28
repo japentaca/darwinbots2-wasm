@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 172 casos / 3461 aserciones en verde (en los tres modos), con las extensiones E1..E6 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 172 casos / 3465 aserciones en verde (en los tres modos), con las extensiones E1..E6 cerradas (ver `spec/PROGRESO.md`).
 
 ## Build
 

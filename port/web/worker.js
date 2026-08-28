@@ -919,14 +919,18 @@ self.onmessage = (e) => {
       break;
     }
     case 'family': {              // parentele.frm: score tipos 0/1 y 2/3
+      // Sin clearHighlight previo: el original ACUMULA (Command1 solo pone
+      // highlight; el unico borrado es `unfocus`, main.frm:2155, que aqui es
+      // el boton "Limpiar"). Es el mismo flag que usa el Player Bot para
+      // elegir a quien pilotar — tambien en el original.
       const n = msg.n | 0, maxrec = msg.maxrec | 0 || 1000;
-      api.clearHighlight(sim);
       const total = api.offspring(sim, n, maxrec);
       const hl = api.highlightFam(sim, n, maxrec);
       let lines = null;
       if (msg.lines) {
         ensure(scratch.fam, 4096 * 7);
         const c = api.familyLines(sim, n, scratch.fam.p, 4096);
+        if (c >= 4096) log('philogeny: arbol recortado a 4096 enlaces');
         lines = Array.from(heapView(scratch.fam.p, Math.max(c, 1) * 7)
                              .subarray(0, c * 7));
       }

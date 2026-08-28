@@ -207,6 +207,17 @@ TEST_CASE("E6-04 AddRecord: el snapshot de los muertos que dispara KillRobot") {
     CHECK(w.sim.deadSnp.snp.find("Vacio.txt") == std::string::npos);
   }
 
+  SUBCASE("el slot fantasma 0 de MemoryPressureKill también deja registro") {
+    // KillRobot(0) del [PROBABLE BUG] A1-3/B-02: rob(0) tiene DnaLen 0, así
+    // que la guarda `If .DnaLen = 1` no lo salva y el original escribe la
+    // fila. Su Fitness suma la descendencia de todo bot con parent = 0.
+    w.sim.opts.DeadRobotSnp = true;
+    KillRobot(w.sim, 0);
+    CHECK(w.sim.deadSnp.records == 1);
+    CHECK(w.sim.deadSnp.snp.find("\r\n\r\n0,0,,0,0,0,0,0,0,0,0,") !=
+          std::string::npos);
+  }
+
   SUBCASE("drain() vacía el texto pero el archivo sigue existiendo") {
     w.sim.opts.DeadRobotSnp = true;
     KillRobot(w.sim, a);

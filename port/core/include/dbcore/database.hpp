@@ -126,7 +126,12 @@ inline void AppendSnpRecord(Sim& sim, int rn, std::string& out) {
 // registro, pero sí crea las cabeceras.
 inline void AddRecord(Sim& sim, int rn) {
   using namespace database_detail;
-  if (rn < 1 || rn >= static_cast<int>(sim.rob.size())) return;
+  // Sin piso en 1: `MemoryPressureKill` puede llamar a KillRobot(0) con el
+  // `selectrobot` que nunca se resetea ([PROBABLE BUG] A1-3 / B-02), y el
+  // original registra ese slot fantasma igual — su DnaLen es 0, asi que la
+  // guarda de :131 no lo salva y sale una fila con AbsNum 0 cuyo Fitness
+  // suma la descendencia de TODO fundador (parent = 0). Se replica.
+  if (rn < 0 || rn >= static_cast<int>(sim.rob.size())) return;
   DeadSnapshot& ds = sim.deadSnp;
   if (!ds.started) {  // `If Dir(path) = ""` — cabeceras una sola vez
     ds.snp += std::string(kSnpHeader) + "\r\n";
