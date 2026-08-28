@@ -25,9 +25,14 @@ inline void VegsRepopulate(Sim& sim);  // definida tras RobScriptLoadSim
 inline void ExecRobs(Sim& sim) {
   for (int t = 1; t <= sim.MaxRobs; ++t) {
     if (sim.rob[t].exist && !sim.rob[t].Corpse && !sim.rob[t].DisableDNA &&
-        !BaseHidden(sim, sim.rob[t]))
+        !BaseHidden(sim, sim.rob[t])) {
+      // E6 — el gate de ga() de DNA.bas:75: foco o consola abierta. Es la
+      // unica forma en que el original decide poblar la traza de genes.
+      sim.vm.gaTrack = (t == sim.robfocus) || sim.rob[t].consoleOpen;
       ExecuteDNA(sim.vm, sim.rob[t]);
+    }
   }
+  sim.vm.gaTrack = false;
 }
 
 // Master.bas:23-554 — UpdateSim, núcleo. La numeración de pasos es la de

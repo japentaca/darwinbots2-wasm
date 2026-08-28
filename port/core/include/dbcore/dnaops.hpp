@@ -4,6 +4,8 @@
 #pragma once
 
 #include <cmath>
+#include <cstdio>
+#include <string>
 
 #include "bitwise.hpp"
 #include "common.hpp"
@@ -19,6 +21,8 @@ struct VmDiag {
   int q17_saturations = 0;  // add/sub con operando ~2^31 (N-07)
   int empty_dna_runs = 0;   // ExecuteDNA sobre ADN solo-defs (V-07: el
                             // original truncaba el tick con error 9)
+  int err9_ga_index = 0;    // E6: ga(currgene) con currgene > genenum (el
+                            // original desbordaba el ReDim de DNA.bas:77)
 };
 
 namespace detail {
@@ -371,16 +375,37 @@ inline void DNAnot(BoolStack& c) {
   c.push(b == 0);  // Not b
 }
 
+// E6 — `dbgstring & vbCrLf & a & " at position " & at_position` de
+// DNA.bas:545/557. El `&` de VB6 concatena con CStr(): sin espacio inicial
+// (a diferencia de Str$), 7 digitos significativos para Single y
+// "True"/"False" para Boolean. Misma aproximacion documentada que el CStr
+// del tag de eco-IM en formats.hpp (%.7G).
+inline std::string vb_cstr_single(vb_single v) {
+  char buf[32];
+  std::snprintf(buf, sizeof buf, "%.7G", static_cast<double>(v));
+  return std::string(buf);
+}
+
 // debugbool (DNA.bas:552-561): pop coercionado a Boolean (CBool(-5) = True) y
-// re-push; el volcado a dbgstring es capa de UI y queda fuera del core.
-inline void DNAdebugbool(BoolStack& c) {
+// re-push. La traza a dbgstring es observacion pura (E6): ningun sistema del
+// core la lee.
+inline void DNAdebugbool(BoolStack& c, std::string* dbg = nullptr,
+                         vb_long at_position = 0) {
   const int a = c.pop();
-  c.push(a != 0);
+  const bool b = (a != 0);
+  if (dbg)
+    *dbg += "\r\n" + std::string(b ? "True" : "False") + " at position " +
+            std::to_string(at_position);
+  c.push(b);
 }
 
 // debugint (DNA.bas:539-550): pop a Single y re-push (bancario).
-inline void DNAdebugint(IntStack& s) {
+inline void DNAdebugint(IntStack& s, std::string* dbg = nullptr,
+                        vb_long at_position = 0) {
   const vb_single a = static_cast<vb_single>(s.pop());
+  if (dbg)
+    *dbg += "\r\n" + vb_cstr_single(a) + " at position " +
+            std::to_string(at_position);
   s.push(vb_clng(static_cast<double>(a)));
 }
 
