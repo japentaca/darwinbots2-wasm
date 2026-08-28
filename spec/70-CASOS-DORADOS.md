@@ -2080,9 +2080,11 @@ target 0 (upper/lower 0, sensibilidad grande para un delta visible):
 > `ModeChangeCycles` ahora se incrementa en el paso 2 (`Master.bas:49`, el
 > port no lo hacía — solo lo persistía).
 >
-> **Sitio de error 9 nuevo**: `err9_pb_memloc` — Player Bot con
+> **Sitios de error nuevos**: `err9_pb_memloc` — Player Bot con
 > `PB_keys(i).memloc` fuera de `mem(0..1000)` (`Master.bas:354`; frmPBMode
-> no valida el rango). Decisión: registrar y no escribir.
+> no valida el rango; decisión: registrar y no escribir) — y
+> `err11_lfor_zero` — división por `LFOR = 0` en el recálculo del handicap
+> (ver E5-16, punto 5).
 >
 > **Fuera de alcance con evidencia** (grep 2026-08-27):
 > - **Fudging** (`x_fudge`/`FudgeEyes`/`FudgeAll`, Senses.bas:236-240/275-290,
@@ -2141,9 +2143,46 @@ target 0 (upper/lower 0, sensibilidad grande para un delta visible):
 ### E5-13 · Restart: sin heterótrofos arranca otra ronda — [ciclo]
 ### E5-14 · Paso 13: Player Bot Mode (aim/teclas/foco/herencia) — [ciclo]
 ### E5-15 · Auto-forking: SpeciationForkInterval es un contador — [mutación]
+### E5-16 · Los cinco hallazgos de la revisión de rama — [ciclo/torneo/evo]
 
-Los 15 casos viven en `port/tests/test_gamemodes.cpp` con el detalle de
+Revisión de `e5-modos-de-juego` (2026-08-28). Cinco sitios que la primera
+pasada de E5 dejó fuera, todos verificados contra el fuente antes de
+corregir y cubiertos por subcasos con mutation-check:
+
+1. **Info shot sin descalificación** (`Robots.bas:1791-1792`): el epílogo
+   `dreason ... "firing an info shot"` de la rama `Case Is >= 0` de
+   `robshoot` faltaba — E5 había portado 12 de los 13 sitios `dreason` del
+   fuente. Con F1 y `Disqualify = 2` un bot podía disparar shots de memoria
+   sin que su especie fuera descalificada.
+2. **`KillRobot` sin apagar `robfocus`** (`Robots.bas:3011-3014`): el
+   traspaso de foco al último resaltado (`:2980-2989`) sí estaba, pero no el
+   `If robfocus = n Then robfocus = 0` que corre cuando no hubo sucesor.
+   Sin él, `posto` recicla el slot y el bot nuevo hereda los overwrites del
+   paso 13 y el `highlight` de la herencia de `Reproduce`.
+3. **`clist` vive por INVOCACIÓN, no por iteración** (`Master.bas:169`):
+   VB6 inicializa los locales una sola vez por llamada al Sub, así que del
+   segundo multibot reposicionado en adelante `clist` llega con las células
+   del anterior. `ListCells` las camina como semillas y añade DESPUÉS de
+   ellas, y el `While` de `:174` desplaza también esas células viejas — el
+   primer organismo recibe el `pozdif` del segundo ([PROBABLE BUG]
+   replicado; el port lo declaraba fresco por iteración).
+4. **`ZBreadyforTest` no apagaba la sim** (`Evo.bas:610-618`): como todo
+   camino de `restarter`, pone `Form1.Active = False`. Era el único evento
+   de E5 que no levantaba `sim_stop_requested` (y el bit 6 no lo leía el
+   worker).
+5. **Sitio de error 11 nuevo — `err11_lfor_zero`** (`Master.bas:109/113`):
+   el recálculo del handicap divide por `LFOR`, que nace en 0 (solo el gset
+   de evo lo puebla) y no tiene control en la UI. Con `x_restartmode` 4/5 y
+   `LFOR = 0` el original lanzaba división por cero (tick truncado); el port
+   producía `0/0 = NaN` y lo propagaba a `energydifXP` y de ahí al `nrg` de
+   todos los `Mutate.txt` — corrupción silenciosa y permanente. Decisión de
+   port (`10-CICLO.md §14`): registrar en `SimDiag` y **saltar el bloque del
+   handicap**; el resto del paso 3 (energydifX, chasers, alternancia) sigue
+   corriendo.
+
+Los 16 casos viven en `port/tests/test_gamemodes.cpp` con el detalle de
 setup/aserciones en el propio test (valores recalculados a mano con la
-aritmética del fuente donde aplica). Suite tras E5: **165 casos / 3333
+aritmética del fuente donde aplica). Suite tras E5: **166 casos / 3370
 aserciones** en verde en los tres modos, con mutation-check (alterar 1.2,
-la media 9:1 o el 1.15 rompe casos).
+la media 9:1, el 1.15, el hoisting de `clist` o la guarda de `LFOR` rompe
+casos).

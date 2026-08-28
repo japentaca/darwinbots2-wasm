@@ -329,6 +329,14 @@ struct SimDiag {
                                  //   loopold+laststartmatch rebasa el array
                                  //   (Robots.bas:492-500 con listas clampadas).
                                  //   Decisión: registrar y cortar el matching.
+  int err11_lfor_zero = 0;       // sitio de error 11: el recálculo del
+                                 //   handicap divide por LFOR
+                                 //   (Master.bas:109/113) y LFOR nace en 0
+                                 //   (solo el gset de evo lo puebla).
+                                 //   Decisión: registrar y SALTAR el bloque
+                                 //   del handicap (sin él, la cadena
+                                 //   0/0 = NaN envenenaría energydifXP y de
+                                 //   ahí el nrg de todos los Mutate).
   int err9_pb_memloc = 0;        // sitio de error 9: Player Bot con
                                  //   PB_keys(i).memloc fuera de mem(0..1000)
                                  //   (Master.bas:354; frmPBMode no valida el

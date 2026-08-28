@@ -962,6 +962,9 @@ inline void robshoot(Sim& sim, int n) {
     if (b.nrg < Cost) Cost = b.nrg;
     b.nrg -= Cost;
     newshot(sim, n, shtype, value, 1.0f, true);
+    // E5 (Robots.bas:1791-1792) — Disqualify: disparar un shot de memoria
+    // (info shot) descalifica bajo Disqualify = 2.
+    DisqualifyAction(sim, n, "firing an info shot");
   } else {
     switch (shtype) {
       case -1: {

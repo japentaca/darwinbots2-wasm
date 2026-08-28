@@ -799,6 +799,125 @@ TEST_CASE("E5-14 paso 13: Player Bot Mode") {
 }
 
 // ---------------------------------------------------------------------------
+// Los cinco hallazgos de la revision de la rama e5-modos-de-juego.
+TEST_CASE("E5-16 revision: sitios que la primera pasada de E5 dejo fuera") {
+  World w;
+
+  SUBCASE("info shot: Disqualify = 2 descalifica (Robots.bas:1791)") {
+    const int a = w.spawn(kDnaIdle, "Cheater.txt", 1000, 1000);
+    const int a2 = w.spawn(kDnaIdle, "Cheater.txt", 2000, 2000);
+    const int c = w.spawn(kDnaIdle, "Clean.txt", 3000, 3000);
+    // newshot de memoria puede extraer RNG: secuencia holgada.
+    w.rng = InjectedRnd{std::vector<vb_single>(8, 0.5f)};
+    w.sim.opts.F1 = true;
+    w.sim.Disqualify = 2;
+    w.sim.rob[a].mem[addr::shoot] = 5;      // shtype >= 0: shot de memoria
+    w.sim.rob[a].mem[addr::shootval] = 10;
+    robshoot(w.sim, a);
+    CHECK(w.sim.rob[a].exist == false);   // especie descalificada entera
+    CHECK(w.sim.rob[a2].exist == false);
+    CHECK(w.sim.rob[c].exist == true);
+    REQUIRE(w.sim.events.dq_log.size() == 1);
+    CHECK(w.sim.events.dq_log[0].find("firing an info shot") !=
+          std::string::npos);
+  }
+
+  SUBCASE("KillRobot sin sucesor apaga robfocus (Robots.bas:3011)") {
+    const int foco = w.spawn(kDnaIdle, "Animal.txt", 1000, 1000);
+    const int otro = w.spawn(kDnaIdle, "Animal.txt", 2000, 2000);
+    w.sim.pb.on = true;
+    w.sim.robfocus = static_cast<vb_integer>(foco);
+    CHECK(w.sim.rob[otro].highlight == false);  // no hay resaltado vivo
+    KillRobot(w.sim, foco);
+    CHECK(w.sim.robfocus == 0);  // sin esto, el slot reciclado heredaria
+                                 // los overwrites del paso 13
+    // Con sucesor resaltado el traspaso gana y NO se apaga.
+    const int f2 = w.spawn(kDnaIdle, "Animal.txt", 3000, 3000);
+    w.sim.rob[otro].highlight = true;
+    w.sim.robfocus = static_cast<vb_integer>(f2);
+    KillRobot(w.sim, f2);
+    CHECK(w.sim.robfocus == otro);
+  }
+
+  SUBCASE("ZBreadyforTest apaga la sim (Evo.bas:610-618)") {
+    w.sim.x_restartmode = 7;
+    const int m = w.spawn(kDnaIdle, "Mutate.txt", 1000, 1000);
+    w.sim.rob[m].LastMut = 1;
+    calculateZB(w.sim, 5, 10.0, m);   // 1a: fija los statics
+    w.sim.events = GameEvents{};
+    calculateZB(w.sim, 5, 20.0, m);   // mismo id, Mx mayor -> ready
+    CHECK(w.sim.events.zb_ready_for_test);
+    CHECK(w.sim.events.sim_stop_requested);
+  }
+
+  SUBCASE("LFOR = 0: sitio de error 11 registrado, sin NaN") {
+    w.rng = InjectedRnd{std::vector<vb_single>{0.5f}};
+    w.sim.x_restartmode = 4;
+    w.sim.hidePredCycl = 0;        // umbral 0: el While entra en el tick 1
+    w.sim.LFOR = 0.0f;             // default: solo el gset de evo lo puebla
+    w.sim.evo.hidepred = true;
+    w.sim.evo.ModeChangeCycles = 1;
+    w.sim.evo.energydifX = 50.0;
+    w.sim.evo.energydifXP = 3.0;
+    w.spawn(kDnaIdle, "Base.txt", 1000, 1000);
+    const int m = w.spawn(kDnaIdle, "Mutate.txt", 20000, 20000);
+    w.sim.rob[m].LastMut = 1;
+
+    HidePredStep(w.sim, true);
+
+    CHECK(w.sim.diag.err11_lfor_zero == 1);
+    CHECK(w.sim.evo.energydifXP == 3.0);   // el bloque no corrio
+    CHECK(w.sim.evo.energydifXP2 == 0.0);
+    CHECK(!std::isnan(w.sim.evo.energydifXP));
+    CHECK(w.sim.evo.hidepred == false);    // el resto del paso 3 SI corre
+    // ...y sin NaN el handicap del paso 8 sigue siendo un numero.
+    w.sim.evo.hidepred = true;
+    HandicapStep(w.sim);
+    CHECK(!std::isnan(w.sim.rob[m].nrg));
+  }
+
+  SUBCASE("clist vive por INVOCACION: el 2o organismo arrastra al 1o") {
+    // maketie extrae 1 rndy por llamada; el toggle de hidepred, 1 mas.
+    w.rng = InjectedRnd{std::vector<vb_single>(8, 0.5f)};
+    w.sim.x_restartmode = 4;
+    w.sim.hidePredCycl = 120;      // umbral 100
+    w.sim.evo.hidePredOffset = 0;
+    w.sim.evo.hidepred = true;
+    w.sim.evo.ModeChangeCycles = 150;
+    w.sim.LFOR = 10.0f;
+
+    const int base = w.spawn(kDnaIdle, "Base.txt", 10000, 10000);
+    // Organismo A: enganchado por el eje X (se desplazara en +x).
+    // Los "partner" quedan atados (maketie exige Length <= c*1.5) pero
+    // FUERA de la distancia de enganche (~724 con body 1000): solo entran
+    // al reposicionado arrastrados por su organismo.
+    const int aLead = w.spawn(kDnaIdle, "Mutate.txt", 10300, 10000);
+    const int aPart = w.spawn(kDnaIdle, "Mutate.txt", 10300, 11500);
+    // Organismo B: enganchado por el eje Y (se desplazara en +y).
+    const int bLead = w.spawn(kDnaIdle, "Mutate.txt", 10000, 10300);
+    const int bPart = w.spawn(kDnaIdle, "Mutate.txt", 11500, 10300);
+    REQUIRE(maketie(w.sim, aLead, aPart, 2000, 0, 0));
+    REQUIRE(maketie(w.sim, bLead, bPart, 2000, 0, 0));
+    for (int t : {aLead, aPart, bLead, bPart}) w.sim.rob[t].Multibot = true;
+    (void)base;
+
+    HidePredStep(w.sim, true);
+
+    // A se aparta en +x (su propio pozdif)...
+    CHECK(w.sim.rob[aLead].pos.x > 10300.0f);
+    // ...y ADEMAS recibe el pozdif de B (+y) porque clist llego con las
+    // celulas de A dentro: el While de Master.bas:174 las desplaza otra vez.
+    CHECK(w.sim.rob[aLead].pos.y > 10000.0f);
+    CHECK(w.sim.rob[aPart].pos.y > 11500.0f);
+    // El desplazamiento parasito es EL MISMO para las dos celulas de A.
+    CHECK(w.sim.rob[aLead].pos.y - 10000.0f ==
+          doctest::Approx(w.sim.rob[aPart].pos.y - 11500.0f));
+    // B se aparta en +y como corresponde.
+    CHECK(w.sim.rob[bLead].pos.y > 10300.0f);
+  }
+}
+
+// ---------------------------------------------------------------------------
 TEST_CASE("E5-15 auto-forking: SpeciationForkInterval es un CONTADOR") {
   World w;
   // mutate() sale de una con DisableMutations o sin Mutables.Mutations

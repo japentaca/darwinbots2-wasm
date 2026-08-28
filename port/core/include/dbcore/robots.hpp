@@ -1520,6 +1520,10 @@ inline void KillRobot(Sim& sim, int n) {
   delallties(sim, n);
   sim.rob[n].exist = false;  // después de borrar las ties (Robots.bas:3006)
   UpdateBotBucket(sim, n);   // Robots.bas:3007 — lo saca del bucket
+  // E5 (Robots.bas:3011-3014): si el traspaso de arriba no encontró
+  // sucesor, el foco se apaga (sin esto el slot reciclado por posto
+  // heredaría los overwrites del paso 13). DisableRobotsMenu es UI.
+  if (sim.robfocus == n) sim.robfocus = 0;
   // makepoff: ornamental (render) — fuera del core.
   if (sim.rob[n].virusshot > 0 &&
       sim.rob[n].virusshot <= sim.maxshotarray) {

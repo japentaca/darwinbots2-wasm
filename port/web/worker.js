@@ -344,6 +344,7 @@ function checkGameState() {
     if (ev & (1 << 2)) log('evo: Base extinguido (evo ganado)');
     if (ev & (1 << 3)) log('seeding: ronda completada (ciclo 2000)');
     if (ev & (1 << 4)) log('zerobot: reinicio necesario');
+    if (ev & (1 << 6)) log('zerobot: listo para la etapa de test');
     if (ev & (1 << 8)) log('zerobot: test superado');
     if (ev & (1 << 9)) log('zerobot: test fallido');
     const winner = (ev & (1 << 10)) ? takeStr(api.eventsWinner(sim)) : '';

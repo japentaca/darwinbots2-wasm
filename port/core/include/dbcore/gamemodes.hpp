@@ -168,8 +168,10 @@ inline void calculateZB(Sim& sim, vb_long robid, double Mx, int bestrob) {
       if (b.Mutables.mutarray[mut::P2UP] > static_cast<vb_single>(MratesMax))
         b.Mutables.mutarray[mut::P2UP] = static_cast<vb_single>(MratesMax);
       // ZBreadyforTest bestrob → host (salvarob + staging + x_restartmode 9
-      // + restarter).
+      // + restarter). Como todo camino de restarter, apaga la sim
+      // (Evo.bas:610-618: DisplayActivations/Active/SecTimer = False).
       sim.events.zb_ready_for_test = true;
+      sim.events.sim_stop_requested = true;
     } else {
       if (!goodtest) sim.events.zb_reset = true;  // logevo "'Reset' ..."
     }
@@ -189,6 +191,15 @@ inline void calculateZB(Sim& sim, vb_long robid, double Mx, int bestrob) {
 inline void HidePredStep(Sim& sim, bool usehidepred) {
   if (!usehidepred) return;
   auto& E = sim.evo;
+
+  // `Dim clist(50) As Integer` (Master.bas:169) vive dentro de los bucles
+  // pero VB6 inicializa los locales UNA vez por INVOCACIÓN del Sub: del
+  // segundo multibot reposicionado en adelante, clist llega con las células
+  // del anterior. ListCells camina esos restos como semillas y añade
+  // después de ellos, y el While de :174 desplaza también las células viejas
+  // de Mutate.txt ([PROBABLE BUG] replicado: declarado aquí, sin re-poner a
+  // cero por iteración — HidePredStep corre una vez por UpdateSim).
+  std::array<vb_integer, 51> clist{};
 
   // Conteo de especies para el fin del evo (:66-73).
   vb_integer Base_count = 0, Mutate_count = 0;
@@ -233,7 +244,13 @@ inline void HidePredStep(Sim& sim, bool usehidepred) {
     // no puede ser /0 salvo estado inyectado — semántica IEEE si ocurre.
     E.energydif2 =
         E.energydif2 + E.energydif / static_cast<double>(E.ModeChangeCycles);
-    if (E.hidepred) {
+    // Sitio de error 11 (:109/:113): LFOR nace en 0 y solo el gset de evo
+    // lo puebla; el original lanzaría "división por cero" y el tick se
+    // truncaría. Decisión de port (10-CICLO.md §14): registrar y saltar el
+    // bloque del handicap — el resto del paso 3 (energydifX, chasers,
+    // alternancia) sigue corriendo.
+    if (E.hidepred && sim.LFOR == 0.0f) sim.diag.err11_lfor_zero += 1;
+    if (E.hidepred && sim.LFOR != 0.0f) {
       const double holdXP =
           (E.energydifX -
            (E.energydif / static_cast<double>(E.ModeChangeCycles))) /
@@ -313,7 +330,6 @@ inline void HidePredStep(Sim& sim, bool usehidepred) {
                   pozdif.x = newpoz.x - bi.pos.x;
                   pozdif.y = newpoz.y - bi.pos.y;
                   if (bi.numties > 0) {
-                    std::array<vb_integer, 51> clist{};
                     clist[0] = static_cast<vb_integer>(i);
                     ListCells(sim, clist);
                     // move multibot — solo la propia especie (:176)
