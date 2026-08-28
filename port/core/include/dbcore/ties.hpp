@@ -539,8 +539,9 @@ inline void sharechloroplasts(Sim& sim, int t, int k) {
 namespace ties_detail {
 
 // Los bloques de transferencia por tieloc negativo (-1 nrg, -3 venom,
-// -4 waste, -6 body) de Update_Ties (Ties.bas:339-645). Transcritos completos
-// salvo capa torneo (dreason/dq).
+// -4 waste, -6 body) de Update_Ties (Ties.bas:339-645). Transcritos
+// completos, capa torneo incluida (E5): dar/tomar nrg o body a través de
+// una tie con un rival descalifica bajo Disqualify = 1.
 inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
   Bot& b = sim.rob[t];
   constexpr int tp = addr::tieport1;
@@ -567,6 +568,13 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
           o.Waste += l * 0.01f;
           o.radius = FindRadius(sim, b.Ties[k].pnt);
           b.nrg -= l;
+          // E5 (Ties.bas:370-371) — Disqualify = 1.
+          if ((sim.opts.F1 || sim.x_restartmode == 1) &&
+              sim.Disqualify == 1 && b.FName != o.FName)
+            dreason(sim, b.FName, b.tag, "giving energy to opponent");
+          if (!sim.opts.F1 && b.dq == 1 && sim.Disqualify == 1 &&
+              b.FName != o.FName)
+            b.Dead = true;
         }
         if (l < 0.0f) {
           if (l < -o.nrg) l = -o.nrg;
@@ -602,6 +610,13 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
               b.mem[220] = static_cast<vb_integer>(b.Kills);
             }
           }
+          // E5 (Ties.bas:425-426) — Disqualify = 1.
+          if ((sim.opts.F1 || sim.x_restartmode == 1) &&
+              sim.Disqualify == 1 && b.FName != o.FName)
+            dreason(sim, b.FName, b.tag, "taking energy from opponent");
+          if (!sim.opts.F1 && b.dq == 1 && sim.Disqualify == 1 &&
+              b.FName != o.FName)
+            b.Dead = true;
         }
         if (!b.Ties[k].back)
           b.Ties[k].nrgused = true;
@@ -702,6 +717,13 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
           o.Waste += l * 0.01f;
           o.radius = FindRadius(sim, b.Ties[k].pnt);
           b.body -= l;
+          // E5 (Ties.bas:576-577) — Disqualify = 1.
+          if ((sim.opts.F1 || sim.x_restartmode == 1) &&
+              sim.Disqualify == 1 && b.FName != o.FName)
+            dreason(sim, b.FName, b.tag, "giving body to opponent");
+          if (!sim.opts.F1 && b.dq == 1 && sim.Disqualify == 1 &&
+              b.FName != o.FName)
+            b.Dead = true;
         }
         if (l < 0.0f) {
           if (l < -o.body) l = -o.body;
@@ -735,6 +757,13 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
             if (b.Kills > 32000) b.Kills = 32000;
             b.mem[220] = static_cast<vb_integer>(b.Kills);
           }
+          // E5 (Ties.bas:629-630) — Disqualify = 1.
+          if ((sim.opts.F1 || sim.x_restartmode == 1) &&
+              sim.Disqualify == 1 && b.FName != o.FName)
+            dreason(sim, b.FName, b.tag, "taking body from opponent");
+          if (!sim.opts.F1 && b.dq == 1 && sim.Disqualify == 1 &&
+              b.FName != o.FName)
+            b.Dead = true;
         }
         if (!b.Ties[k].back)
           b.Ties[k].nrgused = true;

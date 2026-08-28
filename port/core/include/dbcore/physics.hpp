@@ -542,10 +542,12 @@ inline void CheckBotBucketForCollision(Sim& sim, int n, const Vector& pos) {
   while (bk.arr[a] != -1) {
     const int robnumber = bk.arr[a];
     if (robnumber > n) {
+      if (!BaseHidden(sim, sim.rob[robnumber])) {  // E5 (Quads.bas:260)
       Vector distvector = VectorSub(sim.rob[n].pos, sim.rob[robnumber].pos);
       const vb_single dist = sim.rob[n].radius + sim.rob[robnumber].radius;
       if (VectorMagnitudeSquare(distvector) < dist * dist)
         Repel3(sim, n, robnumber);
+      }
     }
     if (a == bk.size) return;
     a += 1;

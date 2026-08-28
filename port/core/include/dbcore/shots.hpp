@@ -122,6 +122,14 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
       s.stored = false;
       result = -1;
     }
+    // E5 (Shots.bas:186-188) — Disqualify: el virus descalifica también
+    // con Disqualify = 1 (única acción con ambos niveles).
+    if ((sim.opts.F1 || sim.x_restartmode == 1) &&
+        (sim.Disqualify == 1 || sim.Disqualify == 2))
+      dreason(sim, sim.rob[n].FName, sim.rob[n].tag, "using a virus");
+    if (!sim.opts.F1 && sim.rob[n].dq == 1 &&
+        (sim.Disqualify == 1 || sim.Disqualify == 2))
+      sim.rob[n].Dead = true;
   } else {
     s.stored = false;
   }
@@ -542,8 +550,8 @@ inline int NewShotCollision(Sim& sim, vb_long shotnum) {
   const Vector vs = sh.velocity;
 
   for (int robnum = 1; robnum <= sim.MaxRobs; ++robnum) {
-    // hidepred: capa torneo ⚙, fuera.
     if (sim.rob[robnum].exist && sh.parent != robnum &&
+        !BaseHidden(sim, sim.rob[robnum]) &&  // E5 (Shots.bas:998)
         std::fabs(sh.opos.x - sim.rob[robnum].pos.x) <
             sim.MaxBotShotSeperation &&
         std::fabs(sh.opos.y - sim.rob[robnum].pos.y) <
@@ -740,7 +748,9 @@ inline void updateshots(Sim& sim) {
     for (vb_long i = 1; i <= sim.maxshotarray; ++i) {
       if (sim.Shots[i].exist) {
         if (sim.Shots[i].stored) {
-          if (sim.rob[sim.Shots[i].parent].exist) {  // hidepred: capa ⚙
+          // E5 (Shots.bas:435): el virus almacenado de un Base oculto muere.
+          if (sim.rob[sim.Shots[i].parent].exist &&
+              !BaseHidden(sim, sim.rob[sim.Shots[i].parent])) {
             sim.rob[sim.Shots[i].parent].virusshot = j;
           } else {
             sim.Shots[i].exist = false;
@@ -952,6 +962,9 @@ inline void robshoot(Sim& sim, int n) {
     if (b.nrg < Cost) Cost = b.nrg;
     b.nrg -= Cost;
     newshot(sim, n, shtype, value, 1.0f, true);
+    // E5 (Robots.bas:1791-1792) — Disqualify: disparar un shot de memoria
+    // (info shot) descalifica bajo Disqualify = 2.
+    DisqualifyAction(sim, n, "firing an info shot");
   } else {
     switch (shtype) {
       case -1: {

@@ -30,6 +30,9 @@
 //   {t:'maze', kind, corridor, wall}       E3: kind = h|v|spiral|checker|
 //                                          polar|trash (Obstacles.bas:45-181)
 //   {t:'tp-del', n} · {t:'tp-clear'}       E3: borrar teleporter(s)
+//   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
+//   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
+//   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
 //   {t:'select', n}                        bot con foco (0 = ninguno); su
 //                                          volcado de ojos/inspector viaja
 //                                          en cada frame (etapa E2)
@@ -39,6 +42,9 @@
 //
 // Protocolo (worker → página):
 //   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
+//   {t:'stopped'}                          E5: el core pidió parar la sim
+//                                          (Form1.Active = False del original)
+//   {t:'f1-over', winner}                  E5: contest terminado ·
 //   {t:'bot-text', n, text} ·
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
@@ -129,6 +135,32 @@ function bindApi() {
     mazeTrash:     C('db_sim_maze_trash_compactor', 'number', ['number']),
     delTeleporter: C('db_sim_delete_teleporter', null, ['number','number']),
     delAllTps:     C('db_sim_delete_all_teleporters', null, ['number']),
+    // E5 — modos de juego
+    f1Start:       C('db_sim_f1_start', 'number', ['number']),
+    f1Contests:    C('db_sim_f1_contests', 'number', ['number']),
+    f1TotSpecies:  C('db_sim_f1_totspecies', 'number', ['number']),
+    f1Over:        C('db_sim_f1_over', 'number', ['number']),
+    f1Pop:         C('db_sim_f1_pop', 'number', ['number', 'number']),
+    f1Wins:        C('db_sim_f1_wins', 'number', ['number', 'number']),
+    f1Name:        C('db_sim_f1_name', 'number', ['number', 'number']),
+    f1Restore:     C('db_sim_f1_restore', null,
+                     ['number','number','number','number','number','number']),
+    f1SetWins:     C('db_sim_f1_set_wins', null, ['number','number','number']),
+    restartsCount: C('db_sim_restarts_count', 'number', ['number']),
+    startAnother:  C('db_sim_start_another_round', 'number', ['number']),
+    clearAnother:  C('db_sim_clear_start_another_round', null, ['number']),
+    events:        C('db_sim_events', 'number', ['number']),
+    eventsWinner:  C('db_sim_events_winner', 'number', ['number']),
+    eventsDq:      C('db_sim_events_dq', 'number', ['number']),
+    eventsClear:   C('db_sim_events_clear', null, ['number']),
+    pbOn:          C('db_sim_pb_on', null, ['number', 'number']),
+    pbMouse:       C('db_sim_pb_mouse', null, ['number', 'number', 'number']),
+    pbClearKeys:   C('db_sim_pb_clear_keys', null, ['number']),
+    pbAddKey:      C('db_sim_pb_add_key', 'number',
+                     ['number','number','number','number']),
+    pbKeyActive:   C('db_sim_pb_key_active', null,
+                     ['number','number','number']),
+    setFocus:      C('db_sim_set_focus', null, ['number', 'number']),
     save:          C('db_sim_save', 'number', ['number', 'number']),
     load:          C('db_sim_load', null, ['number', 'number', 'number']),
     free:          C('db_free', null, ['number']),
@@ -136,6 +168,14 @@ function bindApi() {
 }
 
 function log(msg) { self.postMessage({ t: 'log', msg }); }
+
+// String malloc'd del core -> JS (y liberar).
+function takeStr(p) {
+  if (!p) return '';
+  const s = M.UTF8ToString(p);
+  api.free(p);
+  return s;
+}
 
 // Colores de las formas nuevas (índices from+1..numObstacles): decisión de
 // host (B7-5/Q01 — el original sorteaba Rnd*65536+Rnd*255+Rnd con Rnd crudo;
@@ -229,13 +269,114 @@ function postFrame() {
     t: 'frame', buf,
     stats: { cycle: api.cycle(sim), bots: api.totalRobots(sim),
              vegs: Math.max(api.totvegs(sim), 0), tps,
-             costx: api.getCost(sim, 54) },  // panel "CostX" (MDIForm1:3051)
+             costx: api.getCost(sim, 54),  // panel "CostX" (MDIForm1:3051)
+             f1: f1Stats() },              // E5: estado del contest (o null)
   }, [buf]);
+}
+
+// ---- E5: eventos del tick y rondas ----------------------------------------
+let lastReset = null;  // último msg 'reset': reconstruye la sim por ronda
+
+// Estado del contest para las stats de cada frame (null si no hay contest).
+function f1Stats() {
+  if (!api.f1TotSpecies(sim)) return null;
+  const sp = [];
+  const n = Math.min(api.f1TotSpecies(sim), 5);
+  for (let i = 1; i <= n; i++)
+    sp.push({ name: takeStr(api.f1Name(sim, i)),
+              pop: api.f1Pop(sim, i), wins: api.f1Wins(sim, i) });
+  return { contests: api.f1Contests(sim), minrounds: api.getOpt(sim, 97),
+           over: api.f1Over(sim), restarts: api.restartsCount(sim), sp };
+}
+
+// Ronda nueva: el While StartAnotherRound del host original
+// (OptionsForm.frm:4805-4809 + MDIForm1:2166-2170). El mundo se reconstruye
+// con seed nueva (SimOpts.UserSeedNumber = Rnd * 2147483647 — Rnd de HOST,
+// no toca el RNG de la sim) y el estado de módulo F1Mode sobrevive
+// (Contests/Wins/MinRounds/ReStarts; FindSpecies preserva Wins por slot).
+function newRound() {
+  if (!lastReset) return;
+  const keep = {
+    contests: api.f1Contests(sim),
+    minrounds: api.getOpt(sim, 97), optminrounds: api.getOpt(sim, 101),
+    over: api.f1Over(sim), restarts: api.restartsCount(sim),
+    restart: api.getOpt(sim, 90), f1: api.getOpt(sim, 91),
+    dq: api.getOpt(sim, 93), maxrounds: api.getOpt(sim, 98),
+    maxcycles: api.getOpt(sim, 99), maxpop: api.getOpt(sim, 100),
+    wins: [],
+  };
+  for (let i = 1; i <= 20; i++) keep.wins.push(api.f1Wins(sim, i));
+  const seed = (Math.floor(Math.random() * 2147483646) + 1);
+  const wasRunning = running;
+  resetSim({ ...lastReset, seed });
+  api.setOpt(sim, 90, keep.restart);
+  api.setOpt(sim, 91, keep.f1);
+  api.setOpt(sim, 93, keep.dq);
+  api.setOpt(sim, 97, keep.optminrounds);  // fija MinRounds + optMinRounds
+  api.setOpt(sim, 98, keep.maxrounds);
+  api.setOpt(sim, 99, keep.maxcycles);
+  api.setOpt(sim, 100, keep.maxpop);
+  api.f1Restore(sim, keep.contests, keep.minrounds, keep.optminrounds,
+                keep.over ? 1 : 0, keep.restarts);
+  for (let i = 1; i <= 20; i++) api.f1SetWins(sim, i, keep.wins[i - 1]);
+  const ts = api.f1Start(sim);
+  log(`ronda nueva (seed ${seed})` +
+      (ts ? ` — contest: ronda ${api.f1Contests(sim) + 1}` : ''));
+  running = wasRunning;
+}
+
+// Tras cada tanda de ticks: eventos E5 del core + gate de rondas.
+function checkGameState() {
+  if (!sim) return;
+  let stopped = false;
+  const ev = api.events(sim);
+  if (ev) {
+    if (ev & (1 << 13))
+      for (const line of takeStr(api.eventsDq(sim)).split('\n'))
+        if (line) log('DQ: ' + line);
+    if (ev & (1 << 10))
+      log(`F1: gana ${takeStr(api.eventsWinner(sim))} ` +
+          `(${api.f1Contests(sim) + 1} rondas)`);
+    if (ev & (1 << 11)) log('F1: una sola especie — modo desactivado');
+    if (ev & (1 << 12))
+      log('F1: más de 2 especies — límites de ciclos/población desactivados');
+    if (ev & (1 << 1)) log('evo: Mutate extinguido (evo perdido)');
+    if (ev & (1 << 2)) log('evo: Base extinguido (evo ganado)');
+    if (ev & (1 << 3)) log('seeding: ronda completada (ciclo 2000)');
+    if (ev & (1 << 4)) log('zerobot: reinicio necesario');
+    if (ev & (1 << 6)) log('zerobot: listo para la etapa de test');
+    if (ev & (1 << 8)) log('zerobot: test superado');
+    if (ev & (1 << 9)) log('zerobot: test fallido');
+    const winner = (ev & (1 << 10)) ? takeStr(api.eventsWinner(sim)) : '';
+    stopped = !!(ev & 1);
+    api.eventsClear(sim);
+    if (ev & (1 << 10)) self.postMessage({ t: 'f1-over', winner });
+    if (stopped) {
+      // Form1.Active = False del original: la sim queda pausada.
+      running = false;
+      self.postMessage({ t: 'stopped' });
+      postFrame();
+    }
+  }
+  if (api.startAnother(sim)) {
+    api.clearAnother(sim);
+    // Con parada del core en este mismo chequeo (ganador declarado con
+    // StartAnotherRound colgado del mismo Countpop, F1Mode.bas:364+380) el
+    // original queda detenido en el mundo final: no se abre otra ronda.
+    if (!stopped) newRound();
+  }
 }
 
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
-  for (let i = 0; i < n; i++) api.tick(sim);
+  // El chequeo E5 corre tras CADA tick (como el loop de main.frm:2079-2081):
+  // un evento de parada corta la tanda; una ronda nueva sigue en la sim
+  // reconstruida.
+  for (let i = 0; i < n; i++) {
+    api.tick(sim);
+    checkGameState();
+    if (!running) break;
+  }
   tickCount += n;
   const now = performance.now();
   if (now - tpsT >= 1000) {
@@ -257,7 +398,7 @@ function loop() {
     // De a 1 tick por vuelta: con sims pesadas (ticks de >100ms) la rebanada
     // termina en el primer tick y el frame sale igual de seguido.
     const t0 = performance.now();
-    do { runTicks(1); } while (performance.now() - t0 < 12);
+    do { runTicks(1); } while (running && performance.now() - t0 < 12);
     if (canPost) postFrame();
     setTimeout(loop, 0);
   }
@@ -291,6 +432,15 @@ function resetSim(msg) {
   api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
   log(`sim nueva (seed ${msg.seed})`);
   for (const sp of msg.species) seedSpecies(sp);
+  // E5: la ronda siguiente reconstruye con esto (species copiadas: las
+  // siembras manuales posteriores tambien entran a la ronda).
+  lastReset = { ...msg, species: [...msg.species] };
+  // E5: con F1 activo el arranque corre FindSpecies (main.frm:1337-1340).
+  if (api.getOpt(sim, 91)) {
+    const ts = api.f1Start(sim);
+    log(ts ? `contest F1: ${ts} especies en liza`
+           : 'F1: sin especies de combate — sembrá 2+ y "Arrancar contest"');
+  }
   postFrame();
 }
 
@@ -329,7 +479,32 @@ self.onmessage = (e) => {
       break;
     case 'select':
       focusBot = msg.n | 0;
+      if (sim) api.setFocus(sim, focusBot);  // E5: robfocus vive en el core
       postFrame();  // con la sim pausada el foco tiene que verse igual
+      break;
+    // ---- E5: modos de juego ----
+    case 'f1start': {
+      const ts = api.f1Start(sim);
+      log(ts ? `contest F1: ${ts} especies en liza`
+             : 'contest F1 no activo (¿opción F1 apagada?)');
+      postFrame();
+      break;
+    }
+    case 'pb':
+      if (sim) api.pbOn(sim, msg.on ? 1 : 0);
+      break;
+    case 'pb-mouse':
+      if (sim) api.pbMouse(sim, +msg.x, +msg.y);
+      break;
+    case 'pb-keys':
+      if (sim) {
+        api.pbClearKeys(sim);
+        for (const k of msg.keys)
+          api.pbAddKey(sim, k.memloc | 0, k.value | 0, k.invert ? 1 : 0);
+      }
+      break;
+    case 'pb-key':
+      if (sim) api.pbKeyActive(sim, msg.idx | 0, msg.active ? 1 : 0);
       break;
     case 'bot-text': {
       const n = msg.n | 0;
@@ -353,6 +528,7 @@ self.onmessage = (e) => {
       break;
     case 'seed-species':
       seedSpecies(msg.sp);
+      if (lastReset) lastReset.species.push(msg.sp);  // E5: entra a las rondas
       postFrame();
       break;
     case 'setopt':

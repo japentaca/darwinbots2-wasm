@@ -141,11 +141,13 @@ inline void UpdateCounters(Sim& sim, int n) {
 
 // Robots.bas:2010-2048 — storevenom: 1 venom por 1 nrg (tasa 1). Publica
 // mem(825) con Int() = FLOOR, no CInt ([PROBABLE BUG] B5-2 / B-26: venom 1:1
-// vs poison 4:1 — geometría del código). Disqualify: capa torneo ⚙, fuera.
+// vs poison 4:1 — geometría del código). El epílogo Disqualify (E5,
+// Robots.bas getout:2043-2046) corre en TODA salida, incluida la guarda de
+// nrg <= 0 (GoTo getout, no Exit Sub).
 inline void storevenom(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   constexpr vb_single venomNrgConvRate = 1.0f;
-  if (b.nrg <= 0.0f) return;
+  if (b.nrg > 0.0f) {
 
   if (b.mem[824] > 32000) b.mem[824] = 32000;
   if (b.mem[824] < -32000) b.mem[824] = -32000;
@@ -169,35 +171,39 @@ inline void storevenom(Sim& sim, int n) {
   b.mem[824] = 0;
   b.mem[825] = static_cast<vb_integer>(
       std::floor(static_cast<double>(b.venom)));  // Int(), no CInt
+  }
+  DisqualifyAction(sim, n, "making venom");  // E5 getout:
 }
 
 // Robots.bas:2050-2089 — storepoison: 4 poison por 1 nrg (tasa 0.25; B-26).
 inline void storepoison(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   constexpr vb_single poisonNrgConvRate = 0.25f;
-  if (b.nrg <= 0.0f) return;
+  if (b.nrg > 0.0f) {
 
-  if (b.mem[826] > 32000) b.mem[826] = 32000;
-  if (b.mem[826] < -32000) b.mem[826] = -32000;
+    if (b.mem[826] > 32000) b.mem[826] = 32000;
+    if (b.mem[826] < -32000) b.mem[826] = -32000;
 
-  vb_single Delta = static_cast<vb_single>(b.mem[826]);
-  if (std::fabs(Delta) > b.nrg / poisonNrgConvRate)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / poisonNrgConvRate;
-  if (std::fabs(Delta) > 100.0f)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
-  if (b.poison + Delta > 32000.0f) Delta = 32000.0f - b.poison;
-  if (b.poison + Delta < 0.0f) Delta = -b.poison;
+    vb_single Delta = static_cast<vb_single>(b.mem[826]);
+    if (std::fabs(Delta) > b.nrg / poisonNrgConvRate)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / poisonNrgConvRate;
+    if (std::fabs(Delta) > 100.0f)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
+    if (b.poison + Delta > 32000.0f) Delta = 32000.0f - b.poison;
+    if (b.poison + Delta < 0.0f) Delta = -b.poison;
 
-  b.poison = b.poison + Delta;
-  b.nrg = b.nrg - (std::fabs(Delta) * poisonNrgConvRate);
+    b.poison = b.poison + Delta;
+    b.nrg = b.nrg - (std::fabs(Delta) * poisonNrgConvRate);
 
-  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::POISONCOST] *
-                         sim.vm.costs.v[cost::COSTMULTIPLIER];
-  b.nrg = b.nrg - Cost;
-  b.Waste = b.Waste + Cost;
+    const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::POISONCOST] *
+                           sim.vm.costs.v[cost::COSTMULTIPLIER];
+    b.nrg = b.nrg - Cost;
+    b.Waste = b.Waste + Cost;
 
-  b.mem[826] = 0;
-  b.mem[827] = vb_cint(b.poison);
+    b.mem[826] = 0;
+    b.mem[827] = vb_cint(b.poison);
+  }
+  DisqualifyAction(sim, n, "making poison");  // E5 getout:
 }
 
 // Robots.bas:886-931 — makeshell: 10 shell por 1 nrg (tasa 0.1); coste de
@@ -206,32 +212,34 @@ inline void storepoison(Sim& sim, int n) {
 inline void makeshell(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   constexpr vb_single shellNrgConvRate = 0.1f;
-  if (b.nrg <= 0.0f) return;
+  if (b.nrg > 0.0f) {
 
-  if (b.mem[822] > 32000) b.mem[822] = 32000;
-  if (b.mem[822] < -32000) b.mem[822] = -32000;
+    if (b.mem[822] > 32000) b.mem[822] = 32000;
+    if (b.mem[822] < -32000) b.mem[822] = -32000;
 
-  vb_single Delta = static_cast<vb_single>(b.mem[822]);
-  if (std::fabs(Delta) > b.nrg / shellNrgConvRate)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / shellNrgConvRate;
-  if (std::fabs(Delta) > 100.0f)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
-  if (b.shell + Delta > 32000.0f) Delta = 32000.0f - b.shell;
-  if (b.shell + Delta < 0.0f) Delta = -b.shell;
+    vb_single Delta = static_cast<vb_single>(b.mem[822]);
+    if (std::fabs(Delta) > b.nrg / shellNrgConvRate)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / shellNrgConvRate;
+    if (std::fabs(Delta) > 100.0f)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * 100.0f;
+    if (b.shell + Delta > 32000.0f) Delta = 32000.0f - b.shell;
+    if (b.shell + Delta < 0.0f) Delta = -b.shell;
 
-  b.shell = b.shell + Delta;
-  b.nrg = b.nrg - (std::fabs(Delta) * shellNrgConvRate);
+    b.shell = b.shell + Delta;
+    b.nrg = b.nrg - (std::fabs(Delta) * shellNrgConvRate);
 
-  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SHELLCOST] *
-                         sim.vm.costs.v[cost::COSTMULTIPLIER];
-  if (b.Multibot)
-    b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
-  else
-    b.nrg = b.nrg - Cost;
-  b.Waste = b.Waste + Cost;
+    const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SHELLCOST] *
+                           sim.vm.costs.v[cost::COSTMULTIPLIER];
+    if (b.Multibot)
+      b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
+    else
+      b.nrg = b.nrg - Cost;
+    b.Waste = b.Waste + Cost;
 
-  b.mem[822] = 0;
-  b.mem[823] = vb_cint(b.shell);
+    b.mem[822] = 0;
+    b.mem[823] = vb_cint(b.shell);
+  }
+  DisqualifyAction(sim, n, "making shell");  // E5 getout:
 }
 
 // Robots.bas:933-980 — makeslime: 10 slime por 1 nrg; tope 200/ciclo (los
@@ -239,32 +247,36 @@ inline void makeshell(Sim& sim, int n) {
 inline void makeslime(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   constexpr vb_single slimeNrgConvRate = 0.1f;
-  if (b.nrg <= 0.0f) return;
+  if (b.nrg > 0.0f) {
 
-  if (b.mem[820] > 32000) b.mem[820] = 32000;
-  if (b.mem[820] < -32000) b.mem[820] = -32000;
+    if (b.mem[820] > 32000) b.mem[820] = 32000;
+    if (b.mem[820] < -32000) b.mem[820] = -32000;
 
-  vb_single Delta = static_cast<vb_single>(b.mem[820]);
-  if (std::fabs(Delta) > b.nrg / slimeNrgConvRate)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / slimeNrgConvRate;
-  if (std::fabs(Delta) > 200.0f)
-    Delta = static_cast<vb_single>(vb_sgn(Delta)) * 200.0f;
-  if (b.Slime + Delta > 32000.0f) Delta = 32000.0f - b.Slime;
-  if (b.Slime + Delta < 0.0f) Delta = -b.Slime;
+    vb_single Delta = static_cast<vb_single>(b.mem[820]);
+    if (std::fabs(Delta) > b.nrg / slimeNrgConvRate)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * b.nrg / slimeNrgConvRate;
+    if (std::fabs(Delta) > 200.0f)
+      Delta = static_cast<vb_single>(vb_sgn(Delta)) * 200.0f;
+    if (b.Slime + Delta > 32000.0f) Delta = 32000.0f - b.Slime;
+    if (b.Slime + Delta < 0.0f) Delta = -b.Slime;
 
-  b.Slime = b.Slime + Delta;
-  b.nrg = b.nrg - (std::fabs(Delta) * slimeNrgConvRate);
+    b.Slime = b.Slime + Delta;
+    b.nrg = b.nrg - (std::fabs(Delta) * slimeNrgConvRate);
 
-  const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SLIMECOST] *
-                         sim.vm.costs.v[cost::COSTMULTIPLIER];
-  if (b.Multibot)
-    b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
-  else
-    b.nrg = b.nrg - Cost;
-  b.Waste = b.Waste + Cost;
+    const vb_single Cost = std::fabs(Delta) * sim.vm.costs.v[cost::SLIMECOST] *
+                           sim.vm.costs.v[cost::COSTMULTIPLIER];
+    if (b.Multibot)
+      b.nrg = b.nrg - Cost / ((b.numties < 0.0f ? 0.0f : b.numties) + 1.0f);
+    else
+      b.nrg = b.nrg - Cost;
+    b.Waste = b.Waste + Cost;
 
-  b.mem[820] = 0;
-  b.mem[821] = vb_cint(b.Slime);
+    b.mem[820] = 0;
+    b.mem[821] = vb_cint(b.Slime);
+  }
+  if (!b.Veg) {  // (Robots.bas:976)
+    DisqualifyAction(sim, n, "making slime");  // E5 getout:
+  }
 }
 
 // Robots.bas:1174-1182 — MakeStuff (P5): reales desde M6 (B-26).
@@ -532,6 +544,7 @@ inline void FireTies(Sim& sim, int n) {
                 static_cast<vb_long>(b.radius + sim.rob[b.lastopp].radius +
                                      RobSize * 2),
                 -20, b.mem[addr::mtie]);
+        DisqualifyAction(sim, n, "making a tie");  // E5 (Robots.bas:1437)
       }
     }
     b.mem[addr::mtie] = 0;
@@ -554,7 +567,7 @@ inline void DoGeneticMemory(Sim& sim, int t) {
 // Robots.bas:2869-2905 — simplecoll (sin obstáculos: capa B7).
 inline bool simplecoll(Sim& sim, vb_long X, vb_long Y, int k) {
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist) {
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
       if (std::fabs(sim.rob[t].pos.x - static_cast<vb_single>(X)) <
               sim.rob[t].radius + sim.rob[k].radius &&
           std::fabs(sim.rob[t].pos.y - static_cast<vb_single>(Y)) <
@@ -846,6 +859,12 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   p.onrg = p.nrg;  // el parto no dispara Shock
   c.mass = nbody / 1000.0f + c.shell / 200.0f;
   c.mem[addr::timersys] = p.mem[addr::timersys];  // timer heredado (M-08)
+
+  // E5 (Robots.bas:2385-2388) — Player Bot: "remain in control of
+  // reproduced robots": el hijo del bot controlado hereda el highlight.
+  if (sim.pb.on) {
+    if (n == sim.robfocus || p.highlight) c.highlight = true;
+  }
 
   p.mem[addr::Repro] = 0;   // consumo SOLO en éxito (M-04)
   p.mem[addr::mrepro] = 0;
@@ -1163,6 +1182,16 @@ inline void SexReproduce(Sim& sim, int female) {
   bool tests = simplecoll(sim, nx, ny, female);
   tests = tests || !sim.rob[female].exist;
   if (tests) return;
+
+  // E5 (Robots.bas:2478-2483) — Disqualify: la rama dq = 1 además ABORTA la
+  // reproducción (GoTo getout, etiqueta vacía al final del Function).
+  if ((sim.opts.F1 || sim.x_restartmode == 1) && sim.Disqualify == 2)
+    dreason(sim, sim.rob[female].FName, sim.rob[female].tag,
+            "attempting to reproduce sexually");
+  if (!sim.opts.F1 && sim.rob[female].dq == 1 && sim.Disqualify == 2) {
+    sim.rob[female].Dead = true;
+    return;
+  }
   // dreason/dq (Disqualify): capa torneo ⚙, fuera del core.
 
   // Step1: ambos ADN a block2 (el índice 0 INCLUIDO en ambos lados).
@@ -1416,6 +1445,11 @@ inline void SexReproduce(Sim& sim, int female) {
   c.mass = nbody / 1000.0f + c.shell / 200.0f;
   c.mem[addr::timersys] = p.mem[addr::timersys];  // epigenetic timer
 
+  // E5 (Robots.bas:2819-2822) — Player Bot: herencia de highlight.
+  if (sim.pb.on) {
+    if (female == sim.robfocus || p.highlight) c.highlight = true;
+  }
+
   p.mem[addr::SEXREPRO] = 0;        // sucessfully reproduced
   p.fertilized = -1;                // spermDNA se recupera el próximo ciclo
   p.mem[addr::SYSFERTILIZED] = 0;   // el esperma vale para un solo parto
@@ -1475,9 +1509,21 @@ inline void ReproduceAndKill(Sim& sim) {
 // 10-CICLO.md §11.2) no se replica: decisión de port, el array no encoge.
 inline void KillRobot(Sim& sim, int n) {
   if (n < 0 || n > static_cast<int>(sim.rob.size()) - 1) return;
+  // E5 (Robots.bas:2980-2989) — Player Bot: si muere el bot con foco, el
+  // foco pasa al ÚLTIMO resaltado vivo (el bucle no corta).
+  if (n == sim.robfocus && sim.pb.on) {
+    for (int t = 1; t <= sim.MaxRobs; ++t) {
+      if (sim.rob[t].exist && sim.rob[t].highlight && t != n)
+        sim.robfocus = static_cast<vb_integer>(t);
+    }
+  }
   delallties(sim, n);
   sim.rob[n].exist = false;  // después de borrar las ties (Robots.bas:3006)
   UpdateBotBucket(sim, n);   // Robots.bas:3007 — lo saca del bucket
+  // E5 (Robots.bas:3011-3014): si el traspaso de arriba no encontró
+  // sucesor, el foco se apaga (sin esto el slot reciclado por posto
+  // heredaría los overwrites del paso 13). DisableRobotsMenu es UI.
+  if (sim.robfocus == n) sim.robfocus = 0;
   // makepoff: ornamental (render) — fuera del core.
   if (sim.rob[n].virusshot > 0 &&
       sim.rob[n].virusshot <= sim.maxshotarray) {
@@ -1492,8 +1538,7 @@ inline void KillRobot(Sim& sim, int n) {
 
 // NeoMutations.bas:1007-1022 — delgene: borra el gen g, recalcula
 // DnaLen/genenum con publicación inmediata y rehace la firma occurr.
-// Las ramas de descalificación (Disqualify = 2, F1/x_restartmode) son de la
-// capa torneo ⚙ y no entran al core (Disqualify nace en 0).
+// Descalificación (E5): borrar un gen es acción prohibida bajo Disqualify.
 inline bool delgene(Sim& sim, int n, vb_long g) {
   Bot& b = sim.rob[n];
   const vb_long k = b.genenum;
@@ -1504,6 +1549,7 @@ inline bool delgene(Sim& sim, int n, vb_long g) {
     b.mem[addr::DnaLenSys] = b.DnaLen;
     b.mem[addr::GenesSys] = static_cast<vb_integer>(b.genenum);
     makeoccurrlist(sim, n);
+    DisqualifyAction(sim, n, "deleting a gene");  // E5 (NeoMutations:1019)
     return true;
   }
   return false;
@@ -1787,11 +1833,20 @@ inline void UpdateBots(Sim& sim) {
   sim.totvegsDisplayed = sim.totvegs;
   sim.totvegs = 0;
 
+  // E5 — muestreo del contest F1 (Robots.bas:1502-1505): cada SampFreq
+  // ciclos corre Countpop (censo, culling y cierre de ronda). F1count es
+  // Single y Countpop lo resetea a 0.
+  if (sim.f1.ContestMode) {
+    sim.f1.F1count = sim.f1.F1count + 1;
+    if (sim.f1.F1count == static_cast<vb_single>(sim.f1.SampFreq))
+      Countpop(sim);
+  }
+
   // P0a — teleporters (Robots.bas:1505-1512): la salida corre ANTES que
   // ninguna otra pasada (NetForces puede tocar bots más adelante). Mareas
   // (Tides): ⚙ opcional, fuera (BouyancyScaling queda en 1).
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist) {
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
       if (sim.numTeleporters > 0) CheckTeleporters(sim, t);
     }
   }
@@ -1799,12 +1854,12 @@ inline void UpdateBots(Sim& sim) {
   // P0b — AddedMass, solo si el medio tiene densidad (Robots.bas:1516-1520).
   if (sim.opts.Density != 0.0f) {
     for (int t = 1; t <= sim.MaxRobs; ++t)
-      if (sim.rob[t].exist) AddedMass(sim, t);
+      if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) AddedMass(sim, t);
   }
 
   // P1 — pre update.
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (!sim.rob[t].exist) continue;
+    if (!sim.rob[t].exist || BaseHidden(sim, sim.rob[t])) continue;
     if (!sim.rob[t].Corpse) Upkeep(sim, t);
     if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) Poisons(sim, t);
     if (!sim.opts.DisableFixing) ManageFixed(sim, t);
@@ -1837,11 +1892,12 @@ inline void UpdateBots(Sim& sim) {
   // P2 — contadores.
   for (auto& sp : sim.Specie) sp.population = 0;
   for (int t = 1; t <= sim.MaxRobs; ++t)
-    if (sim.rob[t].exist) UpdateCounters(sim, t);
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t]))
+      UpdateCounters(sim, t);
 
   // P3 — movimiento.
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (!sim.rob[t].exist) continue;
+    if (!sim.rob[t].exist || BaseHidden(sim, sim.rob[t])) continue;
     Update_Ties(sim, t);
     if (sim.rob[t].age < 15) DoGeneticMemory(sim, t);
     if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA) SetAimFunc(sim, t);
@@ -1870,7 +1926,8 @@ inline void UpdateBots(Sim& sim) {
   // P5 — acciones.
   for (int t = 1; t <= sim.MaxRobs; ++t) {
     UpdateTieAngles(sim, t);  // sin chequear exist (Q11)
-    if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA && sim.rob[t].exist) {
+    if (!sim.rob[t].Corpse && !sim.rob[t].DisableDNA && sim.rob[t].exist &&
+        !BaseHidden(sim, sim.rob[t])) {
       mutate(sim, t);
       MakeStuff(sim, t);
       HandleWaste(sim, t);
@@ -1883,7 +1940,8 @@ inline void UpdateBots(Sim& sim) {
       WriteSenses(sim, t);
       FireTies(sim, t);
     }
-    if (!sim.rob[t].Corpse && sim.rob[t].exist) {
+    if (!sim.rob[t].Corpse && sim.rob[t].exist &&
+        !BaseHidden(sim, sim.rob[t])) {
       Ageing(sim, t);
       ManageDeath(sim, t);
     }
@@ -1897,8 +1955,15 @@ inline void UpdateBots(Sim& sim) {
   ReproduceAndKill(sim);
   // RemoveExtinctSpecies: mantenimiento del registro ⚙; sin efecto en mem().
 
-  if (sim.totnvegs == 0 && sim.opts.Restart && !sim.opts.F1)
+  if (sim.totnvegs == 0 && sim.opts.Restart && !sim.opts.F1) {
+    sim.f1.ReStarts += 1;  // E5 (Robots.bas:1654)
     sim.StartAnotherRound = true;
+  }
 }
 
 }  // namespace db
+
+// E5 — gamemodes.hpp define aquí (con robots.hpp ya completo) Countpop y
+// dreason, adelantadas en sim.hpp: todo TU que incluye robots.hpp recibe
+// las definiciones.
+#include "gamemodes.hpp"  // NOLINT(misc-header-include-cycle)

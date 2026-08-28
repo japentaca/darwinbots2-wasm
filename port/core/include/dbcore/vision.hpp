@@ -132,6 +132,7 @@ inline bool AnyShapeBlocksBot(Sim& sim, int n1, int n2) {
 // Transcripción literal (el test de visibilidad de 10 cláusulas se replica
 // tal cual, 32-VISION.md §2.5). hidepred: capa torneo ⚙, fuera.
 inline void CompareRobots3(Sim& sim, int n1, int n2) {
+  if (BaseHidden(sim, sim.rob[n2])) return;  // E5 (Quads.bas:402)
   Bot& b1 = sim.rob[n1];
   const Bot& b2 = sim.rob[n2];
 

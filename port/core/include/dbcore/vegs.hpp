@@ -120,7 +120,8 @@ inline void feedvegs(Sim& sim, vb_long totnrg) {
 
   // Todos los vivos arrancan pensando que no hay sol (Vegs.bas:158-162).
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].nrg > 0.0f && sim.rob[t].exist)
+    if (sim.rob[t].nrg > 0.0f && sim.rob[t].exist &&
+        !BaseHidden(sim, sim.rob[t]))  // E5 (Vegs.bas:161)
       sim.rob[t].mem[218] = 0;
   }
 
@@ -137,7 +138,7 @@ inline void feedvegs(Sim& sim, vb_long totnrg) {
 
   vb_single TotalRobotArea = 0;
   for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist)
+    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t]))  // E5 (:178)
       TotalRobotArea = static_cast<vb_single>(
           TotalRobotArea +
           std::pow(static_cast<double>(sim.rob[t].radius), 2.0) *
@@ -178,7 +179,8 @@ inline void feedvegs(Sim& sim, vb_long totnrg) {
   // Alimentación por bot (Vegs.bas:212-269).
   for (int t = 1; t <= sim.MaxRobs; ++t) {
     Bot& b = sim.rob[t];
-    if (!(b.nrg > 0.0f && b.exist)) continue;
+    if (!(b.nrg > 0.0f && b.exist && !BaseHidden(sim, b)))  // E5 (:215)
+      continue;
 
     vb_single acttok = 0;
 
