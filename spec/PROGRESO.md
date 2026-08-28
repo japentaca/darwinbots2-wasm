@@ -73,27 +73,33 @@ el milestone de mundo (B7), igual que R-08 y los formatos de nivel sim.
 
 ## Siguiente
 
-**El port está completo**: el core entero verificado en WASM (143 casos /
-2962 aserciones en verde en los tres modos, Q07 verificada, ningún stub
-abierto) y la capa de presentación web funcionando (M10: API completa en
-`port/wasm/dbcore_api.cpp` + render 2D en `port/web/index.html`). No hay
-milestone obligatorio pendiente. Posibles extensiones, todas capa host y
-opcionales, si el usuario las pide:
+**El core del port está completo** (M1..M10 cerrados, ningún stub abierto) y
+desde 2026-08-26 se ejecuta el plan de `PLAN-EXTENSIONES.md`. Con **E5 cerrada
+(2026-08-28) el tick de `10-CICLO.md §2` está completo salvo los pasos ⚙ de
+UI/infra pura**: 1 (F12 → pausa), 11 (inspector `ShowMemoryEarlyCycle`), 23
+(monitor RGB) y 25 (autosave a disco), todos capa host sin efecto sobre la
+simulación.
 
-- **UI de sim**: inspector de bot (la API ya da `db_sim_bot_text`),
-  zoom/cámara, editor de opciones completo (la UI actual expone las
-  esenciales; la API llega hasta Costs 0..70), gráficas de población.
-- **Modo Internet/torneo**: la E/S de teleporters entre sims ya funciona
-  por búferes (`outbox`/`inbox`); faltaría solo el transporte que mueva
-  los registros entre navegadores (la capa ⚙ de 50-MUNDO.md §5 quedó
-  deliberadamente fuera del contrato).
-- ~~**Rendimiento**~~: **cerrada 2026-08-26** (Web Worker + frame único
-  transferible; WebGL medido y descartado por innecesario — ver la fila
-  "Ext · Rendimiento" y el registro).
-- ~~**Bestiary del foro**~~: **cerrada 2026-08-26** (545 bots del foro
-  oficial bajados, validados con el core y servidos como presets en la
-  página — ver el registro; el archivador reproducible vive en
-  `port/tools/bestiary/`).
+**Próxima etapa: E6 · Registro y análisis** (`PLAN-EXTENSIONES.md §E6`) —
+**capa host** (no debería tocar `port/core/`):
+
+- **Gráficas** (`grafico.frm`, 4197 líneas; `main.frm:2174 NewGraph`,
+  `:2228 FeedGraph`, alimentadas cada `SimOpts.chartingInterval` ciclos desde
+  el loop, `main.frm:2098-2107`, solo si el chart está visible): las 18 series
+  de `Globals.bas:127-151` (`POPULATION_GRAPH`..`CUSTOM_3_GRAPH`), con
+  `graphvisible`/`graphleft`/`graphtop`/`graphfilecounter` ya persistidos por
+  el formato de sim y viajando en `Sim.evo` desde M8.
+- **Snapshots** (`Database.bas:89 AddRecord`, disparado desde
+  `Robots.bas:2972` con `SimOpts.DeadRobotSnp`/`SnpExcludeVegs`) → descargas
+  del navegador en vez de la MDB de Access.
+- **Philogeny** (`parentele.frm`), **gene activations** (`ActivForm.frm`),
+  **console** (`console.frm`) y **Find Best** del menú Robot.
+- Evaluar con grep qué queda fuera y documentarlo, como en E1..E5.
+
+Después de E6: **E7** (Internet/torneo distribuido — el transporte real entre
+navegadores; la E/S por búferes `outbox`/`inbox` ya funciona entre sims) y
+**E8** (extras de menor valor: eye designer, imagen de fondo, monitor RGB,
+E-Grid, tray icon).
 
 ## Pendiente
 
