@@ -59,6 +59,21 @@
      cosa y el clic en vacío deselecciona todo (el original dejaba foci
      viejos vivos para el drag, que aquí no está). Los colores de formas
      los sortea el worker con su paleta (B7-5/Q01: el color es del host).
+   - Etapa E6: registro y análisis. Ventanas flotantes que hacen de forms
+     del original: el chart de `grafico.frm` con las 18 series de
+     Globals.bas:127-151 (los números los calcula CalcStats/FeedGraph
+     transcrito en wasm/dbcore_api.cpp; aquí vive el búfer circular de 1000
+     puntos, la poda de series, el ordenado por último valor y el volcado
+     .gsave), la consola por bot de `console.frm` (todos sus comandos) y las
+     barras de activación de genes de `ActivForm.frm`. Menú Recording:
+     "Snapshot of the living" y "Snapshot of the dead" (Database.bas, en el
+     core) como descargas. Menú Robot: Find Best (`fittest`) y Philogeny
+     (`parentele.frm`: descendencia, familia resaltada y el árbol de
+     parentesco de score tipo 3). Decisión de capa host documentada en
+     Chart.redraw: la contabilidad del chart corre en cada punto como en el
+     fuente, pero el PINTADO se coalesce en el rAF — en VB6 el chart se
+     repintaba en el hilo del loop y no podía atrasarse; aquí la sim vive en
+     un worker y publicaría puntos más rápido de lo que la página dibuja.
 -->
 <style>
   :root { color-scheme: dark; }
@@ -120,6 +135,43 @@
   .optrows .full { grid-column: 1 / -1; }
   footer { padding: 4px 12px; font-size: 11px; color: #5c6b88;
            background: #0d1119; border-top: 1px solid #1c2333; }
+  /* E6 — ventanas flotantes que hacen de forms del original (grafico.frm,
+     console.frm, ActivForm.frm). */
+  #windows { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .win { position: absolute; pointer-events: auto; background: #121826;
+         border: 1px solid #2e3a55; border-radius: 6px;
+         box-shadow: 0 8px 28px rgba(0,0,0,.55); display: flex;
+         flex-direction: column; }
+  .win-bar { display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+             background: #1a2234; border-bottom: 1px solid #2e3a55;
+             border-radius: 6px 6px 0 0; cursor: move; user-select: none; }
+  .win-title { flex: 1; font-size: 12px; color: #b7c6e0; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+  .win-x { padding: 0 6px; line-height: 18px; }
+  .win-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .chart-wrap { display: flex; gap: 6px; }
+  .chart-wrap canvas { border: 1px solid #1c2333; background: #0a0f1a;
+                       flex: none; }
+  .chart-legend { flex: 1; min-width: 100px; max-height: 150px;
+                  overflow-y: auto; font: 11px ui-monospace, Consolas, monospace; }
+  .chart-legend .ser { display: flex; gap: 4px; align-items: center; }
+  .chart-legend i { width: 9px; height: 9px; display: inline-block;
+                    border-radius: 2px; flex: none; }
+  .chart-legend b { color: #cdd6e4; font-weight: 400; min-width: 42px;
+                    text-align: right; }
+  .chart-legend span { color: #8296b8; overflow: hidden;
+                       text-overflow: ellipsis; white-space: nowrap; }
+  .chart-foot { display: flex; gap: 6px; align-items: center; font-size: 11px;
+                color: #7d8fb0; }
+  .chart-foot button { padding: 2px 8px; font-size: 11px; }
+  .con-btns { display: flex; flex-wrap: wrap; gap: 4px; }
+  .con-btns button { padding: 2px 6px; font-size: 11px; }
+  .con-out { height: 190px; margin: 0; }
+  .con-in { background: #0b0f19; color: #dfe6f2; border: 1px solid #2e3a55;
+            border-radius: 4px; padding: 4px 8px;
+            font: 12px ui-monospace, Consolas, monospace; width: 100%; }
+  .act-lab { font-size: 11px; color: #7d8fb0; }
+  .act-x { font-size: 11px; color: #8296b8; }
 </style>
 </head>
 <body>
@@ -235,6 +287,71 @@
         </span>
       </div>
     </details>
+    <h2>Registro y análisis</h2>
+    <details class="optgrp"><summary>Gráficas (18 series)</summary>
+      <div class="optrows">
+        <label class="full" style="color:#5c6b88">
+          El loop alimenta cada <i>chartingInterval</i> ciclos y solo los
+          gráficos abiertos (main.frm:2098-2107).</label>
+        <label>Intervalo (ciclos)</label>
+        <input type="number" id="o-110" data-id="110" value="200" min="1" max="32000">
+        <div class="full row">
+          <select id="graph-pick" style="flex:1"></select>
+          <button id="btn-graph-open">Abrir</button>
+        </div>
+        <div class="full row">
+          <button id="btn-graph-reset">Reset de todos</button>
+          <button id="btn-graph-close">Cerrar todos</button>
+        </div>
+        <div class="full" id="graph-open-list"
+             style="font-size:11px;color:#5c6b88">ningún gráfico abierto</div>
+        <label class="full" style="color:#5c6b88;margin-top:4px">
+          Consultas de los 3 gráficos personalizables (notación polaca
+          inversa; variables: pop avgmut avgage avgsons avgnrg avglen avgcond
+          simnrg specidiv maxgd simpgenetic; operadores: add sub mult div pow).
+        </label>
+        <label>Custom 1</label><input type="text" id="gq1" style="width:150px"
+               placeholder="p. ej. pop 2 mult">
+        <label>Custom 2</label><input type="text" id="gq2" style="width:150px">
+        <label>Custom 3</label><input type="text" id="gq3" style="width:150px">
+      </div>
+    </details>
+    <details class="optgrp"><summary>Snapshots (menú Recording)</summary>
+      <div class="optrows">
+        <div class="full row">
+          <button id="btn-snap-living">Snapshot of the living</button>
+          <label><input type="checkbox" id="snap-mut" checked>
+            + mutaciones</label>
+        </div>
+        <label>Snapshot of the dead</label>
+        <input type="checkbox" id="o-111" data-id="111">
+        <label title="SnpExcludeVegs">Excluir repobladores (vegetales)</label>
+        <input type="checkbox" id="o-112" data-id="112">
+        <div class="full row">
+          <button id="btn-dead-save">Descargar muertos</button>
+          <button id="btn-dead-reset">Borrar registro</button>
+        </div>
+        <div class="full" id="dead-count"
+             style="font-size:11px;color:#5c6b88">0 registros</div>
+      </div>
+    </details>
+    <details class="optgrp"><summary>Menú Robot</summary>
+      <div class="optrows">
+        <div class="full row">
+          <button id="btn-findbest" title="Ctrl+B en el original">Find Best</button>
+          <button id="btn-console">Consola del bot</button>
+          <button id="btn-activ">Gene activations</button>
+        </div>
+        <div class="full row">
+          <button id="btn-family">Philogeny</button>
+          <label>niveles</label>
+          <input type="number" id="fam-rec" value="1000" min="1" style="width:70px">
+          <button id="btn-family-clear">Limpiar</button>
+        </div>
+        <div class="full" id="family-info"
+             style="font-size:11px;color:#5c6b88">—</div>
+      </div>
+    </details>
     <h2>Sembrar especie</h2>
     <div class="row">
       <select id="preset">
@@ -259,8 +376,10 @@
   </aside>
 </main>
 
+<div id="windows"></div>
+
 <footer>
-  DarwinBots 2.48.32 · core C++→WASM (166 casos dorados en verde) · la sim corre
+  DarwinBots 2.48.32 · core C++→WASM (172 casos dorados en verde) · la sim corre
   en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
 </footer>
 
@@ -590,7 +709,7 @@ function collectOptions() {
   document.querySelectorAll('#opts-panel [data-key]').forEach((el) => {
     named[el.dataset.key] = el.type === 'checkbox' ? el.checked : optValue(el);
   });
-  document.querySelectorAll('#opts-panel [data-id]').forEach((el) => {
+  document.querySelectorAll('aside [data-id]').forEach((el) => {
     opts[+el.dataset.id] = optValue(el);
   });
   const [updn, dxsx] = shapeToOpts();
@@ -707,6 +826,57 @@ worker.onmessage = (e) => {
       log(`sim guardada (${msg.bytes.byteLength} bytes, formato binario de VB6)`);
       break;
     }
+    // ---- E6: registro y análisis ----
+    case 'graph-data': {
+      const c = charts.get(msg.n);
+      if (c) c.feed(msg.series, msg.interval);
+      break;
+    }
+    case 'graphs-restore':
+      // El .dbsim recuerda qué gráficos estaban abiertos (HDRoutines:1482).
+      for (const n of msg.list) openChart(n);
+      break;
+    case 'graph-filecounter': {
+      const c = charts.get(msg.n);
+      if (c) c.filecounter = msg.c;
+      break;
+    }
+    case 'snapshot-done':
+      download(`snapshot-ciclo${stats.cycle}.snp`, msg.snp);
+      if (msg.mut) download(`snapshot-ciclo${stats.cycle}_Mutations.txt`, msg.mut);
+      log(`Snapshot of the living: ${msg.records} robots`);
+      break;
+    case 'dead-data':
+      if (!msg.records) { log('no hay muertos registrados'); break; }
+      download('DeadRobots.snp', msg.snp);
+      download('DeadRobots_Mutations.txt', msg.mut);
+      log(`DeadRobots.snp descargado (${msg.records} registros)`);
+      break;
+    case 'focus':
+      setSelection(msg.n, true);
+      break;
+    case 'family':
+      familyLines = (msg.lines && msg.lines.length)
+        ? Float32Array.from(msg.lines) : null;
+      document.getElementById('family-info').textContent = msg.n
+        ? `bot #${msg.n}: ${msg.total} descendientes · ${msg.highlighted} resaltados`
+        : '—';
+      break;
+    case 'console-open':
+      conAppend(msg.n, `Robot ${msg.absnum} - ${msg.name} console`);
+      conAppend(msg.n, "Type 'help' for commands");
+      const cw = consoles.get(msg.n);
+      if (cw) cw.win.setTitle(`Robot ${msg.absnum} console`);
+      break;
+    case 'console-out':
+      conAppend(msg.n, msg.text);
+      break;
+    case 'genes':
+      drawActivations(msg.ga);
+      break;
+    case 'running':
+      setRunning(msg.running);
+      break;
     case 'error':
       statsEl.textContent = 'error cargando dbcore.wasm';
       log('Error: ' + msg.msg + '\n¿Está compilado el preset wasm? ' +
@@ -746,6 +916,8 @@ function updateStats() {
          (stats.f1.over ? ' · TERMINADO' : '');
     if (stats.f1.restarts) f1 += ` · restarts ${stats.f1.restarts}`;
   }
+  const dc = document.getElementById('dead-count');
+  if (dc) dc.textContent = (stats.dead || 0) + ' registros';
   statsEl.textContent =
     `ciclo ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
     ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms` +
@@ -947,6 +1119,15 @@ function draw(v) {
     hitBots[h] = v[o]; hitBots[h + 1] = wx; hitBots[h + 2] = wy;
     hitBots[h + 3] = wr;
 
+    // E6 — highlight (Robots.bas:318): la familia marcada por score tipo 1
+    // (parentele) y los bots del Player Bot. El original repinta con
+    // DrawAllRobs; aquí es un anillo ámbar.
+    if ((flags & 16) && v[o] !== focus) {
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.35, 0, PIv * 2);
+      ctx.strokeStyle = '#e8b04b';
+      ctx.stroke();
+    }
     // anillo de foco (DrawRobPer: robfocus → círculo blanco a radio×1.2)
     if (v[o] === focus) {
       ctx.beginPath();
@@ -1010,6 +1191,25 @@ function draw(v) {
         drawArrow(wx + dlx * wr, wy + dly * wr, dlx, dly, left, dfx, dfy, s);
       if (right !== 0)
         drawArrow(wx + drx * wr, wy + dry * wr, drx, dry, right, dfx, dfy, s);
+    }
+  }
+
+  // E6 — árbol de parentesco (main.frm:3059-3070, score tipo 3): dos tramos
+  // por enlace hijo→medio→padre; el blanco va del lado del AbsNum mayor y el
+  // otro en gris RGB(128,128,128).
+  if (familyLines) {
+    for (let i = 0; i + 6 < familyLines.length; i += 7) {
+      const white = familyLines[i + 6] === 1;
+      ctx.strokeStyle = white ? '#ffffff' : '#808080';
+      ctx.beginPath();
+      ctx.moveTo(familyLines[i] * s, familyLines[i + 1] * s);
+      ctx.lineTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
+      ctx.stroke();
+      ctx.strokeStyle = white ? '#808080' : '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
+      ctx.lineTo(familyLines[i + 4] * s, familyLines[i + 5] * s);
+      ctx.stroke();
     }
   }
 
@@ -1219,6 +1419,510 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 // ---- Montaje de la sim ----------------------------------------------------
+// ===========================================================================
+// E6 · Registro y análisis (spec/PLAN-EXTENSIONES.md §E6)
+//
+// Ventanas flotantes que hacen de los forms del original: `grafico.frm` (el
+// chart, 18 series de Globals.bas:127-151), `console.frm` (la consola por
+// bot) y `ActivForm.frm` (las barras de activación de genes). Los cálculos
+// viven en wasm/dbcore_api.cpp (CalcStats/FeedGraph, código de main.frm) y
+// en el core (Database.bas → database.hpp); aquí solo hay presentación.
+//
+// Decisiones de capa host:
+//  - Las ventanas del original eran forms top-most con posición persistida
+//    (graphleft/graphtop): aquí son paneles flotantes arrastrables y la
+//    posición viaja al core con {t:'graph-pos'}, así que un guardado de sim
+//    la conserva igual que el original.
+//  - Los "archivos" salen como descargas del navegador: el `.snp` y el
+//    `_Mutations.txt` de Database.bas y el `.gsave` de grafico.frm:4089.
+//  - El `MsgBox "Would you like to keep updating this graph?"` de
+//    Form_QueryUnload no se porta: cerrar la ventana cierra el chart (que es
+//    lo que hace el original con GraphUp activado, grafico.frm:3925).
+
+const GRAPHS = [
+  [1, 'Populations'], [2, 'Average_Mutations'], [3, 'Average_Age'],
+  [4, 'Average_Offspring'], [5, 'Average_Energy'], [6, 'Average_DNA_length'],
+  [7, 'Average_DNA_Cond_statements'],
+  [8, 'Average_Mutations_per_DNA_length_x1000-'],
+  [9, 'Total_Energy_per_Species_x1000-'], [10, 'Dynamic_Costs'],
+  [11, 'Species_Diversity'], [12, 'Average_Chloroplasts'],
+  [13, 'Genetic_Distance_x1000-'], [14, 'Max_Generational_Distance'],
+  [15, 'Simple_Genetic_Distance_x1000-'], [16, 'Customizable_Graph_1-'],
+  [17, 'Customizable_Graph_2-'], [18, 'Customizable_Graph_3-'],
+];
+const GRAPH_CAPTION = new Map(GRAPHS);
+
+// ---- Ventana flotante genérica -------------------------------------------
+const winLayer = document.getElementById('windows');
+
+function makeWindow(title, w, h, onClose) {
+  const el = document.createElement('div');
+  el.className = 'win';
+  el.style.width = w + 'px';
+  el.innerHTML =
+    '<div class="win-bar"><span class="win-title"></span>' +
+    '<button class="win-x" title="Cerrar">✕</button></div>' +
+    '<div class="win-body"></div>';
+  el.querySelector('.win-title').textContent = title;
+  el.querySelector('.win-x').onclick = () => { el.remove(); if (onClose) onClose(); };
+  winLayer.appendChild(el);
+  // Arrastre por la barra de título.
+  const bar = el.querySelector('.win-bar');
+  let dx = 0, dy = 0, moving = false;
+  bar.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('win-x')) return;
+    moving = true; dx = e.clientX - el.offsetLeft; dy = e.clientY - el.offsetTop;
+    bar.setPointerCapture(e.pointerId);
+  });
+  bar.addEventListener('pointermove', (e) => {
+    if (!moving) return;
+    el.style.left = Math.max(0, e.clientX - dx) + 'px';
+    el.style.top = Math.max(0, e.clientY - dy) + 'px';
+  });
+  bar.addEventListener('pointerup', (e) => {
+    moving = false;
+    bar.releasePointerCapture(e.pointerId);
+    if (el.onMoved) el.onMoved(el.offsetLeft, el.offsetTop);
+  });
+  el.body = el.querySelector('.win-body');
+  el.setTitle = (t) => { el.querySelector('.win-title').textContent = t; };
+  return el;
+}
+
+// ---- Chart (grafico.frm) --------------------------------------------------
+const MaxData = 1000, MaxItems = 65;
+const charts = new Map();          // n -> Chart
+
+class Chart {
+  constructor(n) {
+    this.n = n;
+    this.caption = GRAPH_CAPTION.get(n) || ('Graph_' + n);
+    this.interval = 200;
+    this.resetGraph();
+    this.save = false;
+    this.buildWindow();
+  }
+  // grafico.frm:3656-3668 — ResetGraph: Erase data/SerCol/SerName, Pivot y
+  // MaxSeries a cero.
+  resetGraph() {
+    this.data = [];
+    for (let i = 0; i <= MaxData; i++) this.data.push(new Float32Array(MaxItems + 1));
+    this.serCol = new Array(MaxItems + 1).fill(0);
+    this.serName = new Array(MaxItems + 1).fill('');
+    this.sum = new Float32Array(MaxItems + 1);
+    this.pivot = 0;
+    this.maxSeries = 0;
+    this.maxy = 0;
+  }
+  // grafico.frm:3670-3688 — AddSeries: con el array lleno reemplaza la
+  // última. La etiqueta pierde el ".txt" y se recorta a 25 + "...".
+  addSeries(name, color) {
+    if (this.maxSeries >= MaxItems) this.maxSeries = MaxItems - 1;
+    this.serName[this.maxSeries] = name;
+    this.serCol[this.maxSeries] = color;
+    this.maxSeries += 1;
+    return this.maxSeries - 1;
+  }
+  label(k) {
+    let s = this.serName[k] || '';
+    if (s.slice(-4) === '.txt') s = s.slice(0, -4);
+    return s.length > 28 ? s.slice(0, 25) + '...' : s;
+  }
+  // grafico.frm:3703-3763 — SetValues: el 0 NO crea serie ni escribe.
+  setValues(name, v, color) {
+    if (v === 0) return;
+    let k = 0;
+    while (k < this.maxSeries && this.serName[k] !== name && k < MaxItems) k += 1;
+    if (this.serName[k] !== name || k === MaxItems) {
+      // El color lo decide la especie; si no está en la lista (o es el
+      // gráfico 10) el original sortea RGB(Random(100,255) ×3).
+      const c = (color >= 0) ? color : randSeriesColor();
+      this.addSeries(name, c);
+      k = this.maxSeries - 1;
+    }
+    this.data[this.pivot][k] = v;
+  }
+  // grafico.frm:3845-3866 — DelSeries: desplaza y decrementa MaxSeries.
+  delSeries(n) {
+    if (n < this.maxSeries - 1) {
+      for (let k = n; k <= this.maxSeries - 1; k++) {
+        for (let t = 0; t <= MaxData; t++) this.data[t][k] = this.data[t][k + 1];
+        this.serName[k] = this.serName[k + 1];
+        this.serCol[k] = this.serCol[k + 1];
+      }
+    }
+    this.serName[this.maxSeries - 1] = '';
+    this.maxSeries -= 1;
+  }
+  // grafico.frm:3808-3832 / :3834-3843 — SwapSeries + ReorderSeries: las
+  // series se ordenan por el último punto, de mayor a menor.
+  swapSeries(i, t) {
+    for (let x = 0; x <= MaxData; x++) {
+      const tmp = this.data[x][i];
+      this.data[x][i] = this.data[x][t];
+      this.data[x][t] = tmp;
+    }
+    let s = this.serName[i]; this.serName[i] = this.serName[t]; this.serName[t] = s;
+    let c = this.serCol[i]; this.serCol[i] = this.serCol[t]; this.serCol[t] = c;
+  }
+  reorderSeries() {
+    const p = this.pivot - 1;
+    for (let i = 0; i <= this.maxSeries - 1; i++)
+      for (let t = i; t <= this.maxSeries - 1; t++)
+        if (this.data[p][i] < this.data[p][t]) this.swapSeries(i, t);
+  }
+  // grafico.frm:3984-3993 — NewPoints: avanza el pivote circular, limpia la
+  // columna nueva y repinta.
+  newPoints() {
+    this.pivot += 1;
+    if (this.pivot > MaxData) this.pivot = 0;
+    for (let t = 0; t <= MaxItems - 1; t++) this.data[this.pivot][t] = 0;
+    this.redraw();
+  }
+  // grafico.frm:3995-4114 — RedrawGraph. Partido en dos por una decisión de
+  // capa host: la CONTABILIDAD (recorrido del búfer circular, maxv, sumas,
+  // poda de series, maxy, el volcado .gsave) corre en cada NewPoints igual
+  // que en el fuente, y el PINTADO se coalesce en el próximo rAF. En VB6 el
+  // chart se repintaba en el mismo hilo del loop, así que no podía atrasarse;
+  // aquí la sim vive en un worker y puede publicar puntos más rápido de lo
+  // que el hilo de la página dibuja — sin este deslinde la cola de mensajes
+  // crece sin freno y la página se congela. Los datos y su orden son
+  // idénticos; lo único que se ve es el repintado a ritmo de frame.
+  redraw() {
+    // `On Error GoTo bypass` del fuente: con Pivot = 0 el ReorderSeries
+    // indexa data(-1) y el redraw entero se salta (pasa una vez cada 1001
+    // puntos, al dar la vuelta el búfer circular). Replicado.
+    if (this.pivot - 1 < 0) { this.dirty = true; return; }
+    if (this.maxy < 1) this.maxy = 1;
+    let maxv = -1000;
+    this.reorderSeries();
+    let k = this.pivot + 1;
+    if (k > MaxData) k = 0;
+    this.lastVal = this.lastVal || [];
+    for (let t = 0; t <= this.maxSeries - 1; t++) this.sum[t] = 0;
+    while (k !== this.pivot) {
+      for (let t = 0; t <= this.maxSeries - 1; t++) {
+        if (this.data[k][t] > maxv) maxv = this.data[k][t];
+        this.sum[t] = this.data[k][t] + this.sum[t];
+        this.lastVal[t] = this.data[k][t];
+      }
+      k += 1;
+      if (k > MaxData) k = 0;
+    }
+    // Poda de series muertas (el `t` del fuente vale MaxSeries al salir del
+    // For de arriba): con más de 10 series se borran las de suma 0, y con más
+    // de 50 (o auto-especiación) también las que valgan 0 en el último punto.
+    const t = this.maxSeries;
+    if (t > 10)
+      for (let x = this.maxSeries - 1; x >= 0; x--)
+        if (this.sum[x] === 0) this.delSeries(x);
+    let p = this.pivot - 1;
+    if (p < 0) p = MaxData;
+    if (t > 50 || autoSpeciationOn())
+      for (let x = this.maxSeries - 1; x >= 0; x--)
+        if (this.data[p][x] === 0) this.delSeries(x);
+
+    this.maxy = maxv;
+    // grafico.frm:4078-4104 — el volcado .gsave al dar la vuelta al búfer.
+    if (k === 999 && this.save) this.saveData();
+    this.points = k;
+    this.dirty = true;
+  }
+  // El pintado propiamente dicho: ejes de DrawAxes (grafico.frm:4116-4136) y
+  // una polilínea por serie sobre el búfer circular.
+  paint() {
+    this.dirty = false;
+    const cv = this.canvas, cx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    cx.fillStyle = '#0a0f1a';
+    cx.fillRect(0, 0, W, H);
+    const maxy = this.maxy < 1 ? 1 : this.maxy;
+    const xunit = W / (MaxData + 1);
+    const yunit = (H - 12) / maxy;
+    const yo = H - 6;
+    cx.strokeStyle = '#33405c';
+    cx.beginPath(); cx.moveTo(0, yo - yunit * maxy / 2);
+    cx.lineTo(W, yo - yunit * maxy / 2); cx.stroke();
+    cx.beginPath(); cx.moveTo(0, 6); cx.lineTo(W, 6); cx.stroke();
+    cx.fillStyle = '#7d8fb0';
+    cx.font = '10px ui-monospace, Consolas, monospace';
+    cx.fillText(fmtNum(maxy), 2, 14);
+    cx.fillText(fmtNum(maxy / 2), 2, yo - yunit * maxy / 2 - 2);
+    for (let t = 0; t <= this.maxSeries - 1; t++) {
+      let k = this.pivot + 1;
+      if (k > MaxData) k = 0;
+      cx.strokeStyle = vbColorToCss(this.serCol[t]);
+      cx.beginPath();
+      cx.moveTo(xunit, yo - yunit * this.data[k][t]);
+      let an = 2;
+      while (k !== this.pivot) {
+        cx.lineTo(xunit * an, yo - yunit * this.data[k][t]);
+        an += 1;
+        k += 1;
+        if (k > MaxData) k = 0;
+      }
+      cx.stroke();
+    }
+    this.xlabel.textContent = this.interval + ' cycles per data point. ' +
+                              (this.points || 0) + ' data points.';
+    this.renderLegend();
+  }
+  renderLegend() {
+    const rows = [];
+    for (let t = 0; t < this.maxSeries; t++) {
+      const v = (this.lastVal && this.lastVal[t] !== undefined) ? this.lastVal[t] : 0;
+      rows.push('<div class="ser"><i style="background:' +
+                vbColorToCss(this.serCol[t]) + '"></i>' +
+                '<b>' + fmtNum(v) + '</b><span>' + esc(this.label(t)) +
+                '</span></div>');
+    }
+    this.legend.innerHTML = rows.join('') ||
+      '<div style="color:#5c6b88">sin series</div>';
+  }
+  // grafico.frm:4078-4104 — el .gsave: consulta del gráfico, cabeceras
+  // color:etiqueta y 999 filas de valores separados por tab. El original
+  // escribía en MainDir\strSimStart\; aquí es una descarga.
+  saveData() {
+    let out = (this.n === 16 ? queryOf(1) : this.n === 17 ? queryOf(2)
+               : this.n === 18 ? queryOf(3) : 'normal') + '\r\n';
+    let head = '';
+    for (let x = 0; x < this.maxSeries; x++)
+      head += this.serCol[x] + ':' + this.label(x) + ',';
+    out += head + '\r\n';
+    for (let k2 = 0; k2 <= 998; k2++) {
+      let line = '';
+      for (let t2 = 0; t2 < this.maxSeries; t2++) line += this.data[k2][t2] + '\t';
+      out += line + '\r\n';
+    }
+    worker.postMessage({ t: 'graph-filecounter', n: this.n });
+    download(this.caption + (this.filecounter || 1) + '.gsave', out);
+  }
+  buildWindow() {
+    const el = makeWindow(this.caption, 520, 260, () => {
+      charts.delete(this.n);
+      worker.postMessage({ t: 'graph-close', n: this.n });
+      syncGraphList();
+    });
+    el.body.innerHTML =
+      '<div class="chart-wrap"><canvas width="330" height="150"></canvas>' +
+      '<div class="chart-legend"></div></div>' +
+      '<div class="chart-foot">' +
+      '<button class="c-upd">Update Now</button>' +
+      '<button class="c-rst">Reset</button>' +
+      '<label><input type="checkbox" class="c-save"> save data</label>' +
+      '<span class="c-x"></span></div>';
+    this.win = el;
+    this.canvas = el.querySelector('canvas');
+    this.legend = el.querySelector('.chart-legend');
+    this.xlabel = el.querySelector('.c-x');
+    el.querySelector('.c-upd').onclick =
+      () => worker.postMessage({ t: 'graph-update', n: this.n });
+    el.querySelector('.c-rst').onclick = () => {
+      this.resetGraph();
+      this.paint();
+      worker.postMessage({ t: 'graph-update', n: this.n });
+    };
+    el.querySelector('.c-save').onchange = (e) => {
+      this.save = e.target.checked;
+      worker.postMessage({ t: 'graph-save-flag', n: this.n, on: this.save });
+    };
+    el.onMoved = (l, t) =>
+      worker.postMessage({ t: 'graph-pos', n: this.n, left: l, top: t });
+    // Posición inicial en cascada (el original recuerda graphleft/graphtop).
+    const k = charts.size;
+    el.style.left = (40 + k * 24) + 'px';
+    el.style.top = (60 + k * 24) + 'px';
+    this.xlabel.textContent = '200 cycles per data point';
+  }
+  // main.frm:2224-2273 — FeedGraph: un SetValues por serie y un NewPoints.
+  feed(series, interval) {
+    this.interval = interval || this.interval;
+    for (const s of series) this.setValues(s.name, s.value, s.color);
+    this.newPoints();
+    scheduleChartPaint();
+  }
+}
+
+function randSeriesColor() {   // RGB(Random(100,255) ×3) de grafico.frm
+  const c = () => 100 + Math.floor(Math.random() * 156);
+  return c() | (c() << 8) | (c() << 16);
+}
+function fmtNum(v) {
+  if (!isFinite(v)) return '0';
+  return (Math.abs(v) >= 1000 || v === Math.round(v)) ? String(Math.round(v))
+                                                      : v.toFixed(2);
+}
+function esc(s) {
+  return String(s).replace(/[&<>]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+function download(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function autoSpeciationOn() {
+  const el = document.getElementById('o-100');   // EnableAutoSpeciation (E5)
+  return !!(el && el.checked);
+}
+function queryOf(i) {
+  const el = document.getElementById('gq' + i);
+  return el ? el.value : '';
+}
+
+function openChart(n) {
+  if (charts.has(n)) { charts.get(n).win.style.zIndex = ++winZ; return; }
+  // Los 3 personalizables piden su consulta como el InputBox de
+  // MDIForm1.frm:1893-1909: sin consulta no se abre el gráfico.
+  if (n >= 16) {
+    const q = queryOf(n - 15);
+    if (!q) { log('gráfico personalizable ' + (n - 15) + ': falta la consulta'); return; }
+    worker.postMessage({ t: 'graph-query', which: n - 15, q });
+  }
+  charts.set(n, new Chart(n));
+  worker.postMessage({ t: 'graph-open', n });
+  syncGraphList();
+}
+let winZ = 10;
+
+function syncGraphList() {
+  const el = document.getElementById('graph-open-list');
+  if (!el) return;
+  const open = [...charts.keys()].sort((a, b) => a - b);
+  el.textContent = open.length
+    ? 'abiertos: ' + open.map((n) => GRAPH_CAPTION.get(n)).join(', ')
+    : 'ningún gráfico abierto';
+}
+
+// Un solo rAF para todos los charts sucios (ver la nota de Chart.redraw).
+let chartRaf = false;
+function paintCharts() {
+  chartRaf = false;
+  for (const c of charts.values()) if (c.dirty) c.paint();
+}
+function scheduleChartPaint() {
+  if (chartRaf) return;
+  chartRaf = true;
+  requestAnimationFrame(paintCharts);
+}
+
+// ---- Consola del bot (console.frm) ---------------------------------------
+const consoles = new Map();   // n -> {win, out, in, hist, hpos}
+
+function openConsole(n) {
+  if (!n) { log('consola: seleccioná un bot primero'); return; }
+  if (consoles.has(n)) { consoles.get(n).win.style.zIndex = ++winZ; return; }
+  const el = makeWindow('Robot console', 420, 300, () => {
+    consoles.delete(n);
+    worker.postMessage({ t: 'console', n, on: false });
+  });
+  el.body.innerHTML =
+    '<div class="con-btns">' +
+    '<button data-c="cycle 1">▶| ciclo</button>' +
+    '<button data-c="play">▶ play</button>' +
+    '<button data-c="pause">❚❚ pause</button>' +
+    '<button data-c="printeye">eye</button>' +
+    '<button data-c="printtouch">touch</button>' +
+    '<button data-c="printtaste">taste</button>' +
+    '<button data-c="debug">debug</button>' +
+    '<button data-c="showdna">showdna</button>' +
+    '<button data-c="help">help</button>' +
+    '<button class="con-clr">clear</button></div>' +
+    '<textarea class="con-out" readonly spellcheck="false"></textarea>' +
+    '<input class="con-in" type="text" placeholder="comando… (help)">';
+  el.style.left = '80px';
+  el.style.top = '100px';
+  const c = { win: el, out: el.querySelector('.con-out'),
+              inp: el.querySelector('.con-in'), hist: [], hpos: 0 };
+  consoles.set(n, c);
+  for (const b of el.querySelectorAll('.con-btns button[data-c]'))
+    b.onclick = () => sendConsole(n, b.dataset.c);
+  el.querySelector('.con-clr').onclick = () => { c.out.value = ''; };
+  c.inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && c.inp.value) {
+      sendConsole(n, c.inp.value);
+      c.hist.push(c.inp.value);
+      c.hpos = c.hist.length;
+      c.inp.value = '';
+    } else if (e.key === 'ArrowUp' && c.hpos > 0) {
+      c.hpos -= 1; c.inp.value = c.hist[c.hpos] || '';
+    } else if (e.key === 'ArrowDown') {
+      c.hpos = Math.min(c.hpos + 1, c.hist.length);
+      c.inp.value = c.hist[c.hpos] || '';
+    }
+  });
+  worker.postMessage({ t: 'console', n, on: true });
+}
+// console.frm:174-179 — textout: eco del comando y respuesta, con el tope
+// de 2500 caracteres del original.
+function conAppend(n, text) {
+  const c = consoles.get(n);
+  if (!c) return;
+  c.out.value += '\n' + text;
+  if (c.out.value.length > 2500)
+    c.out.value = c.out.value.slice(c.out.value.length - 2500);
+  c.out.scrollTop = c.out.scrollHeight;
+}
+function sendConsole(n, line) {
+  conAppend(n, line);
+  worker.postMessage({ t: 'console-cmd', n, line });
+  worker.postMessage({ t: 'genes', n });
+}
+
+// ---- Gene activations (ActivForm.frm) ------------------------------------
+let activWin = null, activGb = [];
+
+function openActivations() {
+  if (activWin) { activWin.style.zIndex = ++winZ; return; }
+  activWin = makeWindow('Genes Activations', 380, 150, () => {
+    activWin = null;
+    worker.postMessage({ t: 'activ', on: false });
+  });
+  activWin.body.innerHTML =
+    '<div class="act-lab">estático (verde = ejecutó este ciclo)</div>' +
+    '<canvas class="act-a" width="356" height="26"></canvas>' +
+    '<div class="act-lab">dinámico (media móvil, ActivForm.DrawDyn)</div>' +
+    '<canvas class="act-b" width="356" height="42"></canvas>' +
+    '<div class="act-x"></div>';
+  activWin.style.left = '120px';
+  activWin.style.top = '420px';
+  activGb = [];
+  // El original repuebla ga() del bot con foco en cada ciclo mientras la
+  // ventana está visible (DNA.bas:75/1265): se lo pedimos al worker.
+  worker.postMessage({ t: 'activ', on: true });
+}
+// ActivForm.frm:63-77 (DrawStat) y :79-100 (DrawDyn): una celda por gen;
+// la barra dinámica sube (100−gb)/5 y baja gb/5 por ciclo.
+function drawActivations(ga) {
+  if (!activWin) return;
+  const gn = ga.length;
+  const a = activWin.querySelector('.act-a').getContext('2d');
+  const b = activWin.querySelector('.act-b').getContext('2d');
+  const W = 356;
+  a.clearRect(0, 0, W, 26); b.clearRect(0, 0, W, 42);
+  if (!gn) { activWin.querySelector('.act-x').textContent = 'sin genes'; return; }
+  if (activGb.length !== gn) activGb = new Array(gn).fill(0);
+  const stp = W / gn;
+  for (let t = 0; t < gn; t++) {
+    a.fillStyle = ga[t] ? '#00c000' : '#c00000';
+    a.fillRect(stp * t, 2, Math.max(stp - 1, 1), 22);
+    if (ga[t]) { activGb[t] = activGb[t] + (100 - activGb[t]) / 5; }
+    else { activGb[t] = activGb[t] - activGb[t] / 5; }
+    if (activGb[t] > 100) activGb[t] = 100;
+    if (activGb[t] < 0) activGb[t] = 0;
+    const grh = activGb[t] / 100 * 40, reh = 40 - grh;
+    b.fillStyle = '#0000c0'; b.fillRect(stp * t, 1, Math.max(stp - 1, 1), reh);
+    b.fillStyle = '#00c8c8'; b.fillRect(stp * t, 1 + reh, Math.max(stp - 1, 1), grh);
+  }
+  activWin.querySelector('.act-x').textContent =
+    gn + ' genes · ' + ga.filter(Boolean).length + ' ejecutados el último ciclo';
+}
+
+// ---- Philogeny (parentele.frm) -------------------------------------------
+let familyLines = null;   // segmentos [hx,hy,mx,my,px,py,ctBlanco] × n
+
 function newSim() {
   const seed = parseFloat(document.getElementById('seed').value) || 0;
   const alga = PRESETS.alga;
@@ -1362,6 +2066,65 @@ document.getElementById('btn-tp-clear').onclick = () => {
 // El toggle de highlight solo cambia el render: repintar con un 'select'.
 tgTpHl.addEventListener('change', () =>
   worker.postMessage({ t: 'select', n: selBot }));
+
+// ---- E6: cableado del panel ----------------------------------------------
+(() => {
+  const pick = document.getElementById('graph-pick');
+  for (const [n, cap] of GRAPHS) {
+    const o = document.createElement('option');
+    o.value = n;
+    o.textContent = n + '. ' + cap.replace(/_/g, ' ').replace(/-$/, '');
+    pick.appendChild(o);
+  }
+  document.getElementById('btn-graph-open').onclick =
+    () => openChart(+pick.value);
+  // Toolbar "resgraph" (MDIForm1.frm:1910-1914): ResetGraphs(0) + FeedGraph(0).
+  document.getElementById('btn-graph-reset').onclick = () => {
+    for (const c of charts.values()) {
+      c.resetGraph();
+      worker.postMessage({ t: 'graph-update', n: c.n });
+    }
+    log('gráficos reiniciados');
+  };
+  document.getElementById('btn-graph-close').onclick = () => {
+    for (const c of [...charts.values()]) c.win.querySelector('.win-x').click();
+  };
+  for (const i of [1, 2, 3]) {
+    const el = document.getElementById('gq' + i);
+    el.addEventListener('change', () =>
+      worker.postMessage({ t: 'graph-query', which: i, q: el.value }));
+  }
+  // Opciones E6 en vivo (ids 110-112 de wasm/dbcore_api.cpp).
+  for (const id of [110, 111, 112]) {
+    const el = document.getElementById('o-' + id);
+    el.addEventListener('change', () =>
+      worker.postMessage({ t: 'setopt', id, v: optValue(el) }));
+  }
+  document.getElementById('btn-snap-living').onclick = () =>
+    worker.postMessage({ t: 'snapshot',
+                         withMut: document.getElementById('snap-mut').checked });
+  document.getElementById('btn-dead-save').onclick = () =>
+    worker.postMessage({ t: 'dead-take', drain: false });
+  document.getElementById('btn-dead-reset').onclick = () =>
+    worker.postMessage({ t: 'dead-reset' });
+  document.getElementById('btn-findbest').onclick = () =>
+    worker.postMessage({ t: 'findbest' });
+  document.getElementById('btn-console').onclick = () => openConsole(selBot);
+  document.getElementById('btn-activ').onclick = () => {
+    openActivations();
+    if (selBot) worker.postMessage({ t: 'genes', n: selBot });
+    else log('gene activations: seleccioná un bot (solo se puebla el del foco)');
+  };
+  document.getElementById('btn-family').onclick = () => {
+    if (!selBot) { log('philogeny: seleccioná un bot primero'); return; }
+    worker.postMessage({ t: 'family', n: selBot, lines: true,
+                         maxrec: parseInt(document.getElementById('fam-rec').value, 10) });
+  };
+  document.getElementById('btn-family-clear').onclick = () => {
+    familyLines = null;
+    worker.postMessage({ t: 'clear-highlight' });
+  };
+})();
 
 // ---- Arranque -------------------------------------------------------------
 buildOptsPanel();
