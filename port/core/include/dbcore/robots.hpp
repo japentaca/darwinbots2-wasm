@@ -83,6 +83,9 @@ inline void ManageFixed(Sim& sim, int n) {
 }
 
 inline void KillRobot(Sim& sim, int n);  // adelantada (UpdateCounters la usa)
+// E6 — Database.bas:89 AddRecord; definida en database.hpp (incluido al final
+// de este archivo, tras gamemodes.hpp: necesita score/DetokenizeDNA).
+inline void AddRecord(Sim& sim, int rn);
 
 // Shots.bas:457-500 — Decay del corpse: consume 1 RNG por pulso de decay
 // (aim aleatorio) y emite el shot según DecayType.
@@ -1509,6 +1512,14 @@ inline void ReproduceAndKill(Sim& sim) {
 // 10-CICLO.md §11.2) no se replica: decisión de port, el array no encoge.
 inline void KillRobot(Sim& sim, int n) {
   if (n < 0 || n > static_cast<int>(sim.rob.size()) - 1) return;
+  // Robots.bas:2971-2977 (E6) — snapshot de los muertos. El original abria
+  // los .snp del disco aqui mismo; el port compone el registro en memoria
+  // (sim.deadSnp) y la capa host lo descarga, como con Sim.events en E5. El
+  // registro TIENE que armarse ahora: su columna Fitness lee la poblacion
+  // viva de este instante y el slot se recicla enseguida.
+  if (sim.opts.DeadRobotSnp) {
+    if (!(sim.rob[n].Veg && sim.opts.SnpExcludeVegs)) AddRecord(sim, n);
+  }
   // E5 (Robots.bas:2980-2989) — Player Bot: si muere el bot con foco, el
   // foco pasa al ÚLTIMO resaltado vivo (el bucle no corta).
   if (n == sim.robfocus && sim.pb.on) {
@@ -1967,3 +1978,4 @@ inline void UpdateBots(Sim& sim) {
 // dreason, adelantadas en sim.hpp: todo TU que incluye robots.hpp recibe
 // las definiciones.
 #include "gamemodes.hpp"  // NOLINT(misc-header-include-cycle)
+#include "database.hpp"   // NOLINT(misc-header-include-cycle)

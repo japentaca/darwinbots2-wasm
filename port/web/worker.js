@@ -38,6 +38,21 @@
 //                                          en cada frame (etapa E2)
 //   {t:'bot-text', n}                      → {t:'bot-text', n, text} con
 //                                          db_sim_bot_text (inspector)
+//   {t:'graph-open', n} · {t:'graph-close', n} · {t:'graph-update', n}
+//                                          E6: charts (main.frm NewGraph /
+//                                          FeedGraph; el loop alimenta cada
+//                                          chartingInterval ciclos)
+//   {t:'graph-query', which, q}            E6: strGraphQuery1..3
+//   {t:'graph-save-flag', n, on} · {t:'graph-pos', n, left, top} ·
+//   {t:'graph-filecounter', n}             E6: estado que persiste la sim
+//   {t:'snapshot', withMut}                E6: Snapshot de los vivos
+//   {t:'dead-take', drain}                 E6: DeadRobots.snp acumulado
+//   {t:'dead-reset'}                       E6: "borrar los archivos"
+//   {t:'findbest'}                         E6: robfocus = fittest
+//   {t:'family', n, maxrec, lines}         E6: philogeny (parentele.frm)
+//   {t:'clear-highlight'}
+//   {t:'console', n, on} · {t:'console-cmd', n, line} · {t:'genes', n}
+//                                          E6: consola del bot (console.frm)
 //   {t:'ack', buf}                         devuelve el búfer del último frame
 //
 // Protocolo (worker → página):
@@ -49,7 +64,13 @@
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
 //                                          la página actualiza su panel
-//   {t:'frame', buf, stats:{cycle,bots,vegs,tps,costx}}
+//   {t:'graph-data', n, series:[{name,color,value}], cycle, interval} ·
+//   {t:'graph-query', which, q} · {t:'graph-filecounter', n, c} ·
+//   {t:'snapshot-done', records, snp, mut} · {t:'dead-data', records, snp, mut} ·
+//   {t:'focus', n} · {t:'family', n, total, highlighted, lines} ·
+//   {t:'console-open', n, absnum, name, genenum} · {t:'console-out', n, text} ·
+//   {t:'genes', n, ga[]} · {t:'running', running}   (etapa E6)
+//   {t:'frame', buf, stats:{cycle,bots,vegs,tps,costx,f1,dead}}
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
 // la página lo devuelve con 'ack' al terminar de dibujar y el worker lo
@@ -161,6 +182,35 @@ function bindApi() {
     pbKeyActive:   C('db_sim_pb_key_active', null,
                      ['number','number','number']),
     setFocus:      C('db_sim_set_focus', null, ['number', 'number']),
+    // E6 - registro y analisis
+    graphFeed:     C('db_sim_graph_feed', 'number', ['number','number','number','number']),
+    graphName:     C('db_sim_graph_series_name', 'number', ['number','number']),
+    graphSetQuery: C('db_sim_graph_set_query', null, ['number','number','string']),
+    graphGetQuery: C('db_sim_graph_get_query', 'number', ['number','number']),
+    graphGet:      C('db_sim_graph_get', 'number', ['number','number','number']),
+    graphSet:      C('db_sim_graph_set', null, ['number','number','number','number']),
+    snapRun:       C('db_sim_snapshot_run', 'number', ['number','number']),
+    snapTake:      C('db_sim_snapshot_take', 'number', ['number','number']),
+    deadRecords:   C('db_sim_dead_records', 'number', ['number']),
+    deadTake:      C('db_sim_dead_take', 'number', ['number','number']),
+    deadDrain:     C('db_sim_dead_drain', null, ['number']),
+    deadReset:     C('db_sim_dead_reset', null, ['number']),
+    fittest:       C('db_sim_fittest', 'number', ['number']),
+    offspring:     C('db_sim_offspring', 'number', ['number','number','number']),
+    highlightFam:  C('db_sim_highlight_family', 'number', ['number','number','number']),
+    clearHighlight:C('db_sim_clear_highlight', null, ['number']),
+    familyLines:   C('db_sim_family_lines', 'number', ['number','number','number','number']),
+    consoleOpen:   C('db_sim_console_open', null, ['number','number','number']),
+    botGa:         C('db_sim_bot_ga', 'number', ['number','number','number','number']),
+    botDbg:        C('db_sim_bot_dbg', 'number', ['number','number']),
+    botMem:        C('db_sim_bot_mem', 'number', ['number','number','number']),
+    botSetMem:     C('db_sim_bot_set_mem', null, ['number','number','number','number']),
+    sysvarTok:     C('db_sim_sysvar_tok', 'number', ['number','number','string']),
+    botSetNrg:     C('db_sim_bot_set_nrg', null, ['number','number','number']),
+    execRobs:      C('db_sim_exec_robs', null, ['number']),
+    botGenenum:    C('db_sim_bot_genenum', 'number', ['number','number']),
+    botAbsnum:     C('db_sim_bot_absnum', 'number', ['number','number']),
+    botName:       C('db_sim_bot_name', 'number', ['number','number']),
     save:          C('db_sim_save', 'number', ['number', 'number']),
     load:          C('db_sim_load', null, ['number', 'number', 'number']),
     free:          C('db_free', null, ['number']),
@@ -189,7 +239,8 @@ function recolorObstacles(from) {
 
 // ---- Búferes de volcado en el heap C (crecen bajo demanda) ----------------
 const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
-                  obs: {p:0, cap:0}, tps: {p:0, cap:0}, focus: {p:0, cap:0} };
+                  obs: {p:0, cap:0}, tps: {p:0, cap:0}, focus: {p:0, cap:0},
+                  graph: {p:0, cap:0}, ga: {p:0, cap:0}, fam: {p:0, cap:0} };
 
 function ensure(b, floatsNeeded) {
   if (b.cap >= floatsNeeded || floatsNeeded === 0) return;
@@ -270,8 +321,10 @@ function postFrame() {
     stats: { cycle: api.cycle(sim), bots: api.totalRobots(sim),
              vegs: Math.max(api.totvegs(sim), 0), tps,
              costx: api.getCost(sim, 54),  // panel "CostX" (MDIForm1:3051)
-             f1: f1Stats() },              // E5: estado del contest (o null)
+             f1: f1Stats(),                // E5: estado del contest (o null)
+             dead: api.deadRecords(sim) }, // E6: snapshot de los muertos
   }, [buf]);
+  if (activOn && focusBot) sendGenes(focusBot);  // E6 (DNA.bas:1265)
 }
 
 // ---- E5: eventos del tick y rondas ----------------------------------------
@@ -367,6 +420,179 @@ function checkGameState() {
   }
 }
 
+// ---- E6: registro y análisis ---------------------------------------------
+// Gráficas: el loop del original alimenta cada SimOpts.chartingInterval
+// ciclos y SOLO los charts visibles (main.frm:2098-2107). Aquí `graphOpen`
+// es el espejo de Charts(i).graf.Visible; el core guarda graphvisible(n) en
+// sim.evo (lo persiste el formato de sim, HDRoutines.bas:802).
+const graphOpen = new Set();
+// ActivForm.Visible del original: con la ventana abierta, DNA.bas:1265 llama
+// a exechighlight para el bot con foco en CADA ciclo. Aqui el push viaja con
+// el frame (una vez por frame dibujado, no por tick).
+let activOn = false;
+
+function feedGraph(n) {
+  if (!sim) return;
+  ensure(scratch.graph, 76 * 2);
+  const nS = api.graphFeed(sim, n, scratch.graph.p, 76);
+  const v = heapView(scratch.graph.p, Math.max(nS, 1) * 2);
+  const series = [];
+  for (let i = 0; i < nS; i++)
+    series.push({ name: takeStr(api.graphName(sim, i + 1)),
+                  color: v[i * 2 + 1], value: v[i * 2] });
+  self.postMessage({ t: 'graph-data', n, series, cycle: api.cycle(sim),
+                     interval: api.getOpt(sim, 110) });
+}
+
+// main.frm:2174-2201 NewGraph: registra el chart y lo alimenta ya mismo
+// ("EricL - Get the first data point and show the graph key right from the
+// start").
+function openGraph(n) {
+  graphOpen.add(n);
+  api.graphSet(sim, n, 0, 1);   // graphvisible(n) = True (Form_Activate)
+  feedGraph(n);
+}
+function closeGraph(n) {
+  graphOpen.delete(n);
+  if (sim) api.graphSet(sim, n, 0, 0);
+}
+
+// ---- Consola del bot (console.frm:evnt_textentered) ----------------------
+const CONSOLE_HELP = [
+  '',
+  'This console works as an input/output interface for a single robot.',
+  'It could be used for robot debugging and manipulation.',
+  'One of the most useful features of the r.c. is that it shows',
+  'which parts of the dna are executed in each cycle. Just press the single',
+  'cycle button to try. To watch the entire dna, just click the button at',
+  'the extreme right in the console.',
+  '',
+  'Other commands are:',
+  'printeye : prints the eye cells status',
+  'printtouch : prints the touch cells status',
+  'printtaste : prints the taste (hit) cells status',
+  'printmem (or ?) (.var|n): prints value of .var or location n',
+  'set (.var|n) value : stores value in variable .var or location n',
+  'energy e : sets the robot’s energy at e',
+  'cycle n : executes n cycles',
+  'execrob : executes all robots without doing a cycle',
+  'showdna : brings up the robot details window showing the robot’s dna',
+  'debug : fires one cycle with debugger enabled',
+];
+
+// Direcciones que usan printeye/printtouch/printtaste (memmap del core).
+const A = { EyeStart: 500, EYEF: 510, FOCUSEYE: 511, EYE1DIR: 521,
+            EYE1WIDTH: 531, hitup: 205, hitdn: 206, hitdx: 207, hitsx: 208,
+            shup: 210, shdn: 211, shdx: 212, shsx: 213 };
+
+function conOut(n, text) { self.postMessage({ t: 'console-out', n, text }); }
+
+// console.frm:395-405 — printmem: val() primero, sysvar despues; el rango
+// impreso es 0 < v < 1000 (el fuente excluye mem(1000)).
+function printmem(n, w) {
+  let v = parseInt(w, 10);
+  if (!Number.isFinite(v) || v === 0) v = api.sysvarTok(sim, n, w || '');
+  if (v > 0 && v < 1000) conOut(n, ' ' + v + '-> ' + api.botMem(sim, n, v));
+}
+
+function consoleCmd(n, line) {
+  const words = String(line).split(' ');
+  const w = (i) => (i < words.length ? words[i] : '');
+  switch (words[0]) {
+    case 'debug':
+      // El botón `debug` del original dispara un ciclo con el debugger:
+      // aquí la traza ya la escribe la VM en cada tick (dbgstring).
+      conOut(n, '***ROBOT DEBUG***' + takeStr(api.botDbg(sim, n)));
+      break;
+    case 'printeye': {
+      let s = 'EyeN: ';
+      for (let t = 1; t <= 9; t++) s += ' ' + api.botMem(sim, n, A.EyeStart + t);
+      s += ' .eyef: ' + api.botMem(sim, n, A.EYEF) +
+           ' .focuseye: ' + api.botMem(sim, n, A.FOCUSEYE);
+      s += '\nEyeNDir: ';
+      for (let t = 0; t <= 8; t++) s += ' ' + api.botMem(sim, n, A.EYE1DIR + t);
+      s += '\nEyeNWidth: ';
+      for (let t = 0; t <= 8; t++) s += ' ' + api.botMem(sim, n, A.EYE1WIDTH + t);
+      conOut(n, s);
+      break;
+    }
+    case 'printtouch':
+      conOut(n, 'Up: ' + api.botMem(sim, n, A.hitup) +
+                ' Dn: ' + api.botMem(sim, n, A.hitdn) +
+                ' Sx: ' + api.botMem(sim, n, A.hitsx) +
+                ' Dx: ' + api.botMem(sim, n, A.hitdx));
+      break;
+    case 'printtaste':
+      conOut(n, 'Up: ' + api.botMem(sim, n, A.shup) +
+                ' Dn: ' + api.botMem(sim, n, A.shdn) +
+                ' Sx: ' + api.botMem(sim, n, A.shsx) +
+                ' Dx: ' + api.botMem(sim, n, A.shdx));
+      break;
+    case 'cycle': {
+      const k = parseInt(w(1), 10) || 0;
+      for (let i = 0; i < k; i++) { api.tick(sim); checkGameState(); }
+      postFrame();
+      conOut(n, k + ' ciclo(s) ejecutado(s) — ciclo ' + api.cycle(sim));
+      sendGenes(n);
+      break;
+    }
+    case 'energy':
+      api.botSetNrg(sim, n, parseFloat(w(1)) || 0);
+      break;
+    case 'play':
+      running = true; loop();
+      self.postMessage({ t: 'running', running: true });
+      break;
+    case 'pause':
+      running = false;
+      self.postMessage({ t: 'running', running: false });
+      break;
+    case 'set': {
+      const val = parseFloat(w(2)) || 0;
+      if (Math.abs(val) < 32001) {
+        let v = parseInt(w(1), 10);
+        if (!Number.isFinite(v) || v === 0) v = api.sysvarTok(sim, n, w(1));
+        api.botSetMem(sim, n, v, val | 0);
+        printmem(n, w(1));
+      } else {
+        conOut(n, 'Value out of range.  Memory values must be between ' +
+                  '-32000 and 32000.');
+      }
+      break;
+    }
+    case 'printmem':
+    case '?':
+      printmem(n, w(1));
+      break;
+    case 'execrob':
+      api.execRobs(sim);
+      postFrame();
+      sendGenes(n);
+      break;
+    case 'showdna': {
+      const p = api.botText(sim, n);
+      let text = '';
+      if (p) { text = M.UTF8ToString(p); api.free(p); }
+      self.postMessage({ t: 'bot-text', n, text });
+      break;
+    }
+    case 'help':
+      for (const l of CONSOLE_HELP) conOut(n, l);
+      break;
+    default:
+      break;  // el original ignora lo que no reconoce
+  }
+}
+
+// DNA.bas:1254-1263 — la lista de genes ejecutados que la consola imprime
+// tras cada ciclo, y el mismo dato que come ActivForm.DrawGrid.
+function sendGenes(n) {
+  ensure(scratch.ga, 512);
+  const c = api.botGa(sim, n, scratch.ga.p, 512);
+  const g = new Int32Array(M.HEAP32.buffer, scratch.ga.p, Math.max(c, 1));
+  self.postMessage({ t: 'genes', n, ga: Array.from(g.subarray(0, c)) });
+}
+
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
   // El chequeo E5 corre tras CADA tick (como el loop de main.frm:2079-2081):
@@ -375,6 +601,13 @@ function runTicks(n) {
   for (let i = 0; i < n; i++) {
     api.tick(sim);
     checkGameState();
+    // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
+    // solo los charts visibles.
+    if (graphOpen.size) {
+      const iv = api.getOpt(sim, 110) | 0;
+      if (iv > 0 && api.cycle(sim) % iv === 0)
+        for (const g of graphOpen) feedGraph(g);
+    }
     if (!running) break;
   }
   tickCount += n;
@@ -435,6 +668,10 @@ function resetSim(msg) {
   // E5: la ronda siguiente reconstruye con esto (species copiadas: las
   // siembras manuales posteriores tambien entran a la ronda).
   lastReset = { ...msg, species: [...msg.species] };
+  // E6: la sim nueva no sabe de los charts abiertos — repone graphvisible
+  // (el formato de sim lo persiste, HDRoutines.bas:802) y suelta un primer
+  // punto en cada uno, como NewGraph.
+  for (const g of graphOpen) { api.graphSet(sim, g, 0, 1); feedGraph(g); }
   // E5: con F1 activo el arranque corre FindSpecies (main.frm:1337-1340).
   if (api.getOpt(sim, 91)) {
     const ts = api.f1Start(sim);
@@ -466,6 +703,11 @@ function loadSim(msg) {
   focusBot = 0;  // los slots de bot cambian al cargar
   log(`sim cargada (${bytes.length} bytes), ciclo ${api.cycle(sim)}, ` +
       `${api.totalRobots(sim)} bots`);
+  // E6 — HDRoutines.bas:1482-1519: el archivo dice qué charts estaban
+  // visibles y el original los reabre uno a uno al cargar.
+  const restore = [];
+  for (let g = 1; g <= 18; g++) if (api.graphGet(sim, g, 0)) restore.push(g);
+  if (restore.length) self.postMessage({ t: 'graphs-restore', list: restore });
   postFrame();
 }
 
@@ -616,6 +858,109 @@ self.onmessage = (e) => {
       api.delAllTps(sim);
       log('todos los teleporters borrados');
       postFrame();
+      break;
+    // ---- E6: registro y analisis ----
+    case 'graph-open':
+      if (sim) openGraph(msg.n | 0);
+      break;
+    case 'graph-close':
+      closeGraph(msg.n | 0);
+      break;
+    case 'graph-update':          // boton "Update Now" (grafico.frm:4147)
+      if (sim) feedGraph(msg.n | 0);
+      break;
+    case 'graph-query':
+      if (sim) {
+        api.graphSetQuery(sim, msg.which | 0, msg.q || '');
+        self.postMessage({ t: 'graph-query', which: msg.which | 0,
+                           q: takeStr(api.graphGetQuery(sim, msg.which | 0)) });
+      }
+      break;
+    case 'graph-save-flag':       // chk_GDsave (grafico.frm:3868)
+      if (sim) api.graphSet(sim, msg.n | 0, 1, msg.on ? 1 : 0);
+      break;
+    case 'graph-pos':             // graphleft/graphtop (grafico.frm:3999-4000)
+      if (sim) {
+        api.graphSet(sim, msg.n | 0, 2, msg.left | 0);
+        api.graphSet(sim, msg.n | 0, 3, msg.top | 0);
+      }
+      break;
+    case 'graph-filecounter':     // grafico.frm:4085 (+1 por .gsave escrito)
+      if (sim) {
+        const c = api.graphGet(sim, msg.n | 0, 4) + 1;
+        api.graphSet(sim, msg.n | 0, 4, c);
+        self.postMessage({ t: 'graph-filecounter', n: msg.n | 0, c });
+      }
+      break;
+    case 'snapshot': {            // Database.bas:19 Snapshot (los vivos)
+      const r = api.snapRun(sim, msg.withMut ? 1 : 0);
+      self.postMessage({ t: 'snapshot-done', records: r,
+                         snp: takeStr(api.snapTake(sim, 0)),
+                         mut: msg.withMut ? takeStr(api.snapTake(sim, 1)) : '' });
+      break;
+    }
+    case 'dead-take':             // Autosave\DeadRobots.snp del original
+      self.postMessage({ t: 'dead-data', records: api.deadRecords(sim),
+                         snp: takeStr(api.deadTake(sim, 0)),
+                         mut: takeStr(api.deadTake(sim, 1)) });
+      if (msg.drain) api.deadDrain(sim);
+      break;
+    case 'dead-reset':
+      api.deadReset(sim);
+      log('registro de muertos reiniciado');
+      break;
+    case 'findbest': {            // MDIForm1.frm:1398 — robfocus = fittest
+      const n = api.fittest(sim);
+      focusBot = n;
+      self.postMessage({ t: 'focus', n });
+      log(n ? `Find Best: bot #${n} (${takeStr(api.botName(sim, n))})`
+            : 'Find Best: sin candidatos (fittest ignora vegetales)');
+      postFrame();
+      break;
+    }
+    case 'family': {              // parentele.frm: score tipos 0/1 y 2/3
+      // Sin clearHighlight previo: el original ACUMULA (Command1 solo pone
+      // highlight; el unico borrado es `unfocus`, main.frm:2155, que aqui es
+      // el boton "Limpiar"). Es el mismo flag que usa el Player Bot para
+      // elegir a quien pilotar — tambien en el original.
+      const n = msg.n | 0, maxrec = msg.maxrec | 0 || 1000;
+      const total = api.offspring(sim, n, maxrec);
+      const hl = api.highlightFam(sim, n, maxrec);
+      let lines = null;
+      if (msg.lines) {
+        ensure(scratch.fam, 4096 * 7);
+        const c = api.familyLines(sim, n, scratch.fam.p, 4096);
+        if (c >= 4096) log('philogeny: arbol recortado a 4096 enlaces');
+        lines = Array.from(heapView(scratch.fam.p, Math.max(c, 1) * 7)
+                             .subarray(0, c * 7));
+      }
+      self.postMessage({ t: 'family', n, total, highlighted: hl, lines });
+      postFrame();
+      break;
+    }
+    case 'clear-highlight':
+      api.clearHighlight(sim);
+      self.postMessage({ t: 'family', n: 0, total: 0, highlighted: 0,
+                         lines: [] });
+      postFrame();
+      break;
+    case 'console':               // Consoleform.openconsole / endconsole
+      if (sim) api.consoleOpen(sim, msg.n | 0, msg.on ? 1 : 0);
+      if (msg.on && sim)
+        self.postMessage({ t: 'console-open', n: msg.n | 0,
+                           absnum: api.botAbsnum(sim, msg.n | 0),
+                           name: takeStr(api.botName(sim, msg.n | 0)),
+                           genenum: api.botGenenum(sim, msg.n | 0) });
+      break;
+    case 'console-cmd':
+      if (sim) consoleCmd(msg.n | 0, msg.line || '');
+      break;
+    case 'genes':
+      if (sim) sendGenes(msg.n | 0);
+      break;
+    case 'activ':                 // ActivForm abierta/cerrada
+      activOn = !!msg.on;
+      if (activOn && sim && focusBot) sendGenes(focusBot);
       break;
     case 'ack':
       recycleFrameBuffer(msg.buf);

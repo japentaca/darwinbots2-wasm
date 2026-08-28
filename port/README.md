@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 166 casos / 3370 aserciones en verde (en los tres modos), con las extensiones E1..E5 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 172 casos / 3465 aserciones en verde (en los tres modos), con las extensiones E1..E6 cerradas (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -239,6 +239,40 @@ propio `dbcore.wasm`. Los de Veggies se siembran como vegetales. El
 archivador que los baja/valida/publica vive en `tools/bestiary/` (ver su
 README); si `bots.json` no está, la página funciona igual con los dos
 presets de siempre.
+
+### Registro y análisis (etapa E6)
+
+El menú "Recording" y el aparato de gráficas del original, en el panel
+"Registro y análisis":
+
+- **Gráficas** (`grafico.frm` + `main.frm` NewGraph/FeedGraph/CalcStats): las
+  18 series de `Globals.bas:127-151`, cada una en su ventana flotante con
+  leyenda, "Update Now", "Reset" y el volcado `.gsave`. El loop del worker
+  alimenta cada `chartingInterval` ciclos y solo los charts abiertos, como
+  `main.frm:2098-2107`; `graphvisible`/`graphleft`/`graphtop`/`graphsave`/
+  `graphfilecounter` viven en el core y los persiste el formato de sim, así
+  que al cargar un `.dbsim` se reabren los gráficos que estaban visibles.
+  Los tres personalizables aceptan la misma consulta en notación polaca
+  inversa del original (`pop avgmut avgage avgsons avgnrg avglen avgcond
+  simnrg specidiv maxgd simpgenetic` + `add sub mult div pow`).
+- **Snapshots** (`Database.bas`, en el core como `database.hpp`): "Snapshot
+  of the living" descarga el `.snp` y el `_Mutations.txt`; "Snapshot of the
+  dead" (`DeadRobotSnp`/`SnpExcludeVegs`) acumula un registro por muerte
+  desde `KillRobot` y se descarga cuando se quiera.
+- **Menú Robot**: "Find Best" (`fittest`), la consola por bot de
+  `console.frm` con todos sus comandos (`printeye`/`printtouch`/`printtaste`/
+  `printmem`/`set`/`energy`/`cycle`/`play`/`pause`/`execrob`/`showdna`/
+  `debug`/`help`) y la philogeny de `parentele.frm` (descendencia total,
+  familia resaltada y el árbol de parentesco de `score` tipo 3). Las barras
+  de activación de genes de `ActivForm.frm` se pueblan con el `ga()` del bot
+  con foco, ciclo a ciclo.
+
+Decisión de capa host documentada en `Chart.redraw` (`web/index.html`): la
+contabilidad del chart (búfer circular, poda de series, `maxy`, `.gsave`)
+corre en cada punto como en el fuente, pero el **pintado** se coalesce en el
+`requestAnimationFrame`. En VB6 el chart se repintaba en el mismo hilo del
+loop y no podía atrasarse; aquí la sim vive en un worker y publicaría puntos
+más rápido de lo que el hilo de la página dibuja.
 
 Medido en esta máquina (Chrome, campo 32000², velocidad máx): con ~2000
 bots el `draw()` de Canvas 2D cuesta ~4 ms/frame mientras el tick del core

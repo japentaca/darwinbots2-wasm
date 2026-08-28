@@ -41,6 +41,11 @@ struct VmContext {
   RndSource* rndy = nullptr;
   vb_single xDivisor = 1.0f;  // main.frm:1252-1256; campo 32000x32000 => 1
   vb_single yDivisor = 1.0f;
+  // E6 — el gate `(n = robfocus) Or Not (rob(n).console Is Nothing)` de
+  // DNA.bas:75/152/1181: solo con el bot bajo observacion se puebla ga().
+  // Es estado de modulo del original (robfocus + el objeto consola), asi que
+  // aqui vive en el contexto del motor; ExecRobs lo fija por bot.
+  bool gaTrack = false;
 };
 
 namespace detail {
@@ -310,7 +315,10 @@ inline void ExecuteBasicCommand(VmContext& vm, Bot& bot, int n) {
 }
 
 // DNA.bas:329-363 — el coste exime debugint/debugbool (value >= 13).
-inline void ExecuteAdvancedCommand(VmContext& vm, Bot& bot, int n) {
+// at_position es `a`, el indice del token en el ADN (DNA.bas:119): solo lo
+// usa la traza dbgstring de debugint/debugbool.
+inline void ExecuteAdvancedCommand(VmContext& vm, Bot& bot, int n,
+                                   vb_long at_position = 0) {
   if (n < 13) bot.nrg -= vm.costs.of(Costs::ADCMDCOST);
   switch (n) {
     case 1: findang(vm, bot); break;
@@ -325,8 +333,8 @@ inline void ExecuteAdvancedCommand(VmContext& vm, Bot& bot, int n) {
     case 10: DNAlogx(vm.ints); break;
     case 11: DNAsin(vm.ints); break;
     case 12: DNAcos(vm.ints); break;
-    case 13: DNAdebugint(vm.ints); break;   // traza dbgstring = capa UI
-    case 14: DNAdebugbool(vm.bools); break;
+    case 13: DNAdebugint(vm.ints, &bot.dbgstring, at_position); break;
+    case 14: DNAdebugbool(vm.bools, &bot.dbgstring, at_position); break;
     default: break;
   }
 }
@@ -415,6 +423,21 @@ struct FlowState {
   vb_long currgene = 0;
 };
 
+// E6 — `rob(n).ga(currgene) = True` (DNA.bas:152 y :1181). El array se
+// dimensiona a genenum y currgene lo cuenta el flujo: si el ADN abre mas
+// genes de los que CountGenes vio, el original indexaba fuera de rango
+// (error 9 -> truncamiento del tick, 10-CICLO.md §14). Decision de port:
+// registrar y no escribir — la traza es observacion, nunca puede cambiar la
+// simulacion.
+inline void MarkGeneActive(VmContext& vm, Bot& bot, vb_long currgene) {
+  if (!vm.gaTrack) return;
+  if (currgene < 0 || currgene >= static_cast<vb_long>(bot.ga.size())) {
+    vm.diag.err9_ga_index += 1;
+    return;
+  }
+  bot.ga[static_cast<std::size_t>(currgene)] = true;
+}
+
 // DNA.bas:1159-1203 — devuelve false si fue `cond` (el llamador cuenta
 // condnum). El bug del else canónico (V-01) vive en el paso "Not ingene"
 // que fuerza NEXTBODY antes de que el caso else consulte el flag.
@@ -434,6 +457,11 @@ inline bool ExecuteFlowCommands(VmContext& vm, Bot& bot, FlowState& f, int n) {
       ret = true;
       if (f.flow == FlowState::COND) f.condflag = AddupCond(vm.bools);
       if (!f.ingene) f.condflag = true;  // NEXTBODY — mata al else tras start
+      // DNA.bas:1179-1183 (E6): el cuerpo sin stores tambien cuenta como
+      // gen disparado; se lee el flow ANTES del CLEAR de la linea siguiente.
+      if (f.condflag &&
+          (f.flow == FlowState::ELSEBODY || f.flow == FlowState::BODY))
+        MarkGeneActive(vm, bot, f.currgene);
       f.flow = FlowState::CLEAR;
       switch (n) {
         case 2:  // start
@@ -468,7 +496,13 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
 
   vm.ints.clear();
   vm.bools.clear();
+  // E6 — DNA.bas:75-82: el ReDim de ga() solo corre para el bot observado
+  // (foco o consola abierta); el resto de los bots ni siquiera lo dimensiona.
+  if (vm.gaTrack) {
+    bot.ga.assign(static_cast<std::size_t>(bot.genenum) + 1, false);
+  }
   bot.condnum = 0;
+  bot.dbgstring.clear();  // DNA.bas:86
 
   const vb_long ub = static_cast<vb_long>(bot.dna.size()) - 1;
   if (ub < 1) {
@@ -507,7 +541,7 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
         break;
       case tok::ADVANCED:
         if (f.flow != FlowState::CLEAR)
-          detail::ExecuteAdvancedCommand(vm, bot, t.value);
+          detail::ExecuteAdvancedCommand(vm, bot, t.value, a);
         break;
       case tok::BITWISE:
         if (f.flow != FlowState::CLEAR)
@@ -523,7 +557,10 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
         break;
       case tok::STORE:
         if (f.flow == FlowState::BODY || f.flow == FlowState::ELSEBODY) {
-          if (detail::CondStateIsTrue(vm.bools)) ExecuteStores(vm, bot, t.value);
+          if (detail::CondStateIsTrue(vm.bools)) {
+            ExecuteStores(vm, bot, t.value);
+            detail::MarkGeneActive(vm, bot, f.currgene);  // DNA.bas:152 (E6)
+          }
         }
         break;
       case tok::RESERVED:

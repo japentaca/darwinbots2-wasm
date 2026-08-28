@@ -2186,3 +2186,110 @@ aritmética del fuente donde aplica). Suite tras E5: **166 casos / 3370
 aserciones** en verde en los tres modos, con mutation-check (alterar 1.2,
 la media 9:1, el 1.15, el hoisting de `clist` o la guarda de `LFOR` rompe
 casos).
+
+## 13. Familia E6 — registro y análisis (extensión E6, 2026-08-28)
+
+> Extensión de la suite acordada en `PLAN-EXTENSIONES.md §E6`. La etapa es
+> **capa host** salvo esta rebanada mínima de core: los tres campos de
+> **observación** del `Type robot` que el port no había portado porque
+> ningún sistema de la simulación los lee, y el módulo `Database.bas`.
+>
+> **Por qué se abre el core en una etapa host** (la parada documentada que
+> pide el brief de E6): las tres funciones que la etapa expone —
+> gene activations (`ActivForm.frm`), la consola del bot (`console.frm`) y
+> "Snapshot of the dead" (`Database.bas:89`) — se alimentan de estado que
+> solo el intérprete y `KillRobot` pueden producir, en el instante exacto en
+> que corren. No hay forma de reconstruirlo desde fuera:
+>
+> - `rob(n).ga()` (`Robots.bas:328`) lo escribe `ExecuteDNA` mientras camina
+>   el ADN (`DNA.bas:152` y `:1181`); al terminar el ciclo el flujo ya se
+>   perdió. Es el dato de `ActivForm` y de la lista "*** ROBOT GENES
+>   EXECUTION ***" de la consola (`DNA.bas:1254-1263`).
+> - `rob(n).dbgstring` (`Robots.bas:355`) lo escriben los opcodes
+>   `debugint`/`debugbool` (`DNA.bas:545`/`:557`) con el valor **que estaba
+>   en el stack** y la posición del token; es la salida del botón `debug` de
+>   la consola.
+> - `AddRecord` (`Database.bas:89`) corre DENTRO de `KillRobot`
+>   (`Robots.bas:2971-2977`) y su columna *Fitness* llama a `score` sobre la
+>   población **viva en ese instante**; el slot se recicla enseguida
+>   (`posto`), así que el registro no puede armarse después.
+>
+> Las tres son observación pura: escribirlas no cambia una sola decisión del
+> tick (ningún consumidor dentro del core lee `ga`, `dbgstring` ni
+> `deadSnp`), y la suite heredada quedó intacta por construcción — 166
+> casos / 3370 aserciones siguen en verde sin retocar ni un caso.
+>
+> **Deslinde**: `Database.bas` entra al core (`database.hpp`) como
+> `formats.hpp` en M5 — el módulo se transcribe entero pero sobre búferes en
+> memoria: `Snapshot` devuelve los dos "archivos" y `AddRecord` los
+> acumula en `Sim.deadSnp`, y la capa host los entrega como descarga del
+> navegador. Los diálogos (`SnapBrowse`, el MsgBox de "¿generar también el
+> historial de mutaciones?"), la barra `GraphLab` y el `On Error GoTo fine`
+> de disco son UI y quedan fuera. **Fuera del core, en la capa host**
+> (`wasm/dbcore_api.cpp`, con su propia verificación por smoke test): todo
+> el aparato de gráficas — `CalcStats`/`FeedGraph`/`NewGraph` viven en
+> `main.frm`, el form de la UI, y `grafico.frm` es el chart entero.
+>
+> **Inventario RNG**: E6 consume **0 extracciones** (los seis casos corren
+> con `InjectedRnd` vacío).
+>
+> **Aproximación documentada**: `CStr` sobre coma flotante. VB6 emite el
+> número en formato general con 7 dígitos significativos (Single) y 15
+> (Double), exponente en mayúscula; el port usa `%.7G`/`%.15G`. Es el mismo
+> criterio ya documentado en `formats.hpp` para el `CStr(Single)` del tag de
+> eco-IM (B8-3). Solo afecta a texto de diagnóstico, nunca a la simulación.
+>
+> **Sitio de error 9 nuevo** — `err9_ga_index`: `rob(n).ga(currgene)` con
+> `currgene` mayor que el `genenum` con el que se dimensionó el array
+> (`DNA.bas:77`). En el original desbordaba el `ReDim` (error 9 →
+> truncamiento del tick, `10-CICLO.md §14`); decisión de port: **registrar
+> en `VmDiag` y no escribir** — la traza es observación y jamás puede
+> alterar la simulación.
+
+| Caso | Qué fija | Fuente |
+|---|---|---|
+| **E6-01** | El gate de `ga()`: sin foco ni consola el array **ni se dimensiona**; con foco (o `consoleOpen`) sale `ReDim ga(genenum)` = índices 0..genenum, y solo el gen de condición verdadera queda marcado. Se rehace en cada ciclo (no se pega). | `DNA.bas:75-82`, `:152` |
+| **E6-02** | El cuerpo **sin stores** marca igual: el único marcado posible es el del epílogo de `start`/`else`/`stop`, leyendo `CurrentFlow` ANTES del `CLEAR` (el fix de Botsareus 3/24/2012 contra "cualquier gen else mostraba activación"). | `DNA.bas:1179-1183` |
+| **E6-03** | `dbgstring`: `"<CRLF>" & valor & " at position " & a`, con `True`/`False` para `debugbool` (no −1/0) y el índice del token como posición; se vacía al empezar cada `ExecuteDNA` y **no** depende del gate de `ga()`. | `DNA.bas:86`, `:539-561`, `:119` |
+| **E6-04** | `AddRecord` disparado por `KillRobot`: gate `DeadRobotSnp`, exclusión `SnpExcludeVegs`, cabeceras **una sola vez** (`If Dir(path) = ""`), un registro por muerte con sus 14 columnas, la guarda `DnaLen = 1` que corre **después** de abrir los archivos (crea cabeceras, no deja registro) y el **slot fantasma 0**: `MemoryPressureKill` llama a `KillRobot(0)` con el `selectrobot` que nunca se resetea ([PROBABLE BUG] A1-3/B-02) y `rob(0)` tiene `DnaLen = 0`, así que la guarda no lo salva y sale una fila con AbsNum 0 cuyo *Fitness* suma la descendencia de TODO fundador (`parent = 0`) — replicado. | `Robots.bas:2971-2977`, `Database.bas:89-147` |
+| **E6-05** | `Snapshot` de los vivos: cabecera, recorrido por slot con el filtro `exist And DnaLen > 1`, el `.snp` idéntico con y sin historial de mutaciones, y los muertos fuera. | `Database.bas:19-87` |
+| **E6-06** | La columna *Fitness* es la fórmula de `fittest` con `TotalOffspring` arrancando en **1**: `(TotalOffspring ^ sPopulation) * (s ^ sEnergy)` con `s = score(rn,1,10,0) + nrg + body*10` propagando en Double término a término, ponderada por `intFindBestV2`. | `Database.bas:49-57`, `main.frm:2996-3010` |
+
+Los seis casos viven en `port/tests/test_registro.cpp`. Suite tras E6:
+**172 casos / 3465 aserciones** en verde en los tres modos, con
+mutation-check (quitar el marcado del epílogo, mover la guarda `DnaLen = 1`
+o borrar el recorte del `vbCrLf` sobrante rompe casos).
+
+### 13.1 Hallazgos de la capa host (gráficas, sin caso dorado)
+
+El aparato de gráficas es capa host (`main.frm` es el form) y se verifica con
+smoke test bajo node, no con casos dorados; estos tres hallazgos quedan
+anotados en `wasm/dbcore_api.cpp` junto a la transcripción:
+
+1. **`Dim l, ll As Long`** (`main.frm:2387`) declara `l` como **Variant** y
+   solo `ll` como Long — la distancia genética (`l = OldGD`,
+   `l = DoGeneticDistance(...) * 1000`) conserva su parte decimal. Truncarla
+   a Long, como hacía la primera transcripción, achata el gráfico 13/15.
+   Corregido en la revisión de rama.
+2. **La guarda de promedios de la rama "todos los gráficos"**
+   (`main.frm:2450`) es `If dati(p, POPULATION_GRAPH) <> 0` con el `p` que
+   quedó del bucle de bots (la última especie vista), no con el `p` del bucle
+   de promedios que viene justo debajo. Inocuo en la práctica (con un solo
+   bot vivo siempre es ≠ 0; con la sim vacía `p = 0` y el bloque se salta
+   entero), pero es un `[PROBABLE BUG]` estructural.
+3. **`CalcStats` muta el bot**: `GenMut` y `OldGD` (`main.frm:2836`/`:2855`)
+   son la "moneda" que evita recalcular la distancia genética en cada punto.
+   Abrir el gráfico 13 los reescribe. No cambia la trayectoria de la
+   simulación (nadie más los lee; solo `mutate` decrementa `GenMut`,
+   `NeoMutations.bas:224`), pero **sí** cambia lo que un `SaveSimulation`
+   posterior escriba: los dos campos se persisten.
+
+Cuatro divergencias más, todas con decisión de port anotada: el `Round(…, 2)`
+de `ENERGY_SPECIES` existe en la rama 0 y no en la rama de un solo gráfico
+(y el `Round(…, 4)` del CostX, al revés) — se replican tal cual; la división
+`(.LastMut + .Mutations) / .DnaLen` no tiene guarda en el fuente (error 11
+con `DnaLen = 0`) y aquí se salta el sumando; el `SubSpeciesNumber` de
+`main.frm:2432-2437` es código muerto y no se transcribe; y el `On Error GoTo
+bypass` de `RedrawGraph` se traga el redibujo entero una vez cada 1001 puntos
+(con `Pivot = 0`, `ReorderSeries` indexa `data(-1)`) — replicado en el chart
+de la página.

@@ -240,6 +240,23 @@ struct Bot {
   unsigned char multibot_time = 0;
   unsigned char Chlr_Share_Delay = 0;
   unsigned char dq = 0;
+
+  // --- campos de OBSERVACION del Type robot (E6) ---
+  // Los tres existen en el fuente y no tienen ningun consumidor dentro de la
+  // simulacion: solo los lee la capa de presentacion (ActivForm, la consola
+  // del bot y el snapshot). El port los suma en E6 sin tocar ninguna
+  // trayectoria: escribirlos no cambia una sola decision del tick.
+  std::vector<bool> ga;      // Robots.bas:328 — genes que dispararon este
+                             // ciclo; ReDim a genenum en cada ExecuteDNA
+                             // (DNA.bas:76-81) SOLO para el bot con foco o
+                             // con consola abierta.
+  bool consoleOpen = false;  // Robots.bas:288 (`console As Consoleform`): el
+                             // objeto de consola es de la UI; en el core
+                             // queda el unico bit que el motor consulta
+                             // (`Not (rob(n).console Is Nothing)`).
+  std::string dbgstring;     // Robots.bas:355 — traza de debugint/debugbool
+                             // (DNA.bas:545,557); se vacia en cada
+                             // ExecuteDNA (DNA.bas:86).
   bool highlight = false;  // E5 (Robots.bas:318): seleccion Player Bot; no
                            // lo persiste ningun formato (el highlight de
                            // HDRoutines:2330 es el del Teleporter)

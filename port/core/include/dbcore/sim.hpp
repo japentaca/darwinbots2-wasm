@@ -418,6 +418,22 @@ struct GameEvents {
   std::vector<std::string> dq_log;  // dreason: líneas de Disqualifications.txt
 };
 
+// E6 — "Snapshot of the dead" (Database.bas:89 AddRecord, disparado desde
+// KillRobot). El original hacia Append sobre Autosave\DeadRobots.snp y
+// Autosave\DeadRobots_Mutations.txt en cada muerte; el port acumula el mismo
+// texto en memoria y la capa host lo entrega como descarga (misma decision
+// que formats.hpp: el core no toca disco). `started` hace de `Dir(path) = ""`
+// del fuente — la cabecera se emite UNA vez; drenar el buffer no equivale a
+// borrar el archivo (para eso esta reset()).
+struct DeadSnapshot {
+  std::string snp;   // DeadRobots.snp
+  std::string mut;   // DeadRobots_Mutations.txt
+  bool started = false;
+  vb_long records = 0;
+  void reset() { snp.clear(); mut.clear(); started = false; records = 0; }
+  void drain() { snp.clear(); mut.clear(); }  // el "archivo" sigue existiendo
+};
+
 struct Sim {
   SimOptsT opts;
   VmContext vm;  // stacks globales + Costs + VmDiag
@@ -463,6 +479,7 @@ struct Sim {
   F1State f1;
   PlayerBotState pb;
   GameEvents events;
+  DeadSnapshot deadSnp;  // E6 (Database.bas): registro de los muertos
 
   // rob(): el índice 0 existe y no se puebla (10-CICLO.md §8). Arranca con
   // UBound=500 y crece de a 100 (posto, Robots.bas:2925-2948).
