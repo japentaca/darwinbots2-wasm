@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 177 casos / 3530 aserciones en verde (en los tres modos), con las extensiones E1..E7 y E6.5 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 178 casos / 3544 aserciones en verde (en los tres modos), con las extensiones E1..E7 y E6.5 cerradas (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -365,7 +365,16 @@ La etapa abrió el core en dos puntos, con casos dorados (familia E7 de
 (`Sim::fmt`: apodo, sunbelt, SaveWithoutMutations) a los teleporters, y
 `RemoveExtinctSpecies` poda el registro de especies en P6 (sin ella, tras 46
 especies llegadas y extinguidas, el gate de `TeleportInBots` cerraba la
-entrada para siempre).
+entrada para siempre); de paso, el alta de especies de `UpdateCounters` es
+ahora el `AddSpecie` completo del original.
+
+Semántica de las transiciones (del fuente): una **sim nueva apaga** Internet
+Mode (`StartNew_Click` llama al toggle, `OptionsForm.frm:4802`); una **ronda
+nueva** (F1/restart) lo conserva y los teleporters pasan tal cual al handle
+nuevo; **cargar** una sim borra el puerto (`LoadSimulation`) y el modo queda
+encendido sin puerto hasta reconectar. Nada se pierde en el camino: lo que
+espera salir sigue en la cola del cliente y lo recibido y no cargado queda
+retenido para el próximo puerto.
 
 ### Toolchain verificado (Windows 11, 2026-08-26)
 

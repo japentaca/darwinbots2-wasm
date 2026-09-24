@@ -32,7 +32,14 @@
 //    la carpeta outbound con el cliente IM desconectado.
 //  - Un .dbo sin ack en 8 s vuelve a `pending` y se re-sortea (el par pudo
 //    irse): un organismo no se pierde por una desconexión. El receptor
-//    descarta duplicados por (from, file) y re-confirma.
+//    descarta duplicados por (from, file) y re-confirma. Un ack solo vale si
+//    viene del par al que se mandó; uno tardío (el .dbo ya se había
+//    re-encolado) lo saca de la cola. Queda un caso de clon posible y
+//    contado en `late`: el ack tardío llega cuando la copia ya salió hacia
+//    otro par.
+//  - Apagar no pierde nada: la cola (y lo que estaba en camino) se conserva
+//    para la próxima conexión, como la carpeta outbound con el cliente
+//    cerrado.
 //  - `pending` tiene tope (500); pasado el tope se descarta el más viejo y
 //    se cuenta en `dropped`.
 (function (root) {
@@ -76,7 +83,8 @@
     pending: [],          // {file, data(b64), label}
     inflight: new Map(),  // file -> {item, to, t}
     seen: new Map(),      // from|file -> true (duplicados)
-    counters: { sent: 0, acked: 0, recv: 0, dropped: 0, resent: 0, stats: 0 },
+    counters: { sent: 0, acked: 0, recv: 0, dropped: 0, resent: 0, late: 0,
+                stats: 0 },
     fileSeq: 0,
     hooks: {},            // onDbo(bytes, from) -> bool · onChange() · onLog(s)
     _tr: null,
@@ -278,17 +286,33 @@
         changed();
         break;
       }
-      case 'ack':
+      case 'ack': {
         touchPeer(m);
-        if (ImNet.inflight.delete(m.file)) { ImNet.counters.acked += 1; changed(); }
+        const f = ImNet.inflight.get(m.file);
+        if (f && f.to === m.from) {
+          ImNet.inflight.delete(m.file);
+          ImNet.counters.acked += 1;
+        } else {
+          // Tardío: el .dbo había vuelto a la cola (sacarlo) o ya salió
+          // hacia otro par (posible clon, se cuenta).
+          const k = ImNet.pending.findIndex((it) => it.file === m.file);
+          if (k >= 0) { ImNet.pending.splice(k, 1); ImNet.counters.acked += 1; }
+          else if (f) ImNet.counters.late += 1;
+        }
+        changed();
         break;
+      }
       case 'stats': {
         const p = touchPeer(m);
         if (!p) break;
         let pop = null;
         try { pop = JSON.parse(m.json); } catch { /* el JSON del original */ }
-        p.census = { file: m.file, cycle: pop ? pop.cycle : 0, pop,
-                     species: Array.isArray(m.species) ? m.species : [] };
+        const species = Array.isArray(m.species)
+          ? m.species.filter((r) => Array.isArray(r) && typeof r[0] === 'string')
+          : [];
+        p.census = { file: m.file, cycle: pop ? pop.cycle : 0,
+                     pop: pop && Array.isArray(pop.population) ? pop : null,
+                     species };
         changed();
         break;
       }
@@ -306,16 +330,15 @@
     });
     ImNet.hooks = hooks || {};
     for (const k in ImNet.counters) ImNet.counters[k] = 0;
-    ImNet.seen.clear();
     ImNet.on = true;
     ImNet._backoff = 1000;
     openTransport();
     ImNet._hb = setInterval(heartbeat, HEARTBEAT_MS);
   };
 
-  // CloseWindow(pid) del original: el cliente se va. Lo que quedaba en
-  // camino o en espera vuelve al worker para que decida (se descarta: el
-  // original dejaba esos archivos en la carpeta outbound).
+  // CloseWindow(pid) del original: el cliente se va. Lo que estaba en
+  // camino vuelve a la cola, y la cola se conserva para la próxima
+  // conexión (la carpeta outbound seguía ahí). Devuelve cuántos esperan.
   ImNet.stop = function () {
     const had = ImNet.on;
     ImNet.on = false;
@@ -323,12 +346,12 @@
     clearTimeout(ImNet._retry);
     closeTransport();
     ImNet.peers.clear();
-    const left = ImNet.pending.length + ImNet.inflight.size;
-    ImNet.pending = [];
+    for (const f of ImNet.inflight.values()) ImNet.pending.unshift(f.item);
     ImNet.inflight.clear();
+    trimPending();
     ImNet.status = 'apagado';
     if (had) changed();
-    return left;
+    return ImNet.pending.length;
   };
 
   ImNet.setIdentity = function (name, simId) {
@@ -360,6 +383,7 @@
     for (const p of ImNet.peers.values()) {
       if (!p.census) continue;
       for (const [name, pop, veg, color] of p.census.species) {
+        if (typeof name !== 'string') continue;
         if (out.size >= MAX_INTERNET_SPECIES && !out.has(name)) continue;
         const e = out.get(name) || { name, color, veg: !!veg, pop: 0 };
         e.pop += pop | 0;

@@ -256,6 +256,7 @@ function bindApi() {
     gendistStep:   C('db_sim_vis_gendist_step', 'number', ['number','number']),
     // E7 - Internet Mode
     tpGet:         C('db_sim_tp_get', 'number', ['number','number','number']),
+    tpCopy:        C('db_sim_tp_copy', 'number', ['number','number','number']),
     tpSet:         C('db_sim_tp_set', null, ['number','number','number','number']),
     outCount:      C('db_sim_tp_outbox_count', 'number', ['number','number']),
     outTake:       C('db_sim_tp_outbox_take', 'number', ['number','number','number']),
@@ -503,10 +504,13 @@ function newRound() {
   for (let i = 1; i <= 20; i++) keep.wins.push(api.f1Wins(sim, i));
   const seed = (Math.floor(Math.random() * 2147483646) + 1);
   const wasRunning = running;
-  resetSim({ ...lastReset, seed });
-  // E7: una ronda nueva NO pasa por StartNew_Click (OptionsForm.frm:4802,
-  // que apaga Internet): el modo sigue y el puerto vuelve en la sim nueva.
-  if (imCfg) imReattach('ronda nueva');
+  // E7: StartSimul no toca Teleporters() (solo LoadSimulation los
+  // reinicia, HDRoutines.bas:1332) y la ronda no pasa por StartNew_Click
+  // (OptionsForm.frm:4802, que apagaría Internet): los teleporters — el
+  // puerto Internet con su inbox incluido — pasan tal cual al handle nuevo,
+  // sin RNG.
+  resetSim({ ...lastReset, seed }, true);
+  if (imCfg) imInboxKnown = imPort() ? api.tpGet(sim, imPort(), 13) : 0;
   api.setOpt(sim, 90, keep.restart);
   api.setOpt(sim, 91, keep.f1);
   api.setOpt(sim, 93, keep.dq);
@@ -525,7 +529,7 @@ function newRound() {
 
 // Tras cada tanda de ticks: eventos E5 del core + gate de rondas.
 function checkGameState() {
-  if (!sim) return;
+  if (!sim) return false;
   let stopped = false;
   const ev = api.events(sim);
   if (ev) {
@@ -561,8 +565,9 @@ function checkGameState() {
     // Con parada del core en este mismo chequeo (ganador declarado con
     // StartAnotherRound colgado del mismo Countpop, F1Mode.bas:364+380) el
     // original queda detenido en el mundo final: no se abre otra ronda.
-    if (!stopped) newRound();
+    if (!stopped) { newRound(); return true; }
   }
+  return false;
 }
 
 // ---- E6: registro y análisis ---------------------------------------------
@@ -676,7 +681,9 @@ function consoleCmd(n, line) {
     case 'cycle': {
       const k = parseInt(w(1), 10) || 0;
       for (let i = 0; i < k; i++) {
-        tickOnce(); checkGameState(); if (imCfg) imAfterTick();
+        tickOnce();
+        if (imCfg) imDrainOutbox();
+        if (!checkGameState() && imCfg) imAfterTick();
       }
       postFrame();
       conOut(n, k + ' ciclo(s) ejecutado(s) — ciclo ' + api.cycle(sim));
@@ -754,7 +761,13 @@ let imName = '';        // IntOpts.IName: global de proceso (sobrevive resets)
 // teleporters (TeleportForm.frm:378 lo pone en 300); entra al sorteo de la
 // posición del puerto Internet.
 let tpDefaultWidth = 0;
-let imArrivals = [];    // etiquetas de lo que está en el inbox, en orden FIFO
+// Lo que está en el inbox del puerto, en orden FIFO: {label, bytes}. Se
+// guardan los bytes porque el inbox puede perderse sin haberse cargado
+// (LoadSimulation borra el puerto; apagar lo borra): esos registros ya
+// confirmados pasan a imHeld y entran en el próximo puerto — como los
+// archivos que quedaban en la carpeta inbound del original.
+let imArrivals = [];
+let imHeld = [];
 let imInboxKnown = 0;   // registros que el inbox tenía tras el último tick
 let imLogBuf = [], imLogTimer = 0, imStateTimer = 0;
 
@@ -811,10 +824,33 @@ function imOnDbo(bytes, from) {
   const meta = peekLabel(p, bytes.length);
   api.inboxPush(sim, tp, p, bytes.length);
   M._free(p);
-  imArrivals.push(`${meta.label} de ${meta.owner || from}`);
+  imArrivals.push({ label: `${meta.label} de ${meta.owner || from}`, bytes });
   imInboxKnown += 1;
   imState();
   return true;
+}
+
+// Los registros de un inbox que se pierde quedan retenidos (ya se
+// confirmaron al emisor: no pueden volver a la red).
+function imHoldInbox() {
+  for (const a of imArrivals) imHeld.push(a);
+  imArrivals = [];
+  imInboxKnown = 0;
+}
+
+// Puerto nuevo: entra lo retenido, en orden.
+function imFlushHeld(tp) {
+  const held = imHeld;
+  imHeld = [];
+  for (const a of held) {
+    const p = M._malloc(a.bytes.length);
+    M.HEAPU8.set(a.bytes, p);
+    api.inboxPush(sim, tp, p, a.bytes.length);
+    M._free(p);
+    imArrivals.push(a);
+  }
+  imInboxKnown = api.tpGet(sim, tp, 13);
+  return held.length;
 }
 
 // Replace(Replace(Now, ":", "-"), "/", "-") de main.frm:1351 con el Now de
@@ -856,6 +892,8 @@ function imEnable(cfg) {
   imCfg = { ...cfg, name: imName };
   imArrivals = [];
   imInboxKnown = 0;
+  const held = imFlushHeld(i);
+  if (held) log(`Internet: ${held} organismos retenidos entran al puerto nuevo`);
   ImNet.start({ name: imName, simId: simStartOf(), kind: cfg.kind,
                 url: cfg.url, room: cfg.room },
               { onDbo: imOnDbo, onChange: imState, onLog: imLog });
@@ -867,30 +905,32 @@ function imEnable(cfg) {
 }
 
 // Rama de apagado: el cliente se va (CloseWindow) y los puertos Internet se
-// borran. Lo que quedaba en espera se pierde, como los archivos de la
-// carpeta outbound con el cliente cerrado.
+// borran. Nada se pierde: lo que esperaba salir sigue en la cola del cliente
+// (la carpeta outbound) y lo que estaba en el inbox queda retenido (la
+// inbound); todo sale/entra al volver a conectar.
 function imDisable(why) {
   if (!imCfg) return;
   imCfg = null;
-  const left = ImNet.stop();
+  if (sim) imDrainOutbox();   // lo que el último tick dejó en el outbox
+  const out = ImNet.stop();
+  imHoldInbox();
   const n = sim ? api.imDisable(sim) : 0;
   log(`Internet Mode apagado${why ? ' — ' + why : ''}` +
       (n ? ` (${n} puerto borrado)` : '') +
-      (left ? `; ${left} organismos en espera descartados` : ''));
-  imArrivals = [];
-  imInboxKnown = 0;
+      (out ? `; ${out} por salir` : '') +
+      (imHeld.length ? `; ${imHeld.length} recibidos esperan un puerto` : ''));
   imState();
   self.postMessage({ t: 'im-off' });
   postFrame();
 }
 
-// Tras cada tick con IM encendido.
-function imAfterTick() {
+// Tras cada tick con IM encendido, ANTES del chequeo de rondas: lo que el
+// tick escribió en el outbox ya es un "archivo" en la carpeta outbound del
+// original y sobrevive a StartAnotherRound.
+function imDrainOutbox() {
   const n = api.numTeleporters(sim);
-  let tpIn = 0;
   for (let i = 1; i <= n; i++) {
     if (!api.tpGet(sim, i, 3)) continue;
-    if (!tpIn) tpIn = i;
     let k = api.outCount(sim, i);
     while (k-- > 0) {
       const lp = M._malloc(4);
@@ -904,11 +944,18 @@ function imAfterTick() {
       ImNet.push(bytes, meta.label);
     }
   }
+}
+
+// Después del chequeo de rondas, y solo si la sim siguió: en el original
+// `If StartAnotherRound Then Exit Sub` (main.frm:2081) corta el loop antes
+// de writeIMdata.
+function imAfterTick() {
   // Llegadas: el paso 18 sacó registros del inbox (FIFO).
+  const tpIn = imPort();
   const now = tpIn ? api.tpGet(sim, tpIn, 13) : 0;
   if (now < imInboxKnown) {
     for (let k = imInboxKnown - now; k > 0 && imArrivals.length; k--)
-      imLog('llegó ' + imArrivals.shift());
+      imLog('llegó ' + imArrivals.shift().label);
     imState();
   }
   imInboxKnown = now;
@@ -929,17 +976,7 @@ function imRebind() {
   if (sim) api.setIName(sim, imName);
 }
 
-// Sim nueva con el modo encendido (ronda de contest o carga): el cliente
-// sigue conectado y solo el puerto vuelve a crearse en el handle nuevo.
-function imReattach(why) {
-  const i = api.imEnable(sim, tpDefaultWidth);
-  imArrivals = [];
-  imInboxKnown = 0;
-  if (i < 0) { imDisable(`${why}: no se pudo recrear el puerto`); return; }
-  ImNet.setIdentity(imName, simStartOf());
-  log(`Internet Mode: puerto #${i} recreado (${why})`);
-  imState();
-}
+
 
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
@@ -948,8 +985,9 @@ function runTicks(n) {
   // reconstruida.
   for (let i = 0; i < n; i++) {
     tickOnce();
-    checkGameState();
-    if (imCfg) imAfterTick();   // E7
+    if (imCfg) imDrainOutbox();              // E7
+    const restarted = checkGameState();
+    if (imCfg && !restarted) imAfterTick();  // E7
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
     // solo los charts visibles.
     if (graphOpen.size) {
@@ -1008,8 +1046,8 @@ function seedSpecies(sp) {
   return n;
 }
 
-function resetSim(msg) {
-  if (sim) api.destroy(sim);
+function resetSim(msg, carryTeleporters) {
+  const old = sim;
   sim = api.create();
   const o = msg.options;
   api.setField(sim, o.fieldW, o.fieldH);
@@ -1026,6 +1064,11 @@ function resetSim(msg) {
   api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
   imRebind();                                    // E7: IntOpts.IName
   api.setSimStart(sim, vbNowSimStart());         // E7: main.frm:1351
+  if (old) {
+    if (carryTeleporters)
+      for (let i = 1; i <= api.numTeleporters(old); i++) api.tpCopy(sim, old, i);
+    api.destroy(old);
+  }
   log(`sim nueva (seed ${msg.seed})`);
   for (const sp of msg.species) seedSpecies(sp);
   // E5: la ronda siguiente reconstruye con esto (species copiadas: las
@@ -1061,16 +1104,23 @@ function saveSim() {
 
 function loadSim(msg) {
   const bytes = new Uint8Array(msg.bytes);
+  if (imCfg) imDrainOutbox();   // E7: lo que ya salió no se pierde
   const p = M._malloc(bytes.length);
   M.HEAPU8.set(bytes, p);
   api.load(sim, p, bytes.length);
   M._free(p);
   imRebind();
-  // E7: LoadSimulation borra los teleporters Internet (HDRoutines.bas,
-  // quirk replicado en el core); con IM encendido el puerto vuelve, como el
-  // "Would you like to connect to Internet Mode?" de MDIForm1.frm:2135-2150
-  // contestado que sí.
-  if (imCfg) imReattach('sim cargada');
+  // E7: LoadSimulation borra los teleporters Internet (quirk replicado en el
+  // core). Cargar desde el menú (loadsim_Click con path = "",
+  // MDIForm1.frm:2105-2148) NO vuelve a llamar a F1Internet_Click: el modo
+  // queda encendido SIN puerto hasta desconectar y conectar. Lo que había
+  // en el inbox queda retenido para el próximo puerto.
+  if (imCfg) {
+    imHoldInbox();
+    log('Internet Mode sigue conectado sin puerto: LoadSimulation borró el ' +
+        'teleporter Internet — desconectá y conectá para recrearlo');
+    imState();
+  }
   running = false;
   focusBot = 0;  // los slots de bot cambian al cargar
   speciesVersion = -1;

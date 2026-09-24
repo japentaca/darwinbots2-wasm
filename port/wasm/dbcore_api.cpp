@@ -1343,7 +1343,15 @@ DB_EXPORT int db_sim_add_teleporter(void* h, int portIn, int portOut,
   sim.numTeleporters += 1;
   db::Teleporter& t =
       sim.Teleporters[static_cast<std::size_t>(sim.numTeleporters)];
-  t = db::Teleporter{};
+  // E7: como en db_sim_im_enable, NewTeleporter + OKButton_Click no
+  // reinician el slot (highlight/center/BackFlowLimit sobreviven).
+  t.outbox.clear();
+  t.inbox.clear();
+  t.vel = {0.0f, 0.0f};   // Teleport.bas:79
+  t.NumTeleported = 0;
+  t.NumTeleportedIn = 0;
+  t.RespectShapes = false;  // RespectShapesCheck default 0 (TeleportForm:386)
+  t.teleportHeterotrophs = true;  // TeleportForm.frm:385
   t.exist = true;
   const db::vb_single aspectRatio = static_cast<db::vb_single>(
       static_cast<double>(sim.opts.FieldHeight) /
@@ -1400,6 +1408,23 @@ DB_EXPORT void db_sim_tp_inbox_push(void* h, int t, const unsigned char* data,
       data, data + len);
 }
 
+// E7 — ronda nueva (StartAnotherRound): el original sigue en el mismo
+// proceso y StartSimul NO toca Teleporters() (solo LoadSimulation los
+// reinicia, HDRoutines.bas:1332); el port reconstruye la ronda en un handle
+// nuevo, asi que la capa host copia cada teleporter tal cual (posicion,
+// deriva, contadores, buzones) sin consumir RNG. Devuelve el indice nuevo
+// o -1.
+DB_EXPORT int db_sim_tp_copy(void* dst, void* src, int i) {
+  db::Sim& d = S(dst);
+  const db::Sim& o = S(src);
+  if (i < 1 || i > o.numTeleporters) return -1;
+  if (d.numTeleporters + 1 > db::MAXTELEPORTERS) return -1;
+  d.numTeleporters += 1;
+  d.Teleporters[static_cast<std::size_t>(d.numTeleporters)] =
+      o.Teleporters[static_cast<std::size_t>(i)];
+  return d.numTeleporters;
+}
+
 // Campos sueltos de un teleporter (1..numTeleporters), para la capa host:
 // 0 In, 1 Out, 2 local, 3 Internet, 4 teleportVeggies, 5 teleportCorpses,
 // 6 teleportHeterotrophs, 7 RespectShapes, 8 InboundPollCycles,
@@ -1437,7 +1462,8 @@ DB_EXPORT void db_sim_tp_set(void* h, int t, int field, double v) {
   if (t < 1 || t > sim.numTeleporters) return;
   db::Teleporter& tp = sim.Teleporters[static_cast<std::size_t>(t)];
   const bool b = v != 0.0;
-  const auto i16 = static_cast<db::vb_integer>(v);
+  const auto i16 = static_cast<db::vb_integer>(
+      v < -32768.0 ? -32768.0 : (v > 32767.0 ? 32767.0 : v));
   switch (field) {
     case 0: tp.In = b; break;
     case 1: tp.Out = b; break;
@@ -1511,7 +1537,13 @@ DB_EXPORT int db_sim_im_enable(void* h, int defaultWidth) {
   sim.numTeleporters += 1;
   const int i = sim.numTeleporters;
   db::Teleporter& t = sim.Teleporters[static_cast<std::size_t>(i)];
-  t = db::Teleporter{};
+  // NewTeleporter asigna SOLO sus campos: lo demas del slot sobrevive del
+  // teleporter que lo ocupo antes (DeleteTeleporter solo baja .exist,
+  // Teleport.bas:153). Replicado: un `local` viejo convierte al puerto
+  // Internet en expulsor permanente (Teleport.bas:164). Los buzones son del
+  // port (sustituyen a la carpeta, que era propia de cada teleporter).
+  t.outbox.clear();
+  t.inbox.clear();
   t.exist = true;
   const db::vb_single aspectRatio = static_cast<db::vb_single>(
       static_cast<double>(sim.opts.FieldHeight) /
@@ -1668,6 +1700,7 @@ DB_EXPORT char* db_sim_im_stats(void* h) {
     if (k < simpop.size() - 1) simdata += ",";
   }
   simdata += "]}";
+  simdata += "\r\n";  // Print #299 termina la linea con vbCrLf
 
   const std::string file = L(sim.opts.TotRunCycle) +
                            L(sim.opts.UserSeedNumber) + ".stats";
@@ -1747,9 +1780,15 @@ DB_EXPORT void db_free(void* p) { std::free(p); }
 
 // SaveSimulation al formato binario de sim. Devuelve un bufer malloc'd
 // (liberar con db_free) y su longitud en *out_len.
+// E7: con los globales de proceso (Sim::fmt + sunbelt), y el cartel
+// lblSaving visible como durante el guardado del original
+// (HDRoutines.bas:541): SaveRobotBody escribe el sunbelt real y respeta
+// SaveWithoutMutations.
 DB_EXPORT unsigned char* db_sim_save(void* h, int* out_len) {
   db::VbBinFile f;
-  db::SaveSimulation(S(h), f);
+  db::FormatGlobals g = db::TickFormatGlobals(S(h));
+  g.lblSaving_visible = true;
+  db::SaveSimulation(S(h), f, g);
   return CopyOut(f.data.data(), f.data.size(), out_len);
 }
 
@@ -1777,7 +1816,8 @@ DB_EXPORT unsigned char* db_sim_save_organism(void* h, int n, int* out_len) {
   if (out_len) *out_len = 0;
   if (n < 1 || n > sim.MaxRobs || !sim.rob[n].exist) return nullptr;
   db::VbBinFile f;
-  db::SaveOrganism(sim, f, n);
+  // E7: SaveOrganism estampa LastOwner = IntOpts.IName (HDRoutines.bas:232).
+  db::SaveOrganism(sim, f, n, db::TickFormatGlobals(sim));
   return CopyOut(f.data.data(), f.data.size(), out_len);
 }
 

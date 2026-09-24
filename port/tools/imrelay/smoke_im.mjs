@@ -15,6 +15,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT_DIR = path.resolve(here, '..', '..');
@@ -90,7 +91,7 @@ class Sim {
       }, ms);
     });
   }
-  send(m) { this.w.postMessage(m); }
+  send(m, transfer) { this.w.postMessage(m, transfer); }
   async until(fn, ms = 60000) {
     const t0 = Date.now();
     while (Date.now() - t0 < ms) {
@@ -218,6 +219,27 @@ async function pair(kind, url) {
     check('C carga lo que esperaba (LastOwner = "Ana")', loaded);
   }
 
+  if (kind === 'bc') {
+    // Cargar una sim con IM encendido: LoadSimulation borra el puerto y el
+    // modo sigue SIN puerto (loadsim_Click no vuelve a F1Internet_Click).
+    A.send({ t: 'run', running: false });
+    A.send({ t: 'save' });
+    const saved = await A.wait((m) => m.t === 'saved');
+    A.send({ t: 'load', bytes: saved.bytes }, [saved.bytes]);
+    await A.wait((m) => m.t === 'frame');
+    await sleep(600);
+    check('cargar con IM: sigue conectado sin puerto', A.im.enabled && !A.im.port,
+          `port ${A.im.port}`);
+    A.send({ t: 'im', on: false });
+    await A.until(() => A.imOff);
+    A.imOff = false;
+    A.send({ t: 'im', on: true, name: 'Ana', kind, url, room });
+    await A.until(() => A.im && A.im.enabled && A.im.port > 0);
+    check('reconectar recrea el puerto', A.im.port > 0);
+    A.send({ t: 'run', running: true });
+    await sleep(1500);
+  }
+
   // Apagar en A: puerto borrado y el par desaparece de B.
   A.send({ t: 'run', running: false });
   const tpsBefore = A.frame.hdr[6];
@@ -241,6 +263,147 @@ async function pair(kind, url) {
   await Promise.all([A.stop(), B.stop()]);
 }
 
+// ---- la API wasm directa ----------------------------------------------------
+async function direct() {
+  console.log('\n== API wasm (db_sim_im_* / tp_*) ==');
+  const require = createRequire(import.meta.url);
+  const createDbCore = require(path.join(PORT_DIR, 'build-wasm', 'dbcore.js'));
+  const M = await createDbCore({ locateFile: (f) => path.join(PORT_DIR, 'build-wasm', f) });
+  const C = (n, r, a) => M.cwrap(n, r, a);
+  const api = {
+    create: C('db_sim_create', 'number', []),
+    destroy: C('db_sim_destroy', null, ['number']),
+    start: C('db_sim_start', null, ['number', 'number']),
+    setField: C('db_sim_set_field', null, ['number', 'number', 'number']),
+    tick: C('db_sim_tick', null, ['number']),
+    addSpecies: C('db_sim_add_species', 'number', ['number','string','string','number','number','number','number','number']),
+    seed: C('db_sim_seed_species', 'number', ['number','number','number']),
+    imEnable: C('db_sim_im_enable', 'number', ['number','number']),
+    imDisable: C('db_sim_im_disable', 'number', ['number']),
+    setIName: C('db_sim_set_iname', null, ['number','string']),
+    getIName: C('db_sim_get_iname', 'number', ['number']),
+    imStats: C('db_sim_im_stats', 'number', ['number']),
+    setSimStart: C('db_sim_set_sim_start', null, ['number','string']),
+    addTp: C('db_sim_add_teleporter', 'number', ['number','number','number','number','number','number','number','number','number','number']),
+    delTp: C('db_sim_delete_teleporter', null, ['number','number']),
+    tpGet: C('db_sim_tp_get', 'number', ['number','number','number']),
+    tpCopy: C('db_sim_tp_copy', 'number', ['number','number','number']),
+    numTp: C('db_sim_num_teleporters', 'number', ['number']),
+    dumpTp: C('db_sim_dump_teleporters', 'number', ['number','number','number']),
+    save: C('db_sim_save', 'number', ['number','number']),
+    saveOrg: C('db_sim_save_organism', 'number', ['number','number','number']),
+    peek: C('db_dbo_peek', 'number', ['number','number']),
+    free: C('db_free', null, ['number']),
+  };
+  const str = (p) => { const t = M.UTF8ToString(p); api.free(p); return t; };
+  const mk = (seed) => {
+    const h = api.create();
+    api.setField(h, 8000, 6000);
+    api.start(h, seed);
+    return h;
+  };
+
+  // writeIMdata byte a byte (main.frm:3134-3180), con el vbCrLf de Print #.
+  const s1 = mk(77);
+  api.setSimStart(s1, '9-24-2026 1-02-03 PM');
+  const ia = api.addSpecies(s1, 'cond start 0 .up store stop', 'Alga.txt', 1, 0, 3000, 1, 3);
+  const ib = api.addSpecies(s1, 'cond start 0 .up store stop', 'Bicho', 0, 0, 3000, 2, 2);
+  api.seed(s1, ia, 0);
+  api.seed(s1, ib, 0);
+  const raw = str(api.imStats(s1));
+  const expect = '00.stats\n{"cycle":0,"simId":"9-24-2026 1-02-03 PM","width":8000,' +
+    '"height":6000,"population":[{"botName":"Alga","count":3,"repopulating":true},' +
+    '{"botName":"","count":2}]}\r\n';
+  const seedNum = raw.slice(0, raw.indexOf('.stats'));
+  check('writeIMdata: JSON exacto (extractexactname sin punto => "")',
+        raw.slice(raw.indexOf('.stats')) === expect.slice(expect.indexOf('.stats')),
+        JSON.stringify(raw.slice(raw.indexOf('\n') + 1)));
+  check('writeIMdata: archivo = TotRunCycle & UserSeedNumber & ".stats"',
+        /^0-?\d+$/.test(seedNum), seedNum + '.stats');
+
+  // Apodo vacío: "Newbie " & Random(1, 10000) ANTES de los 2 Random de
+  // NewTeleporter (MDIForm1.frm:1310-1324): con apodo, el puerto usa las
+  // dos primeras extracciones; sin apodo, la 2.ª y la 3.ª.
+  const buf = M._malloc(7 * 4 * 4);
+  const tpPos = (h) => { api.dumpTp(h, buf, 4); return [M.HEAPF32[buf >> 2], M.HEAPF32[(buf >> 2) + 1]]; };
+  const a = mk(99), b = mk(99), c = mk(99);
+  api.setIName(a, 'X');
+  api.imEnable(a, 0);
+  api.imEnable(b, 0);
+  api.setIName(c, 'X');
+  api.addTp(c, 0, 0, 3000, 0, 1, 1, 1, 10, 10);  // mismas 2 extracciones
+  const pa = tpPos(a), pb = tpPos(b);
+  check('Newbie N consume 1 extracción antes del puerto', pa[0] !== pb[0] || pa[1] !== pb[1],
+        `${str(api.getIName(b))}: (${pb}) vs con apodo (${pa})`);
+  check('puerto Internet: alto √FieldHeight·10, heterótrofos, sondeo 10/10/10',
+        api.tpGet(a, 1, 6) === 1 && api.tpGet(a, 1, 8) === 10 && api.tpGet(a, 1, 9) === 10 &&
+        api.tpGet(a, 1, 10) === 10 && Math.abs(M.HEAPF32[(buf >> 2) + 3] - Math.fround(Math.sqrt(6000) * 10)) < 1e-3);
+
+  // Slot reutilizado: NewTeleporter no reinicia `local` (Teleport.bas:60-104).
+  const d = mk(5);
+  api.addTp(d, 0, 0, 3000, 0, 1, 1, 1, 10, 10);   // local en el slot 1
+  api.delTp(d, 1);
+  const k = api.imEnable(d, 300);
+  check('slot reutilizado: el puerto Internet hereda local = True', k === 1 &&
+        api.tpGet(d, 1, 3) === 1 && api.tpGet(d, 1, 2) === 1);
+  check('apagar borra los Internet', api.imDisable(d) === 1 && api.numTp(d) === 0);
+
+  // Copia de teleporters entre handles (rondas): sin RNG, campos intactos.
+  const e = mk(6), f = mk(6);
+  const ie = api.imEnable(e, 0);
+  for (let t = 0; t < 30; t++) api.tick(e);
+  const g = api.create();
+  const ig = api.tpCopy(g, e, ie);
+  api.dumpTp(e, buf, 4);
+  const before = Array.from(M.HEAPF32.subarray(buf >> 2, (buf >> 2) + 7));
+  api.dumpTp(g, buf, 4);
+  const after = Array.from(M.HEAPF32.subarray(buf >> 2, (buf >> 2) + 7));
+  check('db_sim_tp_copy: mismo teleporter en el handle nuevo', ig === 1 &&
+        before.every((v, i) => v === after[i]) && api.tpGet(g, 1, 10) === api.tpGet(e, ie, 10));
+
+  // SaveOrganism estampa IntOpts.IName (HDRoutines.bas:232).
+  const n = api.seed(f, api.addSpecies(f, 'cond start 0 .up store stop', 'Z.txt', 0, 0, 3000, 3, 1), 0);
+  api.setIName(f, 'Pepe');
+  const lp = M._malloc(4);
+  const po = api.saveOrg(f, 1, lp);
+  const len = M.HEAP32[lp >> 2];
+  check('db_sim_save_organism estampa el apodo', n === 1 && po &&
+        str(api.peek(po, len)).split('\t')[2] === 'Pepe');
+  api.free(po);
+  M._free(lp);
+  M._free(buf);
+  for (const h of [s1, a, b, c, d, e, f, g]) api.destroy(h);
+}
+
+await direct();
+
+// Rondas (E5): Restart sin heterótrofos => ronda nueva en cada tick. El
+// puerto (con su inbox) pasa al handle nuevo sin RNG y no se duplica.
+async function rounds() {
+  console.log('\n== rondas con Internet Mode ==');
+  const D = new Sim('D');
+  await D.wait((m) => m.t === 'ready');
+  D.send(resetMsg(5555, [{ dna: ALGA, name: 'AlgaSola.txt', veg: true, qty: 10,
+                           nrg: 3000, color: 0x00ff00 }]));
+  await D.wait((m) => m.t === 'frame');
+  D.send({ t: 'im', on: true, name: 'Dora', kind: 'bc', url: '', room: 'smoke-rounds-' + Date.now() });
+  await D.until(() => D.im && D.im.enabled);
+  D.send({ t: 'setopt', id: 90, v: 1 });
+  D.send({ t: 'speed', n: 0 });
+  D.send({ t: 'run', running: true });
+  const n = () => D.logs.filter((l) => l.startsWith('ronda nueva')).length;
+  const ok = await D.until(() => n() >= 5, 20000);
+  D.send({ t: 'run', running: false });
+  D.send({ t: 'redraw' });
+  await D.wait((m) => m.t === 'frame');
+  await sleep(600);
+  check('rondas nuevas: el puerto Internet sobrevive sin duplicarse',
+        ok && D.im.enabled && D.im.port === 1 && D.frame.hdr[6] === 1,
+        `${n()} rondas, teleporters ${D.frame.hdr[6]}, puerto #${D.im.port}`);
+  await D.stop();
+}
+await rounds();
+
 // ---- los dos transportes ------------------------------------------------------
 await pair('bc', '');
 
@@ -255,6 +418,11 @@ try {
   check('relay sirve port/web estático', r.ok && (await r.text()).includes('ImNet'));
   const bad = await fetch(`http://127.0.0.1:${port}/web/..%2f..%2f..%2fsecret`);
   check('relay no sale de la raíz', bad.status === 404 || bad.status === 403, String(bad.status));
+  const mal = await fetch(`http://127.0.0.1:${port}/web/%E0%A4`);
+  const nul = await fetch(`http://127.0.0.1:${port}/web/a%00b`);
+  const still = await fetch(`http://127.0.0.1:${port}/web/imnet.js`);
+  check('relay sobrevive a URLs malformadas / NUL', still.ok,
+        `${mal.status}, ${nul.status}, luego ${still.status}`);
   await pair('ws', `ws://127.0.0.1:${port}/im`);
 } finally {
   relay.kill();

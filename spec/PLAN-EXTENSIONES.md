@@ -322,7 +322,7 @@ Presupuesto (p90 ≤ 8 ms) cumplido. `db_sim_vis_observe` con ~2000 bots:
 0,23–0,38 ms por tick contra un tick de 73–112 ms (0,3 %); volcado de bots
 más el registro extendido: 0,4–0,7 ms por frame.
 
-## E7 · Internet / torneo distribuido — capa host (transporte) + una rebanada de core
+## E7 · Internet / torneo distribuido — capa host (transporte) + una rebanada de core · ✅ cerrada 2026-09-24
 
 La E/S por búferes (`outbox`/`inbox`) ya funciona entre sims. Falta el
 transporte real entre navegadores (la capa ⚙ de `50-MUNDO.md §5`).
@@ -416,6 +416,64 @@ transcribe con su caso (E7-05).
 | Eco-IM (`y_eco_im`) | ❌ fuera: es una variante de la carrera evo (`Evo.bas` Next_Stage/UpdateWonF1 con 15 `testrob`, `im.gset`, `MDIForm1.frm:2585-2640`) que E5 dejó fuera; lo que toca a los registros (B8-3, la DQ al cargar) ya está en `formats.hpp` y ahora es alcanzable por `sim.fmt` |
 | Liga (`MDIForm1.frm:2536-2790`) | ❌ fuera: es orquestación **local** por disco entre reinicios del proceso (`restartmode.gset`, `FileCopy`, `getfiles`), no usa red; no gana nada con el transporte |
 | `NetEvent.frm`, `SaveSimPopulation`, `PipeRPC` (`main.frm:2008-2016`) | ❌ muertos en el original |
+
+### Resultado (2026-09-24)
+
+Hecho según lo de arriba, en tres commits de core/host y uno de revisión:
+
+- **Core** (familia E7-01..E7-06, `70-CASOS-DORADOS.md §14`): `Sim::fmt` y
+  `TickFormatGlobals` en P0a/paso 18; `RemoveExtinctSpecies` + topes de
+  `UpdateCounters`; y (revisión) el `AddSpecie` completo en `UpdateCounters`
+  y la auto-especiación, con el slot de reserva `Specie(76)`. Suite
+  **178 / 3544** en los tres modos; la heredada, intacta.
+- **Host**: `db_sim_im_enable/disable` (F1Internet_Click), `db_sim_im_stats`
+  (writeIMdata con el `vbCrLf` de `Print #`), `db_sim_im_species`,
+  `db_dbo_peek`, `db_sim_tp_get/set/copy`, `db_sim_set_iname`/`sim_start`;
+  `web/imnet.js`; `tools/imrelay/relay.mjs` + `smoke_im.mjs` (44 checks).
+- **Transiciones** (del fuente): sim nueva apaga el modo
+  (`OptionsForm.frm:4802`); ronda nueva lo conserva y copia los
+  teleporters al handle nuevo sin RNG (`StartSimul` no los toca); cargar
+  deja el modo encendido **sin puerto** (el menú de carga no vuelve a
+  llamar a `F1Internet_Click`, `MDIForm1.frm:2105-2148`).
+- **Hallazgo de host heredado**: el teleporter local de M10/E3 no movía a
+  nadie (`teleportHeterotrophs`/`Veggies`/`Corpses` en False); ahora con los
+  defaults de `TeleportForm.frm:383-388`.
+
+**Revisión de rama** (agente independiente, contra el fuente): 3 altas, 4
+medias y varias bajas; corregidas todas salvo las marcadas:
+
+1. Organismos perdidos en ronda nueva/carga: el outbox se vaciaba DESPUÉS
+   del chequeo de rondas (sobre el handle nuevo) y el inbox se descartaba →
+   ahora el outbox se vacía antes, `.stats` no sale tras un restart
+   (`main.frm:2081`), los teleporters pasan a la ronda nueva y lo recibido
+   no cargado queda retenido.
+2. `imReattach` desplazaba el RNG 2 extracciones al recrear el puerto tras
+   el reseed → eliminado (ronda: copia sin RNG; carga: sin puerto, como el
+   original).
+3. El relay caía con una URL malformada o con `%00` → try/catch y 400.
+4. Clones posibles por acks tardíos → el ack solo vale del par destinatario
+   y uno tardío saca el `.dbo` de la cola; el resto se cuenta (`late`).
+5. `NewTeleporter` no reinicia el slot → replicado: un `local` viejo
+   sobrevive en el puerto Internet (`[PROBABLE BUG]`, `Teleport.bas:164`).
+6. Guardado sin los globales de proceso → `db_sim_save` y
+   `db_sim_save_organism` los pasan (sunbelt real, `SaveWithoutMutations`,
+   apodo); E7-04 dejó de ser trivial.
+7. `AddSpecie` mínimo en `UpdateCounters` → E7-06.
+
+Quedan anotadas sin cambio: `Random(1, 10000)` con literales Integer (VB6
+opera en Single; el port usa la convención Double de S-01), el `For i As
+Byte = 0 To -1` de `extractexactname` (sin confirmar si VB6 da error 6) y
+que el relay no autentica `from` (es un hub de sala sin cuentas, como
+cualquier sala pública). Y un límite de E5 que E7 destapó: la ronda nueva
+del port no conserva las formas (el original las regenera desde
+`xObstacle`, `main.frm:1353`); los teleporters sí, desde E7.
+
+**Verificación**: smoke node 44/44 (API directa, dos `worker.js` reales por
+`BroadcastChannel` y por el relay, caída de un par con cola y re-sorteo,
+carga con IM, 8 rondas con el puerto intacto) y Chrome con dos pestañas
+intercambiando organismos reales por los dos transportes (apodo como
+`LastOwner`, censos, cartel "Internet Mode", salidas con anillo cian en la
+vista enriquecida, consola limpia).
 
 ## E8 · Extras de menor valor
 
