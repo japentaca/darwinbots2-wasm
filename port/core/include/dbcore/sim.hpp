@@ -434,6 +434,23 @@ struct DeadSnapshot {
   void drain() { snp.clear(); mut.clear(); }  // el "archivo" sigue existiendo
 };
 
+// Globales de guardado del original que no viven en SimOpts (flags de UI y
+// modo eco-IM). Defaults = los del harness (70-CASOS-DORADOS.md §0). Los
+// consumen SaveOrganism/SaveRobotBody/LoadRobotBody (formats.hpp); desde E7
+// la sim lleva los suyos en Sim::fmt y el tick los pasa a los teleporters
+// (70-CASOS-DORADOS.md §14). Son globales de PROCESO en el original: no los
+// persiste SaveSimulation.
+struct FormatGlobals {
+  bool UseEpiGene = false;          // checkbox de opciones (salvarob)
+  bool SaveWithoutMutations = false;  // MDIForm1.SaveWithoutMutations
+  int y_eco_im = 0;                 // modo eco-IM (⚙): reescribe el tag
+  bool sunbelt = false;             // global de mutaciones sunbelt (en el
+                                    // tick manda Sim::sunbelt, ver robots.hpp)
+  bool lblSaving_visible = false;   // Form1.lblSaving (pantalla de autosave)
+  std::string IName;                // IntOpts.IName (LastOwner al guardar
+                                    // organismos; "" -> "Local" en el campo)
+};
+
 struct Sim {
   SimOptsT opts;
   VmContext vm;  // stacks globales + Costs + VmDiag
@@ -449,6 +466,9 @@ struct Sim {
   vb_single epiresetemp = 1.3f;
   vb_integer epiresetOP = 17;
   bool sunbelt = false;
+  // E7: globales de proceso que el tick pasa a SaveOrganism/LoadOrganism
+  // en los teleporters (IntOpts.IName, SaveWithoutMutations, y_eco_im).
+  FormatGlobals fmt;
   bool Delta2 = false;
   vb_integer DeltaPM = 3000;
   vb_single DeltaMainExp = 1, DeltaMainLn = 0;

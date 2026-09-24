@@ -322,11 +322,90 @@ Presupuesto (p90 ≤ 8 ms) cumplido. `db_sim_vis_observe` con ~2000 bots:
 0,23–0,38 ms por tick contra un tick de 73–112 ms (0,3 %); volcado de bots
 más el registro extendido: 0,4–0,7 ms por frame.
 
-## E7 · Internet / torneo distribuido — capa host (transporte)
+## E7 · Internet / torneo distribuido — capa host (transporte) + una rebanada de core
 
 La E/S por búferes (`outbox`/`inbox`) ya funciona entre sims. Falta el
-transporte real entre navegadores (la capa ⚙ de `50-MUNDO.md §5`):
-servidor simple o WebRTC. Diseño abierto — decidir al llegar.
+transporte real entre navegadores (la capa ⚙ de `50-MUNDO.md §5`).
+Rama: `e7-internet`.
+
+### Qué hacía el original (evidencia)
+
+- **El EXE nunca habló con la red.** `F1Internet_Click`
+  (`MDIForm1.frm:1259-1380`) crea el teleporter Internet y lanza un proceso
+  aparte, `DarwinbotsIM.exe -in <dir> -out <dir> -name <apodo> -port <p>
+  -server <ip>` (`:1347-1354`; "PeterIM" = 198.50.150.51:79). Ese cliente
+  externo (no está en el fuente) movía los `.dbo` de la carpeta outbound a un
+  servidor y los del servidor a la inbound. El simulador solo escribe y lee
+  carpetas: `CheckTeleporters` (`Teleport.bas:175-178`) y `TeleportInBots`
+  (`:418-446`). Al apagar, `CloseWindow(pid)` y borra los teleporters
+  Internet (`:1361-1372`).
+- **Estadísticas**: `writeIMdata` (`main.frm:3126-3181`) deja cada 200 ciclos
+  (`:2109-2111`, gate `InternetMode.Visible`) un `<ciclo><seed>.stats` con un
+  JSON en la misma carpeta outbound — para el cliente IM, que lo sube.
+- **`InternetSpecies`** (`provvisorio.bas:19-22`) **nunca se llena**: grep
+  sobre todo el fuente — solo la declaración y la lectura de
+  `grafico.frm:3747-3751`. Con `numInternetSpecies = 0` el `While` no entra
+  y la serie sale con `InternetSpecies(0).color` = **0 (negro)**. El formato
+  que debía alimentarla es `SaveSimPopulation` (`HDRoutines.bas:445-490`,
+  también muerto): nombre, población, `Veg` y **color** por especie, "used
+  for aggregating the population stats from multiple connected sims".
+- `NetEvent.frm` es solo el cartelito "Network event" (`Appear` sin
+  llamadores: muerto).
+
+### Decisión de transporte
+
+El port replica la **forma** del original: el simulador (el worker) solo
+llena y vacía buzones; un "cliente IM" (`web/imnet.js`, dentro del worker)
+los mueve. Dos backends con el mismo protocolo:
+
+1. **`BroadcastChannel`** — pestañas del mismo navegador y origen. Sin
+   servidor; funciona también en la demo de GitHub Pages.
+2. **Relay WebSocket** — `port/tools/imrelay/relay.mjs`, Node sin
+   dependencias: un hub que reenvía mensajes dentro de una sala (y, de paso,
+   sirve `port/` estático para no depender de `http.server`).
+
+WebRTC descartado: exige señalización (o sea, un servidor igual) para un
+tráfico que son unos pocos KB cada 10 ciclos. El hub no decide nada: el
+**destino de cada organismo lo sortea el emisor** entre los pares vivos de
+la sala (con `Math.random`, nunca el RNG de la sim); sin pares, el `.dbo`
+espera en una cola del emisor (como un archivo en la carpeta outbound con el
+cliente desconectado).
+
+### Por qué se abre el core (la parada documentada)
+
+`SaveOrganism` estampa `rob(k).LastOwner = IntOpts.IName`
+(`HDRoutines.bas:232`) — el apodo del emisor, que el receptor ve en el
+inspector — y `SaveRobotBody`/`LoadRobotBody` leen los globales de proceso
+`y_eco_im`, `sunbelt` y `SaveWithoutMutations`. En el port esos globales
+son `FormatGlobals` (M5) y el **tick los pasa por defecto**: `UpdateBots`
+llama a `CheckTeleporters(sim, t)` y `UpdateSim` a
+`UpdateTeleporters(sim)` sin argumento, así que el registro que sale del
+tick lleva siempre `LastOwner = ""` y `sunbelt = False` aunque la sim tenga
+`sim.sunbelt` encendido. El `.dbo` lo produce el core **dentro** del tick y
+el organismo muere en el acto (`KillOrganism`): la capa host no puede
+volver a serializarlo, y reescribir los bytes desde fuera sería duplicar el
+formato para suplir un global que el core ya modela. Rebanada mínima:
+
+- `FormatGlobals` pasa a `sim.hpp` y `Sim` gana `fmt` (globales de proceso,
+  **no** persistidos por `SaveSimulation`, como en el original); el tick lo
+  pasa a P0a y al paso 18, con `sunbelt` tomado de `sim.sunbelt` (un solo
+  global en VB6).
+- Default = el de hoy ⇒ la suite heredada queda intacta por construcción.
+- Familia nueva **E7-*** (`70-CASOS-DORADOS.md §14`) con el ciclo de siempre
+  (rojo → transcripción → verde) y revisión de rama antes de mergear.
+
+### Alcance
+
+| Pieza | Decisión |
+|---|---|
+| Transporte | ✅ `web/imnet.js` (worker) + `tools/imrelay/relay.mjs` |
+| Toggle Internet Mode | ✅ `F1Internet_Click` transcrito en la capa wasm: guardas de `x_restartmode`, apodo "Newbie N" con `Random(1, 10000)` si está vacío, `NewTeleporter(False, False, √FieldHeight·10, True)` + sus propiedades; apagar = borrar los Internet con el bucle hasta `MAXTELEPORTERS` |
+| `writeIMdata` | ✅ transcrito (JSON byte a byte, `IMgetname` incluido) en la capa wasm; viaja al relay en vez de a la carpeta outbound |
+| `InternetSpecies` | ✅ la llenan los censos de los pares (nombre + color, el esquema de `SaveSimPopulation`); el color de serie cae a negro si no está, como el original |
+| `LastOwner` | ✅ con el core (arriba) |
+| Eco-IM (`y_eco_im`) | ❌ fuera: es una variante de la carrera evo (`Evo.bas` Next_Stage/UpdateWonF1 con 15 `testrob`, `im.gset`, `MDIForm1.frm:2585-2640`) que E5 dejó fuera; lo que toca a los registros (B8-3, la DQ al cargar) ya está en `formats.hpp` y ahora es alcanzable por `sim.fmt` |
+| Liga (`MDIForm1.frm:2536-2790`) | ❌ fuera: es orquestación **local** por disco entre reinicios del proceso (`restartmode.gset`, `FileCopy`, `getfiles`), no usa red; no gana nada con el transporte |
+| `NetEvent.frm`, `SaveSimPopulation`, `PipeRPC` (`main.frm:2008-2016`) | ❌ muertos en el original |
 
 ## E8 · Extras de menor valor
 

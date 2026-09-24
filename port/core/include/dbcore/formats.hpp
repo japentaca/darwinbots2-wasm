@@ -32,17 +32,8 @@
 
 namespace db {
 
-// Globales de guardado del original que no viven en SimOpts (flags de UI y
-// modo eco-IM). Defaults = los del harness (70-CASOS-DORADOS.md §0).
-struct FormatGlobals {
-  bool UseEpiGene = false;          // checkbox de opciones (salvarob)
-  bool SaveWithoutMutations = false;  // MDIForm1.SaveWithoutMutations
-  int y_eco_im = 0;                 // modo eco-IM (⚙): reescribe el tag
-  bool sunbelt = false;             // global de mutaciones sunbelt
-  bool lblSaving_visible = false;   // Form1.lblSaving (pantalla de autosave)
-  std::string IName;                // IntOpts.IName (LastOwner al guardar
-                                    // organismos; "" -> "Local" en el campo)
-};
+// FormatGlobals (los globales de guardado del original que no viven en
+// SimOpts) se define en sim.hpp desde E7: el tick los lee de Sim::fmt.
 
 // ---------------------------------------------------------------------------
 // Archivo binario de VB6 sobre un búfer en memoria. Posición 0-based

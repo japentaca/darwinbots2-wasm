@@ -1817,6 +1817,19 @@ inline void TeleportInBots(Sim& sim, const FormatGlobals& g = {}) {
   }
 }
 
+// E7 (70-CASOS-DORADOS.md §14) — los globales de proceso que el tick del
+// original lee al serializar/cargar por teleporter: IntOpts.IName
+// (LastOwner, HDRoutines.bas:232), MDIForm1.SaveWithoutMutations, y_eco_im
+// y sunbelt. `sunbelt` es UN solo global en VB6 (Globals.bas): manda
+// sim.sunbelt, el mismo que leen las mutaciones. Form1.lblSaving solo es
+// visible dentro de SaveSimulation/LoadSimulation, nunca durante el tick.
+inline FormatGlobals TickFormatGlobals(const Sim& sim) {
+  FormatGlobals g = sim.fmt;
+  g.sunbelt = sim.sunbelt;
+  g.lblSaving_visible = false;
+  return g;
+}
+
 // Teleport.bas:458-468 — UpdateTeleporters (paso 18 del tick).
 inline void UpdateTeleporters(Sim& sim, const FormatGlobals& g = {}) {
   for (int i = 1; i <= sim.numTeleporters; ++i) {
@@ -1856,9 +1869,12 @@ inline void UpdateBots(Sim& sim) {
   // P0a — teleporters (Robots.bas:1505-1512): la salida corre ANTES que
   // ninguna otra pasada (NetForces puede tocar bots más adelante). Mareas
   // (Tides): ⚙ opcional, fuera (BouyancyScaling queda en 1).
-  for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
-      if (sim.numTeleporters > 0) CheckTeleporters(sim, t);
+  if (sim.numTeleporters > 0) {
+    const FormatGlobals g = TickFormatGlobals(sim);  // E7
+    for (int t = 1; t <= sim.MaxRobs; ++t) {
+      if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
+        if (sim.numTeleporters > 0) CheckTeleporters(sim, t, g);
+      }
     }
   }
 
