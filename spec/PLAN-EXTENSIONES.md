@@ -111,6 +111,170 @@ modos. Es el primer trabajo de core desde M8 — rama + revisión.
 - **Philogeny / Gene activations / Console / Find Best** (menú Robot).
 - **Database/Survival info** solo si aporta: era MDB de Access.
 
+## E6.5 · Vista enriquecida — capa host (render) · ⏳ PLAN, pendiente de aprobación
+
+Añadida el 2026-09-24 a petición del usuario. **No es superficie del
+original**: es una segunda forma de mirar la misma sim, con las ideas visuales
+de la v1.5 de otro simulador derivado de DarwinBots (Node + Three.js, carpeta
+hermana `IAs varias/simulador genetico`: `ROADMAP.md §V1.5` y
+`frontend/src/renderer/{OrganismInstances,SceneEffects,organismColors,behaviorStyles}.js`).
+Se toman **solo las ideas**: aquel modelo (dietas, cromosomas, estados de
+comportamiento, 3D) no se parece al de DB y no hay código que portar. Todo se
+dibuja con Canvas 2D sobre los volcados de la API.
+
+**Numeración.** `E6.5` en vez de renumerar: E7/E8 tienen ~25 referencias
+vivas (`PROGRESO.md` ×12, `PROMPT-CONTINUACION.md` ×8, este archivo ×4,
+`web/index.html` ×1, más los comentarios de E6 que dicen "rama
+`InternetSpecies`, de E7"). `E6.5` ordena sola entre E6 y E7, es ASCII para
+grep (`E6\.5`) y deja intactas todas las referencias. Rama:
+`e6-5-vista-enriquecida`.
+
+**Reglas de la etapa**
+1. **Capa host pura**: cero cambios en `port/core/` (`git diff -- port/core/`
+   vacío al cierre) y suite intacta por construcción (172/3465 en los tres
+   modos). Lo nuevo va en `wasm/dbcore_api.cpp` (volcados de solo lectura),
+   `web/worker.js` y `web/index.html`.
+2. **La vista fiel no cambia.** Selector "Vista: Original / Enriquecida"; con
+   *Original* el `draw()` actual se ejecuta tal cual, sin una rama nueva por
+   bot, y el frame no crece (el volcado extendido solo se pide en modo
+   enriquecido). Los 4 toggles del menú View siguen siendo de la vista fiel.
+3. **Sin efecto en la sim**: nada de lo nuevo escribe en el `Sim` ni consume
+   RNG. Única excepción conocida y a neutralizar: `DoGeneticDistance`
+   (`robots.hpp:1027`) suma a `sim.diag.err9_simplematch` si el matching se
+   corta — el volcado de la lente de distancia guarda y restaura ese contador
+   alrededor de la llamada. Verificación: `.dbsim` byte a byte idéntico tras
+   N ticks con y sin vista enriquecida (el mismo control que el lint).
+4. **Lección de E6**: nada se publica a ritmo de tick. Los eventos se
+   **acumulan** en el host del wasm tick a tick y viajan una vez por frame.
+
+### Datos: qué hay y qué falta
+
+El volcado actual de 20 floats (`db_sim_dump_bots`) ya trae posición, radio,
+aim, nrg, color de especie, flags Veg/Fixed/Corpse/Multibot/highlight, body,
+waste, venom, shell, slime, poison, Vtimer, cloroplastos y `last*`. Faltan la
+**identidad** (el índice es el *slot*, que se reutiliza: sin `AbsNum` no se
+puede seguir a un bot entre frames ni detectar muertes), los datos de las
+lentes y las acciones. Export nuevo `db_sim_dump_bots_vis(h, out, max)`,
+paralelo al de 20 y solo en modo enriquecido, ~12 floats por bot:
+
+`[AbsNum, AbsNum de la madre (parent), generation, Mutations, age, DnaLen,
+Kills, acciones (bits), estado (bits), ojos (9 bits), especie (idx), reservado]`
+
+- **estado**: Paralyzed, Poisoned, virus en curso (`Vtimer > 0`),
+  `fertilized > 0`, nacido desde el último volcado.
+- **ojos**: bit a = el ojo a+1 ve algo (`mem(EyeStart+a+1) > 0`); las
+  direcciones se piden solo para los bots en pantalla con zoom (ver LOD), con
+  la misma cuenta de `db_sim_dump_focus`.
+- **especie**: índice en la tabla de especies, que viaja aparte una vez por
+  cambio (nombre para el tooltip y la leyenda) — no strings por frame.
+
+### Acciones del tick (anillo de acción)
+
+Los comandos de `mem` se consumen dentro del mismo ciclo (`21-MEMORIA.md`),
+así que después del tick **no queda qué "ejecutó" el bot**. Definición de la
+etapa: acción = **efecto observable** del tick, obtenido por diferencia
+contra el tick anterior en un estado de host del wasm (arrays por slot,
+invalidados cuando cambia el `AbsNum` del slot). `db_sim_vis_observe(h)` se
+llama tras cada `db_sim_tick` solo en modo enriquecido y hace OR en la
+máscara del bot; `db_sim_dump_bots_vis` la vuelca y la limpia. Bits:
+
+| Bit | Acción | Cómo se observa |
+|---|---|---|
+| 0 | disparo | shot nuevo (slot libre→ocupado o `age` reiniciado) con `parent` = slot; el tipo (`shottype`) da el color del anillo — criterio exacto de "nuevo" contra `Shots.bas` al implementar |
+| 1 | reproducción | hijo con `BirthCycle` = ciclo y `parent` = `AbsNum` de este bot |
+| 2 | sexual | `fertilized` pasa a > 0 |
+| 3 | tie | un slot de `Ties(1..9)` pasa de vacío a ocupado |
+| 4 | movimiento | algún `last*` ≠ 0, o `aim` cambió |
+| 5 | shell / slime | `shell` o `Slime` suben |
+| 6 | venom / poison | `venom` o `poison` suben |
+| 7 | come / mata | `Kills` sube, o `nrg` sube en un no-vegetal (shot de robo) |
+| 8 | body | `body` cambia sin nacimiento (`strbody`/`fdbody`) |
+
+Coste acotado: un recorrido O(MaxRobs) de pocos campos por tick, en C++. Se
+mide la caída de ticks/s con el modo encendido (objetivo ≤ 5 %).
+
+### Correspondencias visuales
+
+| Canal | Qué muestra | Dibujo (Canvas 2D) |
+|---|---|---|
+| **Forma** | vegetal / animal / multibot | vegetal: hexágono con borde suave; animal: círculo con nariz en la dirección de `aim`; multibot: círculo con la tie dibujada gruesa y del tono de la especie (las de `db_sim_dump_ties` pasan a primer plano) |
+| **Tono** | especie | ya existe: `color` del bot (el del original) |
+| **Brillo** | nrg y body | nrg → luminosidad del relleno (escala log 0..32000; desteñido cerca de 0, como el "desteñido con poca energía" de la v1.5). body ya es el **radio** en el original (`FindRadius`); con `FixedBotRadii` el body pasa a la opacidad del núcleo |
+| **Anillo de acción** | lo que hizo desde el último frame | anillo fino fuera del cuerpo, un color por bit (tabla aparte tipo `behaviorStyles.js`, con los colores de `FlashColor` para los disparos); se desvanece en ~300 ms; late solo en disparo y reproducción |
+| **Morfología** | shell, slime, venom/poison, cloroplastos, ojos | shell = grosor del borde (∝ shell/32000); slime = halo translúcido; venom/poison = púas (azul/amarillo, 3-6 según cantidad); cloroplastos = tinte verde mezclado en el relleno; ojos = marcas en el perímetro en la dirección de cada ojo, rellenas si ven |
+| **Eventos** | nacimiento, muerte | nacimiento: destello + línea a la madre (su posición, si sigue viva) durante ~600 ms; muerte: el bot que desaparece (por `AbsNum`) se encoge y se apaga en ~900 ms desde su última posición. El cadáver (`Corpse`) sigue como en el original. Un bot que sale por teleporter no se marca como muerte (el host sabe del `outbox`) |
+| **Estado** | parálisis, veneno, virus | contorno punteado / tinte amarillo / puntos cian (baratos, solo con zoom) |
+
+**Nivel de detalle (LOD)** — importa más que en 3D: a zoom 1 un bot mide
+~1-2 px (campo de 32000 twips en 900 px), así que la morfología **solo se ve
+con zoom**. Regla: cuerpo + tono + brillo siempre; anillo de acción a partir
+de ~3 px de radio; borde/halo/púas/tinte a partir de ~6 px; ojos y estado a
+partir de ~10 px. Fuera de pantalla no se dibuja nada (culling por la caja
+de la cámara).
+
+### Lentes "Color por"
+
+Especie (por defecto: el color del original), nrg, body, generación,
+mutaciones, edad, longitud del ADN y **distancia genética**. Rampa continua
+tipo viridis (la de `organismColors.js`: `#2c1e6b → #fde725`), normalizada
+con el mínimo y el máximo de los bots presentes; leyenda con la rampa y los
+extremos. La distancia genética es **al bot seleccionado** (sin selección, la
+lente pide elegir uno): `db_sim_vis_gendist(h, ref, out, max)` con
+`DoGeneticDistance` (O(DnaLen²) por par), recalculada a ≤ 1 Hz en rebanadas
+presupuestadas dentro del loop del worker, nunca por frame.
+
+### Inspección
+
+- **Cámara**: zoom con rueda (centrado en el cursor), paneo arrastrando y
+  "Seguir" en el inspector (la cámara centra al bot con foco cada frame; se
+  suelta al arrastrar). `whichrob` y el resto del hit-test pasan por la
+  inversa de la transformación.
+- **Rastro** del bot con foco: sus últimas ~120 posiciones (por frame, en la
+  página), en línea que se desvanece; se corta en los saltos de toroide.
+- **Tooltip** al pasar el ratón: especie, nrg, body, edad, generación y las
+  acciones del último frame, con los datos del volcado (sin ida al worker).
+- **Leyenda** plegable: formas, colores de acción y rampa de la lente activa.
+
+### Rendimiento: medición con ~2000 bots
+
+**Línea base medida el 2026-09-24** (Chrome 154, canvas 900×900, 2015 bots +
+1836 shots, vista fiel, 40 llamadas a `draw()` sobre una copia del frame
+pendiente): **mediana 2,6 ms / p90 3,1 ms** sin toggles; **5,7 / 7,7 ms** con
+los 4 toggles del menú View.
+
+Presupuesto de la vista enriquecida con 2000 bots y todas las capas: **p90 ≤
+8 ms a zoom 1** (el mismo orden que la vista fiel con todo encendido) y
+≤ 8 ms con zoom sobre ~300 bots visibles con todos los detalles. Técnicas si
+hace falta: agrupar por estilo (un `Path2D` por color de anillo/estado en vez
+de `beginPath` por bot), cuantizar el brillo a ~16 niveles para cachear los
+`fillStyle`, culling y LOD. Si ni así, se documenta el techo y se evalúa un
+`OffscreenCanvas` en el worker (no WebGL: fuera de alcance). Mismo
+procedimiento para medir en ambas vistas, más ticks/s con y sin
+`db_sim_vis_observe`.
+
+### Trabajo (orden)
+
+1. API: `db_sim_dump_bots_vis`, `db_sim_vis_observe`, `db_sim_vis_gendist`
+   y la tabla de especies; smoke node (campos contra `db_sim_bot_*`, bits de
+   acción provocados a mano: disparo, repro, tie, shell; `.dbsim` idéntico con
+   y sin la vista).
+2. Worker: modo enriquecido (pide el volcado extra, llama a `observe` por
+   tick, lente de distancia en rebanadas).
+3. Página: selector de vista, cámara, `drawRich()` con capas y LOD, lentes,
+   eventos, rastro, tooltip y leyenda.
+4. Medición de rendimiento y ajustes; verificación en Chrome.
+
+**Cierre**: suite 172/3465 en verde en los tres modos y `port/core/` sin
+diff; smoke node; Chrome con las dos vistas (la fiel idéntica a antes), las
+8 lentes, los eventos visibles, seguir + rastro + tooltip, consola limpia y
+las mediciones anotadas en `PROGRESO.md`.
+
+**Fuera de alcance**: 3D/WebGL, interpolación entre frames (la v1.5 la
+necesitaba porque recibía estado cada 80 ms; aquí llega un frame por rAF),
+señales entre bots (DB no tiene el concepto; su análogo, `out1..out5`, queda
+para una lente futura), radar de cromosomas y árbol gráfico (la philogeny de
+E6 ya cubre el parentesco).
+
 ## E7 · Internet / torneo distribuido — capa host (transporte)
 
 La E/S por búferes (`outbox`/`inbox`) ya funciona entre sims. Falta el
@@ -128,5 +292,5 @@ de verdad), tray icon (n/a en web).
 ## Orden recomendado
 
 **E1 → E2 → E3** (todo capa host, valor alto, riesgo nulo para el core) →
-**E4** (primer core nuevo, con su familia de casos) → **E5 → E6 → E7 → E8**
-según apetito. Cada etapa cierra con su fila en `PROGRESO.md`.
+**E4** (primer core nuevo, con su familia de casos) → **E5 → E6 → E6.5 → E7
+→ E8** según apetito (E6.5, vista enriquecida, añadida el 2026-09-24). Cada etapa cierra con su fila en `PROGRESO.md`.
