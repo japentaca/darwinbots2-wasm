@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 178 casos / 3544 aserciones en verde (en los tres modos), con las extensiones E1..E7 y E6.5 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 178 casos / 3544 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -375,6 +375,35 @@ nuevo; **cargar** una sim borra el puerto (`LoadSimulation`) y el modo queda
 encendido sin puerto hasta reconectar. Nada se pierde en el camino: lo que
 espera salir sigue en la cola del cliente y lo recibido y no cargado queda
 retenido para el próximo puerto.
+
+### Extras (etapa E8)
+
+Capa host pura (el core no cambia; `spec/PLAN-EXTENSIONES.md §E8`):
+
+- **Skins** (toggle "skins", arranca activado como `dispskin`): la
+  polilínea de `DrawRobSkin` con su caché `oaim`/`OSkin` (en el wasm,
+  `db_sim_dump_skins`) y la skin de cada especie generada por `AssignSkin`
+  (`db_sim_species_assign_skin`, determinista por nombre + ADN salvo el
+  `Randomize` del reloj). Con las skins a la vista el cuerpo del bot se
+  pinta hueco, como el original.
+- **Monitor RGB** (menú View (extras) → "Settings for RGB Memory
+  Monitor..." y toggle "monitor RGB"): el paso 23 del tick corre en el
+  worker tras cada tick (`db_sim_monitor_capture`) y `DrawMonitor` en la
+  página, con su aritmética de `Integer` (un rango `ceil − floor` mayor que
+  32767 no dibuja nada, como el error 6 del original). Presets `.mtrp`.
+- **Imagen de fondo**: "Import/Remove Background Picture"; tamaño natural
+  en la esquina del canvas, fija a la ventana.
+- **Eye designer** (menú Robot → "Go to eye designer..."): los 18 campos
+  `.eye*dir`/`.eye*width` del bot con foco, "Write DNA ..." y los tres
+  botones de "Ease of Access".
+
+El frame del worker pasa a **13 floats de cabecera** (`extras`: bit0
+monitor, bit1 skins) con los bloques nuevos al final. Smoke test (API
+directa + `worker.js` real):
+
+```
+cd port && node tools/e8/smoke_e8.mjs
+```
 
 ### Toolchain verificado (Windows 11, 2026-08-26)
 

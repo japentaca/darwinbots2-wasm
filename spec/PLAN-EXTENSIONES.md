@@ -475,11 +475,97 @@ intercambiando organismos reales por los dos transportes (apodo como
 `LastOwner`, censos, cartel "Internet Mode", salidas con anillo cian en la
 vista enriquecida, consola limpia).
 
-## E8 · Extras de menor valor
+## E8 · Extras de menor valor — capa host · ✅ cerrada 2026-09-24
 
-Eye designer (`frmEYE.frm`), imagen de fondo, settings del monitor RGB,
-E-Grid (`EGridEnabled/Width` — verificar primero si el original lo consume
-de verdad), tray icon (n/a en web).
+Eye designer (`frmEYE.frm`), imagen de fondo, monitor RGB, skins, E-Grid y
+tray icon. **El core no se abre**: los dos campos del `Type robot` que el
+port no tenía (`monitor_r/g/b`, `oaim`/`OSkin`) son de render — ningún
+sistema de la simulación los lee — y se modelan en la capa wasm con la
+misma forma que el estado de la vista enriquecida (por slot; un AbsNum
+distinto = `rob(posto) = blank`, `Robots.bas:2962-2963`).
+
+### Decisiones por pieza (con la evidencia)
+
+| Pieza | Decisión | Evidencia |
+|---|---|---|
+| Eye designer | ✅ ventana flotante | `frmEYE.frm:322-373`: `txtDir/txtWth_Change` escriben `rob(robfocus).mem(EYE1DIR/EYE1WIDTH + i)` (521..529 / **531**..539) con la conversión implícita String→Integer bajo `On Error Resume Next` (basura o fuera de rango = no se escribe); `showEyeDesign_Click` (`MDIForm1.frm:1635-1643`) llena los campos solo al abrir — los cambios van al foco de ESE momento; "Write DNA ..." escribe `Cond / *.robage 0 = / Start / N .eyeKdir store / N .eyeKwidth store / ' … Stop` con el texto crudo; "Ease of Access": `Costs(COSTMULTIPLIER) = 0`, `mem(SetAim) = 0`, `PhysBrown = 0`. Deshabilitado con F1 (`:1715`). Sin foco, el original escribía `rob(0).mem`: no-op en el port. |
+| Monitor RGB | ✅ paso 23 en la capa wasm + `DrawMonitor` en la página | `Master.bas:416-427` copia `mem(Monitor_mem_r/g/b)` a `monitor_r/g/b`; los pasos 24-26 no tocan `mem()` ni crean bots (`:429-554`), así que tras `UpdateSim` es el mismo instante: el worker llama a `db_sim_monitor_capture` tras cada tick. Una escritura de UI entre ticks no se ve hasta el tick siguiente, un bot nuevo vale 0 y con el monitor apagado los campos quedan viejos — todo como el original. `frmMonitorSet.frm`: defaults mem 1 / piso 0 / techo 32000; `LostFocus` (dirección por `SysvarTok("." & texto)` y acotada a 1..999; piso/techo ±32000 y separados por 1); `overwrite` (hay que dar OK una vez: `MonitorOn_Click` avisa si no); presets `.mtrp` = 9 `Integer` binarios. |
+| Skins | ✅ (E2 las había omitido) | `DrawRobSkin` (`main.frm:838-866`): polilínea de 4 puntos, `OSkin` recalculado solo cuando `oaim <> aim` (skin o radio nuevos con el mismo aim siguen con la forma vieja), nada para cadáveres, `noeyeskin` con más de 500 RobSize a la vista. La skin de la especie la genera `AssignSkin` (`OptionsForm.frm:3411-3472`) al agregarla — el port nunca la había generado (todos los `Skin` en 0) — y ahora se transcribe (`db_sim_species_assign_skin`). El cuerpo del bot del original es hueco (`FillColor = BackColor`, `main.frm:1081`; contorno en `.color`, `:622`): con skins, la página lo pinta así. |
+| Imagen de fondo | ✅ | `loadpiccy_Click`/`removepiccy_Click` (`MDIForm1.frm:1433-1446`, `:1558-1561`) y `Form1.Picture`: tamaño natural en la esquina del form, fija a la ventana, repintada por `Cls`. `BackPic` sobrevive a "Remove": sim nueva y cargar sim la vuelven a poner (`main.frm:1241`, `:1422`), y cancelar el diálogo de "Import" repone la anterior — `[PROBABLE BUG]` replicado. |
+| E-Grid | ❌ vestigial | Menú `Visible = False` sin un solo handler (`MDIForm1.frm:803-825`); `InitEGrid` comentado (`main.frm:1324-1325`, `:1503-1504`); `Gridmode` se asigna (`MDIForm1.frm:3128`) y nunca se lee; `EGridEnabled/Width` solo se persisten (`HDRoutines.bas:774-775`, `:1438-1441`), cosa que el formato de sim del port ya hace desde M8. |
+| Tray icon | ❌ n/a en web | `TrayIcon.cls` + `stealthmode` (`MDIForm1.frm:1693-1699`, `:1822-1827`; `main.frm:3191-3198`): esconde el proceso en la bandeja de Windows con un popup de ciclos/mutaciones/bots — la barra de stats de la página ya muestra eso. |
+
+### Decisiones de host (documentadas en el código)
+
+- **`AssignSkin` corre sobre un LCG propio**, no sobre el de la sim. En el
+  original usaba el global: antes de una sim nueva lo borra el `Rnd -1 :
+  Randomize seed/100` de `startloaded`, pero agregar una especie con la sim
+  en marcha re-sembraba su RNG con el reloj — eso no se replica. El `Timer`
+  del `Randomize` final (Skin(6)) se fija la primera vez por especie, así
+  las rondas nuevas conservan la skin (en el original la guardaba la
+  especie).
+- **Presets `.mtrp`**: `Command1_Click` escribe los `Text` sin pasar por
+  `LostFocus`, así que un archivo fabricado podía dejar una dirección fuera
+  de `mem()` e indexar fuera de rango en el paso 23 (error 9 → truncaba el
+  resto del tick). El port acota esa dirección como `LostFocus` al dar OK.
+  Piso y techo quedan crudos (sus consecuencias son solo de render).
+- **`If MDIForm1.MonitorOn Then`** (`Master.bas:418`) lee la propiedad por
+  defecto de un `Menu`; se toma `.Checked` (lo que usa `main.frm:1122`).
+  Solo cambia qué se ve al encender el monitor con la sim en pausa.
+- **Caché `OSkin`**: se actualiza al volcar y para todos los bots (el
+  original solo al dibujar los visibles); el ritmo de frames del port ya no
+  es el de un Redraw por ciclo.
+
+### Hallazgos
+
+1. **`DrawMonitor` desborda con rangos válidos**: `ceil − floor` y
+   `monitor − floor` son restas de `Integer`; con piso −32000 y techo 32000
+   (valores que la UI acepta) da error 6. Con `ignoreerror` el error sube al
+   `On Error Resume Next` de `main()` y **aborta el `Redraw` entero**. La
+   página lo replica en lo visible (el pase del monitor se corta); ver el
+   hallazgo 2 para lo que no se replica.
+2. **El `Redraw` del original escribe en la sim** (`main.frm:422-469`):
+   antes de dibujar corre cada bot `pos -= vel − actvel` y al final lo
+   devuelve. En `Single`, `(x − d) + d` no siempre vuelve a `x` (medido:
+   ~0,35 % de las coordenadas por frame, 1 ulp), así que **con el video
+   encendido la trayectoria depende de que se dibuje**; y si el Redraw
+   aborta (hallazgo 1, o un `OSkin` fuera de `Integer`) los bots **quedan
+   corridos** en `vel − actvel`. El port corresponde al original con el
+   video apagado (`visualize = False`). No se replica; queda pendiente de
+   decisión del usuario.
+3. **Sembrar en un campo chico desborda la pila de wasm** (15 algas en
+   4000×3000; con 8000×6000 no pasa): es anterior a E8 (la siembra no se
+   tocó) y queda anotado para después del plan.
+
+### Resultado (2026-09-24)
+
+- **wasm**: `db_sim_monitor_capture`/`dump_monitor`, `db_sim_dump_skins`,
+  `db_sim_species_assign_skin`, `db_sim_sysvar_tok0` (+ los getters de solo
+  lectura `bot_skin`/`bot_aim` para el smoke).
+- **worker**: cabecera de frame de 13 floats (`extras`), bloques de monitor
+  (nB×3) y de skins (nB×9); mensajes `monitor`, `skins`,
+  `eye-read`/`eye-vals`, `setmem` y `sysvar`.
+- **página**: toggles "skins" y "monitor RGB", grupo "Menú View (extras)",
+  ventanas "RGB Memory Monitor Settings" y "Eye Designer".
+- **Verificación**: suite 178/3544 intacta en los tres modos; smoke
+  `tools/e8/smoke_e8.mjs` **30/30** y `smoke_im.mjs` 44/44; en Chrome,
+  skins sobre el cuerpo hueco, monitor configurado por nombre de sysvar
+  (`nrg` → 310) con 49 cajas de color y 0 con el rango que desborda, fondo
+  cargado / quitado / repuesto por sim nueva, y eye designer escribiendo con
+  las reglas de VB6 (`2.5` → 2, `&H10` → 16, `abc` → nada); consola limpia.
+
+**Revisión de rama** (agente independiente, contra el fuente): sin
+hallazgos altos; tres bugs reales corregidos — la Skin(6) se re-sorteaba en
+cada sim nueva (el `Timer` pasa a fijarse por especie en el worker, con su
+caso en el smoke), el orden de dibujo (ahora en pases completos como
+`DrawAllRobs`, `main.frm:1076-1116`: con el cuerpo hueco opaco, el bot
+siguiente tapaba la skin del anterior) e `IsNumeric`/`Val` con `&H` en la
+dirección del monitor. Quedan documentados sin cambio: el gate
+`y_eco_im = 2` del eye designer (el port no modela eco-IM), que el abort del
+Redraw también saltea teleporters y shots (la página los pinta antes de los
+bots), el tramo parcial de una skin que falla, la `r` vieja del bucle de
+visibilidad de `main.frm:1100-1112`, y `AssignSkin` sobre bytes UTF-8 (el
+original usa `Asc` ANSI: otra skin para nombres con tildes).
 
 ---
 
@@ -488,3 +574,5 @@ de verdad), tray icon (n/a en web).
 **E1 → E2 → E3** (todo capa host, valor alto, riesgo nulo para el core) →
 **E4** (primer core nuevo, con su familia de casos) → **E5 → E6 → E6.5 → E7
 → E8** según apetito (E6.5, vista enriquecida, añadida el 2026-09-24). Cada etapa cierra con su fila en `PROGRESO.md`.
+**Plan completo el 2026-09-24** (balance de lo que quedó fuera en
+`PROGRESO.md` §"Siguiente").

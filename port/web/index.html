@@ -202,6 +202,14 @@
                text-overflow: ellipsis; white-space: nowrap; }
   .win-x { padding: 0 6px; line-height: 18px; }
   .win-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  /* E8 — frmMonitorSet y frmEYE */
+  .mon-grid { display: flex; gap: 6px; }
+  .mon-grid fieldset, .win fieldset { border: 1px solid #2e3a55; border-radius: 4px;
+                  padding: 4px 6px; display: grid; gap: 3px; font-size: 11px; color: #8296b8; }
+  .mon-grid input { width: 80px; }
+  .eye-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px 6px;
+              align-items: center; font-size: 11px; color: #8296b8; }
+  .eye-grid input { width: 100%; box-sizing: border-box; }
   .chart-wrap { display: flex; gap: 6px; }
   .chart-wrap canvas { border: 1px solid #1c2333; background: #0a0f1a;
                        flex: none; }
@@ -269,6 +277,8 @@
     <label><input type="checkbox" id="tg-vision" checked> visión</label>
     <label><input type="checkbox" id="tg-vectors" checked> vectores</label>
     <label><input type="checkbox" id="tg-gauges" checked> gauges</label>
+    <label title="E8: Form1.dispskin (DrawRobSkin, main.frm:838) — arranca activado (main.frm:394)"><input type="checkbox" id="tg-skins" checked> skins</label>
+    <label title="E8: RGB Memory Monitor (MonitorOn, MDIForm1.frm:1521) — pide configurarlo antes"><input type="checkbox" id="tg-monitor"> monitor RGB</label>
     <label title="E5: el bot con foco (y los resaltados) apuntan al puntero; flechas = motor, espacio = disparo"><input type="checkbox" id="pb-on"> Player Bot</label>
   </div>
   <div class="sep"></div>
@@ -439,6 +449,17 @@
              style="font-size:11px;color:#5c6b88">0 registros</div>
       </div>
     </details>
+    <details class="optgrp"><summary>Menú View (extras)</summary>
+      <div class="optrows">
+        <div class="full row">
+          <button id="btn-bg-load" title="loadpiccy_Click (MDIForm1.frm:1433)">Import Background Picture</button>
+          <button id="btn-bg-remove" title="removepiccy_Click (MDIForm1.frm:1558)">Remove Background Picture</button>
+        </div>
+        <div class="full row">
+          <button id="btn-monitor-set" title="frmMonitorSet.frm (MDIForm1.frm:1525)">Settings for RGB Memory Monitor...</button>
+        </div>
+      </div>
+    </details>
     <details class="optgrp"><summary>Menú Robot</summary>
       <div class="optrows">
         <div class="full row">
@@ -451,6 +472,9 @@
           <label>niveles</label>
           <input type="number" id="fam-rec" value="1000" min="1" style="width:70px">
           <button id="btn-family-clear">Limpiar</button>
+        </div>
+        <div class="full row">
+          <button id="btn-eye" title="frmEYE.frm (MDIForm1.frm:1635); deshabilitado en F1">Go to eye designer...</button>
         </div>
         <div class="full" id="family-info"
              style="font-size:11px;color:#5c6b88">—</div>
@@ -909,6 +933,12 @@ worker.onmessage = (e) => {
       gendistNote = 'la referencia ya no existe (murió, reset o carga): seleccioná otro bot';
       renderLegend();
       break;
+    case 'eye-vals':             // E8: showEyeDesign_Click
+      if (eyeWin) eyeWin.eyeFill(msg.dir, msg.wth);
+      break;
+    case 'sysvar':               // E8: SysvarTok del monitor
+      sysvarReply(msg);
+      break;
     case 'opts':
       // E3: opciones que cambió el core (Polar Ice enciende la deriva,
       // Obstacles.bas:123-125) — reflejarlas en el panel.
@@ -1124,7 +1154,7 @@ function draw(v) {
   const W = v[0], Hh = v[1];
   const nB = v[2], nS = v[3], nT = v[4], nO = v[5], nP = v[6];
   const focus = v[7];
-  const oBots = 12;
+  const oBots = 13;
   const oShots = oBots + nB * 20;
   const oTies = oShots + nS * 9;
   const oObs = oTies + nT * 5;
@@ -1132,6 +1162,10 @@ function draw(v) {
   const oFocus = oTps + nP * 7;
   const oVis = oFocus + (focus > 0 ? 44 : 0);
   const rich = v[8] === 1 && richView;           // E6.5
+  // E8: bloques de monitor y skins, detrás del de la vista enriquecida.
+  const extras = v[12];
+  const oMon = oVis + (v[8] === 1 ? nB * 24 + (v[9] + v[10]) * 6 : 0);
+  const oSkin = oMon + (extras & 1 ? nB * 3 : 0);
   const s = Math.min(canvas.width / W, canvas.height / Hh);
   lastScale = s;
   lastW = W; lastH = Hh;
@@ -1141,6 +1175,7 @@ function draw(v) {
   if (cam.follow && focus > 0) followCam(v[oFocus], v[oFocus + 1], s);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();              // E8: Form1.Picture (Cls la repinta)
   ctx.setTransform(cam.z, 0, 0, cam.z, cam.ox, cam.oy);
   const LW = 1 / cam.z;
   curLW = LW;
@@ -1254,8 +1289,15 @@ function draw(v) {
 
   // bots — E6.5: la vista enriquecida tiene su propio pase (drawRichBots);
   // la original es el bucle de siempre, movido tal cual a drawBotsOriginal.
+  const vis = visibleWorld(s);
+  let redrawOk = true;
   if (rich) drawRichBots(v, oBots, nB, oVis, focus, s, LW);
-  else drawBotsOriginal(v, oBots, nB, focus, s);
+  else redrawOk = drawBotsOriginal(v, oBots, nB, focus, s,
+                                   (extras & 2) && tgSkins.checked ? oSkin : -1, vis, LW);
+  // E8 — RGB Memory Monitor (main.frm:1119-1131), encima de los bots; en
+  // ambas vistas (es un overlay que configura el usuario).
+  if ((extras & 1) && tgMonitor.checked && redrawOk)
+    drawMonitor(v, oBots, oMon, nB, s, LW, vis);
 
   // E6 — árbol de parentesco (main.frm:3059-3070, score tipo 3): dos tramos
   // por enlace hijo→medio→padre; el blanco va del lado del AbsNum mayor y el
@@ -1305,9 +1347,30 @@ function draw(v) {
 
 // Pase de bots de la vista original (DrawRobPer / DrawRobAim de main.frm;
 // el cuerpo es el bucle de E2-E6 sin cambios).
-function drawBotsOriginal(v, oBots, nB, focus, s) {
+function drawBotsOriginal(v, oBots, nB, focus, s, oSkin, vis, LW) {
   const gauges = tgGauges.checked;
-  const vectors = tgVectors.checked;
+  let vectors = tgVectors.checked;
+  // E8 — skins (DrawRobSkin): noeyeskin si se ven más de 500 RobSize de
+  // ancho (main.frm:1015); grosor w = Int(30 / (visiblew / RobSize) + 1).
+  // Un error 6 al asignar un OSkin aborta el Redraw del original: aquí corta
+  // las skins desde ese bot y apaga lo que DrawAllRobs pinta después (los
+  // vectores y el monitor) en ese frame.
+  const visW = vis[1] - vis[0];
+  const skins = oSkin >= 0 && visW / 120 <= 500;
+  let skinStop = nB;
+  if (skins) {
+    for (let i = 0; i < nB; i++) {
+      const o = oBots + i * 20;
+      const x = v[o + 1], y = v[o + 2], r = v[o + 3];
+      if (v[oSkin + i * 9] === -1 &&
+          x + r > vis[0] && x - r < vis[1] && y + r > vis[2] && y - r < vis[3]) {
+        skinStop = i;
+        vectors = false;
+        break;
+      }
+    }
+  }
+  const skinW = Math.floor(30 / (visW / 120) + 1) * LW;
   for (let i = 0; i < nB; i++) {
     const o = oBots + i * 20;
     const wx = v[o + 1], wy = v[o + 2], wr = v[o + 3];
@@ -1337,9 +1400,19 @@ function drawBotsOriginal(v, oBots, nB, focus, s) {
 
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = corpse ? '#555' : vbColorToCss(v[o + 6]);
-    ctx.fill();
-    ctx.strokeStyle = corpse ? '#777' : 'rgba(255,255,255,0.55)';
+    if (skins && !corpse) {
+      // E8 — con las skins a la vista, el cuerpo del original: relleno
+      // FillColor = BackColor y contorno en el color del bot (main.frm:1081,
+      // :622), para que la skin se lea adentro. Sin skins, el disco lleno
+      // de siempre (decisión de M10).
+      ctx.fillStyle = '#0a0f1a';
+      ctx.fill();
+      ctx.strokeStyle = vbColorToCss(v[o + 6]);
+    } else {
+      ctx.fillStyle = corpse ? '#555' : vbColorToCss(v[o + 6]);
+      ctx.fill();
+      ctx.strokeStyle = corpse ? '#777' : 'rgba(255,255,255,0.55)';
+    }
     ctx.stroke();
     // marcador de rumbo: y de mundo crece hacia abajo, aim antihorario
     const aim = v[o + 4];
@@ -1371,7 +1444,34 @@ function drawBotsOriginal(v, oBots, nB, focus, s) {
         ctx.stroke();
       }
     }
+  }
 
+  // E8 — pases completos como DrawAllRobs: las skins de todos después de
+  // los cuerpos (ninguna queda tapada por el cuerpo de otro bot) y los
+  // vectores de todos al final.
+  if (skins) {
+    ctx.lineWidth = skinW;
+    for (let i = 0; i < skinStop; i++) {
+      // E8 — skin: polilínea pos+OSkin(0,1) → (2,3) → (4,5) → (6,7), color
+      // del bot (el PSet inicial de un píxel se omite).
+      if (v[oSkin + i * 9] !== 1) continue;
+      const o = oBots + i * 20;
+      const wx = v[o + 1], wy = v[o + 2];
+      const k = oSkin + i * 9 + 1;
+      ctx.beginPath();
+      ctx.moveTo((wx + v[k]) * s, (wy + v[k + 1]) * s);
+      for (let t = 2; t <= 6; t += 2)
+        ctx.lineTo((wx + v[k + t]) * s, (wy + v[k + t + 1]) * s);
+      ctx.strokeStyle = vbColorToCss(v[o + 6]);
+      ctx.stroke();
+    }
+    ctx.lineWidth = LW;
+  }
+  for (let i = 0; i < nB; i++) {
+    const o = oBots + i * 20;
+    const wx = v[o + 1], wy = v[o + 2], wr = v[o + 3];
+    const corpse = v[o + 7] & 4;
+    const aim = v[o + 4];
     // vectores de movimiento (DrawRobAim; solo bots no-cadáver): flechas de
     // .lastup/.lastdown/.lastleft/.lastright con clamp ±1000, color del bot.
     if (vectors && !corpse) {
@@ -1392,6 +1492,7 @@ function drawBotsOriginal(v, oBots, nB, focus, s) {
         drawArrow(wx + drx * wr, wy + dry * wr, drx, dry, right, dfx, dfy, s);
     }
   }
+  return skinStop === nB;   // E8: false = el Redraw del original abortó
 }
 
 
@@ -2933,8 +3034,404 @@ function drawActivations(ga) {
 // ---- Philogeny (parentele.frm) -------------------------------------------
 let familyLines = null;   // segmentos [hx,hy,mx,my,px,py,ctBlanco] × n
 
+// ---- E8: extras de menor valor (spec/PLAN-EXTENSIONES.md §E8) -------------
+// Capa host pura: imagen de fondo (menú View), monitor RGB (frmMonitorSet +
+// DrawMonitor), skins (DrawRobSkin) y eye designer (frmEYE). Lo único que
+// escribe en la sim es lo que escribía la UI del original (mem de un bot,
+// PhysBrown, Costs(COSTMULTIPLIER)).
+
+// Conversión implícita String → Integer de VB6 (asignar el Text de un
+// TextBox a un Integer): número decimal/científico o &H/&O, redondeo
+// bancario; "" o basura = error 13 y fuera de rango = error 6. Devuelve null
+// en error (los handlers del original llevan On Error Resume Next: no se
+// escribe nada).
+function vbRoundHalfEven(x) {
+  const f = Math.floor(x), d = x - f;
+  if (d > 0.5) return f + 1;
+  if (d < 0.5) return f;
+  return f % 2 === 0 ? f : f + 1;
+}
+function vbTextToInteger(text) {
+  const t = String(text).trim();
+  let x;
+  const hex = /^&H([0-9A-F]+)&?$/i.exec(t), oct = /^&O?([0-7]+)&?$/i.exec(t);
+  if (hex) {
+    x = parseInt(hex[1], 16);
+    if (hex[1].length <= 4 && x > 0x7fff) x -= 0x10000;   // &HFFFF = -1
+  } else if (oct && t[0] === '&') {
+    x = parseInt(oct[1], 8);
+  } else if (/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(t)) {
+    x = vbRoundHalfEven(parseFloat(t));
+  } else {
+    return null;                                            // error 13
+  }
+  return x < -32768 || x > 32767 ? null : x;                // error 6
+}
+// Val() de VB6: prefijo numérico (también &H / &O), 0 si no hay.
+function vbVal(text) {
+  const t = String(text).replace(/^\s+/, '');
+  const h = /^&H([0-9A-F]+)/i.exec(t);
+  if (h) { let x = parseInt(h[1], 16); if (h[1].length <= 4 && x > 0x7fff) x -= 0x10000; return x; }
+  const o = /^&O?([0-7]+)/i.exec(t);
+  if (o) return parseInt(o[1], 8);
+  const m = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(t);
+  return m ? parseFloat(m[0]) : 0;
+}
+// IsNumeric() de VB6 (sin separadores de miles del locale).
+function vbIsNumeric(text) {
+  const t = String(text).trim();
+  return /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(t) ||
+         /^&H[0-9A-F]+&?$/i.test(t) || /^&O?[0-7]+&?$/i.test(t);
+}
+// Resta de dos Integer con su error 6 (null).
+function vbISub(a, b) {
+  const r = a - b;
+  return r < -32768 || r > 32767 ? null : r;
+}
+
+// ---- Imagen de fondo (MDIForm1.frm:1433-1446 / :1558-1561) ----------------
+// Form1.Picture: se pinta en la esquina superior izquierda del form a su
+// tamaño natural, debajo de todo y fija a la ventana (no escala ni se mueve
+// con el zoom). BackPic sobrevive a "Remove": sim nueva y cargar sim vuelven
+// a ponerla (main.frm:1241, :1422) — [PROBABLE BUG] replicado.
+const bgPic = { backPic: null, name: '', shown: false, piccyMode: false };
+const bgInput = document.createElement('input');
+bgInput.type = 'file';
+bgInput.accept = '.bmp,.jpg,.jpeg,image/bmp,image/jpeg';
+function bgNewpic() {
+  // PiccyMode = True : Newpic = True → el próximo Redraw hace
+  // LoadPicture(BackPic); con BackPic = "" queda sin imagen.
+  bgPic.piccyMode = true;
+  bgPic.shown = !!bgPic.backPic;
+  worker.postMessage({ t: 'redraw' });
+}
+bgInput.onchange = () => {
+  const f = bgInput.files && bgInput.files[0];
+  bgInput.value = '';
+  if (!f) { bgNewpic(); return; }
+  const img = new Image();
+  img.onload = () => {
+    bgPic.backPic = img;
+    bgPic.name = f.name;
+    bgNewpic();
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror = () => {         // LoadPicture falla → On Error GoTo fine
+    log(`imagen de fondo: no se pudo leer ${f.name}`);
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+// Cancelar el diálogo también deja PiccyMode/Newpic en True (el If solo
+// protege la asignación de BackPic): reaparece la imagen anterior.
+bgInput.addEventListener('cancel', bgNewpic);
+function bgLoad() { bgInput.click(); }
+function bgRemove() {
+  bgPic.piccyMode = false;
+  bgPic.shown = false;          // Form1.Picture = Nothing (BackPic queda)
+  worker.postMessage({ t: 'redraw' });
+}
+function bgOnSimStart() { bgPic.shown = !!bgPic.backPic; }
+function drawBackground() {
+  if (bgPic.shown && bgPic.backPic) ctx.drawImage(bgPic.backPic, 0, 0);
+}
+
+// ---- Monitor RGB (frmMonitorSet.frm + DrawMonitor, main.frm:548-583) ------
+// monitor.cfg = los Public del form (Monitor_mem/floor/ceil); overwrite =
+// "ya se configuró" (Form_Load/Form_Unload: solo el OK lo deja en True).
+const monitorCfg = { mem: [1, 1, 1], floor: [0, 0, 0], ceil: [32000, 32000, 32000] };
+let monitorConfigured = false;
+let monitorWin = null;
+const tgMonitor = document.getElementById('tg-monitor');
+function monitorSend() {
+  worker.postMessage({ t: 'monitor', on: tgMonitor.checked, mem: monitorCfg.mem.slice() });
+}
+tgMonitor.addEventListener('change', () => {
+  // MonitorOn_Click (MDIForm1.frm:1521-1523)
+  if (!monitorConfigured) {
+    tgMonitor.checked = false;
+    log('Please configure monitor settings first.');
+    openMonitorSettings();
+    return;
+  }
+  monitorSend();
+});
+
+function openMonitorSettings() {
+  if (monitorWin) return;
+  const w = makeWindow('RGB Memory Monitor Settings', 330, 0, () => { monitorWin = null; });
+  w.style.left = '120px'; w.style.top = '90px';
+  monitorWin = w;
+  const names = ['Red', 'Green', 'Blue'];
+  let html = '<div class="mon-grid">';
+  for (let c = 0; c < 3; c++) {
+    html += `<fieldset><legend>${names[c]}</legend>
+      <label>Memory location:</label><input class="m-mem" data-c="${c}" value="1">
+      <label>Floor:</label><input class="m-floor" data-c="${c}" value="0">
+      <label>Ceiling:</label><input class="m-ceil" data-c="${c}" value="32000">
+      </fieldset>`;
+  }
+  html += `</div><div class="row" style="margin-top:6px">
+      <button class="m-load">Load Preset...</button>
+      <button class="m-save">Save Preset...</button>
+      <span style="flex:1"></span>
+      <button class="m-ok primary">OK</button>
+      <button class="m-cancel">Cancel</button></div>`;
+  w.body.innerHTML = html;
+  const q = (cls, c) => w.body.querySelector(`.${cls}[data-c="${c}"]`);
+  // Form_Load: con overwrite, los campos muestran lo configurado; si no,
+  // los defaults del .frm y sin botón Cancel.
+  if (monitorConfigured) {
+    for (let c = 0; c < 3; c++) {
+      q('m-mem', c).value = monitorCfg.mem[c];
+      q('m-floor', c).value = monitorCfg.floor[c];
+      q('m-ceil', c).value = monitorCfg.ceil[c];
+    }
+  } else {
+    w.body.querySelector('.m-cancel').hidden = true;
+  }
+  // LostFocus (frmMonitorSet.frm:393-425)
+  const ceilLost = (c) => {
+    let v = vbVal(q('m-ceil', c).value);
+    if (v < -32000) v = -32000;
+    if (v > 32000) v = 32000;
+    if (v < vbVal(q('m-floor', c).value) + 1) v = vbVal(q('m-floor', c).value) + 1;
+    q('m-ceil', c).value = vbRoundHalfEven(v);
+  };
+  const floorLost = (c) => {
+    let v = vbVal(q('m-floor', c).value);
+    if (v < -32000) v = -32000;
+    if (v > 32000) v = 32000;
+    if (v > vbVal(q('m-ceil', c).value) - 1) v = vbVal(q('m-ceil', c).value) - 1;
+    q('m-floor', c).value = vbRoundHalfEven(v);
+  };
+  const pending = [null, null, null];
+  const memLost = (c) => {
+    const el = q('m-mem', c);
+    const clamp = () => {
+      let v = vbRoundHalfEven(vbVal(el.value));   // Dim v As Integer
+      if (v < 1) v = 1;
+      if (v > 999) v = 999;
+      el.value = v;
+    };
+    // Not IsNumeric → SysvarTok("." & texto): nombre de sysvar → dirección
+    // (la tabla del core, vía el worker).
+    if (vbIsNumeric(el.value)) {
+      clamp();
+      return Promise.resolve();
+    }
+    pending[c] = sysvarAddr('.' + el.value).then((a) => {
+      el.value = a;
+      clamp();
+      pending[c] = null;
+    });
+    return pending[c];
+  };
+  for (let c = 0; c < 3; c++) {
+    q('m-mem', c).addEventListener('blur', () => memLost(c));
+    q('m-floor', c).addEventListener('blur', () => floorLost(c));
+    q('m-ceil', c).addEventListener('blur', () => ceilLost(c));
+  }
+  const close = () => { w.remove(); monitorWin = null; };
+  w.body.querySelector('.m-cancel').onclick = close;
+  w.body.querySelector('.m-ok').onclick = async () => {
+    // LostFocus corre antes del Click del botón: esperar sus SysvarTok.
+    await Promise.all(pending.filter(Boolean));
+    // btnOK_Click: asignación Text → Integer. Un preset cargado no pasa por
+    // LostFocus (Command1_Click escribe el Text directo): decisión de port —
+    // una dirección fuera de 1..999 se acota como la acotaría LostFocus
+    // (en el original indexaba mem() fuera de rango en el paso 23 — error 9
+    // que trunca el resto del tick; solo alcanzable con un .mtrp fabricado).
+    for (let c = 0; c < 3; c++) {
+      const m = vbTextToInteger(q('m-mem', c).value);
+      if (m === null || m < 1 || m > 999) {
+        await memLost(c);
+        log(`monitor: dirección ${names[c]} fuera de 1..999, acotada a ${q('m-mem', c).value}`);
+      }
+      monitorCfg.mem[c] = vbTextToInteger(q('m-mem', c).value) ?? 1;
+      monitorCfg.floor[c] = vbTextToInteger(q('m-floor', c).value) ?? 0;
+      monitorCfg.ceil[c] = vbTextToInteger(q('m-ceil', c).value) ?? 0;
+    }
+    monitorConfigured = true;
+    close();
+    monitorSend();
+  };
+  // Presets .mtrp (Command1/Command2_Click): 9 Integer binarios (LE) en el
+  // orden mem r/g/b, floor r/g/b, ceil r/g/b.
+  const order = [];
+  for (const cls of ['m-mem', 'm-floor', 'm-ceil'])
+    for (let c = 0; c < 3; c++) order.push([cls, c]);
+  w.body.querySelector('.m-save').onclick = () => {
+    const dv = new DataView(new ArrayBuffer(18));
+    for (let i = 0; i < 9; i++) {
+      const v = vbTextToInteger(q(order[i][0], order[i][1]).value);
+      if (v === null) { log('monitor: el preset no se guardó (CInt falla)'); return; }
+      dv.setInt16(i * 2, v, true);
+    }
+    downloadBytes('monitor.mtrp', new Uint8Array(dv.buffer));
+  };
+  const pin = document.createElement('input');
+  pin.type = 'file';
+  pin.accept = '.mtrp';
+  pin.onchange = async () => {
+    const f = pin.files && pin.files[0];
+    pin.value = '';
+    if (!f) return;
+    const dv = new DataView(await f.arrayBuffer());
+    // Get #80 más allá del EOF no cambia holdint: el campo repite el valor
+    // leído antes.
+    let hold = 0;
+    for (let i = 0; i < 9; i++) {
+      if ((i + 1) * 2 <= dv.byteLength) hold = dv.getInt16(i * 2, true);
+      q(order[i][0], order[i][1]).value = hold;
+    }
+  };
+  w.body.querySelector('.m-load').onclick = () => pin.click();
+}
+document.getElementById('btn-monitor-set').onclick = openMonitorSettings;
+
+// SysvarTok(a) sin bot (DNATokenizing.bas:320-338): la tabla del core,
+// consultada al worker; 0 si no es una sysvar.
+let sysvarReq = 0;
+const sysvarWait = new Map();
+function sysvarAddr(name) {
+  const id = ++sysvarReq;
+  return new Promise((res) => {
+    sysvarWait.set(id, res);
+    worker.postMessage({ t: 'sysvar', id, name });
+  });
+}
+function sysvarReply(msg) {
+  const res = sysvarWait.get(msg.id);
+  if (res) { sysvarWait.delete(msg.id); res(msg.v | 0); }
+}
+function downloadBytes(name, bytes) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+// DrawMonitor para cada bot vivo visible, en orden de slot. Aritmética del
+// fuente: (ceil - floor) y (monitor - floor) son restas de Integer (error 6
+// si salen de rango, p. ej. piso -32000 y techo 32000); el resto en Double y
+// RGB() con CInt. Un error corta el pase (en el original aborta el Redraw
+// entero). Devuelve false si abortó.
+function drawMonitor(v, oBots, oMon, nB, s, LW, vis) {
+  ctx.lineWidth = LW;
+  for (let i = 0; i < nB; i++) {
+    const o = oBots + i * 20;
+    const x = v[o + 1], y = v[o + 2], r = v[o + 3];
+    if (!(x + r > vis[0] && x - r < vis[1] && y + r > vis[2] && y - r < vis[3])) continue;
+    const col = [0, 0, 0];
+    for (let c = 0; c < 3; c++) {
+      const range = vbISub(monitorCfg.ceil[c], monitorCfg.floor[c]);
+      if (range === null) return false;
+      const rangeD = range / 255;
+      const start = vbISub(v[oMon + i * 3 + c], monitorCfg.floor[c]);
+      if (start === null || rangeD === 0) return false;   // error 6 / 11
+      let val = start / rangeD;
+      if (val > 255) val = 255;
+      if (val < 0) val = 0;
+      col[c] = vbRoundHalfEven(val);
+    }
+    ctx.strokeStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+    const k = r * 1.1;              // aspectmod = 1 (twips cuadrados)
+    ctx.strokeRect((x - k) * s, (y - k) * s, 2 * k * s, 2 * k * s);
+  }
+  return true;
+}
+
+// ---- Skins (DrawRobSkin, main.frm:838-866) --------------------------------
+// OSkin llega calculado del wasm (la caché oaim/OSkin es estado de render
+// del Type robot). Polilínea de 4 puntos en el color del bot, grosor w de
+// DrawAllRobs; nada si la ventana muestra más de 500 RobSize (noeyeskin).
+const tgSkins = document.getElementById('tg-skins');
+tgSkins.addEventListener('change', () =>
+  worker.postMessage({ t: 'skins', on: tgSkins.checked }));
+
+// Rectángulo visible en twips (Form1.ScaleLeft/Top/Width/Height).
+function visibleWorld(s) {
+  const k = cam.z * s;
+  return [-cam.ox / k, (canvas.width - cam.ox) / k,
+          -cam.oy / k, (canvas.height - cam.oy) / k];
+}
+
+// ---- Eye designer (frmEYE.frm) --------------------------------------------
+// showEyeDesign_Click (MDIForm1.frm:1635-1643) llena los 18 campos con la
+// memoria de robfocus AL ABRIR; cada cambio de texto escribe en rob(robfocus)
+// — el foco de ESE momento (los campos no se releen al cambiar de bot, como
+// en el original). Sin foco el original escribía rob(0).mem: en el port no
+// hay slot 0 que tocar (no-op). Deshabilitado con F1 (MDIForm1.frm:1715).
+let eyeWin = null;
+const EYE_DIR0 = 521, EYE_WTH0 = 531;          // Robots.bas:106, :115
+const SETAIM = 19;                              // Robots.bas:21
+function openEyeDesigner() {
+  if (stats && stats.f1) { log('Eye designer: deshabilitado en modo F1'); return; }
+  if (eyeWin) { eyeWin.remove(); eyeWin = null; }
+  const w = makeWindow('Eye Designer', 260, 0, () => { eyeWin = null; });
+  w.style.left = '80px'; w.style.top = '70px';
+  eyeWin = w;
+  let html = '<div class="eye-grid"><span></span><span>direction</span><span>width</span>';
+  for (let i = 0; i < 9; i++)
+    html += `<span>eye${i + 1}</span><input class="e-dir" data-i="${i}" value="0">` +
+            `<input class="e-wth" data-i="${i}" value="0">`;
+  html += `</div><div class="row" style="margin-top:6px">
+      <button class="e-out">Write DNA ...</button></div>
+    <fieldset style="margin-top:6px"><legend>Ease of Access</legend>
+      <div class="row"><button class="e-costs">Disable Costs</button>
+      <button class="e-raim">Reset Aim</button></div>
+      <div class="row"><button class="e-boff">Turn off Brownian Motion</button></div>
+    </fieldset>`;
+  w.body.innerHTML = html;
+  w.eyeFill = (dir, wth) => {
+    w.body.querySelectorAll('.e-dir').forEach((el) => { el.value = dir[+el.dataset.i]; });
+    w.body.querySelectorAll('.e-wth').forEach((el) => { el.value = wth[+el.dataset.i]; });
+  };
+  const write = (el, base) => {
+    const v = vbTextToInteger(el.value);
+    if (v === null || selBot < 1) return;      // On Error Resume Next
+    worker.postMessage({ t: 'setmem', n: selBot, addr: base + +el.dataset.i, v });
+  };
+  w.body.querySelectorAll('.e-dir').forEach((el) =>
+    el.addEventListener('input', () => write(el, EYE_DIR0)));
+  w.body.querySelectorAll('.e-wth').forEach((el) =>
+    el.addEventListener('input', () => write(el, EYE_WTH0)));
+  // btnOut_Click: el texto de los campos tal cual, con los vbCrLf de Print #.
+  w.body.querySelector('.e-out').onclick = () => {
+    const L = ['Cond', '*.robage 0 =', 'Start'];
+    for (let i = 0; i < 9; i++) {
+      L.push(w.body.querySelector(`.e-dir[data-i="${i}"]`).value + ` .eye${i + 1}dir store`);
+      L.push(w.body.querySelector(`.e-wth[data-i="${i}"]`).value + ` .eye${i + 1}width store`);
+      L.push("'");
+    }
+    L.push('Stop');
+    download('eyes.txt', L.join('\r\n') + '\r\n');
+  };
+  // Ease of Access (frmEYE.frm:322-359)
+  w.body.querySelector('.e-costs').onclick = () => {
+    worker.postMessage({ t: 'setcost', i: 54, v: 0 });   // COSTMULTIPLIER
+    const el = document.getElementById('o-c54');
+    if (el) el.value = 0;
+  };
+  w.body.querySelector('.e-raim').onclick = () => {
+    if (selBot > 0) worker.postMessage({ t: 'setmem', n: selBot, addr: SETAIM, v: 0 });
+  };
+  w.body.querySelector('.e-boff').onclick = () => {
+    worker.postMessage({ t: 'setopt', id: 13, v: 0 });   // PhysBrown
+    const el = document.getElementById('o-13');
+    if (el) el.value = 0;
+  };
+  worker.postMessage({ t: 'eye-read', n: selBot });
+}
+document.getElementById('btn-eye').onclick = openEyeDesigner;
+document.getElementById('btn-bg-load').onclick = bgLoad;
+document.getElementById('btn-bg-remove').onclick = bgRemove;
+
 function newSim() {
   clearRichState();
+  bgOnSimStart();                // E8: main.frm:1241
   const seed = parseFloat(document.getElementById('seed').value) || 0;
   const alga = PRESETS.alga;
   worker.postMessage({
@@ -3063,6 +3560,7 @@ document.getElementById('file-load').onchange = async (e) => {
   const bytes = await f.arrayBuffer();
   setRunning(false);
   worker.postMessage({ t: 'load', bytes, name: f.name }, [bytes]);
+  bgOnSimStart();                // E8: main.frm:1422
   log(`cargando ${f.name}…`);
   e.target.value = '';
 };
