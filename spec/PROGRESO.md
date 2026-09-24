@@ -432,3 +432,21 @@ monitor RGB, E-Grid, tray icon).
   snapshots descargados, consola con `printeye` real, activaciones de genes,
   consola del navegador limpia). Fuentes sin modificar
   (`git diff 02b20d7 -- Darwinbots2/` vacío).
+- **2026-09-24 (lint)** — Extra de capa host fuera de etapa: **lint del ADN
+  al sembrar** (commit `3fb85d9`; escrito el 2026-09-23 y verificado hoy).
+  El cargador no rechaza nada (V-08) y todo token desconocido vale 0 sin
+  aviso, igual que en el original; `db_dna_lint` (`wasm/dbcore_api.cpp`)
+  recorre el texto con las mismas reglas de línea de `LoadDNAText` y las
+  mismas tablas de tokens y sysvars del core, y la página avisa en el panel
+  Sembrar (`{t:'lint'}` del worker): nombres desconocidos (con pista de
+  sysvar cercana, `.50` por la dirección 50, def más abajo, mayúsculas),
+  palabras no reconocidas (incluidos bytes invisibles dentro de `stop`),
+  números pegados, el primer token perdido de `[PROBABLE BUG] A2-2`, defs
+  que tapan una sysvar y el rechazo del cargador. El bot se siembra igual:
+  solo informa, no toca ninguna sim ni consume RNG. Suite 172/3465 en verde
+  en los tres modos (el build del 23/09 11:17 era anterior a la última
+  edición de las fuentes, 11:19: se recompiló), smoke node 15/15 (sim
+  byte a byte idéntica con y sin lint tras 200 ticks; los 588 bots del
+  bestiary recorridos, 199 con avisos) y Chrome (aviso visible, cierre,
+  bot limpio sin aviso, consola limpia). Fuentes sin modificar
+  (`git diff 02b20d7 -- Darwinbots2/` vacío).
