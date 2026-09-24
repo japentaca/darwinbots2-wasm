@@ -466,7 +466,8 @@ Byte = 0 To -1` de `extractexactname` (sin confirmar si VB6 da error 6) y
 que el relay no autentica `from` (es un hub de sala sin cuentas, como
 cualquier sala pública). Y un límite de E5 que E7 destapó: la ronda nueva
 del port no conserva las formas (el original las regenera desde
-`xObstacle`, `main.frm:1353`); los teleporters sí, desde E7.
+`xObstacle`, `main.frm:1357-1365`); los teleporters sí, desde E7.
+→ **Cerrado 2026-09-24 como PP-03** (capa host; `PROGRESO.md`).
 
 **Verificación**: smoke node 44/44 (API directa, dos `worker.js` reales por
 `BroadcastChannel` y por el relay, caída de un par con cola y re-sorteo,

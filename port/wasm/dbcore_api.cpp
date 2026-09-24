@@ -150,6 +150,11 @@ DB_EXPORT void db_sim_destroy(void* h) { delete static_cast<SimHandle*>(h); }
 // Randomize n de VB6 (solo reemplaza los bytes medios del estado, Q02/R-01).
 DB_EXPORT void db_sim_randomize(void* h, double n) { H(h).rng.randomize(n); }
 
+// Estado de 24 bits del LCG (solo lectura; los smokes cuentan extracciones).
+DB_EXPORT int db_sim_rng_state(void* h) {
+  return static_cast<int>(H(h).rng.state());
+}
+
 // Arranque de sim: los pasos del Form_Load/startloaded de main.frm que
 // preparan el mundo alrededor del core. Con seed != 0 replica startloaded
 // (main.frm: `Rnd -1 : Randomize UserSeedNumber / 100`); con seed = 0 deja
@@ -1438,6 +1443,100 @@ DB_EXPORT int db_sim_tp_copy(void* dst, void* src, int i) {
   return d.numTeleporters;
 }
 
+// PP-03 — las formas de la ronda/sim nueva (spec/PROGRESO.md, fila PP-03).
+// En el original Obstacles() es un array global fijo y xObstacle() una copia
+// global de proceso en coordenadas relativas al campo: la captura
+// OptionsForm.ObsRepop (OptionsForm.frm:4550-4563) cada vez que se activa el
+// dialogo de opciones con la sim visible (:4546), y StartSimul la vuelve a
+// crear escalada al campo de la sim que arranca (main.frm:1357-1365) — en
+// cada StartSimul, es decir en sim nueva Y en ronda nueva. El port arma cada
+// sim en un handle nuevo: xObstacle vive aqui (global del modulo, como
+// Sim::fmt) y el array de formas se traspasa con db_sim_obs_carry.
+// Arranca vacia, como el ReDim xObstacle(0) de PaintObstacles (:4580)
+// (el original la cargaba ademas del .set de settings; el port no tiene).
+namespace {
+std::vector<db::Obstacle> g_xObstacle;
+}
+
+// OptionsForm.frm:4550-4563 — ObsRepop (el worker la llama en "Nueva sim" y
+// en cada cambio del panel de opciones: los dos pasan por activar
+// OptionsForm): copia el array entero (tambien los
+// registros apagados, como `xObstacle = Obstacles.Obstacles`) y pasa a
+// fraccion del campo los que existen (Single / Single en el port: mismo
+// resultado que el Double de VB6 asignado a Single).
+DB_EXPORT void db_sim_obs_repop(void* h) {
+  const db::Sim& sim = S(h);
+  g_xObstacle = sim.Obstacles;
+  for (std::size_t o = 1; o < g_xObstacle.size(); ++o) {
+    db::Obstacle& x = g_xObstacle[o];
+    if (!x.exist) continue;
+    x.pos.x = x.pos.x / sim.opts.FieldWidth;
+    x.pos.y = x.pos.y / sim.opts.FieldHeight;
+    x.Width = x.Width / sim.opts.FieldWidth;
+    x.Height = x.Height / sim.opts.FieldHeight;
+  }
+}
+
+// Formas guardadas en xObstacle (las que existen), para el host y el smoke.
+DB_EXPORT int db_xobs_count() {
+  int n = 0;
+  for (std::size_t o = 1; o < g_xObstacle.size(); ++o)
+    if (g_xObstacle[o].exist) ++n;
+  return n;
+}
+
+// StartSimul sobre el array global (main.frm:1313-1316): apaga los 1000
+// registros (exist = False) y numObstacles = 0, pero el resto de cada
+// registro sobrevive. leftCompactor/rightCompactor (Obstacles.bas:42-43) son
+// globales que nada reinicia: siguen apuntando a los mismos indices, que tras
+// la regeneracion son las formas re-creadas en ese orden (o registros
+// apagados). El handle nuevo recibe el array viejo asi, sin RNG.
+DB_EXPORT void db_sim_obs_carry(void* dst, void* src) {
+  db::Sim& d = S(dst);
+  const db::Sim& o = S(src);
+  d.Obstacles = o.Obstacles;
+  for (auto& r : d.Obstacles) r.exist = false;
+  d.numObstacles = 0;
+  d.leftCompactor = o.leftCompactor;
+  d.rightCompactor = o.rightCompactor;
+  // TrashCompactorMove indexa sin chequear: el array fijo del original
+  // siempre tenia esos registros.
+  const int top = std::max(d.leftCompactor, d.rightCompactor);
+  if (top >= static_cast<int>(d.Obstacles.size()))
+    d.Obstacles.resize(static_cast<std::size_t>(top) + 1);
+}
+
+// main.frm:1357-1365 — la regeneracion de formas de StartSimul (despues de
+// loadrobs y FindSpecies): NewObstacle escalado al campo actual y despues
+// color y vel de xObstacle. En el original NewObstacle sortea el color con
+// `Rnd * 65536 + Rnd * 255 + Rnd` (Obstacles.bas:201; 3 extracciones salvo
+// makeAllShapesBlack) aunque aqui el color se pise. No se replican: son Rnd
+// crudo de arranque, la misma clase que el port ya omite por decision
+// (colores de las formas de E3, B7-5/Q01; y en el preludio de StartSimul la
+// skin de la sim, SunOnRnd y SimGUID, main.frm:1210-1236). Con esas
+// omisiones el LCG del arranque ya no va a la par del original; replicar
+// solo estas 3 no lo alinearia. Devuelve cuantas formas creo.
+DB_EXPORT int db_sim_obs_regen(void* h) {
+  db::Sim& sim = S(h);
+  int made = 0;
+  for (std::size_t o = 1; o < g_xObstacle.size(); ++o) {
+    const db::Obstacle& x = g_xObstacle[o];
+    if (!x.exist) continue;
+    const int oo = db::NewObstacle(sim, x.pos.x * sim.opts.FieldWidth,
+                                   x.pos.y * sim.opts.FieldHeight,
+                                   x.Width * sim.opts.FieldWidth,
+                                   x.Height * sim.opts.FieldHeight);
+    // oo = -1 solo con mas de 1000 formas guardadas (un .set editado): en
+    // el original, error 9 en Obstacles(-1) dentro de StartSimul.
+    // Inalcanzable aqui (xObstacle sale de un array de a lo sumo 1000).
+    if (oo < 1) continue;
+    sim.Obstacles[static_cast<std::size_t>(oo)].color = x.color;
+    sim.Obstacles[static_cast<std::size_t>(oo)].vel = x.vel;
+    ++made;
+  }
+  return made;
+}
+
 // Campos sueltos de un teleporter (1..numTeleporters), para la capa host:
 // 0 In, 1 Out, 2 local, 3 Internet, 4 teleportVeggies, 5 teleportCorpses,
 // 6 teleportHeterotrophs, 7 RespectShapes, 8 InboundPollCycles,
@@ -1810,7 +1909,19 @@ DB_EXPORT unsigned char* db_sim_save(void* h, int* out_len) {
 // `Rnd -1 : Randomize UserSeedNumber / 100` (incondicional en el original).
 DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   auto& Sh = H(h);
+  // PP-03 (revision): Obstacles() y leftCompactor/rightCompactor son
+  // globales del original; LoadSimulation solo pone numObstacles = 0 y
+  // reescribe 1..n (HDRoutines.bas:1347-1352) y startloaded tiene comentado
+  // el apagado (main.frm:1471-1473): los registros por encima de n conservan
+  // su exist (invisibles: todo recorre 1..numObstacles, pero ObsRepop los
+  // ve) y los indices del compactador siguen. El loader del port solo
+  // agranda el vector.
+  std::vector<db::Obstacle> obs = std::move(Sh.sim.Obstacles);
+  const int lc = Sh.sim.leftCompactor, rc = Sh.sim.rightCompactor;
   Sh.sim = db::Sim{};
+  if (!obs.empty()) Sh.sim.Obstacles = std::move(obs);
+  Sh.sim.leftCompactor = lc;
+  Sh.sim.rightCompactor = rc;
   Sh.wire();
   db::VbBinFile f;
   f.data.assign(data, data + (len > 0 ? len : 0));
