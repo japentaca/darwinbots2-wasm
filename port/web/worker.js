@@ -287,6 +287,11 @@ function bindApi() {
     dumpSkins:     C('db_sim_dump_skins', 'number', ['number','number','number']),
     sysvarTok0:    C('db_sim_sysvar_tok0', 'number', ['number','string']),
     assignSkin:    C('db_sim_species_assign_skin', null, ['number','number','number']),
+    // PP-03 - formas de la ronda/sim nueva (xObstacle, main.frm:1355-1364)
+    obsRepop:      C('db_sim_obs_repop', null, ['number']),
+    obsCarry:      C('db_sim_obs_carry', null, ['number','number']),
+    obsRegen:      C('db_sim_obs_regen', 'number', ['number']),
+    xobsCount:     C('db_xobs_count', 'number', []),
   };
 }
 
@@ -1123,6 +1128,9 @@ function resetSim(msg, carryTeleporters) {
   imRebind();                                    // E7: IntOpts.IName
   api.setSimStart(sim, vbNowSimStart());         // E7: main.frm:1351
   if (old) {
+    // PP-03: StartSimul apaga el array global de formas sin borrarlo y los
+    // índices del compactador siguen (db_sim_obs_carry).
+    api.obsCarry(sim, old);
     if (carryTeleporters)
       for (let i = 1; i <= api.numTeleporters(old); i++) api.tpCopy(sim, old, i);
     api.destroy(old);
@@ -1145,6 +1153,10 @@ function resetSim(msg, carryTeleporters) {
     log(ts ? `contest F1: ${ts} especies en liza`
            : 'F1: sin especies de combate — sembrá 2+ y "Arrancar contest"');
   }
+  // PP-03 — main.frm:1355-1364: después de loadrobs y FindSpecies, StartSimul
+  // re-crea las formas de xObstacle escaladas al campo (3 Rnd por forma).
+  const nObs = api.obsRegen(sim);
+  if (nObs) log(`formas regeneradas: ${nObs}`);
   postFrame();
 }
 
@@ -1203,6 +1215,11 @@ self.onmessage = (e) => {
       // E7: StartNew_Click hace `If InternetMode Then F1Internet_Click`
       // (OptionsForm.frm:4802) — el toggle, con el modo encendido, lo APAGA.
       if (imCfg) imDisable('sim nueva (OptionsForm.frm:4802)');
+      // PP-03: para llegar a "Start New" el original activa el diálogo de
+      // opciones, y con la sim visible eso corre ObsRepop
+      // (OptionsForm.frm:4546): las formas de ahora son las de la sim
+      // nueva y de sus rondas. La ronda nueva no pasa por aquí.
+      if (sim) api.obsRepop(sim);
       resetSim(msg);
       break;
     // ---- E7: Internet Mode ----
