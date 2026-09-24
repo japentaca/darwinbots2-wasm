@@ -111,7 +111,7 @@ modos. Es el primer trabajo de core desde M8 — rama + revisión.
 - **Philogeny / Gene activations / Console / Find Best** (menú Robot).
 - **Database/Survival info** solo si aporta: era MDB de Access.
 
-## E6.5 · Vista enriquecida — capa host (render) · ⏳ PLAN, pendiente de aprobación
+## E6.5 · Vista enriquecida — capa host (render) · ✅ cerrada 2026-09-24 (ver "Resultado" al final)
 
 Añadida el 2026-09-24 a petición del usuario. **No es superficie del
 original**: es una segunda forma de mirar la misma sim, con las ideas visuales
@@ -274,6 +274,53 @@ necesitaba porque recibía estado cada 80 ms; aquí llega un frame por rAF),
 señales entre bots (DB no tiene el concepto; su análogo, `out1..out5`, queda
 para una lente futura), radar de cromosomas y árbol gráfico (la philogeny de
 E6 ya cubre el parentesco).
+
+### Resultado (2026-09-24)
+
+Aprobado por el usuario con la sugerencia de dejar la cámara también en la
+vista original. Hecho según el plan, con estas desviaciones y hallazgos:
+
+- **Registro de 24 floats** (no 12): los 9 ojos van como dirección por ojo
+  (la misma cuenta de `db_sim_dump_focus`) para no necesitar un segundo
+  volcado con zoom, más la distancia genética y el último `shottype`
+  disparado. Muertes y nacimientos salen de `db_sim_vis_events`; la tabla de
+  especies, de `db_sim_vis_species_*` (una vez por cambio).
+- **Bit de body solo en no-vegetales**: en los vegetales el body cambia cada
+  tick de forma pasiva y el anillo lila tapaba todo (visto en Chrome).
+- **Cámara en las dos vistas**, arrancando en zoom 1 = identidad. Verificado
+  píxel a píxel: la vista original de la rama y la de `HEAD` (página y worker
+  anteriores servidos en paralelo) dan el mismo SHA-256 del canvas tras 60
+  ticks con un bot seleccionado y los 4 toggles.
+- **Carrera de selección heredada de E2**: un frame armado antes de que el
+  worker recibiera el `select` traía `focus = 0` y la página deseleccionaba
+  (con "seguir" se notaba). Ahora cada selección lleva un número que vuelve
+  en `stats.selSeq`, y solo un frame que ya la conoce puede deseleccionar.
+- **Hallazgo de rendimiento**: Canvas rellena mal un path con miles de
+  subpaths — con la lente "generación" (todos en 0 → un solo grupo de
+  color) `draw()` medía 18 ms. Pintando cada grupo en tandas de 64 formas
+  bajó a 4 ms.
+- **Salida por teleporter**: en vez de contar el `outbox`, un bot que
+  desaparece con su última posición dentro de un teleporter Out/Internet se
+  marca como salida (anillo cian) y no como muerte. Es aproximado: con
+  cadáveres activados (`CorpseEnabled`, el default) una muerte normal deja
+  cadáver y no desaparece, así que el caso ambiguo es raro.
+- **LOD final**: anillo ≥ 1,5 px de radio, contorno y nariz ≥ 2,5 px,
+  morfología ≥ 6 px, ojos y estados ≥ 10 px.
+
+**Mediciones** (Chrome 154, canvas 900×900, 2164 bots + 4321 shots, 100
+llamadas a `draw()` sobre una copia del mismo frame; mediana / p90):
+
+| Vista | draw() |
+|---|---|
+| original, sin toggles | 3,5–3,8 / 3,7–5,6 ms |
+| original, 4 toggles | 6,3–7,3 / 7,7–14 ms |
+| enriquecida zoom 1, cualquiera de las 8 lentes | 3,8–4,1 / 4,5–5,5 ms |
+| enriquecida zoom 4 (morfología) | 2,2–2,5 / 2,9–3,0 ms |
+| enriquecida zoom 12 | 1,5–1,7 / 2,4–2,5 ms |
+
+Presupuesto (p90 ≤ 8 ms) cumplido. `db_sim_vis_observe` con ~2000 bots:
+0,23–0,38 ms por tick contra un tick de 73–112 ms (0,3 %); volcado de bots
+más el registro extendido: 0,4–0,7 ms por frame.
 
 ## E7 · Internet / torneo distribuido — capa host (transporte)
 
