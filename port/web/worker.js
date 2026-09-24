@@ -35,9 +35,10 @@
 //   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
 //   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
 //   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
-//   {t:'select', n}                        bot con foco (0 = ninguno); su
+//   {t:'select', n, seq?}                  bot con foco (0 = ninguno); su
 //                                          volcado de ojos/inspector viaja
-//                                          en cada frame (etapa E2)
+//                                          en cada frame (etapa E2); seq
+//                                          vuelve en stats.selSeq (E6.5)
 //   {t:'bot-text', n}                      → {t:'bot-text', n, text} con
 //                                          db_sim_bot_text (inspector)
 //   {t:'graph-open', n} · {t:'graph-close', n} · {t:'graph-update', n}
@@ -55,6 +56,12 @@
 //   {t:'clear-highlight'}
 //   {t:'console', n, on} · {t:'console-cmd', n, line} · {t:'genes', n}
 //                                          E6: consola del bot (console.frm)
+//   {t:'view', rich}                       E6.5: vista enriquecida on/off
+//   {t:'gendist', n}                       E6.5: lente de distancia genética
+//                                          al bot n (0 = apagada)
+//   {t:'redraw'}                           E6.5: frame fresco sin tick
+//                                          (cámara y efectos con la sim en
+//                                          pausa)
 //   {t:'ack', buf}                         devuelve el búfer del último frame
 //
 // Protocolo (worker → página):
@@ -73,6 +80,10 @@
 //   {t:'console-open', n, absnum, name, genenum} · {t:'console-out', n, text} ·
 //   {t:'genes', n, ga[]} · {t:'running', running}   (etapa E6)
 //   {t:'frame', buf, stats:{cycle,bots,vegs,tps,costx,f1,dead}}
+//   {t:'species', names[]}                 E6.5: tabla de especies de la
+//                                          vista (antes del frame que la usa)
+//   {t:'gendist-off'}                      E6.5: la referencia murió o la sim
+//                                          cambió (reset, ronda nueva, carga)
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
 // la página lo devuelve con 'ack' al terminar de dibujar y el worker lo
@@ -81,12 +92,16 @@
 // página; con speed=0 el worker corre a fondo y publica cuando puede).
 //
 // Layout del frame (Float32Array):
-//   [0..7]  header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, focus
-//           (focus = índice del bot seleccionado con volcado válido; 0 = no)
+//   [0..11] header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, focus
+//           (focus = índice del bot seleccionado con volcado válido; 0 = no),
+//           rich (E6.5: 1 si viaja el bloque de la vista enriquecida),
+//           nBirths, nDeaths, cycle
 //   después: bots nBots×20, shots nShots×9, ties nTies×5,
 //            obstáculos nObs×5, teleporters nTps×7
 //           y, si focus > 0, el bloque de foco: 44 floats de
 //           db_sim_dump_focus (inspector + 9 ojos, etapa E2)
+//           y, si rich, nBots×24 de db_sim_dump_bots_vis (misma fila que
+//           el bot) + nBirths×6 + nDeaths×6 de db_sim_vis_events
 //   (mismos registros que db_sim_dump_* — ver wasm/dbcore_api.cpp)
 
 importScripts('../build-wasm/dbcore.js');
@@ -100,6 +115,10 @@ let speed = 4;          // ticks por frame; 0 = máx
 let canPost = true;     // el frame anterior ya fue devuelto con 'ack'
 let wantFrame = false;  // hay estado nuevo pendiente de publicar
 let focusBot = 0;       // robfocus (E2): 0 = sin selección
+// E6.5: número de la última selección de la página. Viaja en cada frame
+// para que la página distinga "el bot con foco murió" (focus 0 en un frame
+// que ya conoce la selección) de un frame armado antes del clic.
+let selSeq = 0;
 
 // ticks/segundo medidos (va en stats de cada frame)
 let tickCount = 0, tpsT = 0, tps = 0;
@@ -217,6 +236,16 @@ function bindApi() {
     load:          C('db_sim_load', null, ['number', 'number', 'number']),
     free:          C('db_free', null, ['number']),
     lint:          C('db_dna_lint', 'number', ['string']),
+    // E6.5 - vista enriquecida (solo lectura del Sim)
+    visReset:      C('db_sim_vis_reset', null, ['number']),
+    visObserve:    C('db_sim_vis_observe', null, ['number']),
+    dumpBotsVis:   C('db_sim_dump_bots_vis', 'number', ['number','number','number']),
+    visEvents:     C('db_sim_vis_events', 'number', ['number','number','number','number']),
+    visSpVersion:  C('db_sim_vis_species_version', 'number', ['number']),
+    visSpCount:    C('db_sim_vis_species_count', 'number', ['number']),
+    visSpName:     C('db_sim_vis_species_name', 'number', ['number','number']),
+    gendistRef:    C('db_sim_vis_gendist_ref', null, ['number','number']),
+    gendistStep:   C('db_sim_vis_gendist_step', 'number', ['number','number']),
   };
 }
 
@@ -243,7 +272,8 @@ function recolorObstacles(from) {
 // ---- Búferes de volcado en el heap C (crecen bajo demanda) ----------------
 const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
                   obs: {p:0, cap:0}, tps: {p:0, cap:0}, focus: {p:0, cap:0},
-                  graph: {p:0, cap:0}, ga: {p:0, cap:0}, fam: {p:0, cap:0} };
+                  graph: {p:0, cap:0}, ga: {p:0, cap:0}, fam: {p:0, cap:0},
+                  vis: {p:0, cap:0}, births: {p:0, cap:0}, deaths: {p:0, cap:0} };
 
 function ensure(b, floatsNeeded) {
   if (b.cap >= floatsNeeded || floatsNeeded === 0) return;
@@ -285,6 +315,11 @@ function buildFrame() {
   ensure(scratch.obs, obsCap * 5);
   ensure(scratch.tps, tpCap * 7);
   ensure(scratch.focus, 44);
+  if (rich) {
+    ensure(scratch.vis, maxB * 24);
+    ensure(scratch.births, VIS_MAX_EVENTS * 6);
+    ensure(scratch.deaths, VIS_MAX_EVENTS * 6);
+  }
 
   const nB = maxB > 0 ? api.dumpBots(sim, scratch.bots.p, maxB) : 0;
   const nS = shotCap > 0 ? api.dumpShots(sim, scratch.shots.p, shotCap) : 0;
@@ -294,22 +329,48 @@ function buildFrame() {
   // Foco (E2): si el bot murió, dumpFocus devuelve 0 y el foco se apaga.
   const nF = focusBot > 0 ? api.dumpFocus(sim, focusBot, scratch.focus.p) : 0;
   if (!nF) focusBot = 0;
+  // E6.5: mismo recorrido de slots que dumpBots → misma fila por bot.
+  let nV = 0, nBi = 0, nDe = 0;
+  if (rich) {
+    nV = maxB > 0 ? api.dumpBotsVis(sim, scratch.vis.p, maxB) : 0;
+    nBi = api.visEvents(sim, 0, scratch.births.p, VIS_MAX_EVENTS);
+    nDe = api.visEvents(sim, 1, scratch.deaths.p, VIS_MAX_EVENTS);
+    const ver = api.visSpVersion(sim);
+    if (ver !== speciesVersion) {
+      speciesVersion = ver;
+      const names = [];
+      for (let i = 0; i < api.visSpCount(sim); i++)
+        names.push(takeStr(api.visSpName(sim, i)));
+      self.postMessage({ t: 'species', names });
+    }
+  }
 
-  const total = 8 + nB * 20 + nS * 9 + nT * 5 + nO * 5 + nP * 7 + nF * 44;
+  const total = 12 + nB * 20 + nS * 9 + nT * 5 + nO * 5 + nP * 7 + nF * 44 +
+                nV * 24 + (nBi + nDe) * 6;
   const buf = takeFrameBuffer(total);
   const v = new Float32Array(buf);
   v[0] = api.fieldW(sim);
   v[1] = api.fieldH(sim);
   v[2] = nB; v[3] = nS; v[4] = nT; v[5] = nO; v[6] = nP;
   v[7] = nF ? focusBot : 0;
+  v[8] = rich && nV === nB ? 1 : 0;
+  v[9] = nBi; v[10] = nDe;
+  v[11] = api.cycle(sim);
 
-  let off = 8;
+  let off = 12;
   if (nB) { v.set(heapView(scratch.bots.p, nB * 20), off); off += nB * 20; }
   if (nS) { v.set(heapView(scratch.shots.p, nS * 9), off); off += nS * 9; }
   if (nT) { v.set(heapView(scratch.ties.p, nT * 5), off); off += nT * 5; }
   if (nO) { v.set(heapView(scratch.obs.p, nO * 5), off); off += nO * 5; }
   if (nP) { v.set(heapView(scratch.tps.p, nP * 7), off); off += nP * 7; }
   if (nF) { v.set(heapView(scratch.focus.p, 44), off); off += 44; }
+  if (v[8]) {
+    if (nV) { v.set(heapView(scratch.vis.p, nV * 24), off); off += nV * 24; }
+    if (nBi) { v.set(heapView(scratch.births.p, nBi * 6), off); off += nBi * 6; }
+    if (nDe) { v.set(heapView(scratch.deaths.p, nDe * 6), off); off += nDe * 6; }
+  } else {
+    v[9] = 0; v[10] = 0;
+  }
   return buf;
 }
 
@@ -325,9 +386,65 @@ function postFrame() {
              vegs: Math.max(api.totvegs(sim), 0), tps,
              costx: api.getCost(sim, 54),  // panel "CostX" (MDIForm1:3051)
              f1: f1Stats(),                // E5: estado del contest (o null)
-             dead: api.deadRecords(sim) }, // E6: snapshot de los muertos
+             dead: api.deadRecords(sim),   // E6: snapshot de los muertos
+             selSeq },                     // E6.5: ver arriba
   }, [buf]);
   if (activOn && focusBot) sendGenes(focusBot);  // E6 (DNA.bas:1265)
+  if (gdOn && running && !gdPumpQueued) gdPump();  // E6.5: una rebanada
+}
+
+// ---- E6.5: vista enriquecida ------------------------------------------------
+// Capa host pura (spec/PLAN-EXTENSIONES.md §E6.5): con la vista encendida el
+// worker llama a db_sim_vis_observe tras CADA tick (acumula en el wasm lo que
+// hizo cada bot; nada se publica a ritmo de tick — lección de E6) y el frame
+// lleva el bloque extendido. Nada de esto escribe en la sim ni consume RNG.
+const VIS_MAX_EVENTS = 2000;
+let rich = false;
+let speciesVersion = -1;
+// Lente de distancia genética: DoGeneticDistance es O(DnaLen²) por par, así
+// que corre en rebanadas de ~3 ms por frame y como mucho una vuelta por
+// segundo con la sim corriendo; en pausa completa la vuelta y publica.
+let gdOn = false, gdRoundDone = false, gdLastRound = 0, gdPumpQueued = false;
+
+function tickOnce() {
+  api.tick(sim);
+  if (rich) api.visObserve(sim);
+}
+
+// La sim cambió de handle o de slots (reset, ronda nueva, carga): la
+// referencia de la lente ya no vale y la página tiene que enterarse.
+function gdDrop() {
+  if (gdOn) self.postMessage({ t: 'gendist-off' });
+  gdOn = false;
+}
+
+function visPrime() {
+  if (rich && sim) api.visReset(sim);
+}
+
+function gdPump() {
+  gdPumpQueued = false;
+  if (!gdOn || !sim) return;
+  if (gdRoundDone) {
+    if (!running || performance.now() - gdLastRound < 1000) return;
+    gdRoundDone = false;       // vuelta nueva: el cursor ya volvió a 1
+  }
+  const t0 = performance.now();
+  let r = 0;
+  do { r = api.gendistStep(sim, 4); } while (r === 0 && performance.now() - t0 < 3);
+  if (r === -1) {
+    gdOn = false;
+    self.postMessage({ t: 'gendist-off' });
+    return;
+  }
+  if (r === 1) {
+    gdRoundDone = true;
+    gdLastRound = performance.now();
+    if (!running) postFrame();
+  } else if (!running) {
+    gdPumpQueued = true;
+    setTimeout(gdPump, 0);
+  }
 }
 
 // ---- E5: eventos del tick y rondas ----------------------------------------
@@ -533,7 +650,7 @@ function consoleCmd(n, line) {
       break;
     case 'cycle': {
       const k = parseInt(w(1), 10) || 0;
-      for (let i = 0; i < k; i++) { api.tick(sim); checkGameState(); }
+      for (let i = 0; i < k; i++) { tickOnce(); checkGameState(); }
       postFrame();
       conOut(n, k + ' ciclo(s) ejecutado(s) — ciclo ' + api.cycle(sim));
       sendGenes(n);
@@ -602,7 +719,7 @@ function runTicks(n) {
   // un evento de parada corta la tanda; una ronda nueva sigue en la sim
   // reconstruida.
   for (let i = 0; i < n; i++) {
-    api.tick(sim);
+    tickOnce();
     checkGameState();
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
     // solo los charts visibles.
@@ -687,6 +804,9 @@ function resetSim(msg) {
   // (el formato de sim lo persiste, HDRoutines.bas:802) y suelta un primer
   // punto en cada uno, como NewGraph.
   for (const g of graphOpen) { api.graphSet(sim, g, 0, 1); feedGraph(g); }
+  speciesVersion = -1;   // E6.5: handle nuevo, tabla de especies nueva
+  gdDrop();
+  visPrime();           // la siembra inicial no son nacimientos
   // E5: con F1 activo el arranque corre FindSpecies (main.frm:1337-1340).
   if (api.getOpt(sim, 91)) {
     const ts = api.f1Start(sim);
@@ -716,6 +836,9 @@ function loadSim(msg) {
   M._free(p);
   running = false;
   focusBot = 0;  // los slots de bot cambian al cargar
+  speciesVersion = -1;
+  gdDrop();
+  visPrime();
   log(`sim cargada (${bytes.length} bytes), ciclo ${api.cycle(sim)}, ` +
       `${api.totalRobots(sim)} bots`);
   // E6 — HDRoutines.bas:1482-1519: el archivo dice qué charts estaban
@@ -736,6 +859,7 @@ self.onmessage = (e) => {
       break;
     case 'select':
       focusBot = msg.n | 0;
+      if (msg.seq !== undefined) selSeq = msg.seq | 0;
       if (sim) api.setFocus(sim, focusBot);  // E5: robfocus vive en el core
       postFrame();  // con la sim pausada el foco tiene que verse igual
       break;
@@ -786,6 +910,7 @@ self.onmessage = (e) => {
     case 'seed-species':
       lintSpecies(msg.sp);
       seedSpecies(msg.sp);
+      visPrime();  // E6.5: sembrar no es nacer
       if (lastReset) lastReset.species.push(msg.sp);  // E5: entra a las rondas
       postFrame();
       break;
@@ -977,6 +1102,24 @@ self.onmessage = (e) => {
     case 'activ':                 // ActivForm abierta/cerrada
       activOn = !!msg.on;
       if (activOn && sim && focusBot) sendGenes(focusBot);
+      break;
+    // ---- E6.5: vista enriquecida ----
+    case 'view':
+      rich = !!msg.rich;
+      speciesVersion = -1;
+      visPrime();
+      if (!rich) { gdOn = false; if (sim) api.gendistRef(sim, 0); }
+      postFrame();
+      break;
+    case 'gendist':
+      if (!sim) break;
+      api.gendistRef(sim, msg.n | 0);
+      gdOn = (msg.n | 0) > 0;
+      gdRoundDone = false;
+      if (gdOn) gdPump(); else postFrame();
+      break;
+    case 'redraw':
+      postFrame();
       break;
     case 'ack':
       recycleFrameBuffer(msg.buf);
