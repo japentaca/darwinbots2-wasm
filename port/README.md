@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 172 casos / 3465 aserciones en verde (en los tres modos), con las extensiones E1..E6 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 172 casos / 3465 aserciones en verde (en los tres modos), con las extensiones E1..E6 y E6.5 cerradas (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -273,6 +273,37 @@ corre en cada punto como en el fuente, pero el **pintado** se coalesce en el
 `requestAnimationFrame`. En VB6 el chart se repintaba en el mismo hilo del
 loop y no podía atrasarse; aquí la sim vive en un worker y publicaría puntos
 más rápido de lo que el hilo de la página dibuja.
+
+### Vista enriquecida (etapa E6.5)
+
+**No es superficie del original**: es una segunda forma de mirar la misma
+sim, con ideas visuales de otro simulador derivado de DarwinBots (sin código
+portado). El selector "Vista" de la barra alterna entre **Original** (el
+render de `main.frm` de siempre, idéntico píxel a píxel) y **Enriquecida**:
+
+- **forma**: hexágono = vegetal, círculo con nariz al rumbo = animal, ties
+  gruesas = multibot; **tono** = color de la especie; **brillo** = nrg (log).
+- **anillo de acción**: lo que el bot hizo desde el último frame (disparo con
+  el color de su tipo de shot, reproducción, tie nueva, venom/poison,
+  shell/slime, body, gana nrg). Como los comandos de `mem` se consumen dentro
+  del ciclo, la acción se define por su **efecto observable**: el wasm
+  compara cada tick con el anterior (`db_sim_vis_observe`, 0,3 % del tick con
+  2000 bots).
+- **morfología con zoom**: borde = shell, halo = slime, púas = venom/poison,
+  tinte verde = cloroplastos, ojos (llenos si ven), estados.
+- **eventos**: nacimiento con línea a la madre, muerte que se encoge y apaga,
+  salida por teleporter.
+- **"Color por"**: especie, nrg, body, generación, mutaciones, edad, longitud
+  del ADN y distancia genética al bot seleccionado (`DoGeneticDistance` en
+  rebanadas de 3 ms, ≤ 1 vuelta/s).
+- **inspección**: rueda = zoom, arrastrar = paneo, "seguir" en el inspector,
+  rastro del bot con foco y tooltip. La cámara sirve también a la vista
+  original y arranca en zoom 1 (el encuadre de siempre).
+
+Nada de esto escribe en la sim ni consume RNG: un `.dbsim` sale byte a byte
+igual con la vista encendida o apagada. Coste medido con ~2150 bots y ~4300
+shots: `draw()` ≈ 4 ms (mediana) con cualquier lente, contra ≈ 7 ms de la
+vista original con sus 4 toggles.
 
 Medido en esta máquina (Chrome, campo 32000², velocidad máx): con ~2000
 bots el `draw()` de Canvas 2D cuesta ~4 ms/frame mientras el tick del core

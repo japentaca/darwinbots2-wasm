@@ -74,6 +74,17 @@
      fuente, pero el PINTADO se coalesce en el rAF — en VB6 el chart se
      repintaba en el hilo del loop y no podía atrasarse; aquí la sim vive en
      un worker y publicaría puntos más rápido de lo que la página dibuja.
+   - Etapa E6.5 (vista enriquecida, decisión de capa host FUERA de la
+     fidelidad): una segunda forma de mirar la misma sim, con las ideas
+     visuales de la v1.5 de otro simulador derivado de DarwinBots (solo las
+     ideas; no hay código portado). Selector "Vista": con "Original" el
+     render es el de siempre; con "Enriquecida" la forma dice vegetal /
+     animal / multibot, el brillo la nrg, un anillo lo que el bot hizo desde
+     el último frame (efecto observable del tick, db_sim_vis_observe), la
+     morfología shell/slime/venom/poison/cloroplastos/ojos (con zoom), los
+     nacimientos y las muertes se animan, y "Color por" cambia la lente.
+     La cámara (rueda = zoom, arrastrar = paneo, "seguir" en el inspector)
+     sirve a las dos vistas y arranca en zoom 1 = el encuadre de siempre.
 -->
 <style>
   :root { color-scheme: dark; }
@@ -133,6 +144,28 @@
   #seed-lint .hint { color: #b9a770; }
   #seed-lint .close { float: right; cursor: pointer; color: #b9a770;
                       background: none; border: 0; font: inherit; }
+  /* E6.5 — vista enriquecida */
+  body:not(.rich) .rich-only { display: none !important; }
+  #field-wrap canvas { cursor: crosshair; }
+  #field-wrap canvas.panning { cursor: grabbing; }
+  #tip { position: fixed; z-index: 50; pointer-events: none;
+         background: rgba(12,16,26,.94); border: 1px solid #2e3a55;
+         border-radius: 4px; padding: 5px 8px; color: #cdd6e4;
+         font: 11px/1.45 ui-monospace, Consolas, monospace; max-width: 300px; }
+  #tip[hidden] { display: none; }
+  #tip b { color: #fff; }
+  #rich-legend { font-size: 11px; color: #93a4c2; border: 1px solid #232a3d;
+                 border-radius: 4px; padding: 6px 8px; }
+  #rich-legend .sw { display: inline-block; width: 10px; height: 10px;
+                     border-radius: 50%; border: 2px solid; margin-right: 4px;
+                     vertical-align: -1px; }
+  #rich-legend .ramp { height: 8px; border-radius: 3px; margin: 3px 0 1px;
+    background: linear-gradient(90deg, #2c1e6b, #2f5fa8, #1fa187, #8fd14f, #fde725); }
+  #rich-legend .lensx { display: flex; justify-content: space-between;
+                        font-variant-numeric: tabular-nums; }
+  #rich-legend .hint { color: #e0c878; }
+  #rich-legend h3 { font-size: 11px; margin: 6px 0 2px; color: #7d8fb0;
+                    font-weight: 600; }
   #log { font: 11px/1.5 ui-monospace, Consolas, monospace; color: #7d8fb0;
          white-space: pre-wrap; max-height: 130px; overflow-y: auto; }
   details.optgrp { border: 1px solid #232a3d; border-radius: 4px;
@@ -221,6 +254,17 @@
     <label title="E5: el bot con foco (y los resaltados) apuntan al puntero; flechas = motor, espacio = disparo"><input type="checkbox" id="pb-on"> Player Bot</label>
   </div>
   <div class="sep"></div>
+  <div class="group" title="E6.5: la vista original es el render de main.frm; la enriquecida es una lectura aparte (no es del original)">
+    <label for="view-mode">Vista</label>
+    <select id="view-mode">
+      <option value="orig" selected>Original</option>
+      <option value="rich">Enriquecida</option>
+    </select>
+    <label for="lens" class="rich-only">Color por</label>
+    <select id="lens" class="rich-only"></select>
+    <button id="btn-cam" title="Cámara: zoom 1 y sin paneo (rueda = zoom, arrastrar = paneo)">⤢</button>
+  </div>
+  <div class="sep"></div>
   <div class="group">
     <button id="btn-save">Guardar sim</button>
     <button id="btn-load">Cargar sim</button>
@@ -232,6 +276,7 @@
 
 <main>
   <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas></div>
+  <div id="tip" hidden></div>
   <aside>
     <h2>Inspector de bot</h2>
     <div id="insp-none" style="color:#5c6b88;font-size:12px">
@@ -240,6 +285,7 @@
       <div class="row" style="justify-content:space-between">
         <span id="insp-head" style="font-variant-numeric:tabular-nums"></span>
         <span>
+          <label title="E6.5: la cámara centra al bot (arrastrar la suelta)" style="font-size:12px;color:#93a4c2"><input type="checkbox" id="insp-follow"> seguir</label>
           <button id="insp-refresh" title="Releer el ADN (db_sim_bot_text)">↻ ADN</button>
           <button id="insp-close" title="Deseleccionar">✕</button>
         </span>
@@ -247,6 +293,8 @@
       <textarea id="insp-text" readonly spellcheck="false"
                 style="height:150px" placeholder="ADN del bot…"></textarea>
     </div>
+    <h2 class="rich-only">Vista enriquecida</h2>
+    <div id="rich-legend" class="rich-only"></div>
     <h2>Opciones de sim</h2>
     <div id="opts-panel"></div>
     <h2>Objetos (menú Objects)</h2>
@@ -798,6 +846,7 @@ worker.onmessage = (e) => {
       onReady();
       break;
     case 'frame':
+      redrawAsked = false;
       latest = msg;
       if (!rafPending) { rafPending = true; requestAnimationFrame(renderFrame); }
       break;
@@ -807,6 +856,14 @@ worker.onmessage = (e) => {
       break;
     case 'lint':
       showSeedLint(msg.name, msg.issues);
+      break;
+    case 'species':          // E6.5: tabla de especies de la vista
+      speciesNames = msg.names;
+      break;
+    case 'gendist-off':      // E6.5: la referencia murió o la sim cambió
+      gendistRef = 0;
+      gendistNote = 'la referencia ya no existe (murió, reset o carga): seleccioná otro bot';
+      renderLegend();
       break;
     case 'opts':
       // E3: opciones que cambió el core (Polar Ice enciende la deriva,
@@ -907,6 +964,7 @@ function renderFrame() {
   const { buf, stats: st } = latest;
   latest = null;
   stats = st;
+  frameSelSeq = st.selSeq !== undefined ? st.selSeq : selSeq;
   const t0 = performance.now();
   draw(new Float32Array(buf));
   drawMs = drawMs * 0.9 + (performance.now() - t0) * 0.1;
@@ -1012,15 +1070,27 @@ function draw(v) {
   const W = v[0], Hh = v[1];
   const nB = v[2], nS = v[3], nT = v[4], nO = v[5], nP = v[6];
   const focus = v[7];
-  const oBots = 8;
+  const oBots = 12;
   const oShots = oBots + nB * 20;
   const oTies = oShots + nS * 9;
   const oObs = oTies + nT * 5;
   const oTps = oObs + nO * 5;
   const oFocus = oTps + nP * 7;
+  const oVis = oFocus + (focus > 0 ? 44 : 0);
+  const rich = v[8] === 1 && richView;           // E6.5
   const s = Math.min(canvas.width / W, canvas.height / Hh);
   lastScale = s;
+  lastW = W; lastH = Hh;
+  // E6.5 — cámara: zoom 1 y sin paneo = la transformación identidad, así la
+  // vista original sale exactamente como antes. Los grosores se dividen por
+  // el zoom para seguir siendo de 1 px en pantalla.
+  if (cam.follow && focus > 0) followCam(v[oFocus], v[oFocus + 1], s);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(cam.z, 0, 0, cam.z, cam.ox, cam.oy);
+  const LW = 1 / cam.z;
+  curLW = LW;
+  ctx.lineWidth = LW;
 
   // hit-test para whichrob(): retener [idx, x, y, r] antes de devolver el búfer
   if (hitBots.length < nB * 4) hitBots = new Float32Array(nB * 4 + 256);
@@ -1092,14 +1162,20 @@ function draw(v) {
   // ties (debajo de los bots)
   for (let i = 0; i < nT; i++) {
     const o = oTies + i * 5;
-    ctx.strokeStyle = v[o + 4] === 3 ? '#c8b060' : '#4a5a78';
-    ctx.lineWidth = v[o + 4] === 3 ? 1.5 : 1;
+    // E6.5: en la vista enriquecida las ties van gruesas (multibot legible)
+    if (rich) {
+      ctx.strokeStyle = v[o + 4] === 3 ? '#e0c070' : '#8fa6cf';
+      ctx.lineWidth = (v[o + 4] === 3 ? 3 : 2) * LW;
+    } else {
+      ctx.strokeStyle = v[o + 4] === 3 ? '#c8b060' : '#4a5a78';
+      ctx.lineWidth = (v[o + 4] === 3 ? 1.5 : 1) * LW;
+    }
     ctx.beginPath();
     ctx.moveTo(v[o] * s, v[o + 1] * s);
     ctx.lineTo(v[o + 2] * s, v[o + 3] * s);
     ctx.stroke();
   }
-  ctx.lineWidth = 1;
+  ctx.lineWidth = LW;
 
   // shots — DrawShots (main.frm:953-971): flash + toggle → destello de un
   // frame en opos (círculo lleno, radio 20 twips, paleta FlashColor; tipos
@@ -1122,7 +1198,60 @@ function draw(v) {
     }
   }
 
-  // bots
+  // bots — E6.5: la vista enriquecida tiene su propio pase (drawRichBots);
+  // la original es el bucle de siempre, movido tal cual a drawBotsOriginal.
+  if (rich) drawRichBots(v, oBots, nB, oVis, focus, s, LW);
+  else drawBotsOriginal(v, oBots, nB, focus, s);
+
+  // E6 — árbol de parentesco (main.frm:3059-3070, score tipo 3): dos tramos
+  // por enlace hijo→medio→padre; el blanco va del lado del AbsNum mayor y el
+  // otro en gris RGB(128,128,128).
+  if (familyLines) {
+    for (let i = 0; i + 6 < familyLines.length; i += 7) {
+      const white = familyLines[i + 6] === 1;
+      ctx.strokeStyle = white ? '#ffffff' : '#808080';
+      ctx.beginPath();
+      ctx.moveTo(familyLines[i] * s, familyLines[i + 1] * s);
+      ctx.lineTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
+      ctx.stroke();
+      ctx.strokeStyle = white ? '#808080' : '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
+      ctx.lineTo(familyLines[i + 4] * s, familyLines[i + 5] * s);
+      ctx.stroke();
+    }
+  }
+
+  // E6.5 — eventos, rastro y tooltip (solo vista enriquecida)
+  if (rich) {
+    ingestRichEvents(v, oVis + nB * 24, v[9], v[10], v[11]);
+    drawRichOverlays(s, LW, focus > 0 ? v[oFocus] : NaN,
+                     focus > 0 ? v[oFocus + 1] : NaN, focus, W);
+  }
+
+  // rejilla de visión del bot con foco (main.frm:1017-1060, transcrita con
+  // los valores por ojo de db_sim_dump_focus; ver la cabecera del archivo).
+  if (focus > 0) {
+    const f = oFocus;
+    if (frameSelSeq === selSeq)
+      updateInspectorLive(focus, v[f + 5], v[f + 6], v[f + 7]);
+    if (tgVision.checked) drawVisionGrid(v, f, s);
+  } else if (selBot > 0 && frameSelSeq === selSeq) {
+    // el bot con foco murió: el worker apagó el foco — deseleccionar la UI
+    setSelection(0, false);
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (rich) {
+    if (tip.on) updateTip();
+    // Con la sim en pausa los efectos que se apagan necesitan frames: se
+    // piden al worker (ping-pong: nunca más de uno en vuelo).
+    if (richEffectsActive()) requestRedraw();
+  }
+}
+
+// Pase de bots de la vista original (DrawRobPer / DrawRobAim de main.frm;
+// el cuerpo es el bucle de E2-E6 sin cambios).
+function drawBotsOriginal(v, oBots, nB, focus, s) {
   const gauges = tgGauges.checked;
   const vectors = tgVectors.checked;
   for (let i = 0; i < nB; i++) {
@@ -1209,37 +1338,8 @@ function draw(v) {
         drawArrow(wx + drx * wr, wy + dry * wr, drx, dry, right, dfx, dfy, s);
     }
   }
-
-  // E6 — árbol de parentesco (main.frm:3059-3070, score tipo 3): dos tramos
-  // por enlace hijo→medio→padre; el blanco va del lado del AbsNum mayor y el
-  // otro en gris RGB(128,128,128).
-  if (familyLines) {
-    for (let i = 0; i + 6 < familyLines.length; i += 7) {
-      const white = familyLines[i + 6] === 1;
-      ctx.strokeStyle = white ? '#ffffff' : '#808080';
-      ctx.beginPath();
-      ctx.moveTo(familyLines[i] * s, familyLines[i + 1] * s);
-      ctx.lineTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
-      ctx.stroke();
-      ctx.strokeStyle = white ? '#808080' : '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(familyLines[i + 2] * s, familyLines[i + 3] * s);
-      ctx.lineTo(familyLines[i + 4] * s, familyLines[i + 5] * s);
-      ctx.stroke();
-    }
-  }
-
-  // rejilla de visión del bot con foco (main.frm:1017-1060, transcrita con
-  // los valores por ojo de db_sim_dump_focus; ver la cabecera del archivo).
-  if (focus > 0) {
-    const f = oFocus;
-    updateInspectorLive(focus, v[f + 5], v[f + 6], v[f + 7]);
-    if (tgVision.checked) drawVisionGrid(v, f, s);
-  } else if (selBot > 0) {
-    // el bot con foco murió: el worker apagó el foco — deseleccionar la UI
-    setSelection(0, false);
-  }
 }
+
 
 // main.frm:1017-1060 — showVisionGrid: 9 arcos cian (encogidos a la
 // distancia vista cuando el ojo ve; el vbNotMergePen del original se
@@ -1268,7 +1368,7 @@ function drawVisionGrid(v, f, s) {
     // ángulo va negado y el arco se recorre con anticlockwise = true.
     // Argumentos negativos (-low, -hi) = radios dibujados en los extremos.
     ctx.strokeStyle = seen > 0 ? '#00ffff' : 'rgba(0,255,255,0.35)';
-    ctx.lineWidth = seen > 0 ? 1.5 : 1;
+    ctx.lineWidth = (seen > 0 ? 1.5 : 1) * curLW;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.arc(x, y, Math.max(length * s, 0.001), -low, -hi, true);
@@ -1281,7 +1381,719 @@ function drawVisionGrid(v, f, s) {
       ctx.stroke();
     }
   }
-  ctx.lineWidth = 1;
+  ctx.lineWidth = curLW;
+}
+
+// ===========================================================================
+// E6.5 · Vista enriquecida (spec/PLAN-EXTENSIONES.md §E6.5)
+//
+// Decisión de capa host fuera de la fidelidad: NO es superficie del original
+// sino una segunda lectura de la misma sim (ideas de la v1.5 de otro
+// simulador derivado de DarwinBots; ningún código portado). Todo sale de los
+// volcados: db_sim_dump_bots (20 floats) + db_sim_dump_bots_vis (24 floats,
+// misma fila) + los eventos de nacimiento/muerte que acumula el wasm tick a
+// tick (db_sim_vis_observe). La página no recalcula nada de la sim.
+//
+// Canales: forma = vegetal (hexágono) / animal (círculo con nariz al rumbo) /
+// multibot (ties gruesas); tono = color de especie del original; brillo = nrg
+// (log); body ya es el radio en el original (FindRadius) — con FixedBotRadii
+// pasa a un núcleo claro; anillo = acción desde el último frame (se apaga en
+// ~350 ms); con zoom: borde = shell, halo = slime, púas = venom (azul) /
+// poison (amarillo), tinte verde = cloroplastos, puntos = ojos (llenos si
+// ven), estados (parálisis, veneno, virus). Nivel de detalle por radio en
+// pantalla: sin él 2000 bots de 1-2 px serían ruido y costarían de más.
+// ===========================================================================
+
+const RICH_REC = 24;               // floats por bot en db_sim_dump_bots_vis
+const RING_MS = 350;               // vida del anillo de acción
+const BIRTH_MS = 600, DEATH_MS = 900;
+const LOD_RING = 1.5, LOD_BODY = 2.5, LOD_DETAIL = 6, LOD_FINE = 10;  // px
+
+// Anillo de acción: el primer bit que aplica (en este orden) da el color.
+// Movimiento (bit 4) no lleva anillo — se lee en la nariz, como "deambular"
+// en la v1.5. El disparo toma el color FlashColor de su shottype.
+const ACTION_RINGS = [
+  { bit: 1, label: 'reproducción', color: '#ff4fa3', pulse: true },
+  { bit: 0, label: 'disparo (color del tipo de shot)', color: null, pulse: true },
+  { bit: 3, label: 'tie nueva', color: '#e0c070' },
+  { bit: 6, label: 'venom / poison', color: '#8c7bff' },
+  { bit: 5, label: 'shell / slime', color: '#ff9100' },
+  { bit: 8, label: 'body (strbody/fdbody)', color: '#c9a0ff' },
+  { bit: 7, label: 'gana nrg o mata', color: '#76ff03' },
+  { bit: 2, label: 'fecundado', color: '#ff80c0' },
+];
+const ACTION_NAMES = ['disparo', 'reproducción', 'fecundado', 'tie',
+                      'movimiento', 'shell/slime', 'venom/poison', 'gana nrg',
+                      'body'];
+function shotRingColor(st) {
+  if (st < 0 && st >= -7) return FLASH_COLORS[st];
+  if (st === -8) return '#ff80c0';          // esperma
+  return '#b0b8c8';                          // info shot (tipo > 0)
+}
+
+// Lentes "Color por": fuente = bot (registro de 20) o vis (registro de 24).
+const LENSES = {
+  species: { label: 'especie (color del original)' },
+  nrg:     { label: 'nrg', bot: 5 },
+  body:    { label: 'body', bot: 8 },
+  gen:     { label: 'generación', vis: 2 },
+  mut:     { label: 'mutaciones', vis: 3 },
+  age:     { label: 'edad', vis: 4 },
+  dna:     { label: 'longitud del ADN', vis: 5 },
+  gendist: { label: 'distancia genética al seleccionado', vis: 21 },
+};
+// Rampa tipo viridis (la de organismColors.js de la v1.5), 32 niveles.
+const RAMP = (() => {
+  const stops = [[0x2c, 0x1e, 0x6b], [0x2f, 0x5f, 0xa8], [0x1f, 0xa1, 0x87],
+                 [0x8f, 0xd1, 0x4f], [0xfd, 0xe7, 0x25]];
+  const out = [];
+  for (let i = 0; i < 32; i++) {
+    const x = (i / 31) * (stops.length - 1);
+    const k = Math.min(stops.length - 2, Math.floor(x)), f = x - k;
+    const c = stops[k].map((a, j) => Math.round(a + (stops[k + 1][j] - a) * f));
+    out.push(`rgb(${c[0]},${c[1]},${c[2]})`);
+  }
+  return out;
+})();
+
+const viewSel = document.getElementById('view-mode');
+const lensSel = document.getElementById('lens');
+const followEl = document.getElementById('insp-follow');
+const tipEl = document.getElementById('tip');
+const legendEl = document.getElementById('rich-legend');
+for (const k in LENSES) {
+  const o = document.createElement('option');
+  o.value = k; o.textContent = LENSES[k].label;
+  lensSel.appendChild(o);
+}
+
+let richView = false;
+let speciesNames = [];
+let gendistRef = 0, gendistNote = '';
+let lensMin = NaN, lensMax = NaN;
+let lastW = 1, lastH = 1, lastCycle = -1;
+let curLW = 1;
+let redrawAsked = false;
+// Memoria de acciones por AbsNum (el slot se reutiliza; AbsNum no).
+const actMem = new Map();   // abs → {bits, t, st}
+let actSweep = 0;
+const births = [];          // {x, y, mx, my, col, t}
+const deaths = [];          // {x, y, r, col, tp, t}
+const trail = [];           // [wx, wy] del bot con foco; null = corte (toroide)
+// Copia del último frame para el tooltip (el búfer vuelve al worker).
+let tipBots = new Float32Array(0), tipVis = new Float32Array(0), tipRows = 0;
+const tip = { on: false, cx: 0, cy: 0 };
+
+// ---- Cámara (sirve a las dos vistas) --------------------------------------
+// pantalla = mundo·s·z + (ox, oy). Zoom 1 y sin paneo = identidad.
+const cam = { z: 1, ox: 0, oy: 0, follow: false };
+
+function canvasPx(e) {
+  const rect = canvas.getBoundingClientRect();
+  return [(e.clientX - rect.left) * (canvas.width / rect.width),
+          (e.clientY - rect.top) * (canvas.height / rect.height)];
+}
+function eventToWorld(e) {
+  const [px, py] = canvasPx(e);
+  return [(px - cam.ox) / cam.z / lastScale, (py - cam.oy) / cam.z / lastScale];
+}
+function clampCam() {
+  if (cam.z <= 1.0001) { cam.z = 1; cam.ox = 0; cam.oy = 0; return; }
+  const fw = lastW * lastScale * cam.z, fh = lastH * lastScale * cam.z;
+  const cw = canvas.width, ch = canvas.height;
+  cam.ox = Math.min(Math.max(cam.ox, Math.min(0, cw - fw)), Math.max(0, cw - fw));
+  cam.oy = Math.min(Math.max(cam.oy, Math.min(0, ch - fh)), Math.max(0, ch - fh));
+}
+function followCam(fx, fy, s) {
+  cam.ox = canvas.width / 2 - fx * s * cam.z;
+  cam.oy = canvas.height / 2 - fy * s * cam.z;
+  clampCam();
+}
+function setFollow(on) {
+  cam.follow = on;
+  followEl.checked = on;
+  if (on && cam.z < 2) cam.z = 4;   // a zoom 1 no hay nada que centrar
+  requestRedraw();
+}
+// Frame fresco con la sim en pausa (corriendo, los frames llegan solos).
+function requestRedraw() {
+  if (running || redrawAsked) return;
+  redrawAsked = true;
+  worker.postMessage({ t: 'redraw' });
+}
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const [px, py] = canvasPx(e);
+  const nz = Math.min(64, Math.max(1, cam.z * Math.exp(-e.deltaY * 0.0015)));
+  const kx = (px - cam.ox) / cam.z, ky = (py - cam.oy) / cam.z;
+  cam.z = nz;
+  cam.ox = px - kx * nz;
+  cam.oy = py - ky * nz;
+  clampCam();
+  requestRedraw();
+}, { passive: false });
+
+let drag = null;   // {x, y, ox, oy, moved}
+canvas.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  const [px, py] = canvasPx(e);
+  drag = { x: px, y: py, ox: cam.ox, oy: cam.oy, moved: false };
+});
+window.addEventListener('mousemove', (e) => {
+  if (!drag) return;
+  const [px, py] = canvasPx(e);
+  if (!drag.moved && Math.hypot(px - drag.x, py - drag.y) < 4) return;
+  if (!drag.moved && cam.z === 1) return;   // sin zoom no hay paneo
+  drag.moved = true;
+  canvas.classList.add('panning');
+  if (cam.follow) setFollow(false);         // arrastrar suelta el "seguir"
+  cam.ox = drag.ox + (px - drag.x);
+  cam.oy = drag.oy + (py - drag.y);
+  clampCam();
+  requestRedraw();
+});
+window.addEventListener('mouseup', (e) => {
+  if (!drag) return;
+  const wasClick = !drag.moved;
+  drag = null;
+  canvas.classList.remove('panning');
+  if (wasClick && e.target === canvas) selectAt(e);
+});
+canvas.addEventListener('mousemove', (e) => {
+  tip.on = richView && !drag;
+  tip.cx = e.clientX; tip.cy = e.clientY;
+  if (tip.on) updateTip();
+});
+canvas.addEventListener('mouseleave', () => { tip.on = false; tipEl.hidden = true; });
+document.getElementById('btn-cam').onclick = () => {
+  cam.z = 1; cam.ox = 0; cam.oy = 0;
+  setFollow(false);
+};
+followEl.addEventListener('change', () => setFollow(followEl.checked));
+
+// ---- Selector de vista y lente --------------------------------------------
+viewSel.addEventListener('change', () => {
+  richView = viewSel.value === 'rich';
+  document.body.classList.toggle('rich', richView);
+  clearRichState();
+  tipEl.hidden = true;
+  worker.postMessage({ t: 'view', rich: richView });
+  if (richView && lensSel.value === 'gendist') setGendistRef(selBot);
+  renderLegend();
+});
+lensSel.addEventListener('change', () => {
+  setGendistRef(lensSel.value === 'gendist' ? selBot : 0);
+  renderLegend();
+  requestRedraw();
+});
+function setGendistRef(n) {
+  gendistRef = n;
+  gendistNote = n ? '' : 'seleccioná un bot: la distancia es a él';
+  worker.postMessage({ t: 'gendist', n });
+  renderLegend();
+}
+
+function clearRichState() {
+  actMem.clear();
+  births.length = 0;
+  deaths.length = 0;
+  trail.length = 0;
+  lastCycle = -1;
+}
+
+function renderLegend() {
+  const lens = LENSES[lensSel.value];
+  let lensHtml;
+  if (lensSel.value === 'species') {
+    lensHtml = 'tono = especie (el color del original); brillo = nrg';
+  } else {
+    const f = (x) => Number.isFinite(x) ? fmtNum(x) : '—';
+    lensHtml = `<div class="ramp"></div><div class="lensx"><span id="lens-min">` +
+      `${f(lensMin)}</span><span>${esc(lens.label)}</span><span id="lens-max">` +
+      `${f(lensMax)}</span></div>` +
+      (lensSel.value === 'gendist' && gendistNote
+        ? `<div class="hint">${esc(gendistNote)}</div>` : '');
+  }
+  legendEl.innerHTML =
+    '<h3>Color</h3>' + lensHtml +
+    '<h3>Forma</h3>⬡ vegetal · ● animal (la nariz marca el rumbo) · ' +
+    'ties gruesas = multibot · gris = cadáver' +
+    '<h3>Anillo = lo que hizo desde el último frame</h3>' +
+    ACTION_RINGS.map((a) =>
+      `<div><span class="sw" style="border-color:${a.color || '#ff0000'}"></span>` +
+      `${esc(a.label)}</div>`).join('') +
+    '<h3>Con zoom (rueda)</h3>borde = shell · halo = slime · púas azules = ' +
+    'venom, amarillas = poison · tinte verde = cloroplastos · puntos = ojos ' +
+    '(llenos si ven) · punteado = paralizado · contorno amarillo = envenenado ' +
+    '· puntos cian = virus' +
+    '<h3>Eventos</h3>destello + línea a la madre = nacimiento · se encoge y ' +
+    'apaga = muerte · anillo cian = salió por un teleporter · rastro del ' +
+    'bot con foco · tooltip al pasar el ratón';
+}
+renderLegend();
+
+// Extremos de la lente en el panel sin rehacer la leyenda en cada frame.
+function updateLensRange(mn, mx) {
+  if (mn === lensMin && mx === lensMax) return;
+  lensMin = mn; lensMax = mx;
+  const a = document.getElementById('lens-min');
+  const b = document.getElementById('lens-max');
+  if (a) a.textContent = Number.isFinite(mn) ? fmtNum(mn) : '—';
+  if (b) b.textContent = Number.isFinite(mx) ? fmtNum(mx) : '—';
+}
+
+// ---- Color de relleno: especie × brillo (nrg) × tinte (cloroplastos) --------
+const richFillCache = new Map();
+function richFill(col, lvl, tint) {
+  const key = col * 64 + lvl * 4 + tint;
+  let css = richFillCache.get(key);
+  if (css === undefined) {
+    const c = col | 0;
+    let r = c & 255, g = (c >> 8) & 255, b = (c >> 16) & 255;   // Long BGR
+    const k = 0.3 + 0.7 * (lvl / 15);   // con poca nrg, hacia gris oscuro
+    r = 40 + (r - 40) * k; g = 40 + (g - 40) * k; b = 40 + (b - 40) * k;
+    const t = tint * 0.15;              // cloroplastos: hacia verde hoja
+    r = r * (1 - t) + 50 * t; g = g * (1 - t) + 205 * t; b = b * (1 - t) + 70 * t;
+    css = `rgb(${r | 0},${g | 0},${b | 0})`;
+    if (richFillCache.size > 20000) richFillCache.clear();
+    richFillCache.set(key, css);
+  }
+  return css;
+}
+const LOG_NRG = Math.log(32001);
+function nrgLevel(nrg) {
+  return nrg > 0 ? Math.min(15, Math.floor(15 * Math.log(1 + nrg) / LOG_NRG)) : 0;
+}
+
+// Canvas rellena mal un path con miles de subpaths: se midió 1943 círculos
+// en UN path = 18 ms contra ~4.5 ms en tandas. Cada grupo se pinta en tandas
+// de BATCH formas.
+const BATCH = 64;
+function batched(rows, add, paint) {
+  for (let a = 0; a < rows.length; a += BATCH) {
+    ctx.beginPath();
+    const b = Math.min(rows.length, a + BATCH);
+    for (let j = a; j < b; j++) add(rows[j]);
+    paint();
+  }
+}
+const HEX_C = [1, 2, 3, 4, 5].map((k) => Math.cos(k * PIv / 3));
+const HEX_S = [1, 2, 3, 4, 5].map((k) => Math.sin(k * PIv / 3));
+const doFill = () => ctx.fill();
+const doStroke = () => ctx.stroke();
+
+function pushBucket(map, key, i) {
+  let a = map.get(key);
+  if (!a) { a = []; map.set(key, a); }
+  a.push(i);
+}
+
+// ---- Pase de bots de la vista enriquecida ---------------------------------
+function drawRichBots(v, oB, nB, oV, focus, s, LW) {
+  const now = performance.now();
+  const z = cam.z;
+  const vx0 = -cam.ox / z, vy0 = -cam.oy / z;
+  const vx1 = (canvas.width - cam.ox) / z, vy1 = (canvas.height - cam.oy) / z;
+  const lensKey = lensSel.value, lens = LENSES[lensKey];
+  const lensBot = lens.bot, lensVis = lens.vis;
+  const valued = lensBot !== undefined || lensVis !== undefined;
+  const fixedRadii = !!(document.getElementById('o-21') || {}).checked;
+
+  // Copia para el tooltip (el búfer del frame vuelve al worker).
+  if (tipBots.length < nB * 20) tipBots = new Float32Array(nB * 20 + 2048);
+  if (tipVis.length < nB * RICH_REC) tipVis = new Float32Array(nB * RICH_REC + 2048);
+  tipBots.set(v.subarray(oB, oB + nB * 20));
+  tipVis.set(v.subarray(oV, oV + nB * RICH_REC));
+  tipRows = nB;
+
+  // Extremos de la lente sobre los bots presentes (sin cadáveres).
+  let mn = Infinity, mx = -Infinity;
+  if (valued) {
+    for (let i = 0; i < nB; i++) {
+      if (v[oB + i * 20 + 7] & 4) continue;
+      const val = lensBot !== undefined ? v[oB + i * 20 + lensBot]
+                                        : v[oV + i * RICH_REC + lensVis];
+      if (lensKey === 'gendist' && val < 0) continue;
+      if (val < mn) mn = val;
+      if (val > mx) mx = val;
+    }
+  }
+  updateLensRange(valued && mn <= mx ? mn : NaN, valued && mn <= mx ? mx : NaN);
+  const span = mx > mn ? mx - mn : 1;
+
+  const fills = new Map();     // css → filas
+  const rings = new Map();     // 'css|nivel' → filas
+  const halos = [], detail = [];
+  const outlines = [], noses = [];
+  const hl = [];
+  let focusRow = -1;
+  if (++actSweep > 120) {      // barrido de la memoria de acciones (~2 s)
+    actSweep = 0;
+    for (const [k, m] of actMem) if (now - m.t > 1000) actMem.delete(k);
+  }
+
+  for (let i = 0; i < nB; i++) {
+    const o = oB + i * 20, q = oV + i * RICH_REC;
+    const wx = v[o + 1], wy = v[o + 2], wr = v[o + 3];
+    const h = i * 4;
+    hitBots[h] = v[o]; hitBots[h + 1] = wx; hitBots[h + 2] = wy;
+    hitBots[h + 3] = wr;
+    const abs = v[q], acts = v[q + 7];
+    if (acts) actMem.set(abs, { bits: acts, t: now, st: v[q + 22] });
+
+    const x = wx * s, y = wy * s, r = Math.max(wr * s, 1.2 * LW);
+    if (x + r * 2 < vx0 || x - r * 2 > vx1 || y + r * 2 < vy0 || y - r * 2 > vy1)
+      continue;                                   // fuera de cámara
+    const pr = r * z;                             // radio en px de pantalla
+    const flags = v[o + 7], corpse = flags & 4;
+
+    let css;
+    if (corpse) css = '#555';
+    else if (valued) {
+      const val = lensBot !== undefined ? v[o + lensBot] : v[q + lensVis];
+      css = (lensKey === 'gendist' && val < 0) ? '#3a3f4a'
+          : RAMP[Math.max(0, Math.min(31, Math.round((val - mn) / span * 31)))];
+    } else {
+      const chl = v[o + 15];
+      css = richFill(v[o + 6], nrgLevel(v[o + 5]),
+                     chl > 0 ? Math.min(3, 1 + Math.floor(chl / 8000)) : 0);
+    }
+    pushBucket(fills, css, i);
+
+    if (v[o] === focus) focusRow = i;
+    else if (flags & 16) hl.push(i);
+    if (corpse) continue;
+
+    if (pr >= LOD_RING) {
+      const m = actMem.get(abs);
+      if (m && now - m.t < RING_MS) {
+        for (const a of ACTION_RINGS) {
+          if (!(m.bits & (1 << a.bit))) continue;
+          const lvl = 2 - Math.min(2, Math.floor(3 * (now - m.t) / RING_MS));
+          const col = a.color || shotRingColor(m.st);
+          pushBucket(rings, col + '|' + lvl + (a.pulse ? '|p' : ''), i);
+          break;
+        }
+      }
+    }
+    if (pr >= LOD_BODY) { outlines.push(i); if (!(flags & 1)) noses.push(i); }
+    if (pr >= LOD_DETAIL) {
+      detail.push(i);
+      if (v[o + 12] > 0.5) halos.push(i);
+    }
+  }
+
+  const geo = (i) => {
+    const o = oB + i * 20;
+    return [v[o + 1] * s, v[o + 2] * s, Math.max(v[o + 3] * s, 1.2 * LW)];
+  };
+
+  // halos de slime (debajo del cuerpo)
+  if (halos.length) {
+    ctx.fillStyle = 'rgba(170,215,255,0.16)';
+    batched(halos, (i) => {
+      const [x, y, r] = geo(i);
+      const sl = v[oB + i * 20 + 12];
+      const rr = r * (1.3 + Math.min(0.5, sl / 8000));
+      ctx.moveTo(x + rr, y);
+      ctx.arc(x, y, rr, 0, PIv * 2);
+    }, doFill);
+  }
+
+  // cuerpos, agrupados por color: un fill por grupo
+  for (const [css, rows] of fills) {
+    ctx.fillStyle = css;
+    batched(rows, (i) => {
+      const [x, y, r] = geo(i);
+      if (v[oB + i * 20 + 7] & 1) {               // vegetal: hexágono
+        const rr = r * 1.08;
+        ctx.moveTo(x + rr, y);
+        for (let k = 0; k < 5; k++) ctx.lineTo(x + rr * HEX_C[k], y + rr * HEX_S[k]);
+        ctx.closePath();
+      } else {
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, PIv * 2);
+      }
+    }, doFill);
+  }
+
+  // contorno fino y nariz (rumbo) cuando el bot mide algunos px
+  if (outlines.length) {
+    ctx.lineWidth = LW;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    batched(outlines, (i) => {
+      if (v[oB + i * 20 + 7] & 1) return;         // el hexágono ya se lee
+      const [x, y, r] = geo(i);
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, PIv * 2);
+    }, doStroke);
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 1.5 * LW;
+    batched(noses, (i) => {
+      const [x, y, r] = geo(i);
+      const aim = v[oB + i * 20 + 4];
+      ctx.moveTo(x + Math.cos(aim) * r * 0.35, y - Math.sin(aim) * r * 0.35);
+      ctx.lineTo(x + Math.cos(aim) * r * 1.25, y - Math.sin(aim) * r * 1.25);
+    }, doStroke);
+  }
+
+  // detalle de morfología y estado (solo los que se ven grandes)
+  for (const i of detail) drawBotDetail(v, oB + i * 20, oV + i * RICH_REC, s,
+                                        LW, fixedRadii, now);
+
+  // anillos de acción, agrupados por color y nivel de desvanecido
+  ctx.lineWidth = 1.5 * LW;
+  for (const [key, rows] of rings) {
+    const [col, lvl, pulse] = key.split('|');
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = 0.35 + 0.3 * +lvl;
+    batched(rows, (i) => {
+      const [x, y, r] = geo(i);
+      let rr = r + Math.max(r * 0.45, 2 * LW);
+      if (pulse) rr *= 1 + 0.12 * Math.sin(now * 0.025 + i);
+      ctx.moveTo(x + rr, y);
+      ctx.arc(x, y, rr, 0, PIv * 2);
+    }, doStroke);
+  }
+  ctx.globalAlpha = 1;
+
+  // resaltados (E6: familia / Player Bot) y foco, como en la vista original
+  ctx.lineWidth = LW;
+  if (hl.length) {
+    ctx.strokeStyle = '#e8b04b';
+    batched(hl, (i) => {
+      const [x, y, r] = geo(i);
+      ctx.moveTo(x + r * 1.35, y);
+      ctx.arc(x, y, r * 1.35, 0, PIv * 2);
+    }, doStroke);
+  }
+  if (focusRow >= 0) {
+    const [x, y, r] = geo(focusRow);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5 * LW;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.2 + 2 * LW, 0, PIv * 2);
+    ctx.stroke();
+    ctx.lineWidth = LW;
+  }
+}
+
+// Morfología de un bot grande en pantalla (r ≥ LOD_DETAIL px).
+function drawBotDetail(v, o, q, s, LW, fixedRadii, now) {
+  const x = v[o + 1] * s, y = v[o + 2] * s, r = v[o + 3] * s;
+  const pr = r * cam.z, aim = v[o + 4];
+  const shell = v[o + 11], venom = v[o + 10], poison = v[o + 13];
+
+  // body como núcleo claro cuando el radio no lo dice (FixedBotRadii)
+  if (fixedRadii && v[o + 8] > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.min(0.55, v[o + 8] / 10000).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.45, 0, PIv * 2);
+    ctx.fill();
+  }
+  // shell = grosor del borde
+  if (shell > 0.5) {
+    ctx.strokeStyle = '#d6deec';
+    ctx.lineWidth = LW * (1 + 4 * Math.min(1, shell / 5000));
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, PIv * 2);
+    ctx.stroke();
+  }
+  // púas: venom azul, poison amarillo (3-6 según la reserva)
+  const spikes = (amount, color, phase) => {
+    if (!(amount > 0.5)) return;
+    const n = 3 + Math.min(3, Math.floor(amount / 1000));
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let k = 0; k < n; k++) {
+      const a = aim + phase + k * (PIv * 2 / n);
+      const w = 0.22;
+      ctx.moveTo(x + Math.cos(a - w) * r, y - Math.sin(a - w) * r);
+      ctx.lineTo(x + Math.cos(a) * r * 1.45, y - Math.sin(a) * r * 1.45);
+      ctx.lineTo(x + Math.cos(a + w) * r, y - Math.sin(a + w) * r);
+      ctx.closePath();
+    }
+    ctx.fill();
+  };
+  spikes(venom, '#4d7dff', PIv / 6);
+  spikes(poison, '#ffe03a', PIv / 2);
+  // multibot: anillo interior
+  if (v[o + 7] & 8) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = LW;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.55, 0, PIv * 2);
+    ctx.stroke();
+  }
+  if (pr < LOD_FINE) return;
+  // ojos: marca en la dirección central de cada ojo (la misma geometría de
+  // la rejilla de visión, main.frm:1017-1060), llena si el ojo ve algo
+  const seen = v[q + 9];
+  const er = Math.max(r * 0.085, 1.2 * LW);
+  for (const want of [1, 0]) {
+    ctx.fillStyle = want ? '#ffffff' : 'rgba(255,255,255,0.28)';
+    ctx.beginPath();
+    for (let a = 0; a <= 8; a++) {
+      if (((seen >> a) & 1) !== want) continue;
+      const ang = aim + PIv / 4 - PIv / 36 - a * (PIv / 18) + v[q + 12 + a];
+      const ex = x + Math.cos(ang) * r * 0.78, ey = y - Math.sin(ang) * r * 0.78;
+      ctx.moveTo(ex + er, ey);
+      ctx.arc(ex, ey, er, 0, PIv * 2);
+    }
+    ctx.fill();
+  }
+  // estados
+  const st = v[q + 8];
+  if (st & 1) {                         // paralizado
+    ctx.strokeStyle = '#9ad0ff';
+    ctx.lineWidth = LW;
+    ctx.setLineDash([3 * LW, 3 * LW]);
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.12, 0, PIv * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (st & 2) {                         // envenenado
+    ctx.strokeStyle = 'rgba(255,224,58,0.7)';
+    ctx.lineWidth = 1.5 * LW;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 1.18, 0, PIv * 2);
+    ctx.stroke();
+  }
+  if (st & 4) {                         // virus en curso
+    ctx.fillStyle = '#00ffff';
+    ctx.beginPath();
+    for (let k = 0; k < 3; k++) {
+      const a = now * 0.003 + k * (PIv * 2 / 3);
+      const cx = x + Math.cos(a) * r * 0.45, cy = y - Math.sin(a) * r * 0.45;
+      ctx.moveTo(cx + r * 0.08, cy);
+      ctx.arc(cx, cy, r * 0.08, 0, PIv * 2);
+    }
+    ctx.fill();
+  }
+}
+
+// ---- Eventos, rastro y tooltip --------------------------------------------
+function ingestRichEvents(v, off, nBi, nDe, cycle) {
+  if (cycle < lastCycle) clearRichState();   // sim nueva o cargada
+  lastCycle = cycle;
+  const now = performance.now();
+  for (let i = 0; i < nBi; i++, off += 6)
+    births.push({ x: v[off], y: v[off + 1], mx: v[off + 2], my: v[off + 3],
+                  col: vbColorToCss(v[off + 4]), t: now });
+  for (let i = 0; i < nDe; i++, off += 6)
+    deaths.push({ x: v[off], y: v[off + 1], r: v[off + 2],
+                  col: vbColorToCss(v[off + 3]), tp: v[off + 5] === 1, t: now });
+  if (births.length > 600) births.splice(0, births.length - 600);
+  if (deaths.length > 600) deaths.splice(0, deaths.length - 600);
+}
+
+function drawRichOverlays(s, LW, fx, fy, focus, W) {
+  const now = performance.now();
+  // nacimientos: destello que se expande + línea a la madre
+  let k = 0;
+  for (const b of births) {
+    const a = (now - b.t) / BIRTH_MS;
+    if (a >= 1) continue;
+    births[k++] = b;
+    ctx.globalAlpha = 1 - a;
+    ctx.strokeStyle = b.col;
+    ctx.lineWidth = 1.5 * LW;
+    ctx.beginPath();
+    ctx.arc(b.x * s, b.y * s, (40 + 160 * a) * s + 2 * LW, 0, PIv * 2);
+    if (!Number.isNaN(b.mx)) {
+      ctx.moveTo(b.x * s, b.y * s);
+      ctx.lineTo(b.mx * s, b.my * s);
+    }
+    ctx.stroke();
+  }
+  births.length = k;
+  // muertes: el bot se encoge y se apaga donde se lo vio por última vez
+  k = 0;
+  for (const d of deaths) {
+    const a = (now - d.t) / DEATH_MS;
+    if (a >= 1) continue;
+    deaths[k++] = d;
+    ctx.globalAlpha = (1 - a) * 0.8;
+    const r = Math.max(d.r * s * (1 - a), 0.8 * LW);
+    if (d.tp) {                          // salió por un teleporter
+      ctx.strokeStyle = '#00ffff';
+      ctx.lineWidth = 1.5 * LW;
+      ctx.beginPath();
+      ctx.arc(d.x * s, d.y * s, d.r * s * (1 + 2 * a), 0, PIv * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = d.col;
+      ctx.beginPath();
+      ctx.arc(d.x * s, d.y * s, r, 0, PIv * 2);
+      ctx.fill();
+    }
+  }
+  deaths.length = k;
+  ctx.globalAlpha = 1;
+
+  // rastro del bot con foco (se corta en los saltos del toroide)
+  if (focus > 0 && Number.isFinite(fx)) {
+    const last = trail[trail.length - 1];
+    if (!last || last[0] !== fx || last[1] !== fy) {
+      if (last && Math.hypot(fx - last[0], fy - last[1]) > W / 3) trail.push(null);
+      trail.push([fx, fy]);
+      if (trail.length > 160) trail.splice(0, trail.length - 160);
+    }
+    ctx.lineWidth = 1.5 * LW;
+    const n = trail.length;
+    for (let band = 0; band < 4; band++) {
+      ctx.strokeStyle = `rgba(255,255,255,${(0.12 + band * 0.18).toFixed(2)})`;
+      ctx.beginPath();
+      let pen = false;
+      for (let i = Math.floor(band * n / 4); i < Math.min(n, Math.floor((band + 1) * n / 4) + 1); i++) {
+        const p = trail[i];
+        if (!p) { pen = false; continue; }
+        if (pen) ctx.lineTo(p[0] * s, p[1] * s);
+        else { ctx.moveTo(p[0] * s, p[1] * s); pen = true; }
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.lineWidth = LW;
+}
+
+function richEffectsActive() {
+  if (births.length || deaths.length) return true;
+  const now = performance.now();
+  for (const m of actMem.values()) if (now - m.t < RING_MS) return true;
+  return false;
+}
+
+function updateTip() {
+  if (!richView || !tipRows) { tipEl.hidden = true; return; }
+  const rect = canvas.getBoundingClientRect();
+  const px = (tip.cx - rect.left) * (canvas.width / rect.width);
+  const py = (tip.cy - rect.top) * (canvas.height / rect.height);
+  const n = whichrob((px - cam.ox) / cam.z / lastScale,
+                     (py - cam.oy) / cam.z / lastScale);
+  let row = -1;
+  if (n) for (let i = 0; i < tipRows; i++) if (tipBots[i * 20] === n) { row = i; break; }
+  if (row < 0) { tipEl.hidden = true; return; }
+  const b = row * 20, q = row * RICH_REC;
+  const m = actMem.get(tipVis[q]);
+  const acts = m && performance.now() - m.t < 1000
+    ? ACTION_NAMES.filter((_, k) => m.bits & (1 << k)).join(', ') : '—';
+  const flags = tipBots[b + 7];
+  const kind = flags & 4 ? 'cadáver' : flags & 1 ? 'vegetal' : 'animal';
+  tipEl.innerHTML =
+    `<b>${esc(speciesNames[tipVis[q + 10]] || '?')}</b> · #${n} · ${kind}` +
+    `${flags & 8 ? ' · multibot' : ''}<br>` +
+    `nrg ${fmtNum(tipBots[b + 5])} · body ${fmtNum(tipBots[b + 8])} · ` +
+    `edad ${tipVis[q + 4]}<br>` +
+    `gen ${tipVis[q + 2]} · mut ${tipVis[q + 3]} · ADN ${tipVis[q + 5]} · ` +
+    `kills ${tipVis[q + 6]} · ties ${tipVis[q + 11]}` +
+    (tipVis[q + 21] >= 0 ? `<br>distancia genética ${tipVis[q + 21].toFixed(3)}` : '') +
+    `<br>acciones: ${acts}`;
+  tipEl.style.left = (tip.cx + 14) + 'px';
+  tipEl.style.top = (tip.cy + 14) + 'px';
+  tipEl.hidden = false;
 }
 
 // ---- Selección de bot e inspector (E2) ------------------------------------
@@ -1292,7 +2104,7 @@ function drawVisionGrid(v, f, s) {
 // inclicable); (b) radio efectivo mínimo de 6px para bots subpixel.
 function whichrob(x, y) {
   let best = 0, dist = Infinity;
-  const tol = 6 / lastScale;
+  const tol = 6 / (lastScale * cam.z);
   for (let i = 0; i < hitCount; i++) {
     const o = i * 4;
     const r = Math.max(hitBots[o + 3], tol);
@@ -1310,9 +2122,16 @@ const inspNoneEl = document.getElementById('insp-none');
 const inspHeadEl = document.getElementById('insp-head');
 const inspTextEl = document.getElementById('insp-text');
 
+// E6.5: cada selección de la página lleva un número; un frame armado antes
+// de que el worker la reciba trae el número viejo y no puede deseleccionar
+// (la carrera existía desde E2; con "seguir" se notaba más).
+let selSeq = 0, frameSelSeq = 0;
+
 function setSelection(n, askDna) {
+  if (n !== selBot) { trail.length = 0; if (!n) setFollow(false); }
   selBot = n;
-  worker.postMessage({ t: 'select', n });
+  if (richView && lensSel.value === 'gendist') setGendistRef(n);
+  worker.postMessage({ t: 'select', n, seq: ++selSeq });
   inspectorEl.style.display = n > 0 ? '' : 'none';
   inspNoneEl.style.display = n > 0 ? 'none' : '';
   if (n > 0) {
@@ -1362,11 +2181,11 @@ function setTpSelection(n) {
 // Form_MouseDown (main.frm:1856-1884): prioridad bot → teleporter →
 // obstáculo. Adaptación de host: el clic deja UNA sola selección viva y el
 // clic en vacío deselecciona todo (ver cabecera del archivo).
-canvas.addEventListener('mousedown', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-  const wx = px / lastScale, wy = py / lastScale;
+// E6.5: la selección pasa al mouseup para distinguir clic de arrastre
+// (arrastrar = paneo de la cámara); las coordenadas pasan por la inversa de
+// la cámara (con zoom 1 y sin paneo, la misma cuenta de siempre).
+function selectAt(e) {
+  const [wx, wy] = eventToWorld(e);
   const n = whichrob(wx, wy);
   let tp = 0, obs = 0;
   if (n === 0) tp = whichTeleporter(wx, wy);
@@ -1374,7 +2193,7 @@ canvas.addEventListener('mousedown', (e) => {
   setTpSelection(tp);
   setObsSelection(obs);
   setSelection(n, n > 0);  // postea 'select' → frame fresco aun en pausa
-});
+}
 
 document.getElementById('insp-close').onclick = () => setSelection(0, false);
 document.getElementById('insp-refresh').onclick = () => {
@@ -1425,10 +2244,8 @@ document.addEventListener('keydown', (e) => pbKey(e, true));
 document.addEventListener('keyup', (e) => pbKey(e, false));
 canvas.addEventListener('mousemove', (e) => {
   if (!tgPb.checked) return;
-  const rect = canvas.getBoundingClientRect();
-  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-  worker.postMessage({ t: 'pb-mouse', x: px / lastScale, y: py / lastScale });
+  const [wx, wy] = eventToWorld(e);
+  worker.postMessage({ t: 'pb-mouse', x: wx, y: wy });
 });
 canvas.addEventListener('mouseleave', () => {
   if (tgPb.checked) worker.postMessage({ t: 'pb-mouse', x: 0, y: 0 });
@@ -1944,6 +2761,7 @@ function drawActivations(ga) {
 let familyLines = null;   // segmentos [hx,hy,mx,my,px,py,ctBlanco] × n
 
 function newSim() {
+  clearRichState();
   const seed = parseFloat(document.getElementById('seed').value) || 0;
   const alga = PRESETS.alga;
   worker.postMessage({

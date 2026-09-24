@@ -32,6 +32,7 @@
 #include <memory>
 #include <new>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "dbcore/buckets.hpp"
@@ -58,6 +59,33 @@ struct SimHandle {
   // de serie (nomi) sobreviven a la llamada para que JS los lea uno a uno.
   std::vector<std::string> graphNames;
   db::SnapshotResult lastSnapshot;  // db_sim_snapshot_run
+
+  // E6.5 — estado de la vista enriquecida (solo host: nunca se escribe en
+  // la sim). Una foto por slot del tick anterior para sacar por diferencia
+  // lo que cada bot hizo; ver db_sim_vis_observe.
+  struct Vis {
+    bool primed = false;
+    std::vector<db::vb_long> abs;          // AbsNum por slot (0 = vacío)
+    std::vector<std::uint32_t> actions;    // bits acumulados desde el volcado
+    std::vector<float> shotType;           // último shottype disparado
+    std::vector<std::uint8_t> born;        // nacido desde el último volcado
+    std::vector<float> shell, slime, venom, poison, body, nrg, aim;
+    std::vector<float> px, py, pr, pcol;   // última posición/radio/color
+    std::vector<db::vb_long> kills;
+    std::vector<int> tieMask, fert;
+    std::vector<std::uint8_t> shotExist;   // por slot de shot
+    std::vector<int> shotAge, shotParent;
+    std::vector<float> births;             // 6 floats por evento
+    std::vector<float> deaths;             // 6 floats por evento
+    std::vector<std::string> species;      // índice → FName
+    std::unordered_map<std::string, int> speciesIdx;
+    int speciesVersion = 0;
+    std::vector<float> gdist;              // lente de distancia, por slot
+    std::vector<db::vb_long> gdistAbs;     // AbsNum al que vale gdist
+    int gdistRef = 0;                      // slot de referencia
+    db::vb_long gdistRefAbs = 0;
+    int gdistCursor = 1;
+  } vis;
 
   SimHandle() { wire(); }
   void wire() {
@@ -657,6 +685,344 @@ DB_EXPORT int db_sim_dump_teleporters(void* h, float* out, int max_tp) {
 }
 
 // ---------------------------------------------------------------------------
+// E6.5 — Vista enriquecida (decisión de capa host, fuera de la fidelidad)
+// ---------------------------------------------------------------------------
+// Segunda forma de mirar la misma sim (spec/PLAN-EXTENSIONES.md §E6.5). Todo
+// es LECTURA del Sim: el estado vive en SimHandle::vis y nada consume RNG.
+//
+// Los comandos de mem se consumen dentro del ciclo (21-MEMORIA.md), así que
+// tras el tick no queda qué "ejecutó" un bot. La vista define acción como el
+// EFECTO observable del tick, por diferencia contra el tick anterior:
+//   bit 0 disparo      shot nuevo en su slot (no existía, age reiniciado o
+//                      parent distinto) con parent = el bot
+//   bit 1 reproducción hijo nuevo cuyo parent es el AbsNum del bot
+//   bit 2 sexual       fertilized pasa a > 0
+//   bit 3 tie          un slot Ties(1..9) pasa de vacío a ocupado
+//   bit 4 movimiento   algún last* != 0 o aim cambió
+//   bit 5 shell/slime  shell o Slime suben
+//   bit 6 venom/poison venom o poison suben
+//   bit 7 gana nrg     Kills sube, o nrg sube en un no-vegetal
+//   bit 8 body         body cambia en un no-vegetal (strbody/fdbody; en
+//                      los vegetales el body se mueve solo cada tick)
+// Un slot cuyo AbsNum cambió es otro bot: su foto se reinicia sin acciones.
+}  // extern "C"
+
+namespace {
+
+using Vis = SimHandle::Vis;
+
+template <class T>
+void Grow(std::vector<T>& v, std::size_t n) {
+  if (v.size() < n) v.resize(n, T{});
+}
+
+int TieMask(const db::Bot& b) {
+  int m = 0;
+  for (int k = 1; k <= db::MAXTIES - 1; ++k)
+    if (b.Ties[static_cast<std::size_t>(k)].pnt > 0) m |= 1 << k;
+  return m;
+}
+
+void VisTake(Vis& v, int n, const db::Bot& b) {
+  const std::size_t i = static_cast<std::size_t>(n);
+  v.abs[i] = b.AbsNum;
+  v.shell[i] = b.shell;
+  v.slime[i] = b.Slime;
+  v.venom[i] = b.venom;
+  v.poison[i] = b.poison;
+  v.body[i] = b.body;
+  v.nrg[i] = b.nrg;
+  v.aim[i] = b.aim;
+  v.kills[i] = b.Kills;
+  v.tieMask[i] = TieMask(b);
+  v.fert[i] = b.fertilized;
+  v.px[i] = b.pos.x;   // última posición conocida: el evento de muerte
+  v.py[i] = b.pos.y;   // se dibuja donde se lo vio por última vez
+  v.pr[i] = b.radius;
+  v.pcol[i] = static_cast<float>(b.color);
+}
+
+bool InsideTeleporter(const db::Sim& sim, float x, float y, float r) {
+  for (int t = 1; t <= sim.numTeleporters; ++t) {
+    const db::Teleporter& tp = sim.Teleporters[static_cast<std::size_t>(t)];
+    if (!tp.exist || !(tp.Out || tp.Internet)) continue;
+    if (x >= tp.pos.x - r && x <= tp.pos.x + tp.Width + r &&
+        y >= tp.pos.y - r && y <= tp.pos.y + tp.Height + r)
+      return true;
+  }
+  return false;
+}
+
+void VisResize(Vis& v, const db::Sim& sim) {
+  const std::size_t n = static_cast<std::size_t>(sim.MaxRobs) + 1;
+  Grow(v.abs, n); Grow(v.actions, n); Grow(v.shotType, n); Grow(v.born, n);
+  Grow(v.shell, n); Grow(v.slime, n); Grow(v.venom, n); Grow(v.poison, n);
+  Grow(v.body, n); Grow(v.nrg, n); Grow(v.aim, n); Grow(v.kills, n);
+  Grow(v.tieMask, n); Grow(v.fert, n); Grow(v.px, n); Grow(v.py, n);
+  Grow(v.pr, n); Grow(v.pcol, n); Grow(v.gdist, n); Grow(v.gdistAbs, n);
+  const std::size_t ns = static_cast<std::size_t>(sim.maxshotarray) + 1;
+  Grow(v.shotExist, ns); Grow(v.shotAge, ns); Grow(v.shotParent, ns);
+}
+
+// Un shot "vivo" para la foto: existe o está en su frame de destello.
+bool ShotAlive(const db::Shot& s) { return (s.exist && !s.stored) || s.flash; }
+
+constexpr std::size_t kMaxEvents = 2000;  // por volcado (6 floats cada uno)
+
+}  // namespace
+
+extern "C" {
+
+// Toma la foto de referencia sin generar acciones ni eventos: al encender
+// la vista, tras un reset o tras una siembra/carga que no son "nacimientos".
+DB_EXPORT void db_sim_vis_reset(void* h) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  VisResize(v, sim);
+  for (int n = 1; n <= sim.MaxRobs; ++n) {
+    const db::Bot& b = sim.rob[n];
+    const std::size_t i = static_cast<std::size_t>(n);
+    v.actions[i] = 0;
+    v.born[i] = 0;
+    if (b.exist) VisTake(v, n, b);
+    else v.abs[i] = 0;
+  }
+  for (db::vb_long k = 1; k <= sim.maxshotarray; ++k) {
+    const db::Shot& s = sim.Shots[static_cast<std::size_t>(k)];
+    const std::size_t i = static_cast<std::size_t>(k);
+    v.shotExist[i] = ShotAlive(s) ? 1 : 0;
+    v.shotAge[i] = s.age;
+    v.shotParent[i] = s.parent;
+  }
+  v.births.clear();
+  v.deaths.clear();
+  v.primed = true;
+}
+
+// Tras cada db_sim_tick (solo con la vista encendida): acumula acciones y
+// eventos del tick. O(MaxRobs + maxshotarray), solo lectura del Sim.
+DB_EXPORT void db_sim_vis_observe(void* h) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  if (!v.primed) { db_sim_vis_reset(h); return; }
+  VisResize(v, sim);
+
+  // Muertes primero (el slot pudo reusarse en el mismo tick), luego bots.
+  std::vector<int> newborn;  // slots con bot nuevo ESTE tick
+  for (int n = 1; n <= sim.MaxRobs; ++n) {
+    const db::Bot& b = sim.rob[n];
+    const std::size_t i = static_cast<std::size_t>(n);
+    const bool same = b.exist && v.abs[i] == b.AbsNum;
+    if (v.abs[i] != 0 && !same && v.deaths.size() < kMaxEvents * 6) {
+      const bool tp = InsideTeleporter(sim, v.px[i], v.py[i], v.pr[i]);
+      v.deaths.insert(v.deaths.end(),
+                      {v.px[i], v.py[i], v.pr[i], v.pcol[i],
+                       static_cast<float>(v.abs[i]), tp ? 1.0f : 0.0f});
+    }
+    if (!b.exist) { v.abs[i] = 0; v.actions[i] = 0; continue; }
+    if (!same) {
+      // Otro bot en el slot: nacido (o sembrado/teletransportado) este tick.
+      v.actions[i] = 0;
+      v.born[i] = 1;
+      v.shotType[i] = 0;
+      VisTake(v, n, b);
+      if (b.parent != 0) newborn.push_back(n);
+      continue;
+    }
+    std::uint32_t a = 0;
+    if (b.fertilized > 0 && v.fert[i] <= 0) a |= 1u << 2;
+    const int tm = TieMask(b);
+    if (tm & ~v.tieMask[i]) a |= 1u << 3;
+    if (b.lastup || b.lastdown || b.lastleft || b.lastright ||
+        b.aim != v.aim[i])
+      a |= 1u << 4;
+    if (b.shell > v.shell[i] || b.Slime > v.slime[i]) a |= 1u << 5;
+    if (b.venom > v.venom[i] || b.poison > v.poison[i]) a |= 1u << 6;
+    if (b.Kills > v.kills[i] || (!b.Veg && b.nrg > v.nrg[i])) a |= 1u << 7;
+    if (!b.Veg && b.body != v.body[i]) a |= 1u << 8;
+    v.actions[i] |= a;
+    VisTake(v, n, b);
+  }
+
+  // Nacimientos: el bit de reproducción de la madre y el evento con línea.
+  if (!newborn.empty()) {
+    std::unordered_map<db::vb_long, int> slotOf;  // AbsNum → slot
+    for (int m = 1; m <= sim.MaxRobs; ++m)
+      if (sim.rob[m].exist) slotOf.emplace(sim.rob[m].AbsNum, m);
+    for (const int n : newborn) {
+      const db::Bot& b = sim.rob[n];
+      float mx = std::nanf(""), my = std::nanf("");
+      const auto it = slotOf.find(b.parent);
+      if (it != slotOf.end()) {
+        const db::Bot& o = sim.rob[it->second];
+        mx = o.pos.x;
+        my = o.pos.y;
+        v.actions[static_cast<std::size_t>(it->second)] |= 1u << 1;
+      }
+      if (v.births.size() < kMaxEvents * 6)
+        v.births.insert(v.births.end(),
+                        {b.pos.x, b.pos.y, mx, my, static_cast<float>(b.color),
+                         static_cast<float>(b.AbsNum)});
+    }
+  }
+
+  // Disparos: slot de shot recién ocupado → acción del tirador (parent es
+  // el SLOT del tirador, sim.hpp:68).
+  for (db::vb_long k = 1; k <= sim.maxshotarray; ++k) {
+    const db::Shot& s = sim.Shots[static_cast<std::size_t>(k)];
+    const std::size_t i = static_cast<std::size_t>(k);
+    const bool alive = ShotAlive(s);
+    if (alive && (!v.shotExist[i] || s.age < v.shotAge[i] ||
+                  s.parent != v.shotParent[i])) {
+      const int p = s.parent;
+      if (p >= 1 && p <= sim.MaxRobs && sim.rob[p].exist) {
+        v.actions[static_cast<std::size_t>(p)] |= 1u;
+        v.shotType[static_cast<std::size_t>(p)] = static_cast<float>(s.shottype);
+      }
+    }
+    v.shotExist[i] = alive ? 1 : 0;
+    v.shotAge[i] = s.age;
+    v.shotParent[i] = s.parent;
+  }
+}
+
+// Registro extendido, 24 floats por bot, en el MISMO orden que
+// db_sim_dump_bots (slots 1..MaxRobs existentes) — la página los empareja
+// por fila:
+//   [0] AbsNum          [1] AbsNum de la madre   [2] generation
+//   [3] Mutations       [4] age                  [5] DnaLen
+//   [6] Kills           [7] acciones (bits, ver arriba; se limpian aquí)
+//   [8] estado: bit0 Paralyzed, bit1 Poisoned, bit2 virus (Vtimer > 0),
+//       bit3 fertilized > 0, bit4 nacido desde el último volcado
+//   [9] ojos que ven (bit a = mem(EyeStart + a + 1) > 0)
+//   [10] índice de especie (tabla por FName; db_sim_vis_species_*)
+//   [11] numties        [12..20] dirección de cada ojo, la misma cuenta que
+//        db_sim_dump_focus: (mem(EYE1DIR + a) Mod 1256) / 200
+//   [21] distancia genética al bot de referencia (−1 = sin dato)
+//   [22] último shottype disparado  [23] reservado
+DB_EXPORT int db_sim_dump_bots_vis(void* h, float* out, int max_bots) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  VisResize(v, sim);
+  int written = 0;
+  for (int n = 1; n <= sim.MaxRobs && written < max_bots; ++n) {
+    const db::Bot& b = sim.rob[n];
+    if (!b.exist) continue;
+    const std::size_t i = static_cast<std::size_t>(n);
+    float* r = out + written * 24;
+    r[0] = static_cast<float>(b.AbsNum);
+    r[1] = static_cast<float>(b.parent);
+    r[2] = static_cast<float>(b.generation);
+    r[3] = static_cast<float>(b.Mutations);
+    r[4] = static_cast<float>(b.age);
+    r[5] = static_cast<float>(b.DnaLen);
+    r[6] = static_cast<float>(b.Kills);
+    const bool mine = v.abs[i] == b.AbsNum;
+    r[7] = mine ? static_cast<float>(v.actions[i]) : 0.0f;
+    r[8] = static_cast<float>((b.Paralyzed ? 1 : 0) | (b.Poisoned ? 2 : 0) |
+                              (b.Vtimer > 0 ? 4 : 0) |
+                              (b.fertilized > 0 ? 8 : 0) |
+                              (mine && v.born[i] ? 16 : 0));
+    int seen = 0;
+    for (int a = 0; a <= 8; ++a)
+      if (b.mem[db::addr::EyeStart + 1 + a] > 0) seen |= 1 << a;
+    r[9] = static_cast<float>(seen);
+    auto it = v.speciesIdx.find(b.FName);
+    if (it == v.speciesIdx.end()) {
+      it = v.speciesIdx.emplace(b.FName, static_cast<int>(v.species.size()))
+               .first;
+      v.species.push_back(b.FName);
+      ++v.speciesVersion;
+    }
+    const int sp = it->second;
+    r[10] = static_cast<float>(sp);
+    r[11] = b.numties;
+    for (int a = 0; a <= 8; ++a)
+      r[12 + a] = static_cast<float>(
+          static_cast<double>(b.mem[db::addr::EYE1DIR + a] % 1256) / 200.0);
+    r[21] = (v.gdistRef > 0 && v.gdistAbs[i] == b.AbsNum) ? v.gdist[i] : -1.0f;
+    r[22] = mine ? v.shotType[i] : 0.0f;
+    r[23] = 0.0f;
+    if (mine) { v.actions[i] = 0; v.born[i] = 0; }
+    ++written;
+  }
+  return written;
+}
+
+// Eventos acumulados desde el último volcado; kind 0 = nacimientos
+// [x, y, madre.x, madre.y (NaN si no está), color, AbsNum], kind 1 = muertes
+// [x, y, radio, color, AbsNum, 1 si salió por un teleporter]. Copia hasta
+// `max` eventos, vacía la lista y devuelve cuántos copió.
+DB_EXPORT int db_sim_vis_events(void* h, int kind, float* out, int max) {
+  std::vector<float>& ev = kind == 0 ? H(h).vis.births : H(h).vis.deaths;
+  const int n = std::min(static_cast<int>(ev.size() / 6), max);
+  if (n > 0) std::memcpy(out, ev.data(), static_cast<std::size_t>(n) * 6 * 4);
+  ev.clear();
+  return n;
+}
+
+// Tabla de especies de la vista (FName por índice). La versión cambia cuando
+// aparece un nombre nuevo (mutación con auto-especiación, carga, siembra).
+DB_EXPORT int db_sim_vis_species_version(void* h) {
+  return H(h).vis.speciesVersion;
+}
+DB_EXPORT int db_sim_vis_species_count(void* h) {
+  return static_cast<int>(H(h).vis.species.size());
+}
+DB_EXPORT char* db_sim_vis_species_name(void* h, int i) {
+  const auto& sp = H(h).vis.species;
+  const std::string s = (i >= 0 && static_cast<std::size_t>(i) < sp.size())
+                            ? sp[static_cast<std::size_t>(i)] : std::string();
+  char* p = static_cast<char*>(std::malloc(s.size() + 1));
+  if (p) std::memcpy(p, s.c_str(), s.size() + 1);
+  return p;
+}
+
+// Lente "distancia genética": fija el bot de referencia (0 = apagada) y
+// reinicia el recorrido.
+DB_EXPORT void db_sim_vis_gendist_ref(void* h, int ref) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  VisResize(v, sim);
+  v.gdistRef = (ref >= 1 && ref <= sim.MaxRobs && sim.rob[ref].exist) ? ref : 0;
+  v.gdistRefAbs = v.gdistRef ? sim.rob[v.gdistRef].AbsNum : 0;
+  v.gdistCursor = 1;
+  std::fill(v.gdistAbs.begin(), v.gdistAbs.end(), 0);
+}
+
+// Avanza el recorrido hasta `pairs` pares (ref, n) con DoGeneticDistance
+// (Robots.bas:534-560, O(DnaLen²)). Devuelve 1 al completar una vuelta
+// (el cursor vuelve a 1), 0 si queda trabajo, −1 si la referencia murió.
+// El único efecto del core fuera de su resultado es el contador de
+// diagnóstico err9_simplematch: se guarda y se restaura (la vista no puede
+// dejar rastro en la sim, ni siquiera en SimDiag).
+DB_EXPORT int db_sim_vis_gendist_step(void* h, int pairs) {
+  Vis& v = H(h).vis;
+  db::Sim& sim = S(h);
+  VisResize(v, sim);
+  const int ref = v.gdistRef;
+  if (!ref) return -1;
+  if (!sim.rob[ref].exist || sim.rob[ref].AbsNum != v.gdistRefAbs) {
+    v.gdistRef = 0;
+    return -1;
+  }
+  const auto saved = sim.diag.err9_simplematch;
+  int done = 0;
+  while (done < pairs && v.gdistCursor <= sim.MaxRobs) {
+    const int n = v.gdistCursor++;
+    const db::Bot& b = sim.rob[n];
+    if (!b.exist) continue;
+    const std::size_t i = static_cast<std::size_t>(n);
+    v.gdist[i] = n == ref ? 0.0f : db::DoGeneticDistance(sim, ref, n);
+    v.gdistAbs[i] = b.AbsNum;
+    ++done;
+  }
+  sim.diag.err9_simplematch = saved;
+  if (v.gdistCursor > sim.MaxRobs) { v.gdistCursor = 1; return 1; }
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Obstaculos y teleporters (altas; la capa host decide donde y de que color)
 // ---------------------------------------------------------------------------
 
@@ -1057,6 +1423,7 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   Sh.wire();
   db::VbBinFile f;
   f.data.assign(data, data + (len > 0 ? len : 0));
+  Sh.vis = SimHandle::Vis{};  // E6.5: los slots de antes no valen
   db::LoadSimulation(Sh.sim, f);
   RecomputeDivisors(Sh.sim);
   db::InitBuckets(Sh.sim);
