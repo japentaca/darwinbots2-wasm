@@ -265,7 +265,8 @@ inline void UpdateSim(Sim& sim) {
 
   // Paso 18 (Master.bas:382-383): obstáculos y teleporters.
   if (sim.numObstacles > 0) MoveObstacles(sim);
-  if (sim.numTeleporters > 0) UpdateTeleporters(sim);
+  // E7: el paso 18 carga con los globales de proceso (TickFormatGlobals).
+  if (sim.numTeleporters > 0) UpdateTeleporters(sim, TickFormatGlobals(sim));
 
   // Paso 19 (Master.bas:384-390): suma de cloroplastos. AllChlr es Long y
   // la suma Long + Single se redondea bancario EN CADA iteración (la

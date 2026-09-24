@@ -2293,3 +2293,84 @@ con `DnaLen = 0`) y aquí se salta el sumando; el `SubSpeciesNumber` de
 bypass` de `RedrawGraph` se traga el redibujo entero una vez cada 1001 puntos
 (con `Pivot = 0`, `ReorderSeries` indexa `data(-1)`) — replicado en el chart
 de la página.
+
+## 14. Familia E7 — Internet (extensión E7, 2026-09-24)
+
+> Extensión de la suite acordada en `PLAN-EXTENSIONES.md §E7`. La etapa es
+> **capa host** (el transporte de los `.dbo` entre navegadores, `writeIMdata`,
+> `InternetSpecies`) salvo esta rebanada mínima de core.
+>
+> **Por qué se abre el core** (la parada documentada que pide el brief de E7):
+> el `.dbo` que viaja lo produce el core **dentro** del tick (P0a,
+> `CheckTeleporters` → `SaveOrganism`) y el organismo muere en el acto
+> (`KillOrganism`), así que la capa host no puede volver a serializarlo. Ese
+> registro lee globales de **proceso** del original — `IntOpts.IName`
+> (`SaveOrganism` estampa `rob(k).LastOwner = IntOpts.IName`,
+> `HDRoutines.bas:232`), `sunbelt` (`SaveRobotBody`, `:2211-2213`),
+> `MDIForm1.SaveWithoutMutations` (`:2112-2116`) y `y_eco_im` — que el port
+> modela desde M5 como `FormatGlobals`, pero el tick los pasaba **por
+> defecto**: todo organismo exportado llevaba `LastOwner = ""` y
+> `sunbelt = False` aunque la sim tuviera `sim.sunbelt` encendido. El
+> receptor, además, nunca veía el apodo del emisor (el dato de "de dónde
+> vino" que el inspector del original muestra).
+>
+> **Cambio**: `FormatGlobals` pasa a `sim.hpp`; `Sim` gana `fmt` y el tick lo
+> entrega a P0a y al paso 18 vía `TickFormatGlobals` (`robots.hpp`), que
+> toma `sunbelt` de `sim.sunbelt` (un solo global en VB6) y fuerza
+> `lblSaving_visible = False` (el cartel solo existe dentro de
+> `SaveSimulation`/`LoadSimulation`). Con `fmt` por defecto el comportamiento
+> es el de antes: la suite heredada quedó **intacta por construcción** (172
+> casos / 3465 aserciones sin retocar un caso).
+>
+> **No persistido**: son globales de proceso; `SaveSimulation` no los
+> escribe (E7-04). La capa host los fija (apodo del panel Internet).
+>
+> **Inventario RNG**: **0 extracciones** nuevas (E7-04 compara el flujo con
+> y sin globales; la poda de E7-05 no consume RNG).
+
+| Caso | Qué fija | Fuente |
+|---|---|---|
+| **E7-01** | `LastOwner`: el organismo que sale por un puerto Internet (o `Out`) en el tick lleva el apodo del EMISOR; sin apodo sale `""` y el cargador lo convierte en `"Local"`; la célula muerta del emisor queda estampada (se escribe ANTES de serializar); el apodo del receptor no interviene al cargar. | `HDRoutines.bas:228-233`, `:1707-1709`, `Teleport.bas:175-178` |
+| **E7-02** | `sunbelt` del registro = el global de la sim: encendido, las 4 tasas sunbelt viajan; apagado, `LoadRobotBody` las pone a 0 en el receptor. | `HDRoutines.bas:2211-2213`, `:1884`, `:1968-1975` |
+| **E7-03** | `SaveWithoutMutations` alcanza al registro del tick: el detalle de mutaciones viaja reemplazado por el texto fijo. | `HDRoutines.bas:2112-2116` |
+| **E7-04** | Inventario: mismo flujo RNG (y misma posición de llegada) con y sin globales; el formato de sim no tiene dónde guardar el apodo (`SaveSimulation` byte a byte idéntico recibiendo `IName`) y una sim recargada nace con `fmt` por defecto. | `HDRoutines.bas:541`, `:1332` |
+| **E7-05** | `RemoveExtinctSpecies` al final de P6: las especies **no nativas** con población 0 salen del registro (las nativas y las que tienen bots quedan); con 46 especies extintas el receptor las poda en P6 y el organismo entra en el paso 18 del **mismo** tick; con el registro lleno (`SpeciesNum = MAXNATIVESPECIES` = 76) `UpdateCounters` ni agrega la especie nueva ni cuenta la población de ninguna, así que la poda se lleva a todas las no nativas **aunque tengan bots vivos** y al tick siguiente vuelven a registrarse — `[PROBABLE BUG]` replicado. | `Robots.bas:1144-1159`, `:1449-1471`, `:1645`, `Teleport.bas:383` |
+
+**E7-05 es un hueco heredado de M3/M6**, no algo nuevo de la etapa: el port
+tenía `RemoveExtinctSpecies` como "mantenimiento del registro ⚙; sin efecto
+en `mem()`" y `UpdateCounters` sin los topes de `MAXNATIVESPECIES`. No toca
+`mem()`, pero `SpeciesNum` es el **gate de `TeleportInBots`** (`> 45` suspende
+toda entrada, `Teleport.bas:383`) y de la auto-especiación (`< 49`,
+`NeoMutations.bas:209`): sin la poda, cada especie que llega por Internet y se
+extingue queda registrada para siempre y, tras 46, la sim deja de aceptar
+organismos (y de bifurcar especies) hasta reiniciarse. Salió al diseñar el
+transporte de E7, que es justamente lo que hace llegar especies nuevas sin
+parar. La suite heredada no dependía del registro sin podar (172 casos
+intactos).
+
+Los cinco casos viven en `port/tests/test_internet.cpp`; E7-01..E7-04
+ejercitan el viaje completo por dos ticks reales (`UpdateSim` del emisor y
+del receptor, con el buzón movido a mano como lo mueve la capa host). Suite
+tras E7: **178 casos / 3544 aserciones** en verde en los tres modos, con
+mutation-check (sin el `g` de P0a caen E7-01..E7-03; sin el `sunbelt` de
+`TickFormatGlobals` cae E7-02; sin la llamada a `RemoveExtinctSpecies` o sin
+los topes de `UpdateCounters` cae E7-05).
+
+**E7-06** (de la revisión de rama) — `UpdateCounters` (`Robots.bas:1152`) y
+la auto-especiación (`NeoMutations.bas:212`) llaman al `AddSpecie` completo
+de `HDRoutines.bas:244-282` (Veg, color, qty 5, Stnrg 3000, tasas por
+defecto, `"Species arrived from the Internet"`, `Native = False`); el port
+usaba desde M3 un "registro mínimo" de nombre + población, y la especie
+nueva quedaba con color 0 y `Veg = False` (se veía en el censo de Internet,
+en los gráficos y al guardar la sim). Y con el registro lleno (`k =
+SpeciesNum = 76`) el original escribe `Specie(76)`, el slot de reserva de
+`SimOptions.bas:65` (`Specie(MAXNATIVESPECIES + 1)`), sin tocar las 76
+vivas: el port pisaba la especie 75. Ahora es `Sim::SpecieSpare`.
+
+| Caso | Qué fija | Fuente |
+|---|---|---|
+| **E7-06** | La especie que registra `UpdateCounters` lleva los datos del bot (color, Veg) y los defaults de red; con el registro lleno el alta va al slot de reserva y la especie 75 queda intacta. | `HDRoutines.bas:244-282`, `Robots.bas:1152`, `SimOptions.bas:65` |
+
+**Eco-IM** (`y_eco_im`) queda alcanzable por `sim.fmt`, pero sin caso: el
+modo es la variante de red de la carrera evo que E5 dejó fuera
+(`PLAN-EXTENSIONES.md §E7`), y B8-3 sigue catalogado "fuera del core" en §9.

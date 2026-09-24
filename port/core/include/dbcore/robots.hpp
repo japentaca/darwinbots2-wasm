@@ -114,16 +114,38 @@ inline void Decay(Sim& sim, int n) {
   }
 }
 
+// Robots.bas:1449-1471 — DeleteSpecies + RemoveExtinctSpecies (P6, :1645).
+// Las especies NO nativas con población 0 salen del registro; el índice no
+// avanza tras borrar (se re-mira la misma posición). SpeciesNum es el gate
+// de TeleportInBots (> 45) y de la auto-especiación (< 49): sin la poda,
+// las especies llegadas por Internet que se extinguen cerraban la entrada
+// para siempre (E7-05). El `.Native = False` sobre el último slot que hace
+// DeleteSpecies cae fuera del registro (el vector se achica).
+inline void RemoveExtinctSpecies(Sim& sim) {
+  std::size_t i = 0;
+  while (i < sim.Specie.size()) {
+    if (sim.Specie[i].population == 0 && !sim.Specie[i].Native)
+      sim.Specie.erase(sim.Specie.begin() + static_cast<std::ptrdiff_t>(i));
+    else
+      i += 1;
+  }
+}
+
 // Robots.bas:1139-1172 — UpdateCounters (P2): contadores + Decay/KillRobot
 // inmediato para corpses sin body.
 inline void UpdateCounters(Sim& sim, int n) {
   sim.TotalRobots += 1;
 
+  // :1149-1156 — con el registro lleno (SpeciesNum = MAXNATIVESPECIES) ni
+  // se agrega la especie nueva ni se cuenta la población de NINGUNA
+  // (E7-05: RemoveExtinctSpecies las ve en 0 y poda las no nativas).
   std::size_t i = SpeciesFromBot(sim, n);
+  const bool room =
+      static_cast<vb_long>(sim.Specie.size()) < MAXNATIVESPECIES;
   if (!sim.rob[n].Corpse) {
-    if (i == sim.Specie.size())
-      AddSpecie(sim, n);
-    else
+    if (i == sim.Specie.size() && room)
+      AddSpecieFromFile(sim, n, false);  // Robots.bas:1152 (E7-06)
+    else if (room)
       sim.Specie[i].population += 1;
   }
   if (i < sim.Specie.size() && sim.Specie[i].population > 32000)
@@ -1817,6 +1839,19 @@ inline void TeleportInBots(Sim& sim, const FormatGlobals& g = {}) {
   }
 }
 
+// E7 (70-CASOS-DORADOS.md §14) — los globales de proceso que el tick del
+// original lee al serializar/cargar por teleporter: IntOpts.IName
+// (LastOwner, HDRoutines.bas:232), MDIForm1.SaveWithoutMutations, y_eco_im
+// y sunbelt. `sunbelt` es UN solo global en VB6 (Globals.bas): manda
+// sim.sunbelt, el mismo que leen las mutaciones. Form1.lblSaving solo es
+// visible dentro de SaveSimulation/LoadSimulation, nunca durante el tick.
+inline FormatGlobals TickFormatGlobals(const Sim& sim) {
+  FormatGlobals g = sim.fmt;
+  g.sunbelt = sim.sunbelt;
+  g.lblSaving_visible = false;
+  return g;
+}
+
 // Teleport.bas:458-468 — UpdateTeleporters (paso 18 del tick).
 inline void UpdateTeleporters(Sim& sim, const FormatGlobals& g = {}) {
   for (int i = 1; i <= sim.numTeleporters; ++i) {
@@ -1856,9 +1891,12 @@ inline void UpdateBots(Sim& sim) {
   // P0a — teleporters (Robots.bas:1505-1512): la salida corre ANTES que
   // ninguna otra pasada (NetForces puede tocar bots más adelante). Mareas
   // (Tides): ⚙ opcional, fuera (BouyancyScaling queda en 1).
-  for (int t = 1; t <= sim.MaxRobs; ++t) {
-    if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
-      if (sim.numTeleporters > 0) CheckTeleporters(sim, t);
+  if (sim.numTeleporters > 0) {
+    const FormatGlobals g = TickFormatGlobals(sim);  // E7
+    for (int t = 1; t <= sim.MaxRobs; ++t) {
+      if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
+        if (sim.numTeleporters > 0) CheckTeleporters(sim, t, g);
+      }
     }
   }
 
@@ -1964,7 +2002,7 @@ inline void UpdateBots(Sim& sim) {
 
   // P6 — nacimientos y muertes.
   ReproduceAndKill(sim);
-  // RemoveExtinctSpecies: mantenimiento del registro ⚙; sin efecto en mem().
+  RemoveExtinctSpecies(sim);  // :1645 (E7-05)
 
   if (sim.totnvegs == 0 && sim.opts.Restart && !sim.opts.F1) {
     sim.f1.ReStarts += 1;  // E5 (Robots.bas:1654)

@@ -189,7 +189,7 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 172 casos / 3465 aserciones en verde (en los tres modos), con las extensiones E1..E6 y E6.5 cerradas (ver `spec/PROGRESO.md`).
+Estado verificado: 178 casos / 3544 aserciones en verde (en los tres modos), con las extensiones E1..E7 y E6.5 cerradas (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -320,6 +320,61 @@ cd port && python -m http.server 8000
 Cualquier servidor estático sirve (`npx http-server`, etc.); el MIME
 `application/wasm` es opcional (Emscripten degrada a instanciación por
 ArrayBuffer si falta).
+
+### Internet Mode (etapa E7)
+
+El original nunca habló con la red: el menú Internet creaba un teleporter
+Internet y lanzaba un programa aparte, `DarwinbotsIM.exe`, que movía los
+`.dbo` entre las carpetas inbound/outbound y un servidor
+(`MDIForm1.frm:1259-1380`). El port conserva esa forma: el core solo llena
+y vacía los buzones del teleporter y un **cliente IM** (`web/imnet.js`,
+dentro del worker) mueve los organismos entre sims. Panel "Internet Mode"
+de la página:
+
+- **Apodo** (`IntOpts.IName`): viaja como `LastOwner` en cada organismo que
+  sale; vacío, el toggle sortea "Newbie N" con el RNG de la sim, como el
+  original.
+- **Transporte**: *Pestañas de este navegador* (`BroadcastChannel`, sin
+  servidor: sirve también en la demo de Pages) o *Relay WebSocket*.
+- **Sala**: sims que se ven entre sí. El destino de cada organismo lo sortea
+  el emisor entre los pares vivos; sin pares espera en cola, y lo que no se
+  confirma en 8 s se re-sortea (un par que se cae no se lleva organismos).
+- Cada 200 ciclos sale el censo de `writeIMdata` (`main.frm:3126`); los
+  censos de los pares se listan en el panel y llenan `InternetSpecies`, que
+  el color de serie de los gráficos consulta (en el original la lista nunca
+  se llenaba).
+
+Relay (Node ≥ 22, sin dependencias) — sirve además la página, así que
+reemplaza al `http.server`:
+
+```
+cd port && node tools/imrelay/relay.mjs          # ws://localhost:8060/im
+# → http://localhost:8060/web/  (el panel propone ese relay solo)
+node tools/imrelay/relay.mjs --port 9000 --host 127.0.0.1 --no-static
+```
+
+Smoke test (dos `worker.js` reales en `worker_threads`, por
+`BroadcastChannel` y por el relay; necesita `build-wasm/dbcore.js`):
+
+```
+cd port && node tools/imrelay/smoke_im.mjs
+```
+
+La etapa abrió el core en dos puntos, con casos dorados (familia E7 de
+`spec/70-CASOS-DORADOS.md §14`): el tick pasa los globales de proceso
+(`Sim::fmt`: apodo, sunbelt, SaveWithoutMutations) a los teleporters, y
+`RemoveExtinctSpecies` poda el registro de especies en P6 (sin ella, tras 46
+especies llegadas y extinguidas, el gate de `TeleportInBots` cerraba la
+entrada para siempre); de paso, el alta de especies de `UpdateCounters` es
+ahora el `AddSpecie` completo del original.
+
+Semántica de las transiciones (del fuente): una **sim nueva apaga** Internet
+Mode (`StartNew_Click` llama al toggle, `OptionsForm.frm:4802`); una **ronda
+nueva** (F1/restart) lo conserva y los teleporters pasan tal cual al handle
+nuevo; **cargar** una sim borra el puerto (`LoadSimulation`) y el modo queda
+encendido sin puerto hasta reconectar. Nada se pierde en el camino: lo que
+espera salir sigue en la cola del cliente y lo recibido y no cargado queda
+retenido para el próximo puerto.
 
 ### Toolchain verificado (Windows 11, 2026-08-26)
 

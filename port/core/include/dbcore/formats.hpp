@@ -32,17 +32,8 @@
 
 namespace db {
 
-// Globales de guardado del original que no viven en SimOpts (flags de UI y
-// modo eco-IM). Defaults = los del harness (70-CASOS-DORADOS.md §0).
-struct FormatGlobals {
-  bool UseEpiGene = false;          // checkbox de opciones (salvarob)
-  bool SaveWithoutMutations = false;  // MDIForm1.SaveWithoutMutations
-  int y_eco_im = 0;                 // modo eco-IM (⚙): reescribe el tag
-  bool sunbelt = false;             // global de mutaciones sunbelt
-  bool lblSaving_visible = false;   // Form1.lblSaving (pantalla de autosave)
-  std::string IName;                // IntOpts.IName (LastOwner al guardar
-                                    // organismos; "" -> "Local" en el campo)
-};
+// FormatGlobals (los globales de guardado del original que no viven en
+// SimOpts) se define en sim.hpp desde E7: el tick los lee de Sim::fmt.
 
 // ---------------------------------------------------------------------------
 // Archivo binario de VB6 sobre un búfer en memoria. Posición 0-based
@@ -956,9 +947,13 @@ inline void SaveOrganism(Sim& sim, VbBinFile& f, int r,
 // qty = 5, Stnrg = 3000, tasas por defecto (la rama NormMut de
 // SetDefaultMutationRates está acoplada a la UI y NormMut nace False;
 // nótese que SIN skipNorm el P2UP NO se pone a 0, a diferencia del
-// cargador binario). El original con el registro lleno (k = 75) escribe
-// igualmente sobre el último slot sin incrementar SpeciesNum; aquí se
-// replica sobrescribiendo el último elemento del vector.
+// cargador binario). Con el registro lleno (k = SpeciesNum = 76) el
+// original escribe Specie(76), el slot de reserva de SimOptions.bas:65
+// (`Specie(MAXNATIVESPECIES + 1)`), sin incrementar SpeciesNum: las 76
+// especies vivas quedan intactas. Aquí ese slot es Sim::SpecieSpare (E7-06;
+// hasta E7 el port pisaba la especie 75). Desde E7 también es el AddSpecie
+// de UpdateCounters (Robots.bas:1152) y de la auto-especiación
+// (NeoMutations.bas:212), que el port resolvía con un registro mínimo.
 inline vb_integer AddSpecieFromFile(Sim& sim, int n, bool IsNative) {
   Bot& b = sim.rob[n];
   if (b.Corpse || b.FName == "Corpse" || !b.exist) return 0;
@@ -969,7 +964,7 @@ inline vb_integer AddSpecieFromFile(Sim& sim, int n, bool IsNative) {
     sim.Specie.emplace_back();
     spp = &sim.Specie.back();
   } else {
-    spp = &sim.Specie.back();  // Specie(k) con SpeciesNum sin crecer
+    spp = &sim.SpecieSpare;  // Specie(76) con SpeciesNum sin crecer
   }
   Specie& sp = *spp;
 
