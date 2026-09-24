@@ -577,6 +577,8 @@ struct Sim {
   // sin calificar, -Wchanges-meaning). El nombre viene del original
   // (Dim Specie() As Specie) y se conserva.
   std::vector<db::Specie> Specie;
+  db::Specie SpecieSpare;  // Specie(MAXNATIVESPECIES): slot de reserva
+                           // de SimOptions.bas:65 (E7-06)
 
   // Shots (Shots.bas:39-44). Índice 0 sin uso, como el original.
   std::vector<Shot> Shots = std::vector<Shot>(301);
@@ -734,13 +736,9 @@ inline std::size_t SpeciesFromBot(Sim& sim, int n) {
   return i;
 }
 
-inline void AddSpecie(Sim& sim, int n) {
-  Specie sp;
-  sp.Name = sim.rob[n].FName;
-  sp.population = 1;
-  sp.Native = false;
-  sim.Specie.push_back(sp);
-}
+// AddSpecie (HDRoutines.bas:244-282) vive en formats.hpp como
+// AddSpecieFromFile; desde E7 también lo usan UpdateCounters y la
+// auto-especiación (antes, un registro mínimo de nombre + población).
 
 // NeoMutations.bas:108-116 — NewSubSpecies: contador por especie con wrap
 // manual +32000 -> -32000. Especie no registrada: el original indexaria

@@ -207,16 +207,23 @@ TEST_CASE("E7-04 inventario: 0 RNG y Sim.fmt no se persiste") {
     CHECK(a.rx.sim.rob[na].pos.x == b.rx.sim.rob[nb].pos.x);
     CHECK(a.rx.sim.rob[na].pos.y == b.rx.sim.rob[nb].pos.y);
   }
-  SUBCASE("SaveSimulation no escribe Sim.fmt") {
-    World a, b;
+  SUBCASE("el formato de sim no tiene dónde guardar el apodo") {
+    // SaveSimulation no estampa LastOwner (eso es SaveOrganism) ni escribe
+    // IntOpts.IName: aun recibiendo los globales, el archivo sale igual. Al
+    // recargar, Sim::fmt nace por defecto (global de proceso).
+    World a;
     a.spawn("X.txt", 3000.0f, 3000.0f);
-    b.spawn("X.txt", 3000.0f, 3000.0f);
-    b.sim.fmt.IName = "Pepe";
-    b.sim.fmt.y_eco_im = 1;
+    FormatGlobals g;
+    g.IName = "Pepe";
+    g.lblSaving_visible = true;   // el cartel del guardado (:541)
     VbBinFile fa, fb;
     SaveSimulation(a.sim, fa);
-    SaveSimulation(b.sim, fb);
+    SaveSimulation(a.sim, fb, g);
     CHECK(fa.data == fb.data);
+    Sim back;
+    fb.pos = 0;
+    LoadSimulation(back, fb);
+    CHECK(back.fmt.IName.empty());
   }
 }
 
@@ -279,5 +286,46 @@ TEST_CASE("E7-05 RemoveExtinctSpecies: el registro se poda en P6") {
     // Al tick siguiente hay lugar: los bots vivos vuelven a registrarse.
     w.tick();
     CHECK(w.sim.Specie.size() == 3);
+  }
+}
+
+// ---------------------------------------------------------------------------
+TEST_CASE("E7-06 AddSpecie completo en UpdateCounters y en la auto-especiación") {
+  // Robots.bas:1152 y NeoMutations.bas:212 llaman al AddSpecie de
+  // HDRoutines.bas:244-282 (el mismo que usa LoadOrganism): Veg, color,
+  // qty 5, Stnrg 3000, tasas por defecto, Native = False. El port usaba un
+  // registro mínimo (solo nombre + población) y la especie nueva quedaba
+  // con color 0 y Veg = False (visible en el censo de Internet y al
+  // guardar la sim).
+  SUBCASE("UpdateCounters registra la especie desconocida con sus datos") {
+    World w;
+    const int n = w.spawn("Suelto.txt", 3000.0f, 3000.0f);
+    w.sim.rob[n].color = 0x123456;
+    w.sim.rob[n].Veg = true;
+    w.tick();
+    REQUIRE(w.sim.Specie.size() == 1);
+    const Specie& sp = w.sim.Specie[0];
+    CHECK(sp.Name == "Suelto.txt");
+    CHECK(sp.color == 0x123456);
+    CHECK(sp.Veg);
+    CHECK(sp.qty == 5);
+    CHECK(sp.Stnrg == 3000);
+    CHECK(!sp.Native);
+    CHECK(sp.Comment == "Species arrived from the Internet");
+    CHECK(sp.population == 1);
+  }
+  SUBCASE("registro lleno: AddSpecie escribe el slot de reserva, no el 75") {
+    // k = SpeciesNum = 76 → Specie(76), el slot extra de SimOptions.bas:65;
+    // SpeciesNum no crece y las 76 especies vivas quedan intactas.
+    World w;
+    for (int k = 0; k < MAXNATIVESPECIES; ++k) {
+      Specie sp;
+      sp.Name = "S" + std::to_string(k) + ".txt";
+      w.sim.Specie.push_back(sp);
+    }
+    const int n = w.spawn("Nueva.txt", 3000.0f, 3000.0f);
+    CHECK(AddSpecieFromFile(w.sim, n, false) == MAXNATIVESPECIES);
+    REQUIRE(static_cast<int>(w.sim.Specie.size()) == MAXNATIVESPECIES);
+    CHECK(w.sim.Specie[MAXNATIVESPECIES - 1].Name == "S75.txt");
   }
 }

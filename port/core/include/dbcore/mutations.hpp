@@ -1010,7 +1010,7 @@ inline void mutate(Sim& sim, int robn, bool reproducing = false) {
       if (static_cast<vb_long>(sim.Specie.size()) < 49) {
         b.FName = robname;
         b.Mutations = 0;
-        AddSpecie(sim, robn);
+        AddSpecieFromFile(sim, robn, false);  // E7-06
       } else {
         sim.opts.SpeciationForkInterval -= 1;
       }

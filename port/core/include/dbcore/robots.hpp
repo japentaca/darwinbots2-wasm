@@ -144,7 +144,7 @@ inline void UpdateCounters(Sim& sim, int n) {
       static_cast<vb_long>(sim.Specie.size()) < MAXNATIVESPECIES;
   if (!sim.rob[n].Corpse) {
     if (i == sim.Specie.size() && room)
-      AddSpecie(sim, n);
+      AddSpecieFromFile(sim, n, false);  // Robots.bas:1152 (E7-06)
     else if (room)
       sim.Specie[i].population += 1;
   }
