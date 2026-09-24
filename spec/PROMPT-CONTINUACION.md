@@ -1,4 +1,4 @@
-# Prompt de continuación — sesión nueva (post-E6)
+# Prompt de continuación — sesión nueva (post-E6.5)
 
 Artefacto **regenerable** (no es historia): lo reescribe `/prompt-continuacion` al
 cerrar cada etapa. Pegá el bloque de abajo como **primer mensaje** de una sesión
@@ -7,7 +7,7 @@ nueva de Claude Code abierta en el directorio del repo
 prompt es autocontenido: no referencia nada de la conversación anterior, solo
 archivos del repo y hashes de commit.
 
-Generado el 2026-08-28, tras cerrar la etapa **E6 · Registro y análisis**.
+Generado el 2026-09-24, tras cerrar la etapa **E6.5 · Vista enriquecida**.
 
 ## ↓ COPIAR DESDE AQUÍ ↓
 
@@ -28,39 +28,48 @@ El port vive en `port/`: core C++20 de headers puros
 `port/wasm/dbcore_api.cpp`. **El port del core está completo** (M1..M10 +
 extensiones Rendimiento y Bestiary cerradas) y ahora se ejecuta el plan de
 extensiones de `spec/PLAN-EXTENSIONES.md`: el resto de la superficie
-funcional del original (UI/animaciones/opciones/modos), por etapas E1..E8.
+funcional del original (UI/animaciones/opciones/modos), por etapas E1..E8
+(más la E6.5, añadida a pedido del usuario y que no es superficie del
+original).
 
-**Estado actual** (verificado 2026-08-28):
+**Estado actual** (verificado 2026-09-24):
 - Suite: **172 casos / 3465 aserciones en verde** en los tres modos (g++ 14.2,
   clang 19.1.7, WASM/Emscripten 6.0.8 bajo node).
 - Milestones M1..M10 cerrados + Ext·Rendimiento (Web Worker) + Ext·Bestiary
   (588 bots del foro como presets). Hashes recientes: E1 `5b83de5`,
   E2 `ad65f01`, E3 `764a03f`, E4 `5adab56` (merge `71c3121`), E5 `f568e6a` +
   `d082f8a` + `ce6d322` (merge `771bd41`), E6 `3994f67` (core) + `88a72f5`
-  (host) + `47231db` (revisión) → merge `58814f5`, PROGRESO `ddc6470`.
-  Línea base de fuentes VB6: `02b20d7`.
-- **Etapas E1..E6 cerradas.** E1-E3 = capa host (opciones por id, toggles del
-  menú View + inspector, menú Objects con los 6 mazes verificados EXACTOS).
-  E4 = primer core desde M8 (pasos 6-7 del tick: costes dinámicos). E5 =
-  modos de juego, core + host (`gamemodes.hpp`: pasos ⚙ 3, 8-9/22, 13 y 26 +
-  `F1Mode.bas` completo + las ~18 guardas `Base.txt And hidepred` + los 13
-  sitios de descalificación). E6 = **registro y análisis, core + host**:
-  `database.hpp` nuevo con `Database.bas` entero sobre búferes (`Snapshot` de
-  los vivos y `AddRecord` por muerte desde `KillRobot`) y los tres campos de
-  **observación** del `Type robot` que ningún sistema de la simulación lee —
-  `ga()` (genes disparados), `consoleOpen` y `dbgstring` —; la capa host trae
-  `CalcStats`/`FeedGraph` transcritos en `wasm/dbcore_api.cpp` (las 18 series
-  de `Globals.bas:127-151` + el motor RPN de los 3 gráficos personalizables) y
-  ventanas flotantes que hacen de `grafico.frm`, `console.frm` y
-  `ActivForm.frm`, más snapshots como descargas, Find Best y philogeny.
+  (host) + `47231db` (revisión) → merge `58814f5`, lint del ADN al sembrar
+  `3fb85d9`, E6.5 plan `1b9a0fa` + `ff30782` (host) → merge `44eda9e`,
+  PROGRESO `7f5ba5b`. Línea base de fuentes VB6: `02b20d7`.
+- **Etapas E1..E6 y E6.5 cerradas.** E1-E3 = capa host (opciones por id,
+  toggles del menú View + inspector, menú Objects con los 6 mazes verificados
+  EXACTOS). E4 = primer core desde M8 (pasos 6-7 del tick: costes
+  dinámicos). E5 = modos de juego, core + host (`gamemodes.hpp`). E6 =
+  registro y análisis, core + host (`database.hpp` + los campos de
+  observación `ga()`/`consoleOpen`/`dbgstring`; `CalcStats`/`FeedGraph` en la
+  capa wasm; charts, consola, activaciones, snapshots, Find Best,
+  philogeny). **E6.5 = vista enriquecida, capa host pura**: selector "Vista"
+  (la original queda idéntica píxel a píxel; la enriquecida muestra forma,
+  tono, brillo por nrg, anillo de acción, morfología con zoom, nacimientos y
+  muertes, 8 lentes "Color por" y cámara con zoom/paneo/seguir, rastro y
+  tooltip). Extra fuera de etapa: **lint del ADN al sembrar**
+  (`db_dna_lint`, avisa los tokens que el cargador convierte en 0 sin
+  decir nada).
 - **Con E5 el tick de `10-CICLO.md §2` está completo** salvo los pasos ⚙ de
   UI/infra pura: 1 (F12), 11 (inspector), 23 (monitor RGB) y 25 (autosave a
   disco) — ninguno afecta la simulación.
-- Sitio de error con decisión de port añadido en E6: `err9_ga_index`
-  (`rob(n).ga(currgene)` con `currgene` mayor que el `genenum` con el que se
-  dimensionó el array — el original desbordaba el `ReDim` de `DNA.bas:77`:
-  registrar en `VmDiag` y no escribir; la traza es observación y jamás puede
-  alterar la simulación).
+- **Contratos de host que E6.5 dejó y que E7 debe respetar**: el frame del
+  worker tiene **cabecera de 12 floats** (`…, focus, rich, nBirths, nDeaths,
+  cycle`) y, con la vista enriquecida, un bloque extra al final (ver la
+  cabecera de `web/worker.js`); cada selección de la página viaja con un
+  número (`{t:'select', n, seq}`) que vuelve en `stats.selSeq`, y solo un
+  frame que ya conoce la selección vigente puede deseleccionar. La API
+  `db_sim_vis_*` es de solo lectura y guarda/restaura
+  `SimDiag::err9_simplematch` alrededor de `DoGeneticDistance`. Si E7
+  cambia slots o el handle (llegada de organismos, carga), la vista se
+  reprima con `db_sim_vis_reset` (ya lo hacen reset/carga/siembra en el
+  worker) y la lente de distancia avisa con `{t:'gendist-off'}`.
 - CI en GitHub: `ci.yml` (suite en los tres modos + fuentes VB6 intactos) y
   `pages.yml` (demo viva; compila el preset wasm y publica `port/web/`).
 
@@ -68,7 +77,8 @@ funcional del original (UI/animaciones/opciones/modos), por etapas E1..E8.
 1. `spec/PROGRESO.md` entero — fuente de verdad del estado (incluida la
    corrección de premisa 2026-08-16: el EXE original compila CON chequeos;
    errores 6/9/11 truncan el tick, `10-CICLO.md §14`).
-2. `spec/PLAN-EXTENSIONES.md §E7` — el alcance de la etapa.
+2. `spec/PLAN-EXTENSIONES.md §E7` — el alcance de la etapa (y §E6.5 para el
+   contrato de frame vigente).
 3. `spec/50-MUNDO.md §5` — la capa ⚙ de Internet/torneo deslindada en B7, y
    `spec/60-FORMATOS.md` para el registro `.dbo` que viaja.
 4. `port/README.md` — toolchain, build y estado por milestone.
@@ -115,20 +125,29 @@ se sirve con `cd port && python -m http.server 8000` →
 ⚠️ Ojo: pueden quedar `http.server` de sesiones anteriores vivos en el 8000
 sirviendo la página vieja — si la demo no refleja los cambios, verificar con
 `netstat -ano | grep :8000` y servir en otro puerto (p. ej. 8050, verificando
-que quede UN solo PID escuchando), y recargar con Ctrl+Shift+R (el worker.js
-se cachea). ⚠️ Al verificar en Chrome: el rAF de una ventana **ocluida** se
-estrangula hasta 0 fps y la página deja de hacer `ack`, así que el canvas y
-las stats quedan congelados aunque el worker siga simulando — no es un
-cuelgue; para comprobar el estado real de la sim con la ventana tapada usá un
-mensaje que no viaje por frames (p. ej. `{t:'bot-text', n}` o
-`{t:'graph-update', n}`, que devuelve el ciclo). Los clics por coordenada
-pueden desfasarse si el panel se re-renderiza: usar `find`+ref.
-⚠️ Lección de E6 sobre el worker: **nada que la página tenga que dibujar puede
-publicarse a ritmo de tick**. El chart se alimenta por ciclo (como el
-original) pero su pintado se coalesce en el `requestAnimationFrame`; sin ese
-deslinde la cola de mensajes crece sin freno y el renderer se bloquea (se
-midió: 1 tick/s). Cualquier canal nuevo de E7 necesita el mismo cuidado.
-Compiladores: g++/clang de MSYS2 ucrt64, node 24.
+que quede UN solo PID escuchando). El `?v=N` en la URL solo evita la caché de
+la página, **no la del `worker.js`**: forzarla con
+`await fetch('worker.js', {cache:'reload'})` antes de recargar.
+⚠️ Al verificar en Chrome con la ventana **ocluida o en segundo plano**: el
+rAF no dispara (la página no hace `ack` y el canvas y las stats quedan
+congelados aunque el worker siga) y **los timers se estrangulan** (hasta 1
+por segundo o menos), así que un guion con `setTimeout` puede tardar minutos
+o exceder los 45 s del evaluador. Lo que funciona: velocidad "máx" (el
+worker corre solo), llamar `renderFrame()` a mano cuando hay `latest`, y
+guiones que esperan el siguiente frame con una promesa colgada de
+`worker.onmessage` (los mensajes no se estrangulan), lanzados sin `await` y
+consultados después. Para comparar píxeles, SHA-256 de `getImageData`. Los
+clics por coordenada pueden desfasarse si el panel se re-renderiza: usar
+`find`+ref.
+⚠️ Lecciones del worker/render: **nada que la página tenga que dibujar puede
+publicarse a ritmo de tick** (E6: sin coalescer el pintado en el rAF la cola
+de mensajes crece sin freno — medido 1 tick/s); lo que se observa por tick se
+acumula en el wasm y viaja una vez por frame (E6.5). Y en Canvas 2D **un
+path con miles de subpaths escala peor que lineal** (E6.5: 1943 círculos en
+un path = 18 ms, en tandas de 64 = 4 ms). Cualquier canal nuevo de E7
+necesita el mismo cuidado. En este Bash los heredocs con ciertas comillas
+fallan ("unexpected EOF"): para scripts largos, escribirlos con Write en el
+scratchpad y ejecutarlos. Compiladores: g++/clang de MSYS2 ucrt64, node 24.
 
 **La tarea: etapa E7 — Internet / torneo distribuido (CAPA HOST, transporte).**
 Según `spec/PLAN-EXTENSIONES.md §E7`. No debería tocar `port/core/`: la
@@ -165,6 +184,10 @@ la etapa es decidir qué entra y qué queda fuera, con evidencia de grep):
    los `FileCopy` de los case 10/2/3/1) que E5 dejó fuera con decisión
    documentada, si tiene sentido sobre el transporte nuevo.
 6. Exponer lo nuevo por la capa host (mensajes del worker + UI) donde aplique.
+   En la vista enriquecida, un organismo que **sale** por un teleporter
+   Out/Internet ya se dibuja como salida (anillo cian); uno que **llega**
+   aparece como bot nuevo (sin línea a la madre si la madre no está en esta
+   sim) — revisar que se lea bien con el transporte real.
 
 Criterio de cierre E7: suite completa en verde en los tres modos (intacta por
 construcción si la etapa es host puro); decisión documentada para cada pieza
