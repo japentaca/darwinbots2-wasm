@@ -121,6 +121,18 @@
                      border-radius: 4px; padding: 4px 8px; font: inherit; width: 140px; }
   input[type=color] { width: 36px; height: 26px; padding: 0; border: 1px solid #2e3a55;
                       background: none; border-radius: 4px; cursor: pointer; }
+  /* Aviso del lint de ADN al sembrar (db_dna_lint) */
+  #seed-lint { font: 11px/1.45 ui-monospace, Consolas, monospace;
+               border: 1px solid #8a6d1f; border-left-width: 3px;
+               background: #1d1a10; color: #e0c878; border-radius: 4px;
+               padding: 6px 8px; margin-top: 6px; max-height: 180px;
+               overflow-y: auto; flex-shrink: 0; /* el aside es flex en columna */ }
+  #seed-lint[hidden] { display: none; }
+  #seed-lint b { color: #ffd966; }
+  #seed-lint code { color: #fff2c0; }
+  #seed-lint .hint { color: #b9a770; }
+  #seed-lint .close { float: right; cursor: pointer; color: #b9a770;
+                      background: none; border: 0; font: inherit; }
   #log { font: 11px/1.5 ui-monospace, Consolas, monospace; color: #7d8fb0;
          white-space: pre-wrap; max-height: 130px; overflow-y: auto; }
   details.optgrp { border: 1px solid #232a3d; border-radius: 4px;
@@ -371,6 +383,7 @@
       <label>nrg</label><input type="number" id="sp-nrg" value="3000" min="1" style="width:80px">
     </div>
     <div class="row"><button id="btn-seed" class="primary">Sembrar</button></div>
+    <div id="seed-lint" role="status" hidden></div>
     <h2>Registro</h2>
     <div id="log"></div>
   </aside>
@@ -791,6 +804,9 @@ worker.onmessage = (e) => {
     case 'log':
       log(msg.msg);
       updateStats();
+      break;
+    case 'lint':
+      showSeedLint(msg.name, msg.issues);
       break;
     case 'opts':
       // E3: opciones que cambió el core (Polar Ice enciende la deriva,
@@ -1939,6 +1955,43 @@ function newSim() {
     species: [{ dna: alga.dna, name: alga.name, veg: true, qty: alga.qty,
                 nrg: alga.nrg, color: cssToVbColor(alga.color) }],
   });
+}
+
+// ---- Aviso de lint al sembrar ---------------------------------------------
+// El cargador no rechaza tokens desconocidos: valen 0 sin aviso (igual que en
+// el original). El worker pasa aquí lo que encontró db_dna_lint.
+const LINT_KINDS = {
+  nombre:  'nombre desconocido (vale 0)',
+  palabra: 'palabra no reconocida (vale 0)',
+  pegado:  'número pegado a otro símbolo',
+  primero: 'primer token perdido',
+  sombra:  'variable propia tapa una sysvar',
+  error:   'el cargador rechaza el archivo',
+};
+function escHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+function showSeedLint(name, issues) {
+  const box = document.getElementById('seed-lint');
+  if (!issues.length) { box.hidden = true; box.innerHTML = ''; return; }
+  const zeros = issues.filter((i) => i.kind === 'nombre' || i.kind === 'palabra')
+    .reduce((n, i) => n + i.count, 0);
+  const MAX = 12;
+  const rows = issues.slice(0, MAX).map((i) =>
+    `<div>${i.line ? `l.${i.line} ` : ''}<code>${escHtml(i.token)}</code>` +
+    `${i.count > 1 ? ` ×${i.count}` : ''} — ${escHtml(LINT_KINDS[i.kind] || i.kind)}` +
+    `<div class="hint">↳ ${escHtml(i.hint)}</div></div>`).join('');
+  const more = issues.length > MAX ? `<div>… y ${issues.length - MAX} más</div>` : '';
+  box.innerHTML =
+    '<button class="close" title="Cerrar" aria-label="Cerrar aviso">✕</button>' +
+    `<b>⚠ ${escHtml(name)}: ${issues.length} aviso${issues.length > 1 ? 's' : ''}` +
+    `${zeros ? ` (${zeros} token${zeros > 1 ? 's' : ''} valen 0)` : ''}</b>` +
+    '<div class="hint">El bot se siembra igual que en el original, pero puede no hacer lo que su autor quería.</div>' +
+    rows + more;
+  box.querySelector('.close').onclick = () => { box.hidden = true; };
+  box.hidden = false;
+  log(`⚠ ${name}: ${issues.length} aviso(s) del ADN — ver panel Sembrar`);
 }
 
 function seedFromForm() {

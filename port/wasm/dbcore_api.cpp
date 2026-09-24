@@ -27,7 +27,9 @@
 #include <cstring>
 #include <cctype>
 #include <cmath>
+#include <algorithm>
 #include <functional>
+#include <memory>
 #include <new>
 #include <string>
 #include <vector>
@@ -2027,6 +2029,283 @@ DB_EXPORT int db_sim_sysvar_tok(void* h, int n, const char* name) {
   // val() (console.frm:397 ya prueba val() antes de llamar aqui).
   return db::loader_detail::SysvarTok(name, s.rob[n], *s.sysvars);
 }
+// ---- Lint de ADN al sembrar (decisión de capa host, fuera de la fidelidad) --
+// El cargador no rechaza nada (V-08): todo token que no reconoce acaba en
+// SysvarTok y vale 0 sin aviso — `.aimshot store` escribe en mem(1000), un
+// `stop` con un byte invisible no cierra el gen, `.50` no es la dirección 50.
+// El original se comportaba igual (el port es fiel), pero el autor del bot
+// quería otra cosa. db_dna_lint recorre el texto con las MISMAS reglas de
+// línea de LoadDNAText y las MISMAS tablas de tokens y sysvars del core, y
+// devuelve esos tokens para que la página avise. No toca ninguna sim ni
+// consume RNG. Salida: una línea por hallazgo, campos separados por TAB:
+//   tipo \t token \t veces \t primera_linea \t pista
+// tipos: nombre | palabra | pegado | primero | sombra | error
+}  // extern "C" (los helpers del lint son C++ con enlace normal)
+
+namespace lint_detail {
+
+int EditDistance(const std::string& a, const std::string& b) {
+  std::vector<int> prev(b.size() + 1), cur(b.size() + 1);
+  for (std::size_t j = 0; j <= b.size(); ++j) prev[j] = static_cast<int>(j);
+  for (std::size_t i = 1; i <= a.size(); ++i) {
+    cur[0] = static_cast<int>(i);
+    for (std::size_t j = 1; j <= b.size(); ++j)
+      cur[j] = std::min({prev[j] + 1, cur[j - 1] + 1,
+                         prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1)});
+    std::swap(prev, cur);
+  }
+  return prev[b.size()];
+}
+
+// ¿Lo reconoce alguna tabla de comandos de Parse (sin ismutating)?
+bool IsCommand(const std::string& lc) {
+  using namespace db::loader_detail;
+  return BasicCommandTok(lc).value || AdvancedCommandTok(lc, false).value ||
+         BitwiseCommandTok(lc).value || ConditionsTok(lc).value ||
+         LogicTok(lc).value || StoresTok(lc).value || FlowTok(lc).value ||
+         MasterFlowTok(lc).value;
+}
+
+const char* const kCommandWords[] = {
+    "add", "sub", "mult", "div", "rnd", "mod", "sgn", "abs", "dup", "drop",
+    "clear", "swap", "over", "angle", "dist", "ceil", "floor", "sqr", "pow",
+    "pyth", "anglecmp", "root", "logx", "sin", "cos", "and", "or", "xor",
+    "not", "true", "false", "dropbool", "clearbool", "dupbool", "swapbool",
+    "overbool", "store", "inc", "dec", "addstore", "substore", "multstore",
+    "divstore", "ceilstore", "floorstore", "rndstore", "sgnstore", "absstore",
+    "sqrstore", "negstore", "cond", "start", "else", "stop", "end"};
+
+bool IsSysvarName(const std::string& lc, const db::SysvarTable& sv) {
+  for (const db::Var& v : sv.entries)
+    if (db::loader_detail::lcase(v.name) == lc) return true;
+  return false;
+}
+
+// Sysvar más parecida o "": distancia 1 para nombres de hasta 4 letras,
+// hasta 2 para los más largos (con menos, cualquier palabra corta "se parece").
+std::string NearestSysvar(const std::string& lc, const db::SysvarTable& sv) {
+  if (lc.size() < 3) return "";
+  std::string best;
+  int bestD = lc.size() <= 4 ? 2 : 3;
+  for (const db::Var& v : sv.entries) {
+    const std::string n = db::loader_detail::lcase(v.name);
+    const int d = EditDistance(lc, n);
+    if (d < bestD) { bestD = d; best = v.name; }
+  }
+  return best;
+}
+
+// Longitud del prefijo que consume Val() (mismo autómata que vb_val).
+std::size_t ValPrefix(const std::string& s, bool& digits) {
+  std::size_t i = 0, n = s.size(), dg = 0;
+  if (i < n && (s[i] == '+' || s[i] == '-')) ++i;
+  while (i < n && std::isdigit(static_cast<unsigned char>(s[i]))) ++i, ++dg;
+  if (i < n && s[i] == '.') {
+    ++i;
+    while (i < n && std::isdigit(static_cast<unsigned char>(s[i]))) ++i, ++dg;
+  }
+  digits = dg > 0;
+  if (!digits) return 0;
+  if (i < n && (s[i] == 'e' || s[i] == 'E' || s[i] == 'd' || s[i] == 'D')) {
+    std::size_t j = i + 1, ed = 0;
+    if (j < n && (s[j] == '+' || s[j] == '-')) ++j;
+    while (j < n && std::isdigit(static_cast<unsigned char>(s[j]))) ++j, ++ed;
+    if (ed > 0) i = j;
+  }
+  return i;
+}
+
+bool HasNonAscii(const std::string& s) {
+  for (char ch : s) {
+    const unsigned char u = static_cast<unsigned char>(ch);
+    if (u < 32 || u >= 127) return true;
+  }
+  return false;
+}
+
+std::string StripNonAscii(const std::string& s) {
+  std::string r;
+  for (char ch : s) {
+    const unsigned char u = static_cast<unsigned char>(ch);
+    if (u >= 32 && u < 127) r += ch;
+  }
+  return r;
+}
+
+struct Finding {
+  std::string kind, token, hint;
+  int count = 0, line = 0;
+};
+
+class Report {
+ public:
+  void add(const std::string& kind, const std::string& token, int line,
+           const std::string& hint) {
+    for (Finding& f : items_)
+      if (f.kind == kind && f.token == token) { ++f.count; return; }
+    items_.push_back(Finding{kind, token, hint, 1, line});
+  }
+  std::string text() const {
+    std::string out;
+    for (const Finding& f : items_)
+      out += f.kind + '\t' + f.token + '\t' + std::to_string(f.count) + '\t' +
+             std::to_string(f.line) + '\t' + f.hint + '\n';
+    return out;
+  }
+ private:
+  std::vector<Finding> items_;
+};
+
+std::string Lint(const std::string& text) {
+  using namespace db::loader_detail;
+  const db::SysvarTable& sv = db::DefaultSysvarTable();
+  Report report;
+  auto bot = std::make_unique<db::Bot>();
+  bot->vars.assign(1, db::Var{});
+  bot->vnum = 1;
+
+  // Líneas ya normalizadas como en LoadDNAText (:92-93 y trim)
+  std::vector<std::string> lines;
+  for (std::size_t start = 0; start <= text.size();) {
+    std::size_t nl = text.find('\n', start);
+    if (nl == std::string::npos) nl = text.size();
+    std::string a = text.substr(start, nl - start);
+    start = nl + 1;
+    if (!a.empty() && a.back() == '\r') a.pop_back();
+    const std::size_t q = a.find('\'');
+    if (q != std::string::npos && q > 0) a = a.substr(0, q);
+    for (char& ch : a)
+      if (ch == '\t') ch = ' ';
+    const std::size_t b0 = a.find_first_not_of(' ');
+    const std::size_t b1 = a.find_last_not_of(' ');
+    lines.push_back(b0 == std::string::npos ? "" : a.substr(b0, b1 - b0 + 1));
+    if (nl == text.size()) break;
+  }
+
+  // Todas las privadas del archivo, para detectar las usadas antes de su def
+  std::vector<std::string> allDefs;
+  for (const std::string& a : lines)
+    if (a.compare(0, 3, "def") == 0 && a.size() > 4) {
+      const std::string rest = a.substr(4);
+      allDefs.push_back(rest.substr(0, rest.find(' ')));
+    }
+
+  bool useref = false;
+  std::string firstToken;
+  try {
+    for (std::size_t li = 0; li < lines.size(); ++li) {
+      const std::string& a = lines[li];
+      const int lineNo = static_cast<int>(li) + 1;
+      if (a.empty() || a[0] == '\'' || a[0] == '/') continue;
+
+      if (a.compare(0, 3, "def") == 0) {
+        insertvar(*bot, a);
+        useref = true;
+        const std::string& name = bot->vars.back().name;
+        if (IsSysvarName(lcase(name), sv))
+          report.add("sombra", "def " + name, lineNo,
+                     "la variable propia tapa a la sysvar ." + name +
+                         " en todo el bot");
+        continue;
+      }
+
+      std::size_t wpos = 0;
+      while (wpos < a.size()) {
+        const std::size_t wend = a.find(' ', wpos);
+        const std::string word = a.substr(
+            wpos, (wend == std::string::npos ? a.size() : wend) - wpos);
+        wpos = (wend == std::string::npos) ? a.size() : wend + 1;
+        if (word.empty()) continue;
+        if (firstToken.empty()) firstToken = word;
+
+        const std::string lc = lcase(word);
+        if (IsCommand(lc)) continue;
+        const std::string operand = word[0] == '*' ? word.substr(1) : word;
+
+        if (!operand.empty() && operand[0] == '.') {
+          const std::string name = operand.substr(1);
+          bool found = IsSysvarName(lcase(name), sv);
+          for (std::size_t t = 1; !found && t < bot->vars.size(); ++t)
+            found = bot->vars[t].name == name;
+          if (found) continue;
+
+          std::string hint;
+          bool digitsOnly = !name.empty();
+          for (char ch : name)
+            digitsOnly = digitsOnly && std::isdigit(static_cast<unsigned char>(ch));
+          bool definedLater = false, otherCase = false;
+          for (const std::string& d : allDefs) {
+            if (d == name) definedLater = true;
+            else if (lcase(d) == lcase(name)) otherCase = true;
+          }
+          if (digitsOnly)
+            hint = "¿la dirección " + name + "? va sin punto: " + name;
+          else if (definedLater)
+            hint = "su def está más abajo; el cargador resuelve al leer: sube el def";
+          else if (otherCase)
+            hint = "las variables propias distinguen mayúsculas";
+          else if (!(hint = NearestSysvar(lcase(name), sv)).empty())
+            hint = "¿." + hint + "?";
+          else
+            hint = "no es una sysvar ni tiene def (¿de otra versión de DB?)";
+          report.add("nombre", word, lineNo, hint);
+          continue;
+        }
+
+        bool digits = false;
+        const std::size_t used = ValPrefix(operand, digits);
+        if (!digits) {
+          std::string hint;
+          const std::string clean = lcase(StripNonAscii(operand));
+          if (HasNonAscii(operand) && IsCommand(clean))
+            hint = "'" + clean + "' con un carácter invisible: no se reconoce";
+          else if (HasNonAscii(operand))
+            hint = "caracteres invisibles o de codificación";
+          else if (IsSysvarName(lcase(operand), sv))
+            hint = "¿falta el punto? ." + operand;
+          else {
+            std::string near;
+            for (const char* c : kCommandWords)
+              if (EditDistance(lc, c) == 1 && lc.size() >= 4) near = c;
+            hint = near.empty() ? "no es comando ni número (¿texto sin ' de comentario?)"
+                                : "¿" + near + "?";
+          }
+          report.add("palabra", word, lineNo, hint);
+          continue;
+        }
+        to_vb_integer(db::loader_detail::vb_val(operand));  // fuera de +-32767: error 6
+        if (used < operand.size())
+          report.add("pegado", word, lineNo,
+                     "se lee como " + operand.substr(0, used) + "; \"" +
+                         operand.substr(used) + "\" se pierde (¿falta un espacio?)");
+      }
+    }
+  } catch (const VbError& e) {
+    report.add("error", "error " + std::to_string(e.number), 0,
+               "el cargador rechaza el archivo (literal fuera de ±32767 o def mal formado)");
+    return report.text();
+  }
+
+  // [PROBABLE BUG] A2-2 (V-06): con defs y primer token no-flujo, el primer
+  // token queda fuera del rango ejecutable.
+  if (useref && !firstToken.empty() &&
+      FlowTok(lcase(firstToken)).value == 0)
+    report.add("primero", firstToken, 0,
+               "con def, el primer token que no es de flujo se pierde (bug A2-2 del original)");
+  return report.text();
+}
+
+}  // namespace lint_detail
+
+extern "C" {
+
+DB_EXPORT char* db_dna_lint(const char* text) {
+  const std::string s = lint_detail::Lint(text ? text : "");
+  char* p = static_cast<char*>(std::malloc(s.size() + 1));
+  if (p) std::memcpy(p, s.c_str(), s.size() + 1);
+  return p;
+}
+
 // console.frm:369 — `energy e`.
 DB_EXPORT void db_sim_bot_set_nrg(void* h, int n, float v) {
   db::Sim& s = S(h);

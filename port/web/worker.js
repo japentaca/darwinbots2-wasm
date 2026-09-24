@@ -13,6 +13,8 @@
 //                                          (corre a fondo en rebanadas ~12ms)
 //   {t:'step'}                             un tick suelto
 //   {t:'seed-species', sp}                 sembrar especie del formulario
+//                                          → {t:'lint', name, issues[]}
+//                                          (tokens del ADN que valen 0)
 //   {t:'setopt', id, v}                    opción E1 en vivo (tabla de ids
 //                                          en wasm/dbcore_api.cpp)
 //   {t:'setcost', i, v}                    E4: Costs(i) en vivo (índices de
@@ -214,6 +216,7 @@ function bindApi() {
     save:          C('db_sim_save', 'number', ['number', 'number']),
     load:          C('db_sim_load', null, ['number', 'number', 'number']),
     free:          C('db_free', null, ['number']),
+    lint:          C('db_dna_lint', 'number', ['string']),
   };
 }
 
@@ -638,6 +641,18 @@ function loop() {
 }
 
 // ---- Comandos -------------------------------------------------------------
+// Lint del ADN al sembrar desde el formulario (db_dna_lint, capa host de
+// wasm/dbcore_api.cpp): los tokens que el cargador convierte en 0 sin avisar.
+// Solo informa; el bot se siembra igual que en el original.
+function lintSpecies(sp) {
+  const issues = takeStr(api.lint(sp.dna)).split('\n').filter(Boolean)
+    .map((row) => {
+      const [kind, token, count, line, hint] = row.split('\t');
+      return { kind, token, count: +count, line: +line, hint };
+    });
+  self.postMessage({ t: 'lint', name: sp.name, issues });
+}
+
 function seedSpecies(sp) {
   const idx = api.addSpecies(sim, sp.dna, sp.name, sp.veg ? 1 : 0, 0,
                              sp.nrg, sp.color, sp.qty);
@@ -769,6 +784,7 @@ self.onmessage = (e) => {
       postFrame();
       break;
     case 'seed-species':
+      lintSpecies(msg.sp);
       seedSpecies(msg.sp);
       if (lastReset) lastReset.species.push(msg.sp);  // E5: entra a las rondas
       postFrame();
