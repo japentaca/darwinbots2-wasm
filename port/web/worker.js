@@ -66,6 +66,16 @@
 //                                          + el cliente IM de web/imnet.js);
 //                                          kind = 'bc' (pestañas) | 'ws'
 //   {t:'im-name', name}                    E7: IntOpts.IName (LastOwner)
+//   {t:'monitor', on, mem:[r,g,b]}         E8: monitor RGB (MonitorOn +
+//                                          frmMonitorSet.Monitor_mem_*): el
+//                                          paso 23 corre tras cada tick
+//   {t:'skins', on}                        E8: Form1.dispskin (DrawRobSkin)
+//   {t:'eye-read', n}                      E8: showEyeDesign_Click →
+//                                          {t:'eye-vals', n, dir[9], wth[9]}
+//   {t:'setmem', n, addr, v}               E8: frmEYE (txtDir/txtWth_Change,
+//                                          Reset Aim) — escribe rob(n).mem
+//   {t:'sysvar', id, name}                 E8: SysvarTok sin bot →
+//                                          {t:'sysvar', id, v}
 //   {t:'ack', buf}                         devuelve el búfer del último frame
 //
 // Protocolo (worker → página):
@@ -100,16 +110,18 @@
 // página; con speed=0 el worker corre a fondo y publica cuando puede).
 //
 // Layout del frame (Float32Array):
-//   [0..11] header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, focus
+//   [0..12] header: fieldW, fieldH, nBots, nShots, nTies, nObs, nTps, focus
 //           (focus = índice del bot seleccionado con volcado válido; 0 = no),
 //           rich (E6.5: 1 si viaja el bloque de la vista enriquecida),
-//           nBirths, nDeaths, cycle
+//           nBirths, nDeaths, cycle, extras (E8: bit0 monitor, bit1 skins)
 //   después: bots nBots×20, shots nShots×9, ties nTies×5,
 //            obstáculos nObs×5, teleporters nTps×7
 //           y, si focus > 0, el bloque de foco: 44 floats de
 //           db_sim_dump_focus (inspector + 9 ojos, etapa E2)
 //           y, si rich, nBots×24 de db_sim_dump_bots_vis (misma fila que
 //           el bot) + nBirths×6 + nDeaths×6 de db_sim_vis_events
+//           y, si extras&1, nBots×3 de db_sim_dump_monitor (E8)
+//           y, si extras&2, nBots×9 de db_sim_dump_skins (E8)
 //   (mismos registros que db_sim_dump_* — ver wasm/dbcore_api.cpp)
 
 importScripts('../build-wasm/dbcore.js', 'imnet.js');
@@ -269,6 +281,12 @@ function bindApi() {
     imStats:       C('db_sim_im_stats', 'number', ['number']),
     imSpecies:     C('db_sim_im_species', 'number', ['number']),
     dboPeek:       C('db_dbo_peek', 'number', ['number','number']),
+    // E8 - extras (monitor RGB y skins: campos de render del Type robot)
+    monCapture:    C('db_sim_monitor_capture', null, ['number','number','number','number']),
+    dumpMonitor:   C('db_sim_dump_monitor', 'number', ['number','number','number']),
+    dumpSkins:     C('db_sim_dump_skins', 'number', ['number','number','number']),
+    sysvarTok0:    C('db_sim_sysvar_tok0', 'number', ['number','string']),
+    assignSkin:    C('db_sim_species_assign_skin', null, ['number','number','number']),
   };
 }
 
@@ -296,7 +314,8 @@ function recolorObstacles(from) {
 const scratch = { bots: {p:0, cap:0}, shots: {p:0, cap:0}, ties: {p:0, cap:0},
                   obs: {p:0, cap:0}, tps: {p:0, cap:0}, focus: {p:0, cap:0},
                   graph: {p:0, cap:0}, ga: {p:0, cap:0}, fam: {p:0, cap:0},
-                  vis: {p:0, cap:0}, births: {p:0, cap:0}, deaths: {p:0, cap:0} };
+                  vis: {p:0, cap:0}, births: {p:0, cap:0}, deaths: {p:0, cap:0},
+                  mon: {p:0, cap:0}, skin: {p:0, cap:0} };
 
 function ensure(b, floatsNeeded) {
   if (b.cap >= floatsNeeded || floatsNeeded === 0) return;
@@ -368,8 +387,21 @@ function buildFrame() {
     }
   }
 
-  const total = 12 + nB * 20 + nS * 9 + nT * 5 + nO * 5 + nP * 7 + nF * 44 +
-                nV * 24 + (nBi + nDe) * 6;
+  // E8: mismo recorrido de slots que dumpBots → misma fila por bot.
+  let nM = 0, nK = 0;
+  if (monitor.on && maxB > 0) {
+    ensure(scratch.mon, maxB * 3);
+    nM = api.dumpMonitor(sim, scratch.mon.p, maxB);
+  }
+  if (skinsOn && maxB > 0) {
+    ensure(scratch.skin, maxB * 9);
+    nK = api.dumpSkins(sim, scratch.skin.p, maxB);
+  }
+  const extras = (nM === nB && nM ? 1 : 0) | (nK === nB && nK ? 2 : 0);
+
+  const total = 13 + nB * 20 + nS * 9 + nT * 5 + nO * 5 + nP * 7 + nF * 44 +
+                nV * 24 + (nBi + nDe) * 6 + (extras & 1 ? nB * 3 : 0) +
+                (extras & 2 ? nB * 9 : 0);
   const buf = takeFrameBuffer(total);
   const v = new Float32Array(buf);
   v[0] = api.fieldW(sim);
@@ -379,8 +411,9 @@ function buildFrame() {
   v[8] = rich && nV === nB ? 1 : 0;
   v[9] = nBi; v[10] = nDe;
   v[11] = api.cycle(sim);
+  v[12] = extras;
 
-  let off = 12;
+  let off = 13;
   if (nB) { v.set(heapView(scratch.bots.p, nB * 20), off); off += nB * 20; }
   if (nS) { v.set(heapView(scratch.shots.p, nS * 9), off); off += nS * 9; }
   if (nT) { v.set(heapView(scratch.ties.p, nT * 5), off); off += nT * 5; }
@@ -394,6 +427,8 @@ function buildFrame() {
   } else {
     v[9] = 0; v[10] = 0;
   }
+  if (extras & 1) { v.set(heapView(scratch.mon.p, nB * 3), off); off += nB * 3; }
+  if (extras & 2) { v.set(heapView(scratch.skin.p, nB * 9), off); off += nB * 9; }
   return buf;
 }
 
@@ -431,8 +466,19 @@ let gdOn = false, gdRoundDone = false, gdLastRound = 0, gdPumpQueued = false;
 
 function tickOnce() {
   api.tick(sim);
+  // E8 — paso 23 (Master.bas:416-427): tras UpdateSim es el mismo instante
+  // (los pasos 24-26 no tocan mem() ni crean bots).
+  if (monitor.on) api.monCapture(sim, monitor.mem[0], monitor.mem[1], monitor.mem[2]);
   if (rich) api.visObserve(sim);
 }
+
+// ---- E8: extras ------------------------------------------------------------
+// Monitor RGB: MonitorOn.Checked + las 3 direcciones de frmMonitorSet (el
+// piso/techo solo los usa DrawMonitor: viven en la página). Skins:
+// Form1.dispskin, que arranca en True (main.frm:394).
+const monitor = { on: false, mem: [1, 1, 1] };
+let skinsOn = true;
+const EYE1DIR = 521, EYE1WIDTH = 531;   // Robots.bas:106, :115
 
 // La sim cambió de handle o de slots (reset, ronda nueva, carga): la
 // referencia de la lente ya no vale y la página tiene que enterarse.
@@ -1037,9 +1083,21 @@ function lintSpecies(sp) {
   self.postMessage({ t: 'lint', name: sp.name, issues });
 }
 
+const skinTimers = new Map();   // E8: especie (nombre + ADN) → Timer
+
 function seedSpecies(sp) {
   const idx = api.addSpecies(sim, sp.dna, sp.name, sp.veg ? 1 : 0, 0,
                              sp.nrg, sp.color, sp.qty);
+  // E8 — AssignSkin (OptionsForm.frm:3411): el original la corre una vez, al
+  // agregar la especie al formulario (la skin queda en TmpOpts.Specie); el
+  // Timer del Randomize final se fija la primera vez que se ve la especie
+  // (nombre + ADN) para que sims y rondas nuevas conserven la skin.
+  const skey = sp.name + '\n' + sp.dna;
+  if (!skinTimers.has(skey)) {
+    const d = new Date();
+    skinTimers.set(skey, (d - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 1000);
+  }
+  api.assignSkin(sim, idx, skinTimers.get(skey));
   const n = api.seedSpecies(sim, idx, 0);
   log(n > 0 ? `sembrados ${n} × ${sp.name}`
             : `ADN rechazado por el cargador (${sp.name})`);
@@ -1435,6 +1493,35 @@ self.onmessage = (e) => {
       break;
     case 'redraw':
       postFrame();
+      break;
+    // ---- E8: extras ----
+    case 'monitor':
+      monitor.on = !!msg.on;
+      if (Array.isArray(msg.mem))
+        for (let c = 0; c < 3; c++) monitor.mem[c] = msg.mem[c] | 0;
+      postFrame();
+      break;
+    case 'skins':
+      skinsOn = !!msg.on;
+      postFrame();
+      break;
+    case 'eye-read': {            // showEyeDesign_Click (MDIForm1.frm:1635-1643)
+      const n = msg.n | 0;
+      const dir = [], wth = [];
+      for (let i = 0; i < 9; i++) {
+        dir.push(sim ? api.botMem(sim, n, i + EYE1DIR) : 0);
+        wth.push(sim ? api.botMem(sim, n, i + EYE1WIDTH) : 0);
+      }
+      self.postMessage({ t: 'eye-vals', n, dir, wth });
+      break;
+    }
+    case 'sysvar':
+      self.postMessage({ t: 'sysvar', id: msg.id,
+                         v: sim ? api.sysvarTok0(sim, String(msg.name || '')) : 0 });
+      break;
+    case 'setmem':
+      if (sim) api.botSetMem(sim, msg.n | 0, msg.addr | 0, msg.v | 0);
+      if (!running) postFrame();   // la rejilla de visión con la sim en pausa
       break;
     case 'ack':
       recycleFrameBuffer(msg.buf);

@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <array>
 #include <cmath>
 #include <algorithm>
 #include <functional>
@@ -86,6 +87,18 @@ struct SimHandle {
     db::vb_long gdistRefAbs = 0;
     int gdistCursor = 1;
   } vis;
+
+  // E8 — campos de render del Type robot que el core no modela (ver la
+  // seccion E8 al final). Un slot cuyo AbsNum cambio es un bot nuevo: su
+  // registro nacio de `rob(posto) = blank` (Robots.bas:2962-2963), asi que
+  // vale 0.
+  struct E8 {
+    std::vector<db::vb_long> monAbs;                  // monitor_r/g/b
+    std::vector<std::array<db::vb_integer, 3>> mon;
+    std::vector<db::vb_long> skinAbs;                 // oaim / OSkin
+    std::vector<db::vb_single> oaim;
+    std::vector<std::array<db::vb_integer, 8>> oskin;
+  } e8;
 
   SimHandle() { wire(); }
   void wire() {
@@ -1802,6 +1815,7 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   db::VbBinFile f;
   f.data.assign(data, data + (len > 0 ? len : 0));
   Sh.vis = SimHandle::Vis{};  // E6.5: los slots de antes no valen
+  Sh.e8 = SimHandle::E8{};    // E8: el formato no persiste monitor ni OSkin
   db::LoadSimulation(Sh.sim, f);
   RecomputeDivisors(Sh.sim);
   db::InitBuckets(Sh.sim);
@@ -3079,6 +3093,256 @@ DB_EXPORT char* db_sim_bot_name(void* h, int n) {
   return reinterpret_cast<char*>(CopyOut(
       reinterpret_cast<const unsigned char*>(v.c_str()), v.size() + 1,
       nullptr));
+}
+
+}  // extern "C"
+
+// ===========================================================================
+// E8 — extras de menor valor (capa host; spec/PLAN-EXTENSIONES.md §E8)
+//
+// Dos campos de render del Type robot que el core no tiene porque ningun
+// sistema de la simulacion los lee: monitor_r/g/b (Robots.bas:347-349) y
+// oaim/OSkin (Robots.bas:211, :316). Viven aqui, por slot, con la regla de
+// siempre: nada de esto escribe en la sim ni consume RNG.
+// ===========================================================================
+
+namespace {
+
+void E8Resize(SimHandle::E8& e, const db::Sim& sim) {
+  const std::size_t n = static_cast<std::size_t>(sim.MaxRobs) + 1;
+  if (e.monAbs.size() < n) {
+    e.monAbs.resize(n, 0);
+    e.mon.resize(n, {0, 0, 0});
+    e.skinAbs.resize(n, 0);
+    e.oaim.resize(n, 0.0f);
+    e.oskin.resize(n, {});
+  }
+}
+
+// CInt de una asignacion a Integer con su error 6 (fuera de -32768..32767).
+bool E8CInt(double v, db::vb_integer& out) {
+  const std::int64_t r = db::vb_round64(v);
+  if (r < -32768 || r > 32767) return false;
+  out = static_cast<db::vb_integer>(r);
+  return true;
+}
+
+}  // namespace
+
+extern "C" {
+
+// Paso 23 del tick (Master.bas:416-427): `If MDIForm1.MonitorOn Then` copia
+// mem(Monitor_mem_r/g/b) a rob(t).monitor_r/g/b de cada bot vivo. El worker
+// lo llama tras CADA tick con el monitor encendido: los pasos 24-26 no tocan
+// mem() ni crean bots (Master.bas:429-554), asi que despues de UpdateSim es
+// el mismo instante. Las direcciones llegan validadas 1..999 (LostFocus de
+// frmMonitorSet.frm:413-425); fuera de 0..MaxMem no se copia.
+DB_EXPORT void db_sim_monitor_capture(void* h, int memR, int memG, int memB) {
+  auto& Sh = H(h);
+  const db::Sim& sim = Sh.sim;
+  auto& e = Sh.e8;
+  E8Resize(e, sim);
+  const int m[3] = {memR, memG, memB};
+  for (int c = 0; c < 3; ++c)
+    if (m[c] < 0 || m[c] > db::MaxMem) return;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!b.exist) continue;
+    const auto i = static_cast<std::size_t>(t);
+    e.monAbs[i] = b.AbsNum;
+    for (int c = 0; c < 3; ++c)
+      e.mon[i][static_cast<std::size_t>(c)] =
+          b.mem[static_cast<std::size_t>(m[c])];
+  }
+}
+
+// 3 floats por bot existente, misma fila que db_sim_dump_bots:
+// [monitor_r, monitor_g, monitor_b]. Un bot que nunca paso por el paso 23
+// con el monitor encendido (o que ocupa un slot nuevo) vale 0.
+DB_EXPORT int db_sim_dump_monitor(void* h, float* out, int max_bots) {
+  auto& Sh = H(h);
+  const db::Sim& sim = Sh.sim;
+  auto& e = Sh.e8;
+  E8Resize(e, sim);
+  int written = 0;
+  for (int n = 1; n <= sim.MaxRobs && written < max_bots; ++n) {
+    const db::Bot& b = sim.rob[n];
+    if (!b.exist) continue;
+    const auto i = static_cast<std::size_t>(n);
+    float* r = out + written * 3;
+    const bool same = e.monAbs[i] == b.AbsNum;
+    for (int c = 0; c < 3; ++c)
+      r[c] = same ? static_cast<float>(e.mon[i][static_cast<std::size_t>(c)])
+                  : 0.0f;
+    ++written;
+  }
+  return written;
+}
+
+// DrawRobSkin (main.frm:838-866): 9 floats por bot existente, misma fila
+// que db_sim_dump_bots: [estado, OSkin(0..7)] con estado 1 = dibujar la
+// polilinea (pos + OSkin(0,1)) -> (pos + OSkin(2,3)) -> ... -> (6,7),
+// 0 = cadaver (el Sub sale sin tocar nada) y -1 = error 6 al asignar un
+// OSkin (Integer): en el original aborta el Redraw entero (la pagina corta
+// el pase). OSkin solo se recalcula cuando `oaim <> aim` — con skin o radio
+// nuevos y el mismo aim se sigue dibujando la forma vieja, como el fuente.
+// Decision de host: la cache se actualiza en cada volcado para todos los
+// bots, no solo los visibles (el original solo la toca al dibujarlos).
+DB_EXPORT int db_sim_dump_skins(void* h, float* out, int max_bots) {
+  auto& Sh = H(h);
+  const db::Sim& sim = Sh.sim;
+  auto& e = Sh.e8;
+  E8Resize(e, sim);
+  int written = 0;
+  for (int n = 1; n <= sim.MaxRobs && written < max_bots; ++n) {
+    const db::Bot& b = sim.rob[n];
+    if (!b.exist) continue;
+    const auto i = static_cast<std::size_t>(n);
+    float* r = out + written * 9;
+    ++written;
+    if (e.skinAbs[i] != b.AbsNum) {       // rob(posto) = blank
+      e.skinAbs[i] = b.AbsNum;
+      e.oaim[i] = 0.0f;
+      e.oskin[i] = {};
+    }
+    if (b.Corpse) {
+      r[0] = 0.0f;
+      continue;
+    }
+    auto& os = e.oskin[i];
+    bool ok = true;
+    if (e.oaim[i] != b.aim) {
+      // .OSkin(t) = (Cos(.Skin(t+1) / 100 - .aim) * .Skin(t)) * .radius / 60
+      // (Integer / 100 es Double; aim y radius son Single promovidos).
+      for (int t = 0; t <= 6 && ok; t += 2) {
+        const double ang = static_cast<double>(b.Skin[t + 1]) / 100.0 -
+                           static_cast<double>(b.aim);
+        const double k = static_cast<double>(b.Skin[t]);
+        const double rad = static_cast<double>(b.radius);
+        ok = E8CInt(std::cos(ang) * k * rad / 60.0, os[t]) &&
+             E8CInt(std::sin(ang) * k * rad / 60.0, os[t + 1]);
+      }
+      if (ok) e.oaim[i] = b.aim;          // .oaim = .aim tras el bucle
+    }
+    r[0] = ok ? 1.0f : -1.0f;
+    for (int c = 0; c < 8; ++c) r[1 + c] = static_cast<float>(os[c]);
+  }
+  return written;
+}
+
+}  // extern "C"
+
+extern "C" {
+// SysvarTok(a) sin bot (DNATokenizing.bas:320-338, n = 0): lo usa el
+// LostFocus de frmMonitorSet (:413-418) con "." & texto. Sin privadas.
+DB_EXPORT int db_sim_sysvar_tok0(void* h, const char* name) {
+  static const db::Bot none{};
+  if (!name) return 0;
+  return db::loader_detail::SysvarTok(name, none, *S(h).sysvars);
+}
+}  // extern "C"
+
+extern "C" {
+// Skin(i) del bot n (solo lectura; lo usa el smoke de E8 para verificar
+// OSkin contra la formula de DrawRobSkin).
+DB_EXPORT int db_sim_bot_skin(void* h, int n, int i) {
+  const db::Sim& s = S(h);
+  if (n < 1 || n >= static_cast<int>(s.rob.size()) || i < 0 || i > 13) return 0;
+  return s.rob[n].Skin[static_cast<std::size_t>(i)];
+}
+DB_EXPORT float db_sim_bot_aim(void* h, int n) {
+  const db::Sim& s = S(h);
+  if (n < 1 || n >= static_cast<int>(s.rob.size())) return 0.0f;
+  return s.rob[n].aim;
+}
+}  // extern "C"
+
+// ---------------------------------------------------------------------------
+// E8 — AssignSkin (OptionsForm.frm:3411-3472): la skin de una especie, que
+// el original genera al agregarla en el formulario de opciones (:3301) y
+// loadrobs copia a cada fundador (main.frm:1552). Determinista por nombre y
+// ADN tokenizado (Rnd con argumento negativo re-siembra), salvo el Randomize
+// final (Timer) que decide Skin(6). Decision de host: corre sobre un LCG
+// propio, no el de la sim — en el original usaba el global, pero antes de
+// una sim nueva eso lo borra el `Rnd -1 : Randomize seed/100` de
+// startloaded; con la sim en marcha, re-sembraba su RNG con el reloj (no se
+// replica: el port no toca el RNG de la sim desde la UI).
+// ---------------------------------------------------------------------------
+namespace {
+
+// Rnd(number) de VB6: < 0 re-siembra, = 0 repite el ultimo, > 0 avanza.
+db::vb_single RndArg(db::VbRng& r, db::vb_single n) {
+  if (n < 0.0f) return r.rnd_negative(n);
+  if (n == 0.0f) return r.rnd0();
+  return r();
+}
+
+}  // namespace
+
+extern "C" {
+
+DB_EXPORT void db_sim_species_assign_skin(void* h, int idx, double timer) {
+  db::Sim& sim = S(h);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= sim.Specie.size()) return;
+  db::Specie& sp = sim.Specie[static_cast<std::size_t>(idx)];
+  db::VbRng rng;
+  rng.randomize(0.0);                                   // Randomize 0
+
+  // robname = Replace(Name, ".txt", "") — todas las apariciones.
+  std::string robname = sp.Name;
+  for (std::size_t p; (p = robname.find(".txt")) != std::string::npos;)
+    robname.erase(p, 4);
+
+  double newR = 0.0, nextR = 0.0;
+  // ReDim dbls(Len - 1): con nombre vacio el original daria error 9; aqui
+  // se saltea el tramo del nombre.
+  std::vector<double> dbls;
+  for (unsigned char c : robname)                       // pre seeds
+    dbls.push_back(RndArg(rng, -static_cast<db::vb_single>(c)));
+  for (double d : dbls) {                               // randomize by name
+    newR = d;
+    nextR = RndArg(rng, -db::vb_angle(0.0f, 0.0f,
+                                      static_cast<db::vb_single>(nextR - 0.5),
+                                      static_cast<db::vb_single>(newR - 0.5)));
+  }
+  const double nameR = nextR;
+  newR = 0.0;
+  nextR = 0.0;
+
+  db::Bot tmp;                                          // rob(0)
+  if (db::LoadDNAText(sp.dnatext, tmp, *sim.sysvars)) {
+    rng.randomize(0.0);
+    dbls.assign(tmp.dna.size(), 0.0);
+    for (std::size_t x = 0; x < tmp.dna.size(); ++x) {  // pre seeds
+      // Los argumentos de angle() se evaluan de izquierda a derecha.
+      const db::vb_single a = RndArg(
+          rng, -static_cast<db::vb_single>(tmp.dna[x].value));
+      const db::vb_single b = RndArg(
+          rng, -static_cast<db::vb_single>(tmp.dna[x].tipo));
+      dbls[x] = RndArg(rng, -db::vb_angle(0.0f, 0.0f, a - 0.5f, b - 0.5f));
+    }
+    for (double d : dbls) {                             // randomize by dna
+      newR = d;
+      nextR = RndArg(rng, -db::vb_angle(0.0f, 0.0f,
+                                        static_cast<db::vb_single>(nextR - 0.5),
+                                        static_cast<db::vb_single>(newR - 0.5)));
+    }
+  }
+
+  rng.randomize(nextR * 1000.0);
+  // Int(Rnd * (half + 1)) / Int(Rnd * 629): Single * Integer = Single.
+  for (int i = 0; i <= 7; i += 2) {
+    sp.Skin[static_cast<std::size_t>(i)] =
+        static_cast<db::vb_integer>(std::floor(rng() * 61.0f));
+    if (i == 4) rng.randomize(nameR * 1000.0);
+    sp.Skin[static_cast<std::size_t>(i + 1)] =
+        static_cast<db::vb_integer>(std::floor(rng() * 629.0f));
+  }
+  rng.randomize(static_cast<double>(static_cast<db::vb_single>(timer)));
+  // (Skin(6) + Int(Rnd * 61) * 2) / 3 → Integer (bancario).
+  const float r6 = std::floor(rng() * 61.0f) * 2.0f;
+  sp.Skin[6] = db::vb_cint(
+      static_cast<double>(static_cast<float>(sp.Skin[6]) + r6) / 3.0);
 }
 
 }  // extern "C"
