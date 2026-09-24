@@ -18,10 +18,12 @@ inline BucketType& BucketAt(Sim& sim, int x, int y) {
 
 inline void UpdateBotBucket(Sim& sim, int n);
 
-// Quads.bas:27-28 — Int(campo / BucketSize).
+// Quads.bas:26-27 — Int(campo / BucketSize). Un campo no finito o no
+// positivo cuenta como 0 celdas (evita el cast de NaN a int, que es UB).
 inline int BucketCountRaw(vb_single field) {
-  return static_cast<int>(
-      std::floor(static_cast<double>(field) / BucketSize));
+  const double q = std::floor(static_cast<double>(field) / BucketSize);
+  if (!(q >= 1.0)) return 0;
+  return static_cast<int>(q);
 }
 
 // Decisión de port PP-01 (70-CASOS-DORADOS.md §15): al menos 1 celda por
@@ -93,7 +95,7 @@ inline void EnsureBuckets(Sim& sim) {
     InitBuckets(sim);
 }
 
-// Quads.bas:113-140 — Add_Bot: primer hueco -1, o crece de a 5.
+// Quads.bas:107-134 — Add_Bot: primer hueco -1, o crece de a 5.
 inline void Add_Bot(Sim& sim, int n, const Vector& pos) {
   BucketType& bk = BucketAt(sim, static_cast<int>(pos.x),
                             static_cast<int>(pos.y));
@@ -112,7 +114,7 @@ inline void Add_Bot(Sim& sim, int n, const Vector& pos) {
   bk.size = static_cast<vb_integer>(bk.size + 5);
 }
 
-// Quads.bas:142-172 — Delete_Bot: compacta y recorta de a 50.
+// Quads.bas:136-172 — Delete_Bot: compacta y recorta de a 50.
 inline void Delete_Bot(Sim& sim, int n, const Vector& pos) {
   if (pos.x < 0 || pos.y < 0) return;  // bots nuevos: aún sin bucket
   if (pos.x > sim.NumXBuckets - 1 || pos.y > sim.NumYBuckets - 1) return;

@@ -189,7 +189,14 @@ Emscripten; presentación web separada.
   probada en Chrome (ecosistema alga/animal vivo, teleporter local,
   sin errores de consola).
 
-Estado verificado: 178 casos / 3544 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) (ver `spec/PROGRESO.md`).
+- **Pendientes post-plan (familia PP, `70-CASOS-DORADOS.md §15`)**: PP-01
+  — un campo con un eje de menos de 4000 dejaba la rejilla de buckets en 0
+  celdas y la siembra recursaba sin fin (`EnsureBuckets`); ahora hay al menos
+  1 celda por eje y se registra en `SimDiag::err9_bucket_field` (en el
+  original era un error 9 inalcanzable desde su UI). Smoke:
+  `node tools/pp/smoke_campo.mjs`.
+
+Estado verificado: 181 casos / 3851 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) y PP-01 (ver `spec/PROGRESO.md`).
 
 ## Build
 

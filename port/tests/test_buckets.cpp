@@ -3,8 +3,8 @@
 // BucketSize (4000) en algún eje.
 //
 // En el original, Int(FieldHeight / 4000) = 0 deja NumYBuckets = 0
-// (Quads.bas:27-28); UpdateBotBucket clampa la celda a NumYBuckets - 1 = -1
-// (:89) y Add_Bot indexa Buckets(x, -1) (:115): error 9 en el primer
+// (Quads.bas:26-27); UpdateBotBucket clampa la celda a NumYBuckets - 1 = -1
+// (:91) y Add_Bot indexa Buckets(x, -1) (:115): error 9 en el primer
 // preparerob (Module1.bas:39), sin handler en el camino de StartSimul. La UI
 // del original no llega ahí (slider 1..25: F1 = 9237x6928, el menor tamaño
 // normal es 8000x6000, OptionsForm.frm:4083-4097); solo un archivo editado.
@@ -12,6 +12,7 @@
 // EnsureBuckets (construcción del port) re-inicializara en cada llamada,
 // también desde el re-registro de InitBuckets: recursión infinita.
 // Decisión de port: al menos 1 celda por eje + SimDiag::err9_bucket_field.
+#include <limits>
 #include <string>
 
 #include "doctest.h"
@@ -94,6 +95,51 @@ TEST_CASE("PP-01 campo de menos de 4000 en un eje: rejilla de 1 celda, "
     CHECK(alive >= 15);
     // EnsureBuckets no vuelve a inicializar: la rejilla ya coincide.
     CHECK(s.diag.err9_bucket_field == 1);
+  }
+}
+
+TEST_CASE("PP-01b el campo se achica con bots ya sembrados: el "
+          "re-registro de InitBuckets no recursa") {
+  Field f(8000.0f, 6000.0f);
+  Sim& s = f.sim;
+  SpecieCfg cfg;
+  cfg.Veg = true;
+  cfg.Stnrg = 3000.0f;
+  for (int t = 0; t < 15; ++t) REQUIRE(InsertFounder(s, kAlga, "Alga.txt", cfg) > 0);
+  UpdateSim(s);
+  CHECK(s.diag.err9_bucket_field == 0);
+
+  // EnsureBuckets ve el campo nuevo en la próxima llamada y re-inicializa
+  // con los 15 bots existentes (Quads.bas:56-62).
+  s.opts.FieldWidth = 4000.0f;
+  s.opts.FieldHeight = 3000.0f;
+  UpdateSim(s);
+  CHECK(s.NumXBuckets == 1);
+  CHECK(s.NumYBuckets == 1);
+  CHECK(s.diag.err9_bucket_field == 1);
+  for (int n = 1; n <= s.MaxRobs; ++n) {
+    if (!s.rob[n].exist) continue;
+    CAPTURE(n);
+    CHECK(registrations(s, n) == 1);
+  }
+
+  // Campos degenerados: no finito o no positivo => 1 celda, sin recursión.
+  const float bad[] = {0.0f, -500.0f, std::numeric_limits<float>::quiet_NaN()};
+  for (float v : bad) {
+    CAPTURE(v);
+    s.opts.FieldWidth = 8000.0f;  // rejilla 2x1 antes de cada campo malo
+    s.opts.FieldHeight = 6000.0f;
+    EnsureBuckets(s);
+    REQUIRE(s.NumXBuckets == 2);
+    s.opts.FieldWidth = v;
+    s.opts.FieldHeight = v;
+    const int before = s.diag.err9_bucket_field;
+    EnsureBuckets(s);
+    CHECK(s.NumXBuckets == 1);
+    CHECK(s.NumYBuckets == 1);
+    CHECK(s.diag.err9_bucket_field == before + 1);
+    for (int n = 1; n <= s.MaxRobs; ++n)
+      if (s.rob[n].exist) CHECK(registrations(s, n) == 1);
   }
 }
 
