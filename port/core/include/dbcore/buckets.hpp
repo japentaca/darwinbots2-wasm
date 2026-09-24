@@ -18,14 +18,34 @@ inline BucketType& BucketAt(Sim& sim, int x, int y) {
 
 inline void UpdateBotBucket(Sim& sim, int n);
 
+// Quads.bas:26-27 — Int(campo / BucketSize). Un campo no finito o no
+// positivo cuenta como 0 celdas (evita el cast de NaN a int, que es UB).
+inline int BucketCountRaw(vb_single field) {
+  const double q = std::floor(static_cast<double>(field) / BucketSize);
+  if (!(q >= 1.0)) return 0;
+  return static_cast<int>(q);
+}
+
+// Decisión de port PP-01 (70-CASOS-DORADOS.md §15): al menos 1 celda por
+// eje. Con 0 celdas el original cae en error 9 (Add_Bot con Buckets(x, -1))
+// y en el port la rejilla vacía hacía recursar EnsureBuckets -> InitBuckets
+// -> UpdateBotBucket sin fin. Para campos de 4000 o más no cambia nada.
+inline int BucketCount(vb_single field) {
+  const int n = BucketCountRaw(field);
+  return n < 1 ? 1 : n;
+}
+
 // Quads.bas:22-63 — Init_Buckets: dimensiona la rejilla, precalcula los
 // adyacentes y re-registra todos los bots existentes. También fija
 // MaxBotShotSeperation (main.frm:1291, mismo camino de arranque).
 inline void InitBuckets(Sim& sim) {
-  sim.NumXBuckets = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldWidth) / BucketSize));
-  sim.NumYBuckets = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldHeight) / BucketSize));
+  sim.NumXBuckets = BucketCount(sim.opts.FieldWidth);
+  sim.NumYBuckets = BucketCount(sim.opts.FieldHeight);
+  // PP-01: con un eje de menos de BucketSize el original hace error 9 en el
+  // primer Add_Bot (Buckets(x, -1)); el port da una celda y lo registra.
+  if (BucketCountRaw(sim.opts.FieldWidth) < 1 ||
+      BucketCountRaw(sim.opts.FieldHeight) < 1)
+    sim.diag.err9_bucket_field += 1;
 
   sim.Buckets.assign(
       static_cast<std::size_t>(sim.NumXBuckets) * sim.NumYBuckets,
@@ -69,15 +89,13 @@ inline void InitBuckets(Sim& sim) {
 
 // Rejilla al día con el campo (ver cabecera). Barata: dos comparaciones.
 inline void EnsureBuckets(Sim& sim) {
-  const int nx = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldWidth) / BucketSize));
-  const int ny = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldHeight) / BucketSize));
+  const int nx = BucketCount(sim.opts.FieldWidth);
+  const int ny = BucketCount(sim.opts.FieldHeight);
   if (sim.NumXBuckets != nx || sim.NumYBuckets != ny || sim.Buckets.empty())
     InitBuckets(sim);
 }
 
-// Quads.bas:113-140 — Add_Bot: primer hueco -1, o crece de a 5.
+// Quads.bas:107-134 — Add_Bot: primer hueco -1, o crece de a 5.
 inline void Add_Bot(Sim& sim, int n, const Vector& pos) {
   BucketType& bk = BucketAt(sim, static_cast<int>(pos.x),
                             static_cast<int>(pos.y));
@@ -96,7 +114,7 @@ inline void Add_Bot(Sim& sim, int n, const Vector& pos) {
   bk.size = static_cast<vb_integer>(bk.size + 5);
 }
 
-// Quads.bas:142-172 — Delete_Bot: compacta y recorta de a 50.
+// Quads.bas:136-172 — Delete_Bot: compacta y recorta de a 50.
 inline void Delete_Bot(Sim& sim, int n, const Vector& pos) {
   if (pos.x < 0 || pos.y < 0) return;  // bots nuevos: aún sin bucket
   if (pos.x > sim.NumXBuckets - 1 || pos.y > sim.NumYBuckets - 1) return;

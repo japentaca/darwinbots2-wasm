@@ -341,6 +341,15 @@ struct SimDiag {
                                  //   PB_keys(i).memloc fuera de mem(0..1000)
                                  //   (Master.bas:354; frmPBMode no valida el
                                  //   rango). Decisión: registrar y no escribir.
+  int err9_bucket_field = 0;     // sitio de error 9: campo de menos de
+                                 //   BucketSize en un eje => NumX/YBuckets = 0
+                                 //   y Add_Bot indexa Buckets(x, -1)
+                                 //   (Quads.bas:26-27, :91, :115). Decisión
+                                 //   (PP-01): al menos 1 celda por eje; se
+                                 //   registra una vez por Init_Buckets que
+                                 //   arma el sitio (aunque aún no haya bots:
+                                 //   el original recién falla en el primer
+                                 //   Add_Bot).
 };
 
 // ---- E5 · modos de juego ----------------------------------------------------
