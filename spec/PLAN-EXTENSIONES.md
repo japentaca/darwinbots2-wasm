@@ -394,6 +394,15 @@ formato para suplir un global que el core ya modela. Rebanada mínima:
 - Familia nueva **E7-*** (`70-CASOS-DORADOS.md §14`) con el ciclo de siempre
   (rojo → transcripción → verde) y revisión de rama antes de mergear.
 
+**Segundo hueco, encontrado al diseñar el transporte**: `RemoveExtinctSpecies`
+(`Robots.bas:1449-1471`, llamado al final de P6 en `:1645`) estaba en el port
+como "mantenimiento sin efecto en `mem()`", y `UpdateCounters` sin los topes
+de `MAXNATIVESPECIES` (`:1149-1156`). No toca `mem()`, pero `SpeciesNum` es el
+gate de `TeleportInBots` (`> 45` suspende TODA entrada, `Teleport.bas:383`):
+sin la poda, cada especie llegada por Internet que se extingue queda en el
+registro para siempre, y tras 46 la sim deja de aceptar organismos. Se
+transcribe con su caso (E7-05).
+
 ### Alcance
 
 | Pieza | Decisión |
@@ -403,6 +412,7 @@ formato para suplir un global que el core ya modela. Rebanada mínima:
 | `writeIMdata` | ✅ transcrito (JSON byte a byte, `IMgetname` incluido) en la capa wasm; viaja al relay en vez de a la carpeta outbound |
 | `InternetSpecies` | ✅ la llenan los censos de los pares (nombre + color, el esquema de `SaveSimPopulation`); el color de serie cae a negro si no está, como el original |
 | `LastOwner` | ✅ con el core (arriba) |
+| Poda de especies extintas | ✅ con el core (E7-05): sin ella el gate de 45 especies se cerraba para siempre |
 | Eco-IM (`y_eco_im`) | ❌ fuera: es una variante de la carrera evo (`Evo.bas` Next_Stage/UpdateWonF1 con 15 `testrob`, `im.gset`, `MDIForm1.frm:2585-2640`) que E5 dejó fuera; lo que toca a los registros (B8-3, la DQ al cargar) ya está en `formats.hpp` y ahora es alcanzable por `sim.fmt` |
 | Liga (`MDIForm1.frm:2536-2790`) | ❌ fuera: es orquestación **local** por disco entre reinicios del proceso (`restartmode.gset`, `FileCopy`, `getfiles`), no usa red; no gana nada con el transporte |
 | `NetEvent.frm`, `SaveSimPopulation`, `PipeRPC` (`main.frm:2008-2016`) | ❌ muertos en el original |

@@ -114,16 +114,38 @@ inline void Decay(Sim& sim, int n) {
   }
 }
 
+// Robots.bas:1449-1471 — DeleteSpecies + RemoveExtinctSpecies (P6, :1645).
+// Las especies NO nativas con población 0 salen del registro; el índice no
+// avanza tras borrar (se re-mira la misma posición). SpeciesNum es el gate
+// de TeleportInBots (> 45) y de la auto-especiación (< 49): sin la poda,
+// las especies llegadas por Internet que se extinguen cerraban la entrada
+// para siempre (E7-05). El `.Native = False` sobre el último slot que hace
+// DeleteSpecies cae fuera del registro (el vector se achica).
+inline void RemoveExtinctSpecies(Sim& sim) {
+  std::size_t i = 0;
+  while (i < sim.Specie.size()) {
+    if (sim.Specie[i].population == 0 && !sim.Specie[i].Native)
+      sim.Specie.erase(sim.Specie.begin() + static_cast<std::ptrdiff_t>(i));
+    else
+      i += 1;
+  }
+}
+
 // Robots.bas:1139-1172 — UpdateCounters (P2): contadores + Decay/KillRobot
 // inmediato para corpses sin body.
 inline void UpdateCounters(Sim& sim, int n) {
   sim.TotalRobots += 1;
 
+  // :1149-1156 — con el registro lleno (SpeciesNum = MAXNATIVESPECIES) ni
+  // se agrega la especie nueva ni se cuenta la población de NINGUNA
+  // (E7-05: RemoveExtinctSpecies las ve en 0 y poda las no nativas).
   std::size_t i = SpeciesFromBot(sim, n);
+  const bool room =
+      static_cast<vb_long>(sim.Specie.size()) < MAXNATIVESPECIES;
   if (!sim.rob[n].Corpse) {
-    if (i == sim.Specie.size())
+    if (i == sim.Specie.size() && room)
       AddSpecie(sim, n);
-    else
+    else if (room)
       sim.Specie[i].population += 1;
   }
   if (i < sim.Specie.size() && sim.Specie[i].population > 32000)
@@ -1980,7 +2002,7 @@ inline void UpdateBots(Sim& sim) {
 
   // P6 — nacimientos y muertes.
   ReproduceAndKill(sim);
-  // RemoveExtinctSpecies: mantenimiento del registro ⚙; sin efecto en mem().
+  RemoveExtinctSpecies(sim);  // :1645 (E7-05)
 
   if (sim.totnvegs == 0 && sim.opts.Restart && !sim.opts.F1) {
     sim.f1.ReStarts += 1;  // E5 (Robots.bas:1654)

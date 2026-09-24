@@ -2326,7 +2326,7 @@ de la página.
 > escribe (E7-04). La capa host los fija (apodo del panel Internet).
 >
 > **Inventario RNG**: **0 extracciones** nuevas (E7-04 compara el flujo con
-> y sin globales).
+> y sin globales; la poda de E7-05 no consume RNG).
 
 | Caso | Qué fija | Fuente |
 |---|---|---|
@@ -2334,13 +2334,27 @@ de la página.
 | **E7-02** | `sunbelt` del registro = el global de la sim: encendido, las 4 tasas sunbelt viajan; apagado, `LoadRobotBody` las pone a 0 en el receptor. | `HDRoutines.bas:2211-2213`, `:1884`, `:1968-1975` |
 | **E7-03** | `SaveWithoutMutations` alcanza al registro del tick: el detalle de mutaciones viaja reemplazado por el texto fijo. | `HDRoutines.bas:2112-2116` |
 | **E7-04** | Inventario: mismo flujo RNG (y misma posición de llegada) con y sin globales; `SaveSimulation` byte a byte idéntico con `fmt` cambiado. | — |
+| **E7-05** | `RemoveExtinctSpecies` al final de P6: las especies **no nativas** con población 0 salen del registro (las nativas y las que tienen bots quedan); con 46 especies extintas el receptor las poda en P6 y el organismo entra en el paso 18 del **mismo** tick; con el registro lleno (`SpeciesNum = MAXNATIVESPECIES` = 76) `UpdateCounters` ni agrega la especie nueva ni cuenta la población de ninguna, así que la poda se lleva a todas las no nativas **aunque tengan bots vivos** y al tick siguiente vuelven a registrarse — `[PROBABLE BUG]` replicado. | `Robots.bas:1144-1159`, `:1449-1471`, `:1645`, `Teleport.bas:383` |
 
-Los cuatro casos viven en `port/tests/test_internet.cpp` y ejercitan el
-viaje completo por dos ticks reales (`UpdateSim` del emisor y del receptor,
-con el buzón movido a mano como lo mueve la capa host). Suite tras E7:
-**176 casos / 3513 aserciones** en verde en los tres modos, con
+**E7-05 es un hueco heredado de M3/M6**, no algo nuevo de la etapa: el port
+tenía `RemoveExtinctSpecies` como "mantenimiento del registro ⚙; sin efecto
+en `mem()`" y `UpdateCounters` sin los topes de `MAXNATIVESPECIES`. No toca
+`mem()`, pero `SpeciesNum` es el **gate de `TeleportInBots`** (`> 45` suspende
+toda entrada, `Teleport.bas:383`) y de la auto-especiación (`< 49`,
+`NeoMutations.bas:209`): sin la poda, cada especie que llega por Internet y se
+extingue queda registrada para siempre y, tras 46, la sim deja de aceptar
+organismos (y de bifurcar especies) hasta reiniciarse. Salió al diseñar el
+transporte de E7, que es justamente lo que hace llegar especies nuevas sin
+parar. La suite heredada no dependía del registro sin podar (172 casos
+intactos).
+
+Los cinco casos viven en `port/tests/test_internet.cpp`; E7-01..E7-04
+ejercitan el viaje completo por dos ticks reales (`UpdateSim` del emisor y
+del receptor, con el buzón movido a mano como lo mueve la capa host). Suite
+tras E7: **177 casos / 3530 aserciones** en verde en los tres modos, con
 mutation-check (sin el `g` de P0a caen E7-01..E7-03; sin el `sunbelt` de
-`TickFormatGlobals` cae E7-02).
+`TickFormatGlobals` cae E7-02; sin la llamada a `RemoveExtinctSpecies` o sin
+los topes de `UpdateCounters` cae E7-05).
 
 **Eco-IM** (`y_eco_im`) queda alcanzable por `sim.fmt`, pero sin caso: el
 modo es la variante de red de la carrera evo que E5 dejó fuera

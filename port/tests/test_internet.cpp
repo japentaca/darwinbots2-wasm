@@ -219,3 +219,65 @@ TEST_CASE("E7-04 inventario: 0 RNG y Sim.fmt no se persiste") {
     CHECK(fa.data == fb.data);
   }
 }
+
+// ---------------------------------------------------------------------------
+TEST_CASE("E7-05 RemoveExtinctSpecies: el registro se poda en P6") {
+  // Robots.bas:1449-1471 + :1645. Hasta E7 el port lo tenía como
+  // "mantenimiento sin efecto en mem()", pero SpeciesNum es el gate de
+  // TeleportInBots (> 45 cierra toda entrada, Teleport.bas:383) y de la
+  // auto-especiación (< 49): sin la poda, las especies llegadas por
+  // Internet que se extinguen cerraban la entrada PARA SIEMPRE.
+  auto addsp = [](Sim& sim, const std::string& name, bool native) {
+    Specie sp;
+    sp.Name = name;
+    sp.Native = native;
+    sim.Specie.push_back(sp);
+  };
+
+  SUBCASE("no nativas sin población salen; nativas y vivas quedan") {
+    World w;
+    addsp(w.sim, "Nativa.txt", true);   // sin bots: queda (Native)
+    addsp(w.sim, "Muerta.txt", false);  // sin bots: sale
+    addsp(w.sim, "Viva.txt", false);    // con un bot: queda
+    addsp(w.sim, "Muerta2.txt", false);
+    w.spawn("Viva.txt", 3000.0f, 3000.0f);
+    w.tick();
+    REQUIRE(w.sim.Specie.size() == 2);
+    CHECK(w.sim.Specie[0].Name == "Nativa.txt");
+    CHECK(w.sim.Specie[1].Name == "Viva.txt");
+    CHECK(w.sim.Specie[1].population == 1);
+  }
+
+  SUBCASE("la entrada de Internet se reabre al podar extintas") {
+    Trip t;
+    for (int k = 0; k < 46; ++k)
+      addsp(t.rx.sim, "Extinta" + std::to_string(k) + ".txt", false);
+    REQUIRE(t.rx.sim.Specie.size() == 46);  // > 45: gate cerrado
+    // Tick del receptor con el gate cerrado: P6 poda las 46 antes del
+    // paso 18, así que el organismo entra en ESTE mismo tick.
+    const int n = t.go();
+    CHECK(n > 0);
+    CHECK(t.rx.sim.Specie.size() == 1);  // solo la del recién llegado
+  }
+
+  SUBCASE("registro lleno (76): UpdateCounters deja de contar y la poda "
+          "se lleva a las no nativas aunque tengan bots") {
+    // Robots.bas:1149-1156: con SpeciesNum = MAXNATIVESPECIES ni se agrega
+    // la especie nueva ni se suma población a NINGUNA; RemoveExtinctSpecies
+    // ve población 0 en todas. [PROBABLE BUG] replicado.
+    World w;
+    addsp(w.sim, "Nativa.txt", true);
+    for (int k = 1; k < MAXNATIVESPECIES; ++k)
+      addsp(w.sim, "N" + std::to_string(k) + ".txt", false);
+    REQUIRE(static_cast<int>(w.sim.Specie.size()) == MAXNATIVESPECIES);
+    const int a = w.spawn("N1.txt", 3000.0f, 3000.0f);
+    w.spawn("Nueva.txt", 6000.0f, 6000.0f);
+    w.tick();
+    CHECK(w.sim.rob[a].exist);
+    REQUIRE(w.sim.Specie.size() == 1);
+    CHECK(w.sim.Specie[0].Name == "Nativa.txt");
+    // Al tick siguiente hay lugar: los bots vivos vuelven a registrarse.
+    w.tick();
+    CHECK(w.sim.Specie.size() == 3);
+  }
+}
