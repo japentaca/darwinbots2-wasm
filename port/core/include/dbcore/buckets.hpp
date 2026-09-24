@@ -18,14 +18,32 @@ inline BucketType& BucketAt(Sim& sim, int x, int y) {
 
 inline void UpdateBotBucket(Sim& sim, int n);
 
+// Quads.bas:27-28 — Int(campo / BucketSize).
+inline int BucketCountRaw(vb_single field) {
+  return static_cast<int>(
+      std::floor(static_cast<double>(field) / BucketSize));
+}
+
+// Decisión de port PP-01 (70-CASOS-DORADOS.md §15): al menos 1 celda por
+// eje. Con 0 celdas el original cae en error 9 (Add_Bot con Buckets(x, -1))
+// y en el port la rejilla vacía hacía recursar EnsureBuckets -> InitBuckets
+// -> UpdateBotBucket sin fin. Para campos de 4000 o más no cambia nada.
+inline int BucketCount(vb_single field) {
+  const int n = BucketCountRaw(field);
+  return n < 1 ? 1 : n;
+}
+
 // Quads.bas:22-63 — Init_Buckets: dimensiona la rejilla, precalcula los
 // adyacentes y re-registra todos los bots existentes. También fija
 // MaxBotShotSeperation (main.frm:1291, mismo camino de arranque).
 inline void InitBuckets(Sim& sim) {
-  sim.NumXBuckets = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldWidth) / BucketSize));
-  sim.NumYBuckets = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldHeight) / BucketSize));
+  sim.NumXBuckets = BucketCount(sim.opts.FieldWidth);
+  sim.NumYBuckets = BucketCount(sim.opts.FieldHeight);
+  // PP-01: con un eje de menos de BucketSize el original hace error 9 en el
+  // primer Add_Bot (Buckets(x, -1)); el port da una celda y lo registra.
+  if (BucketCountRaw(sim.opts.FieldWidth) < 1 ||
+      BucketCountRaw(sim.opts.FieldHeight) < 1)
+    sim.diag.err9_bucket_field += 1;
 
   sim.Buckets.assign(
       static_cast<std::size_t>(sim.NumXBuckets) * sim.NumYBuckets,
@@ -69,10 +87,8 @@ inline void InitBuckets(Sim& sim) {
 
 // Rejilla al día con el campo (ver cabecera). Barata: dos comparaciones.
 inline void EnsureBuckets(Sim& sim) {
-  const int nx = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldWidth) / BucketSize));
-  const int ny = static_cast<int>(
-      std::floor(static_cast<double>(sim.opts.FieldHeight) / BucketSize));
+  const int nx = BucketCount(sim.opts.FieldWidth);
+  const int ny = BucketCount(sim.opts.FieldHeight);
   if (sim.NumXBuckets != nx || sim.NumYBuckets != ny || sim.Buckets.empty())
     InitBuckets(sim);
 }

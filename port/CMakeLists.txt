@@ -47,6 +47,7 @@ add_executable(dbtests
   tests/test_gamemodes.cpp
   tests/test_registro.cpp
   tests/test_internet.cpp
+  tests/test_buckets.cpp
 )
 target_link_libraries(dbtests PRIVATE dbcore)
 target_include_directories(dbtests PRIVATE tests)

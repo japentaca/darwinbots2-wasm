@@ -1414,6 +1414,7 @@ caso propio; el resto se especifica aquí:
 | `TieTorque` con 10 ties y `|mt| > 2π` → `Ties(11)` (`Physics.bas:712`) | — | con el máximo real de 9 ties la escritura cae en `Ties(10)` (slot fantasma, B-27); el caso 10-ties es inalcanzable por creación (`34-TIES.md §0.1`) |
 | `nextlowestmultof2 ≥ 16384` (liga ⚙) | S-05 | fuera del core |
 | consola/UI escribiendo `val()` sin límites | — | fuera del core (la consola del port valida rango) |
+| campo de menos de 4000 en un eje → `Add_Bot` con `Buckets(x, -1)` (`Quads.bas:89`, `:115`) | PP-01 | al menos 1 celda por eje + `SimDiag::err9_bucket_field` (añadido 2026-09-24, §15) |
 
 ---
 
@@ -2374,3 +2375,56 @@ vivas: el port pisaba la especie 75. Ahora es `Sim::SpecieSpare`.
 **Eco-IM** (`y_eco_im`) queda alcanzable por `sim.fmt`, pero sin caso: el
 modo es la variante de red de la carrera evo que E5 dejó fuera
 (`PLAN-EXTENSIONES.md §E7`), y B8-3 sigue catalogado "fuera del core" en §9.
+
+---
+
+## 15. Familia PP — pendientes posteriores al plan (2026-09-24)
+
+> Pendientes que el plan de extensiones dejó anotados (`PROGRESO.md`
+> §"Siguiente") y que, al resolverse, tocan el core. Cada uno con su caso.
+
+### PP-01/PP-02 — la rejilla de `Quads.bas` con un campo de menos de 4000
+
+**Síntoma** (hallazgo 3 de E8): sembrar 15 algas (el preset de la página) en
+un campo de 4000×3000 daba `Maximum call stack size exceeded` en wasm, y
+0xC00000FD (desborde de pila) en nativo. Con 8000×6000 no pasaba.
+
+**Qué hace el original.** `Init_Buckets` (`Quads.bas:27-28`) calcula
+`NumYBuckets = Int(3000 / 4000) = 0`; `ReDim Buckets(NumXBuckets,
+NumYBuckets)` deja una fila (0..0) que el bucle de `:31` nunca inicializa.
+En el primer `preparerob` (`Module1.bas:36-39`: `exist = True`,
+`BucketPos = (-2, -2)`), `UpdateBotBucket` clampa la celda a
+`NumYBuckets - 1 = -1` (`Quads.bas:89`) y `Add_Bot` indexa `Buckets(x, -1)`
+(`:115`): **error 9**, sin handler en el camino de `StartSimul`
+(`main.frm:1330`; `StartNew_Click` tampoco tiene `On Error`). Cargar un
+`.dbsim` así cae en el mismo error desde el re-registro de `Init_Buckets`
+(`main.frm:1420` → `Quads.bas:56-62`). **La UI no llega ahí**: el slider va
+de 1 a 25 (`OptionsForm.frm:478-479`), el 1 es F1 (9237×6928) y el menor
+tamaño normal es 8000×6000 (`:4083-4097`); solo un archivo editado da un
+eje de menos de 4000. No es un `[PROBABLE BUG]` alcanzable: es un sitio de
+error 9 con configuración degenerada.
+
+**Qué hacía el port.** La recursión no es del original: `EnsureBuckets`
+(construcción del port, cabecera de `buckets.hpp`) re-inicializa la rejilla
+si está vacía, y con 0 celdas lo está **siempre**, así que `InitBuckets` →
+re-registro → `UpdateBotBucket` → `EnsureBuckets` → `InitBuckets`… sin fin.
+El campo de la página es libre (E1), así que el sitio sí es alcanzable en
+el port.
+
+**Decisión de port**: al menos **1 celda por eje** (`BucketCount` en
+`buckets.hpp`, usada por `InitBuckets` y `EnsureBuckets`) y registro en
+`SimDiag::err9_bucket_field`, una vez por `Init_Buckets`. Con un eje de
+4000 o más, la rejilla es la del fuente: la suite heredada quedó **intacta
+por construcción** (178 casos / 3544 aserciones sin retocar un caso).
+Inventario RNG: 0 extracciones.
+
+| Caso | Qué fija | Fuente |
+|---|---|---|
+| **PP-01** | Campos 4000×3000, 3000×4000, 8000×3999 y 2000×1500: rejilla de max(1, Int(eje/4000)) celdas por eje, `err9_bucket_field = 1` tras el arranque; 15 fundadores vegetales sembrados, cada uno registrado exactamente una vez en su celda, y tras 50 ticks todos los vivos siguen registrados. El contador no vuelve a subir (`EnsureBuckets` ya ve la rejilla al día). | `Quads.bas:22-105`, `Module1.bas:30-39` |
+| **PP-02** | Campos de 4000 o más (4000², 8000×6000, F1 9237×6928, default 16000×12000): la rejilla es `Int(eje/4000)` y el contador queda en 0. | `Quads.bas:27-28`, `OptionsForm.frm:4083-4097`, `MDIForm1.frm:2479-2480` |
+
+Los dos casos viven en `port/tests/test_buckets.cpp`. Mutation-check: sin
+el piso de `BucketCount`, PP-01 cae en el primer `REQUIRE` (y, sin él, la
+siembra recursa); sin el registro, cae el contador. Smoke de wasm:
+`tools/pp/smoke_campo.mjs`. Suite tras PP-01: **180 casos / 3760
+aserciones** en verde en los tres modos.
