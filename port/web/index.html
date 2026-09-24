@@ -341,8 +341,9 @@
           <button id="btn-shapes-clear">Borrar todas</button>
         </span>
         <span class="full" style="color:#5c6b88;font-size:11px">
-          Como en el original, las formas que hay al pulsar "Nueva sim" se
-          re-crean, escaladas al campo, en la sim nueva y en cada ronda.</span>
+          Como en el original, las formas se guardan al pulsar "Nueva sim" o
+          al cambiar una opción del panel (= abrir el diálogo de opciones) y
+          se re-crean, escaladas al campo, en la sim nueva y en cada ronda.</span>
       </div>
     </details>
     <details class="optgrp"><summary>Mazes</summary>
@@ -3414,7 +3415,7 @@ function openEyeDesigner() {
   };
   // Ease of Access (frmEYE.frm:322-359)
   w.body.querySelector('.e-costs').onclick = () => {
-    worker.postMessage({ t: 'setcost', i: 54, v: 0 });   // COSTMULTIPLIER
+    worker.postMessage({ t: 'setcost', i: 54, v: 0, nocap: true });   // COSTMULTIPLIER (frmEYE, no OptionsForm)
     const el = document.getElementById('o-c54');
     if (el) el.value = 0;
   };
@@ -3422,7 +3423,7 @@ function openEyeDesigner() {
     if (selBot > 0) worker.postMessage({ t: 'setmem', n: selBot, addr: SETAIM, v: 0 });
   };
   w.body.querySelector('.e-boff').onclick = () => {
-    worker.postMessage({ t: 'setopt', id: 13, v: 0 });   // PhysBrown
+    worker.postMessage({ t: 'setopt', id: 13, v: 0, nocap: true });   // PhysBrown (frmEYE)
     const el = document.getElementById('o-13');
     if (el) el.value = 0;
   };

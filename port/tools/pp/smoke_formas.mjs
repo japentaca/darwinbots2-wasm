@@ -4,9 +4,11 @@
 // El original guarda las formas en xObstacle (fraccion del campo) al activar
 // el dialogo de opciones con la sim visible (OptionsForm.frm:4546-4563) y
 // StartSimul las re-crea escaladas al campo nuevo en cada arranque, sim nueva
-// o ronda nueva (main.frm:1355-1364), con los 3 Rnd del color de NewObstacle
-// (Obstacles.bas:201). leftCompactor/rightCompactor son globales que nada
-// reinicia. Hasta PP-03 la ronda nueva del port perdia las formas.
+// o ronda nueva (main.frm:1357-1365). Los 3 Rnd del color de NewObstacle
+// (Obstacles.bas:201) no se replican (Rnd crudo de arranque, B7-5/Q01).
+// Obstacles() y leftCompactor/rightCompactor son globales que nada reinicia
+// (tampoco LoadSimulation). La ronda hereda SimOpts. Hasta PP-03 la ronda
+// nueva del port perdia las formas.
 //
 //   node tools/pp/smoke_formas.mjs     (desde port/, con build-wasm/)
 import path from 'node:path';
@@ -52,6 +54,9 @@ const api = {
   carry: C('db_sim_obs_carry', null, ['number','number']),
   regen: C('db_sim_obs_regen', 'number', ['number']),
   xcount: C('db_xobs_count', 'number', []),
+  save: C('db_sim_save', 'number', ['number', 'number']),
+  load: C('db_sim_load', null, ['number', 'number', 'number']),
+  free: C('db_free', null, ['number']),
 };
 
 const obsBuf = M._malloc(1000 * 5 * 4);
@@ -67,7 +72,7 @@ function obstacles(h) {
 const lcg = (s, k) => { for (let i = 0; i < k; i++) s = (Math.imul(s, 0x43FD43FD) + 0xC39EC3) & 0xFFFFFF; return s; };
 const f32 = Math.fround;
 
-console.log('\n== API directa: ObsRepop → StartSimul (main.frm:1355-1364) ==');
+console.log('\n== API directa: ObsRepop → StartSimul (main.frm:1357-1365) ==');
 {
   // Sim vieja 8000×6000: dos formas a mano (con un hueco borrado entre
   // medio) y el trash compactor a tasa 200 (vel ±20).
@@ -98,7 +103,7 @@ console.log('\n== API directa: ObsRepop → StartSimul (main.frm:1355-1364) ==')
   };
   const { B, n, s0, s1 } = regenInto(16000, 12000, true);
   check('regen: re-crea las 4 formas', n === 4 && api.numObs(B) === 4, `n=${n}`);
-  check('regen: 3 Rnd por forma (12 extracciones del LCG)', s1 === lcg(s0, 12),
+  check('regen: sin RNG (los 3 Rnd crudos del color no se replican, B7-5)', s1 === s0 && lcg(s0, 1) !== s0,
         `${s0.toString(16)} → ${s1.toString(16)}`);
   const now = obstacles(B);
   const exp = old.map((o) => ({
@@ -109,20 +114,21 @@ console.log('\n== API directa: ObsRepop → StartSimul (main.frm:1355-1364) ==')
         JSON.stringify(now[0]));
   check('regen: el color viene de xObstacle', now.every((o, i) => o.color === exp[i].color));
 
-  // Mismo campo: vuelve exacto (x/FW*FW en Single) salvo 1 ulp; basta
-  // con que el conteo y el orden coincidan.
+  // Mismo campo: la ida y vuelta en Single (x/FW)*FW, bit a bit.
   const same = regenInto(8000, 6000, true);
-  check('regen en el mismo campo: mismas formas en el mismo orden',
-        obstacles(same.B).every((o, i) => Math.abs(o.x - old[i].x) <= 0.001 && o.color === old[i].color));
+  const back = (v, d) => f32(f32(v / d) * d);
+  check('regen en el mismo campo: (x/FW)*FW en Single, en el mismo orden',
+        obstacles(same.B).every((o, i) => o.x === back(old[i].x, 8000) && o.y === back(old[i].y, 6000)
+          && o.w === back(old[i].w, 8000) && o.h === back(old[i].h, 6000) && o.color === old[i].color));
 
   // El compactor: con carry los índices 3/4 siguen siendo compactors y
   // TrashCompactorMove los hace rebotar; sin carry, se cruzan y siguen.
-  const walls = (h) => { const o = obstacles(h); return [o[2].x, o[3].x]; };
-  const bounced = (h) => {
-    let rev = false, prev = walls(h)[0];
+  const walls = (h, li = 2) => { const o = obstacles(h); return [o[li].x, o[li + 1].x]; };
+  const bounced = (h, li = 2) => {
+    let rev = false, prev = walls(h, li)[0];
     for (let t = 0; t < 600; t++) {
       api.tick(h);
-      const x = walls(h)[0];
+      const x = walls(h, li)[0];
       if (x < prev) rev = true;
       prev = x;
     }
@@ -132,7 +138,46 @@ console.log('\n== API directa: ObsRepop → StartSimul (main.frm:1355-1364) ==')
         (() => { const a = walls(B); api.tick(B); const b = walls(B); return b[0] - a[0] === 20 && b[1] - a[1] === -20; })());
   check('compactor: los índices globales pasan y el muro rebota', bounced(B));
   const nc = regenInto(16000, 12000, false);
+  // Sin compactor el muro izquierdo (vel +20) recorre 16000 en ~800 ticks:
+  // en los 600 de la ventana no llega al borde que lo re-armaria.
   check('control: sin carry no hay compactor y el muro no rebota', !bounced(nc.B));
+
+  // LoadSimulation: numObstacles = 0 y reescribe 1..n (HDRoutines.bas:
+  // 1347-1352); los indices del compactador siguen.
+  const lenP = M._malloc(4);
+  // 16000 de ancho: el cruce (~410 ticks) llega antes que el borde (~800).
+  const L = api.create();
+  api.setField(L, 16000, 12000);
+  api.start(L, 31);
+  api.setOpt(L, 85, 200);
+  api.trash(L);
+  const p = api.save(L, lenP);
+  const len = M.HEAP32[lenP >> 2];
+  const bytes = M.HEAPU8.slice(p, p + len);
+  api.free(p);
+  const q = M._malloc(len);
+  M.HEAPU8.set(bytes, q);
+  api.load(L, q, len);
+  check('carga: el compactor sigue rebotando (índices globales)', bounced(L, 0));
+  // Un registro por encima del numObstacles cargado conserva su exist:
+  // invisible, pero ObsRepop lo ve.
+  const K = api.create();
+  api.setField(K, 8000, 6000);
+  api.start(K, 32);
+  for (let i = 0; i < 5; i++) api.addObs(K, 100 * i, 100, 50, 50, 0x010101);
+  const e = M._malloc(1);                      // .dbsim de una sim sin formas
+  const Z0 = api.create();
+  api.setField(Z0, 8000, 6000);
+  api.start(Z0, 33);
+  const pz = api.save(Z0, lenP);
+  const lz = M.HEAP32[lenP >> 2];
+  api.load(K, pz, lz);
+  api.free(pz);
+  api.repop(K);
+  check('carga: los registros viejos por encima de n quedan (invisibles, ObsRepop los toma)',
+        api.numObs(K) === 0 && obstacles(K).length === 0 && api.xcount() === 5, `xObstacle = ${api.xcount()}`);
+  M._free(e); M._free(q); M._free(lenP);
+  for (const h of [L, K, Z0]) api.destroy(h);
 
   // Carry: el array viejo llega apagado y sin formas antes de regenerar.
   const E = api.create();
@@ -244,8 +289,11 @@ console.log('\n== worker.js: sim nueva y rondas ==');
         before > 2 && nObsOf(f) === before, `${before} → ${nObsOf(f)}`);
 
   // Rondas: Restart (id 90) sin heterótrofos ⇒ una ronda nueva por tick.
-  A.send({ t: 'shapes-clear' });              // no toca xObstacle
+  // Cambiar una opción del panel = abrir OptionsForm = ObsRepop (captura
+  // las formas de ahora); borrarlas DESPUÉS no toca xObstacle.
   A.send({ t: 'setopt', id: 90, v: 1 });
+  A.send({ t: 'setopt', id: 85, v: 77 });     // opción en vivo: pasa a la ronda
+  A.send({ t: 'shapes-clear' });
   A.send({ t: 'speed', n: 0 });
   A.send({ t: 'run', running: true });
   const rounds = () => A.logs.filter((l) => l.startsWith('ronda nueva')).length;
@@ -256,10 +304,31 @@ console.log('\n== worker.js: sim nueva y rondas ==');
   check('rondas nuevas: cada ronda re-crea las formas de xObstacle (ni se pierden ni se acumulan)',
         ok && nObsOf(g) === before, `${rounds()} rondas, ${nObsOf(g)} formas`);
   const regenLogs = A.logs.filter((l) => l === `formas regeneradas: ${before}`).length;
-  check('rondas nuevas: una regeneración por ronda', regenLogs >= rounds() + 1,
-        `${regenLogs} regeneraciones`);
+  check('rondas nuevas: una regeneración por ronda (+1 de la sim nueva)', regenLogs === rounds() + 1,
+        `${regenLogs} regeneraciones, ${rounds()} rondas`);
 
-  // Borrar todas y "Nueva sim": la captura nueva está vacía.
+  A.send({ t: 'getopt', id: 85 });
+  const o85 = await A.wait((m) => m.t === 'opt' && m.id === 85);
+  check('rondas nuevas: heredan las opciones en vivo (SimOpts sobrevive)', o85.v === 77, `shapeDriftRate = ${o85.v}`);
+
+  // Borrar y DESPUÉS cambiar una opción: la captura queda vacía y la ronda
+  // siguiente sale sin formas. Un toggle de menú (id 70) o el eye designer
+  // (nocap) no capturan.
+  A.send({ t: 'shapes-clear' });
+  A.send({ t: 'setopt', id: 70, v: 0 });                  // menú de MDIForm1
+  A.send({ t: 'setopt', id: 13, v: 0, nocap: true });    // eye designer
+  A.send({ t: 'step' });
+  const h = await A.frameNow();
+  check('toggle de menú / eye designer: no capturan (la ronda re-crea las formas)', nObsOf(h) === before,
+        `${nObsOf(h)} formas`);
+  A.send({ t: 'shapes-clear' });
+  A.send({ t: 'setopt', id: 31, v: 100 });                // panel de opciones
+  A.send({ t: 'step' });
+  const k = await A.frameNow();
+  check('cambio en el panel tras borrar: la ronda siguiente sale sin formas', nObsOf(k) === 0,
+        `${nObsOf(k)} formas`);
+
+  // "Nueva sim" sin formas: la captura nueva está vacía.
   A.send({ t: 'setopt', id: 90, v: 0 });
   A.send({ t: 'shapes-clear' });
   A.send(resetMsg(101, 8000, 6000));

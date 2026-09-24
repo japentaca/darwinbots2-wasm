@@ -194,9 +194,13 @@ Emscripten; presentación web separada.
   celdas y la siembra recursaba sin fin (`EnsureBuckets`); ahora hay al menos
   1 celda por eje y se registra en `SimDiag::err9_bucket_field` (en el
   original era un error 9 inalcanzable desde su UI). Smoke:
-  `node tools/pp/smoke_campo.mjs`.
+  `node tools/pp/smoke_campo.mjs`. PP-03 (capa host) — la sim y la ronda
+  nueva re-crean las formas guardadas en `xObstacle` (capturadas en "Nueva
+  sim" y al cambiar opciones del panel), escaladas al campo, como
+  `StartSimul` (`main.frm:1357-1365`); el compactor sobrevive y la ronda
+  hereda las opciones. Smoke: `node tools/pp/smoke_formas.mjs`.
 
-Estado verificado: 181 casos / 3851 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) y PP-01 (ver `spec/PROGRESO.md`).
+Estado verificado: 181 casos / 3851 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) y PP-01/PP-03 (ver `spec/PROGRESO.md`).
 
 ## Build
 

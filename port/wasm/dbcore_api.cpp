@@ -1448,7 +1448,7 @@ DB_EXPORT int db_sim_tp_copy(void* dst, void* src, int i) {
 // global de proceso en coordenadas relativas al campo: la captura
 // OptionsForm.ObsRepop (OptionsForm.frm:4550-4563) cada vez que se activa el
 // dialogo de opciones con la sim visible (:4546), y StartSimul la vuelve a
-// crear escalada al campo de la sim que arranca (main.frm:1355-1364) — en
+// crear escalada al campo de la sim que arranca (main.frm:1357-1365) — en
 // cada StartSimul, es decir en sim nueva Y en ronda nueva. El port arma cada
 // sim en un handle nuevo: xObstacle vive aqui (global del modulo, como
 // Sim::fmt) y el array de formas se traspasa con db_sim_obs_carry.
@@ -1458,9 +1458,12 @@ namespace {
 std::vector<db::Obstacle> g_xObstacle;
 }
 
-// OptionsForm.frm:4550-4563 — ObsRepop: copia el array entero (tambien los
+// OptionsForm.frm:4550-4563 — ObsRepop (el worker la llama en "Nueva sim" y
+// en cada cambio del panel de opciones: los dos pasan por activar
+// OptionsForm): copia el array entero (tambien los
 // registros apagados, como `xObstacle = Obstacles.Obstacles`) y pasa a
-// fraccion del campo los que existen. Single / Single asignado a Single.
+// fraccion del campo los que existen (Single / Single en el port: mismo
+// resultado que el Double de VB6 asignado a Single).
 DB_EXPORT void db_sim_obs_repop(void* h) {
   const db::Sim& sim = S(h);
   g_xObstacle = sim.Obstacles;
@@ -1503,26 +1506,22 @@ DB_EXPORT void db_sim_obs_carry(void* dst, void* src) {
     d.Obstacles.resize(static_cast<std::size_t>(top) + 1);
 }
 
-// main.frm:1355-1364 — la regeneracion de formas de StartSimul (despues de
+// main.frm:1357-1365 — la regeneracion de formas de StartSimul (despues de
 // loadrobs y FindSpecies): NewObstacle escalado al campo actual y despues
-// color y vel de xObstacle. NewObstacle sortea su color con
-// `Rnd * 65536 + Rnd * 255 + Rnd` (Obstacles.bas:201) salvo
-// makeAllShapesBlack: el color se pisa, pero las 3 extracciones corren el
-// LCG de la ronda y se replican (a diferencia de las altas de E3, cuyo color
-// visible decide la pagina, B7-5/Q01). Devuelve cuantas formas creo.
+// color y vel de xObstacle. En el original NewObstacle sortea el color con
+// `Rnd * 65536 + Rnd * 255 + Rnd` (Obstacles.bas:201; 3 extracciones salvo
+// makeAllShapesBlack) aunque aqui el color se pise. No se replican: son Rnd
+// crudo de arranque, la misma clase que el port ya omite por decision
+// (colores de las formas de E3, B7-5/Q01; y en el preludio de StartSimul la
+// skin de la sim, SunOnRnd y SimGUID, main.frm:1210-1236). Con esas
+// omisiones el LCG del arranque ya no va a la par del original; replicar
+// solo estas 3 no lo alinearia. Devuelve cuantas formas creo.
 DB_EXPORT int db_sim_obs_regen(void* h) {
-  auto& Sh = H(h);
-  db::Sim& sim = Sh.sim;
+  db::Sim& sim = S(h);
   int made = 0;
   for (std::size_t o = 1; o < g_xObstacle.size(); ++o) {
     const db::Obstacle& x = g_xObstacle[o];
     if (!x.exist) continue;
-    // Las 3 extracciones van dentro de la rama de alta de NewObstacle.
-    if (sim.numObstacles + 1 <= 1000 && !sim.opts.makeAllShapesBlack) {
-      Sh.rng();
-      Sh.rng();
-      Sh.rng();
-    }
     const int oo = db::NewObstacle(sim, x.pos.x * sim.opts.FieldWidth,
                                    x.pos.y * sim.opts.FieldHeight,
                                    x.Width * sim.opts.FieldWidth,
@@ -1910,7 +1909,19 @@ DB_EXPORT unsigned char* db_sim_save(void* h, int* out_len) {
 // `Rnd -1 : Randomize UserSeedNumber / 100` (incondicional en el original).
 DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   auto& Sh = H(h);
+  // PP-03 (revision): Obstacles() y leftCompactor/rightCompactor son
+  // globales del original; LoadSimulation solo pone numObstacles = 0 y
+  // reescribe 1..n (HDRoutines.bas:1347-1352) y startloaded tiene comentado
+  // el apagado (main.frm:1471-1473): los registros por encima de n conservan
+  // su exist (invisibles: todo recorre 1..numObstacles, pero ObsRepop los
+  // ve) y los indices del compactador siguen. El loader del port solo
+  // agranda el vector.
+  std::vector<db::Obstacle> obs = std::move(Sh.sim.Obstacles);
+  const int lc = Sh.sim.leftCompactor, rc = Sh.sim.rightCompactor;
   Sh.sim = db::Sim{};
+  if (!obs.empty()) Sh.sim.Obstacles = std::move(obs);
+  Sh.sim.leftCompactor = lc;
+  Sh.sim.rightCompactor = rc;
   Sh.wire();
   db::VbBinFile f;
   f.data.assign(data, data + (len > 0 ? len : 0));

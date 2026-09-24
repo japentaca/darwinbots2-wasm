@@ -287,7 +287,7 @@ function bindApi() {
     dumpSkins:     C('db_sim_dump_skins', 'number', ['number','number','number']),
     sysvarTok0:    C('db_sim_sysvar_tok0', 'number', ['number','string']),
     assignSkin:    C('db_sim_species_assign_skin', null, ['number','number','number']),
-    // PP-03 - formas de la ronda/sim nueva (xObstacle, main.frm:1355-1364)
+    // PP-03 - formas de la ronda/sim nueva (xObstacle, main.frm:1357-1365)
     obsRepop:      C('db_sim_obs_repop', null, ['number']),
     obsCarry:      C('db_sim_obs_carry', null, ['number','number']),
     obsRegen:      C('db_sim_obs_regen', 'number', ['number']),
@@ -541,8 +541,25 @@ function f1Stats() {
 // con seed nueva (SimOpts.UserSeedNumber = Rnd * 2147483647 — Rnd de HOST,
 // no toca el RNG de la sim) y el estado de módulo F1Mode sobrevive
 // (Contests/Wins/MinRounds/ReStarts; FindSpecies preserva Wins por slot).
+// Ids de db_sim_set_opt que en el original son checks de menú de MDIForm1
+// (main.frm:1259-1269 los refleja) y no del diálogo de opciones.
+const MENU_OPT_IDS = new Set([54, 55, 70, 71, 72, 111, 112]);
+// SimOpts que la ronda hereda de la sim que termina (tabla de ids de
+// wasm/dbcore_api.cpp; los de modos de juego 90-101 los restaura newRound).
+const ROUND_OPT_IDS = [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 50, 51, 52, 53, 54, 55, 56,
+  60, 61, 62, 63, 64, 70, 71, 72, 80, 81, 82, 83, 84, 85, 110, 111, 112];
+
 function newRound() {
   if (!lastReset) return;
+  // PP-03 (revisión): StartSimul no toca SimOpts salvo lo que el propio
+  // arranque rehace (main.frm:1182-1368): las opciones en vivo — y las que
+  // escribió la sim, como la deriva de Polar Ice o el COSTMULTIPLIER de los
+  // costes dinámicos — pasan a la ronda. Los ids 90-101 van aparte (abajo).
+  const opts = {};
+  for (const id of ROUND_OPT_IDS) opts[id] = api.getOpt(sim, id);
+  const costs = {};
+  for (let i = 0; i <= 70; i++) costs[i] = api.getCost(sim, i);
   const keep = {
     contests: api.f1Contests(sim),
     minrounds: api.getOpt(sim, 97), optminrounds: api.getOpt(sim, 101),
@@ -560,7 +577,8 @@ function newRound() {
   // (OptionsForm.frm:4802, que apagaría Internet): los teleporters — el
   // puerto Internet con su inbox incluido — pasan tal cual al handle nuevo,
   // sin RNG.
-  resetSim({ ...lastReset, seed }, true);
+  resetSim({ ...lastReset, seed,
+             options: { ...lastReset.options, opts, costs } }, true);
   if (imCfg) imInboxKnown = imPort() ? api.tpGet(sim, imPort(), 13) : 0;
   api.setOpt(sim, 90, keep.restart);
   api.setOpt(sim, 91, keep.f1);
@@ -572,6 +590,9 @@ function newRound() {
   api.f1Restore(sim, keep.contests, keep.minrounds, keep.optminrounds,
                 keep.over ? 1 : 0, keep.restarts);
   for (let i = 1; i <= 20; i++) api.f1SetWins(sim, i, keep.wins[i - 1]);
+  // FindSpecies corre aquí después de la regeneración de formas de resetSim
+  // (en StartSimul va antes, main.frm:1337-1340 vs :1357): no consume RNG ni
+  // lee formas, así que el orden no se observa.
   const ts = api.f1Start(sim);
   log(`ronda nueva (seed ${seed})` +
       (ts ? ` — contest: ronda ${api.f1Contests(sim) + 1}` : ''));
@@ -1153,8 +1174,8 @@ function resetSim(msg, carryTeleporters) {
     log(ts ? `contest F1: ${ts} especies en liza`
            : 'F1: sin especies de combate — sembrá 2+ y "Arrancar contest"');
   }
-  // PP-03 — main.frm:1355-1364: después de loadrobs y FindSpecies, StartSimul
-  // re-crea las formas de xObstacle escaladas al campo (3 Rnd por forma).
+  // PP-03 — main.frm:1357-1365: después de loadrobs y FindSpecies, StartSimul
+  // re-crea las formas de xObstacle escaladas al campo.
   const nObs = api.obsRegen(sim);
   if (nObs) log(`formas regeneradas: ${nObs}`);
   postFrame();
@@ -1299,11 +1320,24 @@ self.onmessage = (e) => {
     case 'setopt':
       // Cambio en vivo (el core lee las opciones cada tick; mismo efecto
       // que el diálogo de opciones del original sobre una sim corriendo).
-      if (sim) api.setOpt(sim, msg.id | 0, +msg.v);
+      if (!sim) break;
+      // PP-03: abrir OptionsForm con la sim visible corre ObsRepop
+      // (OptionsForm.frm:4546). Los toggles de menú de MDIForm1 (ids de
+      // MENU_OPT_IDS) y el eye designer (nocap) no pasan por el diálogo.
+      if (!msg.nocap && !MENU_OPT_IDS.has(msg.id | 0)) api.obsRepop(sim);
+      api.setOpt(sim, msg.id | 0, +msg.v);
+      break;
+    case 'getopt':                // solo lectura (smokes)
+      if (sim) self.postMessage({ t: 'opt', id: msg.id | 0,
+                                  v: api.getOpt(sim, msg.id | 0) });
       break;
     case 'setcost':
-      // E4: Costs(i) en vivo, como el CostsForm del original.
-      if (sim) api.setCost(sim, msg.i | 0, +msg.v);
+      // E4: Costs(i) en vivo, como el CostsForm del original. PP-03: el
+      // CostsForm solo se abre desde OptionsForm (OptionsForm.frm:2990), que
+      // al activarse corrió ObsRepop; el eye designer (nocap) no.
+      if (!sim) break;
+      if (!msg.nocap) api.obsRepop(sim);
+      api.setCost(sim, msg.i | 0, +msg.v);
       break;
     case 'save':
       saveSim();
