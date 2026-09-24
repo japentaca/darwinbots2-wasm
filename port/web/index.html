@@ -85,6 +85,14 @@
      nacimientos y las muertes se animan, y "Color por" cambia la lente.
      La cámara (rueda = zoom, arrastrar = paneo, "seguir" en el inspector)
      sirve a las dos vistas y arranca en zoom 1 = el encuadre de siempre.
+   - Etapa E7 (Internet Mode): panel "Internet Mode" = el menú Internet del
+     original. El toggle es F1Internet_Click (transcrito en la capa wasm) y
+     el transporte es el cliente IM de web/imnet.js dentro del worker (el
+     original lanzaba DarwinbotsIM.exe): pestañas del mismo navegador por
+     BroadcastChannel o un relay WebSocket (tools/imrelay/relay.mjs). El
+     Label InternetMode de main.frm:162 se muestra sobre el campo; los
+     censos de los pares llenan InternetSpecies, que el color de serie de
+     los gráficos consulta (grafico.frm:3745-3751).
 -->
 <style>
   :root { color-scheme: dark; }
@@ -112,7 +120,7 @@
   input[type=number] { width: 90px; cursor: text; }
   #stats { margin-left: auto; font-variant-numeric: tabular-nums; color: #8fa3c4; }
   main { flex: 1; display: flex; min-height: 0; }
-  #field-wrap { flex: 1; display: flex; align-items: center; justify-content: center;
+  #field-wrap { flex: 1; display: flex; align-items: center; justify-content: center; position: relative;
                 background: #06080d; min-width: 0; }
   canvas { background: #0a0f1a; border: 1px solid #1c2333; max-width: 100%; max-height: 100%; }
   aside {
@@ -216,6 +224,16 @@
             border-radius: 4px; padding: 4px 8px;
             font: 12px ui-monospace, Consolas, monospace; width: 100%; }
   .act-lab { font-size: 11px; color: #7d8fb0; }
+  /* E7 — Internet Mode: el Label InternetMode de main.frm:162-183 (MS Sans
+     Serif 24 negrita, azul &H00FF0000&) sobre el campo. */
+  #im-badge { position: absolute; left: 10px; top: 8px; color: #3b6cff;
+              font: 700 22px "MS Sans Serif", Arial, sans-serif;
+              pointer-events: none; text-shadow: 0 1px 2px #000; }
+  #im-peers { font: 11px ui-monospace, Consolas, monospace; color: #9fb0cc;
+              max-height: 160px; overflow-y: auto; }
+  #im-peers .peer { border-top: 1px solid #1c2333; padding: 2px 0; }
+  #im-peers .peer b { color: #cdd6e4; font-weight: 600; }
+  #im-status { font-size: 11px; color: #7d8fb0; }
   .act-x { font-size: 11px; color: #8296b8; }
 </style>
 </head>
@@ -275,7 +293,7 @@
 </header>
 
 <main>
-  <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas></div>
+  <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas><div id="im-badge" hidden>Internet Mode</div></div>
   <div id="tip" hidden></div>
   <aside>
     <h2>Inspector de bot</h2>
@@ -345,6 +363,32 @@
           <button id="btn-tp-del" disabled>Borrar seleccionado</button>
           <button id="btn-tp-clear">Borrar todos</button>
         </span>
+      </div>
+    </details>
+    <h2>Internet (menú Internet)</h2>
+    <details class="optgrp" id="im-panel"><summary>Internet Mode</summary>
+      <div class="optrows">
+        <label class="full" style="color:#5c6b88">
+          Un teleporter Internet expulsa organismos hacia otra sim conectada
+          y deja entrar los que llegan (F1Internet_Click, MDIForm1.frm:1259).
+          El original lanzaba DarwinbotsIM.exe; aquí el cliente vive en el
+          worker.</label>
+        <label for="im-name" title="IntOpts.IName: viaja como LastOwner de cada organismo que sale">Apodo</label>
+        <input type="text" id="im-name" maxlength="40" placeholder="vacío = Newbie N" style="width:150px">
+        <label for="im-kind">Transporte</label>
+        <select id="im-kind">
+          <option value="bc">Pestañas de este navegador</option>
+          <option value="ws">Relay WebSocket</option>
+        </select>
+        <label for="im-url" class="im-ws">Relay</label>
+        <input type="text" id="im-url" class="im-ws" style="width:150px">
+        <label for="im-room">Sala</label>
+        <input type="text" id="im-room" value="publica" maxlength="64" style="width:150px">
+        <span class="full row">
+          <button id="btn-im" class="primary">Conectar Internet Mode</button>
+        </span>
+        <div class="full" id="im-status">apagado</div>
+        <div class="full" id="im-peers"></div>
       </div>
     </details>
     <h2>Registro y análisis</h2>
@@ -440,7 +484,7 @@
 <div id="windows"></div>
 
 <footer>
-  DarwinBots 2.48.32 · core C++→WASM (172 casos dorados en verde) · la sim corre
+  DarwinBots 2.48.32 · core C++→WASM (177 casos dorados en verde) · la sim corre
   en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
 </footer>
 
@@ -949,6 +993,16 @@ worker.onmessage = (e) => {
       break;
     case 'running':
       setRunning(msg.running);
+      break;
+    // ---- E7: Internet Mode ----
+    case 'im-state':
+      imRender(msg.st);
+      break;
+    case 'im-log':
+      for (const l of msg.lines) log('IM: ' + l);
+      break;
+    case 'im-off':
+      imRender(null);
       break;
     case 'error':
       statsEl.textContent = 'error cargando dbcore.wasm';
@@ -2369,11 +2423,22 @@ class Chart {
     if (this.serName[k] !== name || k === MaxItems) {
       // El color sale de SimOpts.Specie(i).color (grafico.frm:3745-3755).
       // Para el gráfico 10 (series fijas) el original sortea
-      // RGB(Random(100,255) ×3); para una especie que no está en la lista
-      // busca en InternetSpecies y, si tampoco está, NO crea la serie —
-      // esa rama es de la capa Internet (etapa E7), así que aquí también
-      // cae en el color al azar (decisión de host).
-      const c = (color >= 0) ? color : randSeriesColor();
+      // RGB(Random(100,255) ×3). E7: una especie que no está en la lista
+      // se busca en InternetSpecies (grafico.frm:3745-3751; aquí la llenan
+      // los censos de los pares conectados) y, si tampoco está, el While
+      // termina en i = numInternetSpecies y la serie sale con
+      // InternetSpecies(i).color = 0 (negro) — en el original la lista
+      // nunca se llenaba y ese era SIEMPRE el resultado.
+      let c = color;
+      if (c < 0) {
+        if (this.n === 10) {
+          c = randSeriesColor();
+        } else {
+          let i = 0;
+          while (i < internetSpecies.length && internetSpecies[i].name !== name) i += 1;
+          c = i < internetSpecies.length ? internetSpecies[i].color : 0;
+        }
+      }
       this.addSeries(name, c);
       k = this.maxSeries - 1;
     }
@@ -2488,7 +2553,7 @@ class Chart {
     for (let t = 0; t <= this.maxSeries - 1; t++) {
       let k = this.pivot + 1;
       if (k > MaxData) k = 0;
-      cx.strokeStyle = vbColorToCss(this.serCol[t]);
+      cx.strokeStyle = seriesCss(this.serCol[t]);
       cx.beginPath();
       cx.moveTo(xunit, yo - yunit * this.data[k][t]);
       let an = 2;
@@ -2509,7 +2574,7 @@ class Chart {
     for (let t = 0; t < this.maxSeries; t++) {
       const v = (this.lastVal && this.lastVal[t] !== undefined) ? this.lastVal[t] : 0;
       rows.push('<div class="ser"><i style="background:' +
-                vbColorToCss(this.serCol[t]) + '"></i>' +
+                seriesCss(this.serCol[t]) + '"></i>' +
                 '<b>' + fmtNum(v) + '</b><span>' + esc(this.label(t)) +
                 '</span></div>');
     }
@@ -2578,6 +2643,114 @@ class Chart {
     this.newPoints();
     scheduleChartPaint();
   }
+}
+
+// ---- E7: Internet Mode -----------------------------------------------------
+// InternetSpecies (provvisorio.bas:19-21): especies de las otras sims
+// conectadas con su color, tal como las mandan sus censos (el worker las
+// agrega; tope MAXINTERNETSPECIES = 500). La consulta el color de serie.
+let internetSpecies = [];
+let imOn = false;
+
+const IM_KEY = 'darwinbots.im';
+function imPrefs() {
+  try { return JSON.parse(localStorage.getItem(IM_KEY) || '{}'); }
+  catch { return {}; }
+}
+function imSavePrefs() {
+  try {
+    localStorage.setItem(IM_KEY, JSON.stringify({
+      name: document.getElementById('im-name').value,
+      kind: document.getElementById('im-kind').value,
+      url: document.getElementById('im-url').value,
+      room: document.getElementById('im-room').value }));
+  } catch { /* sin almacenamiento: la sesión sigue igual */ }
+}
+function imDefaultUrl() {
+  // Servida por tools/imrelay/relay.mjs, el relay es el mismo host:puerto.
+  const h = location.hostname || 'localhost';
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return location.port === '8060' ? `${proto}//${location.host}/im`
+                                   : `${proto}//${h}:8060/im`;
+}
+function imKindChanged() {
+  const ws = document.getElementById('im-kind').value === 'ws';
+  for (const el of document.querySelectorAll('.im-ws')) el.hidden = !ws;
+}
+function imInit() {
+  const p = imPrefs();
+  document.getElementById('im-name').value = p.name || '';
+  document.getElementById('im-kind').value = p.kind === 'ws' ? 'ws' : 'bc';
+  document.getElementById('im-url').value = p.url || imDefaultUrl();
+  document.getElementById('im-room').value = p.room || 'publica';
+  imKindChanged();
+  worker.postMessage({ t: 'im-name', name: document.getElementById('im-name').value.trim() });
+  document.getElementById('im-kind').onchange = () => { imKindChanged(); imSavePrefs(); };
+  for (const id of ['im-url', 'im-room']) document.getElementById(id).onchange = imSavePrefs;
+  document.getElementById('im-name').onchange = () => {
+    imSavePrefs();
+    worker.postMessage({ t: 'im-name', name: document.getElementById('im-name').value.trim() });
+  };
+  document.getElementById('btn-im').onclick = () => {
+    imSavePrefs();
+    if (imOn) { worker.postMessage({ t: 'im', on: false }); return; }
+    worker.postMessage({
+      t: 'im', on: true,
+      name: document.getElementById('im-name').value.trim(),
+      kind: document.getElementById('im-kind').value,
+      url: document.getElementById('im-url').value.trim(),
+      room: document.getElementById('im-room').value.trim() || 'publica' });
+  };
+}
+
+function imRender(st) {
+  imOn = !!(st && st.enabled);
+  document.getElementById('im-badge').hidden = !imOn;
+  document.getElementById('btn-im').textContent =
+    imOn ? 'Desconectar Internet Mode' : 'Conectar Internet Mode';
+  if (!imOn) {
+    document.getElementById('im-status').textContent = 'apagado';
+    document.getElementById('im-peers').innerHTML = '';
+    internetSpecies = [];
+    return;
+  }
+  internetSpecies = st.internetSpecies || [];
+  // El "Newbie N" que sorteó el toggle vuelve al campo (SaveInternetSett).
+  const nm = document.getElementById('im-name');
+  if (st.name && nm.value.trim() !== st.name) { nm.value = st.name; imSavePrefs(); }
+  const c = st.counters;
+  const alive = st.peers.filter((p) => p.alive).length;
+  document.getElementById('im-status').textContent =
+    `${st.status} · puerto #${st.port || '—'} · ${alive} par(es) · ` +
+    `salieron ${st.outTotal} (enviados ${c.sent}, confirmados ${c.acked}` +
+    (c.resent ? `, re-sorteados ${c.resent}` : '') + ') · ' +
+    `llegaron ${st.inTotal} (recibidos ${c.recv}, en inbox ${st.inbox})` +
+    (st.pending ? ` · ${st.pending} esperando un par` : '') +
+    (c.dropped ? ` · ${c.dropped} descartados` : '') +
+    ` · especies de Internet: ${internetSpecies.length}`;
+  let html = '';
+  for (const p of st.peers) {
+    html += `<div class="peer"><b>${escHtml(p.name || p.id)}</b>` +
+            (p.alive ? '' : ' (sin latido)') +
+            (p.simId ? ` · sim ${escHtml(p.simId)}` : '');
+    if (p.census && p.census.pop) {
+      html += `<br>ciclo ${p.census.cycle}: ` + p.census.pop
+        .slice().sort((a, b) => b.count - a.count).slice(0, 6)
+        .map((x) => `${escHtml(x.botName)}${x.repopulating ? ' (veg)' : ''} ${x.count}`)
+        .join(' · ');
+    }
+    html += '</div>';
+  }
+  document.getElementById('im-peers').innerHTML =
+    html || '<span style="color:#5c6b88">sin pares en la sala</span>';
+}
+
+// El form del chart original tenía fondo blanco (grafico.frm: BackColor
+// &H80000005&) y el negro de la rama InternetSpecies se veía; sobre el fondo
+// oscuro de la página se pinta en gris (el 0 se conserva en serCol y en el
+// .gsave — decisión de render de E7).
+function seriesCss(c) {
+  return c === 0 ? '#8a93a6' : vbColorToCss(c);
 }
 
 function randSeriesColor() {   // RGB(Random(100,255) ×3) de grafico.frm
@@ -3008,6 +3181,7 @@ function onReady() {
   const p = PRESETS.animal;
   document.getElementById('dna').value = p.dna;
   worker.postMessage({ t: 'speed', n: parseInt(document.getElementById('speed').value, 10) });
+  imInit();          // E7: apodo/transporte guardados + IntOpts.IName
   newSim();
   loadBestiary();
   log('dbcore.wasm cargado (en worker)');

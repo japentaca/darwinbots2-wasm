@@ -62,6 +62,10 @@
 //   {t:'redraw'}                           E6.5: frame fresco sin tick
 //                                          (cámara y efectos con la sim en
 //                                          pausa)
+//   {t:'im', on, name, kind, url, room}    E7: Internet Mode (F1Internet_Click
+//                                          + el cliente IM de web/imnet.js);
+//                                          kind = 'bc' (pestañas) | 'ws'
+//   {t:'im-name', name}                    E7: IntOpts.IName (LastOwner)
 //   {t:'ack', buf}                         devuelve el búfer del último frame
 //
 // Protocolo (worker → página):
@@ -84,6 +88,10 @@
 //                                          vista (antes del frame que la usa)
 //   {t:'gendist-off'}                      E6.5: la referencia murió o la sim
 //                                          cambió (reset, ronda nueva, carga)
+//   {t:'im-state', st}                     E7: estado del cliente IM (pares,
+//                                          censos, InternetSpecies, colas) —
+//                                          a lo sumo 4 por segundo
+//   {t:'im-log', lines[]}                  E7: salidas/llegadas en tandas
 //
 // El frame es UN solo ArrayBuffer transferible (zero-copy) con ping-pong:
 // la página lo devuelve con 'ack' al terminar de dibujar y el worker lo
@@ -104,7 +112,7 @@
 //           el bot) + nBirths×6 + nDeaths×6 de db_sim_vis_events
 //   (mismos registros que db_sim_dump_* — ver wasm/dbcore_api.cpp)
 
-importScripts('../build-wasm/dbcore.js');
+importScripts('../build-wasm/dbcore.js', 'imnet.js');
 
 let M = null;   // Module de Emscripten
 let api = {};   // cwraps
@@ -246,6 +254,20 @@ function bindApi() {
     visSpName:     C('db_sim_vis_species_name', 'number', ['number','number']),
     gendistRef:    C('db_sim_vis_gendist_ref', null, ['number','number']),
     gendistStep:   C('db_sim_vis_gendist_step', 'number', ['number','number']),
+    // E7 - Internet Mode
+    tpGet:         C('db_sim_tp_get', 'number', ['number','number','number']),
+    tpSet:         C('db_sim_tp_set', null, ['number','number','number','number']),
+    outCount:      C('db_sim_tp_outbox_count', 'number', ['number','number']),
+    outTake:       C('db_sim_tp_outbox_take', 'number', ['number','number','number']),
+    inboxPush:     C('db_sim_tp_inbox_push', null, ['number','number','number','number']),
+    setIName:      C('db_sim_set_iname', null, ['number','string']),
+    getIName:      C('db_sim_get_iname', 'number', ['number']),
+    setSimStart:   C('db_sim_set_sim_start', null, ['number','string']),
+    imEnable:      C('db_sim_im_enable', 'number', ['number','number']),
+    imDisable:     C('db_sim_im_disable', 'number', ['number']),
+    imStats:       C('db_sim_im_stats', 'number', ['number']),
+    imSpecies:     C('db_sim_im_species', 'number', ['number']),
+    dboPeek:       C('db_dbo_peek', 'number', ['number','number']),
   };
 }
 
@@ -482,6 +504,9 @@ function newRound() {
   const seed = (Math.floor(Math.random() * 2147483646) + 1);
   const wasRunning = running;
   resetSim({ ...lastReset, seed });
+  // E7: una ronda nueva NO pasa por StartNew_Click (OptionsForm.frm:4802,
+  // que apaga Internet): el modo sigue y el puerto vuelve en la sim nueva.
+  if (imCfg) imReattach('ronda nueva');
   api.setOpt(sim, 90, keep.restart);
   api.setOpt(sim, 91, keep.f1);
   api.setOpt(sim, 93, keep.dq);
@@ -650,7 +675,9 @@ function consoleCmd(n, line) {
       break;
     case 'cycle': {
       const k = parseInt(w(1), 10) || 0;
-      for (let i = 0; i < k; i++) { tickOnce(); checkGameState(); }
+      for (let i = 0; i < k; i++) {
+        tickOnce(); checkGameState(); if (imCfg) imAfterTick();
+      }
       postFrame();
       conOut(n, k + ' ciclo(s) ejecutado(s) — ciclo ' + api.cycle(sim));
       sendGenes(n);
@@ -713,6 +740,207 @@ function sendGenes(n) {
   self.postMessage({ t: 'genes', n, ga: Array.from(g.subarray(0, c)) });
 }
 
+// ---- E7: Internet Mode ----------------------------------------------------
+// El toggle es F1Internet_Click (MDIForm1.frm:1259-1380, transcrito en
+// db_sim_im_enable/disable) y el transporte es el cliente IM de imnet.js,
+// que hace lo que hacía DarwinbotsIM.exe con las carpetas inbound/outbound.
+// Tras cada tick con IM encendido: el outbox del teleporter Internet se
+// vacía hacia el cliente y, cada 200 ciclos, sale el .stats de writeIMdata
+// (main.frm:2109-2111). Lo que llega entra al inbox y el paso 18 del core lo
+// carga a su ritmo (InboundPollCycles/BotsPerPoll y el gate de 45 especies).
+let imCfg = null;       // {name, kind, url, room} con IM encendido; si no, null
+let imName = '';        // IntOpts.IName: global de proceso (sobrevive resets)
+// teleporterDefaultWidth (Teleport.bas:56): 0 hasta que se usa el form de
+// teleporters (TeleportForm.frm:378 lo pone en 300); entra al sorteo de la
+// posición del puerto Internet.
+let tpDefaultWidth = 0;
+let imArrivals = [];    // etiquetas de lo que está en el inbox, en orden FIFO
+let imInboxKnown = 0;   // registros que el inbox tenía tras el último tick
+let imLogBuf = [], imLogTimer = 0, imStateTimer = 0;
+
+function imLog(line) {
+  imLogBuf.push(line);
+  if (!imLogTimer)
+    imLogTimer = setTimeout(() => {
+      imLogTimer = 0;
+      const lines = imLogBuf;
+      imLogBuf = [];
+      if (lines.length > 40)
+        lines.splice(20, lines.length - 40, `… (${lines.length - 40} más)`);
+      self.postMessage({ t: 'im-log', lines });
+    }, 250);
+}
+
+function imState() {
+  if (imStateTimer) return;
+  imStateTimer = setTimeout(() => {
+    imStateTimer = 0;
+    const st = ImNet.snapshot();
+    st.enabled = !!imCfg;
+    st.port = imPort();
+    st.inbox = st.port ? api.tpGet(sim, st.port, 13) : 0;
+    st.inTotal = st.port ? api.tpGet(sim, st.port, 12) : 0;
+    st.outTotal = st.port ? api.tpGet(sim, st.port, 11) : 0;
+    self.postMessage({ t: 'im-state', st });
+  }, 250);
+}
+
+// Primer teleporter Internet de la sim (0 si no hay: p. ej. lo borraron).
+function imPort() {
+  if (!sim) return 0;
+  const n = api.numTeleporters(sim);
+  for (let i = 1; i <= n; i++) if (api.tpGet(sim, i, 3)) return i;
+  return 0;
+}
+
+function peekLabel(p, len) {
+  const f = takeStr(api.dboPeek(p, len)).split('\t');
+  if (f.length < 7) return { label: 'organismo', owner: '' };
+  const cells = +f[0];
+  return { label: f[1] + (cells > 1 ? ` (${cells} células)` : ''),
+           owner: f[2] };
+}
+
+// Hook del cliente IM: un .dbo para esta sim. Devuelve false si no hay
+// puerto Internet (sin ack: el emisor lo re-sortea hacia otro par).
+function imOnDbo(bytes, from) {
+  const tp = imPort();
+  if (!imCfg || !tp) return false;
+  const p = M._malloc(bytes.length);
+  M.HEAPU8.set(bytes, p);
+  const meta = peekLabel(p, bytes.length);
+  api.inboxPush(sim, tp, p, bytes.length);
+  M._free(p);
+  imArrivals.push(`${meta.label} de ${meta.owner || from}`);
+  imInboxKnown += 1;
+  imState();
+  return true;
+}
+
+// Replace(Replace(Now, ":", "-"), "/", "-") de main.frm:1351 con el Now de
+// VB6 en formato de EE. UU. (el original dependía de la configuración
+// regional de Windows).
+function vbNowSimStart() {
+  const d = new Date();
+  let h = d.getHours();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  const p2 = (x) => String(x).padStart(2, '0');
+  return `${d.getMonth() + 1}-${d.getDate()}-${d.getFullYear()} ` +
+         `${h}-${p2(d.getMinutes())}-${p2(d.getSeconds())} ${ap}`;
+}
+
+function simStartOf() {
+  // El JSON de writeIMdata lleva simId = strSimStart.
+  const t = takeStr(api.imStats(sim));
+  const m = /"simId":"([^"]*)"/.exec(t);
+  return m ? m[1] : '';
+}
+
+// F1Internet_Click, encendido: puerto + cliente. Devuelve true si quedó on.
+function imEnable(cfg) {
+  if (!sim) return false;
+  api.setIName(sim, cfg.name || '');
+  const i = api.imEnable(sim, tpDefaultWidth);
+  if (i <= -100) {
+    const mode = -100 - i;
+    log(`Internet: no se puede activar con el modo de reinicio ${mode} ` +
+        '(MDIForm1.frm:1264-1296)');
+    return false;
+  }
+  if (i < 0) {
+    log('Internet: tope de teleporters (10) — no se pudo crear el puerto');
+    return false;
+  }
+  imName = takeStr(api.getIName(sim));   // "Newbie N" si venía vacío
+  imCfg = { ...cfg, name: imName };
+  imArrivals = [];
+  imInboxKnown = 0;
+  ImNet.start({ name: imName, simId: simStartOf(), kind: cfg.kind,
+                url: cfg.url, room: cfg.room },
+              { onDbo: imOnDbo, onChange: imState, onLog: imLog });
+  log(`Internet Mode: puerto #${i} (${cfg.kind === 'ws' ? 'relay ' + cfg.url
+      : 'pestañas de este navegador'}, sala "${cfg.room}") como "${imName}"`);
+  imState();
+  postFrame();
+  return true;
+}
+
+// Rama de apagado: el cliente se va (CloseWindow) y los puertos Internet se
+// borran. Lo que quedaba en espera se pierde, como los archivos de la
+// carpeta outbound con el cliente cerrado.
+function imDisable(why) {
+  if (!imCfg) return;
+  imCfg = null;
+  const left = ImNet.stop();
+  const n = sim ? api.imDisable(sim) : 0;
+  log(`Internet Mode apagado${why ? ' — ' + why : ''}` +
+      (n ? ` (${n} puerto borrado)` : '') +
+      (left ? `; ${left} organismos en espera descartados` : ''));
+  imArrivals = [];
+  imInboxKnown = 0;
+  imState();
+  self.postMessage({ t: 'im-off' });
+  postFrame();
+}
+
+// Tras cada tick con IM encendido.
+function imAfterTick() {
+  const n = api.numTeleporters(sim);
+  let tpIn = 0;
+  for (let i = 1; i <= n; i++) {
+    if (!api.tpGet(sim, i, 3)) continue;
+    if (!tpIn) tpIn = i;
+    let k = api.outCount(sim, i);
+    while (k-- > 0) {
+      const lp = M._malloc(4);
+      const p = api.outTake(sim, i, lp);
+      const len = M.HEAP32[lp >> 2];
+      M._free(lp);
+      if (!p || len <= 0) break;
+      const bytes = new Uint8Array(M.HEAPU8.buffer, p, len).slice();
+      const meta = peekLabel(p, len);
+      api.free(p);
+      ImNet.push(bytes, meta.label);
+    }
+  }
+  // Llegadas: el paso 18 sacó registros del inbox (FIFO).
+  const now = tpIn ? api.tpGet(sim, tpIn, 13) : 0;
+  if (now < imInboxKnown) {
+    for (let k = imInboxKnown - now; k > 0 && imArrivals.length; k--)
+      imLog('llegó ' + imArrivals.shift());
+    imState();
+  }
+  imInboxKnown = now;
+  // main.frm:2109-2111 — writeIMdata cada 200 ciclos.
+  if (api.cycle(sim) % 200 === 0) {
+    const txt = takeStr(api.imStats(sim));
+    const cut = txt.indexOf('\n');
+    const species = takeStr(api.imSpecies(sim)).split('\n').filter(Boolean)
+      .map((r) => { const [nm, pop, veg, col] = r.split('\t');
+                    return [nm, +pop, +veg, +col]; });
+    ImNet.pushStats(txt.slice(0, cut), txt.slice(cut + 1), species);
+  }
+}
+
+// La sim cambió de handle (reset, ronda, carga): el apodo es global de
+// proceso y Sim::fmt no se persiste — se vuelve a fijar.
+function imRebind() {
+  if (sim) api.setIName(sim, imName);
+}
+
+// Sim nueva con el modo encendido (ronda de contest o carga): el cliente
+// sigue conectado y solo el puerto vuelve a crearse en el handle nuevo.
+function imReattach(why) {
+  const i = api.imEnable(sim, tpDefaultWidth);
+  imArrivals = [];
+  imInboxKnown = 0;
+  if (i < 0) { imDisable(`${why}: no se pudo recrear el puerto`); return; }
+  ImNet.setIdentity(imName, simStartOf());
+  log(`Internet Mode: puerto #${i} recreado (${why})`);
+  imState();
+}
+
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
   // El chequeo E5 corre tras CADA tick (como el loop de main.frm:2079-2081):
@@ -721,6 +949,7 @@ function runTicks(n) {
   for (let i = 0; i < n; i++) {
     tickOnce();
     checkGameState();
+    if (imCfg) imAfterTick();   // E7
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
     // solo los charts visibles.
     if (graphOpen.size) {
@@ -795,6 +1024,8 @@ function resetSim(msg) {
   // del panel (MDIForm1.frm:2484).
   if (o.costs) for (const i in o.costs) api.setCost(sim, i | 0, +o.costs[i]);
   api.start(sim, msg.seed);   // Rnd -1 + Randomize seed/100 + buckets
+  imRebind();                                    // E7: IntOpts.IName
+  api.setSimStart(sim, vbNowSimStart());         // E7: main.frm:1351
   log(`sim nueva (seed ${msg.seed})`);
   for (const sp of msg.species) seedSpecies(sp);
   // E5: la ronda siguiente reconstruye con esto (species copiadas: las
@@ -834,6 +1065,12 @@ function loadSim(msg) {
   M.HEAPU8.set(bytes, p);
   api.load(sim, p, bytes.length);
   M._free(p);
+  imRebind();
+  // E7: LoadSimulation borra los teleporters Internet (HDRoutines.bas,
+  // quirk replicado en el core); con IM encendido el puerto vuelve, como el
+  // "Would you like to connect to Internet Mode?" de MDIForm1.frm:2135-2150
+  // contestado que sí.
+  if (imCfg) imReattach('sim cargada');
   running = false;
   focusBot = 0;  // los slots de bot cambian al cargar
   speciesVersion = -1;
@@ -855,7 +1092,27 @@ self.onmessage = (e) => {
     case 'reset':
       running = false;
       focusBot = 0;
+      // E7: StartNew_Click hace `If InternetMode Then F1Internet_Click`
+      // (OptionsForm.frm:4802) — el toggle, con el modo encendido, lo APAGA.
+      if (imCfg) imDisable('sim nueva (OptionsForm.frm:4802)');
       resetSim(msg);
+      break;
+    // ---- E7: Internet Mode ----
+    case 'im':
+      if (msg.on) {
+        if (imCfg) imDisable('reconexión');
+        imEnable({ name: msg.name || '', kind: msg.kind, url: msg.url || '',
+                   room: msg.room || 'publica' });
+        if (!imCfg) self.postMessage({ t: 'im-off' });
+      } else {
+        imDisable('');
+      }
+      break;
+    case 'im-name':
+      imName = String(msg.name || '');
+      imRebind();
+      if (imCfg) { imCfg.name = imName; ImNet.setIdentity(imName, simStartOf()); }
+      imState();
       break;
     case 'select':
       focusBot = msg.n | 0;
@@ -930,8 +1187,16 @@ self.onmessage = (e) => {
       loadSim(msg);
       break;
     case 'teleporter': {
-      // local: entra y sale en esta sim (2 RNG + ReSpawn); alto 3000 twips
-      const i = api.addTeleporter(sim, 0, 0, 3000, 0, 1, 0, 0, 1, 100);
+      // local: entra y sale en esta sim (2 RNG + ReSpawn); alto 3000 twips.
+      // Filtros con los defaults del form (TeleportForm.frm:383-388: las
+      // tres casillas marcadas, 10/10) — E7: hasta aquí teleportHeterotrophs
+      // quedaba en False y el puerto local no movía a nadie.
+      tpDefaultWidth = 300;   // TeleportForm.frm:378 (el form se abrió)
+      const i = api.addTeleporter(sim, 0, 0, 3000, 0, 1, 1, 1, 10, 10);
+      if (i > 0) {
+        api.tpSet(sim, i, 6, 1);                          // heterótrofos
+        api.tpSet(sim, i, 10, api.tpGet(sim, i, 9));      // :461 BotsPerPoll
+      }
       log(i > 0 ? `teleporter local #${i} creado`
                 : 'tope de teleporters (10) alcanzado');
       postFrame();

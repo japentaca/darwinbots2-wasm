@@ -1400,6 +1400,345 @@ DB_EXPORT void db_sim_tp_inbox_push(void* h, int t, const unsigned char* data,
       data, data + len);
 }
 
+// Campos sueltos de un teleporter (1..numTeleporters), para la capa host:
+// 0 In, 1 Out, 2 local, 3 Internet, 4 teleportVeggies, 5 teleportCorpses,
+// 6 teleportHeterotrophs, 7 RespectShapes, 8 InboundPollCycles,
+// 9 BotsPerPoll, 10 PollCountDown, 11 NumTeleported, 12 NumTeleportedIn,
+// 13 registros en el inbox (solo lectura), 14 driftHorizontal,
+// 15 driftVertical. E7: el form de TeleportForm.frm:455 fija
+// teleportHeterotrophs, que db_sim_add_teleporter no recibe.
+DB_EXPORT double db_sim_tp_get(void* h, int t, int field) {
+  db::Sim& sim = S(h);
+  if (t < 1 || t > sim.numTeleporters) return 0;
+  const db::Teleporter& tp = sim.Teleporters[static_cast<std::size_t>(t)];
+  switch (field) {
+    case 0: return tp.In;
+    case 1: return tp.Out;
+    case 2: return tp.local;
+    case 3: return tp.Internet;
+    case 4: return tp.teleportVeggies;
+    case 5: return tp.teleportCorpses;
+    case 6: return tp.teleportHeterotrophs;
+    case 7: return tp.RespectShapes;
+    case 8: return tp.InboundPollCycles;
+    case 9: return tp.BotsPerPoll;
+    case 10: return tp.PollCountDown;
+    case 11: return static_cast<double>(tp.NumTeleported);
+    case 12: return static_cast<double>(tp.NumTeleportedIn);
+    case 13: return static_cast<double>(tp.inbox.size());
+    case 14: return tp.driftHorizontal;
+    case 15: return tp.driftVertical;
+    default: return 0;
+  }
+}
+
+DB_EXPORT void db_sim_tp_set(void* h, int t, int field, double v) {
+  db::Sim& sim = S(h);
+  if (t < 1 || t > sim.numTeleporters) return;
+  db::Teleporter& tp = sim.Teleporters[static_cast<std::size_t>(t)];
+  const bool b = v != 0.0;
+  const auto i16 = static_cast<db::vb_integer>(v);
+  switch (field) {
+    case 0: tp.In = b; break;
+    case 1: tp.Out = b; break;
+    case 2: tp.local = b; break;
+    case 3: tp.Internet = b; break;
+    case 4: tp.teleportVeggies = b; break;
+    case 5: tp.teleportCorpses = b; break;
+    case 6: tp.teleportHeterotrophs = b; break;
+    case 7: tp.RespectShapes = b; break;
+    case 8: tp.InboundPollCycles = i16; break;
+    case 9: tp.BotsPerPoll = i16; break;
+    case 10: tp.PollCountDown = i16; break;
+    case 14: tp.driftHorizontal = b; break;
+    case 15: tp.driftVertical = b; break;
+    default: break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// E7 — Internet Mode (spec/PLAN-EXTENSIONES.md §E7). Capa host: el "cliente
+// IM" (web/imnet.js, en el worker) mueve los .dbo del outbox/inbox del
+// teleporter Internet entre navegadores; aqui viven las transcripciones de
+// la parte que corria en el EXE — el toggle F1Internet_Click
+// (MDIForm1.frm:1259-1380) y writeIMdata (main.frm:3113-3181) — y el
+// apodo IntOpts.IName, que el tick estampa como LastOwner (Sim::fmt, E7-01).
+// ---------------------------------------------------------------------------
+
+// IntOpts.IName (provvisorio.bas:5). Global de proceso: la capa host lo
+// vuelve a fijar tras cada reset/carga (Sim::fmt no se persiste).
+DB_EXPORT void db_sim_set_iname(void* h, const char* name) {
+  S(h).fmt.IName = name ? name : "";
+}
+DB_EXPORT char* db_sim_get_iname(void* h) {
+  const std::string& v = S(h).fmt.IName;
+  return reinterpret_cast<char*>(CopyOut(
+      reinterpret_cast<const unsigned char*>(v.c_str()), v.size() + 1,
+      nullptr));
+}
+
+// strSimStart (Globals.bas:150): main.frm:1351 lo fija al arrancar una sim
+// nueva con Replace(Replace(Now, ":", "-"), "/", "-"); lo persiste el
+// formato de sim (HDRoutines.bas:796). `Now` es del reloj del host: la
+// pagina manda el texto ya armado.
+DB_EXPORT void db_sim_set_sim_start(void* h, const char* s) {
+  S(h).evo.strSimStart = s ? s : "";
+}
+
+// MDIForm1.frm:1259-1358 — F1Internet_Click, rama de encendido. Devuelve el
+// indice del teleporter Internet nuevo, o:
+//   -100 - x_restartmode  si el modo de reinicio lo prohibe (:1264-1296;
+//                         4/5 solo con y_eco_im = 0, siempre en el port)
+//   -1                    tope de 10 teleporters (NewTeleporter = -1: el
+//                         original seguia con Teleporters(-1) y caia en
+//                         error 9 fuera del tick; aqui no se toca nada)
+// `defaultWidth` es el global de proceso teleporterDefaultWidth
+// (Teleport.bas:56): 0 hasta que se abre TeleportForm (:378 lo pone en 300)
+// y entra al sorteo de la posicion. Consumo de RNG: 1 Random si el apodo
+// esta vacio ("Newbie " & Random(1, 10000), :1310-1312) + los 2 de
+// NewTeleporter. El lblSafeMode de :1260 no existe en el port.
+DB_EXPORT int db_sim_im_enable(void* h, int defaultWidth) {
+  db::Sim& sim = S(h);
+  const int mode = sim.x_restartmode;
+  if (mode >= 1 && mode <= 10) return -100 - mode;
+
+  if (sim.fmt.IName.empty())
+    sim.fmt.IName =
+        "Newbie " + std::to_string(db::Random(1.0, 10000.0, *sim.rndy));
+
+  // NewTeleporter(False, False, (SimOpts.FieldHeight ^ 0.5) * 10, True)
+  if (sim.numTeleporters + 1 > db::MAXTELEPORTERS) return -1;
+  sim.numTeleporters += 1;
+  const int i = sim.numTeleporters;
+  db::Teleporter& t = sim.Teleporters[static_cast<std::size_t>(i)];
+  t = db::Teleporter{};
+  t.exist = true;
+  const db::vb_single aspectRatio = static_cast<db::vb_single>(
+      static_cast<double>(sim.opts.FieldHeight) /
+      static_cast<double>(sim.opts.FieldWidth));
+  const double w = static_cast<double>(static_cast<db::vb_integer>(defaultWidth));
+  t.pos.x = static_cast<db::vb_single>(db::Random(
+      0.0,
+      static_cast<double>(sim.opts.FieldWidth) -
+          static_cast<double>(static_cast<db::vb_single>(w * aspectRatio)),
+      *sim.rndy));
+  t.pos.y = static_cast<db::vb_single>(
+      db::Random(0.0, static_cast<double>(sim.opts.FieldHeight) - w,
+                 *sim.rndy));
+  const db::vb_single height = static_cast<db::vb_single>(
+      std::pow(static_cast<double>(sim.opts.FieldHeight), 0.5) * 10.0);
+  t.Width = height * aspectRatio;
+  t.Height = height;
+  t.color = 0xFFFFFF;  // vbWhite
+  t.In = false;
+  t.Out = false;
+  t.Internet = true;
+  t.driftHorizontal = true;
+  t.driftVertical = true;
+  t.NumTeleported = 0;
+  t.NumTeleportedIn = 0;
+  // :1326-1334 — propiedades del puerto Internet.
+  t.vel = {0.0f, 0.0f};
+  t.teleportVeggies = true;
+  t.teleportCorpses = false;
+  t.teleportHeterotrophs = true;
+  t.RespectShapes = false;
+  t.InboundPollCycles = 10;
+  t.BotsPerPoll = 10;
+  t.PollCountDown = 10;
+  return i;
+}
+
+// MDIForm1.frm:1359-1372 — rama de apagado: borra los teleporters Internet
+// con el bucle literal (hasta MAXTELEPORTERS, re-mirando el indice tras
+// cada DeleteTeleporter). CloseWindow(pid) es del cliente IM (host).
+// Devuelve cuantos borro.
+DB_EXPORT int db_sim_im_disable(void* h) {
+  db::Sim& sim = S(h);
+  int deleted = 0;
+  for (int i = 1; i <= db::MAXTELEPORTERS; ++i) {
+    const db::Teleporter& tp = sim.Teleporters[static_cast<std::size_t>(i)];
+    if (tp.Internet && tp.exist) {
+      if (sim.numTeleporters <= 0) break;  // DeleteTeleporter sale sin tocar
+      for (int x = i + 1; x <= sim.numTeleporters; ++x)
+        sim.Teleporters[static_cast<std::size_t>(x) - 1] =
+            sim.Teleporters[static_cast<std::size_t>(x)];
+      sim.Teleporters[static_cast<std::size_t>(sim.numTeleporters)].exist =
+          false;
+      sim.numTeleporters -= 1;
+      deleted += 1;
+      i -= 1;
+    }
+  }
+  return deleted;
+}
+
+}  // extern "C" (los helpers de IMgetname son C++ con enlace normal)
+
+namespace {
+
+// stringops.bas:35-50 — extractexactname: "Corpse" tal cual; si no, todo
+// menos el ultimo tramo separado por "." (sin punto => "").
+std::string ExtractExactName(const std::string& name) {
+  if (name == "Corpse") return "Corpse";
+  std::vector<std::string> sp(1);
+  for (char c : name) {
+    if (c == '.') sp.emplace_back();
+    else sp.back() += c;
+  }
+  std::string t;
+  const int ub = static_cast<int>(sp.size()) - 1;
+  for (int i = 0; i <= ub - 1; ++i) {
+    t += sp[static_cast<std::size_t>(i)];
+    if (i != ub - 1) t += '.';
+  }
+  return t;
+}
+
+// VB6 Trim: solo espacios.
+std::string VbTrim(const std::string& s) {
+  std::size_t a = 0, b = s.size();
+  while (a < b && s[a] == ' ') ++a;
+  while (b > a && s[b - 1] == ' ') --b;
+  return s.substr(a, b - a);
+}
+
+// Tag de 50 como String * 50 (los fijos de VB6 nacen con Chr(0)).
+std::string Fixed50(const std::string& s) {
+  std::string t = s.substr(0, std::min<std::size_t>(s.size(), 50));
+  t.resize(50, '\0');
+  return t;
+}
+
+// main.frm:3113-3124 — IMgetname.
+std::string IMgetname(const db::Sim& sim, int i) {
+  const db::Bot& b = sim.rob[static_cast<std::size_t>(i)];
+  const std::string tag45 = Fixed50(b.tag).substr(0, 45);
+  std::string name = ExtractExactName(b.FName);
+  if (sim.fmt.y_eco_im > 0) name += "(" + VbTrim(tag45) + ")";
+  if (tag45 == std::string(45, '\0')) name = ExtractExactName(b.FName);
+  std::string out;
+  for (char c : name)
+    if (c != '[' && c != ']' && c != '{' && c != '}' && c != ',') out += c;
+  return out;
+}
+
+}  // namespace
+
+extern "C" {
+
+// main.frm:3126-3181 — writeIMdata. Devuelve "<archivo>\n<json>": el
+// nombre es el del original (TotRunCycle & UserSeedNumber & ".stats") y el
+// JSON sale byte a byte como lo armaba el fuente, sin escapar comillas en
+// los nombres (el fuente tampoco). El loop lo llama cada 200 ciclos con
+// InternetMode.Visible (main.frm:2109-2111); ese gate es del host.
+DB_EXPORT char* db_sim_im_stats(void* h) {
+  const db::Sim& sim = S(h);
+  struct IMbots { std::string Name; bool vegy = false; int pop = 0; };
+  std::vector<IMbots> simpop(1);  // ReDim simpopulations(0), base 1
+  auto L = [](double v) { return std::to_string(static_cast<long long>(v)); };
+
+  std::string simdata = "{\"cycle\":" + L(sim.opts.TotRunCycle) +
+                        ",\"simId\":\"" + sim.evo.strSimStart +
+                        "\",\"width\":" + L(sim.opts.FieldWidth) +
+                        ",\"height\":" + L(sim.opts.FieldHeight) +
+                        ",\"population\":[";
+  // calculate species (orden de primera aparicion por slot)
+  for (int i = 1; i <= sim.MaxRobs; ++i) {
+    const db::Bot& b = sim.rob[static_cast<std::size_t>(i)];
+    if (!b.exist) continue;
+    const std::string nm = IMgetname(sim, i);
+    bool hit = false;
+    for (std::size_t k = 1; k < simpop.size(); ++k)
+      if (simpop[k].Name == nm && simpop[k].vegy == b.Veg) { hit = true; break; }
+    if (!hit) simpop.push_back({nm, b.Veg, 0});
+  }
+  // calculate populations
+  for (int i = 1; i <= sim.MaxRobs; ++i) {
+    const db::Bot& b = sim.rob[static_cast<std::size_t>(i)];
+    if (!b.exist) continue;
+    const std::string nm = IMgetname(sim, i);
+    for (std::size_t k = 1; k < simpop.size(); ++k)
+      if (simpop[k].Name == nm && simpop[k].vegy == b.Veg) simpop[k].pop += 1;
+  }
+  for (std::size_t k = 1; k < simpop.size(); ++k) {
+    simdata += "{\"botName\":\"" + simpop[k].Name + "\",\"count\":" +
+               std::to_string(simpop[k].pop) +
+               (simpop[k].vegy ? ",\"repopulating\":true" : "") + "}";
+    if (k < simpop.size() - 1) simdata += ",";
+  }
+  simdata += "]}";
+
+  const std::string file = L(sim.opts.TotRunCycle) +
+                           L(sim.opts.UserSeedNumber) + ".stats";
+  const std::string out = file + "\n" + simdata;
+  return reinterpret_cast<char*>(CopyOut(
+      reinterpret_cast<const unsigned char*>(out.c_str()), out.size() + 1,
+      nullptr));
+}
+
+// Especies de la sim con color (el esquema de SaveSimPopulation,
+// HDRoutines.bas:445-490 — muerto en el original, pero es el formato que
+// "aggregating the population stats from multiple connected sims" pensaba
+// usar). Una linea por especie con poblacion > 0:
+//   nombre \t poblacion \t Veg(0/1) \t color
+// Alimenta InternetSpecies (provvisorio.bas:21) en los pares.
+DB_EXPORT char* db_sim_im_species(void* h) {
+  const db::Sim& sim = S(h);
+  std::string out;
+  for (const auto& sp : sim.Specie) {
+    if (sp.population <= 0) continue;
+    out += sp.Name + "\t" + std::to_string(sp.population) + "\t" +
+           (sp.Veg ? "1" : "0") + "\t" + std::to_string(sp.color) + "\n";
+  }
+  return reinterpret_cast<char*>(CopyOut(
+      reinterpret_cast<const unsigned char*>(out.c_str()), out.size() + 1,
+      nullptr));
+}
+
+// Lectura de un registro .dbo SIN tocar ninguna sim del usuario: se carga
+// con el lector real del core (LoadOrganism, sin recolocar: X = Y = -1, 0
+// RNG) en una sim desechable. Devuelve
+//   cnum \t FName \t LastOwner \t Veg \t color \t nrg \t generation
+// de la primera celula, o "" si el registro no carga. Solo para los avisos
+// de llegada/salida de la capa host.
+DB_EXPORT char* db_dbo_peek(const unsigned char* data, int len) {
+  std::string out;
+  if (data && len > 2) {
+    // Una sola sim desechable, vaciada tras cada lectura (crear un Sim por
+    // registro cuesta megas de heap a velocidad max).
+    static std::unique_ptr<SimHandle> scratch;
+    if (!scratch) scratch = std::make_unique<SimHandle>();
+    db::VbBinFile f;
+    f.data.assign(data, data + len);
+    const db::vb_integer cnum = f.get_i16();
+    f.pos = 0;
+    const int last = db::LoadOrganism(scratch->sim, f, -1.0f, -1.0f);
+    if (last > 0) {
+      const db::Bot* b = nullptr;
+      for (int t = 1; t <= scratch->sim.MaxRobs; ++t)
+        if (scratch->sim.rob[static_cast<std::size_t>(t)].exist) {
+          b = &scratch->sim.rob[static_cast<std::size_t>(t)];
+          break;
+        }
+      if (b) {
+        char nrg[32];
+        std::snprintf(nrg, sizeof nrg, "%.7g", static_cast<double>(b->nrg));
+        out = std::to_string(cnum) + "\t" + b->FName + "\t" + b->LastOwner +
+              "\t" + (b->Veg ? "1" : "0") + "\t" + std::to_string(b->color) +
+              "\t" + nrg + "\t" + std::to_string(b->generation);
+      }
+    }
+    for (int t = 1; t <= scratch->sim.MaxRobs; ++t)
+      scratch->sim.rob[static_cast<std::size_t>(t)].exist = false;
+    scratch->sim.MaxRobs = 0;
+    scratch->sim.Specie.clear();
+  }
+  return reinterpret_cast<char*>(CopyOut(
+      reinterpret_cast<const unsigned char*>(out.c_str()), out.size() + 1,
+      nullptr));
+}
+
 // ---------------------------------------------------------------------------
 // Formatos (E/S sobre buferes en memoria; el host decide que hacer con ellos)
 // ---------------------------------------------------------------------------
