@@ -478,21 +478,32 @@ TEST_CASE("F-15 touch: sectores del contacto") {
   touch(w.sim, n, 0, -10);  // dang = 4.71 => izquierda
   CHECK(b.mem[addr::hitsx] == 1);
 
-  // Umbral 0.78: todos los comparadores son estrictos. Justo debajo marca
-  // frente; justo encima marca derecha; y si algún dy produce exactamente
-  // 0.78f, no marca ningún sector (solo hit).
+  // touch recibe X/Y como Long (Senses.bas:21, RV-28): 10*tan(0.775) = 9.79
+  // llega como 10 y el contacto cae a 45 grados => derecha.
   reset();
   touch(w.sim, n, 10.0f, 10.0f * std::tan(0.775f));
-  CHECK(b.mem[addr::hitup] == 1);
-  CHECK(b.mem[addr::hitdx] == 0);
-
-  reset();
-  touch(w.sim, n, 10.0f, 10.0f * std::tan(0.785f));
   CHECK(b.mem[addr::hitup] == 0);
   CHECK(b.mem[addr::hitdx] == 1);
 
+  // Umbral 0.78 (literal Double): comparadores estrictos. Los umbrales finos
+  // se prueban con taste, que recibe Single y comparte la geometría. Justo
+  // debajo marca frente y justo encima marca derecha.
+  auto reset_sh = [&] {
+    for (int i = 209; i <= 213; ++i) b.mem[i] = 0;
+  };
+  reset_sh();
+  taste(w.sim, n, 10.0f, 10.0f * std::tan(0.775f), 1);
+  CHECK(b.mem[addr::shup] == 1);
+  CHECK(b.mem[addr::shdx] == 0);
+
+  reset_sh();
+  taste(w.sim, n, 10.0f, 10.0f * std::tan(0.785f), 1);
+  CHECK(b.mem[addr::shup] == 0);
+  CHECK(b.mem[addr::shdx] == 1);
+
   {
-    // Búsqueda del dang exacto 0.78f alrededor de 10*tan(0.78).
+    // Búsqueda del dang exacto 0.78f alrededor de 10*tan(0.78). El Single
+    // 0.78f (0.779999971) es MENOR que el Double 0.78: marca frente.
     float dy = 10.0f * std::tan(0.78f);
     for (int i = 0; i < 600; ++i)
       dy = std::nextafter(dy, 0.0f);
@@ -502,19 +513,21 @@ TEST_CASE("F-15 touch: sectores del contacto") {
       else dy = std::nextafter(dy, 100.0f);
     }
     if (found) {
-      reset();
-      touch(w.sim, n, 10.0f, dy);
-      CHECK(b.mem[addr::hitup] == 0);
-      CHECK(b.mem[addr::hitdx] == 0);
-      CHECK(b.mem[addr::hit] == 1);
+      reset_sh();
+      taste(w.sim, n, 10.0f, dy, 1);
+      CHECK(b.mem[addr::shup] == 1);
+      CHECK(b.mem[addr::shdx] == 0);
     }
   }
 
-  // taste replica la geometría escribiendo el tipo y shang = dang*200.
+  // taste replica la geometría escribiendo el tipo y shang = dang*200. De
+  // frente con aim = 0: `6.28 - aim` se redondea a 6.28f y la vuelta
+  // `dang + 6.28` (Double) deja dang = 6.27999973, no 0 => shang = 1256.
+  reset_sh();
   taste(w.sim, n, 10, 0, -2);
   CHECK(b.mem[addr::shup] == -2);
   CHECK(b.mem[addr::shflav] == -2);
-  CHECK(b.mem[209] == 0);  // shang = CInt(0*200)
+  CHECK(b.mem[209] == 1256);
 }
 
 // ---------------------------------------------------------------------------

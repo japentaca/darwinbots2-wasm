@@ -154,11 +154,14 @@ Geometría común: ángulo del estímulo respecto de `aim` invertido (`aim = 6.2
 | derecha | 0.78–2.36 | `hitdx=1` | `shdx=tipo` |
 | izquierda | 3.92–5.49 | `hitsx=1` | `shsx=tipo` |
 
-Los sectores laterales son **inclusivos en ambos umbrales compartidos** (un `dang`
-exacto de 0.78 marca dx pero no up: up exige `< 0.78` estricto… no: up es
-`> 5.49 Or < 0.78` — 0.78 exacto no marca up ni dx (`> 0.78` estricto). Los umbrales
-exactos no marcan ningún sector lateral doble). `touch` marca además `hit=1`; `taste`
-escribe `shang = dang·200` y `shflav = tipo`. Llamadores: `touch` desde `Repel3` (P1) y
+Todos los umbrales son estrictos y son literales `Double`: un `dang` (`Single`)
+compara contra el `Double`, así que `0.78f` (0.779999971) cae en frente. Los
+literales 6.28/3.14 también son `Double`: `6.28 − .aim`, `ang − 3.14` y
+`dang ± 6.28` se redondean una vez a `Single` (de frente con `aim = 0`, `dang` queda
+en 6.27999973). `touch` recibe `X`/`Y` como **`Long`** (`ByVal`): la posición del otro
+bot o del borde llega redondeada con `CLng`; `taste` recibe `Single`. `touch` marca
+además `hit=1`; `taste` escribe `shang = dang·200` y `shflav = tipo`
+(`REVISION-PORT.md` RV-28/RV-29). Llamadores: `touch` desde `Repel3` (P1) y
 `DoObstacleCollisions` (P1); `taste` solo desde `updateshots` (paso 14).
 
 `LandMark` (`Senses.bas:12-17`): `mem(400) = 1` si `1.39 < aim < 1.75` — "mirando

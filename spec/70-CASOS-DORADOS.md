@@ -1100,18 +1100,23 @@ y = 990 — fuera del borde — y aun así "bloquea".) Solo aplica con
 ### F-15 · `touch`: sectores del contacto — [unit]
 
 (`Senses.bas:21-55`; umbrales literales 5.49/0.78/2.36/3.92 sobre `dang`, con
-`aim = 6.28 − rob.aim` y π literal 3.14.) **Estado**: bot en (0,0) con `aim = 0`.
+`aim = 6.28 − rob.aim` y π literal 3.14. Los literales son `Double`: las restas y
+sumas se redondean una vez a `Single` y los umbrales comparan en `Double`. `touch`
+recibe `X`/`Y` como `Long`: el llamador las redondea con `CLng`; `REVISION-PORT.md`
+RV-28/RV-29.) **Estado**: bot en (0,0) con `aim = 0`.
 
 | estímulo en | dang | esperado |
 |---|---|---|
-| (10, 0) | 0 | `hitup = 1` (frente): ang = Atn(0) = 0; dang = 0 − 6.28 → +6.28 = 0 < 0.78 |
+| (10, 0) | 6.27999973 | `hitup = 1` (frente): ang = 0; `aim` = 6.28f; dang = −6.28f → +6.28 (`Double`) = −2.1·10⁻⁷ → +6.28 = 6.27999973 > 5.49 |
 | (−10, 0) | 3.14 | `hitdn = 1` (ang = 0 − 3.14; dang = −9.42 → +6.28·2 = 3.14) |
 | (0, 10) | dy=10, dx=0 ⇒ ang = 1.57 ⇒ dang = 1.57 | `hitdx = 1` (0.78 < 1.57 < 2.36) |
 | (0, −10) | ang = −1.57 ⇒ dang = 4.71 | `hitsx = 1` |
-| exactamente dang = 0.78 | — | **ningún** sector lateral ni frontal (todos los umbrales son estrictos) |
+| (10, 10·tan 0.775) | — | la Y llega como `CLng(9.79)` = 10: el contacto cae a 45° ⇒ `hitdx = 1` |
+| `dang` = 0.78f exacto (con `taste`, que recibe `Single`) | 0.779999971 | `shup` (frente): el `Single` 0.78f es menor que el `Double` 0.78 |
 
 Siempre `mem(hit) = 1` (`:55`). `taste` replica la geometría escribiendo el tipo de
-shot y `shang = dang·200` (`:60-95`).
+shot y `shang = dang·200` (`:60-95`): de frente con `aim = 0`, `shang = 1256`
+(no 0).
 
 ---
 

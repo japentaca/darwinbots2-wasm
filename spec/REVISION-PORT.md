@@ -1239,8 +1239,154 @@ resto:
   la re-tirada de especie, `Erase mem`, el `aim` y `GenMut = DnaLen / 75`
   (`Double`).
 
+## Piloto 8 — Visión y sentidos (2026-09-25)
+
+**Alcance**:
+- `Senses.bas` completo en lo vivo: `LandMark`, `touch`, `taste`,
+  `EraseSenses`, `SpeciesFromBot`, `WriteSenses`, `lookoccurr`,
+  `EraseLookOccurr`, `lookoccurrShape` y `makeoccurrlist`;
+- la visión de `Quads.bas:174-963`: `BucketsProximity`,
+  `CheckBotBucketForVision`, `AnyShapeBlocksBot`/`ShapeBlocksBot`,
+  `AbsoluteEyeWidth`, `NarrowestEye`, `EyeSightDistance`, `eyestrength`,
+  `CompareRobots3`, `CompareShapes` y `SegmentSegmentIntersect`.
+
+Se compara con `senses.hpp` y `vision.hpp`. El fudge de ojos (`FudgeEyes`/`FudgeAll`)
+sigue fuera, como modo evo ya documentado.
+
+**Resultado**: 2 divergencias confirmadas (RV-28 y RV-29), ambas de efecto
+pequeño. El resto coincide, incluidos los `[PROBABLE BUG]` conservados (B2-1 a
+B2-5, A3-1 y A3-5).
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir RV-28 y RV-29)**:
+> - `touch` hace `vb_clng` de `X`/`Y` una vez para todos los llamadores (RV-28).
+> - `impact_dang` recibe `double` y usa los literales `Double` con un redondeo.
+>   Los umbrales de `touch`/`taste` comparan ahora en `double`: es la nota del
+>   umbral, corregida de paso.
+> - `eyestrength` hace `* 0.8` en `double`.
+> - El helper `view_angle` hace `Atn + PI` con un redondeo, en `CompareRobots3`
+>   y en `CompareShapes`.
+> - `lookoccurr` y `lookoccurrShape` calculan la velocidad relativa en `double`.
+>
+> - **Tests**: RV-28 y RV-29/29b/29c sin `should_fail`, más RV-29d (`theta`
+>   de extremo a extremo: el borde del ojo cae en el ulp) y RV-29e
+>   (`lookoccurrShape`).
+> - **Dorado ajustado**: F-15 (`test_physics.cpp` y `70-CASOS-DORADOS.md`).
+>   `touch` redondea la posición; `0.78f` exacto marca frente; y de frente con
+>   `aim = 0`, `.shang = 1256`. `32-VISION.md §5` queda al día.
+> - **Mutation-check**: con `senses.hpp` y `vision.hpp` de HEAD fallan F-15 y los
+>   6 casos.
+> - **Suites**: 240 casos y 3939 aserciones en los tres modos, solo con los 7
+>   fallos esperados. Los 4 smoke tests pasan.
+
+### RV-28 · `touch` recibe `X`/`Y` como `Long` — CORREGIDO
+
+- **Fuente** (`Senses.bas:21`): `touch(ByVal a As Long, ByVal X As Long, ByVal Y As
+  Long)`. Los llamadores pasan posiciones `Single`, que llegan redondeadas con
+  `CLng`:
+  - `Physics.bas:964-965` (`Repel3`, la posición del otro bot);
+  - `Obstacles.bas:479-517` (el borde de la forma, `pos ± radius`).
+
+  `dx = X - xc` es entonces `Long - Single`, en `Double`. `taste` sí recibe
+  `Single` (`:61`).
+- **Port** (`senses.hpp:43`): `touch(.., vb_single X, vb_single Y)`, que usa la
+  posición sin redondear (`physics.hpp:415-416, 763-798`).
+- **Contraejemplo**: bot en (1347.8092, 3585.77612) con `aim = 2.27662539`,
+  tocado desde (1457.92285, 3594.95947). En el original el golpe entra en
+  **`hitdn`** y en el port en **`hitdx`**.
+- **Frecuencia**: los flags de dirección cambian en el **0,13 %** de los
+  contactos entre bots (distancias de 100 a 140).
+- **Test**: RV-28.
+
+### RV-29 · Promociones a `Double` perdidas en visión y sentidos — CORREGIDO (familia RV-05)
+
+| Fuente | Port | Expresión | Difiere |
+|---|---|---|---|
+| `Senses.bas:30-49, 70-87` | `senses.hpp:24, 31, 36-37` | `aim = 6.28 - .aim`, `ang - 3.14`, `dang ± 6.28` (`touch`/`taste`) | `dang` en el 68 %; `.shang` o los flags en el 0,007 % |
+| `Quads.bas:393` | `vision.hpp:47` | `eyestrength * 0.8` (de noche; con `eyestrength = 1` no difiere) | 20 % en modo estanque |
+| `Quads.bas:482, 496, 799` | `vision.hpp:180-189, 426-428` | `theta = Atn(..) + PI` (y `beta`): `Double + Single`, un redondeo | 9,5 % a 1 ulp; la visibilidad solo cambia si un borde del ojo cae en ese ulp |
+| `Senses.bas:309-310` | `senses.hpp:144-157` | `vel.X * Cos(aim) + vel.Y * Sin(aim) * -1 - velup`, redondeado una vez a `X` (`Single`) | 40 % en `X`; el `CInt` publicado, 1·10⁻⁶ |
+| `Senses.bas:431, 433` | `senses.hpp:219-229` | lo mismo en `lookoccurrShape`, con `CInt` directo del `Double` | como la fila anterior |
+
+- **Contraejemplos** (los de los tests):
+  - `taste` desde (12405.3984, 3160.69653) sobre un bot en (12516, 3238) con
+    `aim = 0.87248832`: `dang` vale 4.62249994 en el original y 4.62250042 en
+    el port, y `.shang` queda en **924** frente a **925**.
+  - `eyestrength` de noche con `pos.y = 3999.11011` (estanque, `FieldHeight
+    = 12000`): 0.999807239 frente a 0.999807298.
+  - `lookoccurr` con `vel = (0.546, -51.022)` y `aim = 1.315`: `X` vale
+    exactamente 49.5 en el original, que da **50**; en el port, 49.4999962, que
+    da **49**.
+- **`theta`/`beta`**: solo cambia la visibilidad si un borde del ojo coincide
+  exactamente con el `theta` del original. RV-29d construye ese caso: bots en
+  (5000, 5000) y (4789.1875, 4830.25) con `aim = 2.76909709`. En el original el
+  ojo 5 ve el bot (80) y con el código anterior no (0).
+- **Tests**: RV-29 (`taste`), RV-29b (`eyestrength`), RV-29c (`lookoccurr`),
+  RV-29d (`theta`) y RV-29e (`lookoccurrShape`: 59 frente a 60).
+
+### Notas menores (sin acción)
+
+- **`makeoccurrlist`** (`Senses.bas:473`): el `While` evalúa `.dna(t)` sin
+  cortocircuito. Con un ADN de un solo elemento (`UBound = 0`) el original
+  daría error 9; el port lo esquiva con `t < ub`. No se alcanza, porque todo ADN
+  cargado tiene al menos el `end`.
+- **`LandMark`** (`1.39`/`1.75`): compara un `Single` con un `Double` y solo
+  difiere en la igualdad exacta con el literal `float`. Los umbrales de
+  `touch`/`taste` (`0.78`, `2.36`, `3.92`, `5.49`, `6.28`) tenían la misma nota
+  y se corrigieron con RV-29.
+
+### Literales `float` inexactos de `senses.hpp` y `vision.hpp` (24)
+
+- **Sumando** (4), que divergen: `6.28f` ×3 y `3.14f` (RV-29). Se comportan como
+  los factores: el literal `float` cambia la suma.
+- **Factor** (2):
+  - `0.8f` en `vision.hpp` diverge (RV-29).
+  - `1.57f * Sgn(dy)` es correcto, porque `Sgn` vale −1, 0 o 1.
+- **Umbral** (18): `1.39f` (ver notas), y los 16 de `touch`/`taste` más el
+  `6.28f` del `While dang > 6.28`, que ya comparan en `double` (RV-29).
+
+### Verificado sin divergencias
+
+- **`BucketsProximity`/`CheckBotBucketForVision`**: el reset de `lastopp`,
+  `EYEF` y los ojos, la celda propia más hasta 8 adyacentes con parada en −1,
+  las formas al final y el retorno de `lastopp`.
+- **`CompareRobots3`** (salvo RV-29):
+  - `edgetoedgedist`, `eyesum` con `CLng`, y `sightdist`/`eyedist` con el atajo
+    de ancho 0;
+  - `ac`/`ad` y la Y invertida;
+  - `eyeaim` (`Mod 1256 / 200` en `Double`; el port hace `PI / 18` en `double`,
+    lo que cubre N-06);
+  - `halfeyewidth` con `Mod 1256 / 400` y los `While` con `PI/36` (B2-2);
+  - las 10 cláusulas;
+  - `eyevalue` con `1 / pd²` y el tope 32000;
+  - el foco `Abs(focuseye + 4) Mod 9` y `EYEF`/ojos con `CInt`.
+- **`CompareShapes`** (salvo RV-29):
+  - el weed-out, el bot dentro de la forma sin `EYEF` (B2-3), los 8 sectores y
+    los lados sin transponer;
+  - `halfeyewidth = (w + 35) / 400` (B2-5) y `lastopppos` solo con `a = 4` (B2-4);
+  - `distleft`/`distright` sin reset entre lados y `SegmentSegmentIntersect`.
+- **`ShapeBlocksBot`** (transpuesto y con `useT Or useS`, B2-1),
+  **`AnyShapeBlocksBot`**, **`AbsoluteEyeWidth`**, **`NarrowestEye`** (techo
+  1221), **`EyeSightDistance`** (`Log` en `Double`) y **`eyestrength`** (salvo
+  RV-29: `Byte / Double ^ ..` en `Double`, clamp ≤ 1).
+- **`lookoccurr`** (salvo RV-29):
+  - las 8 `occurr` y `refnrg`/`refage` con topes;
+  - `in1-10`, `refaim`/`reftie` y `refshell`/`refbody` con `CInt`;
+  - `refxpos`/`refypos` desde 217/219 y `refvelsx` negado sobre sí mismo (A3-1);
+  - `refvelscalar` con `CLng(x ^ 2)` y `refkills` sin clamp (A3-5);
+  - `memloc`/`readmem` con `View` y `reffixed`.
+
+  **`lookoccurrShape`**: `CInt(pos / div Mod 32000)` y `reffixed` por
+  velocidad nula.
+- **`WriteSenses`**:
+  - `TotalBots` y `TOTALMYSPECIES`, y la visión solo sin `CantSee` ni `Corpse`;
+  - los clamps y `pain`/`pleas`/`bodloss`/`bodgain` con `CInt` de la resta
+    (N-06), y el "odd bug" de `mem(body)`;
+  - `mem(215)`, y `mem(217)`/`mem(219)` con `Int(../32000#)` y `Mod` bancario.
+- **`EraseSenses`/`EraseLookOccurr`** (salta los corpses) y **`makeoccurrlist`**
+  (la firma y las publicaciones 721-731).
+
 ## Siguientes pilotos sugeridos
 
-1. **Visión** (`Senses.bas`, frente a `vision.hpp` y `senses.hpp`, con 23
-   literales), con el mismo método. En cada piloto hay que clasificar sus
-   literales `float` inexactos (ver RV-05).
+1. Lo que queda sin revisar del núcleo: `Master.bas` (el orden del tick),
+   `Database.bas`/`HDRoutines.bas` (formatos) y los modos de juego. En cada piloto
+   hay que clasificar sus literales `float` inexactos (ver RV-05).

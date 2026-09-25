@@ -44,7 +44,8 @@ inline vb_single eyestrength(Sim& sim, int n1) {
   } else {
     es = 1.0f;
   }
-  if (!sim.opts.Daytime) es = es * 0.8f;
+  // Single * 0.8 (literal Double): un redondeo (RV-29).
+  if (!sim.opts.Daytime) es = static_cast<vb_single>(static_cast<double>(es) * 0.8);
   if (es > 1.0f) es = 1.0f;
   return es;
 }
@@ -66,6 +67,18 @@ inline vb_single eyevalue_from_dist(vb_single edgetoedgedist,
   vb_single ev = 1.0f / (percentdist * percentdist);
   if (ev > 32000.0f) ev = 32000.0f;
   return ev;
+}
+
+// Quads.bas:476-497, 790-801 — ángulo de un vector (Y ya invertida) con la
+// protección de x = 0. `Atn(y / x)` se asigna a Single; en el cuadrante
+// izquierdo `Atn(y / x) + PI` es Double + Single y se redondea UNA vez
+// (RV-29). La división va en double (N-06).
+inline vb_single view_angle(const Vector& v) {
+  if (v.x == 0.0f) return (v.y > 0.0f) ? PI / 2 : 3 * PI / 2;
+  const double at =
+      std::atan(static_cast<double>(v.y) / static_cast<double>(v.x));
+  if (v.x > 0.0f) return static_cast<vb_single>(at);
+  return static_cast<vb_single>(at + static_cast<double>(PI));
 }
 
 // Quads.bas:578 — mapeo del ojo con foco: Abs(focuseye + 4) Mod 9 pliega los
@@ -173,21 +186,8 @@ inline void CompareRobots3(Sim& sim, int n1, int n2) {
   ac.y = -ac.y;
 
   // theta = ángulo al borde izquierdo; beta = al derecho.
-  vb_single theta, beta;
-  if (ad.x == 0.0f) {
-    theta = (ad.y > 0.0f) ? PI / 2 : 3 * PI / 2;
-  } else {
-    theta = static_cast<vb_single>(
-        std::atan(static_cast<double>(ad.y) / static_cast<double>(ad.x)));
-    if (ad.x < 0.0f) theta = theta + PI;
-  }
-  if (ac.x == 0.0f) {
-    beta = (ac.y > 0.0f) ? PI / 2 : 3 * PI / 2;
-  } else {
-    beta = static_cast<vb_single>(
-        std::atan(static_cast<double>(ac.y) / static_cast<double>(ac.x)));
-    if (ac.x < 0.0f) beta = beta + PI;
-  }
+  vb_single theta = view_angle(ad);
+  vb_single beta = view_angle(ac);
 
   if (theta < 0.0f) theta = theta + 2 * PI;
   if (beta < 0.0f) beta = beta + 2 * PI;
@@ -419,15 +419,7 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
         Vector ab = VectorSub(closestPoint, P0);
         ab.y = -ab.y;
 
-        vb_single theta;
-        if (ab.x == 0.0f) {
-          theta = (ab.y > 0.0f) ? PI / 2 : 3 * PI / 2;
-        } else {
-          theta = static_cast<vb_single>(std::atan(
-              static_cast<double>(ab.y) / static_cast<double>(ab.x)));
-          if (ab.x <= 0.0f) theta = theta + PI;
-        }
-        theta = angnorm(theta);
+        vb_single theta = angnorm(view_angle(ab));
 
         if ((eyeaimleft >= theta && theta >= eyeaimright && !eyespanszero) ||
             (eyeaimleft >= theta && eyespanszero) ||

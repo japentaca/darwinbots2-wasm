@@ -19,45 +19,63 @@ inline void LandMark(Sim& sim, int i) {
 namespace senses_detail {
 // El núcleo angular compartido de touch/taste (Senses.bas:21-55): ángulo del
 // impacto relativo a 6.28 - aim, normalizado a [0, 6.28] con las constantes
-// truncadas del fuente (6.28/3.14/1.57, no PI).
-inline vb_single impact_dang(const Bot& b, vb_single X, vb_single Y) {
-  const vb_single aim = 6.28f - b.aim;
-  const vb_single dx = X - b.pos.x;
-  const vb_single dy = Y - b.pos.y;
+// truncadas del fuente (6.28/3.14/1.57, no PI). Los literales son Double:
+// `6.28 - .aim`, `ang - 3.14` y `dang +/- 6.28` se redondean una vez a
+// Single, y los umbrales comparan en Double (RV-29). X/Y llegan ya con el
+// tipo del llamador (Long en touch, Single en taste): `X - xc` se evalúa
+// exacto y se redondea al asignar a dx (Single).
+inline vb_single impact_dang(const Bot& b, double X, double Y) {
+  const vb_single aim = static_cast<vb_single>(6.28 - static_cast<double>(b.aim));
+  const vb_single dx = static_cast<vb_single>(X - static_cast<double>(b.pos.x));
+  const vb_single dy = static_cast<vb_single>(Y - static_cast<double>(b.pos.y));
   vb_single ang;
   if (dx != 0.0f) {
     const vb_single tn = dy / dx;
     ang = static_cast<vb_single>(std::atan(static_cast<double>(tn)));
-    if (dx < 0.0f) ang = ang - 3.14f;
+    if (dx < 0.0f) ang = static_cast<vb_single>(static_cast<double>(ang) - 3.14);
   } else {
-    ang = 1.57f * static_cast<vb_single>(vb_sgn(dy));
+    ang = 1.57f * static_cast<vb_single>(vb_sgn(dy));  // 1.57 * Sgn: exacto
   }
   vb_single dang = ang - aim;
-  while (dang < 0.0f) dang = dang + 6.28f;
-  while (dang > 6.28f) dang = dang - 6.28f;
+  while (dang < 0.0f) dang = static_cast<vb_single>(static_cast<double>(dang) + 6.28);
+  while (static_cast<double>(dang) > 6.28)
+    dang = static_cast<vb_single>(static_cast<double>(dang) - 6.28);
   return dang;
 }
+
+// Las cuatro direcciones (up, dn, dx, sx) de touch/taste, con los umbrales
+// Double del fuente.
+inline bool dang_up(vb_single d) { return d > 5.49 || d < 0.78; }
+inline bool dang_dn(vb_single d) { return d > 2.36 && d < 3.92; }
+inline bool dang_dx(vb_single d) { return d > 0.78 && d < 2.36; }
+inline bool dang_sx(vb_single d) { return d > 3.92 && d < 5.49; }
 }  // namespace senses_detail
 
 // Senses.bas:21-56 — touch (colisión bot-bot; escrito desde Repel3 en P1).
+// `ByVal X As Long, ByVal Y As Long`: los llamadores pasan posiciones Single
+// y llegan con CLng (RV-28); el redondeo se hace aquí, una vez para todos.
 inline void touch(Sim& sim, int a, vb_single X, vb_single Y) {
+  using namespace senses_detail;
   Bot& b = sim.rob[a];
-  const vb_single dang = senses_detail::impact_dang(b, X, Y);
-  if (dang > 5.49f || dang < 0.78f) b.mem[addr::hitup] = 1;
-  if (dang > 2.36f && dang < 3.92f) b.mem[addr::hitdn] = 1;
-  if (dang > 0.78f && dang < 2.36f) b.mem[addr::hitdx] = 1;
-  if (dang > 3.92f && dang < 5.49f) b.mem[addr::hitsx] = 1;
+  const vb_single dang = impact_dang(b, static_cast<double>(vb_clng(X)),
+                                     static_cast<double>(vb_clng(Y)));
+  if (dang_up(dang)) b.mem[addr::hitup] = 1;
+  if (dang_dn(dang)) b.mem[addr::hitdn] = 1;
+  if (dang_dx(dang)) b.mem[addr::hitdx] = 1;
+  if (dang_sx(dang)) b.mem[addr::hitsx] = 1;
   b.mem[addr::hit] = 1;
 }
 
 // Senses.bas:61-96 — taste (sabor de shot; escrito desde updateshots, paso 14).
 inline void taste(Sim& sim, int a, vb_single X, vb_single Y, vb_integer value) {
+  using namespace senses_detail;
   Bot& b = sim.rob[a];
-  const vb_single dang = senses_detail::impact_dang(b, X, Y);
-  if (dang > 5.49f || dang < 0.78f) b.mem[addr::shup] = value;
-  if (dang > 2.36f && dang < 3.92f) b.mem[addr::shdn] = value;
-  if (dang > 0.78f && dang < 2.36f) b.mem[addr::shdx] = value;
-  if (dang > 3.92f && dang < 5.49f) b.mem[addr::shsx] = value;
+  const vb_single dang =
+      impact_dang(b, static_cast<double>(X), static_cast<double>(Y));
+  if (dang_up(dang)) b.mem[addr::shup] = value;
+  if (dang_dn(dang)) b.mem[addr::shdn] = value;
+  if (dang_dx(dang)) b.mem[addr::shdx] = value;
+  if (dang_sx(dang)) b.mem[addr::shsx] = value;
   b.mem[209] = vb_cint(dang * 200.0f);  // .shang
   b.mem[addr::shflav] = value;
 }
@@ -140,13 +158,18 @@ inline void lookoccurr(Sim& sim, int n, int o) {
   vn.mem[addr::refypos] = vo.mem[217];
   vn.mem[addr::refxpos] = vo.mem[219];
 
-  // Velocidades relativas en el marco del vidente (Senses.bas:311-319).
-  vb_single X = (vo.vel.x * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
-                 vo.vel.y * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim))) * -1.0f) -
-                vn.mem[addr::velup];
-  vb_single Y = (vo.vel.y * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
-                 vo.vel.x * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim)))) -
-                vn.mem[addr::veldx];
+  // Velocidades relativas en el marco del vidente (Senses.bas:309-319):
+  // Single * Cos/Sin (Double) va en Double y se redondea una vez a X/Y
+  // (RV-29).
+  const double ca = std::cos(static_cast<double>(vn.aim));
+  const double sa = std::sin(static_cast<double>(vn.aim));
+  vb_single X = static_cast<vb_single>(
+      (static_cast<double>(vo.vel.x) * ca +
+       static_cast<double>(vo.vel.y) * sa * -1.0) -
+      static_cast<double>(vn.mem[addr::velup]));
+  vb_single Y = static_cast<vb_single>(
+      (static_cast<double>(vo.vel.y) * ca + static_cast<double>(vo.vel.x) * sa) -
+      static_cast<double>(vn.mem[addr::veldx]));
   if (X > 32000.0f) X = 32000.0f;
   if (X < -32000.0f) X = -32000.0f;
   if (Y > 32000.0f) Y = 32000.0f;
@@ -215,18 +238,17 @@ inline void lookoccurrShape(Sim& sim, int n, int o) {
       32000);
 
   // Velocidades relativas en el marco del vidente (sin clamp previo, a
-  // diferencia de lookoccurr: las velocidades de forma son pequeñas).
+  // diferencia de lookoccurr: las velocidades de forma son pequeñas). La
+  // expresión es Double de punta a punta y CInt la redondea (RV-29).
+  const double ca = std::cos(static_cast<double>(vn.aim));
+  const double sa = std::sin(static_cast<double>(vn.aim));
   vn.mem[addr::refvelup] = vb_cint(
-      static_cast<double>(
-          ob.vel.x * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
-          ob.vel.y * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim))) *
-              -1.0f) -
+      (static_cast<double>(ob.vel.x) * ca +
+       static_cast<double>(ob.vel.y) * sa * -1.0) -
       static_cast<double>(vn.mem[addr::velup]));
   vn.mem[addr::refveldn] = static_cast<vb_integer>(-vn.mem[addr::refvelup]);
   vn.mem[addr::refveldx] = vb_cint(
-      static_cast<double>(
-          ob.vel.y * static_cast<vb_single>(std::cos(static_cast<double>(vn.aim))) +
-          ob.vel.x * static_cast<vb_single>(std::sin(static_cast<double>(vn.aim)))) -
+      (static_cast<double>(ob.vel.y) * ca + static_cast<double>(ob.vel.x) * sa) -
       static_cast<double>(vn.mem[addr::veldx]));
   vn.mem[addr::refvelsx] =
       static_cast<vb_integer>(-vn.mem[addr::refvelsx]);  // [PROBABLE BUG] A3-1

@@ -952,3 +952,83 @@ TEST_CASE("RV-26i MoveTeleporter: Height * 0.3 y MaxVelocity * 0.1 en Double") {
   CHECK(tp.center.y == 40.2999992f);  // antes del arreglo: 40.3000031
   CHECK(tp.vel.x == 0.899999976f);    // antes del arreglo: 0.900000036
 }
+
+// ---------------------------------------------------------------------------
+// Piloto 8 — Vision y sentidos (Senses.bas, Quads.bas:174-963).
+
+// RV-28 — Senses.bas:21: `touch(ByVal a As Long, ByVal X As Long, ByVal Y As
+// Long)`. Los llamadores (Physics.bas:964-965, Obstacles.bas:479-517) pasan
+// posiciones Single, que llegan redondeadas con CLng. El port las pasa en
+// float y el angulo del impacto cambia: aqui el golpe cae en hitdn en el
+// original y en hitdx en el port.
+TEST_CASE("RV-28 touch: X e Y son Long (CLng de la posicion)") {
+  RvWorld w;
+  const int a = w.addbot(1347.8092f, 3585.77612f);
+  w.sim.rob[a].aim = 2.27662539f;
+  touch(w.sim, a, 1457.92285f, 3594.95947f);
+  CHECK(w.sim.rob[a].mem[addr::hitdn] == 1);  // antes del arreglo: 0
+  CHECK(w.sim.rob[a].mem[addr::hitdx] == 0);  // antes del arreglo: 1
+}
+
+// RV-29 — promociones a Double perdidas en vision y sentidos (familia RV-05).
+// Senses.bas:70-87: `aim = 6.28 - .aim`, `ang - 3.14` y `dang + 6.28` son
+// Single +/- Double; el port usa los literales float. Cambia .shang.
+TEST_CASE("RV-29 taste: los sumandos 6.28 y 3.14 van en Double") {
+  RvWorld w;
+  const int a = w.addbot(12516.0f, 3238.0f);
+  w.sim.rob[a].aim = 0.87248832f;
+  taste(w.sim, a, 12405.3984f, 3160.69653f, 1);
+  CHECK(w.sim.rob[a].mem[209] == 924);  // antes del arreglo: 925
+}
+
+// RV-29b — Quads.bas:393: `eyestrength * 0.8` (de noche) es Single * Double.
+TEST_CASE("RV-29b eyestrength: * 0.8 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 3999.11011f);
+  w.sim.opts.Pondmode = true;
+  w.sim.opts.Daytime = false;
+  w.sim.opts.FieldHeight = 12000.0f;
+  w.sim.opts.Gradient = 1.02f;
+  CHECK(eyestrength(w.sim, n) == 0.999807239f);  // antes del arreglo: 0.999807298
+}
+
+// RV-29c — Senses.bas:309: `vel.X * Cos(aim) + vel.Y * Sin(aim) * -1 -
+// mem(velup)` va en Double y se redondea una vez a X (Single): 49.5 -> CInt
+// 50. El port opera en float, da 49.4999962 y publica 49.
+TEST_CASE("RV-29c lookoccurr: velocidad relativa en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  const int o = w.addbot(1200.0f, 1000.0f);
+  w.sim.rob[n].aim = 1.315f;
+  w.sim.rob[o].vel = {0.546f, -51.022f};
+  lookoccurr(w.sim, n, o);
+  CHECK(w.sim.rob[n].mem[addr::refvelup] == 50);  // antes del arreglo: 49
+}
+
+// RV-29d — Quads.bas:482: `theta = Atn(ad.y / ad.x) + PI` (Double + Single, un
+// redondeo). Aqui el theta del original (2.68183064) cae justo en el borde
+// derecho del ojo 5 (aim - PI/36) y el bot se ve; con el redondeo previo a
+// float (2.68183041) quedaba un ulp fuera.
+TEST_CASE("RV-29d CompareRobots3: Atn + PI en Double") {
+  RvWorld w;
+  const int n1 = w.addbot(5000.0f, 5000.0f);
+  const int n2 = w.addbot(4789.1875f, 4830.25f);
+  w.sim.rob[n1].aim = 2.76909709f;
+  CompareRobots3(w.sim, n1, n2);
+  CHECK(w.sim.rob[n1].mem[addr::EyeStart + 5] == 80);  // antes del arreglo: 0
+  CHECK(w.sim.rob[n1].lastopp == n2);
+}
+
+// RV-29e — Senses.bas:431: en lookoccurrShape la velocidad relativa es Double
+// de punta a punta y CInt la redondea sin pasar por Single: 59.4999960 -> 59.
+TEST_CASE("RV-29e lookoccurrShape: velocidad relativa en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].aim = 2.1f;
+  w.sim.Obstacles.resize(2);
+  w.sim.Obstacles[1].exist = true;
+  w.sim.Obstacles[1].vel = {-54.684f, -36.947f};
+  w.sim.numObstacles = 1;
+  lookoccurrShape(w.sim, n, 1);
+  CHECK(w.sim.rob[n].mem[addr::refvelup] == 59);  // antes del arreglo: 60
+}
