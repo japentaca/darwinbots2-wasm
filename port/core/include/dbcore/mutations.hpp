@@ -154,7 +154,7 @@ inline void ChangeDNA(Sim& sim, int robn, vb_long nth, vb_long Length = 1,
     if (t >= static_cast<vb_long>(b.dna.size())) return;  // guarda del port
     if (b.dna[t].tipo == 10) return;  // mutations can't cross control barriers
 
-    if (Random(0, 99, *sim.rndy) < PointWhatToChange) {
+    if (RandomI(0, 99, *sim.rndy) < PointWhatToChange) {
       // ---- muta el VALOR ----
       if (b.dna[t].value != 0 && Mtype == mut::InsertionUP) {
         // La siembra de Insertion: Gauss(500, 0) ≈ ±1000. No cuenta como
@@ -224,7 +224,7 @@ inline void ChangeDNA(Sim& sim, int robn, vb_long nth, vb_long Length = 1,
       // ---- muta el TIPO ----
       const Block bp = b.dna[t];
       do {
-        b.dna[t].tipo = static_cast<vb_integer>(Random(0, 20, *sim.rndy));
+        b.dna[t].tipo = static_cast<vb_integer>(RandomI(0, 20, *sim.rndy));
       } while (b.dna[t].tipo == bp.tipo || TipoDetokM(b.dna[t].tipo).empty());
       vb_long Max = 0;
       if (b.dna[t].tipo >= 2) {
@@ -502,7 +502,7 @@ inline void DeltaMut(Sim& sim, int robn) {
 
     vb_integer temp;
     do {
-      temp = static_cast<vb_integer>(Random(0, 10, *sim.rndy));
+      temp = static_cast<vb_integer>(RandomI(0, 10, *sim.rndy));
     } while (b.Mutables.mutarray[temp] <= 0.0f);
 
     vb_single newval;
@@ -868,10 +868,10 @@ inline void mutatecolors(Sim& sim, int n, vb_long a) {
   vb_long r = color - bb * 65536 - g * 256;
 
   for (vb_long counter = 1; counter <= a; ++counter) {
-    switch (Random(1, 3, *sim.rndy)) {
-      case 1: bb += (Random(0, 1, *sim.rndy) * 2 - 1) * 20; break;
-      case 2: g += (Random(0, 1, *sim.rndy) * 2 - 1) * 20; break;
-      case 3: r += (Random(0, 1, *sim.rndy) * 2 - 1) * 20; break;
+    switch (RandomI(1, 3, *sim.rndy)) {
+      case 1: bb += (RandomI(0, 1, *sim.rndy) * 2 - 1) * 20; break;
+      case 2: g += (RandomI(0, 1, *sim.rndy) * 2 - 1) * 20; break;
+      case 3: r += (RandomI(0, 1, *sim.rndy) * 2 - 1) * 20; break;
     }
     if (r > 255) r = 255;
     if (r < 0) r = 0;

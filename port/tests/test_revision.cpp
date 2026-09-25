@@ -39,8 +39,7 @@ bool customcdiff(vb_long a, vb_long b, vb_long d) {
 // Long - Single, que VB6 evalua en Double (regla del operador: Single con
 // Long -> Double), y la comparacion con b (Long) tambien es en Double. El
 // port convierte a y b a Single y pierde precision sobre 2^24.
-TEST_CASE("RV-01 ~= / !~= comparan en Double, no en Single" *
-          doctest::should_fail()) {
+TEST_CASE("RV-01 ~= / !~= comparan en Double, no en Single") {
   // Con d = 0, c = 0: ~= es igualdad exacta. 16777217 no es 16777216.
   CHECK_FALSE(customcequa(16777217, 16777216, 0));
   CHECK(customcdiff(16777217, 16777216, 0));
@@ -52,8 +51,7 @@ TEST_CASE("RV-01 ~= / !~= comparan en Double, no en Single" *
 // (DNA.bas:1098) hi = Abs(mem(a)) es Integer, asi que el original calcula en
 // Single; el port siempre en double.
 // r = 855638 / 2^24 (estado alcanzable: el LCG recorre los 2^24 estados).
-TEST_CASE("RV-02 rndstore: Random con hi Integer calcula en Single" *
-          doctest::should_fail()) {
+TEST_CASE("RV-02 rndstore: Random con hi Integer calcula en Single") {
   const vb_single r = 855638.0f / 16777216.0f;
   // Original: Single(1000 * r) = 51.0 exacto tras redondear -> Int = 51.
   // Port: 1000 * r en double = 50.99999... -> 50.
@@ -71,10 +69,37 @@ TEST_CASE("RV-02 rndstore: Random con hi Integer calcula en Single" *
 // motor (Random(1, 1000) de Vloc/Ploc en Shots.bas:807/852, Ties.bas:399...;
 // Random(0, 99) de NeoMutations.bas:703; etc.). Aqui la suma `+ low` tambien
 // es Single.
-TEST_CASE("RV-02b Random(1, 1000) con literales Integer calcula en Single" *
-          doctest::should_fail()) {
+TEST_CASE("RV-02b Random(1, 1000) con literales Integer calcula en Single") {
   InjectedRnd inj({855638.0f / 16777216.0f});
-  CHECK(Random(1, 1000, inj) == 52);  // original 52; el port devuelve 51
+  CHECK(RandomI(1, 1000, inj) == 52);  // Random (Double) devuelve 51
+}
+
+// RV-02c — si `hi - low` desborda Integer (Robots.bas:994 y main.frm:1556,
+// Random(-32000, 32000)), el Variant pasa a Long y la cadena va por
+// Long * Single -> Double. Con r = 262/2^24 la ruta Single daria -31999.
+TEST_CASE("RV-02c RandomI(-32000, 32000) desborda Integer y va en Double") {
+  InjectedRnd inj({262.0f / 16777216.0f});
+  CHECK(RandomI(-32000, 32000, inj) == -32000);
+}
+
+// RV-02d — main.frm:1537: los argumentos son `Single * CSng(...)` (Single) y
+// Random calcula en Single. FieldWidth = 9237, Poslf = 0.1 y Posrg = 0.9:
+// Random(917.7, 8259.3) con r = 12110/2^24 da 923 en Single y 922 en Double.
+TEST_CASE("RV-02d InsertFounder: Random con argumentos Single calcula en "
+          "Single") {
+  Sim sim;
+  sim.opts.FieldWidth = 9237;
+  std::vector<vb_single> seq(9, 0.5f);
+  seq[6] = 12110.0f / 16777216.0f;  // pos.x (tras las 6 de preparerob)
+  InjectedRnd rng(seq);
+  sim.rndy = &rng;
+  sim.vm.rndy = &rng;
+  SpecieCfg cfg;
+  cfg.Poslf = 0.1f;
+  cfg.Posrg = 0.9f;
+  const int a = InsertFounder(sim, "stop", "F.txt", cfg);
+  REQUIRE(a == 1);
+  CHECK(sim.rob[a].pos.x == 923.0f);  // Random (Double): 922
 }
 
 // ---------------------------------------------------------------------------
@@ -199,8 +224,7 @@ TEST_CASE("RV-06 AddedMass: Density es Double (preset 1e-7)") {
 // la rama de setaim y deja aim = 751/200. El port calcula las dos cosas en
 // double, no ve diferencia y deja aim = 750/200.
 TEST_CASE("RV-07 SetAimFunc: Round(aim*200) sobre Single dispara la rama "
-          "setaim" *
-          doctest::should_fail()) {
+          "setaim") {
   RvWorld w;
   const int n = w.addbot(1000, 1000);
   Bot& b = w.sim.rob[n];
@@ -213,12 +237,31 @@ TEST_CASE("RV-07 SetAimFunc: Round(aim*200) sobre Single dispara la rama "
   CHECK(b.aim == 751.0f / 200.0f);  // port: 750/200
 }
 
+// RV-07b — el mismo patron en Robots.bas:788: `Round((.aim * 200 -
+// .mem(SetAim)) / 1256, 0)` redondea el Single. Con aim = 3.14f y SetAim = 0
+// el cociente es 0.5000000167, que en Single es 0.5 -> Round = 0 (bancario);
+// en double seria 1 y diff2 = +-1256. Se ve en el coste de giro.
+TEST_CASE("RV-07b SetAimFunc: Round((aim*200 - setaim)/1256) sobre Single") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Bot& b = w.sim.rob[n];
+  b.aim = 3.14f;
+  b.ma = 0.0f;
+  b.nrg = 0.0f;
+  b.mem[addr::SetAim] = 0;
+  b.mem[addr::aimsx] = 0;
+  b.mem[addr::aimdx] = 0;
+  w.sim.vm.costs.v[cost::TURNCOST] = 1.0f;
+  w.sim.vm.costs.v[cost::COSTMULTIPLIER] = 1.0f;
+  SetAimFunc(w.sim, n);
+  CHECK(b.nrg == -3.14f);  // diff2 = 0: solo el giro de 628
+}
+
 // RV-08 — Robots.bas:792: `Round(x, 3)` devuelve un Variant Single y los dos
 // productos por Costs son aritmetica Variant (VarMul R4 x R4 -> R4, redondeo
 // real a Single en cada paso). El port multiplica en double. Solo cuenta con
 // TURNCOST <> 0 (por defecto es 0).
-TEST_CASE("RV-08 SetAimFunc: coste de giro en Single (Variant)" *
-          doctest::should_fail()) {
+TEST_CASE("RV-08 SetAimFunc: coste de giro en Single (Variant)") {
   RvWorld w;
   const int n = w.addbot(1000, 1000);
   Bot& b = w.sim.rob[n];
@@ -239,8 +282,7 @@ TEST_CASE("RV-08 SetAimFunc: coste de giro en Single (Variant)" *
 // distancias^2 25000003.24 y 25000004, el primer Min queda en 25000004 y la
 // segunda celula tambien pasa el `<=`: el original elige la MAS LEJANA. El
 // port guarda Min en double y elige la primera.
-TEST_CASE("RV-09 ReSpawn: Min es Single y cambia la celula elegida" *
-          doctest::should_fail()) {
+TEST_CASE("RV-09 ReSpawn: Min es Single y cambia la celula elegida") {
   RvWorld w;
   const int a = w.addbot(5000.0f, 1.8f);
   const int c = w.addbot(5000.0f, 2.0f);

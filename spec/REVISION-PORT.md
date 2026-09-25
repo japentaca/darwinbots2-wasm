@@ -26,7 +26,12 @@ numérico concreto antes de reportarlo.
 **Resultado**: 2 divergencias del port confirmadas, 1 inconsistencia interna de la
 spec y 1 nota menor. El resto coincide (ver la lista al final).
 
-### RV-01 · `~=` / `!~=` comparan en `Single`; el original compara en `Double` — CONFIRMADO
+### RV-01 · `~=` / `!~=` comparan en `Single`; el original compara en `Double` — CORREGIDO
+
+> **Arreglo (2026-09-25, decisión del usuario: resolver todo)**: `DNAcustomcequa`
+> y `DNAcustomcdiff` (`dnaops.hpp`) calculan `a ± c` y comparan con `b` en
+> `double`; `c` sigue siendo `Single`. Test RV-01 sin `should_fail`; con
+> `dnaops.hpp` de HEAD falla. `20-VM.md` (fila de `~=`) queda al día.
 
 - **Fuente** (`DNA.bas:758-784`): `a`, `b` y `d` son `Long`, y `c` es `Single`.
   `a - c` y `a + c` son `Long ± Single`, que por la regla de los operadores
@@ -45,7 +50,40 @@ spec y 1 nota menor. El resto coincide (ver la lista al final).
   están bien: allí `a` y `b` se declaran `Single`.
 - **Test**: RV-01.
 
-### RV-02 · `Random` calcula siempre en `double`; el original depende del subtipo `Variant` — CONFIRMADO, sistémico
+### RV-02 · `Random` calcula siempre en `double`; el original depende del subtipo `Variant` — CORREGIDO, sistémico
+
+> **Arreglo (2026-09-25, decisión del usuario: resolver todo)**: `common.hpp`
+> tiene tres variantes según el subtipo de los argumentos:
+> - `Random(double, double)`: algún `Long`/`Double` (o `Long` con `Single`).
+> - `RandomI(vb_integer, vb_integer)`: los dos `Integer`. Calcula
+>   `float(k)·r + float(low)` en `float`, y pasa a la ruta `Double` si
+>   `hi − low` o `+ 1` desbordan `Integer` (`Random(−32000, 32000)`).
+> - `RandomS(vb_single, vb_single)`: los dos `Single`, todo en `float`.
+>
+> **Corrección a la clasificación de abajo**: `Single` con `Single` (o con
+> `Integer`) da `Single`, no `Double`. `main.frm:1537-1538` (`Poslf ·
+> CSng(...)`) va por la ruta `Single`, igual que `Globals.bas:327-328`
+> (`makepoff`, sin portar) y `Module1.bas:32-33` (`Form1.ScaleWidth`; el port
+> descarta el valor y solo cuenta la extracción).
+>
+> **Llamadores del port**:
+> - `RandomI`: `rndstore` (`vm.hpp`), `preparerob` (aim y colores),
+>   `timersys` de `InsertFounder` y `Robots.bas:994` (desbordan y van en
+>   `Double`), `ChangeDNA`/`DeltaMut`/`mutatecolors` (`mutations.hpp`), las
+>   loterías vegetales, `Vloc`/`Ploc` (`shots.hpp`, `ties.hpp`, `robots.hpp`),
+>   `ran`, `Random(−20, 20)`, `Random(1, 1256)` y `genenum` (`shots.hpp`),
+>   `deflect` (`ties.hpp`), `SpeciesNum − 1` (`master.hpp`, `Globals.bas:411`),
+>   `shapeDriftRate` (`physics.hpp`), `numObstacles` y el `"Newbie "` de
+>   `MDIForm1.frm:1311` (`dbcore_api.cpp`).
+> - `RandomS`: posición del fundador en `InsertFounder` (`main.frm:1537-1538`).
+> - `Random`: `rnd` (`DNA.bas:277`), `Max`/`UBound` de `NeoMutations.bas`,
+>   `Vegs.bas:32`, laberintos, `MakeShape`, teleporters y la posición de
+>   `preparerob` (valor descartado).
+>
+> **Tests**: RV-02 y RV-02b sin `should_fail`; nuevos RV-02c (desborde a
+> `Long`) y RV-02d (`InsertFounder` con argumentos `Single`). Ningún dorado
+> cambia: la cantidad de extracciones es la misma. `20-VM.md` y
+> `70-CASOS-DORADOS.md` (S-01) quedan al día.
 
 - **Fuente** (`Common.bas:53-56`): `Random(low, hi)` tiene parámetros sin tipo
   (`Variant`). La expresión `(hi - low + 1) * rndy + low` toma el tipo de lo que
@@ -427,10 +465,13 @@ condicionada a la lectura de RV-03), 1 hueco de funcionalidad y 2 notas menores.
   las cuatro expresiones en `double`.
 - **Test**: RV-06.
 
-### RV-07 · `SetAimFunc`: `Round(.aim * 200, 0)` redondea un `Single` y `CInt(.aim * 200)` no — CONFIRMADO bajo la lectura adoptada en RV-03
+### RV-07 · `SetAimFunc`: `Round(.aim * 200, 0)` redondea un `Single` y `CInt(.aim * 200)` no — CORREGIDO (bajo la lectura N-06 de RV-03)
 
-> **Decisión del usuario (2026-09-25)**: queda como divergencia confirmada,
-> condicionada a la lectura N-06 de RV-03. El test RV-07 se mantiene.
+> **Arreglo (2026-09-25, decisión del usuario: resolver todo)**: los dos `Round`
+> de `SetAimFunc` (`:781` y `:788`) redondean primero el argumento a
+> `vb_single`; el `CInt` de `:819` sigue en `double`. Tests RV-07 y RV-07b (el
+> de `:788`: `aim = 3.14f`, `SetAim = 0`, el cociente 0.5000000167 es 0.5 en
+> `Single` y `diff2` pasa de ±1256 a 0; se ve en el coste de giro).
 
 - **Fuente** (`Robots.bas:781` frente a `:819`): el primer argumento de `Round`
   es `Variant`, así que `.aim * 200` se guarda como un `Single` de verdad
@@ -457,11 +498,12 @@ condicionada a la lectura de RV-03), 1 hueco de funcionalidad y 2 notas menores.
   conservando `vb_cint(double)` en `:819`.
 - **Test**: RV-07.
 
-### RV-08 · `SetAimFunc`: el coste de giro va en `Single` (`Variant`) y el port lo hace en `double` — CONFIRMADO, solo con `TURNCOST ≠ 0`
+### RV-08 · `SetAimFunc`: el coste de giro va en `Single` (`Variant`) y el port lo hace en `double` — CORREGIDO, solo con `TURNCOST ≠ 0`
 
-> **Decisión del usuario (2026-09-25)**: queda como divergencia confirmada,
-> dependiente de que `Round` conserve el subtipo `Single` y limitada a
-> `TURNCOST ≠ 0`. El test RV-08 se mantiene.
+> **Arreglo (2026-09-25, decisión del usuario: resolver todo)**: se adopta el
+> supuesto de que `Round` conserva el subtipo `Single`. El argumento
+> `(diff + diff2) / 200` se redondea a `Single`, `Round(.., 3)` devuelve
+> `Single`, y los dos productos por `Costs` son `float × float`. Test RV-08.
 
 - **Fuente** (`Robots.bas:792`): `Round(x, 3)` devuelve un `Variant` del subtipo de
   su argumento (`Single`). Los dos productos por `Costs(...)` son aritmética
@@ -480,7 +522,11 @@ condicionada a la lectura de RV-03), 1 hueco de funcionalidad y 2 notas menores.
   coincidiría.
 - **Test**: RV-08.
 
-### RV-09 · `ReSpawn`: `Min` es `Single` y puede cambiar la célula elegida — CONFIRMADO, raro
+### RV-09 · `ReSpawn`: `Min` es `Single` y puede cambiar la célula elegida — CORREGIDO, raro
+
+> **Arreglo (2026-09-25, decisión del usuario: resolver todo)**: `Minv` es
+> `vb_single`; la distancia sigue en `double` y se compara con el `Min`
+> ensanchado. Test RV-09. `30-FISICA.md` (toroidal) queda al día.
 
 - **Fuente** (`Multibots.bas:11, 17-19`): `Dim Min As Single`. La distancia al
   cuadrado (`Double`, por el `^`) se compara con un `Min` ya redondeado a `Single`,
@@ -1384,6 +1430,16 @@ B2-5, A3-1 y A3-5).
   - `mem(215)`, y `mem(217)`/`mem(219)` con `Int(../32000#)` y `Mod` bancario.
 - **`EraseSenses`/`EraseLookOccurr`** (salta los corpses) y **`makeoccurrlist`**
   (la firma y las publicaciones 721-731).
+
+## Cierre de los pendientes de los pilotos 1 y 4 (2026-09-25)
+
+Decisión del usuario: resolver todo. Quedan corregidos RV-01, RV-02 (con
+RV-02b/c/d), RV-07 (con RV-07b), RV-08 y RV-09; el detalle está en el bloque
+"Arreglo" de cada hallazgo.
+- **Mutation-check**: con las cabeceras de HEAD (y `RandomI` sin el paso a
+  `Long`) fallan los 8 casos.
+- **Suites**: 243 casos y 3943 aserciones en g++, clang y wasm, sin fallos
+  esperados: ya no queda ningún `should_fail`. Los 4 smoke tests pasan.
 
 ## Siguientes pilotos sugeridos
 

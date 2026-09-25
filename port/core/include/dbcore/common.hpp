@@ -102,12 +102,48 @@ inline vb_long nextlowestmultof2(vb_integer value) {
   return a / 2;
 }
 
-// Common.bas:53-56 — Random opera en Variant/Double; Int() trunca hacia -inf.
-// La extracción de rndy ocurre ANTES del caso especial (S-01).
+// Common.bas:53-56 — Random(low, hi) tiene parámetros Variant: el tipo de
+// `(hi - low + 1) * rndy + low` depende del subtipo que llega (RV-02), y la
+// aritmética Variant redondea de verdad en cada paso. Int() trunca hacia
+// -inf. La extracción de rndy ocurre ANTES del caso especial (S-01).
+//   - Random: algún argumento Long o Double (o Long con Single) -> Double.
+//   - RandomI: los dos Integer -> Single (I2 * R4 -> R4, R4 + I2 -> R4).
+//   - RandomS: los dos Single -> Single.
 inline vb_long Random(double low, double hi, RndSource& rndy) {
   const double v = rndy();
   vb_long result = static_cast<vb_long>(std::floor((hi - low + 1.0) * v + low));
   if (hi < low && hi == 0.0) result = 0;
+  return result;
+}
+
+// Los dos argumentos Integer. `hi - low` y `+ 1` son I2 y pasan a Long si
+// desbordan (p. ej. Random(-32000, 32000)); desde ahí la cadena es
+// Long * Single -> Double.
+inline vb_long RandomI(vb_integer low, vb_integer hi, RndSource& rndy) {
+  const vb_single v = rndy();
+  const std::int32_t d = static_cast<std::int32_t>(hi) - low;
+  const std::int32_t k = d + 1;
+  vb_long result;
+  if (d < -32768 || d > 32767 || k > 32767) {
+    result = static_cast<vb_long>(
+        std::floor(static_cast<double>(k) * v + static_cast<double>(low)));
+  } else {
+    const vb_single p = static_cast<vb_single>(k) * v;
+    const vb_single sum = p + static_cast<vb_single>(low);
+    result = static_cast<vb_long>(std::floor(sum));
+  }
+  if (hi < low && hi == 0) result = 0;
+  return result;
+}
+
+// Los dos argumentos Single (R4 - R4, R4 + I2, R4 * R4 y R4 + R4 son R4).
+inline vb_long RandomS(vb_single low, vb_single hi, RndSource& rndy) {
+  const vb_single v = rndy();
+  const vb_single k = (hi - low) + 1.0f;
+  const vb_single p = k * v;
+  const vb_single sum = p + low;
+  vb_long result = static_cast<vb_long>(std::floor(sum));
+  if (hi < low && hi == 0.0f) result = 0;
   return result;
 }
 

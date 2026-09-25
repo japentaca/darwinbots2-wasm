@@ -67,7 +67,7 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   s.Memval = b.mem[836];
 
   [[maybe_unused]] const vb_single ran =
-      static_cast<vb_single>(Random(-2, 2, *sim.rndy)) / 20.0f;  // RNG muerto
+      static_cast<vb_single>(RandomI(-2, 2, *sim.rndy)) / 20.0f;  // RNG muerto
 
   vb_single ShAngle;
   if (b.mem[addr::backshot] == 0) {
@@ -88,7 +88,7 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   // Random es As Long y Long / Integer es Double (RV-14).
   ShAngle = static_cast<vb_single>(
       static_cast<double>(ShAngle) +
-      static_cast<double>(Random(-20, 20, *sim.rndy)) / 200.0);
+      static_cast<double>(RandomI(-20, 20, *sim.rndy)) / 200.0);
 
   Vector angle = VectorSet(
       static_cast<vb_single>(std::cos(static_cast<double>(ShAngle))),
@@ -240,7 +240,7 @@ inline void takeven(Sim& sim, int n, vb_long t) {
       if (b.Vloc == 340) b.Vloc = 0;  // protección delgene (mem(0), M-03)
     } else {
       do {
-        b.Vloc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+        b.Vloc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
       } while (b.Vloc == 340);
     }
     b.Vval = s.Memval;
@@ -512,7 +512,7 @@ inline void takepoison(Sim& sim, int n, vb_long t) {
       if (b.Ploc == 340) b.Ploc = 0;
     } else {
       do {
-        b.Ploc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+        b.Ploc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
       } while (b.Ploc == 340);
     }
     b.Pval = s.Memval;
@@ -873,7 +873,7 @@ inline void addgene(Sim& sim, int n, vb_long p) {
   }
 
   const vb_integer Position =
-      static_cast<vb_integer>(Random(0, b.genenum, *sim.rndy));
+      static_cast<vb_integer>(RandomI(0, b.genenum, *sim.rndy));
   vb_long Insert;
   if (Position == 0) {
     Insert = 0;
@@ -935,7 +935,7 @@ inline void Vshoot(Sim& sim, int n, vb_long thisshot) {
                                  static_cast<double>(b.mem[addr::VshootSys]) - shotcost);
 
   const vb_single ShAngle =
-      static_cast<vb_single>(Random(1, 1256, *sim.rndy)) / 200.0f;
+      static_cast<vb_single>(RandomI(1, 1256, *sim.rndy)) / 200.0f;
   s.stored = false;
   // Single + Cos(..) * Single: en Double, un redondeo (RV-14).
   s.pos.x = static_cast<vb_single>(

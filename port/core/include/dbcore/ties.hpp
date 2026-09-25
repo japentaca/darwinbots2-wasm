@@ -141,7 +141,7 @@ inline bool maketie(Sim& sim, int a, int b, vb_long c, vb_integer last,
                     vb_integer mem) {
   if (!sim.rob[a].exist) return false;
 
-  const vb_long deflect = Random(2, 92, *sim.rndy);
+  const vb_long deflect = RandomI(2, 92, *sim.rndy);
   const int Max = MAXTIES;
   bool OK = true;
   int k = 1, j = 1;
@@ -597,7 +597,7 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
               if (b.Ploc == 340) b.Ploc = 0;
             } else {
               do {
-                b.Ploc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+                b.Ploc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
               } while (b.Ploc == 340);
             }
             b.Pval = o.mem[839];
@@ -651,7 +651,7 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
             if (o.Vloc == 340) o.Vloc = 0;
           } else {
             do {
-              o.Vloc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+              o.Vloc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
             } while (o.Vloc == 340);
           }
           o.Vval = b.mem[836];
@@ -746,7 +746,7 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
               if (b.Ploc == 340) b.Ploc = 0;
             } else {
               do {
-                b.Ploc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+                b.Ploc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
               } while (b.Ploc == 340);
             }
             b.Pval = o.mem[839];

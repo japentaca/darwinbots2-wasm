@@ -312,7 +312,7 @@ inline void preparerob(Sim& sim, int t, const std::string& fname) {
       Random(50, static_cast<double>(sim.opts.FieldWidth), *sim.rndy));
   b.pos.y = static_cast<vb_single>(
       Random(50, static_cast<double>(sim.opts.FieldHeight), *sim.rndy));
-  b.aim = static_cast<vb_single>(Random(0, 628, *sim.rndy)) / 100.0f;
+  b.aim = static_cast<vb_single>(RandomI(0, 628, *sim.rndy)) / 100.0f;
   b.aimvector = VectorSet(
       static_cast<vb_single>(std::cos(static_cast<double>(b.aim))),
       static_cast<vb_single>(std::sin(static_cast<double>(b.aim))));
@@ -320,9 +320,9 @@ inline void preparerob(Sim& sim, int t, const std::string& fname) {
   b.BucketPos.x = -2;  // Module1.bas:37-39
   b.BucketPos.y = -2;
   UpdateBotBucket(sim, t);
-  Random(50, 255, *sim.rndy);  // col1
-  Random(50, 255, *sim.rndy);  // col2
-  Random(50, 255, *sim.rndy);  // col3
+  RandomI(50, 255, *sim.rndy);  // col1
+  RandomI(50, 255, *sim.rndy);  // col2
+  RandomI(50, 255, *sim.rndy);  // col3
   b.vnum = 1;
   b.nrg = 20000.0f;
   b.Veg = false;
@@ -373,8 +373,9 @@ inline void aggiungirob(Sim& sim, vb_integer r, vb_single x, vb_single y) {
     if (!anyvegy) return;
 
     do {
-      r = static_cast<vb_integer>(Random(
-          0, static_cast<double>(sim.Specie.size()) - 1.0, *sim.rndy));
+      // SpeciesNum - 1 es Integer: ruta Single (RV-02).
+      r = static_cast<vb_integer>(RandomI(
+          0, static_cast<vb_integer>(sim.Specie.size() - 1), *sim.rndy));
     } while (!checkvegstatus(sim, r));
 
     // fRnd toma Long ByVal: los productos Single se redondean bancario en
@@ -499,18 +500,18 @@ inline int InsertFounder(Sim& sim, const std::string& text,
   b.Fixed = cfg.Fixed;
   if (b.Fixed) b.mem[216] = 1;
   b.pos.x = static_cast<vb_single>(
-      Random(cfg.Poslf * (sim.opts.FieldWidth - 60.0f),
-             cfg.Posrg * (sim.opts.FieldWidth - 60.0f), *sim.rndy));
+      RandomS(cfg.Poslf * (sim.opts.FieldWidth - 60.0f),
+              cfg.Posrg * (sim.opts.FieldWidth - 60.0f), *sim.rndy));
   b.pos.y = static_cast<vb_single>(
-      Random(cfg.Postp * (sim.opts.FieldHeight - 60.0f),
-             cfg.Posdn * (sim.opts.FieldHeight - 60.0f), *sim.rndy));
+      RandomS(cfg.Postp * (sim.opts.FieldHeight - 60.0f),
+              cfg.Posdn * (sim.opts.FieldHeight - 60.0f), *sim.rndy));
   b.nrg = cfg.Stnrg;
   b.body = 1000.0f;
   b.radius = FindRadius(sim, a);
   b.mem[addr::SetAim] = vb_cint(static_cast<double>(b.aim) * 200.0);
   b.Dead = false;
   b.mem[addr::timersys] =
-      static_cast<vb_integer>(Random(-32000, 32000, *sim.rndy));  // M-08(b)
+      static_cast<vb_integer>(RandomI(-32000, 32000, *sim.rndy));  // M-08(b)
   b.CantSee = cfg.CantSee;
   b.DisableDNA = cfg.DisableDNA;
   b.DisableMovementSysvars = cfg.DisableMovementSysvars;

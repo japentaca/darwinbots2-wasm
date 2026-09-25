@@ -315,14 +315,18 @@ inline void DNAcdiff(IntStack& s, BoolStack& cs) {
   cs.push(!((a + c >= b) && (a - c <= b)));
 }
 // '~=' (DNA.bas:758-770, customcequa): pila a b d; c = a/100*d en Single.
+// `a - c` y `a + c` son Long con Single -> Double, y la comparacion con b
+// (Long) tambien va en Double (RV-01).
 inline void DNAcustomcequa(IntStack& s, BoolStack& cs) {
   const vb_long d = s.pop();
   const vb_long b = s.pop();
   const vb_long a = s.pop();
   const vb_single c = static_cast<vb_single>(
       static_cast<double>(a) / 100.0 * static_cast<double>(d));
-  cs.push((static_cast<vb_single>(a) - c <= static_cast<vb_single>(b)) &&
-          (static_cast<vb_single>(a) + c >= static_cast<vb_single>(b)));
+  const double ad = static_cast<double>(a);
+  const double bd = static_cast<double>(b);
+  const double cd = static_cast<double>(c);
+  cs.push((ad - cd <= bd) && (ad + cd >= bd));
 }
 // '!~=' (DNA.bas:772-784, customcdiff): con saturación de c.
 inline void DNAcustomcdiff(IntStack& s, BoolStack& cs) {
@@ -333,8 +337,10 @@ inline void DNAcustomcdiff(IntStack& s, BoolStack& cs) {
       static_cast<double>(a) / 100.0 * static_cast<double>(d));
   if (std::fabs(c) > 2000000000.0f)
     c = static_cast<vb_single>(vb_sgn(c)) * 2000000000.0f;
-  cs.push(!((static_cast<vb_single>(a) + c >= static_cast<vb_single>(b)) &&
-            (static_cast<vb_single>(a) - c <= static_cast<vb_single>(b))));
+  const double ad = static_cast<double>(a);
+  const double bd = static_cast<double>(b);
+  const double cd = static_cast<double>(c);
+  cs.push(!((ad + cd >= bd) && (ad - cd <= bd)));  // en Double (RV-01)
 }
 
 // ---- Lógica (DNA.bas:799-840): centinela -5 = "vacío es true" (N-16) ----

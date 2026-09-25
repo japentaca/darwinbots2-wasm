@@ -1152,8 +1152,8 @@ DB_EXPORT void db_sim_delete_ten_random_obstacles(void* h) {
   if (sim.numObstacles <= 0) return;
   for (int i = 1; i <= 10; ++i)
     db_sim_delete_obstacle(
-        h, static_cast<int>(db::Random(
-               1.0, static_cast<double>(sim.numObstacles), *sim.rndy)));
+        h, static_cast<int>(db::RandomI(
+               1, static_cast<db::vb_integer>(sim.numObstacles), *sim.rndy)));
 }
 
 // --- Mazes (Obstacles.bas:45-181). corridor/wall = mazeCorridorWidth /
@@ -1642,7 +1642,7 @@ DB_EXPORT int db_sim_im_enable(void* h, int defaultWidth) {
 
   if (sim.fmt.IName.empty())
     sim.fmt.IName =
-        "Newbie " + std::to_string(db::Random(1.0, 10000.0, *sim.rndy));
+        "Newbie " + std::to_string(db::RandomI(1, 10000, *sim.rndy));
 
   // NewTeleporter(False, False, (SimOpts.FieldHeight ^ 0.5) * 10, True)
   if (sim.numTeleporters + 1 > db::MAXTELEPORTERS) return -1;

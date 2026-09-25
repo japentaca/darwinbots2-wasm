@@ -186,7 +186,8 @@ inline void DNArndstore(VmContext& vm, Bot& bot) {
     a = detail::normaddr(a);
     const vb_integer m = bot.mem[a];
     const vb_long b =
-        Random(0, (m < 0 ? -m : m), *vm.rndy) * vb_sgn(static_cast<vb_long>(m));
+        RandomI(0, static_cast<vb_integer>(m < 0 ? -m : m), *vm.rndy) *
+        vb_sgn(static_cast<vb_long>(m));  // Abs(Integer): ruta Single (RV-02)
     bot.mem[a] = static_cast<vb_integer>(b);
     bot.nrg -= vm.costs.of(Costs::COSTSTORE) / 7;
   }

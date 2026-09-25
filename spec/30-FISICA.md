@@ -226,6 +226,8 @@ Solo actúa si el bot está a menos de `radius` de un borde. Por eje:
   `radius + 50`). `ReSpawn` es la rutina multibot (`Multibots.bas:9-49`): **traslada el
   organismo entero** (hasta 50 células conectadas, `ListCells`) el mismo desplazamiento,
   y sincroniza `opos = pos` de cada célula (para que `actvel` no registre el salto).
+  La célula de referencia es la más cercana al destino; `Min` es `Single`, así que
+  entre distancias casi empatadas gana la última (RV-09).
 - **Rígido**: `mem(214) = 1`, la posición se clampa al borde y se acumula
   `ImpulseRes += vel·0.05` (amortiguador; el término de muelle `k=0.4` está comentado,
   `:812,833`).
@@ -256,7 +258,10 @@ si ZeroMomentum: vel = (0,0)
 Prioridad: si `mem(SetAim) ≠ Round(aim·200)`, el `.setaim` del bot manda (giro absoluto
 con `AngDiff`+`angnorm` y un término `diff2` que compensa vueltas completas,
 `:786-788`); si no, giro relativo `aimsx − aimdx`. Coste
-`|Round((diff+diff2)/200,3)|·TURNCOST·COSTMULTIPLIER` (`:792`). El resultado se
+`|Round((diff+diff2)/200,3)|·TURNCOST·COSTMULTIPLIER` (`:792`). Los `Round` reciben
+un `Variant` `Single` (el argumento se redondea a `Single` antes de redondear, RV-07) y
+el coste es aritmética `Variant` en `Single` en cada producto (RV-08); el
+`CInt(aim·200)` de `:819` no pasa por `Single`. El resultado se
 normaliza Mod 1256 → radianes, y **se le suma el momento angular** `ma` (clampado a
 ±2π por wraps, `:799-802`). El giro voluntario puede *cancelar* `ma` (si tienen signos
 opuestos) pero nunca aumentarlo (`:806-813`). `ma` lo alimentan TieTorque (§3.2),

@@ -93,8 +93,13 @@ Con `hi < low` y `hi ≠ 0` el rango alcanzable es `[hi+1, low]`: **`hi` mismo e
 inalcanzable** (`Int((hi−low+1)·rndy + low)` con `rndy < 1` nunca llega a `hi`).
 El test de los autores (`TestCommon.cls`, `Random_Minus10To10_I_Bigger_Than_J`)
 afirma `[j, i]` — pasa, pero es más laxo que la semántica real. Adoptado con el
-refinamiento. `Random` opera en `Variant/Double` (parámetros sin tipo,
-`Common.bas:53`): sin overflow para los rangos del motor.
+refinamiento. `Random` tiene parámetros sin tipo (`Variant`, `Common.bas:53`) y
+el tipo de la cuenta depende del subtipo que llega (RV-02, `REVISION-PORT.md`):
+con los dos argumentos `Integer` o los dos `Single` va en **`Single`**
+(aritmética `Variant`, redondeo real en cada paso; port `RandomI`/`RandomS`);
+con algún `Long`/`Double`, o si `hi − low + 1` desborda `Integer`
+(`Random(−32000, 32000)`), va en `Double` (port `Random`). Los casos de la tabla
+dan lo mismo por las dos rutas.
 
 ### S-02 · `fRnd` devuelve `up+1` con probabilidad ~0.5/(rango) — [unit] · HALLAZGO
 

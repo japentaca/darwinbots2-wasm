@@ -335,10 +335,10 @@ inline void altzheimer(Sim& sim, int n) {
   for (vb_integer t = 1; t <= loops; ++t) {
     vb_integer loc;
     do {
-      loc = static_cast<vb_integer>(Random(1, 1000, *sim.rndy));
+      loc = static_cast<vb_integer>(RandomI(1, 1000, *sim.rndy));
     } while (!(loc != addr::mkchlr && loc != addr::rmchlr));
     const vb_integer val =
-        static_cast<vb_integer>(Random(-32000, 32000, *sim.rndy));
+        static_cast<vb_integer>(RandomI(-32000, 32000, *sim.rndy));
     b.mem[loc] = val;
   }
 }
@@ -686,7 +686,7 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   // El And de VB6 no cortocircuita: Random se tira SIEMPRE, también para
   // los animales (RV-21). MaxPopulation * 0.9 es Double.
   {
-    const bool lotto = Random(0, 10, *sim.rndy) != 5;
+    const bool lotto = RandomI(0, 10, *sim.rndy) != 5;
     if (sim.rob[n].Veg && lotto &&
         (static_cast<double>(sim.TotalChlr) > sim.opts.MaxPopulation * 0.9))
       return;
@@ -1233,7 +1233,7 @@ inline void SexReproduce(Sim& sim, int female) {
   // asexual ([PROBABLE BUG] B6-2 / R-10).
   // And sin cortocircuito: el dado se tira siempre (RV-21).
   {
-    const bool lotto = Random(0, 9, *sim.rndy) != 5;
+    const bool lotto = RandomI(0, 9, *sim.rndy) != 5;
     if (sim.rob[female].Veg && lotto &&
         (static_cast<double>(sim.TotalChlr) > sim.opts.MaxPopulation * 0.9))
       return;

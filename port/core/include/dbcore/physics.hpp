@@ -285,8 +285,10 @@ inline void SetAimFunc(Sim& sim, int t) {
   vb_single diff2 = 0.0f;
   vb_single result;
 
+  // Round recibe un Variant: `.aim * 200` se guarda como Single de verdad
+  // (VT_R4) antes de redondear; el CInt de :819 no pasa por Single (RV-07).
   if (b.mem[addr::SetAim] ==
-      vb_round64(static_cast<double>(b.aim) * 200.0)) {
+      vb_round64(static_cast<vb_single>(static_cast<double>(b.aim) * 200.0))) {
     result = b.aim * 200.0f + diff;
   } else {
     result = b.mem[addr::SetAim];
@@ -294,21 +296,26 @@ inline void SetAimFunc(Sim& sim, int t) {
                     angnorm(static_cast<vb_single>(b.mem[addr::SetAim]) / 200.0f)) *
            200.0f;
     diff2 = static_cast<vb_single>(
-                std::abs(vb_round64((static_cast<double>(b.aim) * 200.0 -
-                                     b.mem[addr::SetAim]) /
-                                    1256.0) *
+                std::abs(vb_round64(static_cast<vb_single>(
+                             (static_cast<double>(b.aim) * 200.0 -
+                              b.mem[addr::SetAim]) /
+                             1256.0)) *
                          1256)) *
             static_cast<vb_single>(vb_sgn(diff));
   }
 
-  // Round((diff+diff2)/200, 3): bancario a 3 decimales.
-  const double turn =
-      static_cast<double>(vb_round64(static_cast<double>(diff + diff2) / 200.0 *
-                                     1000.0)) /
-      1000.0;
-  b.nrg -= static_cast<vb_single>(
-      std::fabs(turn * sim.vm.costs.v[cost::TURNCOST] *
-                sim.vm.costs.v[cost::COSTMULTIPLIER]));
+  // Round((diff+diff2)/200, 3): bancario a 3 decimales. El argumento y el
+  // resultado son Variant Single, y los dos productos por Costs son
+  // aritmetica Variant (R4 x R4 -> R4): se redondea a Single en cada paso
+  // (RV-08).
+  const vb_single turnarg =
+      static_cast<vb_single>(static_cast<double>(diff + diff2) / 200.0);
+  const vb_single turn = static_cast<vb_single>(
+      static_cast<double>(vb_round64(static_cast<double>(turnarg) * 1000.0)) /
+      1000.0);
+  const vb_single c1 = turn * sim.vm.costs.v[cost::TURNCOST];
+  const vb_single c2 = c1 * sim.vm.costs.v[cost::COSTMULTIPLIER];
+  b.nrg -= std::fabs(c2);
 
   // SetAimFunc = SetAimFunc Mod 1256 — Mod de VB6 sobre Single: redondeo
   // bancario a Long primero.
@@ -461,15 +468,17 @@ inline void ReSpawn(Sim& sim, int n, vb_single X, vb_single Y) {
   std::array<vb_integer, 51> clist{};
   clist[0] = static_cast<vb_integer>(n);
   ListCells(sim, clist);
-  double Minv = 999999999999.0;
+  // `Dim Min As Single`: la distancia (Double, por el ^) se compara con el
+  // Min ya redondeado a Single (RV-09).
+  vb_single Minv = static_cast<vb_single>(999999999999.0);
   int nmin = 0;
   int t = 0;
   while (clist[t] > 0) {
     const double d =
         std::pow(static_cast<double>(sim.rob[clist[t]].pos.x) - X, 2.0) +
         std::pow(static_cast<double>(sim.rob[clist[t]].pos.y) - Y, 2.0);
-    if (d <= Minv) {
-      Minv = d;
+    if (d <= static_cast<double>(Minv)) {
+      Minv = static_cast<vb_single>(d);
       nmin = clist[t];
     }
     t += 1;
@@ -657,13 +666,15 @@ inline void DriftObstacles(Sim& sim) {
     Obstacle& o = sim.Obstacles[i];
     if (o.exist && (i != sim.leftCompactor && i != sim.rightCompactor)) {
       if (sim.opts.allowHorizontalShapeDrift) {
-        const vb_long r = Random(-sim.opts.shapeDriftRate,
-                                 sim.opts.shapeDriftRate, *sim.rndy);
+        const vb_long r =
+            RandomI(static_cast<vb_integer>(-sim.opts.shapeDriftRate),
+                    sim.opts.shapeDriftRate, *sim.rndy);
         o.vel.x = DriftStep(sim, o.vel.x, r);
       }
       if (sim.opts.allowVerticalShapeDrift) {
-        const vb_long r = Random(-sim.opts.shapeDriftRate,
-                                 sim.opts.shapeDriftRate, *sim.rndy);
+        const vb_long r =
+            RandomI(static_cast<vb_integer>(-sim.opts.shapeDriftRate),
+                    sim.opts.shapeDriftRate, *sim.rndy);
         o.vel.y = DriftStep(sim, o.vel.y, r);
       }
       if (VectorMagnitude(o.vel) > sim.opts.MaxVelocity)
