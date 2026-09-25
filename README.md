@@ -1,5 +1,7 @@
 # DarwinBots 2 en el navegador — un port del original en Visual Basic
 
+*[Read in English](README.en.md)*
+
 > **Este proyecto es un port.** No es un DarwinBots nuevo: es una
 > reimplementación fiel, en C++20 compilado a WebAssembly, de
 > **DarwinBots 2.48.32**, el simulador de vida artificial escrito en
