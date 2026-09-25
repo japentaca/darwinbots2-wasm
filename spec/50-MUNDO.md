@@ -93,7 +93,8 @@ vivo → si no toca comer, fin. Si toca:
   dentro de la banda: `tok = LightIntensity/depth^Gradient` en pondmode
   (profundidad = `pos.y/2000 + 1`) o `MaxEnergy` plano; `/3.5`; ganancia
   `(AreaCorr · chlr/16000 · 1.25 − (chlr/32000)²) · tok`; impuesto por edad
-  `age·chlr/1e9`; con mareas ×`(1 − BouyancyScaling)`; reparto
+  `age·chlr/1e9`; con mareas ×`(1 − BouyancyScaling)` (la marea la calcula
+  `UpdateBots`, `Robots.bas:1523-1530`; RV-27); reparto
   nrg/body según `VegFeedingToBody` (body ÷10), caps 32000 (`:213-269`).
 
 ### 2.3 Digestión de waste (`feedveg2`, P5 vía `HandleWaste`, `Vegs.bas:273-325`)

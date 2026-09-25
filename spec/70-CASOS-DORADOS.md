@@ -1248,7 +1248,8 @@ vs 1/10 es comportamiento a conservar.
 
 *(Corregido 2026-08-25 contra el fuente, en dos puntos — ver la nota B6-1 abajo.)*
 
-(`Robots.bas:2488-2607,562-694`.) **Estado**: madre y esperma con ADN **idéntico**:
+(`Robots.bas:2488-2607,562-694`.) Antes del crossover se consume la lotería vegetal
+(`:2456`), que se tira siempre (RV-21). **Estado**: madre y esperma con ADN **idéntico**:
 `5 100 store end` → arrays (0,0)(0,5)(0,100)(7,1)(10,1) — el fantasma del índice 0
 **entra en el crossover** (`:2493-2503` copian desde 0). Distancia genética 0 ≤ 0.6.
 **Esperado**: `simplematch` empareja toda la secuencia, fantasmas incluidos (una
@@ -1745,15 +1746,14 @@ emparejan, nota B6-1 en R-11).
 ### B-30 · `nbody As Integer`: el body del hijo redondea bancario — [ciclo]
 
 (`Robots.bas:2108,2140` — `Dim nbody As Integer`.) **Estado**: padre con
-`body = 501`, `per = 50`. **Esperado**: `nbody = (501/100)·50` en aritmética
-**Single estricta** (Q07/premisa del EXE) = `250.500015` (un ULP **sobre** .5:
-`501/100` redondea a `5.0100002f`) → **251**; con `body = 503`: `251.500015` →
-**252**. El empate exacto que dispara el redondeo bancario existe cuando
-`body/100` es representable: `body = 525` → `262.5` exacto → **262** (par,
-baja); `body = 475` → `237.5` exacto → **238** (par, sube). El padre pierde
-exactamente `nbody`; todo lo demás del reparto es Single.
-*(Corregido 2026-08-25 contra el fuente: la tabla original decía 250.5 → 250
-para 501 — ese producto no es un empate en Single.)*
+`body = 501`, `per = 50`. **Esperado**: `nbody = (501/100#)·50` — `100#` es
+`Double`, así que la cuenta va en **`Double`** = `250.5` exacto → **250** (par,
+baja); con `body = 503`: `251.5` → **252** (par, sube); `body = 525` → `262.5` →
+**262**; `body = 475` → `237.5` → **238**. El padre pierde exactamente `nbody`; el
+resto del reparto (`nnrg`, `nwaste`, `npwaste`, `nchloroplasts` y los impuestos
+0.001/0.999) también va en `Double` con un redondeo.
+*(Corregido 2026-09-25, `REVISION-PORT.md` RV-23: la errata del 2026-08-25 supuso
+Single estricto y daba 251 para 501, pero el fuente divide por `100#`.)*
 
 ### B-31 · Los suelos anti-freeze reescriben las tasas heredables — [ciclo]
 

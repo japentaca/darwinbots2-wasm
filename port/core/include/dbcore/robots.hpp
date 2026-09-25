@@ -24,13 +24,16 @@ inline void Upkeep(Sim& sim, int n) {
   const vb_long ageDelta =
       b.age - static_cast<vb_long>(vb_round64(C[cost::AGECOSTSTART]));
   if (ageDelta > 0 && b.age > 0) {
+    // Single * Log (Double) y Long * Single (Double): un redondeo (RV-26).
     vb_single Cost;
     if (C[cost::AGECOSTMAKELOG] == 1.0f)
-      Cost = C[cost::AGECOST] *
-             static_cast<vb_single>(std::log(static_cast<double>(ageDelta)));
+      Cost = static_cast<vb_single>(static_cast<double>(C[cost::AGECOST]) *
+                                    std::log(static_cast<double>(ageDelta)));
     else if (C[cost::AGECOSTMAKELINEAR] == 1.0f)
-      Cost = C[cost::AGECOST] +
-             (static_cast<vb_single>(ageDelta) * C[cost::AGECOSTLINEARFRACTION]);
+      Cost = static_cast<vb_single>(
+          static_cast<double>(C[cost::AGECOST]) +
+          static_cast<double>(ageDelta) *
+              static_cast<double>(C[cost::AGECOSTLINEARFRACTION]));
     else
       Cost = C[cost::AGECOST];
     b.nrg -= Cost * C[cost::COSTMULTIPLIER];
@@ -39,11 +42,12 @@ inline void Upkeep(Sim& sim, int n) {
   b.nrg -= b.body * C[cost::BODYUPKEEP] * C[cost::COSTMULTIPLIER];
   b.nrg -= (b.DnaLen - 1) * C[cost::DNACYCCOST] * C[cost::COSTMULTIPLIER];
 
-  b.Slime *= 0.98f;
+  // Single * 0.98 (literal Double): un redondeo (RV-26).
+  b.Slime = static_cast<vb_single>(static_cast<double>(b.Slime) * 0.98);
   if (b.Slime < 0.5f) b.Slime = 0.0f;
   b.mem[821] = vb_cint(b.Slime);
 
-  b.poison *= 0.98f;
+  b.poison = static_cast<vb_single>(static_cast<double>(b.poison) * 0.98);
   if (b.poison < 0.5f) b.poison = 0.0f;
   b.mem[827] = vb_cint(b.poison);
 }
@@ -399,9 +403,10 @@ inline void ChangeChlr(Sim& sim, int t) {
 inline void ManageChlr(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.mem[addr::mkchlr] > 0 || b.mem[addr::rmchlr] > 0) ChangeChlr(sim, n);
-  b.chloroplasts -=
-      0.5f / static_cast<vb_single>(
-                 std::pow(100.0, static_cast<double>(b.chloroplasts) / 16000.0));
+  // `^` devuelve Double: la resta va en Double con un redondeo (RV-26).
+  b.chloroplasts = static_cast<vb_single>(
+      static_cast<double>(b.chloroplasts) -
+      0.5 / std::pow(100.0, static_cast<double>(b.chloroplasts) / 16000.0));
   if (b.chloroplasts > 32000.0f) b.chloroplasts = 32000.0f;
   if (b.chloroplasts < 0.0f) b.chloroplasts = 0.0f;
   b.mem[addr::chlr] = vb_cint(b.chloroplasts);
@@ -415,7 +420,10 @@ inline void storebody(Sim& sim, int t) {
   Bot& b = sim.rob[t];
   if (b.mem[addr::strbody] > 100) b.mem[addr::strbody] = 100;
   b.nrg -= b.mem[addr::strbody];
-  b.body += b.mem[addr::strbody] / 10.0f;
+  // Integer / Integer es Double: un redondeo (RV-26).
+  b.body = static_cast<vb_single>(
+      static_cast<double>(b.body) +
+      static_cast<double>(b.mem[addr::strbody]) / 10.0);
   if (b.body > 32000.0f) b.body = 32000.0f;
   b.radius = FindRadius(sim, t);
   b.mem[addr::strbody] = 0;
@@ -426,7 +434,10 @@ inline void feedbody(Sim& sim, int t) {
   Bot& b = sim.rob[t];
   if (b.mem[addr::fdbody] > 100) b.mem[addr::fdbody] = 100;
   b.nrg += b.mem[addr::fdbody];
-  b.body -= static_cast<vb_single>(b.mem[addr::fdbody]) / 10.0f;
+  // CSng(mem) / 10#: Double, un redondeo (RV-26).
+  b.body = static_cast<vb_single>(
+      static_cast<double>(b.body) -
+      static_cast<double>(b.mem[addr::fdbody]) / 10.0);
   if (b.nrg > 32000.0f) b.nrg = 32000.0f;
   b.radius = FindRadius(sim, t);
   b.mem[addr::fdbody] = 0;
@@ -496,7 +507,10 @@ inline void ManageDeath(Sim& sim, int n) {
 inline void ManageBouyancy(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.mem[addr::setboy] != 0) {
-    b.Bouyancy += static_cast<vb_single>(b.mem[addr::setboy]) / 32000.0f;
+    // Integer / Integer es Double: un redondeo (RV-26).
+    b.Bouyancy = static_cast<vb_single>(
+        static_cast<double>(b.Bouyancy) +
+        static_cast<double>(b.mem[addr::setboy]) / 32000.0);
     if (b.Bouyancy < 0.0f) b.Bouyancy = 0.0f;
     if (b.Bouyancy > 1.0f) b.Bouyancy = 1.0f;
     b.mem[addr::rdboy] = vb_cint(static_cast<double>(b.Bouyancy) * 32000.0);
@@ -563,12 +577,16 @@ inline void FireTies(Sim& sim, int n) {
     if (b.lastopp > 0 && !sim.opts.DisableTies && b.lastopptype == 0) {
       Vector d = VectorSub(sim.rob[b.lastopp].pos, b.pos);
       const vb_single length = VectorMagnitude(d);
-      const vb_single maxLength =
-          RobSize * 4.0f + b.radius + sim.rob[b.lastopp].radius;
+      // RobSize * 4# es Double: un redondeo al asignar (RV-25).
+      const vb_single maxLength = static_cast<vb_single>(
+          RobSize * 4.0 + static_cast<double>(b.radius) +
+          static_cast<double>(sim.rob[b.lastopp].radius));
       if (length <= maxLength) {
+        // `c As Long` ByRef: el temporal hace CLng de la suma (RV-25).
         maketie(sim, n, static_cast<int>(b.lastopp),
-                static_cast<vb_long>(b.radius + sim.rob[b.lastopp].radius +
-                                     RobSize * 2),
+                vb_clng(static_cast<double>(b.radius) +
+                        static_cast<double>(sim.rob[b.lastopp].radius) +
+                        RobSize * 2),
                 -20, b.mem[addr::mtie]);
         DisqualifyAction(sim, n, "making a tie");  // E5 (Robots.bas:1437)
       }
@@ -590,7 +608,7 @@ inline void DoGeneticMemory(Sim& sim, int t) {
   }
 }
 
-// Robots.bas:2869-2905 — simplecoll (sin obstáculos: capa B7).
+// Robots.bas:2868-2905 — simplecoll.
 inline bool simplecoll(Sim& sim, vb_long X, vb_long Y, int k) {
   for (int t = 1; t <= sim.MaxRobs; ++t) {
     if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) {
@@ -601,6 +619,20 @@ inline bool simplecoll(Sim& sim, vb_long X, vb_long Y, int k) {
         if (k != t) return true;
       }
     }
+  }
+  // :2887-2894 — no se nace dentro ni a través de una forma: la caja entre el
+  // padre y el punto de parto frente a cada obstáculo, sin mirar .exist
+  // (RV-22). Max/Min de Common.bas toman Single ByVal.
+  const vb_single fx = static_cast<vb_single>(X);
+  const vb_single fy = static_cast<vb_single>(Y);
+  const Vector& kp = sim.rob[k].pos;
+  for (int t = 1; t <= sim.numObstacles; ++t) {
+    const Obstacle& o = sim.Obstacles[t];
+    if (!((o.pos.x > std::max(kp.x, fx)) ||
+          (o.pos.x + o.Width < std::min(kp.x, fx)) ||
+          (o.pos.y > std::max(kp.y, fy)) ||
+          (o.pos.y + o.Height < std::min(kp.y, fy))))
+      return true;
   }
   constexpr vb_single smudgefactor = 10.0f;  // Globals.bas
   if (!sim.opts.Dxsxconnected) {
@@ -618,6 +650,27 @@ inline bool simplecoll(Sim& sim, vb_long X, vb_long Y, int k) {
   return false;
 }
 
+// Reparto al nacer (Robots.bas:2139, 2209-2230; :2466, 2658-2688 en la
+// sexual): `(x / 100#) * CSng(per)`, `nrg - nnrg - (nnrg * 0.001)` y
+// `nnrg * 0.999` van en Double con un solo redondeo al asignar (RV-23).
+inline vb_single repro_part(vb_single x, vb_single per) {
+  return static_cast<vb_single>(static_cast<double>(x) / 100.0 *
+                                static_cast<double>(per));
+}
+inline vb_single repro_parent_nrg(vb_single nrg, vb_single nnrg) {
+  return static_cast<vb_single>(static_cast<double>(nrg) -
+                                static_cast<double>(nnrg) -
+                                static_cast<double>(nnrg) * 0.001);
+}
+inline vb_single repro_child_nrg(vb_single nnrg) {
+  return static_cast<vb_single>(static_cast<double>(nnrg) * 0.999);
+}
+// `multibot_time / 2 + 2`: Byte / Integer es Double y el Byte redondea
+// bancario (107 -> 55.5 -> 56) (RV-24).
+inline unsigned char repro_multibot_time(unsigned char mt) {
+  return static_cast<unsigned char>(vb_cint(static_cast<double>(mt) / 2.0 + 2.0));
+}
+
 // mutate: real desde M7 (mutations.hpp — NeoMutations.bas completo).
 
 // Robots.bas:2100-2413 — Reproduce (M-05, M-08): transcrito completo salvo
@@ -630,9 +683,14 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   if (sim.rob[n].Veg &&
       (sim.TotalChlr > sim.opts.MaxPopulation || sim.totvegsDisplayed < 0))
     return;
-  if (sim.rob[n].Veg && (Random(0, 10, *sim.rndy) != 5) &&
-      (sim.TotalChlr > sim.opts.MaxPopulation * 0.9f))
-    return;
+  // El And de VB6 no cortocircuita: Random se tira SIEMPRE, también para
+  // los animales (RV-21). MaxPopulation * 0.9 es Double.
+  {
+    const bool lotto = Random(0, 10, *sim.rndy) != 5;
+    if (sim.rob[n].Veg && lotto &&
+        (static_cast<double>(sim.TotalChlr) > sim.opts.MaxPopulation * 0.9))
+      return;
+  }
   if (sim.totvegsDisplayed == -1) return;
 
   per = static_cast<vb_integer>(per % 100);
@@ -643,13 +701,12 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
       static_cast<double>(FindRadius(sim, n, per / 100.0f) +
                           FindRadius(sim, n, (100 - per) / 100.0f))));
 
-  vb_single nnrg = (sim.rob[n].nrg / 100.0f) * static_cast<vb_single>(per);
-  // nbody As Integer: la expresión es aritmética SINGLE en VB6 y el redondeo
-  // bancario muerde el .5 exacto del float ([PROBABLE BUG] B6-4, B-30;
-  // 501/100*50 -> 250.5f -> 250, 503/100*50 -> 251.5f -> 252). En double la
-  // cuenta daría 251.4999... -> 251: la precisión Single es la spec.
-  const vb_integer nbody = vb_cint(static_cast<double>(
-      (sim.rob[n].body / 100.0f) * static_cast<vb_single>(per)));
+  // `(x / 100#) * CSng(per)`: 100# es Double, la expresión va en Double y se
+  // redondea una vez al asignar (RV-23). nbody As Integer hace CInt del
+  // Double: 501/100#*50 = 250.5 exacto -> 250 ([PROBABLE BUG] B6-4, B-30).
+  vb_single nnrg = repro_part(sim.rob[n].nrg, per);
+  const vb_integer nbody = vb_cint(static_cast<double>(sim.rob[n].body) /
+                                   100.0 * static_cast<double>(per));
 
   const vb_single tempnrg = sim.rob[n].nrg;
   if (tempnrg <= 0.0f) return;
@@ -715,13 +772,12 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   c.BirthCycle = sim.opts.TotRunCycle;
   c.vnum = 1;
 
-  nnrg = (p.nrg / 100.0f) * static_cast<vb_single>(per);
-  const vb_single nwaste = p.Waste / 100.0f * static_cast<vb_single>(per);
-  const vb_single npwaste = p.Pwaste / 100.0f * static_cast<vb_single>(per);
-  const vb_single nchloroplasts =
-      (p.chloroplasts / 100.0f) * static_cast<vb_single>(per);
+  nnrg = repro_part(p.nrg, per);
+  const vb_single nwaste = repro_part(p.Waste, per);
+  const vb_single npwaste = repro_part(p.Pwaste, per);
+  const vb_single nchloroplasts = repro_part(p.chloroplasts, per);
 
-  p.nrg = p.nrg - nnrg - (nnrg * 0.001f);
+  p.nrg = repro_parent_nrg(p.nrg, nnrg);
   p.Waste -= nwaste;
   p.Pwaste -= npwaste;
   p.body -= nbody;
@@ -737,8 +793,8 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   p.mem[311] = vb_cint(p.body);
   p.SonNumber = static_cast<vb_integer>(
       (p.SonNumber + 1 > 32000) ? 32000 : p.SonNumber + 1);
-  c.nrg = nnrg * 0.999f;
-  c.onrg = nnrg * 0.999f;
+  c.nrg = repro_child_nrg(nnrg);
+  c.onrg = repro_child_nrg(nnrg);
   c.mem[addr::Energy] = vb_cint(c.nrg);
   c.Poisoned = false;
   c.parent = p.AbsNum;
@@ -758,8 +814,7 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
   c.GenMut = p.GenMut;
   c.tag = p.tag;
   c.Bouyancy = p.Bouyancy;
-  if (p.multibot_time > 0)
-    c.multibot_time = static_cast<unsigned char>(p.multibot_time / 2 + 2);
+  if (p.multibot_time > 0) c.multibot_time = repro_multibot_time(p.multibot_time);
   c.dq = p.dq;
 
   c.Vtimer = 0;
@@ -1176,9 +1231,13 @@ inline void SexReproduce(Sim& sim, int female) {
     return;
   // Lotería vegetal sexual: Random(0, 9) <> 5 — 1/10, no 1/11 como la
   // asexual ([PROBABLE BUG] B6-2 / R-10).
-  if (sim.rob[female].Veg && (Random(0, 9, *sim.rndy) != 5) &&
-      (sim.TotalChlr > sim.opts.MaxPopulation * 0.9f))
-    return;
+  // And sin cortocircuito: el dado se tira siempre (RV-21).
+  {
+    const bool lotto = Random(0, 9, *sim.rndy) != 5;
+    if (sim.rob[female].Veg && lotto &&
+        (static_cast<double>(sim.TotalChlr) > sim.opts.MaxPopulation * 0.9))
+      return;
+  }
   if (sim.totvegsDisplayed == -1) return;
 
   per = static_cast<vb_single>(static_cast<vb_long>(per) % 100);  // per Mod 100
@@ -1190,11 +1249,10 @@ inline void SexReproduce(Sim& sim, int female) {
       FindRadius(sim, female,
                  static_cast<vb_single>((100.0f - per) / 100.0)))));
 
-  vb_single nnrg = (sim.rob[female].nrg / 100.0f) * per;
-  // nbody As Integer en aritmética Single estricta (B-30, misma decisión que
-  // la asexual).
-  const vb_integer nbody =
-      vb_cint(static_cast<double>((sim.rob[female].body / 100.0f) * per));
+  // Reparto en Double, como en la asexual (RV-23).
+  vb_single nnrg = repro_part(sim.rob[female].nrg, per);
+  const vb_integer nbody = vb_cint(static_cast<double>(sim.rob[female].body) /
+                                   100.0 * static_cast<double>(per));
 
   const vb_single tempnrg = sim.rob[female].nrg;
   if (tempnrg <= 0.0f) return;
@@ -1315,12 +1373,12 @@ inline void SexReproduce(Sim& sim, int female) {
   c.BirthCycle = sim.opts.TotRunCycle;
   c.vnum = 1;
 
-  nnrg = (p.nrg / 100.0f) * per;
-  const vb_single nwaste = p.Waste / 100.0f * per;
-  const vb_single npwaste = p.Pwaste / 100.0f * per;
-  const vb_single nchloroplasts = (p.chloroplasts / 100.0f) * per;
+  nnrg = repro_part(p.nrg, per);
+  const vb_single nwaste = repro_part(p.Waste, per);
+  const vb_single npwaste = repro_part(p.Pwaste, per);
+  const vb_single nchloroplasts = repro_part(p.chloroplasts, per);
 
-  p.nrg = p.nrg - nnrg - (nnrg * 0.001f);  // 0.1% para la madre
+  p.nrg = repro_parent_nrg(p.nrg, nnrg);  // 0.1% para la madre
   // El macho pagó el coste del disparo y nada más.
   p.Waste -= nwaste;
   p.Pwaste -= npwaste;
@@ -1339,8 +1397,8 @@ inline void SexReproduce(Sim& sim, int female) {
       (p.SonNumber + 1 > 32000) ? 32000 : p.SonNumber + 1);
   // El SonNumber/parent del macho no se actualizan (linaje matrilineal).
 
-  c.nrg = nnrg * 0.999f;  // 1% para el hijo
-  c.onrg = nnrg * 0.999f;
+  c.nrg = repro_child_nrg(nnrg);  // 1% para el hijo
+  c.onrg = repro_child_nrg(nnrg);
   c.mem[addr::Energy] = vb_cint(c.nrg);
   c.Poisoned = false;
   c.parent = p.AbsNum;
@@ -1362,8 +1420,7 @@ inline void SexReproduce(Sim& sim, int female) {
   c.tag = p.tag;
   c.Bouyancy = p.Bouyancy;
 
-  if (p.multibot_time > 0)
-    c.multibot_time = static_cast<unsigned char>(p.multibot_time / 2 + 2);
+  if (p.multibot_time > 0) c.multibot_time = repro_multibot_time(p.multibot_time);
   c.dq = p.dq;
 
   c.Vtimer = 0;
@@ -1609,9 +1666,12 @@ inline void BotDNAManipulation(Sim& sim, int n) {
       // Vtimer = 2 x longitud del gen; mem(mkvirus) NO se consume aquí.
       if (MakeVirus(sim, n, b.mem[addr::mkvirus])) {
         const vb_long length = genelength(sim, n, b.mem[addr::mkvirus]) * 2;
-        b.nrg -= static_cast<vb_single>(length) / 2.0f *
-                 sim.vm.costs.v[cost::DNACOPYCOST] *
-                 sim.vm.costs.v[cost::COSTMULTIPLIER];
+        // Long / Integer es Double: la resta va en Double (RV-26).
+        b.nrg = static_cast<vb_single>(
+            static_cast<double>(b.nrg) -
+            static_cast<double>(length) / 2.0 *
+                static_cast<double>(sim.vm.costs.v[cost::DNACOPYCOST]) *
+                static_cast<double>(sim.vm.costs.v[cost::COSTMULTIPLIER]));
         if (length < 32000)
           b.Vtimer = length;
         else
@@ -1754,22 +1814,30 @@ inline void MoveTeleporter(Sim& sim, int i) {
 
   if (tp.driftHorizontal && tp.driftVertical)
     tp.pos = VectorAdd(tp.pos, tp.vel);
-  tp.center = VectorSet(tp.pos.x + tp.Width * 0.5f,
-                        tp.pos.y + tp.Height * 0.3f);
+  // Single * 0.5/0.3 (literales Double): un redondeo al pasar a VectorSet
+  // (RV-26).
+  tp.center = VectorSet(
+      static_cast<vb_single>(static_cast<double>(tp.pos.x) +
+                             static_cast<double>(tp.Width) * 0.5),
+      static_cast<vb_single>(static_cast<double>(tp.pos.y) +
+                             static_cast<double>(tp.Height) * 0.3));
+  // MaxVelocity * 0.1 (Double), un redondeo (RV-26).
+  const vb_single bounce =
+      static_cast<vb_single>(static_cast<double>(sim.opts.MaxVelocity) * 0.1);
 
   if (tp.pos.x < 0.0f) {
     if (tp.pos.x + tp.Width < 0.0f) tp.pos.x = 0.0f;
     if (sim.opts.Dxsxconnected)
       tp.pos.x = tp.pos.x + sim.opts.FieldWidth - tp.Width;
     else
-      tp.vel.x = sim.opts.MaxVelocity * 0.1f;
+      tp.vel.x = bounce;
   }
   if (tp.pos.y < 0.0f) {
     if (tp.pos.y + tp.Height < 0.0f) tp.pos.y = 0.0f;
     if (sim.opts.Updnconnected)
       tp.pos.y = tp.pos.y + sim.opts.FieldHeight - tp.Height;
     else
-      tp.vel.y = sim.opts.MaxVelocity * 0.1f;
+      tp.vel.y = bounce;
   }
   if (tp.pos.x + tp.Width > sim.opts.FieldWidth) {
     if (tp.pos.x > sim.opts.FieldWidth)
@@ -1777,7 +1845,7 @@ inline void MoveTeleporter(Sim& sim, int i) {
     if (sim.opts.Dxsxconnected)
       tp.pos.x = tp.pos.x - (sim.opts.FieldWidth - tp.Width);
     else
-      tp.vel.x = -sim.opts.MaxVelocity * 0.1f;
+      tp.vel.x = -bounce;
   }
   if (tp.pos.y + tp.Height > sim.opts.FieldHeight) {
     if (tp.pos.y > sim.opts.FieldHeight)
@@ -1785,7 +1853,7 @@ inline void MoveTeleporter(Sim& sim, int i) {
     if (sim.opts.Updnconnected)
       tp.pos.y = tp.pos.y - (sim.opts.FieldHeight - tp.Height);
     else
-      tp.vel.y = -sim.opts.MaxVelocity * 0.1f;
+      tp.vel.y = -bounce;
   }
 }
 
@@ -1890,8 +1958,7 @@ inline void UpdateBots(Sim& sim) {
   }
 
   // P0a — teleporters (Robots.bas:1505-1512): la salida corre ANTES que
-  // ninguna otra pasada (NetForces puede tocar bots más adelante). Mareas
-  // (Tides): ⚙ opcional, fuera (BouyancyScaling queda en 1).
+  // ninguna otra pasada (NetForces puede tocar bots más adelante).
   if (sim.numTeleporters > 0) {
     const FormatGlobals g = TickFormatGlobals(sim);  // E7
     for (int t = 1; t <= sim.MaxRobs; ++t) {
@@ -1905,6 +1972,28 @@ inline void UpdateBots(Sim& sim) {
   if (sim.opts.Density != 0.0) {
     for (int t = 1; t <= sim.MaxRobs; ++t)
       if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) AddedMass(sim, t);
+  }
+
+  // Mareas (Robots.bas:1523-1530, RV-27). El original lee TmpOpts.Tides/
+  // TidesOf (la copia de la UI) y divide por SimOpts.Tides; el port solo
+  // tiene opts. (TotRunCycle + TidesOf) Mod Tides es Long, `/ Tides` da
+  // Double y cada asignación a BouyancyScaling (Single) redondea. La marea
+  // PISA Ygravity y PhysBrown (quedan así en la sim).
+  if (sim.opts.Tides == 0) {
+    sim.BouyancyScaling = 1.0f;
+  } else {
+    const vb_long phase =
+        (sim.opts.TotRunCycle + sim.opts.TidesOf) % sim.opts.Tides;
+    sim.BouyancyScaling = static_cast<vb_single>(
+        (1.0 + std::sin(static_cast<double>(phase) /
+                        static_cast<double>(sim.opts.Tides) *
+                        static_cast<double>(PI) * 2.0)) /
+        2.0);
+    sim.BouyancyScaling = static_cast<vb_single>(
+        std::sqrt(static_cast<double>(sim.BouyancyScaling)));
+    sim.opts.Ygravity = (1.0f - sim.BouyancyScaling) * 4.0f;
+    sim.opts.PhysBrown =
+        static_cast<double>(sim.BouyancyScaling) > 0.8 ? 10.0f : 0.0f;
   }
 
   // P1 — pre update.

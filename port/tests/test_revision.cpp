@@ -3,6 +3,8 @@
 // confirmada del port. Van con doctest::should_fail(): la suite sigue verde
 // mientras la divergencia exista; al corregirla el caso pasa a rojo y hay que
 // quitar el decorador (y mover el caso a su familia definitiva).
+#include <string>
+
 #include "doctest.h"
 #include "dbcore/master.hpp"
 #include "dbcore/vm.hpp"
@@ -99,6 +101,27 @@ struct RvWorld {
     b.aimvector = {1.0f, 0.0f};
     b.radius = radius;
     b.mass = 1.0f;
+    b.BucketPos = {-2.0f, -2.0f};
+    UpdateBotBucket(sim, n);
+    return n;
+  }
+
+  // Alta con ADN (patron de test_bugs2.cpp), para Reproduce/SexReproduce.
+  int spawn(const std::string& dnatext, float x, float y) {
+    const int n = posto(sim);
+    Bot& b = sim.rob[n];
+    b.exist = true;
+    b.FName = "A.txt";
+    b.nrg = 20000.0f;
+    b.body = 1000.0f;
+    REQUIRE(LoadDNAText(dnatext, b, *sim.sysvars));
+    makeoccurrlist(sim, n);
+    b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
+    b.genenum = CountGenes(b.dna);
+    b.pos = {x, y};
+    b.aim = 0.0f;
+    b.aimvector = {1.0f, 0.0f};
+    b.radius = FindRadius(sim, n);
     b.BucketPos = {-2.0f, -2.0f};
     UpdateBotBucket(sim, n);
     return n;
@@ -697,4 +720,235 @@ TEST_CASE("RV-19b tielen1: CLng de la suma, no truncar cada radio") {
   w.sim.rob[a].TieLenOverwrite[0] = true;
   Update_Ties(w.sim, a);
   CHECK(w.sim.rob[a].Ties[1].NaturalLength == 221.0f);  // antes del arreglo: 220
+}
+
+// ---------------------------------------------------------------------------
+// Piloto 7 — Reproduccion y energia (Robots.bas, Vegs.bas, Teleport.bas).
+
+// RV-21 — Robots.bas:2129 y :2456: `If rob(n).Veg = True And (Random(0, 10)
+// <> 5) And (...)`. El And de VB6 no cortocircuita: Random se evalua SIEMPRE,
+// tambien para los animales. El port usa && y solo tira el dado con Veg. Con
+// per = 100, `per Mod 100 = 0` sale justo despues de la loteria.
+TEST_CASE("RV-21 Reproduce: la loteria vegetal consume RNG tambien en animales") {
+  RvWorld w;
+  const int n = w.addbot(5000.0f, 5000.0f);
+  w.sim.rob[n].body = 1000.0f;
+  w.sim.rob[n].nrg = 1000.0f;
+  InjectedRnd inj({0.5f});
+  w.sim.rndy = &inj;
+  Reproduce(w.sim, n, 100);
+  CHECK(inj.consumed() == 1);  // antes del arreglo: 0
+}
+
+TEST_CASE("RV-21b SexReproduce: la loteria vegetal consume RNG tambien en animales") {
+  RvWorld w;
+  const int n = w.addbot(5000.0f, 5000.0f);
+  w.sim.rob[n].body = 1000.0f;
+  w.sim.rob[n].nrg = 1000.0f;
+  w.sim.rob[n].spermDNA.assign(2, Block{});
+  w.sim.rob[n].mem[addr::SEXREPRO] = 100;
+  InjectedRnd inj({0.5f});
+  w.sim.rndy = &inj;
+  SexReproduce(w.sim, n);
+  CHECK(inj.consumed() == 1);  // antes del arreglo: 0
+}
+
+// RV-22 — Robots.bas:2887-2894: simplecoll impide nacer dentro o a traves de
+// una forma (AABB entre el padre y el punto de parto). El port omite el bucle
+// de obstaculos ("capa B7"), aunque las formas ya estan portadas.
+TEST_CASE("RV-22 simplecoll: una forma entre padre e hijo bloquea el parto") {
+  RvWorld w;
+  const int k = w.addbot(1000.0f, 1000.0f);
+  w.sim.Obstacles.resize(2);
+  w.sim.Obstacles[1].exist = true;
+  w.sim.Obstacles[1].pos = {1150.0f, 900.0f};
+  w.sim.Obstacles[1].Width = 100.0f;
+  w.sim.Obstacles[1].Height = 200.0f;
+  w.sim.numObstacles = 1;
+  CHECK(simplecoll(w.sim, 1400, 1000, k));
+}
+
+// RV-23 — Robots.bas:2139-2140, 2209-2230 (y :2466-2467, 2658-2688 en la
+// sexual): `(nrg / 100#) * CSng(per)` es Double (100# es literal Double), y
+// tambien `nnrg * 0.001` y `nnrg * 0.999`; se redondea una vez al asignar.
+// nbody (Integer) hace CInt del Double: 501/100#*50 = 250.5 exacto -> 250.
+// El caso dorado B-30 de la spec supuso Single estricto (-> 251).
+TEST_CASE("RV-23 Reproduce: el reparto /100# va en Double") {
+  auto run = [](float body, float nrg, vb_integer per, float& child_body,
+                float& child_nrg, float& parent_nrg) {
+    RvWorld w;
+    const int p = w.spawn("stop", 10000.0f, 10000.0f);
+    w.sim.rob[p].body = body;
+    w.sim.rob[p].nrg = nrg;
+    Reproduce(w.sim, p, per);
+    REQUIRE(w.sim.rob[2].exist);
+    child_body = w.sim.rob[2].body;
+    child_nrg = w.sim.rob[2].nrg;
+    parent_nrg = w.sim.rob[p].nrg;
+  };
+  float cb, cn, pn;
+  run(501.0f, 20000.0f, 50, cb, cn, pn);
+  CHECK(cb == 250.0f);  // antes del arreglo: 251
+  run(1000.0f, 25829.0879f, 80, cb, cn, pn);
+  CHECK(cn == 20642.6055f);  // antes del arreglo: 20642.6094
+  CHECK(pn == 5145.15527f);  // antes del arreglo: 5145.15332
+}
+
+// RV-24 — Robots.bas:2257 y :2715: `multibot_time / 2 + 2` es Byte / Integer
+// -> Double y la asignacion al Byte redondea bancario: 107 / 2 + 2 = 55.5 ->
+// 56. El port divide en entero (53 + 2 = 55). Difiere con x = 3 (mod 4).
+TEST_CASE("RV-24 Reproduce: multibot_time / 2 + 2 redondea bancario") {
+  RvWorld w;
+  const int p = w.spawn("stop", 10000.0f, 10000.0f);
+  w.sim.rob[p].multibot_time = 107;
+  Reproduce(w.sim, p, 50);
+  REQUIRE(w.sim.rob[2].exist);
+  CHECK(w.sim.rob[2].multibot_time == 56);  // antes del arreglo: 55
+}
+
+// RV-25 — Robots.bas:1435 y Ties.bas:883: maketie recibe `c As Long` ByRef,
+// asi que `radius + radius + RobSize * 2` (Single) llega con CLng (bancario)
+// al temporal. El port hace static_cast (trunca): 60.3 + 60.3 + 240 = 360.6
+// da c = 361 en el original y 360 en el port; el umbral c * 1.5 pasa de
+// 541.5 a 540 y una tie a 541 ya no se forma.
+TEST_CASE("RV-25 FireTies: c de maketie es CLng de la suma") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f, 60.3f);
+  const int c = w.addbot(1541.2f, 1000.0f, 60.3f);
+  Bot& b = w.sim.rob[a];
+  b.age = 5;
+  b.lastopp = c;
+  b.lastopptype = 0;
+  b.mem[addr::mtie] = 1;
+  FireTies(w.sim, a);
+  CHECK(w.sim.rob[a].Ties[1].pnt == c);  // antes del arreglo: sin tie
+}
+
+// RV-26 — promociones a Double perdidas en el mantenimiento por bot (familia
+// RV-05). Robots.bas:1028: `.Slime = .Slime * 0.98`.
+TEST_CASE("RV-26 Upkeep: Slime * 0.98 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].Slime = 6546.32666f;
+  Upkeep(w.sim, n);
+  CHECK(w.sim.rob[n].Slime == 6415.3999f);  // antes del arreglo: 6415.40039
+}
+
+// RV-26b — Robots.bas:1010: `Costs(AGECOST) * Math.Log(ageDelta)` es
+// Single * Double.
+TEST_CASE("RV-26b Upkeep: coste de edad logaritmico en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  auto& C = w.sim.vm.costs.v;
+  C[cost::AGECOSTMAKELOG] = 1.0f;
+  C[cost::AGECOST] = 0.01f;
+  C[cost::COSTMULTIPLIER] = 1.0f;
+  w.sim.rob[n].age = 3;
+  w.sim.rob[n].nrg = 0.0f;
+  w.sim.rob[n].body = 0.0f;
+  Upkeep(w.sim, n);
+  CHECK(w.sim.rob[n].nrg == -0.0109861223f);  // antes del arreglo: -0.0109861232
+}
+
+// RV-26c — Robots.bas:1701: `.body + .mem(strbody) / 10` (Integer / Integer
+// -> Double). Con body pequeno (5-80) difiere en el 4 %.
+TEST_CASE("RV-26c storebody: body + mem / 10 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].body = 5.00010014f;
+  w.sim.rob[n].nrg = 1000.0f;
+  w.sim.rob[n].mem[addr::strbody] = 31;
+  storebody(w.sim, n);
+  CHECK(w.sim.rob[n].body == 8.10010052f);  // antes del arreglo: 8.10009956
+}
+
+// RV-26d — Robots.bas:1345: `.Bouyancy + .mem(setboy) / 32000` (Integer /
+// Integer -> Double).
+TEST_CASE("RV-26d ManageBouyancy: mem / 32000 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].Bouyancy = 0.25f;
+  w.sim.rob[n].mem[addr::setboy] = 263;
+  ManageBouyancy(w.sim, n);
+  CHECK(w.sim.rob[n].Bouyancy == 0.258218735f);  // antes del arreglo: 0.258218765
+}
+
+// RV-26e — Robots.bas:1222: `.chloroplasts - 0.5 / (100 ^ (..))`: `^` da
+// Double y la resta se redondea una vez.
+TEST_CASE("RV-26e ManageChlr: decaimiento de cloroplastos en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].chloroplasts = 5.217731f;
+  ManageChlr(w.sim, n);
+  CHECK(w.sim.rob[n].chloroplasts == 4.71848154f);  // antes del arreglo: 4.71848106
+}
+
+// RV-27 — Robots.bas:1523-1530: con Tides > 0 UpdateBots calcula la marea
+// (BouyancyScaling, Ygravity, PhysBrown). El port no la calcula
+// (BouyancyScaling queda en 1) pero carga Tides del .sim, y feedvegs
+// (Vegs.bas:253) multiplica el sol por 1 - BouyancyScaling = 0.
+// Ciclo 0: (1 + Sin(0)) / 2 = 0.5 -> Sqr -> 0.707106769.
+TEST_CASE("RV-27 UpdateBots: mareas con Tides > 0") {
+  RvWorld w;
+  w.sim.opts.Tides = 100;
+  w.sim.opts.TidesOf = 0;
+  w.sim.opts.TotRunCycle = 0;
+  w.sim.opts.PhysBrown = 7.0f;
+  UpdateBots(w.sim);
+  CHECK(w.sim.BouyancyScaling == 0.707106769f);  // antes del arreglo: 1
+  CHECK(w.sim.opts.Ygravity == 1.17157292f);     // antes del arreglo: 0
+  CHECK(w.sim.opts.PhysBrown == 0.0f);           // antes del arreglo: 7
+}
+
+// RV-26f — Robots.bas:1033: `.poison * 0.98` (mismo patron que el slime).
+TEST_CASE("RV-26f Upkeep: poison * 0.98 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].poison = 6546.32666f;
+  Upkeep(w.sim, n);
+  CHECK(w.sim.rob[n].poison == 6415.3999f);  // antes del arreglo: 6415.40039
+}
+
+// RV-26g — Robots.bas:1012: `AGECOST + (ageDelta * FRACTION)`: Long * Single
+// es Double.
+TEST_CASE("RV-26g Upkeep: coste de edad lineal en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  auto& C = w.sim.vm.costs.v;
+  C[cost::AGECOSTMAKELINEAR] = 1.0f;
+  C[cost::AGECOST] = 0.01f;
+  C[cost::AGECOSTLINEARFRACTION] = 0.01f;
+  C[cost::COSTMULTIPLIER] = 1.0f;
+  w.sim.rob[n].age = 5;
+  w.sim.rob[n].nrg = 0.0f;
+  w.sim.rob[n].body = 0.0f;
+  Upkeep(w.sim, n);
+  CHECK(w.sim.rob[n].nrg == -0.0599999987f);  // antes del arreglo: -0.0599999949
+}
+
+// RV-26h — Robots.bas:1710: `.body - CSng(mem) / 10#` (feedbody).
+TEST_CASE("RV-26h feedbody: body - mem / 10# en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000.0f, 1000.0f);
+  w.sim.rob[n].body = 5.0f;
+  w.sim.rob[n].nrg = 1000.0f;
+  w.sim.rob[n].mem[addr::fdbody] = 31;
+  feedbody(w.sim, n);
+  CHECK(w.sim.rob[n].body == 1.89999998f);  // antes del arreglo: 1.9000001
+}
+
+// RV-26i — Teleport.bas:324, 335: el centro `pos.y + Height * 0.3` y el
+// rebote `MaxVelocity * 0.1` son Double.
+TEST_CASE("RV-26i MoveTeleporter: Height * 0.3 y MaxVelocity * 0.1 en Double") {
+  RvWorld w;
+  Teleporter& tp = w.sim.Teleporters[1];
+  tp.exist = true;
+  tp.pos = {-5.0f, 10.0f};
+  tp.Width = 100.0f;
+  tp.Height = 101.0f;
+  w.sim.opts.MaxVelocity = 9.0f;
+  w.sim.opts.Dxsxconnected = false;
+  MoveTeleporter(w.sim, 1);
+  CHECK(tp.center.y == 40.2999992f);  // antes del arreglo: 40.3000031
+  CHECK(tp.vel.x == 0.899999976f);    // antes del arreglo: 0.900000036
 }

@@ -614,7 +614,7 @@ struct Sim {
   std::vector<BucketType> Buckets;
   int NumXBuckets = 0, NumYBuckets = 0;
 
-  // Physics.bas:21 — global de mareas; 1 sin Tides (capa ⚙).
+  // Physics.bas:21 — global de mareas; la calcula UpdateBots (1 sin Tides).
   vb_single BouyancyScaling = 1.0f;
 
   Sim() { vm.xDivisor = 1.0f; vm.yDivisor = 1.0f; }

@@ -782,9 +782,10 @@ TEST_CASE("E5-14 paso 13: Player Bot Mode") {
   }
 
   SUBCASE("Reproduce hereda el highlight bajo pbOn") {
-    // Reproduce consume 1 rndy SIEMPRE (el tope del For de mutación de
-    // parto, Int(3*rndy), se extrae aunque mrepro sea 0).
-    w.rng = InjectedRnd{std::vector<vb_single>{0.0f}};
+    // Reproduce consume 2 rndy SIEMPRE: la loteria vegetal (el And de VB6
+    // no cortocircuita, RV-21) y el tope del For de mutación de parto,
+    // Int(3*rndy), que se extrae aunque mrepro sea 0.
+    w.rng = InjectedRnd{std::vector<vb_single>{0.5f, 0.0f}};
     w.sim.pb.on = true;
     w.sim.rob[resaltado].nrg = 20000.0f;
     Reproduce(w.sim, resaltado, 50);
@@ -794,7 +795,7 @@ TEST_CASE("E5-14 paso 13: Player Bot Mode") {
         hijo = t;
     REQUIRE(hijo != 0);
     CHECK(w.sim.rob[hijo].highlight == true);
-    CHECK(w.rng.consumed() == 1);
+    CHECK(w.rng.consumed() == 2);
   }
 }
 

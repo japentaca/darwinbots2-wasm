@@ -961,8 +961,286 @@ familia RV-07.
   (`FudgeEyes`/`FudgeAll`) sigue fuera por ser del modo evo, como ya está
   documentado.
 
+## Piloto 7 — Reproducción y energía (2026-09-25)
+
+**Alcance**: lo vivo de `Robots.bas` que no cubrieron los pilotos 4-6:
+- el bucle por bot de `UpdateBots` y sus rutinas (`Upkeep`, `Poisons`,
+  `UpdateCounters`, `MakeStuff` con `storevenom`/`storepoison`/`makeshell`/`makeslime`,
+  `altzheimer`, `HandleWaste`, `Ageing`, `ManageChlr`/`ChangeChlr`,
+  `ManageBody` con `storebody`/`feedbody`, `Shock`, `ManageDeath`,
+  `ManageBouyancy`, `ManageReproduction`, `FireTies`, `BotDNAManipulation`,
+  `DoGeneticMemory`);
+- `ReproduceAndKill`, `Reproduce`, `SexReproduce` con el crossover
+  (`scanfromn`, `GeneticDistance`, `simplematch`, `crossover`), `simplecoll`,
+  `posto`, `KillRobot` y `FindRadius`;
+- `Vegs.bas` completo, `aggiungirob` (`Globals.bas:395-505`) y lo de `Teleport.bas`
+  que vive en `robots.hpp` (`DriftTeleporter`/`MoveTeleporter`).
+
+Se compara con `robots.hpp`, `vegs.hpp`, `sim.hpp` (`FindRadius`, `posto`) y
+`master.hpp` (`aggiungirob`, `VegsRepopulate`).
+
+**Resultado**: 7 divergencias confirmadas (RV-21 a RV-27). Dos pesan más que el
+resto:
+- **RV-21** desincroniza el RNG en cada intento de parto de un animal.
+- **RV-23** afecta a todo nacimiento y desmiente el caso dorado B-30 de la spec.
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir RV-21 a RV-27)**, en
+> `robots.hpp`:
+> - la lotería tira el dado antes del `if` (RV-21);
+> - `simplecoll` recorre las formas (RV-22);
+> - el reparto va por los helpers `repro_part`, `repro_parent_nrg`,
+>   `repro_child_nrg` y `repro_multibot_time` (RV-23, RV-24);
+> - `FireTies` hace `vb_clng` de la suma, y `maxLength` va en `double` (RV-25);
+> - los diez sitios de RV-26 van en `double` con un redondeo;
+> - `UpdateBots` calcula las mareas (RV-27).
+>
+> - **Tests**: RV-21 a RV-27 sin `should_fail`, más RV-26f (poison), RV-26g
+>   (coste lineal), RV-26h (`feedbody`) y RV-26i (teleporter). El coste del virus
+>   solo se confirmó en el scratchpad.
+> - **Dorados ajustados**: B-30 (501 → 250) en `test_bugs2.cpp` y en
+>   `70-CASOS-DORADOS.md`, que queda corregido. B-29, R-09, R-11 y E5-14 cuentan
+>   ahora la extracción de la lotería.
+> - **Spec**: `36-REPRO.md` (lotería, reparto en `Double`, `multibot_time`,
+>   formas en `simplecoll`) y `50-MUNDO.md` (mareas).
+> - **Mutation-check**: con el `robots.hpp` de HEAD fallan los 16 casos nuevos y
+>   los 5 dorados ajustados.
+> - **Suites**: 234 casos y 3927 aserciones en g++, clang y wasm, solo con los 7
+>   fallos esperados (RV-01, 02, 07, 08 y 09). Los 4 smoke tests pasan.
+
+### RV-21 · La lotería vegetal consume RNG también en los animales (`And` sin cortocircuito) — CORREGIDO
+
+- **Fuente** (`Robots.bas:2129`, `:2456`): `If rob(n).Veg = True And (Random(0,
+  10) <> 5) And (TotalChlr > ..) Then GoTo getout`. El `And` de VB6 evalúa todos
+  sus operandos, así que `Random` se ejecuta **siempre**, sea vegetal o no. Es la
+  misma regla que la moneda de `ChangeDNA2` del piloto 2, que el port sí respeta.
+- **Port** (`robots.hpp:633`, `:1179`): `Veg && (Random(..) != 5) && ..`
+  cortocircuita, y solo tira el dado con `Veg`.
+- **Contraejemplo**: animal con `Reproduce(n, 100)` (sale en `per Mod 100 = 0`,
+  justo después de la lotería): el original consume **1** extracción y el port
+  **0**. Lo mismo en `SexReproduce`.
+- **Alcance**: todo intento de parto de un animal que pase las primeras guardas
+  (`body`, `CantReproduce`, techo vegetal) desplaza el RNG una posición. Dos
+  simulaciones con la misma semilla se separan en el **primer** intento de
+  reproducción animal.
+- **Origen**: la spec (`36-REPRO.md:58`) cuenta "1 RNG" dentro de los "gates
+  vegetales" sin decir que se consume siempre; el port lo leyó como condicional.
+  En el fuente no hay más `And`/`Or` con RNG (barrido de `*.bas` y `*.frm`).
+- **Tests**: RV-21 (asexual) y RV-21b (sexual).
+
+### RV-22 · `simplecoll` ignora las formas — CORREGIDO
+
+- **Fuente** (`Robots.bas:2887-2894`): no se puede nacer dentro de una forma ni a
+  través de ella. El test es la caja entre el padre y el punto de parto frente a
+  cada obstáculo, sin mirar `.exist`.
+- **Port** (`robots.hpp:594`): "sin obstáculos: capa B7". La capa B7 se portó
+  después (formas en `.sim`, en la web y en física y visión), pero `simplecoll` no
+  se actualizó.
+- **Contraejemplo**: padre en (1000, 1000), parto en (1400, 1000) y una forma en
+  (1150, 900) de 100×200. El original bloquea el parto y el port lo permite.
+- **Test**: RV-22.
+
+### RV-23 · El reparto de recursos al nacer va en `Double` (`/ 100#`) — CORREGIDO; el caso dorado B-30 estaba mal (corregido)
+
+- **Fuente**: `Robots.bas:2139-2140`, `:2209-2230` y, en la sexual, `:2466-2467`
+  y `:2658-2688`.
+  - `nnrg = (nrg / 100#) * CSng(per)`: `100#` es `Double`, así que la expresión
+    va en `Double` y se redondea una vez. Lo mismo `nwaste`, `npwaste`,
+    `nchloroplasts` y `nbody`, este último `Integer`, que hace `CInt` del `Double`.
+  - `nrg - nnrg - (nnrg * 0.001)` y `nnrg * 0.999` también son `Double`.
+- **Port** (`robots.hpp:646-652`, `:718-724`, `:740-741`, `:1193-1197`,
+  `:1318-1323`, `:1342-1343`): `/ 100.0f` y los literales `0.001f` y `0.999f` en `float`.
+- **Contraejemplos**:
+  - `body = 501` con `per = 50`: `501 / 100# * 50` es exactamente 250.5 en
+    `Double`, y `CInt` da **250**. El port calcula 250.500015f y da **251**.
+  - `nrg = 25829.0879` con `per = 80`: el hijo nace con 20642.6055 frente a
+    20642.6094, y al padre le quedan 5145.15527 frente a 5145.15332.
+- **Frecuencia**:
+  - `nnrg` difiere en el 24,7 %.
+  - El `nrg` del padre, en el 10,5 %.
+  - El `nrg` del hijo, en el 15,6 %.
+  - `nbody` difiere en el 0,2 % de los pares (body entero, per).
+- **Spec**: `70-CASOS-DORADOS.md` B-30 afirma "aritmética Single estricta" y la
+  errata del 2026-08-25 lo reforzó (501 → 251). El fuente dice `100#`: con 501
+  el empate es real y baja a 250. 503, 525 y 475 dan lo mismo en las dos
+  lecturas. Si se corrige, hay que ajustar B-30 en la spec y en
+  `test_bugs2.cpp:189`.
+- **Test**: RV-23.
+
+### RV-24 · `multibot_time / 2 + 2` redondea bancario — CORREGIDO
+
+- **Fuente** (`Robots.bas:2257`, `:2715`): `Byte / Integer` con `/` da `Double`
+  y la asignación al `Byte` redondea bancario. 107 / 2 + 2 = 55.5 → **56**.
+- **Port** (`robots.hpp:762`, `:1366`): división entera, 53 + 2 = **55**.
+- **Frecuencia**: 52 de los 210 valores posibles (x ≡ 3 mod 4). Ocurre ya en
+  la segunda generación de una especie con `kill_mb`: 210 → 107 → 56 frente a 55.
+- **Efecto**: un ciclo menos de gracia antes de que `Ties.bas:174` mate a la
+  célula sin ties.
+- **Test**: RV-24.
+
+### RV-25 · `FireTies`: el `c` de `maketie` es `CLng` de la suma, no truncado — CORREGIDO
+
+- **Fuente** (`Robots.bas:1435`, `Ties.bas:883`): `maketie(.., c As Long, ..)`
+  es `ByRef`. La expresión `radius + radius + RobSize * 2` (`Single`) llega a un
+  temporal `Long` con `CLng`, que redondea bancario. `c` solo se usa en el umbral
+  `Length <= c * 1.5`.
+- **Port** (`robots.hpp:571`): `static_cast<vb_long>(..)`, que trunca.
+- **Contraejemplo**: con radios de 60.3, el original da `c` = 361 (umbral 541.5)
+  y el port 360 (umbral 540). Una tie a distancia 541 se forma en el original
+  y en el port no.
+- **Frecuencia**: `c` difiere en el 50 % de los pares de radios. Se nota cuando la
+  distancia cae en el tramo de 1.5 twips entre los dos umbrales.
+- **Menor, en la misma línea** (`robots.hpp:567`): `maxLength = RobSize * 4# + r1
+  + r2` es `Double` en el original. Difiere en el 23 % a 1 ulp y solo cambia el
+  resultado en el umbral exacto.
+- **Test**: RV-25.
+
+### RV-26 · Promociones a `Double` perdidas en el mantenimiento por bot — CORREGIDO (familia RV-05)
+
+| Fuente | Port | Expresión | Difiere |
+|---|---|---|---|
+| `Robots.bas:1028, 1033` | `robots.hpp:42, 46` | `.Slime * 0.98`, `.poison * 0.98` (`Upkeep`, cada ciclo) | 24 % |
+| `Robots.bas:1010` | `robots.hpp:30` | `Costs(AGECOST) * Math.Log(ageDelta)` (con `AGECOSTMAKELOG`) | 31 % |
+| `Robots.bas:1012` | `robots.hpp:33` | `AGECOST + ageDelta * FRACTION` (`Long * Single`, con `AGECOSTMAKELINEAR`) | 24 % |
+| `Robots.bas:1701` | `robots.hpp:418` | `body + mem(strbody) / 10` (`Integer / Integer`) | 4 % con body 5-80, 0 % desde ~100 |
+| `Robots.bas:1710` | `robots.hpp:429` | `body - CSng(mem) / 10#` (`feedbody`) | 7 % con body 5-80 |
+| `Robots.bas:1345` | `robots.hpp:499` | `Bouyancy + mem(setboy) / 32000` | 31 % |
+| `Robots.bas:1222` | `robots.hpp:403` | `chloroplasts - 0.5 / (100 ^ (..))` (cada ciclo, bots con cloroplastos) | 3,4 % con < 50 cloroplastos, 0,008 % en [0, 32000] |
+| `Robots.bas:1070` | `robots.hpp:1612` | `nrg - length / 2 * DNACOPYCOST * COSTMULT` (`Long / Integer`, al hacer un virus) | 0,02 % (con costes 0.01 y 1.3) |
+| `Teleport.bas:324` | `robots.hpp:1758` | `pos.y + Height * 0.3` (centro del teleporter) | 2,8 % |
+| `Teleport.bas:335, 345, 355, 365` | `robots.hpp:1765-1788` | `MaxVelocity * 0.1` (rebote del teleporter) | 199 de los enteros 1-1000; con 60 no difiere |
+
+- **Contraejemplos** (los de los tests):
+  - `Slime = 6546.32666` pasa a 6415.3999 en el original y a 6415.40039 en el port.
+  - Coste logarítmico con `age = 3`: −0.0109861223 frente a −0.0109861232.
+  - `storebody` con `body = 5.00010014` y `mem = 31`: 8.10010052 frente a
+    8.10009956.
+  - `Bouyancy = 0.25` con `setboy = 263`: 0.258218735 frente a 0.258218765.
+  - `chloroplasts = 5.217731`: 4.71848154 frente a 4.71848106.
+- **Tests**: RV-26 (slime), RV-26b (log), RV-26c (`storebody`), RV-26d
+  (`Bouyancy`), RV-26e (`ManageChlr`), RV-26f (poison), RV-26g (lineal), RV-26h
+  (`feedbody`) y RV-26i (teleporter). El virus solo se confirmó en el scratchpad.
+
+### RV-27 · Mareas: el port carga `Tides` pero no las calcula, y los vegetales dejan de comer — CORREGIDO
+
+- **Fuente** (`Robots.bas:1523-1530`): con `Tides > 0`, cada ciclo:
+  - `BouyancyScaling = Sqr((1 + Sin(((TotRunCycle + TidesOf) Mod Tides) / Tides
+    · 2π)) / 2)`;
+  - `Ygravity = (1 - BouyancyScaling) · 4`;
+  - `PhysBrown = IIf(BouyancyScaling > 0.8, 10, 0)`.
+
+  `feedvegs` (`Vegs.bas:253`) multiplica el sol por `1 - BouyancyScaling`.
+- **Port**: `robots.hpp:1894` lo deja fuera ("⚙ opcional, `BouyancyScaling` queda en 1"),
+  pero `formats.hpp:1936` lee `Tides` del `.sim` y `vegs.hpp:241-242` aplica el
+  factor. Con un `.sim` que traiga mareas, `acttok · (1 - 1) = 0`: **ningún
+  bot con cloroplastos se alimenta** (tampoco paga el impuesto por edad), y la
+  gravedad y el browniano no oscilan.
+- **Contraejemplo**: `Tides = 100` en el ciclo 0 da `BouyancyScaling =
+  0.707106769`, `Ygravity = 1.17157292` y `PhysBrown = 0`. El port deja 1, 0 y el
+  valor previo.
+- **Alcance**: solo si se carga un `.sim` con mareas, porque la web no las ofrece.
+  Es un hueco de funcionalidad como `PlanetEaters`, pero **a medias**: la parte
+  portada anula la alimentación.
+- **Test**: RV-27.
+
+### Notas menores (sin acción)
+
+- **`aggiungirob`** (`Globals.bas:414-415`, `master.hpp:373-384`):
+  `Poslf * (FieldWidth - 60)` es `Single * Long`, es decir `Double`, y el port
+  lo hace en `float` antes del `CLng`. Solo cambia algo si el producto cae a
+  menos de 1 ulp de un `.5`, y es fijo por configuración de especie. Pasa lo mismo
+  en `InsertFounder` (host).
+- **Umbral `aim > 6.28`** (`Robots.bas:2193, 2642`, `robots.hpp:704, 1304`): solo
+  difiere si `aim` es exactamente `6.28f`, como en la nota del piloto 4.
+- **`KillRobot`**:
+  - El port no replica los resets de `Fixed`, `Veg`, `View`, `NewMove`,
+    `LastOwner`, `SonNumber`, `age` y `LastMutDetail` (`Robots.bas:2998-3004, 3025`).
+  - Tampoco el suelo `b > 1` de la búsqueda de `MaxRobs`: con todo muerto el
+    original deja 1 y el port 0.
+  - Nada de esto es observable: la visión se recalcula por buckets, `FireTies`
+    mira `.exist`, y `posto` borra el slot y elige el mismo índice.
+
+### Literales `float` inexactos de `robots.hpp` (19)
+
+- **Factor de un producto** (15), que divergen:
+  - `0.98f` ×2, `0.001f` ×2 y `0.999f` ×4 (RV-23 y RV-26).
+  - `0.3f` y `0.1f` ×4 del teleporter (RV-26).
+  - `0.9f` ×2 en `MaxPopulation * 0.9`. Estos **no divergen**: comparados con
+    `TotalChlr` (un `Long` ≤ `MaxPopulation`), el barrido de los 32767 valores
+    no da ningún resultado distinto.
+- **Asignación directa** (2): `shellNrgConvRate = 0.1` y `slimeNrgConvRate = 0.1`
+  son variables `Single`, así que el literal se redondea una vez. Correctos.
+- **Umbral** (2): `6.28f` (ver notas).
+
+### Verificado sin divergencias
+
+- **Tipos de campo**: `numties`, `Paracount`, `Poisoncount` y `chloroplasts` son
+  `Single`; `MutEpiReset` es `Double`; `multibot_time`, `Chlr_Share_Delay` y `dq`
+  son `Byte`; `TotalChlr` es `Long` y `LightAval` es `Double`.
+- **`storevenom`/`storepoison`/`makeshell`/`makeslime`**:
+  - las tasas (1, 0.25, 0.1 y 0.1);
+  - los topes de 100/200 y de 32000;
+  - `Int` frente a `CInt` en `mem(825)`;
+  - el divisor `IIf(numties < 0, 0, numties) + 1`, en aritmética `Variant` R4,
+    igual que el `float`;
+  - el epílogo `Disqualify` en toda salida.
+- **`Upkeep`** (salvo RV-26): `CLng(AGECOSTSTART)`; el cuerpo y el ADN en
+  `Single`; los suelos 0.5 y la publicación con `CInt`.
+- **`Poisons`, `Ageing`, `Shooting`, `ManageDeath`, `ManageFixed`,
+  `ManageReproduction`** (el doble encolado y el `ReDim` del esperma en −1),
+  **`Shock`** (`temp` en `Double`, el bug de la conversión muerta) y
+  **`DoGeneticMemory`**.
+- **`altzheimer`**: `loops` con `CInt`, la re-tirada que esquiva
+  `mkchlr`/`rmchlr` y el orden de las 2 extracciones.
+  **`HandleWaste`**: el orden, `BadWastelevel` 0 → 400 y los topes.
+- **`ChangeChlr`**: solo cobra al añadir, con el gate `newnrg < 100` o
+  `TotalChlr > MaxPopulation`.
+- **`BotDNAManipulation`** (salvo RV-26): `Vtimer`, el cobro único, `Vshoot` con
+  `Vtimer = 1` y `delgene`.
+- **`ReproduceAndKill`**: `rndy > 0.5` solo con los dos comandos, y primero todos
+  los nacimientos y después las muertes.
+- **`Reproduce`/`SexReproduce`** (salvo RV-21, RV-23 y RV-24):
+  - las guardas y su orden;
+  - `per Mod 100` (en la sexual, `per` es `Single`);
+  - `sondist` con `FindRadius(per / 100)` (`Double`, que pasa a `Single ByVal`);
+  - `nx`/`ny`, la copia desde el índice 1 y el `Erase`;
+  - `aim + PI` con el `- 2 * PI`, y `generation`/`SonNumber` con tope;
+  - la memoria genética 5 + 15;
+  - la rama `Delta2`, con el `Int(3 * rndy)` que se consume siempre y el bucle
+    `mrep` `Byte`;
+  - el `mrepro` sin `Delta2` (tasas /10, 0 → 1000);
+  - `maketie(.., sondist, 100, 0)`, `mass = nbody / 1000 + shell / 200`, el
+    `epireset` y el coste `DNACOPY`.
+- **Crossover**:
+  - `scanfromn`: el literal 0 `ByRef` y el retorno `Variant`.
+  - `GeneticDistance`: `Long / Long` en `Double`; el umbral 0.6 compara un
+    `Single` con un `Double`, y el port lo hace en `double`.
+  - `simplematch`: el `matchr2` que persiste, inocuo; `patch > 16000 ^ 2`, y el
+    error 9 ya documentado.
+  - `crossover`: la moneda por tramo, la de lado y la de valor por token (el
+    `IIf` evalúa todos sus brazos); el orden de consumo; y el `dna(0)`
+    `(0,0)` que se quita.
+- **`posto`** (+100) y **`KillRobot`** (el orden `AddRecord` → foco →
+  `delallties` → `exist` → bucket → `virusshot`), y **`FindRadius`**
+  (`Log`/`^` en `Double` y la corrección por cloroplastos en `Single`).
+- **`simplecoll`** (salvo RV-22): `Abs(pos - X)` es `Double` en el original, pero
+  la resta en `float` es exacta en el rango útil, y los bordes con `smudgefactor`.
+- **`UpdateBots`**: el orden de las pasadas P0-P6, el static friction y las
+  anti-gigantes con `bodyfix`.
+- **`Vegs.bas`**:
+  - la deriva del sol (2 extracciones + 1 condicional) y los umbrales día/noche
+    con sus tres modos;
+  - `ScreenArea` en `Double` menos las formas `Single`;
+  - `TotalRobotArea` con `radius ^ 2 * PI` en `Double`;
+  - `sunstart`/`sunstop` con `CLng` y la envoltura;
+  - `depth` con `CLng`;
+  - `tok / 3.5`, `AddEnergyRate · 1.25` y el impuesto por edad con `1000000000#`;
+  - `feedveg2` con `/ 64000` (literal `Long`, así que `Double`) y la moneda de orden.
+- **`aggiungirob`/`VegsRepopulate`** (salvo la nota): los 2 `Random` descartados,
+  la re-tirada de especie, `Erase mem`, el `aim` y `GenMut = DnaLen / 75`
+  (`Double`).
+
 ## Siguientes pilotos sugeridos
 
-1. **Reproducción y energía** (`Robots.bas`, `Vegs.bas`) y **visión**
-   (`Senses.bas`), con el mismo método. En cada uno, clasificar sus literales
-   `float` inexactos (ver RV-05).
+1. **Visión** (`Senses.bas`, frente a `vision.hpp` y `senses.hpp`, con 23
+   literales), con el mismo método. En cada piloto hay que clasificar sus
+   literales `float` inexactos (ver RV-05).

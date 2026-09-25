@@ -344,11 +344,12 @@ TEST_CASE("B-35 mutacion en vida: occurr rancio, mem(336/339) re-publicados [PRO
 // B-29 · El crossover pierde tramos [integración] (RNG-parametrizado)
 TEST_CASE("B-29 el tramo C presente solo en la madre vive o muere por moneda [PROBABLE BUG] B6-3") {
   // Madre A B C D end, esperma A B D end (nucli distintos por valor).
-  // Monedas: [w1 racha inicial, 3 monedas de valor (IIf eager), moneda del
-  // tramo C, w2 racha final, 2 monedas de valor, deflect de maketie].
+  // Monedas: [loteria vegetal (se tira siempre, RV-21), w1 racha inicial,
+  // 3 monedas de valor (IIf eager), moneda del tramo C, w2 racha final,
+  // 2 monedas de valor, deflect de maketie].
   auto run = [](vb_single segcoin, std::vector<Block>& childOut,
                 Sim& sim) -> int {
-    InjectedRnd rnd({0.3f, 0.3f, 0.3f, 0.3f, segcoin, 0.3f, 0.3f, 0.3f, 0.5f});
+    InjectedRnd rnd({0.5f, 0.3f, 0.3f, 0.3f, 0.3f, segcoin, 0.3f, 0.3f, 0.3f, 0.5f});
     sim.rndy = &rnd;
     const int mother = addbot(sim, 16000, 16000);
     Bot& m = sim.rob[mother];
@@ -418,9 +419,9 @@ TEST_CASE("R-09 repro y mrepro activos: 1 moneda decide el porcentaje") {
 
   SUBCASE("rndy 0.6 > 0.5: manda repro (30%)") {
     Sim sim;
-    // [moneda, 5 sorteos de operadores del regimen mrepro (rates 1000),
-    //  deflect de maketie]
-    const int n = run({0.6f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.5f}, sim);
+    // [moneda, loteria vegetal (siempre, RV-21), 5 sorteos de operadores del
+    //  regimen mrepro (rates 1000), deflect de maketie]
+    const int n = run({0.6f, 0.5f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.5f}, sim);
     const int child = n + 1;
     CHECK(sim.rob[child].nrg == (10000.0f / 100.0f) * 30.0f * 0.999f);
     CHECK(sim.rob[child].body == 300.0f);
@@ -429,14 +430,14 @@ TEST_CASE("R-09 repro y mrepro activos: 1 moneda decide el porcentaje") {
   }
   SUBCASE("rndy 0.4 <= 0.5: manda mrepro (60%)") {
     Sim sim;
-    const int n = run({0.4f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.5f}, sim);
+    const int n = run({0.4f, 0.5f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.5f}, sim);
     const int child = n + 1;
     CHECK(sim.rob[child].nrg == (10000.0f / 100.0f) * 60.0f * 0.999f);
     CHECK(sim.rob[child].body == 600.0f);
   }
   SUBCASE("un solo comando activo: cero extracciones en la eleccion") {
     Sim sim;
-    InjectedRnd rnd({0.5f});  // SOLO el deflect de maketie
+    InjectedRnd rnd({0.5f, 0.5f});  // loteria vegetal (RV-21) + deflect de maketie
     sim.rndy = &rnd;
     const int n = addbot(sim, 16000, 16000);
     Bot& b = sim.rob[n];
@@ -526,11 +527,12 @@ TEST_CASE("R-10 gate vegetal: 1/11 asexual vs 1/10 sexual [PROBABLE BUG] B6-2") 
 // R-11 · Crossover con padres idénticos [integración] · CORREGIDO CONTRA EL
 // FUENTE (ver cabecera del archivo): el hijo NO pierde su primer token — la
 // racha emparejada copia desde UBound(Outdna)+1 (:633) y el (0,0) inicial lo
-// recorta el bug fix. El consumo de RNG es 1 whatside + 5 monedas de valor
-// (IIf eager) + 1 deflect de maketie.
+// recorta el bug fix. El consumo de RNG es 1 loteria vegetal (se tira
+// siempre, RV-21) + 1 whatside + 5 monedas de valor (IIf eager) + 1 deflect
+// de maketie.
 TEST_CASE("R-11 padres identicos: hijo identico; 6 extracciones de crossover") {
   Sim sim;
-  InjectedRnd rnd({0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.5f});
+  InjectedRnd rnd({0.5f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.5f});
   sim.rndy = &rnd;
   const int mother = addbot(sim, 16000, 16000);
   Bot& m = sim.rob[mother];

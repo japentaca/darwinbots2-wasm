@@ -55,24 +55,30 @@
 
 Guardas en orden: `body < 5` (`:2102`), `DisableTypArepro` para no-vegetales (`:2104`),
 `body ≤ 2` o `CantReproduce` (`:2120`), gates vegetales — techo de `TotalChlr`
-(`:2123`), lotería `Random(0,10) ≠ 5` sobre el 90% del techo (**1 RNG**, `:2129`),
-primer ciclo (`totvegsDisplayed = −1`, `:2130`) —, `per ≤ 0` tras `Mod 100` (`:2136`),
-`nrg ≤ 0` (`:2144`), colisión en el punto de parto (`simplecoll`, `:2147`).
+(`:2123`), lotería `Random(0,10) ≠ 5` sobre el 90% del techo (**1 RNG que se tira
+SIEMPRE, también para los animales**: el `And` de VB6 no cortocircuita, `:2129`;
+RV-21), primer ciclo (`totvegsDisplayed = −1`, `:2130`) —, `per ≤ 0` tras `Mod 100`
+(`:2136`), `nrg ≤ 0` (`:2144`), colisión en el punto de parto (`simplecoll`, `:2147`:
+otros bots, las formas entre el padre y el punto de parto (`:2887-2894`, RV-22) y los
+bordes).
 
 **Qué hereda el hijo** (todo del padre): ADN copiado **desde el índice 1** — `dna(0)`
 del hijo queda fantasma `(0,0)`, consistente con A2 (`:2156-2159`); `Mutables`,
 `Mutations`/`OldMutations`, `LastMutDetail`, `usedvars`/`maxusedvars`, `Skin`, color,
 `NewMove`, flags de especie (`Veg`/`NoChlr`/`Fixed`/`CantSee`/`DisableDNA`/
 `DisableMovementSysvars`/`CantReproduce`/`VirusImmune`), `SubSpecies`, `OldGD`/`GenMut`,
-`tag`, `Bouyancy`, `dq`, mitad del `multibot_time`+2 (`:2257`), memoria genética
+`tag`, `Bouyancy`, `dq`, mitad del `multibot_time`+2 (`Byte / Integer` es `Double`:
+el `Byte` redondea bancario, 107 → 56; `:2257`, RV-24), memoria genética
 (`21-MEMORIA.md §5`), `mem(timersys)`. **No hereda**: `vars()`/`vnum` (reseteado a 1 —
 irrelevante: las direcciones ya están tokenizadas), ties, `mem` general, venom/poison/
 shell/slime (quedan a 0 del slot en blanco), `LastMut` (a 0).
 
 **Reparto de recursos** (`per` = % al hijo): nrg, waste, pwaste y cloroplastos al
-`per`%; body por `nbody = (body/100)·per` (**`Integer`**, redondeo bancario,
-`:2108,2140`); impuestos: 0.1% del nrg transferido al padre y 1% al hijo
-(`:2214,2230`); posición a `sondist` = suma de los radios que tendrán ambos
+`per`% con `(x / 100#) * CSng(per)` — **`Double`**, un solo redondeo al asignar;
+body por `nbody = (body/100#)·per` (**`Integer`**: `CInt` bancario del `Double`,
+501 → 250.5 → 250; `:2108,2140`); impuestos: 0.1% del nrg transferido al padre y 1%
+al hijo (`nrg - nnrg - nnrg * 0.001` y `nnrg * 0.999`, también `Double`; `:2214,2230`;
+RV-23); posición a `sondist` = suma de los radios que tendrán ambos
 (`FindRadius` con `mult`, `:2137`), mirando en sentido opuesto (`aim + π`);
 velocidad heredada. Tie de nacimiento (`last=100, Port=0`); `onrg` del padre
 sincronizado anti-`Shock` (`:2381`); coste final `DnaLen·DNACOPYCOST·mult` con suelo
@@ -97,7 +103,7 @@ un solo parto** (`fertilized = −1` tras el éxito, `:2825`).
 ### 3.2 Guardas propias
 
 Como las asexuales, más: `IsRobDNABounded(spermDNA)` (`:2440`), y la lotería vegetal usa
-`Random(0, 9) ≠ 5` — **1/10 en vez de 1/11**: las vegetales sexuales pasan el gate más a
+`Random(0, 9) ≠ 5` (también se tira siempre, RV-21) — **1/10 en vez de 1/11**: las vegetales sexuales pasan el gate más a
 menudo que las asexuales (`:2456` vs `:2129`). Sin guarda de `DisableTypArepro`.
 
 ### 3.3 El crossover (`Robots.bas:2488-2594`, `simplematch :424-532`, `crossover :562-694`)
