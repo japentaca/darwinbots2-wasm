@@ -440,3 +440,109 @@ TEST_CASE("RV-38 - opciones base y especies de la ronda") {
   db_sim_destroy(page);
   db_sim_destroy(r);
 }
+
+// ---------------------------------------------------------------------------
+// Piloto 14 ("Start New"): RV-42..RV-44. La parte de worker.js la cubre
+// tools/rv/smoke_host.mjs.
+
+namespace {
+
+// Sim vieja con Player Bot, registro de muertos y globales de E6/evo vivos.
+void* OldSimWithProcessState() {
+  void* a = db_sim_create();
+  db_sim_start(a, 1234);
+  db_sim_pb_on(a, 1);
+  REQUIRE(db_sim_pb_add_key(a, 500, 40, 0) >= 0);
+  db_sim_pb_key_active(a, 0, 1);
+  db_sim_pb_mouse(a, 100, 200);
+  S(a).deadSnp.records = 4;
+  S(a).deadSnp.started = true;
+  S(a).deadSnp.snp = "fila\n";
+  S(a).evo.ModeChangeCycles = 60;
+  S(a).evo.energydif = 1.5;
+  db_sim_graph_set_query(a, 1, "consulta");
+  db_sim_graph_set(a, 1, 1, 1);  // graphsave(1)
+  db_sim_graph_set(a, 1, 4, 3);  // graphfilecounter(1)
+  db_sim_set_sim_start(a, "vieja");
+  S(a).f1.Contests = 3;
+  S(a).f1.ReStarts = 2;
+  S(a).x_restartmode = 3;
+  return a;
+}
+
+void* NewSim() {
+  void* b = db_sim_create();
+  db_sim_start(b, 99);
+  db_sim_set_sim_start(b, "nueva");
+  return b;
+}
+
+void CheckEvoCarried(void* b) {
+  CHECK(S(b).evo.ModeChangeCycles == 60);
+  CHECK(S(b).evo.energydif == 1.5);
+  CHECK(S(b).evo.strGraphQuery1 == "consulta");
+  CHECK(db_sim_graph_get(b, 1, 1) == 1);
+  CHECK(db_sim_graph_get(b, 1, 4) == 3);
+  CHECK(S(b).evo.strSimStart == "nueva");  // StartSimul lo vuelve a fijar
+}
+
+}  // namespace
+
+// RV-42 — el Player Bot vive en el menu de MDIForm1 y en Globals.bas:15-16:
+// "Start New" no lo toca. El handle nuevo nacia apagado y sin teclas.
+TEST_CASE("RV-42 - db_sim_startnew_carry conserva el Player Bot") {
+  void* a = OldSimWithProcessState();
+  void* b = NewSim();
+  db_sim_startnew_carry(b, a);
+  CHECK(S(b).pb.on);
+  REQUIRE(S(b).pb.keys.size() == 1);
+  CHECK(S(b).pb.keys[0].memloc == 500);
+  CHECK(S(b).pb.keys[0].Active);
+  CHECK(S(b).pb.Mouse_loc.x == 100.0f);
+  // Efecto: la tecla activa escribe en el bot con foco del mundo nuevo.
+  const int sp = db_sim_add_species(b, kAlga, "Alga.txt", 1, 0, 3000, 0, 1);
+  REQUIRE(db_sim_seed_species(b, sp, 0) == 1);
+  db_sim_set_focus(b, 1);
+  db_sim_tick(b);
+  CHECK(db_sim_bot_mem(b, 1, 500) == 40);
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+// RV-43 — DeadRobots.snp es un archivo que AddRecord abre en Append
+// (Database.bas:95-107) y StartNew_Click no borra.
+TEST_CASE("RV-43 - db_sim_startnew_carry conserva el registro de muertos") {
+  void* a = OldSimWithProcessState();
+  void* b = NewSim();
+  db_sim_startnew_carry(b, a);
+  CHECK(db_sim_dead_records(b) == 4);
+  CHECK(S(b).deadSnp.started);  // sin cabecera nueva
+  CHECK(S(b).deadSnp.snp == "fila\n");
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+// RV-44 — Sim::evo (ModeChangeCycles, consultas y flags de las graficas,
+// handicap evo) sigue en "Start New"; strSimStart lo fija StartSimul.
+// F1State y el gset no: los reinicia StartNew_Click o los manda el panel.
+TEST_CASE("RV-44 - db_sim_startnew_carry conserva Sim::evo") {
+  void* a = OldSimWithProcessState();
+  void* b = NewSim();
+  db_sim_startnew_carry(b, a);
+  CheckEvoCarried(b);
+  CHECK(S(b).f1.Contests == 0);
+  CHECK(S(b).f1.ReStarts == 0);
+  CHECK(S(b).x_restartmode == 0);
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+// RV-44 — la ronda tampoco los reinicia (StartSimul no los toca).
+TEST_CASE("RV-44 - db_sim_round_carry conserva Sim::evo") {
+  void* a = OldSimWithProcessState();
+  void* b = NewSim();
+  db_sim_round_carry(b, a);
+  CheckEvoCarried(b);
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}

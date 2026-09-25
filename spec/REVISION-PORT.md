@@ -2134,7 +2134,7 @@ Tres de las cuatro nacen al cargar un `.dbsim`.
 - **"Start New" y los globales de proceso**: `resetSim` crea un handle nuevo también
   en "Start New", y la página solo vuelve a fijar lo que manda en el mensaje (los
   ids de la tabla y `StartChlr`). Queda por comparar con `OptionsForm.StartNew`, que
-  sí reinicia parte del estado (F1). Candidato para un piloto futuro.
+  sí reinicia parte del estado (F1). Resuelto en el piloto 14 (RV-42..RV-45).
 - **Especies no nativas en la ronda**: con la copia de `SimOpts.Specie`, la ronda
   intenta sembrar también las especies de `AddSpecie` que siguen vivas, como
   `loadrobs`. Sin ADN por nombre, se saltan como el `.txt` ausente.
@@ -2150,9 +2150,154 @@ Tres de las cuatro nacen al cargar un `.dbsim`.
 - **E6**: el `fittest_Click` de `MDIForm1.frm:1398-1400` (`findbest`), la familia
   acumulada de `parentele` y los snapshots de vivos y muertos.
 
+## Piloto 14 — "Start New" y los globales de proceso (2026-09-25)
+
+**Alcance**: `resetSim` (`worker.js:1195`), que en "Start New" crea un handle nuevo
+(`api.create`, `:1197`) y solo vuelve a fijar lo que trae el mensaje. Se compara con
+`StartNew_Click` (`OptionsForm.frm:4712-4811`) y `StartSimul`
+(`main.frm:1182-1368`), que corren en el mismo proceso: lo que no reinician
+explícitamente, sigue. De paso se repasa el traspaso de la ronda
+(`db_sim_round_carry`, `dbcore_api.cpp:247`) para el mismo estado.
+
+**Resultado**: 4 divergencias (RV-42 a RV-45). RV-42..RV-44 corregidas; RV-45 se
+queda sin cambio. Contraejemplos:
+- el `worker.js` real en un `worker_thread`, con un shim que añade `__eval` para leer
+  la API desde dentro del worker;
+- los `.sim` que guarda el worker, leídos con un programa C++ que incluye
+  `dbcore_api.cpp`.
+
+RV-42 y RV-43 son el mismo defecto que RV-39, pero en "Start New". RV-44 también
+afecta a la ronda.
+
+### RV-42 · "Start New" apaga el Player Bot — CORREGIDO
+
+> **Arreglo (2026-09-25)**: API nueva `db_sim_startnew_carry` (`dbcore_api.cpp:286`),
+> que `resetSim` llama en "Start New" tras `db_sim_start` (`worker.js:1223`). Pasa del
+> handle viejo el Player Bot, `deadSnp` (RV-43) y `Sim::evo` (RV-44). No pasa
+> `F1State` ni el gset: los reinicia `StartNew_Click` o los manda el panel.
+>
+> Tests: `RV-42` (`test_host.cpp`: estado y efecto, `mem(500) = 40` en el bot con foco
+> del mundo nuevo) y `smoke_host`. Con la API de HEAD más un stub, fallan; con
+> `worker.js` de HEAD, falla el smoke.
+
+- **Fuente**: el Player Bot vive en `MDIForm1.pbOn.Checked` y en los globales
+  `PB_keys`/`Mouse_loc` (`Globals.bas:15-16`). Solo lo tocan el menú
+  (`MDIForm1.frm:1542-1547`), `MDIForm_Load` (`ReDim PB_keys(0)`, `:2374`) y
+  `frmPBMode`. Ni `StartNew_Click` ni `StartSimul` lo tocan: sigue encendido, con sus
+  teclas.
+- **Port**: el handle nuevo nace con `PlayerBotState{}` (apagado, sin teclas).
+  `resetSim` no lo traspasa y la página no reenvía `pb`/`pb-keys`, aunque su casilla
+  sigue marcada.
+- **Contraejemplo**: Player Bot encendido con una tecla activa sobre `mem(500) = 40`
+  y foco en el bot 1:
+  - sim 1, tras un tick: `mem(500) = 40`;
+  - tras "Start New" (misma casilla y tecla activa), foco en el bot 1, un tick:
+    `mem(500) = 0`. El original: 40.
+
+### RV-43 · "Start New" vacía el registro de muertos — CORREGIDO
+
+> **Arreglo (2026-09-25)**: lo traspasa `db_sim_startnew_carry` (ver RV-42), con
+> `started`, así que no se repite la cabecera. Tests: `RV-43` y `smoke_host` (2 → 2).
+
+- **Fuente**: `AddRecord` escribe en `Autosave\DeadRobots.snp` y
+  `DeadRobots_Mutations.txt` en modo `Append`, y solo pone las cabeceras si el
+  archivo no existe (`Database.bas:95-107`). `StartNew_Click` borra
+  `localcopy.sim` y `lastautosave.sim` (`OptionsForm.frm:4738-4739`), pero no estos
+  archivos. El registro sigue acumulando entre sims hasta que el usuario lo borra.
+- **Port**: `deadSnp` vive en la `Sim`, y el handle nuevo lo trae vacío
+  (`started = false`, 0 registros). Lo que no se había descargado se pierde. El
+  botón "Borrar registro" (`dead-reset`) ya modela el borrado explícito.
+- **Contraejemplo**: `DeadRobotSnp` encendido y cadáveres apagados; se matan 4 bots
+  (`energy -1`):
+  - sim 1: 4 registros;
+  - tras "Start New": 0. El original: 4, y los nuevos se añaden detrás, sin
+    cabecera nueva.
+
+### RV-44 · "Start New" y la ronda reinician los globales de E6/evo (`Sim::evo`) — CORREGIDO
+
+> **Arreglo (2026-09-25)**: `CarryEvoGlobals` (`dbcore_api.cpp:184`) copia
+> `Sim::evo` salvo `strSimStart`, que `StartSimul` vuelve a fijar (`main.frm:1351`).
+> La usan `db_sim_startnew_carry` y `db_sim_round_carry` (`:272`). La carga no, porque
+> esos globales los trae el archivo.
+>
+> Tests: los dos casos `RV-44` (Start New y ronda) y `smoke_host` (consulta y
+> `graphsave` tras "Start New"; consulta tras la ronda). `60-FORMATOS.md §4` y
+> `50-MUNDO.md §2.1` quedan al día.
+
+- **Fuente**: estos globales no los toca ni `StartNew_Click` ni `StartSimul`:
+  - `ModeChangeCycles` (`Globals.bas:96`), que sube en cada ciclo
+    (`Master.bas:49`) y solo baja en el bloque de `hidepred` (`Master.bas:99-102`)
+    o en el de `optMaxCycles` de `Countpop` (`F1Mode.bas:322-331`);
+  - las consultas `strGraphQuery1..3` (`Globals.bas:146-148`);
+  - `graphfilecounter` y `graphsave` (`Globals.bas:152-156`); el checkbox
+    `chk_GDsave` de un chart abierto sigue marcado (`grafico.frm:3869`);
+  - los del handicap evo: `energydif*`, `stagnent` (`Master.bas:9-21`) y
+    `hidePredOffset` (`Globals.bas:113`).
+
+  `grafico.ResetGraph` (`main.frm:1273`) solo borra los datos de la instancia.
+- **Port**: `Sim::evo` nace a cero en el handle nuevo. `resetSim` repone
+  `graphvisible` y `strSimStart`, pero nada más. `db_sim_round_carry` tampoco lo
+  traspasa, así que la ronda los pierde igual.
+- **Contraejemplo** (consulta custom 1 = `consulta`, `graphsave(1)` encendido, 60
+  ticks; los `.sim` guardados se leen con `db_sim_load`):
+
+  | Momento | `ModeChangeCycles` port | Original | `strGraphQuery1` port | Original |
+  |---|---|---|---|---|
+  | sim 1, ciclo 59 | 60 | 60 | `consulta` | `consulta` |
+  | "Start New" + 1 tick | 1 | 61 | `""` | `consulta` |
+  | + 30 ticks y una ronda Restart | 0 | 92 | `""` | `consulta` |
+
+  `graphsave(1)` pasa de 1 a 0 tras "Start New"; en el original sigue en 1.
+- **Efecto**:
+  - con F1 y tope de ciclos (id 99), `ModeChangeCycles > 1000` decide cuándo se
+    ajusta `optMaxCycles` (`F1Mode.bas:322`). En el original ese reloj corre a
+    través de rondas y sims; en el port vuelve a 0 en cada una;
+  - los `.sim` guardan valores distintos (`HDRoutines.bas:790-814`);
+  - la consulta custom y el guardado `.gsave` se apagan en silencio.
+
+  Los del handicap evo solo se mueven con `x_restartmode` 4/5, que la página no
+  puede fijar; se citan por completitud.
+
+### RV-45 · F1: "Start New" borra estado que el original conserva (menor) — SIN CAMBIO
+
+> **Decisión (2026-09-25)**: el usuario eligió corregir solo RV-42..RV-44. `F1State`
+> sigue naciendo limpio en "Start New" y el panel manda `MaxPop`.
+
+- **Fuente**:
+  - `StartNew_Click` pone `Contests = 0` y `ReStarts = 0` (`OptionsForm.frm:4747-4748`),
+    y `StartSimul` pone `Over = False` (`main.frm:1237`) y, con contest,
+    `F1count = 0` (`:1339`). El resto de `F1Mode.bas:11-27` sigue.
+  - `FindSpecies` → `ResetContest` solo borra `PopArray(1..5)` (`F1Mode.bas:43`):
+    las `Wins` de los slots 6..20 pasan a la sim siguiente.
+  - Con más de 2 especies, `FindSpecies` pone `MaxPop = 0` (`F1Mode.bas:97-98`), y
+    el formulario de opciones lo muestra así al abrirse (`OptionsForm.frm:4937`):
+    el siguiente "Start New" arranca con `MaxPop = 0`.
+- **Port**: `F1State` nace limpio (se pierden las `Wins` 6..20), y la página reenvía
+  el `MaxPop` de su panel (id 100), que no refleja el 0 de `FindSpecies`.
+- **Contraejemplo**: por construcción. Hacen falta un contest de 6 o más especies,
+  o uno de 3 o más con `MaxPop > 0`, seguido de "Start New". No se ha medido el
+  efecto en una partida.
+- **Nota**: las `Wins` 6..20 que sobreviven parecen un descuido del original
+  (`ResetContest` recorre 1..5 y `FindSpecies` 1..20).
+
+### Verificado sin divergencias
+- **Globales del gset**: `StartChlr` y `Disqualify` los reenvía el panel en cada
+  "Start New". `x_restartmode`, `hidePredCycl`, `LFOR`, `intFindBestV2` (ids 92, 94,
+  95, 96) y los de mutación no tienen control en la página, así que valen su
+  default antes y después.
+- **`Sim::fmt`**: el apodo IM se vuelve a fijar (`imRebind`). `UseEpiGene`,
+  `SaveWithoutMutations` y `y_eco_im` no tienen setter: default fijo.
+- **F1 que sí reinicia el original**: `Contests`, `ReStarts`, `Over` y `F1count`
+  valen 0 en el handle nuevo. `MinRounds` lo vuelve a fijar el formulario al abrirse
+  (`OptionsForm.frm:4934` → `txtMinRounds_Change`, `:4502-4505`), igual que el id 97.
+- **`TotRunCycle = -1`, foco a 0 e IM apagado** por el toggle de
+  `OptionsForm.frm:4802`: ya cubiertos (RV-35 y piloto 13).
+- **`Static` de `Countpop`** (`oldpop1/2`, `setoldpop`): siguen la decisión de la
+  `Sim` limpia (RV-39).
+
 ## Siguientes pilotos sugeridos
 
 1. Con el piloto 13 queda revisado también `worker.js` (rondas, carga, Internet
    y E6). Sin revisar: la presentación de solo lectura (`CalcStats`/`grafico.frm`,
    vista E6.5, lint).
-2. "Start New" frente a los globales de proceso (nota del piloto 13).
+2. ~~"Start New" frente a los globales de proceso~~: piloto 14.

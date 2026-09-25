@@ -300,7 +300,8 @@ function bindApi() {
     roundCarry:    C('db_sim_round_carry', null, ['number','number']),
     roundSeed:     C('db_sim_round_seed', 'number', ['number']),
     roundSpecies:  C('db_sim_round_species', null, ['number','number']),
-    getBase:       C('db_sim_get_base', 'number', ['number','number']),
+    startNewCarry: C('db_sim_startnew_carry', null, ['number','number']),
+    getBase:      C('db_sim_get_base', 'number', ['number','number']),
     optionsOk:     C('db_sim_options_ok', null, ['number']),
   };
 }
@@ -1217,6 +1218,9 @@ function resetSim(msg, carryTeleporters) {
     // RV-33/RV-35: en la ronda, StartSimul no toca TotRunCycle ni la
     // repoblación (cooldown y contadores): siguen los de la sim que termina.
     if (carryTeleporters) api.roundCarry(sim, old);
+    // RV-42..RV-44: en "Start New" siguen el Player Bot, el registro de
+    // muertos y los globales de E6/evo (StartNew_Click no los toca).
+    else api.startNewCarry(sim, old);
     if (carryTeleporters)
       for (let i = 1; i <= api.numTeleporters(old); i++) api.tpCopy(sim, old, i);
     // RV-38: la ronda siembra SimOpts.Specie tal como quedó (main.frm:1517).

@@ -174,6 +174,19 @@ void CarryProcessGlobals(db::Sim& d, const db::Sim& o) {
   d.deadSnp = o.deadSnp;
 }
 
+// RV-44: los globales de E6/evo (Sim::evo: ModeChangeCycles, Globals.bas:96,
+// que sube cada ciclo en Master.bas:49; strGraphQuery1..3, graphfilecounter y
+// graphsave, Globals.bas:146-156; energydif*/stagnent/hidePredOffset,
+// Master.bas:9-21) tampoco los toca StartSimul ni StartNew_Click: siguen en
+// la ronda y en "Start New". strSimStart no, porque StartSimul lo vuelve a
+// fijar (main.frm:1351) y el host ya lo hizo. La carga no pasa por aquí:
+// esos globales los trae el archivo (HDRoutines.bas:790-841).
+void CarryEvoGlobals(db::Sim& d, const db::Sim& o) {
+  const std::string simStart = d.evo.strSimStart;
+  d.evo = o.evo;
+  d.evo.strSimStart = simStart;
+}
+
 }  // namespace
 
 extern "C" {
@@ -256,6 +269,26 @@ DB_EXPORT void db_sim_round_carry(void* dst, void* src) {
   // RV-39: los globales de proceso tampoco los toca StartSimul
   // (main.frm:1182-1368).
   CarryProcessGlobals(d, o);
+  CarryEvoGlobals(d, o);  // RV-44
+}
+
+// "Start New" (StartNew_Click + StartSimul, OptionsForm.frm:4712-4811): el
+// host arma la sim en un handle nuevo y fija lo que manda el panel (gset
+// incluido). Lo que sigue del proceso y el panel no reenvía se traspasa
+// tras db_sim_start:
+//  - RV-42: el Player Bot (MDIForm1.pbOn.Checked, PB_keys y Mouse_loc,
+//    Globals.bas:15-16); solo lo tocan el menú y frmPBMode;
+//  - RV-43: el registro de muertos, un archivo en disco que AddRecord abre
+//    en Append (Database.bas:95-107) y StartNew_Click no borra;
+//  - RV-44: Sim::evo.
+// F1State NO: StartNew_Click reinicia Contests/ReStarts (:4747-4748) y el
+// resto lo decide la Sim limpia (RV-45, sin cambio).
+DB_EXPORT void db_sim_startnew_carry(void* dst, void* src) {
+  db::Sim& d = S(dst);
+  const db::Sim& o = S(src);
+  d.pb = o.pb;
+  d.deadSnp = o.deadSnp;
+  CarryEvoGlobals(d, o);
 }
 
 // Opciones base que el host fija fuera de la tabla de ids. La ronda las lee

@@ -143,6 +143,18 @@ estado evo ⚙ + sol (`SunPosition`/`SunRange`/`SunChange`) + mareas + `stagnent
   Tampoco los toca `StartSimul`. En el port, `db_sim_load` y `db_sim_round_carry`
   los traspasan (`CarryProcessGlobals`); los `Static` internos siguen la decisión de
   la `Sim` limpia.
+- **"Start New" tampoco los toca todos** (RV-42..RV-44). `StartNew_Click`
+  (`OptionsForm.frm:4712-4811`) solo reinicia `Contests`/`ReStarts`, y `StartSimul`
+  reinicia `Over`, `F1count` y `strSimStart`. Siguen:
+  - el Player Bot;
+  - `DeadRobots.snp`, que se abre en `Append` (`Database.bas:95-107`);
+  - los globales de E6/evo (`Sim::evo`): `ModeChangeCycles`, `strGraphQuery1..3`,
+    `graphsave`, `graphfilecounter` y los del handicap.
+
+  En el port, el host arma la sim en un handle nuevo y fija lo que manda el panel;
+  `db_sim_startnew_carry` traspasa esos tres. `F1State` nace limpio (RV-45, sin
+  cambio). `Sim::evo` también sigue en la ronda (`db_sim_round_carry`). Al cargar lo
+  trae el archivo (`HDRoutines.bas:790-841`).
 - `SimGUID` ausente se regenera con **`Rnd` crudo** al cargar (`:1451`) — fuera del
   flujo `rndy`, una sola extracción, en carga (no en tick): cierra el resto de
   **Q01** para `HDRoutines` (el otro `Rnd`, `:1035`, es del modo torneo ⚙).

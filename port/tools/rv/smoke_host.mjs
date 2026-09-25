@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Revision del port, pilotos 12 y 13 (spec/REVISION-PORT.md, RV-34..RV-41): el
+// Revision del port, pilotos 12 a 14 (spec/REVISION-PORT.md, RV-34..RV-44): el
 // pegamento de web/worker.js con la API corregida, con el worker real dentro
 // de un worker_thread (mismo shim que tools/pp/smoke_formas.mjs). La API en
 // si la cubren los casos RV-32..RV-40 de tests/test_host.cpp.
@@ -38,7 +38,16 @@ self.importScripts = (...files) => {
     vm.runInThisContext(fs.readFileSync(p, 'utf8'), { filename: p });
   }
 };
-parentPort.on('message', (data) => { if (self.onmessage) self.onmessage({ data }); });
+parentPort.on('message', (data) => {
+  // Piloto 14: lectura del estado del worker (api/sim) sin mensaje propio.
+  if (data && data.t === '__eval') {
+    let r;
+    try { r = vm.runInThisContext(data.code); } catch (e) { r = 'ERR ' + e.message; }
+    parentPort.postMessage({ t: '__evalr', r });
+    return;
+  }
+  if (self.onmessage) self.onmessage({ data });
+});
 importScripts('worker.js');
 `;
 process.chdir(WEB);
@@ -275,6 +284,56 @@ console.log('\n== gráficas y rondas ==');
   await A.frameNow();
   check('RV-41: la carga alimenta el chart abierto que el archivo marca visible',
         pts.length === 1, `${pts.length} puntos`);
+  await A.w.terminate();
+}
+
+// ---- Piloto 14 ("Start New") ----------------------------------------------
+// RV-42..RV-44 — StartNew_Click no toca el Player Bot, el registro de muertos
+// ni los globales de E6/evo; la página tampoco los reenvía.
+console.log('\n== "Start New" y los globales de proceso ==');
+{
+  const A = new W();
+  const ev = async (code) => {
+    A.send({ t: '__eval', code });
+    return (await A.wait((m) => m.t === '__evalr')).r;
+  };
+  await A.wait((m) => m.t === 'ready');
+  A.send(resetMsg(1234));
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'select', n: 1 });
+  A.send({ t: 'pb', on: true });
+  A.send({ t: 'pb-keys', keys: [{ memloc: 500, value: 40, invert: false }] });
+  A.send({ t: 'pb-key', idx: 0, active: true });
+  A.send({ t: 'graph-query', which: 1, q: 'consulta' });
+  await A.wait((m) => m.t === 'graph-query');
+  A.send({ t: 'setopt', id: 111, v: 1 });   // DeadRobotSnp
+  A.send({ t: 'setopt', id: 50, v: 0 });    // sin cadáveres
+  await ev('api.graphSet(sim, 1, 1, 1)');   // chk_GDsave del chart 1
+  await ev('for (let n = 1; n <= 2; n++) api.botSetNrg(sim, n, -1)');
+  A.send({ t: 'step' });
+  await A.frameNow();
+  const dead0 = await ev('api.deadRecords(sim)');
+  A.send(resetMsg(1234));                   // "Start New"
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'select', n: 1 });
+  A.send({ t: 'step' });
+  await A.frameNow();
+  check('RV-42: el Player Bot sigue encendido tras "Start New"',
+        (await ev('api.botMem(sim, 1, 500)')) === 40);
+  A.send({ t: 'dead-take', drain: false });
+  const d = await A.wait((m) => m.t === 'dead-data');
+  check('RV-43: el registro de muertos sigue', dead0 === 2 && d.records === 2,
+        `${dead0} → ${d.records}`);
+  check('RV-44: la consulta custom sigue',
+        (await ev('takeStr(api.graphGetQuery(sim, 1))')) === 'consulta');
+  check('RV-44: graphsave sigue', (await ev('api.graphGet(sim, 1, 1)')) === 1);
+  A.send({ t: 'setopt', id: 90, v: 1 });
+  A.logs.length = 0;
+  A.send({ t: 'step' });
+  await A.until(() => A.logs.some((l) => l.startsWith('ronda nueva')));
+  await A.frameNow();
+  check('RV-44: y sigue tras la ronda',
+        (await ev('takeStr(api.graphGetQuery(sim, 1))')) === 'consulta');
   await A.w.terminate();
 }
 

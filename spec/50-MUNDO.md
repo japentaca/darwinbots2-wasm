@@ -90,7 +90,8 @@ Si el `.txt` de la especie no está (`LoadDNA` = False, `60-FORMATOS.md §4`),
 `RobScriptLoad` devuelve −1 después de `preparerob` (sus 6 RNG ya consumidos) y la
 especie queda `Native = False` (`Globals.bas:420-424`): no se añade el vegetal y
 `checkvegstatus` la excluye en adelante (RV-40). `StartChlr` es un global del proceso
-(gset), no de la sim: sobrevive a la carga y a las rondas (RV-39).
+(gset), no de la sim: sobrevive a la carga y a las rondas (RV-39). En "Start New"
+lo vuelve a fijar el panel (RV-42..RV-44, `60-FORMATOS.md §4`).
 
 ### 2.2 El sol (paso 21 → `feedvegs`, `Vegs.bas:41-271`)
 
