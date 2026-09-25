@@ -166,6 +166,10 @@ function bindApi() {
     addSpecies:    C('db_sim_add_species', 'number',
                      ['number', 'string', 'string', 'number', 'number', 'number', 'number', 'number']),
     seedSpecies:   C('db_sim_seed_species', 'number', ['number', 'number', 'number']),
+    numSpecies:    C('db_sim_num_species', 'number', ['number']),
+    speciesName:   C('db_sim_species_name', 'number', ['number', 'number']),
+    speciesMissing: C('db_sim_species_missing', 'number', ['number', 'number']),
+    speciesSetDna: C('db_sim_species_set_dna', null, ['number', 'number', 'string']),
     cycle:         C('db_sim_cycle', 'number', ['number']),
     totalRobots:   C('db_sim_total_robots', 'number', ['number']),
     maxRobs:       C('db_sim_max_robs', 'number', ['number']),
@@ -295,6 +299,8 @@ function bindApi() {
     // RV-32..RV-35 (revision del port, piloto 12)
     roundCarry:    C('db_sim_round_carry', null, ['number','number']),
     roundSeed:     C('db_sim_round_seed', 'number', ['number']),
+    roundSpecies:  C('db_sim_round_species', null, ['number','number']),
+    getBase:       C('db_sim_get_base', 'number', ['number','number']),
     optionsOk:     C('db_sim_options_ok', null, ['number']),
   };
 }
@@ -526,7 +532,6 @@ function gdPump() {
 }
 
 // ---- E5: eventos del tick y rondas ----------------------------------------
-let lastReset = null;  // último msg 'reset': reconstruye la sim por ronda
 
 // Estado del contest para las stats de cada frame (null si no hay contest).
 function f1Stats() {
@@ -555,7 +560,6 @@ const ROUND_OPT_IDS = [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
   60, 61, 62, 63, 64, 70, 71, 72, 80, 81, 82, 83, 84, 85, 110, 111, 112];
 
 function newRound() {
-  if (!lastReset) return;
   // PP-03 (revisión): StartSimul no toca SimOpts salvo lo que el propio
   // arranque rehace (main.frm:1182-1368): las opciones en vivo — y las que
   // escribió la sim, como la deriva de Polar Ice o el COSTMULTIPLIER de los
@@ -583,8 +587,17 @@ function newRound() {
   // (OptionsForm.frm:4802, que apagaría Internet): los teleporters — el
   // puerto Internet con su inbox incluido — pasan tal cual al handle nuevo,
   // sin RNG.
-  resetSim({ ...lastReset, seed,
-             options: { ...lastReset.options, opts, costs } }, true);
+  // RV-38: las opciones base y la lista de especies salen de la sim que
+  // termina — tras una carga, las del archivo (MDIForm1.frm:2166-2170) —,
+  // no del último "Start New". La lista la copia resetSim (loadrobs siembra
+  // SimOpts.Specie, main.frm:1517).
+  const base = (k) => api.getBase(sim, k);
+  resetSim({ seed, species: [],
+             options: { fieldW: api.fieldW(sim), fieldH: api.fieldH(sim),
+                        minVegs: base(0), repopAmount: base(1),
+                        repopCooldown: base(2), maxEnergy: base(3),
+                        startChlr: base(4), mutations: !!base(5),
+                        opts, costs } }, true);
   if (imCfg) imInboxKnown = imPort() ? api.tpGet(sim, imPort(), 13) : 0;
   api.setOpt(sim, 90, keep.restart);
   api.setOpt(sim, 91, keep.f1);
@@ -1078,8 +1091,9 @@ function runTicks(n) {
     const restarted = checkGameState();
     if (imCfg && !restarted) imAfterTick();  // E7
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
-    // solo los charts visibles.
-    if (graphOpen.size) {
+    // solo los charts visibles. RV-41: no en el tick que abrió la ronda (el
+    // `If StartAnotherRound Then Exit Sub` de main.frm:2081 va antes).
+    if (graphOpen.size && !restarted) {
       const iv = api.getOpt(sim, 110) | 0;
       if (iv > 0 && api.cycle(sim) % iv === 0)
         for (const g of graphOpen) feedGraph(g);
@@ -1141,10 +1155,41 @@ function seedSpecies(sp) {
     skinTimers.set(skey, (d - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 1000);
   }
   api.assignSkin(sim, idx, skinTimers.get(skey));
+  dnaLib.set(sp.name, sp.dna);   // RV-40: la "carpeta Robots" de la sesión
+  return seedIndex(idx);
+}
+
+// loadrobs para la especie `idx` ya registrada en la sim.
+function seedIndex(idx) {
+  const name = takeStr(api.speciesName(sim, idx));
+  const missing = api.speciesMissing(sim, idx);
   const n = api.seedSpecies(sim, idx, 0);
-  log(n > 0 ? `sembrados ${n} × ${sp.name}`
-            : `ADN rechazado por el cargador (${sp.name})`);
+  log(n > 0 ? `sembrados ${n} × ${name}`
+            : missing ? `sin ADN para ${name} (el .txt no está: no se siembra)`
+            : `ADN rechazado por el cargador (${name})`);
   return n;
+}
+
+// ---- RV-40: el ADN de las especies sin archivo ----------------------------
+// El .sim guarda ruta + nombre de cada especie y el original relee el .txt
+// del disco (RobScriptLoad; si falta, lo busca por nombre en la carpeta
+// común Robots, DNATokenizing.bas:180-186). Aquí la "carpeta" es lo que la
+// sesión conoce por nombre: las especies sembradas y lo que la página
+// resuelve de sus presets y del Bestiary ('dna-lib').
+const dnaLib = new Map();   // nombre de especie → ADN
+
+// Aplica la biblioteca a las especies sin archivo; devuelve los nombres que
+// siguen sin ADN.
+function dnaResolve() {
+  const left = [];
+  if (!sim) return left;
+  for (let i = 0; i < api.numSpecies(sim); i++) {
+    if (!api.speciesMissing(sim, i)) continue;
+    const name = takeStr(api.speciesName(sim, i));
+    if (dnaLib.has(name)) api.speciesSetDna(sim, i, dnaLib.get(name));
+    else left.push(name);
+  }
+  return left;
 }
 
 function resetSim(msg, carryTeleporters) {
@@ -1174,17 +1219,22 @@ function resetSim(msg, carryTeleporters) {
     if (carryTeleporters) api.roundCarry(sim, old);
     if (carryTeleporters)
       for (let i = 1; i <= api.numTeleporters(old); i++) api.tpCopy(sim, old, i);
+    // RV-38: la ronda siembra SimOpts.Specie tal como quedó (main.frm:1517).
+    if (carryTeleporters) api.roundSpecies(sim, old);
     api.destroy(old);
   }
   log(`sim nueva (seed ${msg.seed})`);
-  for (const sp of msg.species) seedSpecies(sp);
-  // E5: la ronda siguiente reconstruye con esto (species copiadas: las
-  // siembras manuales posteriores tambien entran a la ronda).
-  lastReset = { ...msg, species: [...msg.species] };
+  if (carryTeleporters) {
+    dnaResolve();
+    for (let i = 0; i < api.numSpecies(sim); i++) seedIndex(i);
+  } else {
+    for (const sp of msg.species) seedSpecies(sp);
+  }
   // E6: la sim nueva no sabe de los charts abiertos — repone graphvisible
-  // (el formato de sim lo persiste, HDRoutines.bas:802) y suelta un primer
-  // punto en cada uno, como NewGraph.
-  for (const g of graphOpen) { api.graphSet(sim, g, 0, 1); feedGraph(g); }
+  // (el formato de sim lo persiste, HDRoutines.bas:802). RV-41: sin punto
+  // nuevo — StartSimul no llama a FeedGraph (el grafico.ResetGraph de
+  // main.frm:1273 es la instancia por defecto, no un chart abierto).
+  for (const g of graphOpen) api.graphSet(sim, g, 0, 1);
   speciesVersion = -1;   // E6.5: handle nuevo, tabla de especies nueva
   gdDrop();
   visPrime();           // la siembra inicial no son nacimientos
@@ -1221,6 +1271,10 @@ function loadSim(msg) {
   api.load(sim, p, bytes.length);
   M._free(p);
   imRebind();
+  // RV-40: el archivo no trae el ADN de las especies; lo que la sesión no
+  // conoce por nombre se le pide a la página (presets y Bestiary).
+  const left = dnaResolve();
+  if (left.length) self.postMessage({ t: 'dna-missing', names: left });
   // E7: LoadSimulation borra los teleporters Internet (quirk replicado en el
   // core). Cargar desde el menú (loadsim_Click con path = "",
   // MDIForm1.frm:2105-2148) NO vuelve a llamar a F1Internet_Click: el modo
@@ -1243,6 +1297,9 @@ function loadSim(msg) {
   // visibles y el original los reabre uno a uno al cargar.
   const restore = [];
   for (let g = 1; g <= 18; g++) if (api.graphGet(sim, g, 0)) restore.push(g);
+  // RV-41: NewGraph sobre un chart ya abierto no lo recrea pero sí lo
+  // alimenta (main.frm:2183-2198); los que no estaban los abre la página.
+  for (const g of restore) if (graphOpen.has(g)) feedGraph(g);
   if (restore.length) self.postMessage({ t: 'graphs-restore', list: restore });
   postFrame();
 }
@@ -1334,9 +1391,17 @@ self.onmessage = (e) => {
       lintSpecies(msg.sp);
       seedSpecies(msg.sp);
       visPrime();  // E6.5: sembrar no es nacer
-      if (lastReset) lastReset.species.push(msg.sp);  // E5: entra a las rondas
       postFrame();
       break;
+    case 'dna-lib': {             // RV-40: lo que la página resolvió por nombre
+      for (const e of msg.entries || []) dnaLib.set(String(e.name), String(e.dna));
+      const left = dnaResolve();
+      const got = (msg.entries || []).length;
+      if (got) log(`ADN por nombre: ${got} especie(s) de la biblioteca de la página`);
+      if (left.length)
+        log(`sin ADN (como el .txt ausente del original): ${left.join(', ')}`);
+      break;
+    }
     case 'setopt':
       // Cambio en vivo (el core lee las opciones cada tick; mismo efecto
       // que el diálogo de opciones del original sobre una sim corriendo).

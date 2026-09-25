@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Revision del port, piloto 12 (spec/REVISION-PORT.md, RV-34..RV-37): el
+// Revision del port, pilotos 12 y 13 (spec/REVISION-PORT.md, RV-34..RV-41): el
 // pegamento de web/worker.js con la API corregida, con el worker real dentro
 // de un worker_thread (mismo shim que tools/pp/smoke_formas.mjs). La API en
-// si la cubren los casos RV-32..RV-37 de tests/test_host.cpp.
+// si la cubren los casos RV-32..RV-40 de tests/test_host.cpp.
 //
 //   node tools/rv/smoke_host.mjs     (desde port/, con build-wasm/)
 import path from 'node:path';
@@ -160,6 +160,121 @@ console.log('\n== consola: set ==');
   check('RV-37: set 7 -1.7 -> mem(7) = -2', (await cmd('set 7 -1.7')) === ' 7-> -2');
   check('RV-37: set 7 2.5 -> mem(7) = 2', (await cmd('set 7 2.5')) === ' 7-> 2');
   check('RV-37: set 5.5 9 -> mem(6) = 9', (await cmd('set 5.5 9')) === ' 6-> 9');
+  await A.w.terminate();
+}
+
+// ---- Piloto 13 (worker.js) ------------------------------------------------
+const simMsg = (seed, fw, name) => ({
+  t: 'reset', seed,
+  options: { fieldW: fw, fieldH: 6000, minVegs: 0, repopAmount: 0, repopCooldown: 0,
+             maxEnergy: 40, startChlr: 3000, mutations: false },
+  species: [{ dna: ALGA, name, veg: true, qty: 5, nrg: 3000, color: 0x30d030 }],
+});
+
+// RV-38 — la ronda que sigue a una sim cargada arranca de la sim cargada
+// (MDIForm1.frm:2166-2170), no del último "Start New".
+console.log('\n== ronda tras cargar ==');
+{
+  const A = new W();
+  await A.wait((m) => m.t === 'ready');
+  A.send(simMsg(1234, 8000, 'Archivo.txt'));
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'save' });
+  const saved = await A.wait((m) => m.t === 'saved');
+  A.send(simMsg(99, 12000, 'Pagina.txt'));
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'load', bytes: saved.bytes });
+  await A.frameNow();
+  A.send({ t: 'setopt', id: 90, v: 1 });
+  A.logs.length = 0;
+  A.send({ t: 'step' });
+  await A.until(() => A.logs.some((l) => l.startsWith('ronda nueva')));
+  const f = await A.frameNow();
+  check('RV-38: campo de la ronda = el del archivo', f[0] === 8000, `${f[0]} × ${f[1]}`);
+  check('RV-38: la ronda siembra las especies del archivo',
+        A.logs.includes('sembrados 5 × Archivo.txt') &&
+        !A.logs.some((l) => l.includes('Pagina.txt')), A.logs.filter((l) => l.startsWith('sembrados')).join('; '));
+  await A.w.terminate();
+}
+
+// RV-40 — el .sim no trae el ADN: la sesión lo busca por nombre y lo que no
+// encuentra se lo pide a la página; sin ADN, la especie no se siembra.
+console.log('\n== ADN de las especies cargadas ==');
+{
+  const A = new W();
+  await A.wait((m) => m.t === 'ready');
+  A.send(simMsg(1234, 8000, 'Archivo.txt'));
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'save' });
+  const saved = await A.wait((m) => m.t === 'saved');
+  await A.w.terminate();
+
+  const B = new W();                          // sesión que no conoce la especie
+  await B.wait((m) => m.t === 'ready');
+  B.send(simMsg(99, 12000, 'Pagina.txt'));
+  await B.wait((m) => m.t === 'frame');
+  B.send({ t: 'load', bytes: saved.bytes });
+  const miss = await B.wait((m) => m.t === 'dna-missing');
+  check('RV-40: la carga pide el ADN que la sesión no tiene',
+        miss.names.join() === 'Archivo.txt', miss.names.join());
+  B.send({ t: 'setopt', id: 90, v: 1 });
+  B.logs.length = 0;
+  B.send({ t: 'step' });
+  await B.until(() => B.logs.some((l) => l.startsWith('ronda nueva')));
+  await B.frameNow();
+  check('RV-40: sin ADN la ronda no siembra la especie (el .txt ausente)',
+        B.logs.some((l) => l.startsWith('sin ADN para Archivo.txt')) &&
+        !B.logs.some((l) => l.startsWith('sembrados')), B.logs.join(' | '));
+  B.send({ t: 'load', bytes: saved.bytes });
+  await B.wait((m) => m.t === 'dna-missing');
+  B.send({ t: 'setopt', id: 90, v: 1 });
+  B.logs.length = 0;
+  B.send({ t: 'dna-lib', entries: [{ name: 'Archivo.txt', dna: ALGA }] });
+  B.send({ t: 'step' });
+  await B.until(() => B.logs.some((l) => l.startsWith('ronda nueva')));
+  await B.frameNow();
+  check('RV-40: con el ADN de la página la ronda la siembra',
+        B.logs.includes('sembrados 5 × Archivo.txt'), B.logs.join(' | '));
+  await B.w.terminate();
+}
+
+// RV-41 — puntos de gráfica: StartSimul no llama a FeedGraph y el tick que
+// abre la ronda sale antes de alimentar (main.frm:2081); NewGraph al cargar
+// alimenta el chart abierto que el archivo marca visible.
+console.log('\n== gráficas y rondas ==');
+{
+  const A = new W();
+  const pts = [];
+  A.w.on('message', (m) => { if (m.t === 'graph-data') pts.push(m.cycle); });
+  await A.wait((m) => m.t === 'ready');
+  A.send(simMsg(1234, 8000, 'AlgaSola.txt'));
+  await A.wait((m) => m.t === 'frame');
+  A.send({ t: 'setopt', id: 110, v: 1 });
+  A.send({ t: 'graph-open', n: 1 });
+  await A.until(() => pts.length === 1);
+  pts.length = 0;
+  A.send({ t: 'save' });
+  const saved = await A.wait((m) => m.t === 'saved');
+  A.send(simMsg(99, 8000, 'AlgaSola.txt'));
+  await A.frameNow();
+  check('RV-41: "Start New" no suma un punto', pts.length === 0, `${pts.length} puntos`);
+  A.send({ t: 'setopt', id: 110, v: 1 });   // el "Start New" volvió a 200
+  A.send({ t: 'setopt', id: 90, v: 1 });
+  for (let i = 0; i < 3; i++) A.send({ t: 'step' });
+  await A.frameNow();
+  await sleep(300);
+  check('RV-41: los ticks que abren ronda no alimentan', pts.length === 0,
+        `${pts.length} puntos (${pts.join()})`);
+  A.send({ t: 'setopt', id: 90, v: 0 });
+  A.send({ t: 'step' });
+  await A.frameNow();
+  check('RV-41: el tick normal sí alimenta', pts.length === 1, `${pts.length} puntos`);
+  pts.length = 0;
+  A.send({ t: 'load', bytes: saved.bytes });
+  await A.wait((m) => m.t === 'graphs-restore');
+  await A.frameNow();
+  check('RV-41: la carga alimenta el chart abierto que el archivo marca visible',
+        pts.length === 1, `${pts.length} puntos`);
   await A.w.terminate();
 }
 

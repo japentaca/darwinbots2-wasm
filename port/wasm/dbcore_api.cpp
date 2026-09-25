@@ -134,6 +134,46 @@ unsigned char* CopyOut(const unsigned char* src, std::size_t n, int* out_len) {
   return p;
 }
 
+// RV-39: globales del proceso original que ni LoadSimulation ni startloaded
+// tocan (HDRoutines.bas:1073-1540, main.frm:1374-1515), así que sobreviven a
+// la carga: los del gset (LoadGlobalSettings, HDRoutines.bas:852-1069:
+// StartChlr, Disqualify, x_restartmode, intFindBestV2, hidePredCycl, LFOR y
+// los de mutación), los de módulo de F1Mode.bas:18-32, los flags de guardado
+// y el apodo IM (Sim::fmt), el Player Bot de MDIForm1 y el
+// DeadRobots.snp de disco. Los Static internos (Gauss, calculateZB,
+// totnrgnvegs, stopflag) siguen la decisión de la Sim limpia.
+void CarryProcessGlobals(db::Sim& d, const db::Sim& o) {
+  d.StartChlr = o.StartChlr;
+  d.reprofix = o.reprofix;
+  d.epireset = o.epireset;
+  d.epiresetemp = o.epiresetemp;
+  d.epiresetOP = o.epiresetOP;
+  d.sunbelt = o.sunbelt;
+  d.fmt = o.fmt;
+  d.Delta2 = o.Delta2;
+  d.DeltaPM = o.DeltaPM;
+  d.DeltaMainExp = o.DeltaMainExp;
+  d.DeltaMainLn = o.DeltaMainLn;
+  d.DeltaDevExp = o.DeltaDevExp;
+  d.DeltaDevLn = o.DeltaDevLn;
+  d.DeltaWTC = o.DeltaWTC;
+  d.DeltaMainChance = o.DeltaMainChance;
+  d.DeltaDevChance = o.DeltaDevChance;
+  d.NormMut = o.NormMut;
+  d.valNormMut = o.valNormMut;
+  d.valMaxNormMut = o.valMaxNormMut;
+  d.x_restartmode = o.x_restartmode;
+  d.y_normsize = o.y_normsize;
+  d.curr_dna_size = o.curr_dna_size;
+  d.hidePredCycl = o.hidePredCycl;
+  d.LFOR = o.LFOR;
+  d.intFindBestV2 = o.intFindBestV2;
+  d.Disqualify = o.Disqualify;
+  d.f1 = o.f1;
+  d.pb = o.pb;
+  d.deadSnp = o.deadSnp;
+}
+
 }  // namespace
 
 extern "C" {
@@ -213,6 +253,37 @@ DB_EXPORT void db_sim_round_carry(void* dst, void* src) {
   d.totvegsDisplayed = o.totvegsDisplayed;
   d.totnvegs = o.totnvegs;
   d.totnvegsDisplayed = o.totnvegsDisplayed;
+  // RV-39: los globales de proceso tampoco los toca StartSimul
+  // (main.frm:1182-1368).
+  CarryProcessGlobals(d, o);
+}
+
+// Opciones base que el host fija fuera de la tabla de ids. La ronda las lee
+// de la sim que termina: StartSimul arranca con los SimOpts en vivo, que tras
+// una carga son los del archivo (RV-38).
+//   0 MinVegs · 1 RepopAmount · 2 RepopCooldown · 3 MaxEnergy
+//   4 StartChlr (global del gset, RV-39) · 5 mutaciones (Not DisableMutations)
+DB_EXPORT double db_sim_get_base(void* h, int k) {
+  const db::Sim& sim = S(h);
+  switch (k) {
+    case 0: return static_cast<double>(sim.opts.MinVegs);
+    case 1: return sim.opts.RepopAmount;
+    case 2: return sim.opts.RepopCooldown;
+    case 3: return static_cast<double>(sim.opts.MaxEnergy);
+    case 4: return sim.StartChlr;
+    case 5: return sim.opts.DisableMutations ? 0 : 1;
+    default: return 0;
+  }
+}
+
+// Ronda nueva: loadrobs siembra SimOpts.Specie tal como quedo en la sim que
+// termina (main.frm:1523-1573; RemoveExtinctSpecies ya borro las no nativas
+// sin poblacion, Robots.bas:1461-1473), con su skin, sus tasas y su marca de
+// archivo. El host siembra despues cada indice con db_sim_seed_species
+// (RV-38).
+DB_EXPORT void db_sim_round_species(void* dst, void* src) {
+  S(dst).Specie = S(src).Specie;
+  S(dst).SpecieSpare = S(src).SpecieSpare;
 }
 
 // Semilla de la ronda siguiente: `SimOpts.UserSeedNumber = Rnd *
@@ -497,6 +568,36 @@ DB_EXPORT int db_sim_num_species(void* h) {
   return static_cast<int>(S(h).Specie.size());
 }
 
+// Nombre de la especie `idx` (string malloc'd; db_free).
+DB_EXPORT char* db_sim_species_name(void* h, int idx) {
+  const db::Sim& sim = S(h);
+  static const std::string empty;
+  const std::string& v =
+      (idx >= 0 && static_cast<std::size_t>(idx) < sim.Specie.size())
+          ? sim.Specie[static_cast<std::size_t>(idx)].Name
+          : empty;
+  return reinterpret_cast<char*>(CopyOut(
+      reinterpret_cast<const unsigned char*>(v.c_str()), v.size() + 1,
+      nullptr));
+}
+
+// RV-40: 1 si la especie no tiene .txt que la respalde (sim cargada o
+// AddSpecie). El host busca el ADN por nombre, como RobScriptLoad en la
+// carpeta comun Robots (DNATokenizing.bas:180-186), y lo fija con
+// db_sim_species_set_dna.
+DB_EXPORT int db_sim_species_missing(void* h, int idx) {
+  const db::Sim& sim = S(h);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= sim.Specie.size()) return 0;
+  return sim.Specie[static_cast<std::size_t>(idx)].dnaMissing ? 1 : 0;
+}
+DB_EXPORT void db_sim_species_set_dna(void* h, int idx, const char* dnatext) {
+  db::Sim& sim = S(h);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= sim.Specie.size()) return;
+  db::Specie& sp = sim.Specie[static_cast<std::size_t>(idx)];
+  sp.dnatext = dnatext ? dnatext : "";
+  sp.dnaMissing = false;
+}
+
 // Siembra `count` fundadores de la especie `idx` (count <= 0 => sp.qty),
 // como loadrobs (main.frm:1517-1573): InsertFounder + los campos que la
 // especie aporta (color, NoChlr, StartChlr, Mutables, Skin, GenMut). Si el
@@ -524,7 +625,8 @@ DB_EXPORT int db_sim_seed_species(void* h, int idx, int count) {
 
   int inserted = 0;
   for (int t = 1; t <= qty; ++t) {
-    const int a = db::InsertFounder(sim, sp.dnatext, sp.Name, cfg);
+    const int a = db::InsertFounder(sim, sp.dnatext, sp.Name, cfg,
+                                    sp.dnaMissing);
     if (a < 0) {
       sp.Native = false;  // main.frm:1528-1531
       break;
@@ -1986,7 +2088,9 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   // agranda el vector.
   std::vector<db::Obstacle> obs = std::move(Sh.sim.Obstacles);
   const int lc = Sh.sim.leftCompactor, rc = Sh.sim.rightCompactor;
+  db::Sim prev = std::move(Sh.sim);
   Sh.sim = db::Sim{};
+  CarryProcessGlobals(Sh.sim, prev);  // RV-39
   if (!obs.empty()) Sh.sim.Obstacles = std::move(obs);
   Sh.sim.leftCompactor = lc;
   Sh.sim.rightCompactor = rc;

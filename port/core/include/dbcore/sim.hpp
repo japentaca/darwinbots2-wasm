@@ -196,6 +196,13 @@ struct Specie {
   std::array<vb_integer, 14> Skin{};
   std::string path;
   std::string dnatext;               // port: sustituto en memoria del disco
+  // port (RV-40): el .txt de la especie no está en "disco". RobScriptLoad
+  // del original lo busca en path, después en la carpeta común Robots y, si
+  // tampoco, pregunta con un diálogo; cancelado, LoadDNA = False
+  // (DNATokenizing.bas:177-201). Lo marcan la carga de sims (el .sim guarda
+  // path + nombre, no el ADN) y AddSpecie (path = MainDir\robots); el host
+  // lo levanta si encuentra el ADN por nombre (db_sim_species_set_dna).
+  bool dnaMissing = false;
   vb_integer Stnrg = 3000;
   bool Veg = false;
   bool NoChlr = false;

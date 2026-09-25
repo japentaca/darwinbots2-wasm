@@ -331,12 +331,13 @@ inline void preparerob(Sim& sim, int t, const std::string& fname) {
 
 // Module1.bas:8-26 — RobScriptLoad sobre texto en memoria: posto + preparerob
 // + LoadDNA + makeoccurrlist + publicaciones (M-10). Devuelve -1 si el ADN se
-// rechaza ("no valid robot").
+// rechaza ("no valid robot") o si el archivo no está (`missing`, RV-40:
+// LoadDNA = False tras posto y preparerob, que ya consumieron su RNG).
 inline int RobScriptLoadSim(Sim& sim, const std::string& text,
-                            const std::string& fname) {
+                            const std::string& fname, bool missing = false) {
   const int n = posto(sim);
   preparerob(sim, n, fname);
-  if (LoadDNAText(text, sim.rob[n], *sim.sysvars)) {
+  if (!missing && LoadDNAText(text, sim.rob[n], *sim.sysvars)) {
     // insertsysvars/ScanUsedVars: contadores de display, sin efecto en mem.
     makeoccurrlist(sim, n);
     sim.rob[n].DnaLen = static_cast<vb_integer>(DnaLen(sim.rob[n].dna));
@@ -399,7 +400,7 @@ inline void aggiungirob(Sim& sim, vb_integer r, vb_single x, vb_single y) {
   Specie& sp = sim.Specie[static_cast<std::size_t>(r)];
   if (sp.Name.empty() || sp.path == "Invalid Path") return;
 
-  const int a = RobScriptLoadSim(sim, sp.dnatext, sp.Name);
+  const int a = RobScriptLoadSim(sim, sp.dnatext, sp.Name, sp.dnaMissing);
   if (a < 0) {
     sp.Native = false;  // Globals.bas:421-424
     return;
@@ -492,8 +493,9 @@ struct SpecieCfg {
 // main.frm:1516-1570 — la siembra por fundador de loadrobs. Consumo de RNG
 // por fundador: 6 (preparerob) + 2 (posición) + 1 (timer) = 9 (M-08).
 inline int InsertFounder(Sim& sim, const std::string& text,
-                         const std::string& fname, const SpecieCfg& cfg = {}) {
-  const int a = RobScriptLoadSim(sim, text, fname);
+                         const std::string& fname, const SpecieCfg& cfg = {},
+                         bool missing = false) {
+  const int a = RobScriptLoadSim(sim, text, fname, missing);
   if (a < 0) return a;
   Bot& b = sim.rob[a];
   b.Veg = cfg.Veg;

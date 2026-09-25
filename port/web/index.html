@@ -989,6 +989,12 @@ worker.onmessage = (e) => {
       // El .dbsim recuerda qué gráficos estaban abiertos (HDRoutines:1482).
       for (const n of msg.list) openChart(n);
       break;
+    case 'dna-missing':
+      // RV-40: el .dbsim no trae el ADN de sus especies (el original relee
+      // el .txt y lo busca por nombre en la carpeta Robots). Aquí la carpeta
+      // son los presets y el Bestiary.
+      resolveDnaByName(msg.names);
+      break;
     case 'graph-filecounter': {
       const c = charts.get(msg.n);
       if (c) c.filecounter = msg.c;
@@ -3554,6 +3560,23 @@ document.getElementById('preset').onchange = async (e) => {
   document.getElementById('sp-nrg').value = p.nrg;
   document.getElementById('sp-color').value = p.color;
 };
+
+// RV-40: ADN por nombre de especie (nombre del .txt) desde los presets y el
+// Bestiary; lo que no aparece queda como el .txt ausente del original.
+async function resolveDnaByName(names) {
+  const entries = [];
+  for (const name of names) {
+    const p = Object.values(PRESETS).find((x) => x.name === name);
+    if (p) { entries.push({ name, dna: p.dna }); continue; }
+    const b = BESTIARY.find((x) => x.name + '.txt' === name);
+    if (!b) continue;
+    try {
+      const r = await fetch('bots/' + b.file);
+      if (r.ok) entries.push({ name, dna: await r.text() });
+    } catch (e) { /* sin archivo: igual que el .txt ausente */ }
+  }
+  worker.postMessage({ t: 'dna-lib', entries });
+}
 
 document.getElementById('btn-save').onclick = () =>
   worker.postMessage({ t: 'save' });

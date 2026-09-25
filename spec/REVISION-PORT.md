@@ -1,7 +1,8 @@
 # Revisión del port contra el fuente VB6
 
 > Revisión independiente del port (`port/core`, y desde el piloto 12 la capa
-> host `port/wasm/dbcore_api.cpp` con sus tests en `port/tests/test_host.cpp`)
+> host `port/wasm/dbcore_api.cpp` con sus tests en `port/tests/test_host.cpp`, y
+> desde el piloto 13 el pegamento de `port/web/worker.js` con `tools/rv/smoke_host.mjs`)
 > **contra el fuente VB6**
 > (`Darwinbots2/`, commit `02b20d7`), no contra la spec: si la spec se extrajo mal,
 > el port la sigue fielmente y la suite pasa igual. Cada hallazgo confirmado lleva un
@@ -1978,8 +1979,180 @@ scratchpad que incluyen `dbcore_api.cpp` y llaman a la API como la página.
   evaluación de `angle`, `Randomize` a mitad, y `Skin(6)` `Single/3`, que no
   cae cerca de .5) y `DrawRobSkin` con su error 6.
 
+## Piloto 13 — `worker.js`: rondas, carga, Internet y E6 (2026-09-25)
+
+**Alcance**: lo que el piloto 12 dejó sin revisar de `port/web/worker.js`:
+- las rondas (`newRound`, `checkGameState` y `runTicks`), frente a
+  `main.frm:main`/`StartSimul`/`loadrobs` y a los bucles `While StartAnotherRound`
+  de `OptionsForm.frm:4805-4809` y `MDIForm1.frm:2166-2170`;
+- la carga (`loadSim`), frente a `simload`/`LoadSimulation`/`startloaded`;
+- el pegamento de Internet (desagüe del outbox, `writeIMdata` y el corte de
+  `Exit Sub`);
+- E6: gráficas (`NewGraph`/`FeedGraph`), `fittest`, `parentele` y snapshots.
+
+**Fuera**: la presentación de solo lectura (`CalcStats`/`grafico.frm`, vista E6.5 y
+lint).
+
+**Resultado**: 4 divergencias (RV-38 a RV-41, corregidas). Contraejemplos:
+- el `worker.js` real en un `worker_thread`, con el shim de `smoke_formas`;
+- programas del scratchpad que incluyen `dbcore_api.cpp`.
+
+Tres de las cuatro nacen al cargar un `.dbsim`.
+
+### RV-38 · La ronda que sigue a una sim cargada se reconstruye con el último "Start New" — CORREGIDO
+
+> **Arreglo (2026-09-25)**: `newRound` (`worker.js:590`) toma las opciones base de la
+> sim que termina y deja de usar `lastReset` (se elimina):
+> - el campo;
+> - con `db_sim_get_base`: `MinVegs`, la repoblación, `MaxEnergy`, `StartChlr` y las
+>   mutaciones.
+>
+> `resetSim` copia la lista de especies con `db_sim_round_species` (`:1223`) y
+> siembra cada índice (`seedIndex`, `:1163`), como `loadrobs` sobre
+> `SimOpts.Specie`. De paso, la ronda deja de reintentar las especies que
+> `RemoveExtinctSpecies` ya borró.
+>
+> Tests: `RV-38` (`test_host.cpp`) y `smoke_host` (campo y especies de la ronda tras
+> cargar). Con `worker.js` de HEAD, el smoke falla con 12000 × 6000 y `Pagina.txt`.
+
+- **Fuente**: tras cargar, el bucle hace `UserSeedNumber = Rnd * 2147483647 :
+  Form1.StartSimul` sobre los `SimOpts` cargados (`MDIForm1.frm:2166-2170`), y
+  `loadrobs` siembra `SimOpts.Specie` (`main.frm:1517-1573`).
+- **Port**: `newRound` rehacía la sim con `lastReset`, el último mensaje `reset`. Tras
+  cargar, eso daba el campo, `MinVegs`, la repoblación, `MaxEnergy`, `StartChlr`, las
+  mutaciones y las especies del "Start New" anterior; `loadSim` no tocaba
+  `lastReset`.
+- **Contraejemplo**:
+  1. Guardo una sim de 8000 × 6000 con `Archivo.txt`.
+  2. Hago "Start New" con 12000 y `Pagina.txt`.
+  3. Cargo la sim guardada y fuerzo un Restart.
+
+  La ronda sale de 12000 × 6000 y siembra `Pagina.txt`. El original: 8000 y
+  `Archivo.txt`.
+
+### RV-39 · La carga (y cada ronda) borra los globales del proceso — CORREGIDO
+
+> **Arreglo (2026-09-25)**: `CarryProcessGlobals` (`dbcore_api.cpp:145`) traspasa
+> estos globales en `db_sim_load` (`:2093`) y en `db_sim_round_carry` (`:258`):
+> - del gset: `StartChlr`, `Disqualify`, `x_restartmode`, `intFindBestV2`,
+>   `hidePredCycl`, `LFOR` y los de mutación;
+> - `F1State`;
+> - `Sim::fmt`;
+> - el Player Bot;
+> - `deadSnp`.
+>
+> Los `Static` internos (Gauss, `calculateZB`, `totnrgnvegs`, `stopflag`) siguen la
+> decisión de la `Sim` limpia. La ronda se añadió con el visto bueno del usuario.
+>
+> Tests: los dos casos `RV-39` de `test_host.cpp`, que fallan con la API de HEAD.
+> `60-FORMATOS.md §4` y `50-MUNDO.md §2.1` quedan al día.
+
+- **Fuente**: `LoadSimulation` (`HDRoutines.bas:1073-1540`), `startloaded`
+  (`main.frm:1374-1515`) y `StartSimul` no tocan estos globales, que viven con el
+  proceso:
+  - `StartChlr` (`Globals.bas:94`) y los demás del gset, que lee
+    `LoadGlobalSettings` (`HDRoutines.bas:852-1069`);
+  - los de módulo de `F1Mode.bas:18-32`;
+  - el Player Bot;
+  - `DeadRobots.snp`, que está en disco.
+- **Port**: `db_sim_load` partía de un `Sim{}` y solo el apodo IM se volvía a fijar
+  (`imRebind`). La ronda crea un handle nuevo, y `db_sim_round_carry` solo pasaba
+  el contador y la repoblación.
+- **Contraejemplo (carga)**: `StartChlr` pasa de 3000 a 0 y `Disqualify` de 2 a 0.
+  Los vegetales repoblados nacen con 0 cloroplastos, así que
+  `TotalChlr < MinVegs` se cumple siempre y la repoblación no para: en 300 ciclos,
+  1490 bots en la sim cargada frente a 110 en la misma sim sin cargar.
+- **Contraejemplo (ronda)**:
+
+  | Global | Antes de la ronda | Después |
+  |---|---|---|
+  | Player Bot | encendido | apagado |
+  | Muertos registrados | 7 | 0 |
+  | `x_restartmode` | 3 | 0 |
+  | `UseEpiGene` | 1 | 0 |
+
+### RV-40 · Tras cargar, las especies no tienen ADN y la repoblación crea vegetales sin genes — CORREGIDO
+
+> **Arreglo (2026-09-25, decisión del usuario: ADN por nombre desde la página)**:
+> - **Núcleo**:
+>   - `Specie::dnaMissing` (`sim.hpp`), que marcan `LoadSimulation`
+>     (`formats.hpp:1687`) y `AddSpecieFromFile` (`:1001`).
+>   - `RobScriptLoadSim(…, missing)` (`master.hpp:337`) falla tras
+>     `posto`/`preparerob`, que ya consumieron su RNG, como el `LoadDNA = False` del
+>     original. La usan `aggiungirob` (`:403`) e `InsertFounder` (`:497`, por
+>     `db_sim_seed_species`).
+> - **Host**: el worker hace de carpeta `Robots`, con una biblioteca nombre → ADN
+>   (`dnaResolve`, `worker.js:1183`) que alimentan:
+>   - las especies sembradas en la sesión;
+>   - lo que la página resuelve con sus presets y el Bestiary (`dna-missing` →
+>     `resolveDnaByName`, `index.html:3566` → `dna-lib`).
+>
+>   Lo que no aparece se comporta como el `.txt` ausente.
+>
+> Tests: los cinco casos `RV-40` de `test_host.cpp` y `smoke_host`: se pide el ADN
+> al cargar; sin ADN la ronda no siembra la especie, y con el de la página sí la
+> siembra.
+
+- **Fuente**: el registro de especie del `.sim` guarda ruta + nombre, y
+  `RobScriptLoad` relee el `.txt` en cada `loadrobs`/`aggiungirob`. Si falta,
+  `LoadDNA` lo busca por nombre en la carpeta común `Robots` y, si tampoco lo
+  encuentra, abre un diálogo; al cancelarlo devuelve False
+  (`DNATokenizing.bas:177-201`). `aggiungirob` deja entonces la especie
+  `Native = False` (`Globals.bas:420-424`), y `loadrobs` la salta
+  (`main.frm:1526-1529`).
+- **Port**: el formato no trae `dnatext`, y `LoadDNAText("")` carga bien (un `.txt`
+  vacío existente también cargaría en el original). El resultado era un vegetal con
+  `DnaLen 1`, sin genes, que no coincide con ninguno de los dos casos del original.
+- **Contraejemplo**: sim cargada con `MinVegs = 20`: a los 3 ticks, 5 vegetales
+  repoblados con `DnaLen 1`.
+
+### RV-41 · Puntos de más en las gráficas al empezar una ronda o una sim nueva — CORREGIDO
+
+> **Arreglo (2026-09-25)**:
+> - `resetSim` repone `graphvisible` sin alimentar (`worker.js:1237`).
+> - `runTicks` no alimenta en el tick que abrió la ronda (`:1094`).
+> - `loadSim` alimenta los charts abiertos que el archivo marca visibles (`:1302`).
+>
+> Test: `smoke_host`, 4 casos que fallan con la lógica anterior.
+
+- **Fuente**:
+  - `StartSimul` no llama a `FeedGraph`. El `grafico.ResetGraph` de `main.frm:1273`
+    actúa sobre la instancia por defecto del formulario, no sobre los `Charts(i).graf`
+    abiertos, que conservan sus datos.
+  - En el tick que pide ronda, `If StartAnotherRound Then Exit Sub`
+    (`main.frm:2081`) sale antes de alimentar (`:2098-2107`).
+  - Al cargar, `NewGraph` alimenta también los charts ya abiertos
+    (`main.frm:2183-2198`).
+- **Port**: `resetSim` alimentaba cada chart abierto, y `runTicks` volvía a
+  alimentarlo con el ciclo heredado. Al cargar, la página no reabre un chart que ya
+  está abierto, así que ese no recibía su punto.
+- **Contraejemplo**: con `chartingInterval = 1` y un reinicio en cada tick, el port
+  añadía 2 puntos por ronda (ciclos 0, 0, 1, 1, 2, 2) y el original ninguno. Cada
+  punto de más desplaza el búfer circular y el volcado `.gsave`.
+
+### Notas (sin acción)
+- **"Start New" y los globales de proceso**: `resetSim` crea un handle nuevo también
+  en "Start New", y la página solo vuelve a fijar lo que manda en el mensaje (los
+  ids de la tabla y `StartChlr`). Queda por comparar con `OptionsForm.StartNew`, que
+  sí reinicia parte del estado (F1). Candidato para un piloto futuro.
+- **Especies no nativas en la ronda**: con la copia de `SimOpts.Specie`, la ronda
+  intenta sembrar también las especies de `AddSpecie` que siguen vivas, como
+  `loadrobs`. Sin ADN por nombre, se saltan como el `.txt` ausente.
+
+### Verificado sin divergencias
+- **Semilla y herencia de la ronda**: RV-34 y RV-35; F1 restaurado (`Contests`,
+  `Wins` por slot, `MinRounds`, `ReStarts`).
+- **Parada con ganador en el mismo `Countpop`**: sin ronda nueva.
+- **Orden del tick con IM**: desagüe del outbox antes del chequeo de rondas, y
+  `writeIMdata` cada 200 ciclos después, cortado por `Exit Sub`
+  (`main.frm:2081-2111`). En "Start New", `If InternetMode Then F1Internet_Click`
+  (`OptionsForm.frm:4802`) lo apaga.
+- **E6**: el `fittest_Click` de `MDIForm1.frm:1398-1400` (`findbest`), la familia
+  acumulada de `parentele` y los snapshots de vivos y muertos.
+
 ## Siguientes pilotos sugeridos
 
-1. Con el piloto 12 queda revisada también la capa host de `dbcore_api.cpp`
-   frente a los formularios. Sin revisar: la presentación de solo lectura
-   (`CalcStats`/`grafico.frm`, vista E6.5, lint) y el resto de `worker.js`.
+1. Con el piloto 13 queda revisado también `worker.js` (rondas, carga, Internet
+   y E6). Sin revisar: la presentación de solo lectura (`CalcStats`/`grafico.frm`,
+   vista E6.5, lint).
+2. "Start New" frente a los globales de proceso (nota del piloto 13).

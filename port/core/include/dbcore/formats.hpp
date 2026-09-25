@@ -998,6 +998,7 @@ inline vb_integer AddSpecieFromFile(Sim& sim, int n, bool IsNative) {
   sp.Stnrg = 3000;
   sp.Native = IsNative;
   sp.path = "";  // MainDir + "\robots" del original: ruta de disco, infra
+  sp.dnaMissing = true;  // RV-40: ningún .txt respalda la especie nueva
 
   return k;
 }
@@ -1681,6 +1682,9 @@ inline void LoadSimulation(Sim& sim, VbBinFile& f,
 
   for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
     Specie& sp = sim.Specie[static_cast<std::size_t>(k)];
+    // RV-40: el registro trae path + nombre, no el ADN; RobScriptLoad lo
+    // relee del disco. Hasta que el host lo encuentre, no hay archivo.
+    sp.dnaMissing = true;
     if (!f.eof()) sp.Colind = f.get_i16();
     if (!f.eof()) sp.color = f.get_i32();
     if (!f.eof()) sp.Fixed = f.get_bool();

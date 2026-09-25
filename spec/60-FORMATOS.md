@@ -121,6 +121,28 @@ repartidos por época) + `Costs(0..70)` + teleporters + obstáculos +
 estado evo ⚙ + sol (`SunPosition`/`SunRange`/`SunChange`) + mareas + `stagnent`.
 
 - El autosave "safemode" del tick (paso 25) usa este mismo formato.
+- **El registro de especie guarda ruta + nombre, no el ADN** (RV-40). `loadrobs` y
+  `aggiungirob` releen el `.txt` con `RobScriptLoad`. Si no está, `LoadDNA` lo busca
+  por nombre en la carpeta común `Robots` y, si tampoco, abre un diálogo; al
+  cancelarlo devuelve False (`DNATokenizing.bas:177-201`). Entonces
+  `RobScriptLoad = −1` después de `posto`/`preparerob`, que ya consumieron sus 6 RNG,
+  y la especie queda `Native = False`. Lo mismo vale para las especies de `AddSpecie`
+  (path = `MainDir\robots`, donde no hay `.txt` de la especie nueva).
+  - Port: `Specie::dnaMissing`, que marcan `LoadSimulation` y `AddSpecieFromFile`.
+    El host hace de carpeta `Robots`: busca el ADN por nombre entre las especies de
+    la sesión, los presets y el Bestiary (`db_sim_species_set_dna`). Lo que no
+    encuentra se comporta como el `.txt` ausente.
+- **`LoadSimulation` y `startloaded` no tocan los globales del proceso** (RV-39):
+  - los del gset (`StartChlr`, `Disqualify`, `x_restartmode`, `intFindBestV2`,
+    `hidePredCycl`, `LFOR` y los de mutación);
+  - los de módulo de `F1Mode.bas`;
+  - los flags de guardado y el apodo IM;
+  - el Player Bot;
+  - el `DeadRobots.snp` de disco.
+
+  Tampoco los toca `StartSimul`. En el port, `db_sim_load` y `db_sim_round_carry`
+  los traspasan (`CarryProcessGlobals`); los `Static` internos siguen la decisión de
+  la `Sim` limpia.
 - `SimGUID` ausente se regenera con **`Rnd` crudo** al cargar (`:1451`) — fuera del
   flujo `rndy`, una sola extracción, en carga (no en tick): cierra el resto de
   **Q01** para `HDRoutines` (el otro `Rnd`, `:1035`, es del modo torneo ⚙).

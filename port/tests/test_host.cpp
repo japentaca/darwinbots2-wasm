@@ -1,7 +1,7 @@
 // Capa host (port/wasm/dbcore_api.cpp) frente a los formularios VB6: los
-// casos del piloto 12 de la revision del port (spec/REVISION-PORT.md,
-// RV-32..RV-37). La API se compila aqui mismo (una sola unidad de
-// traduccion la incluye) y se llama como la pagina.
+// casos de los pilotos 12 y 13 de la revision del port
+// (spec/REVISION-PORT.md, RV-32..RV-40). La API se compila aqui mismo (una
+// sola unidad de traduccion la incluye) y se llama como la pagina.
 #include <string>
 
 #include "doctest.h"
@@ -242,4 +242,201 @@ TEST_CASE("RV-37 - db_sim_sysvar_tok: direccion numerica con CInt") {
   CHECK(db_sim_sysvar_tok(h, 1, "99999") == -1);
   CHECK(db_sim_sysvar_tok(h, 1, ".nrg") == 310);
   db_sim_destroy(h);
+}
+
+// ---------------------------------------------------------------------------
+// Piloto 13 (worker.js): RV-38..RV-40. La parte de worker.js la cubre
+// tools/rv/smoke_host.mjs.
+
+namespace {
+
+// Sim guardada como la arma la pagina: campo 8000x6000, repoblacion viva,
+// 5 algas de la especie "Archivo.txt".
+std::vector<unsigned char> SavedSim(void* h) {
+  db_sim_set_field(h, 8000, 6000);
+  db_sim_set_minvegs(h, 20);
+  db_sim_set_repop(h, 5, 2);
+  db_sim_set_max_energy(h, 40);
+  db_sim_set_start_chlr(h, 3000);
+  db_sim_start(h, 1234);
+  const int sp = db_sim_add_species(h, kAlga, "Archivo.txt", 1, 0, 3000, 0, 5);
+  REQUIRE(db_sim_seed_species(h, sp, 0) == 5);
+  int len = 0;
+  unsigned char* p = db_sim_save(h, &len);
+  std::vector<unsigned char> v(p, p + len);
+  db_free(p);
+  return v;
+}
+
+// Los globales de proceso que la pagina (o el gset) fija.
+void SetProcessGlobals(void* h) {
+  db_sim_set_start_chlr(h, 3000);
+  db_sim_set_opt(h, 92, 3);    // x_restartmode
+  db_sim_set_opt(h, 93, 2);    // Disqualify
+  db_sim_set_opt(h, 96, 50);   // intFindBestV2
+  db_sim_set_opt(h, 97, 7);    // MinRounds
+  db_sim_pb_on(h, 1);
+  S(h).deadSnp.records = 4;
+  S(h).deadSnp.snp = "fila\n";
+  S(h).fmt.UseEpiGene = true;
+}
+
+void CheckProcessGlobals(void* h) {
+  CHECK(S(h).StartChlr == 3000);
+  CHECK(S(h).x_restartmode == 3);
+  CHECK(S(h).Disqualify == 2);
+  CHECK(S(h).intFindBestV2 == 50);
+  CHECK(S(h).f1.MinRounds == 7);
+  CHECK(S(h).pb.on);
+  CHECK(S(h).deadSnp.records == 4);
+  CHECK(S(h).deadSnp.snp == "fila\n");
+  CHECK(S(h).fmt.UseEpiGene);
+}
+
+}  // namespace
+
+// RV-39 — LoadSimulation y startloaded no tocan los globales del proceso
+// (gset, F1Mode, menus, DeadRobots.snp): la carga los conserva. El port
+// partia de un Sim{} y los dejaba en su default; con StartChlr = 0 los
+// vegetales repoblados nacian sin cloroplastos y la repoblacion no paraba.
+TEST_CASE("RV-39 - db_sim_load conserva los globales de proceso") {
+  void* h = db_sim_create();
+  const std::vector<unsigned char> file = SavedSim(h);
+  SetProcessGlobals(h);
+  db_sim_load(h, file.data(), static_cast<int>(file.size()));
+  CheckProcessGlobals(h);
+  // El vegetal repoblado nace con StartChlr cloroplastos (Globals.bas:434).
+  db_sim_species_set_dna(h, 0, kAlga);
+  const int before = S(h).MaxRobs;
+  REQUIRE(FirstRepopTick(h, 5) > 0);
+  REQUIRE(S(h).MaxRobs > before);
+  CHECK(S(h).rob[before + 1].chloroplasts == 3000.0f);
+  db_sim_destroy(h);
+}
+
+// RV-39 — StartSimul tampoco los toca: la ronda (handle nuevo) los hereda.
+TEST_CASE("RV-39 - db_sim_round_carry conserva los globales de proceso") {
+  void* a = db_sim_create();
+  db_sim_start(a, 1234);
+  SetProcessGlobals(a);
+  void* b = db_sim_create();
+  db_sim_start(b, 99);
+  db_sim_round_carry(b, a);
+  CheckProcessGlobals(b);
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+// RV-40 — el .sim guarda ruta + nombre de la especie, no su ADN: tras cargar
+// no hay archivo hasta que el host lo encuentra por nombre.
+TEST_CASE("RV-40 - la carga marca las especies sin archivo") {
+  void* h = db_sim_create();
+  const std::vector<unsigned char> file = SavedSim(h);
+  CHECK(db_sim_species_missing(h, 0) == 0);
+  db_sim_load(h, file.data(), static_cast<int>(file.size()));
+  REQUIRE(db_sim_num_species(h) == 1);
+  CHECK(db_sim_species_missing(h, 0) == 1);
+  db_sim_species_set_dna(h, 0, kAlga);
+  CHECK(db_sim_species_missing(h, 0) == 0);
+  CHECK(S(h).Specie[0].dnatext == kAlga);
+  db_sim_destroy(h);
+}
+
+// RV-40 — aggiungirob con el .txt ausente: RobScriptLoad falla (LoadDNA =
+// False) y la especie deja de ser nativa (Globals.bas:420-424). El port
+// cargaba el texto vacio como un robot sin genes.
+TEST_CASE("RV-40 - repoblacion de una especie sin archivo") {
+  void* h = db_sim_create();
+  const std::vector<unsigned char> file = SavedSim(h);
+  db_sim_load(h, file.data(), static_cast<int>(file.size()));
+  REQUIRE(FirstRepopTick(h, 5) > 0);
+  CHECK_FALSE(S(h).Specie[0].Native);
+  int alive = 0, empty = 0;
+  for (int t = 1; t <= S(h).MaxRobs; ++t)
+    if (S(h).rob[t].exist) {
+      ++alive;
+      if (S(h).rob[t].DnaLen <= 1) ++empty;
+    }
+  CHECK(alive == 5);  // solo las 5 algas del archivo
+  CHECK(empty == 0);
+  db_sim_destroy(h);
+}
+
+// RV-40 — loadrobs con el .txt ausente: bypassThisSpecies (main.frm:1526-1529).
+TEST_CASE("RV-40 - siembra de una especie sin archivo") {
+  void* h = db_sim_create();
+  const std::vector<unsigned char> file = SavedSim(h);
+  db_sim_load(h, file.data(), static_cast<int>(file.size()));
+  CHECK(db_sim_seed_species(h, 0, 2) == 0);
+  CHECK_FALSE(S(h).Specie[0].Native);
+  db_sim_species_set_dna(h, 0, kAlga);
+  CHECK(db_sim_seed_species(h, 0, 2) == 2);
+  CHECK(S(h).Specie[0].Native);
+  db_sim_destroy(h);
+}
+
+// RV-40 — RobScriptLoad con el archivo ausente: posto y preparerob corren
+// (y consumen su RNG) antes de que LoadDNA falle (Module1.bas:8-26).
+TEST_CASE("RV-40 - RobScriptLoadSim con archivo ausente") {
+  void* a = db_sim_create();
+  void* b = db_sim_create();
+  db_sim_start(a, 1234);
+  db_sim_start(b, 1234);
+  const int na = db::RobScriptLoadSim(S(a), kAlga, "x.txt");
+  const int nb = db::RobScriptLoadSim(S(b), kAlga, "x.txt", true);
+  CHECK(na == 1);
+  CHECK(nb == -1);
+  CHECK_FALSE(S(b).rob[1].exist);
+  CHECK(db_sim_rng_state(a) == db_sim_rng_state(b));
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+// RV-40 — AddSpecie apunta a MainDir\robots, donde no hay .txt de la especie
+// nueva (HDRoutines.bas:289).
+TEST_CASE("RV-40 - AddSpecie marca la especie sin archivo") {
+  void* h = db_sim_create();
+  db_sim_start(h, 1234);
+  const int sp = db_sim_add_species(h, kAlga, "a.txt", 1, 0, 3000, 0, 1);
+  REQUIRE(db_sim_seed_species(h, sp, 1) == 1);
+  S(h).rob[1].FName = "(1)a.txt";
+  db::AddSpecieFromFile(S(h), 1, false);
+  REQUIRE(db_sim_num_species(h) == 2);
+  CHECK(db_sim_species_missing(h, 0) == 0);
+  CHECK(db_sim_species_missing(h, 1) == 1);
+  db_sim_destroy(h);
+}
+
+// RV-38 — la ronda arranca de los SimOpts en vivo, que tras una carga son
+// los del archivo (MDIForm1.frm:2166-2170), y loadrobs siembra la lista de
+// especies tal como quedo (main.frm:1517).
+TEST_CASE("RV-38 - opciones base y especies de la ronda") {
+  void* h = db_sim_create();
+  const std::vector<unsigned char> file = SavedSim(h);
+  void* page = db_sim_create();            // el ultimo "Start New" de la pagina
+  db_sim_set_field(page, 12000, 6000);
+  db_sim_set_minvegs(page, 0);
+  db_sim_set_start_chlr(page, 3000);
+  db_sim_load(page, file.data(), static_cast<int>(file.size()));
+  CHECK(db_sim_field_width(page) == 8000);
+  CHECK(db_sim_get_base(page, 0) == 20);
+  CHECK(db_sim_get_base(page, 1) == 5);
+  CHECK(db_sim_get_base(page, 2) == 2);
+  CHECK(db_sim_get_base(page, 3) == 40);
+  CHECK(db_sim_get_base(page, 4) == 3000);
+  CHECK(db_sim_get_base(page, 5) == 1);
+  void* r = db_sim_create();
+  db_sim_start(r, 5);
+  db_sim_round_species(r, page);
+  REQUIRE(db_sim_num_species(r) == 1);
+  char* nm = db_sim_species_name(r, 0);
+  CHECK(std::string(nm) == "Archivo.txt");
+  db_free(nm);
+  CHECK(db_sim_species_missing(r, 0) == 1);
+  CHECK(S(r).Specie[0].Skin == S(page).Specie[0].Skin);
+  db_sim_species_set_dna(r, 0, kAlga);
+  CHECK(db_sim_seed_species(r, 0, 0) == 5);
+  db_sim_destroy(h);
+  db_sim_destroy(page);
+  db_sim_destroy(r);
 }
