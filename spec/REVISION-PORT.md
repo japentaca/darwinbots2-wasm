@@ -1441,8 +1441,112 @@ RV-02b/c/d), RV-07 (con RV-07b), RV-08 y RV-09; el detalle está en el bloque
 - **Suites**: 243 casos y 3943 aserciones en g++, clang y wasm, sin fallos
   esperados: ya no queda ningún `should_fail`. Los 4 smoke tests pasan.
 
+## Piloto 9 — `Master.bas`: el orden del tick (2026-09-25)
+
+**Alcance**:
+- `Master.bas` completo (`UpdateSim`, `:23-555`) frente a `master.hpp`
+  (`UpdateSim`, `DynamicCostsStep`, `MemoryPressureKill`) y los pasos del tick
+  que viven en `gamemodes.hpp` (`HidePredStep`, `HandicapStep`,
+  `AvrnrgStartStep`/`AvrnrgEndStep`, `PlayerBotStep`, `RestartModesStep`),
+  con `calc_handycap`/`calc_exact_handycap` (`Evo.bas:729-739`).
+- `ExecRobs` (`DNA.bas:1245-1262`).
+- El bucle `main` y `SecTimer_Timer` de `main.frm:1957-2140`: fuera de
+  `UpdateSim` solo hay host (redibujo, gráficas, `Follow`, `CycSec`,
+  `StartAnotherRound` de liga).
+- La siembra de `loadrobs` (`main.frm:1516-1573`) frente a `InsertFounder` y
+  `db_sim_seed_species`, y la preparación de `startloaded`
+  (`main.frm:1373-1512`) frente a `db_sim_start`.
+
+**Resultado**: sin divergencias. No hay literales `float` inexactos en
+`master.hpp` ni en los pasos del tick de `gamemodes.hpp` (todos son enteros o
+`1/16`).
+
+### Verificado sin divergencias
+- **Orden de los pasos**: contadores → hidepred → oscilación de
+  `MutCurrMult` → contabilidad de energía → costes dinámicos → handicap →
+  `avrnrgStart` → `ExecRobs` → `EraseSenses` → Player Bot → `updateshots` →
+  `opos` → `UpdateBots` → `actvel` → formas y teleporters → cloroplastos →
+  repoblación → `feedvegs` → `avrnrgEnd` → matanza por memoria → modos
+  restart. Coincide paso a paso.
+- **Gates**: `ExecRobs` (`exist`, no `Corpse`, no `DisableDNA`, no Base
+  oculto); `EraseSenses` solo por `DisableDNA`; `opos`/`actvel`/cloroplastos
+  excluyen el Base oculto; el handicap va por `hidepred` y no por
+  `usehidepred`.
+- **Tipos**:
+  - `AllChlr` es `Long`: `CLng` de la suma por vuelta, y `TotalChlr` con
+    `CLng` de `/ 16000`.
+  - `maxdel` es `CLng` de la cadena `Double`; `i` es `Integer`, pero
+    `maxdel` ≤ 0,16·`TotalRobots` no desborda.
+  - `hidePredOffset` redondea bancario `hidePredCycl / 3 * rndy`.
+  - `ingdist` usa `Log` natural en `Double`.
+  - La condición de salida del reposicionamiento es `Long > Double`.
+  - `20 ^ -Sin(..)` es `20 ^ (-Sin)` (la negación forma parte del
+    exponente).
+  - `PI` es la constante `Single` de `Common.bas:19`.
+  - En los costes dinámicos, `AmountOff`/`CorrectionAmount` son una resta
+    `Single` con un redondeo, `UpperRange`/`LowerRange` y el ajuste de
+    `COSTMULTIPLIER` van en `Double`, y `Sgn` devuelve `Integer`.
+- **Bugs conservados**: `selectrobot` arranca en 0 y no se resetea (A1-3);
+  `clist` no se re-pone a cero entre multibots dentro del mismo `UpdateSim`;
+  `totnrgnvegs` es `Static`; y `LastMutDetail` se borra en todos los slots.
+- **Siembra**: la secuencia de RNG (6 de `preparerob`, 2 de posición y 1 del
+  timer) coincide, igual que el orden `FindRadius` → cloroplastos y los campos
+  de la especie. Las extracciones `Rnd` crudas del arranque (skin, `SunOnRnd`,
+  `SimGUID`, colores de formas) siguen omitidas por decisión (B7-5/Q01).
+
+## Piloto 10 — Modos de juego (2026-09-25)
+
+**Alcance**: la parte de los modos que cambia el estado de la sim.
+- `F1Mode.bas`: `ResetContest`, `FindSpecies`, `Countpop` y `dreason`, con
+  el `F1count` de `UpdateBots` (`Robots.bas:1502-1505`) y el arranque de
+  ronda (`main.frm:1337-1340`, `db_sim_f1_start`).
+- `fittest`, `score` (tipo 0) e `InvestedEnergy` (`main.frm:2993-3081`).
+- `calculateZB` y `calc_handycap` (`Evo.bas:686-739`).
+
+Se compara con `gamemodes.hpp`. **Fuera** por la decisión E5: la carrera evo
+de archivos (`Increase`/`Decrease_Difficulty`, `Next_Stage`,
+`scale_mutations`, `ZBreadyforTest`, `UpdateWon`/`LostEvo`/`F1`), la liga
+(`populateladder`, `MDIForm1.frm:2536-2790`) y las captions de
+`Contest_Form`.
+
+**Resultado**: sin divergencias. Los literales `float` de estas rutinas son
+exactos (`320000`, `10`); `1.15`/`1.75` van en `double`, como en el fuente.
+
+### Verificado sin divergencias
+- **`Countpop`**:
+  - `selectrobot` es un local que arranca en 0 y lo comparten los dos bucles
+    de borrado.
+  - `erase2 = erase1 * (pop2 / pop1)` es `CInt` de un `Double`, y el ajuste
+    de `optMaxCycles`, `CLng` de un `Double`; la división solo se hace con
+    poblaciones distintas.
+  - `oldpop1`/`oldpop2`/`setoldpop` son `Static`.
+  - `Wins` es `Single` (`Sqr + MinRounds/2`) y se compara con un `Integer`.
+  - El `GoTo won` desde `Maxrounds` sale sin poner `F1count = 0`.
+  - El "Statistical Draw" suma una ronda solo si el bucle dio alguna vuelta.
+  - El `Case 0` restaura `MinRounds`.
+- **`FindSpecies`**: recorre desde el slot 0, vacía `PopArray(1..20)` y solo
+  resetea `Wins` en la primera ronda; `optMaxCycles`/`MaxPop` se anulan con
+  más de dos especies.
+- **`dreason`**: el tag `String * 50` (`Chr(0)` sin asignar frente a espacios)
+  y la matanza por `FName` completo.
+- **`fittest`**:
+  - `Not FName = "Corpse"` es `Not (..)`.
+  - `score + nrg + body*10` va en `Double` término a término, e
+    `InvestedEnergy` es una suma `Single`.
+  - `0 ^ 0 = 1`.
+  - `fittest` arranca en 0, el empate lo gana el último (`>=`) y el Cancer
+    solo pesa en los modos 7/8.
+- **`calculateZB`**:
+  - El `IIf` evalúa las dos ramas, pero `DnaLen · valMaxNormMut` ≤ 32000 ·
+    32767 no desborda.
+  - `mutarray > MratesMax` compara en `Double` frente al `float` del port. No
+    hay diferencia observable: no existe ningún `Single` entre `M` y
+    `CSng(M)`.
+  - `ZBreadyforTest` pone `x_restartmode = 9` y `TotRunCycle = 8001` en el
+    proceso que muere (decisión E5).
+
 ## Siguientes pilotos sugeridos
 
-1. Lo que queda sin revisar del núcleo: `Master.bas` (el orden del tick),
-   `Database.bas`/`HDRoutines.bas` (formatos) y los modos de juego. En cada piloto
+1. Lo que queda sin revisar del núcleo: `Database.bas`/`HDRoutines.bas`
+   (formatos). En cada piloto
    hay que clasificar sus literales `float` inexactos (ver RV-05).
