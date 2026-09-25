@@ -1443,8 +1443,8 @@ inline void SaveSimulation(Sim& sim, VbBinFile& f,
   f.put_f32(sim.opts.CoefficientKinetic);
   f.put_bool(sim.opts.PlanetEaters);
   f.put_f32(sim.opts.PlanetEatersG);
-  f.put_f64(static_cast<vb_double>(sim.opts.Viscosity));
-  f.put_f64(static_cast<vb_double>(sim.opts.Density));
+  f.put_f64(sim.opts.Viscosity);
+  f.put_f64(sim.opts.Density);
 
   // New for 2.4
   for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
@@ -1703,8 +1703,8 @@ inline void LoadSimulation(Sim& sim, VbBinFile& f,
   if (!f.eof()) sim.opts.CoefficientKinetic = f.get_f32();
   if (!f.eof()) sim.opts.PlanetEaters = f.get_bool();
   if (!f.eof()) sim.opts.PlanetEatersG = f.get_f32();
-  if (!f.eof()) sim.opts.Viscosity = static_cast<vb_single>(f.get_f64());
-  if (!f.eof()) sim.opts.Density = static_cast<vb_single>(f.get_f64());
+  if (!f.eof()) sim.opts.Viscosity = f.get_f64();
+  if (!f.eof()) sim.opts.Density = f.get_f64();
 
   for (vb_integer k = 0; k <= SpeciesNum - 1; ++k) {
     Specie& sp = sim.Specie[static_cast<std::size_t>(k)];

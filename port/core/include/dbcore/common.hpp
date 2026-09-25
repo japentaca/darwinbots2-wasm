@@ -44,14 +44,17 @@ inline Vector VectorScalar(Vector& v1, vb_single k) {
   return {v1.x * k, v1.y * k};
 }
 
-// Common.bas:144-157 — magnitud numéricamente estable.
+// Common.bas:144-157 — magnitud numéricamente estable. Sqr devuelve Double y
+// el literal 0.00001 es Double: el producto y la comparación van en Double y
+// se redondea una sola vez al devolver Single (RV-05).
 inline vb_single VectorMagnitude(const Vector& v1) {
   const vb_single minVal = Min(std::fabs(v1.x), std::fabs(v1.y));
   const vb_single maxVal = Max(std::fabs(v1.x), std::fabs(v1.y));
-  if (maxVal < 0.00001f) return 0.0f;
+  if (static_cast<double>(maxVal) < 0.00001) return 0.0f;
   const vb_single q = minVal / maxVal;
-  return maxVal * static_cast<vb_single>(
-                      std::sqrt(1.0 + std::pow(static_cast<double>(q), 2.0)));
+  return static_cast<vb_single>(
+      static_cast<double>(maxVal) *
+      std::sqrt(1.0 + std::pow(static_cast<double>(q), 2.0)));
 }
 
 // Common.bas:159-169.

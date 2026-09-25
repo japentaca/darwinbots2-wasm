@@ -49,11 +49,18 @@ inline void BrownianForces(Sim& sim, int n) {
   if (sim.opts.PhysBrown == 0.0f) return;
   const vb_single Impulse = sim.opts.PhysBrown * 0.5f * sim.rnd();
   const vb_single RandomAngle = sim.rnd() * 2.0f * PI;
+  // Cos/Sin devuelven Double y el literal 0.5 es Double: los productos van en
+  // Double y se redondean una vez (VectorSet ByVal Single, asignación a ma).
   Vector imp = VectorSet(
-      static_cast<vb_single>(std::cos(static_cast<double>(RandomAngle))) * Impulse,
-      static_cast<vb_single>(std::sin(static_cast<double>(RandomAngle))) * Impulse);
+      static_cast<vb_single>(std::cos(static_cast<double>(RandomAngle)) *
+                             static_cast<double>(Impulse)),
+      static_cast<vb_single>(std::sin(static_cast<double>(RandomAngle)) *
+                             static_cast<double>(Impulse)));
   sim.rob[n].ImpulseInd = VectorAdd(sim.rob[n].ImpulseInd, imp);
-  sim.rob[n].ma += (Impulse / 100.0f) * (sim.rnd() - 0.5f);
+  const vb_single r = sim.rnd();
+  sim.rob[n].ma = static_cast<vb_single>(
+      static_cast<double>(sim.rob[n].ma) +
+      static_cast<double>(Impulse / 100.0f) * (static_cast<double>(r) - 0.5));
 }
 
 // Physics.bas:54-70 — AddedMass (P0b, solo si Density != 0): masa de fluido
@@ -62,21 +69,25 @@ inline void AddedMass(Sim& sim, int n) {
   constexpr vb_single fourthirdspi = 4.18879f;
   constexpr vb_single AddedMassCoefficientForASphere = 0.5f;
   Bot& b = sim.rob[n];
-  if (sim.opts.Density == 0.0f)
+  if (sim.opts.Density == 0.0)
     b.AddedMass = 0.0f;
-  else
-    b.AddedMass = AddedMassCoefficientForASphere * sim.opts.Density *
-                  fourthirdspi * b.radius * b.radius * b.radius;
+  else  // Density es Double: toda la cadena en Double (RV-06).
+    b.AddedMass = static_cast<vb_single>(
+        static_cast<double>(AddedMassCoefficientForASphere) * sim.opts.Density *
+        static_cast<double>(fourthirdspi) * b.radius * b.radius * b.radius);
 }
 
 // Physics.bas:306-341 — SphereCd: coeficiente de arrastre por tramos de
 // Reynolds, constantes literales.
 inline vb_single SphereCd(Sim& sim, vb_single velocitymagnitude,
                           vb_single radius) {
-  if (sim.opts.Viscosity == 0.0f) return 0.0f;
-  if (velocitymagnitude < 0.00001f) velocitymagnitude = 0.00001f;
-  const vb_single Reynolds =
-      radius * 2 * velocitymagnitude * sim.opts.Density / sim.opts.Viscosity;
+  if (sim.opts.Viscosity == 0.0) return 0.0f;
+  if (static_cast<double>(velocitymagnitude) < 0.00001)
+    velocitymagnitude = 0.00001f;
+  // radius * 2 * v es Single; por Density (Double) pasa a Double (RV-06).
+  const vb_single Reynolds = static_cast<vb_single>(
+      static_cast<double>(radius * 2 * velocitymagnitude) * sim.opts.Density /
+      sim.opts.Viscosity);
 
   const vb_single y11 = static_cast<vb_single>(24.0 / (3.0 * 100000.0));
   const vb_single y12 =
@@ -106,11 +117,12 @@ inline vb_single SphereCd(Sim& sim, vb_single velocitymagnitude,
 // Physics.bas:121-156 — SphereDragForces: muta vel directamente y drena ma.
 inline void SphereDragForces(Sim& sim, int n) {
   Bot& b = sim.rob[n];
-  if ((b.vel.x == 0.0f && b.vel.y == 0.0f) || sim.opts.Density == 0.0f) return;
+  if ((b.vel.x == 0.0f && b.vel.y == 0.0f) || sim.opts.Density == 0.0) return;
 
   if (std::fabs(b.ma) > 0.0f) {
-    if (sim.opts.Density < 0.000001f)
-      b.ma = b.ma * (1.0f - (sim.opts.Density * 1000000.0f));
+    if (sim.opts.Density < 0.000001)
+      b.ma = static_cast<vb_single>(static_cast<double>(b.ma) *
+                                    (1.0 - (sim.opts.Density * 1000000.0)));
     else
       b.ma = 0.0f;
     if (std::fabs(b.ma) < 0.0000001f) b.ma = 0.0f;
@@ -123,7 +135,8 @@ inline void SphereDragForces(Sim& sim, int n) {
       0.5 * SphereCd(sim, mag, b.radius) * sim.opts.Density * mag * mag *
       (static_cast<double>(PI) *
        std::pow(static_cast<double>(b.radius), 2.0)));
-  if (Impulse > mag) Impulse = mag * 0.99f;
+  if (Impulse > mag)  // literal Double (RV-05)
+    Impulse = static_cast<vb_single>(static_cast<double>(mag) * 0.99);
   Vector u = VectorUnit(b.vel);
   Vector ImpulseVector = VectorScalar(u, Impulse);
   b.vel = VectorSub(b.vel, ImpulseVector);
@@ -339,8 +352,8 @@ inline void Repel3(Sim& sim, int rob1, int rob2) {
   const vb_single currdist = VectorMagnitude(normal);
 
   if ((r1.Fixed && r2.Fixed) ||
-      (VectorMagnitude(r1.vel) < 0.0001f &&
-       VectorMagnitude(r2.vel) < 0.0001f)) {
+      (static_cast<double>(VectorMagnitude(r1.vel)) < 0.0001 &&
+       static_cast<double>(VectorMagnitude(r2.vel)) < 0.0001)) {
     // Ambos fijos o ambos quietos: mitad y mitad, sin masas.
     const vb_single fixedSep = ((r1.radius + r2.radius) - currdist) / 2.0f;
     Vector u = VectorUnit(normal);
@@ -373,20 +386,25 @@ inline void Repel3(Sim& sim, int rob1, int rob2) {
     Vector vel1 = r1.vel;
     Vector vel2 = r2.vel;
 
-    vb_single projection = Dot(vel1, unit) * 0.99f;
+    // Dot * 0.99 y (e + 1#) * M: literal Double, producto en Double (RV-05).
+    vb_single projection =
+        static_cast<vb_single>(static_cast<double>(Dot(vel1, unit)) * 0.99);
     if (projection <= 0.0f) projection = 0.000001f;  // ya se alejan
     Vector V1 = VectorScalar(unit, projection);
 
-    projection = Dot(vel2, unit) * 0.99f;
+    projection =
+        static_cast<vb_single>(static_cast<double>(Dot(vel2, unit)) * 0.99);
     if (projection >= 0.0f) projection = -0.000001f;
     Vector V2 = VectorScalar(unit, projection);
 
-    Vector t1 = VectorScalar(V2, (e + 1.0f) * M2);
+    Vector t1 = VectorScalar(
+        V2, static_cast<vb_single>((static_cast<double>(e) + 1.0) * M2));
     Vector t2 = VectorScalar(V1, M1 - e * M2);
     Vector sum1 = VectorAdd(t1, t2);
     Vector V1f = VectorScalar(sum1, 1.0f / (M1 + M2));
 
-    Vector t3 = VectorScalar(V1, (e + 1.0f) * M1);
+    Vector t3 = VectorScalar(
+        V1, static_cast<vb_single>((static_cast<double>(e) + 1.0) * M1));
     Vector t4 = VectorScalar(V2, M2 - e * M1);
     Vector sum2 = VectorAdd(t3, t4);
     Vector V2f = VectorScalar(sum2, 1.0f / (M1 + M2));
@@ -609,9 +627,24 @@ inline void TrashCompactorMove(Sim& sim) {
     R.vel.x = -R.vel.x;
   }
   if (L.pos.x <= -L.Width) {
-    L.vel.x = sim.opts.shapeDriftRate * 0.1f;
-    R.vel.x = -sim.opts.shapeDriftRate * 0.1f;
+    // Integer * 0.1 (Double), redondeado una vez (RV-05).
+    L.vel.x = static_cast<vb_single>(sim.opts.shapeDriftRate * 0.1);
+    R.vel.x = static_cast<vb_single>(-sim.opts.shapeDriftRate * 0.1);
   }
+}
+
+// Obstacles.bas:359,362 — `vel + Random(-rate, rate) * Rndy * 0.01`. Random
+// devuelve un Variant: Single si hi - low + 1 cabe en Integer, Double si no.
+// `* Rndy` es VarMul (R4 x R4 -> R4, redondeo real a Single); `* 0.01` pasa a
+// Double y la suma se redondea una vez al asignar (RV-05).
+inline vb_single DriftStep(Sim& sim, vb_single vel, vb_long r) {
+  const bool single_path = 2L * sim.opts.shapeDriftRate + 1 <= 32767;
+  const double rr = static_cast<double>(sim.rnd());
+  const double prod = single_path
+                          ? static_cast<double>(static_cast<vb_single>(r) *
+                                                static_cast<vb_single>(rr))
+                          : static_cast<double>(r) * rr;
+  return static_cast<vb_single>(static_cast<double>(vel) + prod * 0.01);
 }
 
 // Obstacles.bas:355-372 — DriftObstacles: 2 RNG por eje activo y por forma
@@ -626,16 +659,12 @@ inline void DriftObstacles(Sim& sim) {
       if (sim.opts.allowHorizontalShapeDrift) {
         const vb_long r = Random(-sim.opts.shapeDriftRate,
                                  sim.opts.shapeDriftRate, *sim.rndy);
-        o.vel.x = static_cast<vb_single>(
-            static_cast<double>(o.vel.x) +
-            static_cast<double>(r) * static_cast<double>(sim.rnd()) * 0.01);
+        o.vel.x = DriftStep(sim, o.vel.x, r);
       }
       if (sim.opts.allowVerticalShapeDrift) {
         const vb_long r = Random(-sim.opts.shapeDriftRate,
                                  sim.opts.shapeDriftRate, *sim.rndy);
-        o.vel.y = static_cast<vb_single>(
-            static_cast<double>(o.vel.y) +
-            static_cast<double>(r) * static_cast<double>(sim.rnd()) * 0.01);
+        o.vel.y = DriftStep(sim, o.vel.y, r);
       }
       if (VectorMagnitude(o.vel) > sim.opts.MaxVelocity)
         o.vel = VectorScalar(o.vel, VectorMagnitude(o.vel) /
@@ -658,19 +687,19 @@ inline void MoveObstacles(Sim& sim) {
     o.pos = VectorAdd(o.pos, o.vel);
     if (o.pos.x < -o.Width) {
       o.pos.x = -o.Width;
-      o.vel.x = sim.opts.shapeDriftRate * 0.01f;
+      o.vel.x = static_cast<vb_single>(sim.opts.shapeDriftRate * 0.01);
     }
     if (o.pos.y < -o.Height) {
       o.pos.y = -o.Height;
-      o.vel.y = sim.opts.shapeDriftRate * 0.01f;
+      o.vel.y = static_cast<vb_single>(sim.opts.shapeDriftRate * 0.01);
     }
     if (o.pos.x > sim.opts.FieldWidth) {
       o.pos.x = sim.opts.FieldWidth;
-      o.vel.x = -sim.opts.shapeDriftRate * 0.01f;
+      o.vel.x = static_cast<vb_single>(-sim.opts.shapeDriftRate * 0.01);
     }
     if (o.pos.y > sim.opts.FieldHeight) {
       o.pos.y = sim.opts.FieldHeight;
-      o.vel.y = -sim.opts.shapeDriftRate * 0.01f;
+      o.vel.y = static_cast<vb_single>(-sim.opts.shapeDriftRate * 0.01);
     }
   }
 }

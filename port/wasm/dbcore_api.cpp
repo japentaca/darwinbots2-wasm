@@ -277,8 +277,8 @@ DB_EXPORT void db_sim_set_opt(void* h, int id, double v) {
     case 11: o.MaxVelocity = f; break;
     case 12: o.PhysMoving = f; break;
     case 13: o.PhysBrown = f; break;
-    case 14: o.Density = f; break;
-    case 15: o.Viscosity = f; break;
+    case 14: o.Density = v; break;    // Double en el original (RV-06)
+    case 15: o.Viscosity = v; break;
     case 16: o.CoefficientStatic = f; break;
     case 17: o.CoefficientKinetic = f; break;
     case 18: o.CoefficientElasticity = f; break;

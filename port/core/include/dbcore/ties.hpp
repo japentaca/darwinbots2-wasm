@@ -323,20 +323,19 @@ inline void TieTorque(Sim& sim, int t) {
           if (std::fabs(mm) > angleslack) {
             mm = (std::fabs(mm) - angleslack) *
                  static_cast<vb_single>(vb_sgn(mm));
-            const vb_single m = mm * 0.1f;
+            // mm * 0.1 y -Sin(anl) * m * dist / 10: literal e intrínseca
+            // Double, cadena en Double con un solo redondeo (RV-05).
+            const vb_single m =
+                static_cast<vb_single>(static_cast<double>(mm) * 0.1);
             const vb_single dx = sim.rob[n].pos.x - b.pos.x;
             const vb_single dy = b.pos.y - sim.rob[n].pos.y;
             const vb_single dist = static_cast<vb_single>(std::sqrt(
                 std::pow(static_cast<double>(dx), 2.0) +
                 std::pow(static_cast<double>(dy), 2.0)));
-            vb_single nax =
-                -static_cast<vb_single>(
-                    std::sin(static_cast<double>(anl))) *
-                m * dist / 10.0f;
-            vb_single nay =
-                -static_cast<vb_single>(
-                    std::cos(static_cast<double>(anl))) *
-                m * dist / 10.0f;
+            vb_single nax = static_cast<vb_single>(
+                -std::sin(static_cast<double>(anl)) * m * dist / 10.0);
+            vb_single nay = static_cast<vb_single>(
+                -std::cos(static_cast<double>(anl)) * m * dist / 10.0);
             if (std::fabs(nax) > 100.0f)
               nax = 100.0f * static_cast<vb_single>(vb_sgn(nax));
             if (std::fabs(nay) > 100.0f)

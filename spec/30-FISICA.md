@@ -25,6 +25,11 @@
    2×`Single`, `Common.bas:11-14`). Los autores lucharon contra el FP a mano: guardas
    de underflow `0.0000001` por todas partes (`Physics.bas:31-32,95,100,138,143`),
    `VectorMagnitude` con formulación estable `max·√(1+(min/max)²)` (`Common.bas:144-156`).
+   **Ojo con los intermedios** (revisión RV-05/RV-06, `REVISION-PORT.md`): el estado es
+   `Single`, pero `Sqr`/`Sin`/`Cos`/`^` devuelven `Double`, los literales con decimales
+   (`0.99`, `0.1`, `1#`) son `Double` y `SimOpts.Density`/`Viscosity` son `Double`
+   (`SimOptions.bas:134-135`): esas expresiones se evalúan en `Double` y se redondean
+   una sola vez al asignar.
 3. **La biblioteca de vectores tiene clamps ocultos que MUTAN sus argumentos.**
    `VectorScalar` clampa `k` y los componentes de `V1` a ±32000 **in place** (ByRef,
    `Common.bas:125-131`); `VectorMagnitudeSquare` clampa los componentes de su argumento

@@ -1901,7 +1901,7 @@ inline void UpdateBots(Sim& sim) {
   }
 
   // P0b — AddedMass, solo si el medio tiene densidad (Robots.bas:1516-1520).
-  if (sim.opts.Density != 0.0f) {
+  if (sim.opts.Density != 0.0) {
     for (int t = 1; t <= sim.MaxRobs; ++t)
       if (sim.rob[t].exist && !BaseHidden(sim, sim.rob[t])) AddedMass(sim, t);
   }

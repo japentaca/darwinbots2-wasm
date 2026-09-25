@@ -90,7 +90,7 @@ struct SimOptsT {
   vb_single PhysMoving = 0.66f;
   vb_single FieldWidth = 32000, FieldHeight = 32000;
   vb_single xDivisor = 1, yDivisor = 1;  // main.frm:1252-1256
-  vb_single Density = 0, Viscosity = 0;
+  vb_double Density = 0, Viscosity = 0;  // SimOptions.bas:134-135 (RV-06)
   vb_single Zgravity = 0, Ygravity = 0, PhysBrown = 0;
   vb_single CoefficientStatic = 0, CoefficientKinetic = 0;
   vb_single CoefficientElasticity = 0;  // OptionsForm.frm:2651 default
