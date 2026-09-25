@@ -1545,8 +1545,144 @@ exactos (`320000`, `10`); `1.15`/`1.75` van en `double`, como en el fuente.
   - `ZBreadyforTest` pone `x_restartmode = 9` y `TotRunCycle = 8001` en el
     proceso que muere (decisión E5).
 
+## Piloto 11 — Formatos (2026-09-25)
+
+**Alcance**:
+- `HDRoutines.bas`: `SaveRobotBody`/`LoadRobotBody` (con `FileContinue` y
+  `sint`), `LoadRobot`/`GiveAbsNum`, `SaveSimulation`/`LoadSimulation`,
+  `Save`/`LoadTeleporter`, `Save`/`LoadObstacle`, `Save`/`LoadShot`,
+  `RemapAllTies`/`RemapAllShots`, `SaveOrganism`/`LoadOrganism`/`AddSpecie`/
+  `PlaceOrganism`/`RemapTies`, `salvarob`, `Save_mrates`/`Load_mrates` y los
+  defaults de `LoadGlobalSettings`.
+- `Database.bas` (`Snapshot`, `AddRecord`).
+- `DeleteTeleporter` (`Teleport.bas:147-157`).
+
+Se compara con `formats.hpp`, `database.hpp` y `db_sim_load`/`db_sim_save`
+(`dbcore_api.cpp`). Cada campo se contrastó con su tipo declarado en `Type
+robot`, `tie`, `shot`, `Teleporter`, `Obstacle`, `SimOptions`, `datispecie` y
+`mutationprobs`, y con el tamaño que escribe `Put`: `Len()` es `Long`, un
+literal entero es `Integer` y `True`/`False` son `Boolean` de 2 bytes.
+**Fuera**: `SaveSimPopulation`/IM, las utilidades de torneo y los archivos
+`.gset` (⚙).
+
+**Resultado**: 2 divergencias pequeñas (RV-30 y RV-31, corregidas) y 1 nota. El formato
+binario de bot, organismo y sim coincide byte a byte. No hay literales
+`float` inexactos en `formats.hpp` ni en `database.hpp`.
+
+### RV-30 · `SaveSimulation`/`LoadSimulation` no fuerzan `lblSaving.Visible = True` — CORREGIDO (no tenía efecto en el producto)
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir los dos)**: las dos
+> rutinas copian el `FormatGlobals` recibido y encienden `lblSaving_visible`
+> antes de recorrer los bots. Test RV-30 sin `should_fail`.
+
+- **Fuente** (`HDRoutines.bas:541` y `:1108`): las dos rutinas encienden el
+  cartel antes de recorrer los bots y lo apagan al final (`:842`, `:1558`).
+  Dentro de ellas, `SaveRobotBody` y `LoadRobotBody` siempre ven
+  `lblSaving.Visible = True`, y eso tiene tres efectos:
+  - el tag no se contamina con el `nrg` al guardar (`:2203`);
+  - no hay descalificación eco-IM al cargar (`:1909`);
+  - se toma la rama que lee siempre el `LastMutDetail` (`:1750`).
+- **Port** (`formats.hpp:1334`, `:1588`): pasa a los bots el `FormatGlobals`
+  que recibe. `db_sim_save` fija el flag a mano; `db_sim_load` pasa uno por
+  defecto (apagado).
+- **Contraejemplo**: con `g.y_eco_im = 1` y el cartel apagado:
+  - `SaveSimulation` deja el tag del bot en `"A.txt … 1234."` y el original
+    no lo toca;
+  - `LoadSimulation` del mismo archivo deja `dq = 2` en un bot `A.txt` y el
+    original, `dq = 0`.
+- **Alcance**: hoy ninguno. El port no activa eco-IM (`y_eco_im` es siempre
+  0), y `db_sim_load` resetea la sim (`TotalRobotsDisplayed = 0`, así que
+  nunca se salta el detalle). Solo se ve llamando al core directamente.
+- **Arreglo propuesto**: que las dos rutinas copien `g` y pongan
+  `lblSaving_visible = true` antes del bucle de bots.
+- **Test**: RV-30.
+
+### RV-31 · `Save_mrates` escribe los `Single` enteros ≥ 1E+07 con todas sus cifras — CORREGIDO
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir los dos)**:
+> `vb_write_single` usa `%.7G` para todos los valores y conserva el recorte del
+> cero inicial. Test RV-31 sin `should_fail`. `60-FORMATOS.md` (sidecar
+> `.mrate` y quirk eco-IM) queda al día.
+>
+> - **Mutation-check**: con `formats.hpp` de HEAD fallan RV-30 y RV-31.
+> - **Suites**: 245 casos y 3950 aserciones en g++, clang y wasm, sin fallos.
+>   Los 4 smoke tests pasan.
+
+- **Fuente** (`HDRoutines.bas:2562-2575`): `Write #1, .mutarray(m)` formatea
+  cada `Single` en formato general con 7 cifras significativas y el exponente
+  en mayúscula. Es el criterio que el port ya adoptó para `CStr` sobre coma
+  flotante (`database.hpp:37-48`, `70-CASOS-DORADOS.md` E6, y el tag de
+  eco-IM). Es un criterio de fuente secundaria: no hay oráculo.
+- **Port** (`formats.hpp`, `vb_write_single`): un atajo `%.0f` para los
+  valores enteros y `%.7g` (exponente en minúscula) para el resto.
+- **Contraejemplo**:
+
+  | Valor | Original | Port |
+  |---|---|---|
+  | `mutarray = 12345678` | `1.234568E+07` | `12345678` |
+  | `mutarray = 2E+09` | `2E+09` | `2000000000` |
+  | `Mean = 1.5E-05` | `1.5E-05` | `1.5e-05` |
+
+  El primero cambia además el valor al recargar: el original vuelve con
+  **12345680** y el port con **12345678**.
+- **Alcance**: tasas ≥ 1E+07. Se alcanzan en el modo zerobot, donde
+  `calculateZB` multiplica por 1,15 y 1,75 con tope `MratesMax` = 2E+09, y
+  `ZBreadyforTest` guarda el `.mrate` del mejor bot.
+- **Arreglo propuesto**: `%.7G` para todos los valores, conservando el
+  recorte del cero inicial (`.5`) que ya hace el port.
+- **Test**: RV-31.
+
+### Nota (sin acción)
+- **Estado de sesión que el `.sim` no guarda**:
+  - `SimOpts.Specie(k)` es un array fijo. `LoadSimulation` y `AddSpecie` no
+    escriben `NoChlr`, `kill_mb`, `dq_kill` ni `Comment`, así que conservan
+    lo que hubiera en ese índice. `aggiungirob` los usa al repoblar
+    (`Globals.bas:492-494`).
+  - `LoadRobotBody` mata vegetales con el `TotalChlr`/`MaxPopulation` de la
+    sim anterior (`:1916`).
+
+  El port parte de una `Sim` limpia (`db_sim_load`) y usa los valores por
+  defecto. Es el comportamiento de un arranque en frío del original.
+
+### Verificado sin divergencias
+- **Registro de bot**:
+  - El orden y el tamaño de los ~150 campos, incluidas las 15 ties "v2.37" y
+    los campos muertos (`ln`/`shrink`/`stat`/`mem`, el `k` repetido y los
+    501×3 `Long` de ancestros).
+  - El `t` sobrante del `For` del esperma como contador.
+  - El escape `Int → Long` de `LastMutDetail`, `sint` con `Mod`, el `tag`
+    `String * 50` y el terminador 254×3.
+  - En la carga: la rama `k < 0 → OldFile`, los clamps
+    (`shell`/`Slime`/`NaturalLength`/`chloroplasts`/`Chlr_Share_Delay`/`dq`),
+    las guardas de `Boolean` que solo aceptan -1, `MessedUpMutations`,
+    `dq -= 2`, el `Corpse` con `nrg` 0 y el reset sunbelt si falta el campo.
+- **Sim**:
+  - Las capas "new stuff" en orden, con `Len` como `Long` y los literales
+    `0`/`8` como `Integer`.
+  - Los `Pos*` viejos se leen como `Single` y se descartan, y
+    `Viscosity`/`Density` son `Double`.
+  - Presets y clamps de compatibilidad (`BadWastelevel`,
+    `chartingInterval`, `FluidSolidCustom`, `CostRadioSetting`,
+    `MaxVelocity`, sol) y el borrado de teleporters Internet con el tope del
+    `For` cacheado.
+  - `DisableMutations` nunca sobrevive a una carga, y
+    `DYNAMICCOSTSENSITIVITY` pasa de 0 a 500.
+  - 18 gráficas; evo, sol y mareas.
+- **Shots, teleporters y obstáculos**: el ADN solo para -7/-8 vivos; el
+  `.dna` viejo se conserva con `k ≤ 0`; los defaults 10/10/10 y el de
+  heterótrofos.
+- **Organismos**: `LastOwner = IName` al guardar, la búsqueda de especie
+  hacia atrás, `AddSpecie` con el slot de reserva, `PlaceOrganism` relativo a
+  la célula 0 y la poda de ties de `RemapTies`.
+- **Texto**: `salvarob` (cabecera, gen epigenético, hash, `'#tag:` con doble
+  salto) y `Database.bas` (los `Print` con `;`, el recorte `Mid(d, L-3, 2)` y
+  la cabecera única de `AddRecord`).
+- **Defaults** de `LoadGlobalSettings` frente a `Sim`: `bodyfix`, epi,
+  Delta, `NormMut`/`valNormMut`/`valMaxNormMut` e `intFindBestV2`.
+
 ## Siguientes pilotos sugeridos
 
-1. Lo que queda sin revisar del núcleo: `Database.bas`/`HDRoutines.bas`
-   (formatos). En cada piloto
-   hay que clasificar sus literales `float` inexactos (ver RV-05).
+1. Con el piloto 11, el núcleo está revisado entero. Si se abre otro
+   piloto (por ejemplo, la capa host de `dbcore_api.cpp` frente a los
+   formularios), hay que clasificar sus literales `float` inexactos (ver
+   RV-05).

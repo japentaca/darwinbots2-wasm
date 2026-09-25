@@ -6,6 +6,7 @@
 #include <string>
 
 #include "doctest.h"
+#include "dbcore/formats.hpp"
 #include "dbcore/master.hpp"
 #include "dbcore/vm.hpp"
 
@@ -1073,4 +1074,47 @@ TEST_CASE("RV-29e lookoccurrShape: velocidad relativa en Double") {
   w.sim.numObstacles = 1;
   lookoccurrShape(w.sim, n, 1);
   CHECK(w.sim.rob[n].mem[addr::refvelup] == 59);  // antes del arreglo: 60
+}
+
+// ---------------------------------------------------------------------------
+// Piloto 11 — Formatos (HDRoutines.bas, Database.bas).
+
+// RV-30 — HDRoutines.bas:541 y :1108: SaveSimulation y LoadSimulation ponen
+// `Form1.lblSaving.Visible = True` antes de recorrer los bots, asi que
+// SaveRobotBody/LoadRobotBody nunca ven el cartel apagado dentro de ellas: el
+// tag no se contamina al guardar (:2203) ni se descalifica al cargar (:1909).
+// El port toma el flag del FormatGlobals que le pasan.
+TEST_CASE("RV-30 SaveSimulation/LoadSimulation fuerzan lblSaving visible") {
+  RvWorld w;
+  const int n = w.spawn("cond start 1 1 store stop", 1000.0f, 1000.0f);
+  w.sim.rob[n].nrg = 1234.5f;
+  const std::string tag0 = w.sim.rob[n].tag;
+  FormatGlobals g;
+  g.y_eco_im = 1;  // modo eco-IM, cartel apagado (como en el tick)
+  VbBinFile f;
+  SaveSimulation(w.sim, f, g);
+  CHECK(w.sim.rob[n].tag == tag0);  // port: FName + nrg en el tag
+
+  RvWorld w2;
+  f.pos = 0;
+  LoadSimulation(w2.sim, f, g);
+  CHECK(w2.sim.rob[1].dq == 0);  // port: 2 (A.txt no es Mutate/Base)
+}
+
+// RV-31 — HDRoutines.bas:2562-2575: `Write #1, .mutarray(m)` formatea el
+// Single con 7 cifras significativas y exponente en mayuscula (el criterio
+// que el port ya adopta para CStr en database.hpp y en el tag de eco-IM). El
+// atajo %.0f del port escribe los enteros >= 1E+07 con todas sus cifras: el
+// archivo difiere y, al recargarlo, el original lee 12345680 donde el port
+// conserva 12345678.
+TEST_CASE("RV-31 Save_mrates: Single en formato general de 7 cifras") {
+  Mutationprobs m{};
+  m.mutarray[0] = 12345678.0f;
+  m.mutarray[1] = 2000000000.0f;
+  m.Mean[1] = 1.5e-5f;
+  const std::string s = Save_mrates(m);
+  CHECK(s.find("\r\n1.234568E+07\r\n") != std::string::npos);
+  CHECK(s.find("\r\n2E+09\r\n") != std::string::npos);
+  CHECK(s.find("\r\n1.5E-05\r\n") != std::string::npos);
+  CHECK(Load_mrates(s).mutarray[0] == 12345680.0f);
 }

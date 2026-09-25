@@ -1332,8 +1332,12 @@ inline void LoadShot(Sim& sim, VbBinFile& f, vb_long t) {
 // mismo (recursión infinita con ruta no escribible); en el port la
 // escritura a búfer no falla y la capa host NO reintenta (decisión M5).
 inline void SaveSimulation(Sim& sim, VbBinFile& f,
-                           const FormatGlobals& g = {}) {
+                           const FormatGlobals& gin = {}) {
   using formats_detail::put_lstr32;
+  // Form1.lblSaving.Visible = True (:541): SaveRobotBody lo ve encendido
+  // (el tag eco-IM no se contamina, :2203). RV-30.
+  FormatGlobals g = gin;
+  g.lblSaving_visible = true;
 
   vb_integer numOfExistingBots = 0;
   for (int x = 1; x <= sim.MaxRobs; ++x)
@@ -1586,8 +1590,12 @@ inline void SaveSimulation(Sim& sim, VbBinFile& f,
 // carga; el SimGUID ausente se regeneraba con Rnd CRUDO (fuera del flujo
 // rndy) — aquí queda en 0 y la capa host decide (documentado, Q01).
 inline void LoadSimulation(Sim& sim, VbBinFile& f,
-                           const FormatGlobals& g = {}) {
+                           const FormatGlobals& gin = {}) {
   auto& C = sim.vm.costs.v;
+  // Form1.lblSaving.Visible = True (:1108): LoadRobotBody lee siempre el
+  // LastMutDetail (:1750) y salta la descalificación eco-IM (:1909). RV-30.
+  FormatGlobals g = gin;
+  g.lblSaving_visible = true;
   auto get_str32 = [&f]() {
     const vb_long k = f.get_i32();
     return f.get_str(static_cast<std::size_t>(k < 0 ? -k : k));  // Abs
@@ -1947,20 +1955,18 @@ inline void LoadSimulation(Sim& sim, VbBinFile& f,
 // Sidecar .mrate (60-FORMATOS.md §1) — HDRoutines.bas:2562-2592. Formato de
 // texto de VB6 (Write # / Input #): un valor por línea. Solo persiste los
 // operadores 0..10 ("keeping some backword compatability"): las celdas
-// 11..20 de mutarray/Mean/StdDev NO viajan. Los Singles del dominio real
-// son enteros; el formateo VB6 de fraccionarios (".5" sin cero inicial) se
-// replica por si acaso.
+// 11..20 de mutarray/Mean/StdDev NO viajan. Los Single salen con 7 cifras
+// significativas (desde 1E+07 en notación E, que al recargar puede cambiar
+// el valor, RV-31); el formateo VB6 de fraccionarios (".5" sin cero
+// inicial) se replica por si acaso.
 
 namespace formats_detail {
+// Formato general de 7 cifras significativas con exponente en mayúscula
+// (1.234568E+07, 2E+09), el criterio de CStr(Single) del port (RV-31).
 inline std::string vb_write_single(vb_single v) {
   const double d = static_cast<double>(v);
-  if (d == std::floor(d) && std::fabs(d) < 1e15) {
-    char buf[32];
-    std::snprintf(buf, sizeof(buf), "%.0f", d);
-    return buf;
-  }
   char buf[48];
-  std::snprintf(buf, sizeof(buf), "%.7g", d);
+  std::snprintf(buf, sizeof(buf), "%.7G", d);
   std::string s = buf;
   if (s.rfind("0.", 0) == 0) s.erase(0, 1);          // 0.5 -> .5
   else if (s.rfind("-0.", 0) == 0) s.erase(1, 1);    // -0.5 -> -.5

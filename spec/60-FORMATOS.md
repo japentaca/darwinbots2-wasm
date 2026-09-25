@@ -62,12 +62,19 @@ Estructura del archivo generado:
 5. `'#tag:` si el bot lleva tag.
 
 Sidecar: `<nombre>.mrate` con las `Mutables` (`Save_mrates`/`Load_mrates`,
-`:2562-2592`). Al terminar, un **`MsgBox` interactivo** ofrece renombrar la especie
+`:2562-2592`). `Write #` formatea cada `Single` en formato general con 7 cifras
+significativas y el exponente en mayúscula (`1.234568E+07`, `2E+09`). Es el criterio
+de `CStr` sobre coma flotante adoptado por el port (fuente secundaria, sin oráculo).
+Una tasa ≥ 1E+07 puede cambiar de valor al recargar: 12345678 vuelve como
+12345680 (RV-31). Al terminar, un **`MsgBox` interactivo** ofrece renombrar la especie
 (`:2307-2309`, ⚙ UI).
 
 Quirk de guardado en modo eco-IM (`y_eco_im > 0`): el **tag se reescribe con el
 nombre + los primeros dígitos del `nrg`** antes de persistirlo (`:2202-2207`) — el
-tag deja de ser un identificador estable.
+tag deja de ser un identificador estable. Solo ocurre con el cartel `lblSaving`
+apagado. `SaveSimulation` y `LoadSimulation` lo encienden durante todo el recorrido de
+bots (`:541`, `:1108`), así que dentro de un `.sim` el tag no se contamina ni se
+aplica la descalificación eco-IM de la carga (`:1909`) (RV-30).
 
 ## 2. Registro binario de bot (`SaveRobotBody`/`LoadRobotBody`)
 
