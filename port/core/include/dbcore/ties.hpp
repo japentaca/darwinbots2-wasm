@@ -146,11 +146,13 @@ inline bool maketie(Sim& sim, int a, int b, vb_long c, vb_integer last,
   bool OK = true;
   int k = 1, j = 1;
 
+  // Dim Length As Long: la distancia se redondea (CLng) y la NaturalLength
+  // de la tie nueva es entera (RV-18).
   Vector diff = VectorSub(sim.rob[a].pos, sim.rob[b].pos);
-  const vb_single Length = VectorMagnitude(diff);
+  const vb_long Length = vb_clng(VectorMagnitude(diff));
   bool made = false;
 
-  if (Length <= static_cast<vb_single>(c) * 1.5f) {
+  if (static_cast<double>(Length) <= static_cast<double>(c) * 1.5) {
     if (static_cast<vb_single>(deflect) < sim.rob[b].Slime) OK = false;
     if (OK) DeleteTie(sim, a, b);
 
@@ -161,7 +163,7 @@ inline bool maketie(Sim& sim, int a, int b, vb_long c, vb_integer last,
       Tie& ta = sim.rob[a].Ties[k];
       ta.pnt = static_cast<vb_integer>(b);
       ta.ptt = static_cast<vb_integer>(j);
-      ta.NaturalLength = Length;
+      ta.NaturalLength = static_cast<vb_single>(Length);
       ta.stat = false;
       ta.last = last;
       ta.Port = mem;
@@ -177,7 +179,7 @@ inline bool maketie(Sim& sim, int a, int b, vb_long c, vb_integer last,
       Tie& tb = sim.rob[b].Ties[j];
       tb.pnt = static_cast<vb_integer>(a);
       tb.ptt = static_cast<vb_integer>(k);
-      tb.NaturalLength = Length;
+      tb.NaturalLength = static_cast<vb_single>(Length);
       tb.stat = false;
       tb.last = last;
       tb.back = true;
@@ -447,8 +449,9 @@ inline void sharenrg(Sim& sim, int t, int k) {
   }
 
   const vb_single totnrg = b.nrg + o.nrg;
-  vb_single portionThatsMine =
-      totnrg * (static_cast<vb_single>(b.mem[830]) / 100.0f);
+  // totnrg * (CSng(m) / 100#): Single * Double, un redondeo (RV-20).
+  vb_single portionThatsMine = static_cast<vb_single>(
+      static_cast<double>(totnrg) * (static_cast<double>(b.mem[830]) / 100.0));
   if (portionThatsMine > 32000.0f) portionThatsMine = 32000.0f;
   vb_single myChangeInNrg = portionThatsMine - b.nrg;
   if (std::fabs(myChangeInNrg) > b.body)
@@ -460,10 +463,24 @@ inline void sharenrg(Sim& sim, int t, int k) {
 
   b.nrg += myChangeInNrg;
   o.nrg -= myChangeInNrg;
-  b.nrg -= std::fabs(myChangeInNrg) * 0.01f;
+  b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) -
+                                 std::fabs(static_cast<double>(myChangeInNrg)) * 0.01);
   if (b.nrg > 32000.0f) b.nrg = 32000.0f;
   if (o.nrg > 32000.0f) o.nrg = 32000.0f;
 }
+
+namespace ties_detail {
+// `tot * (CSng(m) / 100#)` y `tot * ((100# - CSng(m)) / 100#)`: Single * Double,
+// comparado con 32000 en Double y redondeado una vez al asignar (RV-20).
+inline vb_single share_part(vb_single tot, double frac) {
+  const double v = static_cast<double>(tot) * frac;
+  return v < 32000.0 ? static_cast<vb_single>(v) : 32000.0f;
+}
+inline double pct_mine(vb_integer m) { return static_cast<double>(m) / 100.0; }
+inline double pct_theirs(vb_integer m) {
+  return (100.0 - static_cast<double>(m)) / 100.0;
+}
+}  // namespace ties_detail
 
 // Robots.bas:1895-1911 — shareslime: clamp 0..99 en la celda.
 inline void shareslime(Sim& sim, int t, int k) {
@@ -472,11 +489,8 @@ inline void shareslime(Sim& sim, int t, int k) {
   if (b.mem[833] > 99) b.mem[833] = 99;
   if (b.mem[833] < 0) b.mem[833] = 0;
   const vb_single totslime = b.Slime + o.Slime;
-  const vb_single mine = totslime * (static_cast<vb_single>(b.mem[833]) / 100.0f);
-  b.Slime = (mine < 32000.0f) ? mine : 32000.0f;
-  const vb_single theirs =
-      totslime * ((100.0f - static_cast<vb_single>(b.mem[833])) / 100.0f);
-  o.Slime = (theirs < 32000.0f) ? theirs : 32000.0f;
+  b.Slime = ties_detail::share_part(totslime, ties_detail::pct_mine(b.mem[833]));
+  o.Slime = ties_detail::share_part(totslime, ties_detail::pct_theirs(b.mem[833]));
 }
 
 // Robots.bas:1913-1930 — sharewaste (0..99).
@@ -486,11 +500,8 @@ inline void sharewaste(Sim& sim, int t, int k) {
   if (b.mem[831] > 99) b.mem[831] = 99;
   if (b.mem[831] < 0) b.mem[831] = 0;
   const vb_single totwaste = b.Waste + o.Waste;
-  const vb_single mine = totwaste * (static_cast<vb_single>(b.mem[831]) / 100.0f);
-  b.Waste = (mine < 32000.0f) ? mine : 32000.0f;
-  const vb_single theirs =
-      totwaste * ((100.0f - static_cast<vb_single>(b.mem[831])) / 100.0f);
-  o.Waste = (theirs < 32000.0f) ? theirs : 32000.0f;
+  b.Waste = ties_detail::share_part(totwaste, ties_detail::pct_mine(b.mem[831]));
+  o.Waste = ties_detail::share_part(totwaste, ties_detail::pct_theirs(b.mem[831]));
 }
 
 // Robots.bas:1931-1953 — shareshell: publica mem(823) en AMBOS extremos.
@@ -500,11 +511,8 @@ inline void shareshell(Sim& sim, int t, int k) {
   if (b.mem[832] > 99) b.mem[832] = 99;
   if (b.mem[832] < 0) b.mem[832] = 0;
   const vb_single totshell = b.shell + o.shell;
-  const vb_single theirs =
-      totshell * ((100.0f - static_cast<vb_single>(b.mem[832])) / 100.0f);
-  o.shell = (theirs < 32000.0f) ? theirs : 32000.0f;
-  const vb_single mine = totshell * (static_cast<vb_single>(b.mem[832]) / 100.0f);
-  b.shell = (mine < 32000.0f) ? mine : 32000.0f;
+  o.shell = ties_detail::share_part(totshell, ties_detail::pct_theirs(b.mem[832]));
+  b.shell = ties_detail::share_part(totshell, ties_detail::pct_mine(b.mem[832]));
   b.mem[823] = vb_cint(b.shell);
   o.mem[823] = vb_cint(o.shell);
 }
@@ -526,13 +534,10 @@ inline void sharechloroplasts(Sim& sim, int t, int k) {
   if (b.mem[addr::sharechlr] > 99) b.mem[addr::sharechlr] = 99;
   if (b.mem[addr::sharechlr] < 0) b.mem[addr::sharechlr] = 0;
   const vb_single totchlr = b.chloroplasts + o.chloroplasts;
-  const vb_single mine =
-      totchlr * (static_cast<vb_single>(b.mem[addr::sharechlr]) / 100.0f);
-  b.chloroplasts = (mine < 32000.0f) ? mine : 32000.0f;
-  const vb_single theirs =
-      totchlr *
-      ((100.0f - static_cast<vb_single>(b.mem[addr::sharechlr])) / 100.0f);
-  o.chloroplasts = (theirs < 32000.0f) ? theirs : 32000.0f;
+  b.chloroplasts =
+      ties_detail::share_part(totchlr, ties_detail::pct_mine(b.mem[addr::sharechlr]));
+  o.chloroplasts =
+      ties_detail::share_part(totchlr, ties_detail::pct_theirs(b.mem[addr::sharechlr]));
 }
 
 namespace ties_detail {
@@ -541,6 +546,8 @@ namespace ties_detail {
 // -4 waste, -6 body) de Update_Ties (Ties.bas:339-645). Transcritos
 // completos, capa torneo incluida (E5): dar/tomar nrg o body a través de
 // una tie con un rival descalifica bajo Disqualify = 1.
+// Los `l * 0.7`, `* 0.029`, `* 0.01`... son literales Double: cada
+// acumulacion va en Double con un solo redondeo al asignar (RV-20).
 inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
   Bot& b = sim.rob[t];
   constexpr int tp = addr::tieport1;
@@ -560,11 +567,11 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
         Bot& o = sim.rob[b.Ties[k].pnt];
         if (l > 0.0f) {
           if (l > b.nrg) l = b.nrg;
-          o.nrg += l * 0.7f;
+          o.nrg = static_cast<vb_single>(static_cast<double>(o.nrg) + static_cast<double>(l) * 0.7);
           if (o.nrg > 32000.0f) o.nrg = 32000.0f;
-          o.body += l * 0.029f;
+          o.body = static_cast<vb_single>(static_cast<double>(o.body) + static_cast<double>(l) * 0.029);
           if (o.body > 32000.0f) o.body = 32000.0f;
-          o.Waste += l * 0.01f;
+          o.Waste = static_cast<vb_single>(static_cast<double>(o.Waste) + static_cast<double>(l) * 0.01);
           o.radius = FindRadius(sim, b.Ties[k].pnt);
           b.nrg -= l;
           // E5 (Ties.bas:370-371) — Disqualify = 1.
@@ -595,11 +602,11 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
             }
             b.Pval = o.mem[839];
           }
-          b.nrg -= l * 0.7f;
+          b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) - static_cast<double>(l) * 0.7);
           if (b.nrg > 32000.0f) b.nrg = 32000.0f;
-          b.body -= l * 0.029f;
+          b.body = static_cast<vb_single>(static_cast<double>(b.body) - static_cast<double>(l) * 0.029);
           if (b.body > 32000.0f) b.body = 32000.0f;
-          b.Waste -= l * 0.01f;
+          b.Waste = static_cast<vb_single>(static_cast<double>(b.Waste) - static_cast<double>(l) * 0.01);
           b.radius = FindRadius(sim, t);
           o.nrg += l;
           if (o.nrg <= 0.0f && !o.Dead) {
@@ -677,15 +684,15 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
         Bot& o = sim.rob[b.Ties[k].pnt];
         if (l > 0.0f) {
           if (l > b.Waste) l = b.Waste;
-          o.Waste += l * 0.99f;
+          o.Waste = static_cast<vb_single>(static_cast<double>(o.Waste) + static_cast<double>(l) * 0.99);
           b.Waste -= l;
-          b.Pwaste += l * 0.01f;
+          b.Pwaste = static_cast<vb_single>(static_cast<double>(b.Pwaste) + static_cast<double>(l) * 0.01);
         }
         if (l < 0.0f) {
           if (l < -o.Waste) l = -o.Waste;
-          b.Waste -= l * 0.99f;
+          b.Waste = static_cast<vb_single>(static_cast<double>(b.Waste) - static_cast<double>(l) * 0.99);
           o.Waste += l;
-          o.Pwaste -= l * 0.01f;
+          o.Pwaste = static_cast<vb_single>(static_cast<double>(o.Pwaste) - static_cast<double>(l) * 0.01);
         }
         if (!b.Ties[k].back)
           b.Ties[k].nrgused = true;
@@ -709,11 +716,11 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
         Bot& o = sim.rob[b.Ties[k].pnt];
         if (l > 0.0f) {
           if (l > b.body) l = b.body;
-          o.nrg += l * 0.03f;
+          o.nrg = static_cast<vb_single>(static_cast<double>(o.nrg) + static_cast<double>(l) * 0.03);
           if (o.nrg > 32000.0f) o.nrg = 32000.0f;
-          o.body += l * 0.987f;
+          o.body = static_cast<vb_single>(static_cast<double>(o.body) + static_cast<double>(l) * 0.987);
           if (o.body > 32000.0f) o.body = 32000.0f;
-          o.Waste += l * 0.01f;
+          o.Waste = static_cast<vb_single>(static_cast<double>(o.Waste) + static_cast<double>(l) * 0.01);
           o.radius = FindRadius(sim, b.Ties[k].pnt);
           b.body -= l;
           // E5 (Ties.bas:576-577) — Disqualify = 1.
@@ -744,11 +751,11 @@ inline void tie_transfers(Sim& sim, int t, vb_integer tn) {
             }
             b.Pval = o.mem[839];
           }
-          b.nrg -= l * 0.03f;
+          b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) - static_cast<double>(l) * 0.03);
           if (b.nrg > 32000.0f) b.nrg = 32000.0f;
-          b.body -= l * 0.987f;
+          b.body = static_cast<vb_single>(static_cast<double>(b.body) - static_cast<double>(l) * 0.987);
           if (b.body > 32000.0f) b.body = 32000.0f;
-          b.Waste -= l * 0.01f;
+          b.Waste = static_cast<vb_single>(static_cast<double>(b.Waste) - static_cast<double>(l) * 0.01);
           b.radius = FindRadius(sim, t);
           o.body += l;
           if (o.body <= 0.0f && !o.Dead) {  // (esta vía no excluye corpses)
@@ -871,9 +878,11 @@ inline void Update_Ties(Sim& sim, int t) {
       }
       // fixlen (Ties.bas:251-258)
       if (b.mem[addr::FIXLEN] != 0 && b.Ties[k].Port == tn) {
-        vb_long Length = std::abs(static_cast<vb_long>(b.mem[addr::FIXLEN])) +
-                         static_cast<vb_long>(b.radius) +
-                         static_cast<vb_long>(sim.rob[b.Ties[k].pnt].radius);
+        // Integer + Single + Single asignado a Long: CLng de la suma (RV-19).
+        vb_long Length = vb_clng(
+            static_cast<double>(std::abs(static_cast<vb_long>(b.mem[addr::FIXLEN]))) +
+            static_cast<double>(b.radius) +
+            static_cast<double>(sim.rob[b.Ties[k].pnt].radius));
         if (Length > 32000) Length = 32000;
         b.Ties[k].NaturalLength = static_cast<vb_single>(Length);
         // srctie puede devolver 0: el original escribe en Ties(0), el slot
@@ -887,11 +896,14 @@ inline void Update_Ties(Sim& sim, int t) {
         b.mem[addr::stifftie] = static_cast<vb_integer>(b.mem[addr::stifftie] % 100);
         if (b.mem[addr::stifftie] == 0) b.mem[addr::stifftie] = 100;
         if (b.mem[addr::stifftie] < 0) b.mem[addr::stifftie] = 1;
-        b.Ties[k].b = 0.005f * b.mem[addr::stifftie];
-        b.Ties[k].k = 0.0025f * b.mem[addr::stifftie];
+        // Literal Double * Integer: un solo redondeo al asignar (RV-20).
+        const vb_single sb = static_cast<vb_single>(0.005 * b.mem[addr::stifftie]);
+        const vb_single sk = static_cast<vb_single>(0.0025 * b.mem[addr::stifftie]);
+        b.Ties[k].b = sb;
+        b.Ties[k].k = sk;
         const int st = srctie(sim, b.Ties[k].pnt, t);
-        sim.rob[b.Ties[k].pnt].Ties[st].b = 0.005f * b.mem[addr::stifftie];
-        sim.rob[b.Ties[k].pnt].Ties[st].k = 0.0025f * b.mem[addr::stifftie];
+        sim.rob[b.Ties[k].pnt].Ties[st].b = sb;
+        sim.rob[b.Ties[k].pnt].Ties[st].k = sk;
       }
     }
     k += 1;
@@ -907,9 +919,9 @@ inline void Update_Ties(Sim& sim, int t) {
     for (k = 1; k <= 4; ++k) {
       if (b.Ties[k].pnt > 0 && b.Ties[k].type == 3) {
         if (b.TieLenOverwrite[k - 1]) {
-          vb_long Length = static_cast<vb_long>(b.mem[483 + k]) +
-                           static_cast<vb_long>(b.radius) +
-                           static_cast<vb_long>(sim.rob[b.Ties[k].pnt].radius);
+          vb_long Length = vb_clng(  // CLng de la suma (RV-19)
+              static_cast<double>(b.mem[483 + k]) + static_cast<double>(b.radius) +
+              static_cast<double>(sim.rob[b.Ties[k].pnt].radius));
           if (Length > 32000) Length = 32000;
           b.Ties[k].NaturalLength = static_cast<vb_single>(Length);
           const int st = srctie(sim, b.Ties[k].pnt, t);

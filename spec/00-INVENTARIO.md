@@ -68,6 +68,16 @@ sin optimizar, **con todos los chequeos**):
   sentencias). Queda como única fuente de divergencia numérica la precisión extendida
   x87 **dentro de una expresión** (doble redondeo), acotada y no falsable sin el
   binario (ver Q07).
+  - **Excepción documentada (2026-09-25, revisión del port, piloto 6)**: en
+    `CInt(x * 200)` o `CInt(dist - r1 - r2)` con operandos `Single`:
+    - **Lectura N-06** (RV-03 en `REVISION-PORT.md`): se redondearía a entero
+      el valor extendido.
+    - **Port**: redondea antes el producto o la resta a `float` (binary32 por
+      operación). Se acepta como límite asumido, sin tocar el port.
+    - **Cuándo difiere**: solo si ese redondeo cruza una frontera de .5, con una
+      frecuencia de 10⁻⁵ a 10⁻⁴ por llamada.
+    - **Excepción dentro de la excepción**: RV-07, donde el propio fuente
+      compara `Round` con `CInt` y la diferencia es observable.
 
 **Qué pasa con esos errores en runtime — la semántica que importa**: la simulación
 arranca siempre con `MDIForm1.ignoreerror = True` desde 2014 (`MDIForm1.frm:1701-1703`),

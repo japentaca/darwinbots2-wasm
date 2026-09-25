@@ -584,3 +584,117 @@ TEST_CASE("RV-15b robshoot: Cost = multiplier * c1 * c2 en el orden del fuente")
   robshoot(w.sim, n);
   CHECK(b.nrg == 9.5f - 8.94200039f);  // antes del arreglo: 9.5 - 8.94200134
 }
+
+// ---------------------------------------------------------------------------
+// Piloto 6 — Ties (Ties.bas, share* de Robots.bas).
+
+namespace {
+
+// Tie endurecida (type 3) entre a y c por el puerto 1, vista desde a.
+void HardTie(RvWorld& w, int a, int c) {
+  Bot& ba = w.sim.rob[a];
+  Bot& bc = w.sim.rob[c];
+  ba.Ties[1].pnt = static_cast<vb_integer>(c);
+  ba.Ties[1].ptt = 1;
+  ba.Ties[1].Port = 1;
+  ba.Ties[1].type = 3;
+  bc.Ties[1].pnt = static_cast<vb_integer>(a);
+  bc.Ties[1].ptt = 1;
+  bc.Ties[1].Port = 1;
+  bc.Ties[1].type = 3;
+  bc.Ties[1].back = true;
+  ba.Multibot = true;
+  ba.numties = 1.0f;
+  bc.numties = 1.0f;
+  ba.mem[addr::TIENUM] = 1;
+  ba.mem[addr::FIXANG] = 32000;
+}
+
+}  // namespace
+
+// RV-18 — Ties.bas:891, 904, 921: en maketie `Dim Length As Long`, asi que
+// `Length = VectorMagnitude(..)` redondea (CLng) y la NaturalLength de toda
+// tie nueva es entera. El port guarda la distancia en float sin redondear.
+TEST_CASE("RV-18 maketie: Length es Long") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f);
+  const int c = w.addbot(1123.6f, 1000.0f);
+  InjectedRnd inj({0.5f});  // deflect = Random(2, 92)
+  w.sim.rndy = &inj;
+  REQUIRE(maketie(w.sim, a, c, 1000, 0, 1));
+  CHECK(w.sim.rob[a].Ties[1].NaturalLength == 124.0f);  // antes del arreglo: 123.6
+  CHECK(w.sim.rob[c].Ties[1].NaturalLength == 124.0f);
+}
+
+// RV-19 — Ties.bas:257 y :290: `Length = Abs(.mem(FIXLEN)) + .radius +
+// rob(..).radius` es Single y se asigna a un Long (CLng de la SUMA). El port
+// trunca cada radio a vb_long por separado: 100 + 60.7 + 60.7 da 221 en el
+// original y 220 en el port.
+TEST_CASE("RV-19 fixlen: CLng de la suma, no truncar cada radio") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f, 60.7f);
+  const int c = w.addbot(1300.0f, 1000.0f, 60.7f);
+  HardTie(w, a, c);
+  w.sim.rob[a].mem[addr::FIXLEN] = 100;
+  Update_Ties(w.sim, a);
+  CHECK(w.sim.rob[a].Ties[1].NaturalLength == 221.0f);  // antes del arreglo: 220
+  CHECK(w.sim.rob[c].Ties[1].NaturalLength == 221.0f);
+}
+
+// RV-20 — promociones a Double en ties (familia RV-05). Ties.bas:268:
+// `.b = 0.005 * .mem(stifftie)` es Double * Integer: con 5 da Single(0.025)
+// = 0.0250000004 (en float, 0.0249999985).
+TEST_CASE("RV-20 stifftie: 0.005 * mem en Double") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f);
+  const int c = w.addbot(1300.0f, 1000.0f);
+  HardTie(w, a, c);
+  w.sim.rob[a].mem[addr::stifftie] = 5;
+  Update_Ties(w.sim, a);
+  CHECK(w.sim.rob[a].Ties[1].b == 0.0250000004f);
+}
+
+// RV-20b — Ties.bas:361: `rob(..).nrg + l * 0.7` (tie feeding) en Double.
+TEST_CASE("RV-20b tie feeding: nrg + l * 0.7 en Double") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f);
+  const int c = w.addbot(1300.0f, 1000.0f);
+  HardTie(w, a, c);
+  Bot& b = w.sim.rob[a];
+  b.nrg = 5000.0f;
+  b.body = 1000.0f;
+  b.age = 5;
+  b.mem[addr::tieport1 + 2] = -1;
+  b.mem[addr::tieport1 + 3] = 623;
+  w.sim.rob[c].nrg = 313.556946f;
+  Update_Ties(w.sim, a);
+  CHECK(w.sim.rob[c].nrg == 749.656921f);  // antes del arreglo: 749.656982
+}
+
+// RV-20c — Robots.bas:1897-1900: `totslime * (CSng(.mem(833)) / 100#)` es
+// Single * Double (lo mismo en sharewaste/shareshell/sharechloroplasts y el
+// portionThatsMine de sharenrg).
+TEST_CASE("RV-20c shareslime: tot * (m / 100#) en Double") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f);
+  const int c = w.addbot(1300.0f, 1000.0f);
+  HardTie(w, a, c);
+  w.sim.rob[a].Slime = 11162.7051f;
+  w.sim.rob[c].Slime = 0.0f;
+  w.sim.rob[a].mem[833] = 3;
+  shareslime(w.sim, a, 1);
+  CHECK(w.sim.rob[a].Slime == 334.881165f);  // antes del arreglo: 334.881134
+}
+
+// RV-19b — Ties.bas:290: la misma suma en la ruta de `tielen1` (mem 484 con
+// el flag de overwrite).
+TEST_CASE("RV-19b tielen1: CLng de la suma, no truncar cada radio") {
+  RvWorld w;
+  const int a = w.addbot(1000.0f, 1000.0f, 60.7f);
+  const int c = w.addbot(1300.0f, 1000.0f, 60.7f);
+  HardTie(w, a, c);
+  w.sim.rob[a].mem[484] = 100;
+  w.sim.rob[a].TieLenOverwrite[0] = true;
+  Update_Ties(w.sim, a);
+  CHECK(w.sim.rob[a].Ties[1].NaturalLength == 221.0f);  // antes del arreglo: 220
+}

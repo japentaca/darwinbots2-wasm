@@ -838,9 +838,131 @@ y se redondea una vez al asignar. El port hace cada paso en `float`.
   `Double`, `nrg / 100#`, `venom / 20#` y `Waste / 20#` (una división de `float`
   entre `double` da lo mismo), y el borrado de `shoot`/`shootval`.
 
+## Piloto 6 — Ties (2026-09-25)
+
+**Alcance**: `Ties.bas` completo en lo vivo (`tieportcom`, `UpdateTieAngles`,
+`Update_Ties` con las transferencias por `tieloc` negativo, `EraseTRefVars`,
+`readtie`, `ReadTRefVars`, `delallties`, `DeleteTie`, `maketie`, `srctie` y
+`regang`) y las funciones `share*` (`Robots.bas:1866-2007`). Se compara con
+`ties.hpp`. `TieHooke`/`TieTorque` ya se vieron en el piloto 4, y `bend`/`shrink`
+son código muerto.
+
+**Resultado**: 3 divergencias confirmadas (RV-18 a RV-20) y 1 nota sistémica de la
+familia RV-07.
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir RV-18 a RV-20)**: en
+> `ties.hpp`, `maketie` redondea `Length` con `vb_clng`; `fixlen` y `tielen1-4`
+> hacen `CLng` de la suma; y `stifftie`, las transferencias y los `share*` (con
+> el helper `share_part`) van en `double` con un solo redondeo.
+>
+> - **Tests**: RV-18, RV-19, RV-19b (`tielen1`), RV-20, RV-20b y RV-20c, sin
+>   `should_fail`.
+> - **Mutation-check**: con el `ties.hpp` de HEAD fallan los 6 casos.
+> - **Suites**: 218 casos y 3900 aserciones en los tres modos, solo con los 7
+>   fallos esperados (RV-01, 02, 07, 08 y 09). Los 4 smoke tests pasan.
+> - **Nota sistémica**: queda documentada como excepción en `00-INVENTARIO.md
+>   §1`, junto a N-06.
+
+### RV-18 · `maketie`: `Length` es `Long` y la `NaturalLength` de cada tie nueva es entera — CORREGIDO
+
+- **Fuente** (`Ties.bas:891, 904, 921, 938`): con `Dim Length As Long`,
+  `Length = VectorMagnitude(..)` redondea con `CLng` (bancario). Las dos
+  mitades de la tie nacen con `NaturalLength` entera.
+- **Port** (`ties.hpp:150, 164, 180`): `const vb_single Length`, sin redondear.
+- **Contraejemplo**: con dos bots a 123.6 de distancia, el original da
+  `NaturalLength = 124` y el port 123.6.
+- **Alcance**: **toda tie creada** (por ADN o al nacer). `TieHooke` usa
+  `NaturalLength - Length` con una zona muerta de 20, así que cambia la fuerza
+  del muelle mientras la tie no se endurece. Además, el umbral
+  `Length <= c * 1.5` compara la longitud ya redondeada: difiere en unos 3·10⁻⁴
+  de los intentos.
+- **Test**: RV-18.
+
+### RV-19 · `fixlen`/`tielen1-4`: el port trunca cada radio en vez de redondear la suma — CORREGIDO
+
+- **Fuente** (`Ties.bas:257, 290`): `Length = Abs(.mem(FIXLEN)) + .radius +
+  rob(..).radius`, es decir `Integer + Single + Single`, que da `Single`. Al
+  asignarse a un `Long`, se redondea **la suma** (bancario).
+- **Port** (`ties.hpp:874-876, 910-912`): `static_cast<vb_long>` de cada radio
+  por separado, es decir, trunca dos veces.
+- **Contraejemplo**: con `fixlen = 100` y radios de 60.7, el original da **221** y el port
+  **220**. Difiere en el **87 %** de los casos, con errores de hasta −2.
+- **Alcance**: todo `.fixlen` y `.tielen1-4` de los multibots.
+- **Test**: RV-19.
+
+### RV-20 · Promociones a `Double` perdidas en ties y `share*` — CORREGIDO (familia RV-05)
+
+| Fuente | Port | Expresión | Difiere |
+|---|---|---|---|
+| `Ties.bas:268-271` | `ties.hpp:890-894` | `0.005 * mem(stifftie)`, `0.0025 * ..` | 30 de los 100 valores |
+| `Ties.bas:361-365, 408-412` | `ties.hpp:563-567, 598-602` | `l * 0.7`, `* 0.029`, `* 0.01` (tie feeding de nrg) | 0,2-5 % |
+| `Ties.bas:518-531` | `ties.hpp:680-688` | `l * 0.99`, `* 0.01` (waste) | 0,2-9,5 % |
+| `Ties.bas:567-571, 614-618` | `ties.hpp:712-716, 747-751` | `l * 0.03`, `* 0.987`, `* 0.01` (body) | 0,2-10 % |
+| `Robots.bas:1879-1887, 1898-1907, 1917-1926, 1938-1947, 1975` | `ties.hpp:449-535` | `tot * (CSng(m) / 100#)` y `(100# - m) / 100#` (`share*`); `portionThatsMine` | 25 % |
+| `Robots.bas:1998` | `ties.hpp:463` | `nrg - Abs(c) * 0.01` (`sharenrg`) | 0,7 % |
+
+- **Contraejemplos** (los de los tests):
+  - `stifftie = 5` da `b` = 0.0250000004 en el original y 0.0249999985 en el port.
+  - Feeding con `l = 623` sobre `nrg = 313.556946` da 749.656921 frente a
+    749.656982.
+  - `shareslime` con `tot = 11162.7051` y `m = 3` da 334.881165 frente a
+    334.881134.
+- **Tests**: RV-20 (`stifftie`), RV-20b (feeding) y RV-20c (`shareslime`).
+
+### Nota sistémica (familia RV-07, condicionada a N-06)
+
+`CInt(x * 200)` y `CInt(dist - r1 - r2)` con operandos `Single`:
+- **Lectura N-06**: la expresión va en precisión extendida y se redondea una
+  sola vez.
+- **Port**: redondea antes el producto o la resta a `float`.
+- **Sitios**: `UpdateTieAngles` (`Ties.bas:113-114`) y la salida de
+  `tieang/tielen1-4` (`:310-311`).
+- **Frecuencia**: 8·10⁻⁶ y 6·10⁻⁵ por llamada.
+- **Alcance del patrón**: se repite en todo el port (`vb_cint(float * float)`).
+  Es el mismo patrón de RV-07, pero sin el `Round` que lo haga observable
+  dentro del propio VB6.
+- **Decisión (2026-09-25)**: se documenta como excepción asumida
+  (`00-INVENTARIO.md §1`), sin tocar el port.
+
+### Literales `float` inexactos de `ties.hpp` (28)
+
+- **Factor de un producto** (los de RV-20): `0.7`, `0.029`, `0.01`, `0.99`,
+  `0.03`, `0.987`, `0.005`, `0.0025`, más el `100.0f` como divisor
+  (`/ 100#`, que es exacto pero deja la división en `float`).
+- **Asignaciones directas**: `b = 0.02`, `k = 0.01`, `b = 0.1` y `k = 0.05`.
+  Son correctas, porque un literal asignado a un `Single` se redondea una vez.
+- **Los de física** (`TieTorque`) ya se corrigieron en RV-05.
+
+### Verificado sin divergencias
+
+- **`DeleteTie`/`delallties`**: la búsqueda con `k < MAXTIES`, `tiepres` al borrar la
+  última, el desplazamiento y el `pnt` de la tie 10.
+- **`maketie`** (salvo RV-18): `deflect` antes de todo (1 extracción de RNG; con
+  `Random(2, 92)` ya en RV-02); el `DeleteTie` previo; los bordes `k < Max`;
+  `ReadTRefVars` antes de `b`/`k`/`type`; el puerto de la tie de vuelta =
+  `numties`; el coste de slime; y el coste `TIECOST` (aritmética `Variant` R4,
+  igual que el port).
+- **`srctie`** (`last < 1`) y **`regang`** (`dist` en `Double`, el ángulo solo en
+  la tie de ida).
+- **`Update_Ties`**:
+  - el recuento de `numties`, `vbody` y `multibot_time`;
+  - `deltie` con el límite capturado;
+  - el gate `tn = 0`, con persistencia de `fixang`/`fixlen`/`stifftie`;
+  - `fixang Mod 1256 / 200` (división de enteros, un redondeo) y
+    `angnorm(mem / 200)`;
+  - los flags de overwrite;
+  - el orden y los topes de las transferencias, con el veneno cruzado, `Ploc` y
+    `Vloc`;
+  - los `Kills` con clamp y la vía de body sin exclusión de corpses;
+  - los resets de `tieloc`/`tieval`/`tienum`.
+- **`tieportcom`**, **`readtie`** y **`EraseTRefVars`** (con el hueco en 449).
+- **`ReadTRefVars`**: las guardas estrictas de ±32000, el `View` sobre la celda
+  equivocada, el clamp de `vel`, y `trefvelmy*` en `Double` con `CInt`. El fudge
+  (`FudgeEyes`/`FudgeAll`) sigue fuera por ser del modo evo, como ya está
+  documentado.
+
 ## Siguientes pilotos sugeridos
 
-1. **Ties** (`Ties.bas`), **reproducción y energía** (`Robots.bas`, `Vegs.bas`;
-   incluye `absx`/`absy` en el nacimiento y la otra mitad de RV-16) y **visión**
+1. **Reproducción y energía** (`Robots.bas`, `Vegs.bas`) y **visión**
    (`Senses.bas`), con el mismo método. En cada uno, clasificar sus literales
    `float` inexactos (ver RV-05).
