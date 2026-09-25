@@ -44,9 +44,12 @@ Single` (la energía marca el alcance), `memloc`/`Memval` (venom/poison dirigido
 
 - **Asignación de slots**: `FirstSlot` (`:265-277`) avanza el puntero global circular
   `shotpointer`; si el array se llena, crece un 10% (`ReDim Preserve`, `:102-106`).
+  Una sim nueva arranca con **50** slots (`main.frm:390-392, 1304-1305`), y los
+  tamaños nuevos van con `CLng` (bancario): 50 → 55 → 61 → 67… (RV-11).
 - **Compactación** (`CompactShots`, `:426-456`): al final de cada `updateshots`, si la
   ocupación < 70% (y el array > 100), se empaquetan los vivos al frente y el array se
-  recorta a `max(100, 1.2·numshots)` (`:414-423`). **Renumera los shots**: el único
+  recorta a `max(100, CLng(1.2·numshots))` (`:414-423`) y deja `shotpointer =
+  numshots`, que es **0** si no queda ningún disparo (RV-11b). **Renumera los shots**: el único
   puntero externo, `rob().virusshot`, se re-apunta durante la pasada (`:436`); un shot
   almacenado cuyo dueño ya no existe se destruye aquí (`:438-441`).
 - El chequeo `Shots(j).shottype` en `:444` mira el slot **destino** antes de copiarlo
@@ -90,7 +93,9 @@ entera, redondeo arriba), `nrg = Range·40` (`:162-171`); si no, `Range = rngmul
 ### 2.3 `createshot` (`Shots.bas:205-261`)
 
 La variante "partícula" usada por rebotes, `Decay` y poffs: posición/velocidad
-explícitas, `nrg = Range+41` (o `val` si −2), `Range = (Range+41)\40`,
+explícitas, pero **`X`/`Y` son `ByVal Long` y `vx`/`vy` son `ByVal Integer`**:
+llegan redondeadas a entero, con redondeo bancario (RV-10); `nrg = Range+41` (o `val`
+si −2), `Range = (Range+41)\40` (`\` redondea la suma ya hecha, RV-17),
 `memloc = mem(834)` del *emisor* (ploc — nota: `newshot` usa 835/vloc, `createshot`
 834/ploc), `Memval = mem(839)` solo para −5 (`:257-259`).
 
@@ -176,7 +181,9 @@ shot −4 (`DecayType=2`) o −2 (`DecayType=3`) con `min(Decay, body)`; body �
 
 - **Q01**: 2 RNG por `newshot` (uno muerto), 1 por `Decay`-evento, re-tiradas de
   `Vloc`/`Ploc` (A3).
-- **Q03**: `Shots(0)` existe y no se usa (los bucles van de 1 a `maxshotarray`;
-  `FirstSlot` arranca en `shotpointer ≥ 1`) — mismo patrón que `rob(0)`.
+- **Q03**: `Shots(0)` existe y los bucles van de 1 a `maxshotarray`, así que nunca
+  se procesa. Normalmente no se usa, pero **tras compactar con 0 disparos**
+  `shotpointer` queda en 0 y el siguiente disparo cae en el slot 0, donde se queda
+  congelado para siempre (RV-11b; `spec/REVISION-PORT.md`).
 - **Q14**: la comparación rota de §0.2 es exactamente la cita `Shots.bas:330` que Q14
   señalaba; queda documentada aquí.

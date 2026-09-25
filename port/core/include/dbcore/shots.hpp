@@ -42,7 +42,7 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   vb_long a = FirstSlot(sim);
   if (a > sim.maxshotarray) {
     sim.shotpointer = sim.maxshotarray;
-    sim.maxshotarray = static_cast<vb_long>(sim.maxshotarray * 1.1);
+    sim.maxshotarray = vb_clng(sim.maxshotarray * 1.1);  // CLng (RV-11)
     sim.Shots.resize(sim.maxshotarray + 1);
   }
   Bot& b = sim.rob[n];
@@ -79,10 +79,16 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   if (b.mem[addr::aimshoot] != 0) {
     b.mem[addr::aimshoot] =
         static_cast<vb_integer>(b.mem[addr::aimshoot] % 1256);  // in place (M-11)
-    ShAngle = b.aim - static_cast<vb_single>(b.mem[addr::aimshoot]) / 200.0f;
+    // Integer / Integer es Double: se resta en Double (RV-14).
+    ShAngle = static_cast<vb_single>(
+        static_cast<double>(b.aim) -
+        static_cast<double>(b.mem[addr::aimshoot]) / 200.0);
     b.mem[addr::aimshoot] = 0;
   }
-  ShAngle += static_cast<vb_single>(Random(-20, 20, *sim.rndy)) / 200.0f;
+  // Random es As Long y Long / Integer es Double (RV-14).
+  ShAngle = static_cast<vb_single>(
+      static_cast<double>(ShAngle) +
+      static_cast<double>(Random(-20, 20, *sim.rndy)) / 200.0);
 
   Vector angle = VectorSet(
       static_cast<vb_single>(std::cos(static_cast<double>(ShAngle))),
@@ -100,11 +106,13 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   s.opos = VectorSub(s.pos, s.velocity);
 
   if (b.vbody > 10.0f) {
+    // Log(..) * 60 * rngmultiplier: todo en Double, un redondeo (RV-14).
     s.nrg = static_cast<vb_single>(
-                std::log(std::fabs(static_cast<double>(b.vbody)))) *
-            60.0f * rngmultiplier;
+        std::log(std::fabs(static_cast<double>(b.vbody))) * 60.0 *
+        static_cast<double>(rngmultiplier));
+    // `\` redondea el operando ya sumado (RV-17).
     const vb_long temp =
-        static_cast<vb_long>(vb_round64(static_cast<double>(s.nrg)) + 40 + 1) / 40;
+        static_cast<vb_long>(vb_round64(static_cast<double>(s.nrg) + 40.0 + 1.0)) / 40;
     s.Range = static_cast<vb_single>(temp);
     s.nrg = static_cast<vb_single>(temp) * 40.0f;
   } else {
@@ -143,22 +151,29 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   return result;
 }
 
-// Shots.bas:206-268 — createshot (rebotes de poison, shots de decay).
+// Shots.bas:205-261 — createshot (rebotes de poison, shots de decay). En el
+// fuente X/Y son ByVal Long y vx/vy ByVal Integer: la posicion y la velocidad
+// llegan redondeadas (bancario) a entero (RV-10). Se reciben en float y se
+// redondean aqui para que ningun llamador trunque sin querer.
+// Ojo: puede reubicar sim.Shots; quien tenga un Shot& debe volver a indexar
+// despues (RV-12).
 inline void createshot(Sim& sim, vb_single X, vb_single Y, vb_single vx,
                        vb_single vy, vb_integer loc, int par, vb_single val,
                        vb_single Range, vb_long col) {
+  const vb_long Xl = vb_clng(X), Yl = vb_clng(Y);
+  const vb_integer vxi = vb_cint(vx), vyi = vb_cint(vy);
   vb_long a = FirstSlot(sim);
   if (a > sim.maxshotarray) {
     sim.shotpointer = sim.maxshotarray;
-    sim.maxshotarray = static_cast<vb_long>(sim.maxshotarray * 1.1);
+    sim.maxshotarray = vb_clng(sim.maxshotarray * 1.1);  // CLng (RV-11)
     sim.Shots.resize(sim.maxshotarray + 1);
   }
   Shot& s = sim.Shots[a];
   s.parent = static_cast<vb_integer>(par);
   s.FromSpecie = sim.rob[par].FName;
   s.fromveg = sim.rob[par].Veg;
-  s.pos = VectorSet(X, Y);
-  s.velocity = VectorSet(vx, vy);
+  s.pos = VectorSet(static_cast<vb_single>(Xl), static_cast<vb_single>(Yl));
+  s.velocity = VectorSet(static_cast<vb_single>(vxi), static_cast<vb_single>(vyi));
   s.opos = VectorSub(s.pos, s.velocity);
   s.age = 0;
   s.color = col;
@@ -166,8 +181,9 @@ inline void createshot(Sim& sim, vb_single X, vb_single Y, vb_single vx,
   s.stored = false;
   s.DnaLen = 0;
 
+  // `\` redondea el operando ya sumado (RV-17).
   const vb_long temp =
-      (static_cast<vb_long>(vb_round64(static_cast<double>(Range))) + 40 + 1) / 40;
+      static_cast<vb_long>(vb_round64(static_cast<double>(Range) + 40.0 + 1.0)) / 40;
   s.nrg = Range + 40.0f + 1.0f;
   if (val > 32000.0f) val = 32000.0f;
   if (loc == -2) s.nrg = val;
@@ -264,6 +280,8 @@ inline void releasenrg(Sim& sim, int n, vb_long t) {
   Shot& s = sim.Shots[t];
 
   (void)FirstSlot(sim);  // a = FirstSlot (resultado sin uso, fiel al fuente)
+  // createshot puede reubicar Shots: el tirador se lee antes (RV-12).
+  const vb_integer shooter = s.parent;
 
   if (b.nrg <= 0.5f) return;
 
@@ -290,12 +308,14 @@ inline void releasenrg(Sim& sim, int n, vb_long t) {
     // Rebote de poison.
     createshot(sim, s.pos.x, s.pos.y, vel.x, vel.y, -5, n, power,
                Range * (RobSize / 3.0f), 0);
-    b.poison = b.poison - (power * 0.9f);
+    // Literales Double: un solo redondeo (RV-14).
+    b.poison = static_cast<vb_single>(static_cast<double>(b.poison) -
+                                      static_cast<double>(power) * 0.9);
     if (b.poison < 0.0f) b.poison = 0.0f;
     b.mem[addr::poison] = vb_cint(b.poison);
   } else {
     // Shot de energía: 90% de nrg, 1% de body.
-    vb_single EnergyLost = power * 0.9f;
+    vb_single EnergyLost = static_cast<vb_single>(static_cast<double>(power) * 0.9);
     if (EnergyLost > b.nrg) {
       power = b.nrg;
       b.nrg = 0.0f;
@@ -303,7 +323,7 @@ inline void releasenrg(Sim& sim, int n, vb_long t) {
       b.nrg = b.nrg - EnergyLost;
     }
 
-    EnergyLost = power * 0.01f;
+    EnergyLost = static_cast<vb_single>(static_cast<double>(power) * 0.01);
     if (EnergyLost > b.body)
       b.body = 0.0f;
     else
@@ -316,9 +336,9 @@ inline void releasenrg(Sim& sim, int n, vb_long t) {
 
   if (b.body <= 0.5f || b.nrg <= 0.5f) {
     b.Dead = true;
-    sim.rob[s.parent].Kills += 1;  // sin clamp (la vía de ties sí clampa)
-    sim.rob[s.parent].mem[220] =
-        static_cast<vb_integer>(sim.rob[s.parent].Kills);
+    sim.rob[shooter].Kills += 1;  // sin clamp (la vía de ties sí clampa)
+    sim.rob[shooter].mem[220] =
+        static_cast<vb_integer>(sim.rob[shooter].Kills);
   }
 }
 
@@ -349,8 +369,10 @@ inline void releasebod(Sim& sim, int n, vb_long t) {
 
   const vb_single shell = b.shell * static_cast<vb_single>(ShellEffectiveness);
 
-  if (power > (b.body * 10.0f) / 0.8f + shell)
-    power = (b.body * 10.0f) / 0.8f + shell;
+  // `/ 0.8` es Double: la comparacion y la asignacion van en Double (RV-14).
+  const double techo =
+      static_cast<double>(b.body) * 10.0 / 0.8 + static_cast<double>(shell);
+  if (static_cast<double>(power) > techo) power = static_cast<vb_single>(techo);
 
   if (power < shell) {
     b.shell = b.shell - power / ShellEffectiveness;
@@ -375,7 +397,7 @@ inline void releasebod(Sim& sim, int n, vb_long t) {
     b.radius = FindRadius(sim, n);
   } else {
     vb_single leftover = 0.0f;
-    vb_single EnergyLost = power * 0.2f;
+    vb_single EnergyLost = static_cast<vb_single>(static_cast<double>(power) * 0.2);
     if (EnergyLost > b.nrg) {
       leftover = EnergyLost - b.nrg;
       b.nrg = 0.0f;
@@ -383,7 +405,7 @@ inline void releasebod(Sim& sim, int n, vb_long t) {
       b.nrg = b.nrg - EnergyLost;
     }
 
-    EnergyLost = power * 0.08f;
+    EnergyLost = static_cast<vb_single>(static_cast<double>(power) * 0.08);
     if (EnergyLost > b.body) {
       leftover = leftover + EnergyLost - b.body * 10.0f;  // literal: -body*10
       b.body = 0.0f;
@@ -400,7 +422,8 @@ inline void releasebod(Sim& sim, int n, vb_long t) {
         b.nrg = 0.0f;
       }
       if (b.body > 0.0f && b.body * 10.0f > leftover) {
-        b.body = b.body - leftover * 0.1f;
+        b.body = static_cast<vb_single>(static_cast<double>(b.body) -
+                                        static_cast<double>(leftover) * 0.1);
         leftover = 0.0f;
       } else if (b.body > 0.0f && b.body * 10.0f < leftover) {
         b.body = 0.0f;
@@ -434,19 +457,24 @@ inline void takenrg(Sim& sim, int n, vb_long t) {
   else
     partial = s.nrg;
 
-  if (b.nrg + partial * 0.95f > 32000.0f) {
-    overflow = b.nrg + (partial * 0.95f) - 32000.0f;
+  // Literales Double: comparaciones y sumas en Double, un redondeo (RV-14).
+  const double p = static_cast<double>(partial);
+  const double nrg95 = static_cast<double>(b.nrg) + p * 0.95;
+  if (nrg95 > 32000.0) {
+    overflow = static_cast<vb_single>(nrg95 - 32000.0);
     b.nrg = 32000.0f;
   } else {
-    b.nrg = b.nrg + partial * 0.95f;
+    b.nrg = static_cast<vb_single>(nrg95);
   }
 
-  if ((b.body + partial * 0.004f) + (overflow * 0.1f) > 32000.0f)
+  const double body4 = (static_cast<double>(b.body) + p * 0.004) +
+                       static_cast<double>(overflow) * 0.1;
+  if (body4 > 32000.0)
     b.body = 32000.0f;
   else
-    b.body = b.body + (partial * 0.004f) + (overflow * 0.1f);
+    b.body = static_cast<vb_single>(body4);
 
-  b.Waste = b.Waste + partial * 0.01f;
+  b.Waste = static_cast<vb_single>(static_cast<double>(b.Waste) + p * 0.01);
 
   b.radius = FindRadius(sim, n);
 }
@@ -454,7 +482,11 @@ inline void takenrg(Sim& sim, int n, vb_long t) {
 // Shots.bas:816-826 — takewaste.
 inline void takewaste(Sim& sim, int n, vb_long t) {
   Shot& s = sim.Shots[t];
-  const vb_single power = s.nrg / (s.Range * (RobSize / 3.0f)) * s.value;
+  // RobSize / 3 es Integer / Integer = Double y aqui no hay CSng: toda la
+  // expresion va en Double y se redondea al asignar a power (RV-14).
+  const vb_single power = static_cast<vb_single>(
+      static_cast<double>(s.nrg) /
+      (static_cast<double>(s.Range) * (RobSize / 3.0)) * s.value);
   if (power < 0.0f) return;
   sim.rob[n].Waste += power;
 }
@@ -472,7 +504,8 @@ inline void takepoison(Sim& sim, int n, vb_long t) {
     b.mem[827] = vb_cint(b.poison);
   } else {
     b.Poisoned = true;
-    b.Poisoncount += power / 1.5f;
+    b.Poisoncount = static_cast<vb_single>(static_cast<double>(b.Poisoncount) +
+                                           static_cast<double>(power) / 1.5);  // RV-14
     if (b.Poisoncount > 32000.0f) b.Poisoncount = 32000.0f;
     if (s.memloc > 0) {
       b.Ploc = static_cast<vb_integer>((s.memloc - 1) % 1000 + 1);
@@ -648,63 +681,72 @@ inline void updateshots(Sim& sim) {
   const vb_long limit = sim.maxshotarray;  // tope cacheado como el For de VB6
   for (vb_long t = 1; t <= limit; ++t) {
     if (t > sim.maxshotarray) break;  // guard del fuente (Shots.bas:308)
-    Shot& s = sim.Shots[t];
+    // Puntero y no referencia: createshot (rebotes) puede reubicar Shots y
+    // hay que volver a indexar despues (RV-12; en VB6 Shots(t) se reindexa).
+    Shot* s = &sim.Shots[t];
 
-    if (s.flash) {
-      s.exist = false;
-      s.flash = false;
-      s.DnaLen = 0;
+    if (s->flash) {
+      s->exist = false;
+      s->flash = false;
+      s->DnaLen = 0;
     }
-    if (!s.exist) continue;
+    if (!s->exist) continue;
     sim.numshots += 1;
 
-    if (s.shottype == -2)
-      sim.TotalSimEnergy[sim.CurrentEnergyCycle] +=
-          static_cast<vb_long>(vb_round64(static_cast<double>(s.nrg)));
+    // Long + Single es Double: se redondea la suma, no el sumando (RV-16).
+    if (s->shottype == -2)
+      sim.TotalSimEnergy[sim.CurrentEnergyCycle] = vb_clng(
+          static_cast<double>(sim.TotalSimEnergy[sim.CurrentEnergyCycle]) +
+          static_cast<double>(s->nrg));
 
     int h;
-    if (s.shottype == -100 || s.stored)
+    if (s->shottype == -100 || s->stored)
       h = 0;
     else
       h = NewShotCollision(sim, t);
 
     // Inmunidad filial ROTA: compara el SLOT tirador con el AbsNum del padre
     // del golpeado (Shots.bas:330; [PROBABLE BUG], catálogo §9).
-    if (h > 0 && !(s.parent == sim.rob[h].parent && sim.rob[h].age <= 1)) {
+    if (h > 0 && !(s->parent == sim.rob[h].parent && sim.rob[h].age <= 1)) {
       vb_single tempnum;
-      if (s.Range == 0.0f)
-        tempnum = static_cast<vb_single>(s.age) + 1.0f;
+      if (s->Range == 0.0f)
+        tempnum = static_cast<vb_single>(s->age) + 1.0f;
       else
-        tempnum = static_cast<vb_single>(s.age) / s.Range;
+        tempnum = static_cast<vb_single>(s->age) / s->Range;
 
-      if (!(sim.opts.NoShotDecay && s.shottype == -2)) {
-        if (!(s.shottype == -4 && sim.opts.NoWShotDecay)) {
-          s.nrg = s.nrg *
-                  static_cast<vb_single>(
-                      std::atan(static_cast<double>(tempnum) * shotdecay -
-                                shotdecay)) /
-                  static_cast<vb_single>(std::atan(-static_cast<double>(shotdecay)));
+      if (!(sim.opts.NoShotDecay && s->shottype == -2)) {
+        if (!(s->shottype == -4 && sim.opts.NoWShotDecay)) {
+          // Single * Atn / Atn: todo en Double, un redondeo (RV-14).
+          s->nrg = static_cast<vb_single>(
+              static_cast<double>(s->nrg) *
+              std::atan(static_cast<double>(tempnum) * shotdecay - shotdecay) /
+              std::atan(-static_cast<double>(shotdecay)));
         }
       }
 
-      if (s.shottype > 0) {
+      if (s->shottype > 0) {
         // shot de memoria: (tipo-1) Mod 1000 + 1, salto de 340, bloqueo por
         // poison con rebote -5 (M-09).
-        s.shottype = static_cast<vb_integer>((s.shottype - 1) % 1000 + 1);
-        if (s.shottype != addr::DelgeneSys) {
-          if (s.nrg / 2.0f > sim.rob[h].poison || sim.rob[h].poison == 0.0f) {
-            sim.rob[h].mem[s.shottype] = s.value;
+        s->shottype = static_cast<vb_integer>((s->shottype - 1) % 1000 + 1);
+        if (s->shottype != addr::DelgeneSys) {
+          if (s->nrg / 2.0f > sim.rob[h].poison || sim.rob[h].poison == 0.0f) {
+            sim.rob[h].mem[s->shottype] = s->value;
           } else {
-            createshot(sim, s.pos.x, s.pos.y, -s.velocity.x, -s.velocity.y, -5,
-                       h, s.nrg / 2.0f, s.Range * 40.0f, 0);
-            sim.rob[h].poison -= (s.nrg / 2.0f) * 0.9f;
-            sim.rob[h].Waste += (s.nrg / 2.0f) * 0.1f;
+            createshot(sim, s->pos.x, s->pos.y, -s->velocity.x, -s->velocity.y, -5,
+                       h, s->nrg / 2.0f, s->Range * 40.0f, 0);
+            s = &sim.Shots[t];  // RV-12
+            // Literales Double: un solo redondeo (RV-14).
+            const double mitad = static_cast<double>(s->nrg / 2.0f);
+            sim.rob[h].poison = static_cast<vb_single>(
+                static_cast<double>(sim.rob[h].poison) - mitad * 0.9);
+            sim.rob[h].Waste = static_cast<vb_single>(
+                static_cast<double>(sim.rob[h].Waste) + mitad * 0.1);
             if (sim.rob[h].poison < 0.0f) sim.rob[h].poison = 0.0f;
             sim.rob[h].mem[addr::poison] = vb_cint(sim.rob[h].poison);
           }
         }
       } else {
-        switch (s.shottype) {
+        switch (s->shottype) {
           case -1: releasenrg(sim, h, t); break;
           case -2: takenrg(sim, h, t); break;
           case -6: releasebod(sim, h, t); break;
@@ -715,27 +757,28 @@ inline void updateshots(Sim& sim) {
           case -8: takesperm(sim, h, t); break;
           default: break;
         }
+        s = &sim.Shots[t];  // releasenrg/releasebod crean rebotes (RV-12)
       }
-      taste(sim, h, s.opos.x, s.opos.y, s.shottype);
-      s.flash = true;
+      taste(sim, h, s->opos.x, s->opos.y, s->shottype);
+      s->flash = true;
     }
 
     if (sim.numObstacles > 0) DoShotObstacleCollisions(sim, t);
 
-    s.opos = s.pos;
-    s.pos = VectorAdd(s.pos, s.velocity);
+    s->opos = s->pos;
+    s->pos = VectorAdd(s->pos, s->velocity);
 
-    if ((sim.opts.NoShotDecay && s.shottype == -2) || s.stored) {
+    if ((sim.opts.NoShotDecay && s->shottype == -2) || s->stored) {
       // sin envejecimiento
-    } else if (s.shottype == -4 && sim.opts.NoWShotDecay) {
+    } else if (s->shottype == -4 && sim.opts.NoWShotDecay) {
       // sin envejecimiento
     } else {
-      s.age += 1;
+      s->age += 1;
     }
 
-    if (static_cast<vb_single>(s.age) > s.Range && !s.flash) {
-      s.exist = false;
-      s.DnaLen = 0;
+    if (static_cast<vb_single>(s->age) > s->Range && !s->flash) {
+      s->exist = false;
+      s->DnaLen = 0;
     }
   }
 
@@ -770,9 +813,11 @@ inline void updateshots(Sim& sim) {
     if (sim.numshots < 90)
       sim.maxshotarray = 100;
     else
-      sim.maxshotarray = static_cast<vb_long>(sim.numshots * 1.2);
+      sim.maxshotarray = vb_clng(sim.numshots * 1.2);  // CLng (RV-11)
     sim.Shots.resize(sim.maxshotarray + 1);
-    sim.shotpointer = sim.numshots > 0 ? sim.numshots : 1;
+    // Con 0 vivos queda en 0: el siguiente shot cae en el slot 0, que el
+    // bucle (1..maxshotarray) no procesa nunca (RV-11b, fiel al fuente).
+    sim.shotpointer = sim.numshots;
   }
   sim.ShotsThisCycle = sim.numshots;
 }
@@ -875,19 +920,30 @@ inline void Vshoot(Sim& sim, int n, vb_long thisshot) {
   if (tempa < 0.0f) tempa = 0.0f;
 
   s.nrg = tempa;
-  b.nrg -= (tempa / 20.0f) + sim.vm.costs.v[cost::SHOTCOST] *
-                                 sim.vm.costs.v[cost::COSTMULTIPLIER];
+  // Se resta de izquierda a derecha, como el fuente (RV-15): `nrg - (tempa /
+  // 20#) - coste` es Double, y `nrg - CSng(mem) - coste` va en precision
+  // extendida (N-06); el producto de costes, dentro de la expresion.
+  const double shotcost =
+      static_cast<double>(sim.vm.costs.v[cost::SHOTCOST]) *
+      static_cast<double>(sim.vm.costs.v[cost::COSTMULTIPLIER]);
+  b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) -
+                                 static_cast<double>(tempa) / 20.0 - shotcost);
 
   s.Range = 11.0f + static_cast<vb_single>(
                         vb_cint(static_cast<double>(b.mem[addr::VshootSys]) / 2.0));
-  b.nrg -= static_cast<vb_single>(b.mem[addr::VshootSys]) +
-           sim.vm.costs.v[cost::SHOTCOST] * sim.vm.costs.v[cost::COSTMULTIPLIER];
+  b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) -
+                                 static_cast<double>(b.mem[addr::VshootSys]) - shotcost);
 
   const vb_single ShAngle =
       static_cast<vb_single>(Random(1, 1256, *sim.rndy)) / 200.0f;
   s.stored = false;
-  s.pos.x = b.pos.x + static_cast<vb_single>(std::cos(static_cast<double>(ShAngle))) * b.radius;
-  s.pos.y = b.pos.y - static_cast<vb_single>(std::sin(static_cast<double>(ShAngle))) * b.radius;
+  // Single + Cos(..) * Single: en Double, un redondeo (RV-14).
+  s.pos.x = static_cast<vb_single>(
+      static_cast<double>(b.pos.x) +
+      std::cos(static_cast<double>(ShAngle)) * static_cast<double>(b.radius));
+  s.pos.y = static_cast<vb_single>(
+      static_cast<double>(b.pos.y) -
+      std::sin(static_cast<double>(ShAngle)) * static_cast<double>(b.radius));
   s.velocity.x = absx(ShAngle, RobSize / 3.0f, 0, 0, 0);
   s.velocity.y = absy(ShAngle, RobSize / 3.0f, 0, 0, 0);
   s.velocity.x += b.actvel.x;
@@ -910,8 +966,16 @@ inline void robshoot(Sim& sim, int n) {
   vb_single value = b.mem[addr::shootval];
   vb_single multiplier = 0.0f, rngmultiplier = 0.0f, Cost = 0.0f;
   bool valmode = false;
+  // shotcost en float: donde el producto entra en aritmetica Variant (el
+  // IIf de numties) o se asigna a un Single, VB6 lo redondea a Single.
+  // costx(x): el mismo producto dentro de una expresion (lectura N-06), en
+  // el orden del fuente `x * c1 * c2` (RV-15).
   const vb_single shotcost =
       sim.vm.costs.v[cost::SHOTCOST] * sim.vm.costs.v[cost::COSTMULTIPLIER];
+  const auto costx = [&](double x) {
+    return x * static_cast<double>(sim.vm.costs.v[cost::SHOTCOST]) *
+           static_cast<double>(sim.vm.costs.v[cost::COSTMULTIPLIER]);
+  };
   const vb_single nt = (b.numties < 0.0f) ? 0.0f : b.numties;
 
   if (shtype == -1 || shtype == -6) {
@@ -929,7 +993,7 @@ inline void robshoot(Sim& sim, int n) {
       rngmultiplier = 1.0f;
     }
     if (rngmultiplier > 4.0f) {
-      Cost = rngmultiplier * shotcost;
+      Cost = static_cast<vb_single>(costx(rngmultiplier));
       rngmultiplier = static_cast<vb_single>(
           std::log(static_cast<double>(rngmultiplier) / 2.0) / std::log(2.0));
     } else if (!valmode) {
@@ -937,7 +1001,7 @@ inline void robshoot(Sim& sim, int n) {
       Cost = shotcost / (nt + 1.0f);
     }
     if (multiplier > 4.0f) {
-      Cost = multiplier * shotcost;
+      Cost = static_cast<vb_single>(costx(multiplier));
       multiplier = static_cast<vb_single>(
           std::log(static_cast<double>(multiplier) / 2.0) / std::log(2.0));
     } else if (valmode) {
@@ -947,12 +1011,12 @@ inline void robshoot(Sim& sim, int n) {
     if (Cost > b.nrg && Cost > 2.0f && b.nrg > 2.0f && valmode) {
       Cost = b.nrg;
       multiplier = static_cast<vb_single>(
-          std::log(static_cast<double>(b.nrg) / shotcost) / std::log(2.0));
+          std::log(static_cast<double>(b.nrg) / costx(1.0)) / std::log(2.0));
     }
     if (Cost > b.nrg && Cost > 2.0f && b.nrg > 2.0f && !valmode) {
       Cost = b.nrg;
       rngmultiplier = static_cast<vb_single>(
-          std::log(static_cast<double>(b.nrg) / shotcost) / std::log(2.0));
+          std::log(static_cast<double>(b.nrg) / costx(1.0)) / std::log(2.0));
     }
   }
 
@@ -1008,7 +1072,8 @@ inline void robshoot(Sim& sim, int n) {
         value = std::fabs(value);
         if (value == 0.0f) value = b.Waste / 20.0f;
         if (value > b.Waste) value = b.Waste;
-        b.Waste -= value * 0.99f;
+        b.Waste = static_cast<vb_single>(static_cast<double>(b.Waste) -
+                                         static_cast<double>(value) * 0.99);  // RV-14
         b.Pwaste += value / 100.0f;
         const vb_single EnergyLost = shotcost / (nt + 1.0f);
         if (EnergyLost > b.nrg)

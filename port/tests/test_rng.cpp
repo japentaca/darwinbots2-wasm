@@ -154,10 +154,9 @@ TEST_CASE("R-06 Vshoot: doble cobro y direccion aleatoria [PROBABLE BUG] B3b-1")
   UpdateSim(sim);
 
   Bot& b = sim.rob[n];
-  // La compactacion del paso 14 (ocupacion < 70%) movio el shot almacenado
-  // al slot 1 re-apuntando rob().virusshot (Shots.bas:436) — Vshoot lo
-  // dispara desde ahi en P3.
-  Shot& sh = sim.Shots[1];
+  // Con el array inicial de 50 (main.frm:390-392; RV-11) no hay compactacion
+  // (exige maxshotarray > 100): el virus sale del mismo slot 5.
+  Shot& sh = sim.Shots[5];
   // Cargo 1: tempa/20 = 50 + SHOTCOST; cargo 2: mem(vshoot) = 50 + SHOTCOST
   // (el precio es doble): 10000 - 104 = 9896.
   CHECK(b.nrg == doctest::Approx(9896.0));

@@ -227,3 +227,360 @@ TEST_CASE("RV-09 ReSpawn: Min es Single y cambia la celula elegida" *
   // Original: nmin = c, dy = (0 - 2) + 1 = -1  -> pos.y = 1.8 - 1.
   CHECK(w.sim.rob[a].pos.y == 1.8f + -1.0f);  // port: 1.0
 }
+
+// ---------------------------------------------------------------------------
+// Piloto 5 — Disparos (Shots.bas, robshoot de Robots.bas, Decay).
+
+namespace {
+
+// Deja un shot t dentro del bot h en t = 0 (golpe inmediato en
+// NewShotCollision), disparado por otro bot (sin inmunidad filial).
+void PlaceHit(RvWorld& w, vb_long t, int h, int shooter, vb_integer type) {
+  w.sim.MaxBotShotSeperation = 1000.0f;
+  w.sim.rob[h].age = 5;
+  Shot& s = w.sim.Shots[t];
+  s.exist = true;
+  s.shottype = type;
+  s.parent = static_cast<vb_integer>(shooter);
+  s.pos = w.sim.rob[h].pos;
+  s.opos = s.pos;
+  s.velocity = {1.0f, 0.0f};
+}
+
+}  // namespace
+
+// RV-10 — Shots.bas:205-206: `createshot(ByVal X As Long, ByVal Y As Long,
+// ByVal vx As Integer, ByVal vy As Integer, ...)`. Los rebotes (-2 de
+// releasenrg/releasebod, -5 de poison) nacen con posicion y velocidad
+// redondeadas a entero (CLng/CInt, bancario). El port recibe float.
+TEST_CASE("RV-10 createshot: posicion Long y velocidad Integer") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  createshot(w.sim, 123.7f, 456.5f, -40.3f, 2.5f, -2, n, 10.0f, 80.0f, 0);
+  const Shot& s = w.sim.Shots[1];
+  CHECK(s.pos.x == 124.0f);
+  CHECK(s.pos.y == 456.0f);
+  CHECK(s.velocity.x == -40.0f);
+  CHECK(s.velocity.y == 2.0f);
+}
+
+// RV-11 — main.frm:390-392/1304-1305: una sim nueva arranca con
+// maxshotarray = 50 (el port, 300, del codigo comentado de newshot). Y los
+// tamanos usan CLng (bancario): CLng(55 * 1.1) = CLng(60.5000000000000049) =
+// 61 (Shots.bas:104) y CLng(93 * 1.2) = 112 (:419); el port trunca (60, 111).
+// El tamano decide en que slot cae cada shot y con ello el orden de proceso.
+TEST_CASE("RV-11 array de shots: tamano inicial 50 y CLng al crecer") {
+  {
+    RvWorld w;
+    CHECK(w.sim.maxshotarray == 50);
+  }
+  {
+    RvWorld w;
+    const int n = w.addbot(1000, 1000);
+    w.sim.Shots.assign(56, Shot{});
+    w.sim.maxshotarray = 55;
+    for (vb_long i = 1; i <= 55; ++i) w.sim.Shots[i].exist = true;
+    newshot(w.sim, n, 1, 1.0f, 1.0f);
+    CHECK(w.sim.maxshotarray == 61);
+  }
+  {
+    RvWorld w;
+    w.sim.Shots.assign(151, Shot{});
+    w.sim.maxshotarray = 150;
+    for (vb_long i = 1; i <= 93; ++i) {
+      Shot& s = w.sim.Shots[i];
+      s.exist = true;
+      s.shottype = -100;  // ornamental: no colisiona
+      s.Range = 1000.0f;
+    }
+    updateshots(w.sim);
+    CHECK(w.sim.maxshotarray == 112);
+  }
+}
+
+// RV-11b — Shots.bas:421: tras compactar con 0 shots vivos, `shotpointer =
+// numshots` = 0. El siguiente FirstSlot devuelve el slot 0, que updateshots
+// (For 1 To maxshotarray) no procesa nunca: ese shot queda congelado. El port
+// fuerza shotpointer = 1 (y la spec, 33-SHOTS.md §8 Q03, da por hecho >= 1).
+TEST_CASE("RV-11b compactar con 0 shots deja shotpointer = 0") {
+  RvWorld w;
+  w.sim.Shots.assign(151, Shot{});
+  w.sim.maxshotarray = 150;
+  updateshots(w.sim);
+  CHECK(w.sim.shotpointer == 0);
+}
+
+// RV-12 — error de memoria del port, sin equivalente VB6. updateshots y
+// releasenrg guardan `Shot& s = sim.Shots[t]` y luego llaman a createshot,
+// que puede hacer Shots.resize y reubicar el vector: las escrituras
+// posteriores (flash, opos, pos, age) van a memoria liberada. En VB6
+// `Shots(t)` se vuelve a indexar tras el ReDim Preserve (Shots.bas:584 lo
+// comenta). Aqui el array esta lleno y un -1 golpea: releasenrg crea el -2.
+TEST_CASE("RV-12 createshot reubica Shots bajo una referencia viva") {
+  RvWorld w;
+  const int h = w.addbot(1000, 1000);
+  const int sh = w.addbot(9000, 9000);
+  w.sim.rob[h].nrg = 1000.0f;
+  w.sim.rob[h].body = 1000.0f;
+  const vb_long M = w.sim.maxshotarray;
+  for (vb_long i = 2; i <= M; ++i) {
+    Shot& o = w.sim.Shots[i];
+    o.exist = true;
+    o.shottype = -100;
+    o.Range = 1000.0f;
+    o.pos = {5000.0f, 5000.0f};
+    o.opos = o.pos;
+  }
+  PlaceHit(w, 1, h, sh, -1);
+  w.sim.Shots[1].Range = 10.0f;
+  w.sim.Shots[1].nrg = 40.0f;
+  w.sim.Shots[1].value = 20;
+  updateshots(w.sim);
+  CHECK(w.sim.Shots[1].flash);          // antes del arreglo: false
+  CHECK(w.sim.Shots[1].age == 1);       // antes del arreglo: 0
+  CHECK(w.sim.Shots[1].pos.x == 1001.0f);
+}
+
+// RV-13 — Shots.bas:485-486: cada pulso de Decay resta `SimOpts.Decay / 10`
+// al body (aunque va sea menor), sin suelo, y recalcula el radio. El port
+// resta va / 10, recorta a 0 y no llama a FindRadius. Con el preset de
+// corpses (Decay 75, Decaydelay 3, DecayType 3) y body = 5, el original deja
+// body = -2.5 (el corpse muere en el siguiente UpdateCounters); el port deja
+// 4.5 y el corpse decae geometricamente sin morir.
+TEST_CASE("RV-13 Decay resta Decay/10 al body y recalcula el radio") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Bot& b = w.sim.rob[n];
+  b.Corpse = true;
+  b.body = 5.0f;
+  b.DecayTimer = 2;
+  w.sim.opts.Decay = 75.0f;
+  w.sim.opts.Decaydelay = 3;
+  w.sim.opts.DecayType = 3;
+  Decay(w.sim, n);
+  CHECK(b.body == -2.5f);                     // antes del arreglo: 4.5
+  CHECK(b.radius == FindRadius(w.sim, n));    // antes del arreglo: se queda en 60
+}
+
+// RV-14 — promociones a Double perdidas en disparos (mismo patron que RV-05).
+// Shots.bas:822: `nrg / (Range * (RobSize / 3)) * value`. RobSize es Integer
+// y `/` da Double (40#), asi que toda la expresion va en Double (takewaste no
+// lleva el CSng de takeven/takepoison).
+TEST_CASE("RV-14 takewaste: la potencia va en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Shot& s = w.sim.Shots[1];
+  s.nrg = 9.76221085f;
+  s.Range = 5.0f;
+  s.value = 409;
+  w.sim.rob[n].Waste = 0.0f;
+  takewaste(w.sim, n, 1);
+  CHECK(w.sim.rob[n].Waste == 19.9637203f);  // antes del arreglo: 19.9637222
+}
+
+// RV-14b — Shots.bas:742: `nrg + partial * 0.95` (literal Double).
+TEST_CASE("RV-14b takenrg: partial * 0.95 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Shot& s = w.sim.Shots[1];
+  s.nrg = 114.059998f;
+  s.Range = 1.0f;
+  w.sim.rob[n].nrg = 1000.0f;
+  takenrg(w.sim, n, 1);
+  CHECK(w.sim.rob[n].nrg == 1108.35706f);  // antes del arreglo: 1108.35693
+}
+
+// RV-14c — Shots.bas:146: `Random` devuelve Long y `Long / 200` es Double, asi
+// que `ShAngle + Random(-20, 20) / 200` va en Double. Con aim = 0.0244212653
+// y k = -13 el angulo es -0.0405787341 (el port: -0.0405787304).
+TEST_CASE("RV-14c newshot: el jitter Random/200 se suma en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  w.sim.rob[n].aim = 0.0244212653f;
+  InjectedRnd inj({0.5f, 0.18f});  // Random(-2,2) muerto; Random(-20,20) = -13
+  w.sim.rndy = &inj;
+  const vb_long a = newshot(w.sim, n, 1, 1.0f, 1.0f);
+  const float sa = static_cast<float>(0.0244212653f + -13.0 / 200.0);
+  CHECK(w.sim.Shots[a].velocity.y ==
+        static_cast<float>(-std::sin(static_cast<double>(sa))) * 40.0f);
+}
+
+// RV-14d — Shots.bas:345: `nrg * Atn(..) / Atn(-shotdecay)`: Single * Double
+// / Double, un solo redondeo. El port redondea cada Atn a float y opera en
+// float.
+TEST_CASE("RV-14d updateshots: el decaimiento Atn va en Double") {
+  RvWorld w;
+  const int h = w.addbot(1000, 1000);
+  const int sh = w.addbot(9000, 9000);
+  PlaceHit(w, 1, h, sh, -4);
+  Shot& s = w.sim.Shots[1];
+  s.nrg = 1342.11816f;
+  s.age = 3;
+  s.Range = 7.0f;
+  updateshots(w.sim);
+  const double at = std::atan(static_cast<double>(3.0f / 7.0f) * 40 - 40);
+  CHECK(w.sim.Shots[1].nrg ==
+        static_cast<float>(1342.11816f * at / std::atan(-40.0)));
+}
+
+// RV-15 — Shots.bas:1100 y :1103 (Vshoot): el original resta de izquierda a
+// derecha, `nrg - (tempa / 20#) - coste` (Double) y `nrg - CSng(mem) -
+// coste`; el port reasocia a `nrg - (a + coste)` en float. Difiere con las
+// dos lecturas de RV-03.
+TEST_CASE("RV-15 Vshoot: el coste se resta en el orden del fuente") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Bot& b = w.sim.rob[n];
+  b.nrg = 102.160255f;
+  b.mem[addr::VshootSys] = 77;
+  w.sim.vm.costs.v[cost::SHOTCOST] = 1.0458796f;
+  w.sim.vm.costs.v[cost::COSTMULTIPLIER] = 1.0f;
+  w.sim.Shots[1].exist = true;
+  w.sim.Shots[1].stored = true;
+  Vshoot(w.sim, n, 1);
+  const double c = 1.0458796f;
+  const float n1 = static_cast<float>(102.160255f - 1540.0 / 20.0 - c);
+  const float n2 = static_cast<float>(n1 - 77.0 - c);  // lectura N-06
+  CHECK(b.nrg == n2);
+}
+
+// RV-16 — Shots.bas:319 (y Robots.bas:1640): TotalSimEnergy es Long y
+// `Long + Single` es Double, redondeado UNA vez al asignar. El port redondea
+// el sumando y luego suma: con T = 1 y nrg = 2.5, CLng(3.5) = 4 frente a
+// 1 + CLng(2.5) = 3. Alimenta los umbrales de SunUp/SunDown (Vegs.bas:85).
+TEST_CASE("RV-16 TotalSimEnergy redondea la suma, no el sumando") {
+  RvWorld w;
+  w.sim.TotalSimEnergy[w.sim.CurrentEnergyCycle] = 1;
+  Shot& s = w.sim.Shots[1];
+  s.exist = true;
+  s.shottype = -2;
+  s.nrg = 2.5f;
+  s.Range = 1000.0f;
+  updateshots(w.sim);
+  CHECK(w.sim.TotalSimEnergy[w.sim.CurrentEnergyCycle] == 4);  // antes del arreglo: 3
+}
+
+// RV-17 — Shots.bas:165 y :238: `(x + 40 + 1) \ 40`. `\` redondea el
+// operando YA sumado; el port redondea x y suma 41 despues, lo que cambia la
+// paridad del bancario: con x = 38.5, CLng(79.5) = 80 -> 2, frente a
+// CLng(38.5) + 41 = 79 -> 1.
+TEST_CASE("RV-17 createshot: (Range + 41) \\ 40 redondea la suma") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  createshot(w.sim, 0.0f, 0.0f, 0.0f, 0.0f, -2, n, 10.0f, 38.5f, 0);
+  CHECK(w.sim.Shots[1].Range == 2.0f);  // antes del arreglo: 1
+}
+
+// RV-14e — Shots.bas:565: `EnergyLost = power * 0.9` (releasenrg). Con
+// EnergyFix = 7 y nrg = 20: 20 - Single(6.3) = 13.6999998.
+TEST_CASE("RV-14e releasenrg: power * 0.9 en Double") {
+  RvWorld w;
+  const int h = w.addbot(1000, 1000);
+  const int sh = w.addbot(9000, 9000);
+  PlaceHit(w, 1, h, sh, -1);
+  w.sim.opts.EnergyExType = false;
+  w.sim.opts.EnergyFix = 7;
+  w.sim.rob[h].nrg = 20.0f;
+  w.sim.rob[h].body = 1000.0f;
+  releasenrg(w.sim, h, 1);
+  CHECK(w.sim.rob[h].nrg == 13.6999998f);  // antes del arreglo: 13.7000008
+}
+
+// RV-14f — Shots.bas:634-635: el techo `(body * 10) / 0.8 + shell` es Double.
+// Con body = 2.48 y shell = 0 da 31 exacto (en float, 30.9999981); el -2 de
+// vuelta lleva esa potencia.
+TEST_CASE("RV-14f releasebod: techo (body * 10) / 0.8 en Double") {
+  RvWorld w;
+  const int h = w.addbot(1000, 1000);
+  const int sh = w.addbot(9000, 9000);
+  PlaceHit(w, 1, h, sh, -6);
+  w.sim.opts.EnergyExType = false;
+  w.sim.opts.EnergyFix = 1000;
+  w.sim.rob[h].nrg = 1000.0f;
+  w.sim.rob[h].body = 2.48000002f;
+  w.sim.rob[h].shell = 0.0f;
+  releasebod(w.sim, h, 1);
+  CHECK(w.sim.Shots[2].nrg == 31.0f);  // antes del arreglo: 30.9999981
+}
+
+// RV-14g — Shots.bas:845: `Poisoncount + power / 1.5` (1.5 es Double).
+TEST_CASE("RV-14g takepoison: Poisoncount + power / 1.5 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Shot& s = w.sim.Shots[1];
+  s.nrg = 100.0f;
+  s.Range = 1.0f;
+  s.value = 5;  // power = 12.5
+  s.FromSpecie = "Otra.txt";
+  s.memloc = 5;  // sin RNG
+  w.sim.rob[n].Poisoncount = 10.0f;
+  takepoison(w.sim, n, 1);
+  CHECK(w.sim.rob[n].Poisoncount == 18.333334f);  // antes: 18.3333321
+}
+
+// RV-14h — Robots.bas:744-757: `Cos(aim) * upTotal + Sin(aim) * sxTotal` es
+// Double (Vshoot y el nacimiento lo usan).
+TEST_CASE("RV-14h absx: Cos(aim) * up en Double") {
+  CHECK(absx(0.0149999997f, 40.0f, 0.0f, 0.0f, 0.0f) == 39.9954987f);  // antes: 39.9955025
+}
+
+// RV-14i — Robots.bas:1834: `Waste - value * 0.99` (robshoot -4).
+TEST_CASE("RV-14i robshoot -4: Waste - value * 0.99 en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Bot& b = w.sim.rob[n];
+  b.nrg = 1000.0f;
+  b.Waste = 1000.0f;
+  b.mem[addr::shoot] = -4;
+  b.mem[addr::shootval] = 84;
+  robshoot(w.sim, n);
+  CHECK(b.Waste == 916.840027f);  // antes del arreglo: 916.839966
+}
+
+// RV-14j — Shots.bas:360: el rebote de poison de un shot de memoria resta
+// `(nrg / 2) * 0.9` en Double.
+TEST_CASE("RV-14j updateshots: rebote de poison (nrg / 2) * 0.9 en Double") {
+  RvWorld w;
+  const int h = w.addbot(1000, 1000);
+  const int sh = w.addbot(9000, 9000);
+  PlaceHit(w, 1, h, sh, 5);
+  Shot& s = w.sim.Shots[1];
+  s.nrg = 92.490097f;
+  s.Range = 10.0f;
+  s.age = 0;  // tempnum = 0: el decaimiento deja nrg igual
+  w.sim.rob[h].poison = 2000.0f;
+  updateshots(w.sim);
+  CHECK(w.sim.rob[h].poison == 1958.37952f);  // antes del arreglo: 1958.37939
+}
+
+// RV-14k — Shots.bas:1108: `pos.X + Cos(ShAngle) * radius` en Double. Con
+// Random(1, 1256) = 26 y radius 60.
+TEST_CASE("RV-14k Vshoot: pos + Cos(ShAngle) * radius en Double") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  w.sim.rob[n].mem[addr::VshootSys] = 1;
+  w.sim.rob[n].nrg = 1000.0f;
+  InjectedRnd inj({25.5f / 1256.0f});  // Random(1, 1256) = 26
+  w.sim.rndy = &inj;
+  w.sim.Shots[1].exist = true;
+  w.sim.Shots[1].stored = true;
+  Vshoot(w.sim, n, 1);
+  CHECK(w.sim.Shots[1].pos.x == 1059.49377f);  // antes del arreglo: 1059.49365
+}
+
+// RV-15b — Robots.bas:1761: `Cost = multiplier * Costs(SHOTCOST) *
+// Costs(COSTMULTIPLIER)` de izquierda a derecha. Con shootval = 10 (Cost =
+// 10 * c1 * c2), c1 = 0.526000023 y c2 = 1.70000005: 8.94200039 frente a
+// 8.94200134 con el producto de costes precalculado en float.
+TEST_CASE("RV-15b robshoot: Cost = multiplier * c1 * c2 en el orden del fuente") {
+  RvWorld w;
+  const int n = w.addbot(1000, 1000);
+  Bot& b = w.sim.rob[n];
+  b.nrg = 9.5f;
+  b.mem[addr::shoot] = -1;
+  b.mem[addr::shootval] = 10;
+  w.sim.vm.costs.v[cost::SHOTCOST] = 0.526000023f;
+  w.sim.vm.costs.v[cost::COSTMULTIPLIER] = 1.70000005f;
+  robshoot(w.sim, n);
+  CHECK(b.nrg == 9.5f - 8.94200039f);  // antes del arreglo: 9.5 - 8.94200134
+}

@@ -107,10 +107,11 @@ inline void Decay(Sim& sim, int n) {
       va = 0.0f;
     if (sim.opts.DecayType == 2 && va != 0.0f) newshot(sim, n, -4, va, 1.0f);
     if (sim.opts.DecayType == 3 && va != 0.0f) newshot(sim, n, -2, va, 1.0f);
-    // la resta de body del pulso pertenece a B5 (31-ENERGIA); con
-    // Decay = 0 (default del harness) va = 0 y no hay efecto
-    b.body -= va / 10.0f;
-    if (b.body < 0.0f) b.body = 0.0f;
+    // Shots.bas:485-486: resta Decay/10 aunque va sea menor, sin suelo, y
+    // recalcula el radio (RV-13). Con body <= 0, el UpdateCounters siguiente
+    // mata al corpse.
+    b.body = b.body - sim.opts.Decay / 10.0f;
+    b.radius = FindRadius(sim, n);
   }
 }
 
@@ -1994,10 +1995,12 @@ inline void UpdateBots(Sim& sim) {
       Ageing(sim, t);
       ManageDeath(sim, t);
     }
+    // Long + Single + Single es Double: se redondea la suma (RV-16).
     if (sim.rob[t].exist)
-      sim.TotalSimEnergy[sim.CurrentEnergyCycle] += static_cast<vb_long>(
-          vb_round64(static_cast<double>(sim.rob[t].nrg) +
-                     static_cast<double>(sim.rob[t].body) * 10.0));
+      sim.TotalSimEnergy[sim.CurrentEnergyCycle] = vb_clng(
+          static_cast<double>(sim.TotalSimEnergy[sim.CurrentEnergyCycle]) +
+          static_cast<double>(sim.rob[t].nrg) +
+          static_cast<double>(sim.rob[t].body) * 10.0);
   }
 
   // P6 — nacimientos y muertes.

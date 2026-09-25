@@ -568,9 +568,279 @@ condicionada a la lectura de RV-03), 1 hueco de funcionalidad y 2 notas menores.
   anti-atrapamiento y las cuatro ramas con `LastPush`), el compactador y el "tope"
   invertido de `DriftObstacles`.
 
+## Piloto 5 — Disparos (2026-09-25)
+
+**Alcance**: `Shots.bas` completo en lo vivo (`newshot`, `createshot`, `FirstSlot`,
+`updateshots`, `CompactShots`, `Decay`, `defacate`, `releasenrg`, `releasebod`,
+`takenrg`, `takeven`, `takewaste`, `takepoison`, `takesperm`, `NewShotCollision`,
+`Vshoot`, `MakeVirus`, `copygene`, `addgene`), más `robshoot`
+(`Robots.bas:1718-1864`), `absx`/`absy` (`Robots.bas:744-771`) y la
+inicialización del array (`main.frm:390-392, 1304-1305`). Frente a `shots.hpp`,
+`robots.hpp:92-113` (`Decay`) y `sim.hpp:593-595, 689-708`.
+
+**Dato de tipos que cambia la lectura de RV-02 aquí**: `Random` se declara
+`As Long` (`Common.bas:53`). Su cálculo interno es el de RV-02, pero lo que
+devuelve es un `Long`, así que `Random(..) / 200` es `Long / Integer`, que da
+**`Double`**.
+
+**Resultado**: 8 divergencias confirmadas (RV-10 a RV-17), una de ellas un error de
+memoria del propio port (RV-12), y 2 notas menores.
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir todo)**: en la rama
+> `rv-05-06-promociones-double` están corregidos RV-10 a RV-17, en `shots.hpp`,
+> `sim.hpp` (el array inicial de 50 y `absx`/`absy`) y `robots.hpp` (`Decay` y el
+> `TotalSimEnergy` de los bots).
+>
+> - **Tests**: 20 casos (RV-10 a RV-17, con RV-14e-k y RV-15b añadidos para cada
+>   sitio corregido), todos sin `should_fail`.
+> - **Mutation-check**: con las tres cabeceras de HEAD fallan los 20 casos (28 de
+>   28 aserciones).
+> - **Sin test propio**: la mitad de RV-16 de `robots.hpp`, que tiene el mismo
+>   patrón que la de disparos.
+> - **Test anterior ajustado**: R-06 (`test_rng.cpp`) daba por hecho que el virus
+>   pasaba del slot 5 al 1. Eso solo ocurría por la compactación que forzaba el
+>   array inicial de 300; con 50, el virus se queda en el slot 5.
+> - **Notas menores**: no se tocan.
+
+### RV-10 · `createshot` recibe la posición en `Long` y la velocidad en `Integer` — CORREGIDO
+
+- **Fuente** (`Shots.bas:205-206`): `ByVal X As Long, ByVal Y As Long, ByVal vx
+  As Integer, ByVal vy As Integer`. Cada rebote (el −2 de `releasenrg` y de
+  `releasebod`, el −5 de poison) nace con la posición y la velocidad
+  **redondeadas a entero** (bancario).
+- **Port** (`shots.hpp:147-162`): los cuatro parámetros son `vb_single`, sin
+  redondear.
+- **Contraejemplo**: `createshot(123.7, 456.5, -40.3, 2.5, …)` deja en el
+  original `pos = (124, 456)` y `velocity = (-40, 2)`; en el port, los valores sin
+  tocar.
+- **Alcance**: todo rebote de energía o de poison, es decir, prácticamente
+  siempre (la velocidad relativa casi nunca es entera). Cambia la trayectoria del
+  rebote y, con ella, a quién golpea.
+- **Origen**: la spec (`33-SHOTS.md §2.3`) dice "posición/velocidad explícitas"
+  sin el tipo.
+- **Test**: RV-10.
+
+### RV-11 · Tamaño del array de disparos: arranca en 300 (no en 50) y trunca en lugar de `CLng` — CORREGIDO
+
+- **Fuente**:
+  - Una sim nueva hace `maxshotarray = 50` y `ReDim Shots(50)`
+    (`main.frm:390-392` y `:1304-1305`).
+  - Al crecer, `CLng(maxshotarray * 1.1)` (`Shots.bas:104`, `:217`); al compactar,
+    `CLng(numshots * 1.2)` (`:419`). `CLng` redondea (bancario).
+- **Port**:
+  - Arranca en 300 (`sim.hpp:593-595`), que sale del código comentado de
+    `newshot` (`Shots.bas:96-99`). Como 300 > 100, compacta en el primer ciclo y
+    baja a 100; el original se queda en 50.
+  - `static_cast<vb_long>` trunca (`shots.hpp:45`, `:153`, `:773`).
+- **Contraejemplo**: al crecer desde 50, el original da 55, **61**, 67, 74, 81,
+  89 y el port 55, **60**, 66, 72, 79, 86. Al compactar con `numshots = 93`, el
+  original da 112 y el port 111 (difiere en 364 de los valores 90-999).
+- **Por qué importa**: el tamaño decide dónde se da la vuelta a `shotpointer` y,
+  por tanto, en qué slot cae cada disparo. `updateshots` procesa por índice: un
+  rebote creado durante la pasada en un slot **mayor** que el actual se procesa
+  en ese mismo ciclo, y en uno **menor**, en el siguiente. Cambia además el orden
+  de los efectos cuando dos disparos alcanzan al mismo bot, y el orden de las
+  extracciones de RNG de `takeven`/`takepoison`/`addgene`.
+- **Test**: RV-11.
+
+### RV-11b · Compactar con 0 disparos deja `shotpointer = 0` — CORREGIDO, raro
+
+- **Fuente** (`Shots.bas:421`): `shotpointer = numshots`. Si se compacta con
+  `numshots = 0` (array mayor que 100 que se vacía de golpe), el siguiente
+  `FirstSlot` devuelve el **slot 0**. `updateshots` y `CompactShots` recorren
+  desde 1, así que ese disparo queda congelado para siempre: no se mueve, no
+  golpea y no envejece. Si es un virus, `MakeVirus` recibe `virusshot = 0` y
+  devuelve `False`. Solo puede pasar una vez por sim: después el slot 0 ya está
+  ocupado y `FirstSlot` lo salta.
+- **Port** (`shots.hpp:775`): fuerza `shotpointer = 1`. La spec lo da por hecho
+  (`33-SHOTS.md §8`, Q03: "`FirstSlot` arranca en `shotpointer ≥ 1`"), y es falso
+  en este caso.
+- **Test**: RV-11b.
+
+### RV-12 · `createshot` reubica `Shots` bajo una referencia viva — ERROR DEL PORT (memoria), CORREGIDO
+
+- **Qué pasa**: `updateshots` (`shots.hpp:651`) y `releasenrg` (`:264`) guardan
+  `Shot& s = sim.Shots[t]` y después llaman a `createshot`. Si el array está lleno,
+  `createshot` hace `Shots.resize` (`:154`) y el `std::vector` cambia de sitio.
+  Todo lo que sigue (`taste`, `s.flash = true`, `opos`, `pos`, `age` y, en
+  `releasenrg`, el `Kills` de `s.parent`) **lee y escribe memoria liberada**.
+  Lo mismo pasa en el rebote de poison de los disparos de memoria (`:698-701`).
+- **VB6**: `Shots(t)` se vuelve a indexar después del `ReDim Preserve`. El propio
+  fuente lo tiene presente (`Shots.bas:584`: "so that no Shots array elements are
+  on the stack in case the Shots array gets redimmed").
+- **Contraejemplo**: con el array lleno, un −1 alcanza a un bot vivo. El
+  original deja el disparo con `flash = True`, `age = 1` y `pos.x` avanzado; en
+  el port se quedan `flash = False`, `age = 0` y la posición sin cambiar, porque
+  las escrituras se pierden en el bloque liberado. Es comportamiento indefinido:
+  hoy no revienta en ninguno de los tres modos, pero podría.
+- **Alcance**: cada vez que un rebote hace crecer el array (sims con muchos
+  disparos vivos).
+- **Arreglo propuesto**: volver a indexar `sim.Shots[t]` después de cada llamada
+  que pueda crear un disparo, o reservar capacidad antes de la pasada.
+- **Test**: RV-12.
+
+### RV-13 · `Decay`: el port resta `va/10` en vez de `Decay/10`, pone suelo a 0 y no recalcula el radio — CORREGIDO
+
+- **Fuente** (`Shots.bas:485-486`): `body = body - SimOpts.Decay / 10`, sin suelo,
+  y `radius = FindRadius(n)`, en cada pulso.
+- **Port** (`robots.hpp:112-113`): `body -= va / 10`, recorta a 0 y no toca el
+  radio. El comentario dice que "la resta pertenece a B5", pero B5 no la añadió
+  (`31-ENERGIA.md:88` remite a `33-SHOTS.md §5`, que sí dice `Decay/10`).
+- **Contraejemplo**: con el preset de corpses (`Decay = 75`, `Decaydelay = 3`,
+  `DecayType = 3`, `OptionsForm.frm:2775-2777`) y `body = 5`:
+  - el original deja `body = -2.5`, y el corpse muere en el siguiente
+    `UpdateCounters`;
+  - el port deja `body = 4.5`: el corpse decae geométricamente (×0,9 por pulso),
+    no muere nunca y sigue emitiendo disparos.
+  - El radio se queda en el del último `FindRadius` que hubo, 60 en el test,
+    frente a 11,35.
+- **Alcance**: toda sim con corpses y `Decay > 0` (la web expone `Decay`, id 51).
+- **Test**: RV-13.
+
+### RV-14 · Se pierden las promociones a `Double` en los disparos — CORREGIDO (misma familia que RV-05)
+
+La misma regla de RV-05: un literal con decimales o una intrínseca dan `Double`,
+y se redondea una vez al asignar. El port hace cada paso en `float`.
+
+| Fuente | Port | Expresión | Difiere |
+|---|---|---|---|
+| `Shots.bas:146` | `shots.hpp:85` | `ShAngle + Random(-20, 20) / 200` (`Long / Integer` → `Double`) | 1,8 % de los disparos |
+| `Shots.bas:142` | `shots.hpp:82` | `aim - mem(aimshoot) / 200` | 31 % (solo con `aimshoot ≠ 0`) |
+| `Shots.bas:345` | `shots.hpp:682-686` | `nrg * Atn(..) / Atn(-40)` (decaimiento en cada impacto) | 36 % |
+| `Shots.bas:360-361` | `shots.hpp:700-701` | `(nrg / 2) * 0.9` y `* 0.1` (rebote de poison) | 39 % y 5 % |
+| `Shots.bas:560, 565, 575` | `shots.hpp:293, 298, 306` | `power * 0.9`, `power * 0.01` (`releasenrg`) | 31 % y 28 % |
+| `Shots.bas:634-635` | `shots.hpp:352-353` | `(body * 10) / 0.8 + shell`: la comparación y la asignación (`releasebod`) | 23 % |
+| `Shots.bas:665, 675, 698` | `shots.hpp:378, 386, 403` | `power * 0.2`, `* 0.08`, `leftover * 0.1` | 10-20 % |
+| `Shots.bas:738-751` | `shots.hpp:437-449` | `partial * 0.95`, `* 0.004`, `overflow * 0.1`, `* 0.01` (`takenrg`), incluidas las comparaciones con 32000 | 1-37 % |
+| `Shots.bas:822` | `shots.hpp:457` | `nrg / (Range * (RobSize / 3)) * value` (`takewaste`; `RobSize / 3` es `Double` y aquí no hay `CSng`) | 26 % |
+| `Shots.bas:845` | `shots.hpp:475` | `Poisoncount + power / 1.5` | 2,3 % |
+| `Shots.bas:1108-1112` | `shots.hpp:889-892`, `sim.hpp:696-707` | `pos + Cos(a) * radius` y `absx`/`absy` (`Cos(aim) * upTotal`) | 0,6 % y 23 % |
+| `Robots.bas:1834` | `shots.hpp:1011` | `Waste - value * 0.99` (`robshoot` −4) | 38 % |
+
+- **Contraejemplos** (los de los tests):
+  - `takewaste` con `nrg = 9.76221085`, `Range = 5` y `value = 409`: el original
+    da **19.9637203** y el port **19.9637222**.
+  - `takenrg` con `nrg = 1000` y `partial = 114.059998`: **1108.35706** frente a
+    **1108.35693**.
+  - Jitter de `newshot` con `aim = 0.0244212653` y `k = −13`: el ángulo es
+    −0.0405787341 en el original y −0.0405787304 en el port.
+  - Decaimiento con `nrg = 1342.11816` y `tempnum = 3/7`: difiere en 1 ulp.
+- **Fuera de la tabla**: `absx`/`absy` también los usan la reproducción
+  (`robots.hpp:658-694, 1202-1293`), que queda para su piloto.
+- **Tests**: RV-14 (`takewaste`), RV-14b (`takenrg`), RV-14c (jitter) y RV-14d
+  (decaimiento).
+
+### RV-15 · `Vshoot` y `robshoot` reasocian la resta y el producto de costes — CORREGIDO
+
+- **Fuente**:
+  - `Vshoot` (`Shots.bas:1100, 1103`) resta de izquierda a derecha:
+    `nrg - (tempa / 20#) - coste` (en `Double`) y `nrg - CSng(mem) - coste`.
+  - `robshoot` (`Robots.bas:1753, 1761`) multiplica
+    `rngmultiplier * Costs(SHOTCOST) * Costs(COSTMULTIPLIER)` de izquierda a
+    derecha.
+- **Port**:
+  - `Vshoot` (`shots.hpp:878-884`) calcula `nrg -= a + coste`: primero redondea la
+    suma en `float` y luego resta.
+  - `robshoot` (`:913, 932, 940`) precalcula `shotcost = c1 * c2` y hace
+    `r * shotcost`.
+- **Diferencia**: 5,5 % en `Vshoot`, y **con las dos lecturas de RV-03**. En
+  `robshoot`, 17 % de los costes con `COSTMULTIPLIER ≠ 1`; con el valor por
+  defecto (1) no hay diferencia.
+- **Contraejemplo**: `nrg = 102.160255`, `vshoot = 77` y coste 1.0458796: tras la
+  primera línea, el original da 24.1143761 y el port 24.1143723.
+- **Test**: RV-15 (`Vshoot`).
+
+### RV-16 · `TotalSimEnergy` redondea el sumando en vez de la suma — CORREGIDO, efecto pequeño
+
+- **Fuente** (`Shots.bas:319`, `Robots.bas:1640`): `TotalSimEnergy` es `Long`
+  (`Vegs.bas:11`). `Long + Single` da `Double`, que se redondea **una** vez al
+  asignar.
+- **Port** (`shots.hpp:662-663`, `robots.hpp:1998-2000`): suma `CLng(x)` al
+  acumulado. Con el bancario, la paridad cambia: con `T = 1` y `nrg = 2.5`, el
+  original da `CLng(3.5)` = **4** y el port `1 + CLng(2.5)` = **3**.
+- **Alcance**: solo con fracción exacta de .5. Alimenta `TotalSimEnergyDisplayed`,
+  que decide `SunUp`/`SunDown` (`Vegs.bas:85, 107`): una unidad de diferencia
+  solo cuenta en el umbral.
+- **Test**: RV-16.
+
+### RV-17 · `(x + 40 + 1) \ 40`: el port redondea `x` antes de sumar — CORREGIDO, raro
+
+- **Fuente** (`Shots.bas:165, 238`): `\` redondea (bancario) el operando **ya
+  sumado**.
+- **Port** (`shots.hpp:107, 170`): `(vb_round64(x) + 41) / 40`. Como 41 es impar,
+  cambia la paridad del bancario cuando `x` acaba en .5 exacto. Con
+  `x = 38.5`: el original da `CLng(79.5)` = 80, es decir, **2**; el port
+  `CLng(38.5) + 41` = 79, es decir, **1**.
+- **Alcance**:
+  - En `newshot`: con `vbody = 14.0365772`, `nrg = Log(vbody) * 60` =
+    158.5 exacto, y el original da `Range = 5` y `nrg = 200` frente a 4 y 160 en
+    el port.
+  - Sumando además la cadena `Double` de `Log(..) * 60 * rngmultiplier`
+    (`Shots.bas:163`, que es de la familia RV-14), el `Range` difiere en unos 4
+    de cada 10⁶ disparos.
+- **Test**: RV-17 (`createshot`).
+
+### Notas menores (sin acción)
+
+- **Umbrales `Double`**:
+  - `Const MinBotRadius = 0.2` no tiene tipo, así que es `Double`
+    (`Shots.bas:48`, frente a `0.2f` en `shots.hpp:503`).
+  - `Range < 0.00001` (`Shots.bas:728`, `shots.hpp:432`).
+  - Como en la nota del piloto 4, solo difieren si el valor coincide exactamente
+    con `float(L)`.
+- **`createshot`: `nrg = Range + 40 + 1`**: el port suma en dos pasos `float` y la
+  lectura N-06 (RV-03) redondea una sola vez. Solo difiere al cruzar una potencia
+  de 2, y para los −2 el valor se pisa con `val`.
+
+### Literales `float` inexactos de `shots.hpp` (21)
+
+- **Factor de un producto** (19), que divergen: todos los de RV-14 (`0.9`,
+  `0.01`, `0.8`, `0.2`, `0.08`, `0.1`, `0.95`, `0.004`, `0.99`).
+- **Umbral** (2): `0.00001f` (`:432`) y `MinBotRadius = 0.2f` (`:503`), que van en
+  las notas.
+- **`Const As Single`**: `SlimeEffectiveness = 1 / 20` (`Shots.bas:46`) es
+  correcto y no cuenta entre los inexactos, porque el port lo escribe como
+  `1.0f / 20.0f`.
+
+### Verificado sin divergencias
+
+- **RNG**: las 2 extracciones de `newshot`, una de ellas muerta; la re-tirada de
+  `Vloc`/`Ploc` si sale 340 (es `Random(1, 1000)`, que ya está en RV-02); la
+  extracción de `addgene` y la de `Vshoot`. `Random(1, 1256) / 200` coincide
+  (división de un entero exacto, un solo redondeo).
+- **`newshot`**: el clamp de `val`; `Int(val)`; el plegado `Mod 8` y el −8; `memloc`/`Memval`
+  de 835/836; `backshot`/`aimshoot` normalizados en la celda; el `offset`; la
+  velocidad `actvel + dir·40`; el virus con `genenum = Int(gene)`; la
+  descalificación, y el esperma.
+- **`createshot`**: `memloc` 834, `Memval` 839 solo para −5, y `CInt(val)`. El
+  `val` `ByRef` recortado a 32000 no llega a notarse en ningún llamador.
+- **`FirstSlot`** y la llamada descartada de `releasenrg`.
+- **`updateshots`**: el orden (`flash`, contabilidad, colisión, efectos, formas,
+  movimiento, edad y muerte); la inmunidad filial rota; el `tempnum` con
+  `Range = 0`; las exenciones de `NoShotDecay`/`NoWShotDecay`; `(t - 1) Mod 1000
+  + 1` y `DelgeneSys`; el `If t <= maxshotarray`, que nunca salta; y el
+  compactador (`virusshot`, huérfanos, `Base.txt` oculto).
+- **`NewShotCollision`**: los bordes (toroidal o rígido con `±Abs`), el prefiltro, `pos − vel
+  + actvel`, el golpe en t = 0, la cuadrática `DdotP ^ 2 - D2 * (P2 - r ^ 2)` en
+  `Double`, las raíces en (0, 1), el "último bot con raíces" como resultado y la
+  recolocación.
+- **`takeven`/`takepoison`**: la potencia con `CSng` (todo `Single`), el escudo ×25 y
+  ÷20, los topes 32000, y `Vloc`/`Ploc` con el remapeo y el 340 → 0.
+- **`releasenrg`/`releasebod`** (salvo RV-14): el orden del chequeo de muerte y
+  del rebote, `Kills` sin clamp y la cascada de `leftover`.
+- **`addgene`**: la potencia en `Single` (aquí `Range * RobSize / 3` es
+  `Single * Integer / Integer`); la slime negativa que amplifica (B-19); y el
+  `Insert`.
+- **`copygene`**, **`takesperm`**, **`MakeVirus`** y **`defacate`**: en
+  `defacate`, el `IIf` es `Variant` R4, la misma aritmética que el `float` del
+  port.
+- **`robshoot`** (salvo RV-14 y RV-15): el `Mod MaxMem`, los multiplicadores, `Log(x / 2) / Log(2)` en
+  `Double`, `nrg / 100#`, `venom / 20#` y `Waste / 20#` (una división de `float`
+  entre `double` da lo mismo), y el borrado de `shoot`/`shootval`.
+
 ## Siguientes pilotos sugeridos
 
-1. **Disparos** (`Shots.bas`), **ties** (`Ties.bas`), **reproducción y
-   energía** (`Robots.bas`, `Vegs.bas`) y **visión** (`Senses.bas`), con el
-   mismo método. En cada uno, clasificar sus literales `float` inexactos (ver
-   RV-05).
+1. **Ties** (`Ties.bas`), **reproducción y energía** (`Robots.bas`, `Vegs.bas`;
+   incluye `absx`/`absy` en el nacimiento y la otra mitad de RV-16) y **visión**
+   (`Senses.bas`), con el mismo método. En cada uno, clasificar sus literales
+   `float` inexactos (ver RV-05).

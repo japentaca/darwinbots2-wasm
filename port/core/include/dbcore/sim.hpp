@@ -590,9 +590,10 @@ struct Sim {
                            // de SimOptions.bas:65 (E7-06)
 
   // Shots (Shots.bas:39-44). Índice 0 sin uso, como el original.
-  std::vector<Shot> Shots = std::vector<Shot>(301);
+  // Una sim nueva arranca con 50 (main.frm:390-392, 1304-1305; RV-11).
+  std::vector<Shot> Shots = std::vector<Shot>(51);
   vb_long shotpointer = 1;
-  vb_long maxshotarray = 300;
+  vb_long maxshotarray = 50;
   vb_long numshots = 0;
   vb_long ShotsThisCycle = 0;
   // main.frm:1291 — prefiltro por caja del swept-sphere; se calcula en
@@ -693,8 +694,10 @@ inline vb_single absx(vb_single aim, vb_single up, vb_single dn, vb_single sx,
   if (upTotal < -32000.0f) upTotal = -32000.0f;
   if (sxTotal > 32000.0f) sxTotal = 32000.0f;
   if (sxTotal < -32000.0f) sxTotal = -32000.0f;
-  return static_cast<vb_single>(std::cos(static_cast<double>(aim))) * upTotal +
-         static_cast<vb_single>(std::sin(static_cast<double>(aim))) * sxTotal;
+  // Cos/Sin son Double: toda la expresion en Double, un redondeo (RV-14).
+  return static_cast<vb_single>(
+      std::cos(static_cast<double>(aim)) * static_cast<double>(upTotal) +
+      std::sin(static_cast<double>(aim)) * static_cast<double>(sxTotal));
 }
 inline vb_single absy(vb_single aim, vb_single up, vb_single dn, vb_single sx,
                       vb_single dx) {
@@ -703,8 +706,9 @@ inline vb_single absy(vb_single aim, vb_single up, vb_single dn, vb_single sx,
   if (upTotal < -32000.0f) upTotal = -32000.0f;
   if (sxTotal > 32000.0f) sxTotal = 32000.0f;
   if (sxTotal < -32000.0f) sxTotal = -32000.0f;
-  return -static_cast<vb_single>(std::sin(static_cast<double>(aim))) * upTotal +
-         static_cast<vb_single>(std::cos(static_cast<double>(aim))) * sxTotal;
+  return static_cast<vb_single>(
+      -std::sin(static_cast<double>(aim)) * static_cast<double>(upTotal) +
+      std::cos(static_cast<double>(aim)) * static_cast<double>(sxTotal));
 }
 
 // HDRoutines.bas:1587-1599 — GiveAbsNum (Q14: no se publica en memoria).
