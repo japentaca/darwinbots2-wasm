@@ -12,9 +12,9 @@
 //    (50-MUNDO.md); aqui el core opera sobre sim.Teleporters[i].outbox/inbox
 //    en memoria y el host mueve los registros con db_sim_tp_outbox_take /
 //    db_sim_tp_inbox_push. Un "archivo" = un registro SaveOrganism (.dbo).
-//  - SimGUID ausente: el original lo regeneraba con Rnd CRUDO (fuera del
-//    flujo rndy); aqui queda en 0 (LoadSimulation ya lo documenta). El host
-//    puede fijarlo si algun dia lo necesita; ningun sistema del core lo lee.
+//  - SimGUID: el original lo regeneraba con `CLng(Rnd)` en el preludio de
+//    StartSimul; aqui queda en 0 salvo con SunOnRnd, donde db_sim_start
+//    replica el preludio entero (RV-32). Ningun sistema del core lo lee.
 //  - Colores con Rnd crudo (Q01): los colores de especies los decide la
 //    pagina (paleta propia); el core recibe el Long BGR ya decidido, igual
 //    que NewObstacle. El unico color heredado del original es el vbWhite de
@@ -155,28 +155,83 @@ DB_EXPORT int db_sim_rng_state(void* h) {
   return static_cast<int>(H(h).rng.state());
 }
 
-// Arranque de sim: los pasos del Form_Load/startloaded de main.frm que
-// preparan el mundo alrededor del core. Con seed != 0 replica startloaded
-// (main.frm: `Rnd -1 : Randomize UserSeedNumber / 100`); con seed = 0 deja
-// el estado del LCG como este.
+// Arranque de una sim NUEVA: StartNew_Click + StartSimul (OptionsForm.frm,
+// main.frm:1182-1368), los pasos que preparan el mundo alrededor del core.
+// La ronda nueva usa el mismo arranque y despues db_sim_round_carry.
+//  - UserSeedNumber es Long: el form lo asigna con CLng bancario
+//    (OptionsForm.frm:4115-4116), y StartSimul hace SIEMPRE `Rnd -1 :
+//    Randomize UserSeedNumber / 100` (main.frm:1197-1198), tambien con 0
+//    (RV-34). Decision de host: el port modela chseedstartnew = False (la
+//    semilla es la del usuario, no Timer * 100, OptionsForm.frm:4720).
+//  - TotRunCycle = -1 (OptionsForm.frm:4752): el primer tick es el ciclo 0
+//    (RV-35).
+//  - El sol (main.frm:1227-1234, RV-32). Con SunOnRnd el preludio se
+//    replica entero (skin 3 Rnd descartados, sol 3, SimGUID 1) para que la
+//    banda salga sorteada como en el original; sin SunOnRnd no hay RNG y
+//    esos Rnd crudos siguen omitidos (B7-5/Q01).
+//  - La deuda de la repoblacion y los contadores del primer ciclo NO son de
+//    StartSimul sino de startloaded (main.frm:1507-1510): viven en
+//    db_sim_load (RV-33). En una sim nueva valen lo del proceso (0 en frio).
 DB_EXPORT void db_sim_start(void* h, double seed) {
   auto& Sh = H(h);
   db::Sim& sim = Sh.sim;
-  if (seed != 0.0) {
-    sim.opts.UserSeedNumber = static_cast<db::vb_long>(seed);
-    Sh.rng.rnd_negative(-1.0f);
-    Sh.rng.randomize(seed / 100.0);
+  const std::int64_t s = db::vb_round64(seed);
+  sim.opts.UserSeedNumber = static_cast<db::vb_long>(
+      s < INT32_MIN ? INT32_MIN : (s > INT32_MAX ? INT32_MAX : s));
+  sim.opts.TotRunCycle = -1;
+  Sh.rng.rnd_negative(-1.0f);
+  Sh.rng.randomize(static_cast<double>(sim.opts.UserSeedNumber) / 100.0);
+  if (sim.opts.SunOnRnd) {
+    for (int i = 0; i < 3; ++i) Sh.rng();  // skin de la sim (main.frm:1211-1213)
+    sim.SunRange = 0.5;
+    // Int(Rnd * 3) + Int(Rnd * 2) * 10: Single, de izquierda a derecha.
+    const db::vb_single a = std::floor(Sh.rng() * 3.0f);
+    const db::vb_single b = std::floor(Sh.rng() * 2.0f);
+    sim.SunChange = static_cast<unsigned char>(a + b * 10.0f);
+    sim.SunPosition = static_cast<double>(Sh.rng());
+    sim.opts.SimGUID = db::vb_clng(static_cast<double>(Sh.rng()));
+  } else {
+    sim.SunPosition = 0.5;
+    sim.SunRange = 1;
   }
-  RecomputeDivisors(sim);       // main.frm:1432-1435
-  db::InitBuckets(sim);         // main.frm:1420 (fija MaxBotShotSeperation)
-  sim.shotpointer = 1;          // main.frm:1460
-  // main.frm:1507-1510 — la deuda inicial de la repoblacion (B-37) y los
-  // contadores del primer ciclo.
-  sim.cooldown = -sim.opts.RepopCooldown;
-  sim.totnvegsDisplayed = -1;
-  sim.totvegs = -1;
-  sim.totnvegs =
-      static_cast<int>(db::vb_round64(sim.vm.costs.v[53]));  // DYNAMICCOSTTARGET
+  RecomputeDivisors(sim);       // main.frm:1252-1256
+  db::InitBuckets(sim);         // main.frm:1291 (fija MaxBotShotSeperation)
+  sim.shotpointer = 1;          // main.frm:1305
+}
+
+// Ronda nueva (StartAnotherRound): el original vuelve a StartSimul en el
+// mismo proceso, y StartSimul no toca el contador de ciclos ni la
+// repoblacion. El port arma la ronda en un handle nuevo, asi que el host
+// traspasa esto tras db_sim_start (RV-33, RV-35). La ronda de F1 ya dejo
+// TotRunCycle = 0 en la sim vieja (F1Mode.bas:435).
+DB_EXPORT void db_sim_round_carry(void* dst, void* src) {
+  db::Sim& d = S(dst);
+  const db::Sim& o = S(src);
+  d.opts.TotRunCycle = o.opts.TotRunCycle;
+  d.cooldown = o.cooldown;
+  d.totvegs = o.totvegs;
+  d.totvegsDisplayed = o.totvegsDisplayed;
+  d.totnvegs = o.totnvegs;
+  d.totnvegsDisplayed = o.totnvegsDisplayed;
+}
+
+// Semilla de la ronda siguiente: `SimOpts.UserSeedNumber = Rnd *
+// 2147483647` con el LCG de la sim que termina (OptionsForm.frm:4809,
+// MDIForm1.frm:2168; Single * Long = Double, CLng bancario). RV-34.
+DB_EXPORT double db_sim_round_seed(void* h) {
+  const double r = static_cast<double>(H(h).rng());
+  return static_cast<double>(db::vb_clng(r * 2147483647.0));
+}
+
+// OptionsForm.frm:4620-4624 — al aplicar el dialogo de opciones con
+// SunOnRnd apagado, el sol vuelve al campo entero (RV-32). El host lo llama
+// despues de cada cambio que pasa por OptionsForm.
+DB_EXPORT void db_sim_options_ok(void* h) {
+  db::Sim& sim = S(h);
+  if (!sim.opts.SunOnRnd) {
+    sim.SunPosition = 0.5;
+    sim.SunRange = 1;
+  }
 }
 
 // Un ciclo completo de UpdateSim (los 19 pasos del tick, 10-CICLO.md §2).
@@ -427,7 +482,10 @@ DB_EXPORT int db_sim_add_species(void* h, const char* dnatext,
   sp.dnatext = dnatext ? dnatext : "";
   sp.Veg = veg != 0;
   sp.Fixed = fixed != 0;
-  sp.Stnrg = static_cast<db::vb_integer>(stnrg);
+  // Stnrg = val(SpecNrg.text) Mod 32000 (OptionsForm.frm:3582): Mod redondea
+  // el operando a Long (bancario) y conserva el signo del dividendo (RV-37).
+  sp.Stnrg = static_cast<db::vb_integer>(
+      db::vb_round64(static_cast<double>(stnrg)) % 32000);
   sp.color = color;
   sp.qty = static_cast<db::vb_integer>(qty > 0 ? qty : 1);
   sp.Native = true;
@@ -1345,13 +1403,16 @@ DB_EXPORT void db_sim_delete_all_teleporters(void* h) {
   sim.numTeleporters = 0;
 }
 
-// Teleport.bas:60-105 — NewTeleporter(PortIn, PortOut, Height, Internet),
-// transcrito: posicion sorteada con el MISMO flujo RNG (Random dos veces,
-// con teleporterDefaultWidth = 300, el default de TeleportForm.frm:378),
-// Width = Height * aspectRatio, color vbWhite, drift en ambos ejes. `local_`
-// es el modo local del form (entrada+salida con ReSpawn en la misma sim).
-// Los parametros de sondeo del inbox (botsPerPoll/pollCycles) son del form
-// de Internet. Devuelve el indice o -1 con el tope de 10.
+// Teleport.bas:60-105 — NewTeleporter(PortIn, PortOut, Height, Internet) +
+// TeleportForm.OKButton_Click (:415-465), transcrito. `height` es el valor
+// del slider de tamano (100..1000, default 300, :245-246 y :378-379): el
+// Change del slider lo copia tambien a teleporterDefaultWidth (:470-472), el
+// ancho con que NewTeleporter sortea la posicion con el MISMO flujo RNG
+// (Random dos veces, RV-36). Width = Height * aspectRatio, color vbWhite,
+// drift en ambos ejes. `local_` es el modo local del form (entrada+salida
+// con ReSpawn en la misma sim). Sondeo del inbox: CInt(val Mod 32000) y
+// PollCountDown = BotsPerPoll (:459-461). Devuelve el indice o -1 con el
+// tope de 10.
 DB_EXPORT int db_sim_add_teleporter(void* h, int portIn, int portOut,
                                     float height, int internet, int local_,
                                     int teleVeggies, int teleCorpses,
@@ -1374,14 +1435,17 @@ DB_EXPORT int db_sim_add_teleporter(void* h, int portIn, int portOut,
   const db::vb_single aspectRatio = static_cast<db::vb_single>(
       static_cast<double>(sim.opts.FieldHeight) /
       static_cast<double>(sim.opts.FieldWidth));
-  constexpr double kDefaultWidth = 300.0;  // TeleportForm.frm:378
-  t.pos.x = static_cast<db::vb_single>(
-      db::Random(0.0, sim.opts.FieldWidth - kDefaultWidth * aspectRatio,
-                 *sim.rndy));
-  t.pos.y = static_cast<db::vb_single>(
-      db::Random(0.0, sim.opts.FieldHeight - kDefaultWidth, *sim.rndy));
-  t.Width = height * aspectRatio;
-  t.Height = height;
+  // teleporterDefaultWidth (Integer) = valor del slider.
+  const db::vb_integer tdw = db::vb_cint(static_cast<double>(height));
+  t.pos.x = static_cast<db::vb_single>(db::Random(
+      0.0,
+      static_cast<double>(sim.opts.FieldWidth) -
+          static_cast<double>(static_cast<db::vb_single>(tdw * aspectRatio)),
+      *sim.rndy));
+  t.pos.y = static_cast<db::vb_single>(db::Random(
+      0.0, static_cast<double>(sim.opts.FieldHeight) - tdw, *sim.rndy));
+  t.Width = static_cast<db::vb_single>(tdw) * aspectRatio;
+  t.Height = static_cast<db::vb_single>(tdw);
   t.color = 0xFFFFFF;  // vbWhite
   t.In = portIn != 0;
   t.Out = portOut != 0;
@@ -1391,9 +1455,9 @@ DB_EXPORT int db_sim_add_teleporter(void* h, int portIn, int portOut,
   t.driftVertical = true;
   t.teleportVeggies = teleVeggies != 0;
   t.teleportCorpses = teleCorpses != 0;
-  t.BotsPerPoll = static_cast<db::vb_integer>(botsPerPoll);
-  t.InboundPollCycles = static_cast<db::vb_integer>(pollCycles);
-  t.PollCountDown = t.InboundPollCycles;
+  t.InboundPollCycles = static_cast<db::vb_integer>(pollCycles % 32000);
+  t.BotsPerPoll = static_cast<db::vb_integer>(botsPerPoll % 32000);
+  t.PollCountDown = t.BotsPerPoll;
   // center la publica MoveTeleporter en el paso 18 del proximo tick.
   return sim.numTeleporters;
 }
@@ -1905,8 +1969,12 @@ DB_EXPORT unsigned char* db_sim_save(void* h, int* out_len) {
 }
 
 // LoadSimulation desde un bufer. Resetea la sim del handle y despues aplica
-// el post-carga de startloaded (main.frm): divisores, Init_Buckets y
-// `Rnd -1 : Randomize UserSeedNumber / 100` (incondicional en el original).
+// el post-carga de startloaded (main.frm:1374-1515): divisores,
+// Init_Buckets, `Rnd -1 : Randomize UserSeedNumber / 100` (incondicional en
+// el original) y la deuda de la repoblacion con los contadores del primer
+// ciclo (main.frm:1507-1510, RV-33). Decision de host: la semilla es la del
+// archivo; el original usaba tmpseed (Timer * 100 con chseedloadsim, o la
+// de la sesion anterior, MDIForm1.frm:2093-2094 y main.frm:1377-1380).
 DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   auto& Sh = H(h);
   // PP-03 (revision): Obstacles() y leftCompactor/rightCompactor son
@@ -1932,6 +2000,12 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   db::InitBuckets(Sh.sim);
   Sh.rng.rnd_negative(-1.0f);
   Sh.rng.randomize(static_cast<double>(Sh.sim.opts.UserSeedNumber) / 100.0);
+  db::Sim& sim = Sh.sim;
+  sim.cooldown = -sim.opts.RepopCooldown;
+  sim.totnvegsDisplayed = -1;
+  sim.totvegs = -1;
+  sim.totnvegs =
+      static_cast<int>(db::vb_round64(sim.vm.costs.v[53]));  // DYNAMICCOSTTARGET
 }
 
 // SaveOrganism (.dbo) del organismo que contiene al bot `n` (celulas atadas
@@ -2897,8 +2971,14 @@ DB_EXPORT int db_sim_sysvar_tok(void* h, int n, const char* name) {
   db::Sim& s = S(h);
   if (n < 1 || n >= static_cast<int>(s.rob.size()) || !name) return 0;
   // El token viaja TAL CUAL, con su punto: sin prefijo `.` el original cae en
-  // val() (console.frm:397 ya prueba val() antes de llamar aqui).
-  return db::loader_detail::SysvarTok(name, s.rob[n], *s.sysvars);
+  // val() con CInt bancario (el `set` de console.frm:362 llama aqui con la
+  // direccion numerica). Fuera de Integer el original daba error 6 y se
+  // caia; aqui devuelve -1 (direccion invalida: el host no escribe nada).
+  try {
+    return db::loader_detail::SysvarTok(name, s.rob[n], *s.sysvars);
+  } catch (const db::loader_detail::VbError&) {
+    return -1;
+  }
 }
 // ---- Lint de ADN al sembrar (decisión de capa host, fuera de la fidelidad) --
 // El cargador no rechaza nada (V-08): todo token que no reconoce acaba en

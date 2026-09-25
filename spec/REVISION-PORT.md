@@ -1,6 +1,8 @@
 # Revisión del port contra el fuente VB6
 
-> Revisión independiente del port (`port/core`) **contra el fuente VB6**
+> Revisión independiente del port (`port/core`, y desde el piloto 12 la capa
+> host `port/wasm/dbcore_api.cpp` con sus tests en `port/tests/test_host.cpp`)
+> **contra el fuente VB6**
 > (`Darwinbots2/`, commit `02b20d7`), no contra la spec: si la spec se extrajo mal,
 > el port la sigue fielmente y la suite pasa igual. Cada hallazgo confirmado lleva un
 > test en `port/tests/test_revision.cpp` que afirma el comportamiento del original,
@@ -1680,9 +1682,304 @@ binario de bot, organismo y sim coincide byte a byte. No hay literales
 - **Defaults** de `LoadGlobalSettings` frente a `Sim`: `bodyfix`, epi,
   Delta, `NormMut`/`valNormMut`/`valMaxNormMut` e `intFindBestV2`.
 
+## Piloto 12 — Capa host (2026-09-25)
+
+**Alcance**: `port/wasm/dbcore_api.cpp` frente a los formularios:
+- `main.frm`: `StartSimul`, `startloaded` y `loadrobs`.
+- `MDIForm1.frm`: `loadsim_Click`/`simload` y `F1Internet_Click`.
+- `OptionsForm.frm`: `StartNew`, `OKButton_Click`, `AssignSkin` y
+  `UserSeedText_Change`.
+- `ObstacleForm.frm`/`Obstacles.bas` (formas y mazes).
+- `TeleportForm.frm`/`Teleport.bas`.
+- `console.frm`.
+
+Donde el contrato de la API lo fija el llamador, se mira también
+`port/web/worker.js`. **Fuera**: la vista E6.5, `CalcStats` y el lint, que
+son presentación de solo lectura. De `CalcStats` solo se comprobó que la
+mutación de `GenMut`/`OldGD` no llega a la sim.
+
+**Resultado**: 6 divergencias (RV-32 a RV-37, corregidas). No hay literales `float`
+inexactos: los 11 distintos del archivo (0, 0.5, 1, 2, 10, 61, 100, 629,
+1000, 5000 y 32000) son exactos en `Single`. Contraejemplos: programas del
+scratchpad que incluyen `dbcore_api.cpp` y llaman a la API como la página.
+
+### RV-32 · El arranque no inicializa el sol: los vegetales del centro del campo no reciben luz — CORREGIDO
+
+> **Arreglo (2026-09-25, decisión del usuario: corregir todos; con
+> `SunOnRnd`, replicar el preludio)**:
+> - `db_sim_start` replica `main.frm:1227-1234`. Sin `SunOnRnd` fija 0.5/1,
+>   sin RNG. Con `SunOnRnd` consume el preludio entero después del
+>   `Randomize`: los 3 `Rnd` de la skin (descartados), los 3 del sol y el
+>   `CLng(Rnd)` de `SimGUID`. Con eso, el sol y el LCG salen exactos. B7-5
+>   sigue igual para el caso sin `SunOnRnd`.
+> - API nueva `db_sim_options_ok` (`OKButton_Click`). El worker la llama
+>   después de cada `setopt`/`setcost` que pasa por `OptionsForm`.
+> - `50-MUNDO.md` §3 describe el arranque del sol.
+>
+> Tests RV-32 (tres casos en `tests/test_host.cpp`).
+
+- **Fuente** (`main.frm:1227-1234`): `StartSimul` fija
+  - sin `SunOnRnd`: `SunPosition = 0.5` y `SunRange = 1`, así que la banda
+    solar cubre `[0, FieldWidth]`;
+  - con `SunOnRnd`: `SunRange = 0.5`, `SunChange` y `SunPosition` a partir
+    de `Rnd`.
+
+  `OKButton_Click` (`OptionsForm.frm:4620-4624`) vuelve a 0.5/1 cada vez
+  que se aplican opciones con `SunOnRnd` apagado.
+- **Port**: `db_sim_start` no toca `SunPosition`/`SunRange`. Se quedan en el
+  default de `Sim` (0/0), y la banda de `feedvegs` resulta
+  `[−0,125·W, 0,125·W]` con envoltura. `db_sim_set_opt(40, 0)` no normaliza
+  el sol.
+- **Contraejemplo**: campo de 16000, `MaxEnergy` 10, dos algas con 16000
+  cloroplastos, en `x = 8000` y en `x = 500`. Tras cada tick:
+
+  | | Alga en x = 8000 | Alga en x = 500 |
+  |---|---|---|
+  | Port | Δnrg = **0** | Δnrg = +3,38 |
+  | Sol 0.5/1 | Δnrg = +3,38 | Δnrg = +3,38 |
+
+- **Alcance**: toda sim nueva de la página. Los vegetales solo comen en el
+  25 % del campo pegado a los bordes. Con `SunOnRnd` la banda también
+  arranca en otro sitio.
+- **Arreglo propuesto**: `db_sim_start` replica `main.frm:1227-1234`. Sin
+  `SunOnRnd`, fija 0.5/1. Con `SunOnRnd`, fija `SunRange = 0.5` y queda por
+  decidir qué hacer con los 4 `Rnd`: replicarlos (reabre B7-5) o dejar la
+  posición en 0.5. Además, un punto de la API para la normalización de
+  `OKButton_Click`: al aplicar opciones, o en `set_opt(40, 0)`.
+
+### RV-33 · La inicialización de la repoblación está cruzada entre sim nueva y sim cargada — CORREGIDO
+
+> **Arreglo (2026-09-25)**:
+> - Las cuatro asignaciones de `main.frm:1507-1510` pasan de
+>   `db_sim_start` a `db_sim_load`.
+> - API nueva `db_sim_round_carry`: la ronda nueva hereda `cooldown`,
+>   `totvegs`, `totvegsDisplayed`, `totnvegs` y `totnvegsDisplayed` del
+>   handle viejo (el worker la llama en `resetSim` de ronda).
+> - Corregidos `50-MUNDO.md` §2.1, la ficha B-37 y el comentario de
+>   `sim.hpp`, que citaba un `StartNewSimCounters` inexistente. El dorado
+>   B-37 del core no cambia.
+>
+> Tests: RV-33 (sim nueva, tick 25; sim cargada, tick 51) y RV-33/RV-35
+> (traspaso de ronda).
+
+- **Fuente**: la deuda B-37 (`cooldown = −RepopCooldown`) y los contadores
+  `totvegs = −1`, `totnvegsDisplayed = −1` y `totnvegs = Costs(53)` solo
+  están en `startloaded` (`main.frm:1507-1510`). `StartSimul` no los toca:
+  una sim nueva parte de los valores del proceso (0 en frío; en una ronda,
+  los de la ronda anterior). `totvegsDisplayed = −1` es lo que salta la
+  repoblación del primer tick (`Master.bas:393`).
+- **Port**: `db_sim_start` (sim nueva y ronda nueva) aplica las cuatro
+  asignaciones. `db_sim_load` no aplica ninguna: deja 0.
+- **Contraejemplo** (`RepopCooldown = 25`, primera tanda de
+  `VegsRepopulate`):
+
+  | | Port | Original |
+  |---|---|---|
+  | Sim nueva | tick **51** | tick 25 |
+  | Sim cargada | tick **25** | tick 51 |
+
+- **Spec**: `50-MUNDO.md` §2.1 y B-37 (`70-CASOS-DORADOS.md`) dicen "al
+  iniciar una sim" y citan `main.frm:1507`, que es `startloaded`. El dorado
+  del core no cambia: asigna el `cooldown` a mano.
+- **Arreglo propuesto**: mover las cuatro asignaciones a `db_sim_load`. En
+  la ronda nueva, traspasar `cooldown` y los contadores del handle viejo,
+  como hace `db_sim_obs_carry` con las formas.
+
+### RV-34 · La semilla no se trata como en el original — CORREGIDO
+
+> **Arreglo (2026-09-25, decisión del usuario: documentar los flags
+> `chseed*` como decisión de host)**:
+> - `db_sim_start` guarda `CLng(seed)` y hace siempre `Rnd -1 : Randomize
+>   CLng(seed) / 100`.
+> - API nueva `db_sim_round_seed`, que devuelve `CLng(Rnd · 2147483647)` con
+>   el LCG de la sim que termina. El worker la usa en lugar de
+>   `Math.random`.
+> - La decisión (el port modela `chseedstartnew`/`chseedloadsim` apagados)
+>   queda documentada en `db_sim_start` y `db_sim_load`.
+>
+> Tests: RV-34 (semilla 0, semilla no entera, semilla de ronda) y el smoke
+> `tools/rv/smoke_host.mjs` (dos corridas dan las mismas semillas de ronda).
+
+- **Fuente**:
+  - `StartSimul` y `startloaded` hacen siempre `Rnd -1 : Randomize
+    UserSeedNumber / 100` (`main.frm:1197-1198`, `:1391-1392`), también con
+    semilla 0.
+  - `UserSeedNumber` es `Long`: `UserSeedText_Change` asigna `val(texto)`
+    con `CLng` bancario (`OptionsForm.frm:4115-4116`).
+  - En la ronda nueva, la semilla sale del LCG de la sim que termina:
+    `UserSeedNumber = Rnd * 2147483647` (`OptionsForm.frm:4809`,
+    `MDIForm1.frm:2168`).
+- **Port**: `db_sim_start` salta el `Rnd -1 : Randomize` con semilla 0,
+  pasa `seed / 100` sin redondear y trunca `UserSeedNumber`. La ronda nueva
+  toma la semilla de `Math.random` (`worker.js:573`), así que las rondas no
+  son reproducibles.
+- **Contraejemplo**:
+
+  | Semilla | Port | Original |
+  |---|---|---|
+  | 0 | primer `Rnd` = **0.7055475** | primer `Rnd` = 0.3328429 |
+  | 1234.5 | estado `F08B86` | `Randomize 12.34`, estado `EE3C86` |
+  | 1235.5 | `UserSeedNumber` = 1235 | `UserSeedNumber` = 1236 |
+
+- **Nota**: con los defaults del original (`chseedstartnew` y
+  `chseedloadsim` a `True`, `HDRoutines.bas:855-856`), sim nueva y carga
+  usan `Timer * 100` (`OptionsForm.frm:4720`, `MDIForm1.frm:2093-2094`), y
+  `startloaded` usa esa semilla (`tmpseed`), no la del archivo. El port
+  modela los dos flags apagados y en la carga usa la del archivo. Es
+  defendible como decisión de host (reproducibilidad), pero no está
+  documentado.
+- **Arreglo propuesto**:
+  - `db_sim_start` hace siempre `Rnd -1 : Randomize CLng(seed) / 100` y
+    guarda `CLng(seed)`.
+  - La ronda nueva toma `CLng(Rnd * 2147483647)` del LCG de la sim que
+    termina.
+  - Documentar la decisión de los flags `chseed*`.
+
+### RV-35 · `TotRunCycle` va un ciclo por delante en la sim nueva — CORREGIDO
+
+> **Arreglo (2026-09-25)**:
+> - `db_sim_start` fija `TotRunCycle = −1`.
+> - `db_sim_round_carry` traspasa el contador a la ronda. La ruta de F1 ya
+>   lo deja en 0 en la sim vieja (`gamemodes.hpp`, `F1Mode.bas:435`).
+> - `smoke_im` escribía `writeIMdata` antes del primer tick y esperaba el
+>   ciclo 0: ahora espera −1 y el archivo `-177.stats`.
+>
+> Tests: RV-35 y el smoke `tools/rv/smoke_host.mjs` (ciclo 3 tras 4 ticks
+> con una ronda por tick).
+
+- **Fuente**: `StartNew` fija `TotRunCycle = −1` (`OptionsForm.frm:4752`),
+  así que el primer tick es el ciclo 0. En las rondas, `StartSimul` no lo
+  toca:
+  - la ronda de F1 lo pone a 0 (`F1Mode.bas:435`);
+  - las rondas del modo Restart (`Robots.bas:1650-1655`) y las de F1 con
+    `SpeciesLeft = 0` (`F1Mode.bas:364-366`) siguen contando.
+- **Port**: `Sim` arranca en 0 y `db_sim_start` no lo cambia (primer tick =
+  ciclo 1). La ronda nueva es un handle nuevo, así que siempre vuelve a 0.
+- **Contraejemplo**: después de un tick de una sim nueva, el port tiene
+  `TotRunCycle = 1` y el original, 0.
+- **Alcance**: todo lo que depende del número de ciclo se corre uno:
+  - `logmutation` no registra en el ciclo 0 (`NeoMutations.bas:22`);
+  - `Master.bas:486` (`= 2000`) y `:535` (`= 1`);
+  - `Mod 10`/`Mod 100` de los costes dinámicos y de la energía;
+  - el intervalo de las gráficas;
+  - `MaxCycles` de F1.
+- **Arreglo propuesto**: `db_sim_start` con sim nueva fija
+  `TotRunCycle = −1`. La ronda nueva conserva el contador salvo en la ruta
+  de F1 que lo pone a 0.
+
+### RV-36 · Teleporter local: el tamaño y el sorteo de la posición no siguen al formulario — CORREGIDO
+
+> **Arreglo (2026-09-25)**:
+> - `db_sim_add_teleporter` usa el alto recibido (el valor del slider) como
+>   `teleporterDefaultWidth` para el sorteo.
+> - `PollCountDown = BotsPerPoll` y `Mod 32000` en el sondeo.
+> - El worker crea el teleporter local con 300 y ya no necesita parchear
+>   `PollCountDown`.
+>
+> Tests: RV-36 (slider en 1000: posición (7298, 778)) y el smoke (300 × 225
+> en un campo de 8000 × 6000).
+
+- **Fuente**:
+  - El slider de `TeleportForm` va de 100 a 1000, con default 300
+    (`TeleportForm.frm:245-246`, `:378-379`).
+  - Mover el slider también cambia `teleporterDefaultWidth`
+    (`:470-472`), que es el ancho con el que `NewTeleporter` sortea la
+    posición (`Teleport.bas:73-74`).
+  - `OKButton_Click` fija `PollCountDown = BotsPerPoll` (`:461`).
+- **Port**:
+  - `worker.js:1354` crea el teleporter con alto **3000**, fuera del rango
+    del slider.
+  - `db_sim_add_teleporter` sortea con 300 fijo, sea cual sea el alto.
+  - La API fija `PollCountDown = InboundPollCycles`; el worker lo corrige
+    después.
+- **Contraejemplo**: con el formulario sin tocar, el teleporter del
+  original es de 300 × 300·aspect; el de la página, de 3000 × 3000·aspect.
+  Con un alto distinto de 300, `Random(0, FW − h·aspect)` y el del port
+  (`FW − 300·aspect`) sortean en rangos distintos con el mismo LCG.
+- **Arreglo propuesto**: la API recibe el valor del slider y lo usa como
+  alto y como ancho del sorteo, y `PollCountDown = BotsPerPoll`. El worker
+  usa 300, o un slider de 100 a 1000.
+
+### RV-37 · Las entradas numéricas del host no pasan por la conversión del formulario — CORREGIDO
+
+> **Arreglo (2026-09-25)**:
+> - `db_sim_add_species` aplica `CLng(stnrg) Mod 32000`.
+> - `set`/`printmem` del worker usan `CInt` bancario: `set` resuelve la
+>   dirección con `SysvarTok` como el original.
+> - `db_sim_sysvar_tok` devuelve −1 en lugar de propagar el error 6 de
+>   `SysvarTok` (el original se caía), así que el host no escribe nada.
+>
+> Tests: RV-37 (`Stnrg` y `sysvar_tok`) y el smoke (`set 7 3.5`,
+> `set 7 -1.7`, `set 5.5 9`).
+>
+> **Verificación de los seis arreglos**:
+> - **Mutation-check**: con el `dbcore_api.cpp` de HEAD (más stubs vacíos
+>   de las 3 APIs nuevas) fallan los 13 casos de `test_host.cpp`; con el
+>   `worker.js` de HEAD fallan 6 de las 7 comprobaciones del smoke (el
+>   control `set 7 2.5` coincide en los dos).
+> - **Suites**: 258 casos y 4004 aserciones en g++, clang y wasm, sin
+>   fallos.
+> - **Smoke tests**: `smoke_e8` 30/30, `smoke_im` 44/44, `smoke_campo` 8/8,
+>   `smoke_formas` 21/21 y `smoke_host` 7/7.
+
+- **Fuente**:
+  - `set` de la consola: `mem(SysvarTok(x)) = val(v)` (`console.frm:362`),
+    con `CInt` bancario en el valor y en la dirección numérica
+    (`SysvarTok` → `val`).
+  - `Stnrg = val(texto) Mod 32000` (`OptionsForm.frm:3582`).
+  - `InboundPollCycles`/`BotsPerPoll = CInt(val(texto) Mod 32000)`
+    (`TeleportForm.frm:459-460`).
+- **Port**: `set` hace `val | 0` y `parseInt` (trunca).
+  `db_sim_add_species` y `db_sim_add_teleporter` hacen un cast a
+  `vb_integer`, sin `Mod 32000`.
+- **Contraejemplo**:
+
+  | Entrada | Port | Original |
+  |---|---|---|
+  | `set 7 3.5` | `mem(7) = 3` | `mem(7) = 4` |
+  | `set 7 -1.7` | `mem(7) = −1` | `mem(7) = −2` |
+  | nrg de especie 40000 | `Stnrg = −25536` | `Stnrg = 8000` |
+
+- **Alcance**: entradas raras del usuario.
+- **Arreglo propuesto**: `CInt` bancario en `set`, y `Mod 32000` (con
+  `CLng` bancario previo) en la API.
+
+### Notas (sin acción)
+- **RNG del host**: los llamadores de `Random` (`MakeShape`, mazes,
+  teleporters, `Random(1, 10000)` del apodo IM y `numObstacles`) ya se
+  clasificaron en RV-02. `FieldWidth` es `Long`, así que `FW − Integer`
+  sigue la ruta `Double`.
+- **Decisiones que siguen igual (B7-5/Q01)**: los 3 `Rnd` de color de cada
+  `NewObstacle` y los `Rnd` del preludio de `StartSimul` (skin y
+  `SimGUID`).
+- **N-06**: `db_sim_add_teleporter` calcula `300 · aspectRatio` en
+  `Double`, mientras que el original redondea el producto a `Single`
+  (`db_sim_im_enable` sí lo redondea). Queda cubierto por N-06.
+- **`CalcStats`** reescribe `GenMut`/`OldGD`, pero ningún sistema de la sim
+  los lee. Solo `mutate` decrementa `GenMut` (`NeoMutations.bas:224`).
+
+### Verificado sin divergencias
+- **Siembra**: `RecomputeDivisors` (`Single` = `Long/Integer` redondeado
+  una vez), `InitBuckets`/`MaxBotShotSeperation`, `shotpointer` y
+  `db_sim_seed_species` frente a `loadrobs`: bypass de especie, `Native`,
+  `FindRadius` antes de los cloroplastos, `Mutables`/`Skin`/`color`,
+  `GenMut` y `kill_mb`/`dq_kill`.
+- **Formas**: `MakeShape`, `AddRandomObstacles` (4 `Rnd` en `Single`,
+  desplazamiento y recorte), `DeleteObstacle`/`All`/`TenRandom` (sorteos
+  que consumen RNG aunque la lista se vacíe) y los 6 mazes con sus tipos
+  (`CInt` de `Single`, `Int` de `Single`, `Min` en `Single` y los `CSng`
+  del espiral).
+- **Teleporters**: `DeleteTeleporter`/`All`, `F1Internet_Click` (guardas,
+  apodo con `RandomI`, alto `FH ^ 0.5 · 10` en `Single`, slot no
+  reiniciado) y el apagado con `i = i − 1`.
+- **Carga**: `db_sim_load` frente a `startloaded` en divisores, buckets y
+  `Rnd -1 : Randomize UserSeedNumber / 100`, salvo lo de RV-33 y RV-34.
+- **E8**: `AssignSkin` (pre-semillas por nombre y ADN, orden de
+  evaluación de `angle`, `Randomize` a mitad, y `Skin(6)` `Single/3`, que no
+  cae cerca de .5) y `DrawRobSkin` con su error 6.
+
 ## Siguientes pilotos sugeridos
 
-1. Con el piloto 11, el núcleo está revisado entero. Si se abre otro
-   piloto (por ejemplo, la capa host de `dbcore_api.cpp` frente a los
-   formularios), hay que clasificar sus literales `float` inexactos (ver
-   RV-05).
+1. Con el piloto 12 queda revisada también la capa host de `dbcore_api.cpp`
+   frente a los formularios. Sin revisar: la presentación de solo lectura
+   (`CalcStats`/`grafico.frm`, vista E6.5, lint) y el resto de `worker.js`.

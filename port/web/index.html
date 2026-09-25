@@ -25,7 +25,9 @@
      original los sorteaba con Rnd crudo en la UI). Se pasan al core como
      Long BGR de VB6.
    - Semilla: el input "seed" alimenta db_sim_start, que replica
-     `Rnd -1 : Randomize seed/100` de startloaded (main.frm).
+     `Rnd -1 : Randomize CLng(seed)/100` de StartSimul (main.frm:1197-1198;
+     siempre, también con 0). Las rondas siguientes toman la semilla del
+     LCG de la sim que termina (RV-34).
    - Teleporters: el botón crea uno LOCAL (entra y sale en esta sim); el
      movimiento de "archivos" .dbo entre sims vive en la API
      (db_sim_tp_outbox_take / db_sim_tp_inbox_push), no en esta página.

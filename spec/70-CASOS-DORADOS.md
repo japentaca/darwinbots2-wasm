@@ -1814,8 +1814,9 @@ se aplica. Con ambos flags, traslada con tope `MaxVelocity/4` y rebote/envoltura
 
 ### B-37 · La primera repoblación tarda el doble — [integración]
 
-(`main.frm:1507`; `Vegs.bas:23-38`.) **Estado**: sim nueva con `RepopCooldown = 25`,
-sin cloroplastos. **Esperado**: `cooldown` arranca en **−25**: la primera tanda de
+(`main.frm:1507`; `Vegs.bas:23-38`.) **Estado**: sim CARGADA (`startloaded`; una sim
+nueva vía `StartSimul` no fija la deuda, ver RV-33 en `REVISION-PORT.md`) con
+`RepopCooldown = 25`, sin cloroplastos. **Esperado**: `cooldown` arranca en **−25**: la primera tanda de
 vegetales llega tras ~50 ciclos elegibles; las siguientes cada 25 (el acumulador
 descuenta el umbral y conserva el resto — repoblación "con deuda").
 

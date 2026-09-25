@@ -27,7 +27,13 @@
 3. **El sol es una banda vertical móvil** (con `SunOnRnd`): `SunPosition`/`SunRange`
    derivan ±0.0005/ciclo con cambios de rumbo sorteados 1/2000 (**2 RNG por ciclo**,
    `Vegs.bas:44-65`); solo los bots con cloroplastos dentro de la banda comen
-   (`:225`). Sin `SunOnRnd` la banda inicial no se mueve. Los umbrales de energía
+   (`:225`). Sin `SunOnRnd` la banda inicial no se mueve. Arranque
+   (`StartSimul`, `main.frm:1227-1234`): sin `SunOnRnd`, `SunPosition = 0.5` y
+   `SunRange = 1` (banda = campo entero; `OKButton_Click` lo repone al aplicar
+   opciones, `OptionsForm.frm:4620-4624`); con `SunOnRnd`, `SunRange = 0.5`,
+   `SunChange = Int(Rnd·3) + Int(Rnd·2)·10` y `SunPosition = Rnd`, detrás de los
+   3 `Rnd` de la skin de la sim (`:1211-1213`) y antes del `CLng(Rnd)` de
+   `SimGUID`. La carga toma el sol del archivo. Los umbrales de energía
    total (`SunUp`/`SunDown`, 3 modos) pueden forzar día o noche (`:85-133`).
 4. **La capa de torneo es separable y está entretejida**: `hidepred` filtra
    `FName = "Base.txt"` en *cada* bucle del motor; `x_restartmode`, `Disqualify`/`dq`,
@@ -57,8 +63,12 @@ ya citado en A2/A3).
 
 Acumulador `cooldown` +1 por ciclo elegible; al alcanzar `RepopCooldown`, añade
 `RepopAmount` vegetales y descuenta el umbral (el resto se conserva — repoblación
-"con deuda"). **`cooldown` arranca en `−RepopCooldown`** al iniciar una sim
-(`main.frm:1507`): la primera repoblación tarda el doble. Cada vegetal:
+"con deuda"). **`cooldown` arranca en `−RepopCooldown`** al CARGAR una sim
+(`startloaded`, `main.frm:1507-1510`, junto con `totvegs = −1`,
+`totnvegsDisplayed = −1` y `totnvegs = Costs(DYNAMICCOSTTARGET)`): el primer
+tick salta la repoblación (`Master.bas:393`) y la primera tanda tarda el doble.
+Una sim NUEVA (`StartSimul`) no toca esos globales: valen lo del proceso (0 en
+frío) y, en una ronda nueva, lo que dejó la ronda anterior. Cada vegetal:
 `aggiungirob −1, Random(60, W−60), Random(60, H−60)` — pero **esas coordenadas se
 descartan**: con `r = −1`, `aggiungirob` re-sortea la especie vegetal (re-tiradas hasta
 `checkvegstatus`) **y re-sortea la posición** con `fRnd` dentro del área de la especie

@@ -311,7 +311,8 @@ async function direct() {
   api.seed(s1, ia, 0);
   api.seed(s1, ib, 0);
   const raw = str(api.imStats(s1));
-  const expect = '00.stats\n{"cycle":0,"simId":"9-24-2026 1-02-03 PM","width":8000,' +
+  // Sin ticks, TotRunCycle vale -1 (StartNew, OptionsForm.frm:4752; RV-35).
+  const expect = '-177.stats\n{"cycle":-1,"simId":"9-24-2026 1-02-03 PM","width":8000,' +
     '"height":6000,"population":[{"botName":"Alga","count":3,"repopulating":true},' +
     '{"botName":"","count":2}]}\r\n';
   const seedNum = raw.slice(0, raw.indexOf('.stats'));
@@ -319,7 +320,7 @@ async function direct() {
         raw.slice(raw.indexOf('.stats')) === expect.slice(expect.indexOf('.stats')),
         JSON.stringify(raw.slice(raw.indexOf('\n') + 1)));
   check('writeIMdata: archivo = TotRunCycle & UserSeedNumber & ".stats"',
-        /^0-?\d+$/.test(seedNum), seedNum + '.stats');
+        seedNum === '-177', seedNum + '.stats');
 
   // Apodo vacío: "Newbie " & Random(1, 10000) ANTES de los 2 Random de
   // NewTeleporter (MDIForm1.frm:1310-1324): con apodo, el puerto usa las

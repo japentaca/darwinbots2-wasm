@@ -292,6 +292,10 @@ function bindApi() {
     obsCarry:      C('db_sim_obs_carry', null, ['number','number']),
     obsRegen:      C('db_sim_obs_regen', 'number', ['number']),
     xobsCount:     C('db_xobs_count', 'number', []),
+    // RV-32..RV-35 (revision del port, piloto 12)
+    roundCarry:    C('db_sim_round_carry', null, ['number','number']),
+    roundSeed:     C('db_sim_round_seed', 'number', ['number']),
+    optionsOk:     C('db_sim_options_ok', null, ['number']),
   };
 }
 
@@ -570,7 +574,9 @@ function newRound() {
     wins: [],
   };
   for (let i = 1; i <= 20; i++) keep.wins.push(api.f1Wins(sim, i));
-  const seed = (Math.floor(Math.random() * 2147483646) + 1);
+  // RV-34: `SimOpts.UserSeedNumber = Rnd * 2147483647` con el LCG de la sim
+  // que termina (OptionsForm.frm:4809, MDIForm1.frm:2168).
+  const seed = api.roundSeed(sim);
   const wasRunning = running;
   // E7: StartSimul no toca Teleporters() (solo LoadSimulation los
   // reinicia, HDRoutines.bas:1332) y la ronda no pasa por StartNew_Click
@@ -711,9 +717,19 @@ function conOut(n, text) { self.postMessage({ t: 'console-out', n, text }); }
 
 // console.frm:395-405 — printmem: val() primero, sysvar despues; el rango
 // impreso es 0 < v < 1000 (el fuente excluye mem(1000)).
+// CInt de VB6 (redondeo bancario) sobre val(): la asignación a Integer de
+// console.frm (RV-37).
+function vbCInt(x) {
+  const f = Math.floor(x), d = x - f;
+  if (d > 0.5) return f + 1;
+  if (d < 0.5) return f;
+  return (f % 2 === 0) ? f : f + 1;
+}
+
+// console.frm:398-407 — `Dim v As Integer: v = val(w)`; si 0, SysvarTok.
 function printmem(n, w) {
-  let v = parseInt(w, 10);
-  if (!Number.isFinite(v) || v === 0) v = api.sysvarTok(sim, n, w || '');
+  let v = vbCInt(parseFloat(w) || 0);
+  if (v === 0) v = api.sysvarTok(sim, n, w || '');
   if (v > 0 && v < 1000) conOut(n, ' ' + v + '-> ' + api.botMem(sim, n, v));
 }
 
@@ -774,11 +790,12 @@ function consoleCmd(n, line) {
       self.postMessage({ t: 'running', running: false });
       break;
     case 'set': {
+      // console.frm:360-362: mem(SysvarTok(x)) = val(v), con CInt bancario
+      // en la dirección (SysvarTok -> val) y en el valor (RV-37).
       const val = parseFloat(w(2)) || 0;
       if (Math.abs(val) < 32001) {
-        let v = parseInt(w(1), 10);
-        if (!Number.isFinite(v) || v === 0) v = api.sysvarTok(sim, n, w(1));
-        api.botSetMem(sim, n, v, val | 0);
+        const v = api.sysvarTok(sim, n, w(1));
+        api.botSetMem(sim, n, v, vbCInt(val));
         printmem(n, w(1));
       } else {
         conOut(n, 'Value out of range.  Memory values must be between ' +
@@ -1152,6 +1169,9 @@ function resetSim(msg, carryTeleporters) {
     // PP-03: StartSimul apaga el array global de formas sin borrarlo y los
     // índices del compactador siguen (db_sim_obs_carry).
     api.obsCarry(sim, old);
+    // RV-33/RV-35: en la ronda, StartSimul no toca TotRunCycle ni la
+    // repoblación (cooldown y contadores): siguen los de la sim que termina.
+    if (carryTeleporters) api.roundCarry(sim, old);
     if (carryTeleporters)
       for (let i = 1; i <= api.numTeleporters(old); i++) api.tpCopy(sim, old, i);
     api.destroy(old);
@@ -1326,6 +1346,8 @@ self.onmessage = (e) => {
       // MENU_OPT_IDS) y el eye designer (nocap) no pasan por el diálogo.
       if (!msg.nocap && !MENU_OPT_IDS.has(msg.id | 0)) api.obsRepop(sim);
       api.setOpt(sim, msg.id | 0, +msg.v);
+      // RV-32: OKButton_Click normaliza el sol (OptionsForm.frm:4620-4624).
+      if (!msg.nocap && !MENU_OPT_IDS.has(msg.id | 0)) api.optionsOk(sim);
       break;
     case 'getopt':                // solo lectura (smokes)
       if (sim) self.postMessage({ t: 'opt', id: msg.id | 0,
@@ -1338,6 +1360,7 @@ self.onmessage = (e) => {
       if (!sim) break;
       if (!msg.nocap) api.obsRepop(sim);
       api.setCost(sim, msg.i | 0, +msg.v);
+      if (!msg.nocap) api.optionsOk(sim);   // RV-32 (OKButton_Click)
       break;
     case 'save':
       saveSim();
@@ -1346,16 +1369,15 @@ self.onmessage = (e) => {
       loadSim(msg);
       break;
     case 'teleporter': {
-      // local: entra y sale en esta sim (2 RNG + ReSpawn); alto 3000 twips.
+      // local: entra y sale en esta sim (2 RNG + ReSpawn). Tamaño = el
+      // slider del form sin tocar (TeleportForm.frm:378-379: 300, rango
+      // 100..1000), que es también el ancho del sorteo de posición (RV-36).
       // Filtros con los defaults del form (TeleportForm.frm:383-388: las
       // tres casillas marcadas, 10/10) — E7: hasta aquí teleportHeterotrophs
       // quedaba en False y el puerto local no movía a nadie.
       tpDefaultWidth = 300;   // TeleportForm.frm:378 (el form se abrió)
-      const i = api.addTeleporter(sim, 0, 0, 3000, 0, 1, 1, 1, 10, 10);
-      if (i > 0) {
-        api.tpSet(sim, i, 6, 1);                          // heterótrofos
-        api.tpSet(sim, i, 10, api.tpGet(sim, i, 9));      // :461 BotsPerPoll
-      }
+      const i = api.addTeleporter(sim, 0, 0, 300, 0, 1, 1, 1, 10, 10);
+      if (i > 0) api.tpSet(sim, i, 6, 1);                // heterótrofos
       log(i > 0 ? `teleporter local #${i} creado`
                 : 'tope de teleporters (10) alcanzado');
       postFrame();
