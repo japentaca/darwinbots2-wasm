@@ -251,6 +251,34 @@ archivador que los baja/valida/publica vive en `tools/bestiary/` (ver su
 README); si `bots.json` no está, la página funciona igual con los dos
 presets de siempre.
 
+Los bots del Bestiary no van al `<select>`: se eligen desde el
+**Inventario** (botón "📚 Inventario…", `web/inventory.js`), una ventana
+flotante con búsqueda, filtros y agrupación (foro, arquetipo, capacidad,
+tag, tamaño, favoritos), ficha por bot, tags libres, favoritos, notas,
+selecciones con nombre y siembra en lote (un color por especie). El
+**perfil genético** de cada bot (`web/bots/profiles.json`) lo genera
+offline `tools/bestiary/analyze_bots.js`: siembra el bot con el core y
+recorre su ADN ya parseado (`db_sim_bot_text`) gen por gen, anotando qué
+sysvars escribe y lee y el tipo de disparo, lo que da 30 capacidades
+(caza, veneno, caparazón, fotosíntesis, lazos, reproducción sexual, …) y
+un arquetipo (depredador, multicelular, vegetal, defensivo, pasivo). Lo del
+usuario vive en IndexedDB (`darwinbots-inventario`), identificado por
+un hash del ADN canónico, así que sobrevive a una nueva corrida del
+archivador; se respalda con Exportar/Importar (JSON).
+
+El **Laboratorio de híbridos** (botón 🧬, o "🧬 Laboratorio" en la ficha y
+en la selección del Inventario, `web/lab.js`) arma un ADN nuevo con genes
+de distintos bots: se buscan por capacidad en todo el Bestiary (o se
+recorren los de un bot), se ordenan y se siembran, se llevan al formulario
+o se guardan en IndexedDB. Los genes vienen de `web/bots/genes.json`, el
+texto de cada gen tal como lo dejó el core (verificado con una ida y
+vuelta por el core para los 588 bots). El Laboratorio avisa de lo que se
+rompe al mezclar: un gen que lee memoria propia que en su bot escribía otro
+gen ("+ gen N" lo agrega), dos bots que usan la misma dirección propia (por
+defecto se remapea la del segundo a una libre, empezando por 971-990) y los
+números de gen literales en `.delgene`/`.mkvirus`. Una sim guardada que
+sembró un híbrido recupera su ADN por nombre (RV-40) desde los guardados.
+
 ### Registro y análisis (etapa E6)
 
 El menú "Recording" y el aparato de gráficas del original, en el panel

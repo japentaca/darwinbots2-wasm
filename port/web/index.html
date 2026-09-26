@@ -135,6 +135,7 @@
     width: 100%; height: 180px; background: #0b0f19; color: #b9c8e0;
     border: 1px solid #2e3a55; border-radius: 4px; padding: 6px;
     font: 12px/1.4 ui-monospace, Consolas, monospace; resize: vertical;
+    flex-shrink: 0; /* el aside es flex en columna: sin esto #dna se aplasta */
   }
   .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .row label { color: #93a4c2; }
@@ -196,7 +197,8 @@
   .win { position: absolute; pointer-events: auto; background: #121826;
          border: 1px solid #2e3a55; border-radius: 6px;
          box-shadow: 0 8px 28px rgba(0,0,0,.55); display: flex;
-         flex-direction: column; }
+         flex-direction: column;
+         isolation: isolate; /* los z-index de adentro no cruzan a otra ventana */ }
   .win-bar { display: flex; align-items: center; gap: 6px; padding: 4px 6px;
              background: #1a2234; border-bottom: 1px solid #2e3a55;
              border-radius: 6px 6px 0 0; cursor: move; user-select: none; }
@@ -204,6 +206,105 @@
                text-overflow: ellipsis; white-space: nowrap; }
   .win-x { padding: 0 6px; line-height: 18px; }
   .win-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  /* Inventario de bots (inventory.js) */
+  .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
+  .inv-win .win-body { flex: 1; min-height: 0; font-size: 12px; }
+  .inv-bar, .inv-foot { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .inv-bar select, .inv-foot select, .inv-foot button, .inv-bar button { padding: 2px 6px; }
+  .inv-bar label, .inv-foot label { color: #93a4c2; white-space: nowrap; }
+  .inv-foot input[type=number] { padding: 2px 4px; }
+  .inv-win input[type=search], .inv-win input[type=text] { background: #0b0f19; color: #dfe6f2;
+    border: 1px solid #2e3a55; border-radius: 4px; padding: 3px 6px; font: inherit; }
+  #inv-q { width: 200px; }
+  .inv-sp { flex: 1; }
+  .inv-sep { width: 1px; height: 18px; background: #2e3a55; }
+  #inv-capf { display: flex; flex-wrap: wrap; gap: 3px; align-items: center;
+              max-height: 74px; overflow-y: auto; flex-shrink: 0; }
+  .inv-capg { color: #5c6b88; font-size: 10px; text-transform: uppercase;
+              letter-spacing: .06em; margin: 0 2px 0 8px; }
+  .inv-cap { display: inline-block; font-size: 10.5px; line-height: 16px; padding: 0 5px;
+             border-radius: 8px; white-space: nowrap; margin: 1px 2px 1px 0;
+             color: hsl(var(--h) 70% 78%); background: hsl(var(--h) 45% 20% / .55);
+             border: 1px solid hsl(var(--h) 45% 35% / .7); }
+  .inv-cap small { color: #7d8fb0; }
+  #inv-capf .inv-cap { cursor: pointer; user-select: none; }
+  #inv-capf .inv-cap[data-m="1"] { outline: 2px solid #3fbf6a; background: #1d4a2b; color: #c8f5d5; }
+  #inv-capf .inv-cap[data-m="-1"] { outline: 2px solid #d05050; background: #4a1d1d;
+                                    color: #f5c8c8; text-decoration: line-through; }
+  .inv-tag { display: inline-flex; align-items: center; font-size: 10.5px; line-height: 16px;
+             padding: 0 5px; border-radius: 3px; margin: 1px 3px 1px 0; color: #ffe39a;
+             background: #3a3010; border: 1px solid #6b5a1f; white-space: nowrap; }
+  .inv-tag-x { background: none; border: 0; padding: 0 0 0 3px; color: #d8b85a; line-height: 1; }
+  .inv-main { flex: 1; min-height: 0; display: flex; gap: 6px; }
+  #inv-list { flex: 1; min-width: 0; overflow-y: auto; border: 1px solid #232a3d;
+              border-radius: 4px; background: #0d1220; }
+  #inv-detail { width: 320px; flex-shrink: 0; overflow-y: auto; border: 1px solid #232a3d;
+                border-radius: 4px; padding: 6px 8px; background: #0d1220;
+                display: flex; flex-direction: column; gap: 5px; }
+  #inv-detail h3 { margin: 0; font-size: 14px; color: #fff; }
+  #inv-detail h4 { margin: 4px 0 0; font-size: 11px; color: #7d8fb0;
+                   text-transform: uppercase; letter-spacing: .06em; }
+  #inv-detail textarea { height: 60px; font: 12px/1.4 system-ui, sans-serif; }
+  #inv-detail a { color: #8fb4ff; }
+  .inv-sub { color: #7d8fb0; font-size: 11px; }
+  .inv-dl { display: grid; grid-template-columns: 76px 1fr; gap: 4px; align-items: start;
+            padding: 2px 0; border-bottom: 1px solid #1a2132; }
+  .inv-dl > span:first-child { color: #7d8fb0; font-size: 11px; }
+  .inv-genes summary { cursor: pointer; color: #93a4c2; margin-top: 4px; }
+  .inv-gh { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center;
+            padding: 3px 6px; background: #1a2234; border-bottom: 1px solid #2e3a55;
+            cursor: pointer; user-select: none; }
+  .inv-gh b { color: #cdd6e4; font-weight: 600; }
+  .inv-n { color: #7d8fb0; font-size: 11px; }
+  .inv-tw { width: 10px; color: #7d8fb0; }
+  .inv-row { display: grid; grid-template-columns: 18px 20px minmax(140px, 260px) 38px 1fr;
+             gap: 4px; align-items: center; padding: 2px 6px; cursor: pointer;
+             border-bottom: 1px solid #141b2b; }
+  .inv-row:hover { background: #151d30; }
+  .inv-row.cur { background: #1d2a48; }
+  .inv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inv-name i { color: #6fbf73; font-style: normal; }
+  .inv-meta { color: #7d8fb0; font-size: 11px; text-align: right;
+              font-variant-numeric: tabular-nums; }
+  .inv-caps { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .inv-star { background: none; border: 0; padding: 0; color: #5c6b88; font-size: 14px; }
+  .inv-star.on { color: #ffd23f; }
+  .inv-empty { color: #5c6b88; padding: 8px; font-style: italic; }
+  #inv-count { color: #93a4c2; font-variant-numeric: tabular-nums; margin-right: 4px; }
+  /* Laboratorio de híbridos (lab.js) */
+  .lab-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .lab-h { display: flex; gap: 6px; align-items: center; color: #7d8fb0; font-size: 11px;
+           text-transform: uppercase; letter-spacing: .06em; }
+  .lab-h b { color: #cdd6e4; text-transform: none; letter-spacing: 0; flex: 1; }
+  .lab-list { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid #232a3d;
+              border-radius: 4px; background: #0d1220; }
+  .lab-g { display: flex; gap: 5px; align-items: center; padding: 2px 6px;
+           border-bottom: 1px solid #141b2b; cursor: pointer; }
+  .lab-g:hover { background: #151d30; }
+  .lab-g button { padding: 0 6px; line-height: 18px; flex-shrink: 0; }
+  .lab-g .inv-caps { flex: 1; min-width: 0; }
+  .lab-k { color: #7d8fb0; width: 18px; text-align: right; flex-shrink: 0; }
+  .lab-src { width: 150px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis;
+             white-space: nowrap; }
+  .lab-gi, .lab-tk { color: #7d8fb0; font-size: 11px; white-space: nowrap; flex-shrink: 0;
+                     font-variant-numeric: tabular-nums; }
+  .lab-tk { width: 40px; text-align: right; }
+  .lab-mem { font-size: 10px; color: #e0c878; border: 1px solid #6b5a1f; border-radius: 3px;
+             padding: 0 3px; margin-right: 3px; }
+  #lab-preview { flex-shrink: 0; max-height: 40%; display: flex; flex-direction: column; }
+  #lab-preview[hidden] { display: none; }
+  #lab-preview pre { margin: 0; overflow: auto; background: #0b0f19; border: 1px solid #2e3a55;
+                     border-radius: 4px; padding: 6px; color: #b9c8e0;
+                     font: 12px/1.4 ui-monospace, Consolas, monospace; }
+  #lab-preview button { padding: 0 6px; }
+  .lab-caps { flex-shrink: 0; }
+  #lab-warns { flex-shrink: 0; max-height: 120px; overflow-y: auto; font-size: 11.5px; }
+  .lab-w { padding: 2px 6px; border-left: 3px solid; margin: 2px 0; border-radius: 2px; }
+  .lab-w button { padding: 0 6px; font-size: 11px; margin-left: 4px; }
+  .lab-w-dep, .lab-w-gl, .lab-w-col { border-color: #c9a227; background: #1d1a10; color: #e0c878; }
+  .lab-w-remap, .lab-w-info { border-color: #3a62bd; background: #111a2e; color: #a9bde0; }
+  #lab-dna { flex-shrink: 0; height: 160px; }
+  #lab-dna[hidden] { display: none; }
   /* E8 — frmMonitorSet y frmEYE */
   .mon-grid { display: flex; gap: 6px; }
   .mon-grid fieldset, .win fieldset { border: 1px solid #2e3a55; border-radius: 4px;
@@ -493,6 +594,8 @@
         <option value="alga">Alga Minimalis (veg)</option>
         <option value="custom">— ADN propio —</option>
       </select>
+      <button id="btn-inventory" title="Bots del Bestiary: buscar, filtrar por capacidades, tags, favoritos y siembra en lote">📚 Inventario…</button>
+      <button id="btn-lab" title="Laboratorio de híbridos: armar un ADN con genes de distintos bots">🧬</button>
     </div>
     <textarea id="dna" spellcheck="false"></textarea>
     <div class="row">
@@ -518,6 +621,8 @@
   en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
 </footer>
 
+<script src="inventory.js"></script>
+<script src="lab.js"></script>
 <script>
 'use strict';
 
@@ -865,28 +970,14 @@ function collectOptions() {
 // bots.json lo genera el archivador del Bestiary (scripts fuera del repo de
 // la sim): un registro por bot validado con el propio dbcore.wasm. La página
 // solo los ofrece como presets; si no existe el archivo, todo sigue igual.
+// Ya no van al <select>: se eligen desde el Inventario (inventory.js).
 let BESTIARY = [];
 async function loadBestiary() {
   try {
     const r = await fetch('bots/bots.json');
     if (!r.ok) return;
     BESTIARY = await r.json();
-    const sel = document.getElementById('preset');
-    const groups = new Map();
-    BESTIARY.forEach((b, i) => {
-      let g = groups.get(b.board);
-      if (!g) {
-        g = document.createElement('optgroup');
-        g.label = 'Bestiary · ' + b.board;
-        groups.set(b.board, g);
-        sel.appendChild(g);
-      }
-      const o = document.createElement('option');
-      o.value = 'bestiary:' + i;
-      o.textContent = b.name + (b.veg ? ' (veg)' : '');
-      g.appendChild(o);
-    });
-    if (BESTIARY.length) log(`bestiary: ${BESTIARY.length} bots del foro en el selector`);
+    if (BESTIARY.length) log(`bestiary: ${BESTIARY.length} bots del foro en el Inventario`);
   } catch (e) { /* sin bots.json (p. ej. file://): la página sigue igual */ }
 }
 
@@ -3528,6 +3619,8 @@ document.getElementById('btn-reset').onclick = () => {
   newSim();
 };
 document.getElementById('btn-seed').onclick = seedFromForm;
+document.getElementById('btn-inventory').onclick = () => openInventory();
+document.getElementById('btn-lab').onclick = () => openLab();
 // E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
 // vive en el panel dinámico (se construye en onReady): delegación.
 document.addEventListener('click', (e) => {
@@ -3540,17 +3633,6 @@ document.getElementById('speed').onchange = (e) =>
 
 document.getElementById('preset').onchange = async (e) => {
   const v = e.target.value;
-  if (v.startsWith('bestiary:')) {
-    const b = BESTIARY[parseInt(v.slice(9), 10)];
-    const r = await fetch('bots/' + b.file);
-    if (!r.ok) { log(`no pude leer bots/${b.file}`); return; }
-    document.getElementById('dna').value = await r.text();
-    document.getElementById('sp-name').value = b.name + '.txt';
-    document.getElementById('sp-veg').checked = b.veg;
-    document.getElementById('sp-qty').value = b.veg ? 15 : 5;
-    document.getElementById('sp-nrg').value = 3000;
-    return;
-  }
   const p = PRESETS[v];
   if (!p) return;
   document.getElementById('dna').value = p.dna;
@@ -3569,7 +3651,11 @@ async function resolveDnaByName(names) {
     const p = Object.values(PRESETS).find((x) => x.name === name);
     if (p) { entries.push({ name, dna: p.dna }); continue; }
     const b = BESTIARY.find((x) => x.name + '.txt' === name);
-    if (!b) continue;
+    if (!b) {
+      const h = await labDnaByName(name);   // híbrido guardado (lab.js)
+      if (h) entries.push({ name, dna: h });
+      continue;
+    }
     try {
       const r = await fetch('bots/' + b.file);
       if (r.ok) entries.push({ name, dna: await r.text() });
