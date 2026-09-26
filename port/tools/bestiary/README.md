@@ -67,3 +67,13 @@ direcciones de sysvar salen de `core/include/dbcore/sysvars.hpp`, la misma
 tabla del core. El script verifica la **ida y vuelta**: los genes pegados
 de nuevo tienen que dar, en el core, el mismo ADN que el bot original
 (corrida del 2026-09-25: 588 de 588 idénticos).
+
+**Nombres únicos.** Varios temas comparten título (el mismo bot publicado
+en varios sub-boards, dos versiones con el mismo título, adjuntos titulados
+"1"). Al final, `analyze_bots.js` quita las copias con ADN idéntico (queda
+la primera en el orden de `publish_bots.py`) y renombra las demás a partir
+del ADN: el nombre de la cabecera del `.txt` si el título no tiene uno
+("1" → "Saber", "Slam Funk 1.0"…) o, si lo tiene, el título más lo que
+distingue a cada ADN (nº de genes, nombre de cabecera, arquetipo o
+tokens). Corrida del 2026-09-26: 20 copias fuera, 568 bots, 0 nombres
+repetidos.

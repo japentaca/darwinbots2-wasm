@@ -1,7 +1,7 @@
 [
  {
   "file": "1.txt",
-  "name": "1",
+  "name": "Depredador de 6 genes",
   "board": "F1 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2379.0.html"
@@ -1002,21 +1002,21 @@
  },
  {
   "file": "1_2.txt",
-  "name": "1",
+  "name": "Pasivo de 1 gen",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2596.0.html"
  },
  {
   "file": "1_3.txt",
-  "name": "1",
+  "name": "Saber",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2940.0.html"
  },
  {
   "file": "1_4.txt",
-  "name": "1",
+  "name": "BETA-AA",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3048.0.html"
@@ -1107,7 +1107,7 @@
  },
  {
   "file": "BETA_F2_SB_d-EVO_23-10-2008.txt",
-  "name": "BETA(F2)(SB)(d-EVO)23-10-2008",
+  "name": "BETA(F2)(SB)(d-EVO)23-10-2008 · 414 tokens",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3028.0.html"
@@ -1170,7 +1170,7 @@
  },
  {
   "file": "Caterpillar_Peter_F2_MB_04-11-08.txt",
-  "name": "Caterpillar(Peter)(F2_MB)04-11-08",
+  "name": "Caterpillar(Peter)(F2_MB)04-11-08 · 32 genes",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3003.0.html"
@@ -1429,7 +1429,7 @@
  },
  {
   "file": "Hydra_F2MB_Bacillus_08-10-2008.txt",
-  "name": "Hydra(F2MB)(Bacillus)(08-10-2008)",
+  "name": "Hydra(F2MB)(Bacillus)(08-10-2008) · Hydra Velocans",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2941.0.html"
@@ -1597,7 +1597,7 @@
  },
  {
   "file": "One_Man_Bucket_SS_F2_abyaly_-03.04.07.txt",
-  "name": "One Man Bucket (SS)(F2)(abyaly)-03.04.07",
+  "name": "One Man Bucket (SS)(F2)(abyaly)-03.04.07 · 20 genes",
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6375.0.html"
@@ -1839,13 +1839,6 @@
   "board": "F2 bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2936.0.html"
- },
- {
-  "file": "TriggerBot_f1_f2_Interesting_Niemci_10-11-2014_2.txt",
-  "name": "TriggerBot(f1)(f2)(Interesting)(Niemci)10-11-2014",
-  "board": "F2 bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6573.0.html"
  },
  {
   "file": "Turneria_Cassus_F2_Norg_-11.12.03.txt",
@@ -2115,14 +2108,14 @@
  },
  {
   "file": "1_5.txt",
-  "name": "1",
+  "name": "Pacifist v0.01",
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2547.0.html"
  },
  {
   "file": "1_6.txt",
-  "name": "1",
+  "name": "Guardian-0.9",
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2133.0.html"
@@ -2185,7 +2178,7 @@
  },
  {
   "file": "BETA_F2_SB_d-EVO_23-10-2008_2.txt",
-  "name": "BETA(F2)(SB)(d-EVO)23-10-2008",
+  "name": "BETA(F2)(SB)(d-EVO)23-10-2008 · 410 tokens",
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6365.0.html"
@@ -2252,13 +2245,6 @@
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,88.0.html"
- },
- {
-  "file": "Ebrejs_pre-SS_F3_SB_MysticalDumpling_15.8.14_2.txt",
-  "name": "Ebrejs_pre-SS(F3)(SB)MysticalDumpling 15.8.14",
-  "board": "Short bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6481.0.html"
  },
  {
   "file": "Ever_Jan_s_bot_6G_Ever_Jan_-08.03.04.txt",
@@ -2345,13 +2331,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2500.0.html"
  },
  {
-  "file": "Gnat_3.0_F2_SB_MysticalDumpling_20.7.14_2.txt",
-  "name": "Gnat 3.0 (F2)(SB)(MysticalDumpling)20.7.14",
-  "board": "Short bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6449.0.html"
- },
- {
   "file": "Gnat_F3SB_MysticalDumpling_29.4.14.txt",
   "name": "Gnat(F3SB)(MysticalDumpling)29.4.14",
   "board": "Short bots",
@@ -2385,13 +2364,6 @@
   "board": "Short bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,1835.0.html"
- },
- {
-  "file": "Nanite_Detonators_1G_F2_Trafalgar_-21.07.07_2.txt",
-  "name": "Nanite Detonators (1G)(F2)(Trafalgar)-21.07.07",
-  "board": "Short bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6373.0.html"
  },
  {
   "file": "Nanite_Detonators_v2.2_SG_F1_Trafalgar_-_05.11.2008.txt",
@@ -2549,7 +2521,7 @@
  },
  {
   "file": "Caterpillar_Peter_F2_MB_04-11-08_2.txt",
-  "name": "Caterpillar(Peter)(F2_MB)04-11-08",
+  "name": "Caterpillar(Peter)(F2_MB)04-11-08 · 36 genes",
   "board": "Multi-Bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6366.0.html"
@@ -2668,7 +2640,7 @@
  },
  {
   "file": "Hydra_F2MB_Bacillus_08-10-2008_2.txt",
-  "name": "Hydra(F2MB)(Bacillus)(08-10-2008)",
+  "name": "Hydra(F2MB)(Bacillus)(08-10-2008) · Hydra",
   "board": "Multi-Bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6367.0.html"
@@ -2700,20 +2672,6 @@
   "board": "Multi-Bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6363.0.html"
- },
- {
-  "file": "Knotbot_v1_MB_Interesting_F2_MysticalDumpling_2.6.14_2.txt",
-  "name": "Knotbot v1 (MB)(Interesting)(F2) (MysticalDumpling) 2.6.14",
-  "board": "Multi-Bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6451.0.html"
- },
- {
-  "file": "Knotbot_v2_MB_Interesting_F2_MysticalDumpling_2.6.14_2.txt",
-  "name": "Knotbot v2 (MB)(Interesting)(F2) (MysticalDumpling) 2.6.14",
-  "board": "Multi-Bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6450.0.html"
  },
  {
   "file": "Medusa_MB_Spork22_6-7-2014.txt",
@@ -2756,13 +2714,6 @@
   "board": "Multi-Bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6741.0.html"
- },
- {
-  "file": "Seasnake_1.0_MB_EricL_-_23.04.08_2.txt",
-  "name": "Seasnake 1.0 (MB)(EricL) - 23.04.08",
-  "board": "Multi-Bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,2679.0.html"
  },
  {
   "file": "Seasnake_Catapiller_MB_EVO_Botsareus_8-4-2014.txt",
@@ -2940,13 +2891,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6979.0.html"
  },
  {
-  "file": "Carnivore_Ivy_Veggie_F1_MacadamiaNuts_-25.10.14_2.txt",
-  "name": "Carnivore_Ivy(Veggie)(F1)(MacadamiaNuts)-25.10.14",
-  "board": "Veggies",
-  "veg": true,
-  "url": "http://forum.darwinbots.com/index.php/topic,6609.0.html"
- },
- {
   "file": "Caterpillar_Chloroplastus_Veggie_spork22.txt",
   "name": "Caterpillar Chloroplastus(Veggie)spork22",
   "board": "Veggies",
@@ -2990,14 +2934,14 @@
  },
  {
   "file": "Plankton_Kinetic_MBVeggie.txt",
-  "name": "Plankton Kinetic (MBVeggie)",
+  "name": "Plankton Kinetic (MBVeggie) · 12 genes",
   "board": "Veggies",
   "veg": true,
   "url": "http://forum.darwinbots.com/index.php/topic,2781.0.html"
  },
  {
   "file": "Plankton_Kinetic_MBVeggie_2.txt",
-  "name": "Plankton Kinetic (MBVeggie)",
+  "name": "Plankton Kinetic (MBVeggie) · 10 genes",
   "board": "Veggies",
   "veg": true,
   "url": "http://forum.darwinbots.com/index.php/topic,2773.0.html"
@@ -3032,7 +2976,7 @@
  },
  {
   "file": "1_7.txt",
-  "name": "1",
+  "name": "Depredador de 1 gen (PeterB)",
   "board": "Interesting behaviour bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3026.0.html"
@@ -3283,20 +3227,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,6684.0.html"
  },
  {
-  "file": "Knotbot_v1_MB_Interesting_F2_MysticalDumpling_2.6.14_3.txt",
-  "name": "Knotbot v1 (MB)(Interesting)(F2) (MysticalDumpling) 2.6.14",
-  "board": "Interesting behaviour bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6452.0.html"
- },
- {
-  "file": "Knotbot_v2_MB_Interesting_F2_MysticalDumpling_2.6.14_3.txt",
-  "name": "Knotbot v2 (MB)(Interesting)(F2) (MysticalDumpling) 2.6.14",
-  "board": "Interesting behaviour bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6453.0.html"
- },
- {
   "file": "MicroNet2.txt",
   "name": "MicroNet2",
   "board": "Interesting behaviour bots",
@@ -3444,13 +3374,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2584.0.html"
  },
  {
-  "file": "TriggerBot_f1_f2_Interesting_Niemci_10-11-2014_3.txt",
-  "name": "TriggerBot(f1)(f2)(Interesting)(Niemci)10-11-2014",
-  "board": "Interesting behaviour bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6592.0.html"
- },
- {
   "file": "Turbo_IB_F2_Abyaly_-04.05.06.txt",
   "name": "Turbo (IB)(F2)(Abyaly)-04.05.06",
   "board": "Interesting behaviour bots",
@@ -3480,7 +3403,7 @@
  },
  {
   "file": "1_8.txt",
-  "name": "1",
+  "name": "sexbau",
   "board": "EcoSim Bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3748.0.html"
@@ -3501,7 +3424,7 @@
  },
  {
   "file": "1_9.txt",
-  "name": "1",
+  "name": "Zerobot evolucionado",
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6853.0.html"
@@ -3533,13 +3456,6 @@
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6259.0.html"
- },
- {
-  "file": "BlueOnBlue_evolved_evo_F1_MysticalDumpling_20-2-14_2.txt",
-  "name": "BlueOnBlue evolved(evo)(F1)(MysticalDumpling)20-2-14",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6358.0.html"
  },
  {
   "file": "Bot_evolved_from_zerobot.txt",
@@ -3596,20 +3512,6 @@
   "board": "Mutations",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6790.0.html"
- },
- {
-  "file": "Everlivus_Influenzus_F1_EVO_Spork22_5.23.2014_2.txt",
-  "name": "Everlivus Influenzus(F1_EVO)(Spork22)5.23.2014",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6380.0.html"
- },
- {
-  "file": "Evolved_BlueOnBlue_Evolved_F2_F1_evo_MysticalDumpling_21-2-1_2.txt",
-  "name": "Evolved BlueOnBlue Evolved(F2,F1,evo)(MysticalDumpling)21-2-14",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6357.0.html"
  },
  {
   "file": "Evolved_Gnat_evo_7.5.14.txt",
@@ -3710,27 +3612,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,3373.0.html"
  },
  {
-  "file": "Seasnake_Catapiller_MB_EVO_Botsareus_8-4-2014_2.txt",
-  "name": "Seasnake Catapiller (MB)(EVO) Botsareus 8-4-2014",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6485.0.html"
- },
- {
-  "file": "Seasnake_Hydra_MB_EVO_Botsareus_8-5-2014_2.txt",
-  "name": "Seasnake Hydra (MB)(EVO) Botsareus 8-5-2014",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6486.0.html"
- },
- {
-  "file": "Shinto_F2_Evo_interesting_20.7.14_2.txt",
-  "name": "Shinto(F2)(Evo)(interesting)20.7.14",
-  "board": "Mutations",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6447.0.html"
- },
- {
   "file": "Slimy_Veg_Evolved_evo_MysticalDumpling_7-2-14.txt",
   "name": "Slimy_Veg Evolved! (evo)(MysticalDumpling)7-2-14",
   "board": "Mutations",
@@ -3822,13 +3703,6 @@
   "url": "http://forum.darwinbots.com/index.php/topic,2618.0.html"
  },
  {
-  "file": "Ebrejs_v0.5_SS_F3_MysticalDumpling_16.8.14_2.txt",
-  "name": "Ebrejs v0.5 (SS)(F3)(MysticalDumpling)16.8.14",
-  "board": "Single store",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6482.0.html"
- },
- {
   "file": "Insulsus_SS_MysticalDumpling_13.8.14.txt",
   "name": "Insulsus(SS)MysticalDumpling 13.8.14",
   "board": "Single store",
@@ -3858,7 +3732,7 @@
  },
  {
   "file": "One_Man_Bucket_SS_F2_abyaly_-03.04.07_2.txt",
-  "name": "One Man Bucket (SS)(F2)(abyaly)-03.04.07",
+  "name": "One Man Bucket (SS)(F2)(abyaly)-03.04.07 · 1 gen",
   "board": "Single store",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,2066.0.html"
@@ -3879,7 +3753,7 @@
  },
  {
   "file": "1_10.txt",
-  "name": "1",
+  "name": "Slam Funk 1.0",
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3112.0.html"
@@ -3955,25 +3829,11 @@
   "url": "http://forum.darwinbots.com/index.php/topic,3369.0.html"
  },
  {
-  "file": "Evolved_BlueOnBlue_Evolved_F2_F1_evo_MysticalDumpling_21-2-1_3.txt",
-  "name": "Evolved BlueOnBlue Evolved(F2,F1,evo)(MysticalDumpling)21-2-14",
-  "board": "Untagged bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6356.0.html"
- },
- {
   "file": "Evolved_Tribolis_F2F3_evo_mut_MysticalDumpling_25.2.14.txt",
   "name": "Evolved Tribolis (F2F3)(evo)(mut)(MysticalDumpling)25.2.14",
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,6354.0.html"
- },
- {
-  "file": "Evolved_Tribolis_F2F3_evo_mut_MysticalDumpling_25.2.14_2.txt",
-  "name": "Evolved Tribolis (F2F3)(evo)(mut)(MysticalDumpling)25.2.14",
-  "board": "Untagged bots",
-  "veg": false,
-  "url": "http://forum.darwinbots.com/index.php/topic,6355.0.html"
  },
  {
   "file": "Glue_nothing_but_a_name.txt",

@@ -237,6 +237,91 @@ function canonical(text) {
     .filter((l) => l && l[0] !== "'").join('\n');
 }
 
+// Nombre que el autor puso en la cabecera del .txt: de las dos primeras
+// líneas de comentario, la que parezca un nombre ("'Saber",
+// "'NAME :BETA-AA", "'sexbau by Botsareus ..."), no una frase ni un
+// "Gene 1 ...".
+function headerName(raw) {
+  let author = '', lines = 0;
+  for (const line of raw.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t) continue;
+    if (!t.startsWith("'") || ++lines > 2) break;
+    let s = t.replace(/^'+/, '').trim().replace(/^name\s*:\s*/i, '');
+    const by = s.match(/\bby\s+([A-Za-z0-9_-]+)/i);
+    if (by && !author) author = by[1];
+    s = s.replace(/\s*\b(compiled\s+)?by\b.*$/i, '').replace(/\.txt$/i, '')
+      .replace(/\s+bot$/i, '').replace(/[.,:;]+$/, '').trim();
+    if (!s || /^gene?\b/i.test(s) || s.startsWith('#')) continue;
+    const evo = s.match(/^evolved from (\w+)/i);
+    if (evo) return { name: `${evo[1][0].toUpperCase()}${evo[1].slice(1)} evolucionado`, author };
+    if (s.length <= 32 && s.split(/\s+/).length <= 4) return { name: s, author };
+  }
+  return { name: '', author };
+}
+
+// bots.json sale de los títulos del foro, y varios temas comparten título:
+// el mismo bot publicado en varios sub-boards, versiones distintas con el
+// mismo título, o adjuntos titulados "1". Las copias con ADN idéntico se
+// quitan (queda la primera, en el orden de publish_bots.py); a las demás
+// se les da un nombre sacado de su ADN.
+function uniqueNames(index, out, genesOut) {
+  const groups = new Map();
+  for (const b of index) {
+    if (!out[b.file]) continue;
+    if (!groups.has(b.name)) groups.set(b.name, []);
+    groups.get(b.name).push(b);
+  }
+  const drop = new Set();
+  for (const [title, bs] of groups) {
+    if (bs.length < 2) continue;
+    const seen = new Set();
+    const keep = bs.filter((b) => {
+      const h = out[b.file].hash;
+      if (seen.has(h)) { drop.add(b); return false; }
+      seen.add(h);
+      return true;
+    });
+    if (keep.length < 2) continue;
+    const info = keep.map((b) => ({
+      b, p: out[b.file],
+      ...headerName(fs.readFileSync(path.join(BOTS, b.file), 'utf8')),
+    }));
+    const distinct = (f) => new Set(info.map(f)).size === info.length;
+    const genes = (n) => `${n} gen${n === 1 ? '' : 'es'}`;
+    const arch = (p) => ARCHETYPES.find(([k]) => k === p.arch)[1];
+    if (!/[A-Za-z]{2}/.test(title)) {
+      // título sin nombre: el de la cabecera, o el arquetipo y sus genes
+      for (const x of info) {
+        x.b.name = x.name ||
+          `${arch(x.p)} de ${genes(x.p.genes)}${x.author ? ` (${x.author})` : ''}`;
+      }
+      if (new Set(info.map((x) => x.b.name)).size < info.length) {
+        for (const x of info) x.b.name += ` #${x.p.hash.slice(0, 4)}`;
+      }
+    } else {
+      // título con nombre: se conserva y se le agrega lo que distingue al ADN
+      const tags = [
+        (x) => genes(x.p.genes),
+        (x) => x.name,
+        (x) => arch(x.p).toLowerCase(),
+        (x) => `${x.p.tokens} tokens`,
+      ].find((f) => info.every((x) => f(x)) && distinct(f)) ||
+        ((x) => `ADN ${x.p.hash.slice(0, 6)}`);
+      for (const x of info) x.b.name = `${title} · ${tags(x)}`;
+    }
+    for (const x of info) console.log(`  nombre: ${x.b.file} → ${x.b.name}`);
+  }
+  for (const b of drop) {
+    console.log(`  copia con el mismo ADN, fuera: ${b.file}`);
+    delete out[b.file];
+    delete genesOut[b.file];
+    fs.unlinkSync(path.join(BOTS, b.file));
+    index.splice(index.indexOf(b), 1);
+  }
+  fs.writeFileSync(path.join(BOTS, 'bots.json'), JSON.stringify(index, null, 1) + '\n');
+}
+
 function profile(text, bot) {
   const genes = splitGenes(text);
   const all = new Set();
@@ -318,6 +403,7 @@ function profile(text, bot) {
     out[b.file] = p;
   }
   console.log(`ida y vuelta de genes: ${index.length - bad - roundBad} idénticos, ${roundBad} distintos`);
+  uniqueNames(index, out, genesOut);
 
   const counts = {};
   for (const p of Object.values(out)) for (const k of p.caps) counts[k] = (counts[k] || 0) + 1;
