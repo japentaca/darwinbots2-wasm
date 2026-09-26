@@ -40,6 +40,16 @@ jobs:
           mkdir -p site/build-wasm
           cp -r port/web site/web
           cp port/build-wasm/dbcore.js port/build-wasm/dbcore.wasm site/build-wasm/
+      - name: Versionar los scripts (cache busting)
+        # Pages deja cachear cada archivo 10 min: sin esto el navegador puede
+        # mezclar el index.html nuevo con un contest.js/worker.js viejo. Cada
+        # script, el worker, dbcore.js y el .wasm se piden con ?v=<commit>.
+        run: |
+          V="${GITHUB_SHA::7}"
+          sed -i -E "s#<script src=\"([a-z]+)\.js\"></script>#<script src=\"\1.js?v=$V\"></script>#; s#new Worker\('worker\.js'\)#new Worker('worker.js?v=$V')#" site/web/index.html
+          sed -i -E "s#importScripts\('\.\./build-wasm/dbcore\.js', 'imnet\.js'\)#importScripts('../build-wasm/dbcore.js?v=$V', 'imnet.js?v=$V')#; s#locateFile: \(f\) => '\.\./build-wasm/' \+ f \}#locateFile: (f) => '../build-wasm/' + f + '?v=$V' }#" site/web/worker.js
+          test "$(grep -c "\.js?v=$V" site/web/index.html)" -ge 5
+          test "$(grep -c "?v=$V" site/web/worker.js)" -ge 2
           cat > site/index.html <<'EOF'
           <!DOCTYPE html><meta charset="utf-8">
           <meta http-equiv="refresh" content="0; url=web/">
