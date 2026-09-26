@@ -568,6 +568,100 @@ bots), el tramo parcial de una skin que falla, la `r` vieja del bucle de
 visibilidad de `main.frm:1100-1112`, y `AssignSkin` sobre bytes UTF-8 (el
 original usa `Asc` ANSI: otra skin para nombres con tildes).
 
+## E9 · Sexualidad visible — capa host
+
+Añadida el 2026-09-26 a petición del usuario. **No es superficie del
+original**, igual que E6.5. La reproducción sexual ya está portada entera
+(M7: `takesperm`, `SexReproduce` y el crossover, `36-REPRO.md`), pero en la
+web solo se ve el anillo rosa de "fertilized" de E6.5. Esta etapa la hace
+observable: cuánto sexo hay, entre quiénes y qué gana una especie sexual
+frente a una asexual. **Descartado**: los sexos en el motor (macho/hembra).
+No existen en el original y se pueden programar en el ADN
+(`animal_minimal_gender_Shadowgod2`). Rama: `e9-sexualidad`.
+
+**Reglas**: las tres de E6.5. Cero cambios en `port/core/` y suite intacta
+por construcción. Nada escribe en el `Sim` ni consume RNG (`.dbsim` byte a
+byte idéntico con y sin la etapa). Los eventos se acumulan en el host del
+wasm y viajan una vez por frame.
+
+### Qué se puede observar sin tocar el core (del orden del tick)
+
+Dentro de un tick: paso 14 `updateshots` → `takesperm` pone
+`fertilized = 10` y copia el ADN del shot a `spermDNA`. Paso 16, P5:
+`ManageReproduction` descuenta 1 y encola el sexo si queda `≥ 0`. P6:
+`SexReproduce` deja a la madre en `−1` si hay hijo (`robots.hpp:1537`) o en
+`−18` si la distancia genética supera 0,6 (`:1306`). Así que, comparando
+el `fertilized` de cada slot antes y después del tick (`v.fert`, que el
+observador de E6.5 ya guarda):
+
+| Evento | Criterio post-tick |
+|---|---|
+| **fecundación** | un shot −8 con `flash` cuyo `dna` es igual al `spermDNA` del bot, y el bot con `fertilized` = 9 (o −1/−18 si el sexo se resolvió en el mismo tick) |
+| **nacimiento sexual** | hijo nuevo cuya madre pasó a `fertilized = −1` desde `≥ 1`, o desde cualquier valor si la fecundó un shot en este tick. Un `0 → −1` es caducidad, no sexo. Como una madre puede encolarse dos veces (A1-5), un éxito sexual cuenta **un** hijo sexual y los demás de esa madre en el tick son asexuales |
+| **rechazo** | la madre queda en `fertilized = −18` exactamente (solo `SexReproduce` pone ese valor; los ticks siguientes suben a −17…) |
+| **donante** | `parent` del shot −8 de la fecundación: es el **slot** del tirador (`sim.hpp:68`). Su `AbsNum` se toma de la foto de antes del tick, porque P6 puede reocupar ese slot |
+
+Los criterios se confirman contra el fuente al implementar. Los casos que
+quedan ambiguos se documentan: varios esperma sobre el mismo bot en un
+tick (gana el último `takesperm`; el `dna` identifica cuál) o clones del
+donante con el mismo ADN (se elige el shot más cercano).
+
+### Piezas
+
+1. **Contadores y gráfica** — `db_sim_sex_stats`: fecundaciones,
+   nacimientos sexuales y asexuales, y rechazos, acumulados desde el
+   arranque de la sim y por especie de la madre. Contador en la barra de
+   estadísticas ("births: N asex / M sex") y una gráfica nueva
+   **"Reproduction"** con el aspecto de las de E6 y el mismo
+   `chartingInterval`, con las 4 series por intervalo. No se agrega como
+   `graphNum` a `CalcStats`: esas son las del original y no cambian. El
+   observador pasa a correr **siempre**, no solo con la vista enriquecida,
+   porque sin él no hay conteo. Su coste medido en E6.5 es 0,3 % del tick;
+   se vuelve a medir. Los contadores no se guardan en el `.dbsim` (son
+   estado de host): cargar o empezar una ronda los pone a cero, con un aviso
+   en la gráfica.
+2. **Vista enriquecida** —
+   - Mientras un bot está fecundado, una línea punteada rosa hacia el
+     donante (si sigue vivo y en pantalla). El `AbsNum` del donante se añade
+     al registro de 24 floats en el campo reservado, o como float 25.
+   - El evento de nacimiento gana las coordenadas del padre: un hijo sexual
+     dibuja dos líneas (madre y padre) en vez de una.
+   - **Lente "Color por: fertilidad"**, categórica en lugar de viridis:
+     fecundado (tono según los ciclos que le quedan, 9…0), bloqueado por
+     rechazo (`< −10`) y sin esperma. Leyenda con las 3 clases.
+   - En el inspector: `fertilized`, AbsNum y especie del donante, y la
+     distancia genética madre–esperma cuando existe
+     (`DoGeneticDistance` sobre `spermDNA`, con el contador `err9` guardado
+     y restaurado como en la lente de distancia).
+3. **Escenario "Sexual vs asexual"** — un preset más en "Seed species" que
+   siembra algas, `Animal_Minimalis_4G_Numsgil` (asexual) y
+   `Animal_Minimalis_Amorous_EvoBot` (su variante sexual), en la misma
+   cantidad y energía, con colores fijos y distintos. Activa las mutaciones
+   y abre la gráfica "Reproduction" junto a la de población. **Riesgo**:
+   Amorous solo se aparea con `robage > 16000`. Si en Chrome no se ven
+   nacimientos sexuales en un tiempo razonable, se cambia a otra pareja
+   del bestiario (LoveBot, SexBot) y se deja escrito el porqué.
+
+### Trabajo (orden)
+
+1. API: observador de sexo dentro de `db_sim_vis_observe` (que corre
+   siempre), `db_sim_sex_stats`, el donante en el registro extendido y en
+   los nacimientos, y el volcado del inspector. Smoke node
+   `tools/e9/smoke_sex.mjs` con dos bots sexuales en contacto: una
+   fecundación, un nacimiento sexual con madre y padre correctos, un rechazo
+   por distancia forzado con ADN muy distinto, y un doble encolado
+   asexual+sexual que cuenta 1 + 1. `.dbsim` idéntico con y sin observador.
+2. Worker y página: gráfica "Reproduction", contador, línea al donante,
+   lente, inspector, preset.
+3. Chrome: el escenario corriendo con nacimientos de los dos tipos, las
+   gráficas y la vista fiel sin cambios. Medición de ticks/s con el
+   observador siempre encendido.
+
+**Cierre**: suite 181/3851 en verde en los tres modos y `port/core/` sin
+diff. Smoke E9 en verde, más `smoke_e8`, `smoke_im`, `smoke_formas` y
+`smoke_campo`. Verificación en Chrome con la consola limpia. Fila en
+`PROGRESO.md`.
+
 ---
 
 ## Orden recomendado
@@ -576,4 +670,5 @@ original usa `Asc` ANSI: otra skin para nombres con tildes).
 **E4** (primer core nuevo, con su familia de casos) → **E5 → E6 → E6.5 → E7
 → E8** según apetito (E6.5, vista enriquecida, añadida el 2026-09-24). Cada etapa cierra con su fila en `PROGRESO.md`.
 **Plan completo el 2026-09-24** (balance de lo que quedó fuera en
-`PROGRESO.md` §"Siguiente").
+`PROGRESO.md` §"Siguiente"). **E9** (sexualidad visible, capa host) se
+añadió el 2026-09-26 a petición del usuario y está pendiente.
