@@ -44,7 +44,7 @@ all, **wrote bots**. That community is the reason this port exists.
 
 ### Where the demo's bots come from
 
-The page includes a **Bestiary of 588 real bots**, written by the community
+The page includes a **Bestiary of 568 real bots**, written by the community
 and published over the years in the
 [forum's Bestiary](http://forum.darwinbots.com/) (board 13 and its
 sub-boards). None of them was written or modified for this port:
@@ -59,10 +59,17 @@ sub-boards). None of them was written or modified for this port:
   characters (`&nbsp;`, zero-width spaces) that the forum had introduced.
 - Every candidate was validated **with the ported engine itself**, not with
   heuristics: it is loaded, seeded and run for 50 cycles. All 753
-  candidates passed, and one bot per topic was published.
+  candidates passed, and one bot per topic was published; afterwards 20
+  copies with identical DNA (the same bot posted in several sub-boards)
+  were removed.
 - In the page's selector each bot keeps the name its author published it
-  under, and `port/web/bots/bots.json` stores the link to the original
-  forum topic, where the authorship and the discussion live.
+  under. Where two topics shared a title but had different DNA, the name
+  comes from the DNA itself: the one the author wrote in the code's
+  header (several attachments titled "1" are actually *Saber*, *Slam
+  Funk 1.0*, *Pacifist*…) or the title plus whatever sets each version
+  apart (number of genes, for example). `port/web/bots/bots.json` also
+  stores the link to the original forum topic, where the authorship and
+  the discussion live.
 
 The details of the process are in
 [`port/tools/bestiary/README.md`](port/tools/bestiary/README.md) (in
@@ -110,7 +117,7 @@ source drop and kept untouched.
   asserted by tests: fidelity includes the bugs.
 - A web page with the full sim: physics and RNG live in `dbcore.wasm`
   inside a Web Worker; the page only presents. It includes saving/loading
-  the sim in the VB6 binary format and the **Bestiary of 588 community
+  the sim in the VB6 binary format and the **Bestiary of 568 community
   bots** (see [Where the demo's bots come from](#where-the-demos-bots-come-from)).
 
 The milestone-by-milestone detail, with hashes and dates, is in
@@ -138,6 +145,27 @@ cd port && python -m http.server 8000
 
 (Requires the `wasm` preset to be built: it produces `build-wasm/dbcore.js`
 + `dbcore.wasm`, which the worker consumes.)
+
+## Contest and TV Channel
+
+On top of the faithful sim, the page adds two windows for watching
+Bestiary bots fight under the original's F1 league rules (host layer:
+they don't touch the core):
+
+- **Contest**: a hand-picked tournament. Choose 2 to 20 contenders, the
+  F1 settings are applied, and a single click resets, seeds and starts;
+  the scoreboard tracks population, round wins and the winner, with a
+  rematch button.
+- **TV Channel** (*Canal* button): back-to-back fights with no
+  intervention, like a channel broadcasting live. It draws fighters from
+  the Inventory (everything, favorites, a tag or a saved selection) in
+  *king of the hill* format: the winner stays and faces new challengers,
+  and after R wins in a row it retires undefeated. Each round has a cycle
+  cap, so no fight hangs forever. Between fights there is an interstitial
+  screen; the field shows a LIVE banner, and the window lists the latest
+  fights and a **Hall of Fame** (stored in the browser). Each fighter gets
+  a fixed color from a palette chosen to stand out on the dark field (the
+  champion keeps its color for as long as its streak lasts).
 
 ## Project rules
 
