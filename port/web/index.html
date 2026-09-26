@@ -206,6 +206,48 @@
                text-overflow: ellipsis; white-space: nowrap; }
   .win-x { padding: 0 6px; line-height: 18px; }
   .win-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  /* Contest F1 (contest.js) */
+  .ct-win { max-height: calc(100vh - 70px); overflow: auto; }
+  .ct-win .win-body { font-size: 12px; gap: 6px; }
+  .ct-h { color: #93a4c2; font-weight: 600; margin-top: 4px; }
+  .ct-h span { font-weight: 400; color: #5c6b88; margin-left: 6px; }
+  .ct-empty { color: #5c6b88; padding: 4px 0; }
+  #ct-roster { display: flex; flex-direction: column; gap: 3px; }
+  .ct-fighter { display: flex; align-items: center; gap: 6px; background: #0b0f19;
+                border: 1px solid #1c2333; border-radius: 4px; padding: 3px 6px; }
+  .ct-fighter .ct-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+                         white-space: nowrap; color: #dfe6f2; }
+  .ct-fighter .ct-src { color: #5c6b88; font-size: 11px; }
+  .ct-fighter label { color: #93a4c2; white-space: nowrap; }
+  .ct-qty { width: 48px; padding: 1px 3px; }
+  .ct-color { width: 22px; height: 20px; padding: 0; border: none; background: none; }
+  .ct-del { padding: 0 6px; }
+  #ct-q { width: 100%; box-sizing: border-box; }
+  #ct-results { display: flex; flex-wrap: wrap; gap: 3px; max-height: 120px; overflow: auto; }
+  .ct-hit { padding: 1px 6px; font-size: 11px; }
+  .ct-srcrow { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ct-srcrow button, .ct-srcrow select { padding: 2px 6px; }
+  .ct-rules { display: grid; grid-template-columns: 1fr 90px; gap: 4px 8px; align-items: center; }
+  .ct-rules label { color: #93a4c2; }
+  .ct-rules input[type=number] { padding: 2px 4px; }
+  .ct-wide { grid-column: 1 / -1; }
+  .ct-go { font-size: 14px; padding: 6px; margin-top: 4px; }
+  .ct-note { color: #93a4c2; min-height: 16px; }
+  .ct-note.warn { color: #f0b35a; }
+  .ct-round { color: #b7c6e0; font-size: 13px; margin-bottom: 4px; }
+  .ct-rule { color: #5c6b88; font-size: 11px; }
+  .ct-row { display: grid; grid-template-columns: 12px minmax(80px, 3fr) 2fr 52px 40px;
+            gap: 6px; align-items: center; padding: 2px 0; }
+  .ct-row.out { opacity: 0.45; }
+  .ct-row .ct-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #dfe6f2; }
+  .ct-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .ct-bar { height: 10px; background: #0b0f19; border: 1px solid #1c2333; border-radius: 3px;
+            overflow: hidden; }
+  .ct-bar span { display: block; height: 100%; }
+  .ct-pop, .ct-wins { text-align: right; font-variant-numeric: tabular-nums; color: #b9c8e0; }
+  .ct-wins.lead { color: #ffd166; font-weight: 600; }
+  .ct-winner { margin-top: 6px; font-size: 15px; color: #ffd166; text-align: center; }
+  .ct-liverow { display: flex; gap: 6px; margin-top: 6px; }
   /* Inventario de bots (inventory.js) */
   .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
   .inv-win .win-body { flex: 1; min-height: 0; font-size: 12px; }
@@ -355,6 +397,7 @@
     <button id="btn-run" class="primary">▶ Iniciar</button>
     <button id="btn-step">Paso</button>
     <button id="btn-reset">Reiniciar</button>
+    <button id="btn-contest" title="Contest F1: elegir contrincantes, arrancar el torneo en un clic y ver el marcador">🏆 Contest</button>
   </div>
   <div class="sep"></div>
   <div class="group">
@@ -623,6 +666,7 @@
 
 <script src="inventory.js"></script>
 <script src="lab.js"></script>
+<script src="contest.js"></script>
 <script>
 'use strict';
 
@@ -1029,6 +1073,9 @@ worker.onerror = (e) =>
 
 worker.onmessage = (e) => {
   const msg = e.data;
+  // contest.js: estado del torneo para su ventana (no consume el mensaje).
+  if (msg.t === 'f1-started' || msg.t === 'f1-note' || msg.t === 'f1-over')
+    contestOnMessage(msg);
   switch (msg.t) {
     case 'ready':
       onReady();
@@ -1200,6 +1247,7 @@ function updateStats() {
          (stats.f1.over ? ' · TERMINADO' : '');
     if (stats.f1.restarts) f1 += ` · restarts ${stats.f1.restarts}`;
   }
+  contestOnStats(stats);
   const dc = document.getElementById('dead-count');
   if (dc) dc.textContent = (stats.dead || 0) + ' registros';
   statsEl.textContent =
@@ -3644,6 +3692,7 @@ document.getElementById('btn-reset').onclick = () => {
 document.getElementById('btn-seed').onclick = seedFromForm;
 document.getElementById('btn-inventory').onclick = () => openInventory();
 document.getElementById('btn-lab').onclick = () => openLab();
+document.getElementById('btn-contest').onclick = () => openContest();
 // E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
 // vive en el panel dinámico (se construye en onReady): delegación.
 document.addEventListener('click', (e) => {

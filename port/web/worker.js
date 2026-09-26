@@ -82,6 +82,8 @@
 //   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
 //   {t:'stopped'}                          E5: el core pidió parar la sim
 //                                          (Form1.Active = False del original)
+//   {t:'f1-note', kind}                    contest: 'single' | 'many'
+//   {t:'f1-started', n}                    respuesta a f1start (nº especies)
 //   {t:'f1-over', winner}                  E5: contest terminado ·
 //   {t:'bot-text', n, text} ·
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
@@ -539,7 +541,9 @@ function gdPump() {
 function f1Stats() {
   if (!api.f1TotSpecies(sim)) return null;
   const sp = [];
-  const n = Math.min(api.f1TotSpecies(sim), 5);
+  // Hasta 20 especies (PopArray(1 To 20), F1Mode.bas:59): la barra de
+  // estado y el marcador de contest.js las muestran todas.
+  const n = Math.min(api.f1TotSpecies(sim), 20);
   for (let i = 1; i <= n; i++)
     sp.push({ name: takeStr(api.f1Name(sim, i)),
               pop: api.f1Pop(sim, i), wins: api.f1Wins(sim, i) });
@@ -633,9 +637,14 @@ function checkGameState() {
     if (ev & (1 << 10))
       log(`F1: gana ${takeStr(api.eventsWinner(sim))} ` +
           `(${api.f1Contests(sim) + 1} rondas)`);
-    if (ev & (1 << 11)) log('F1: una sola especie — modo desactivado');
-    if (ev & (1 << 12))
+    if (ev & (1 << 11)) {
+      log('F1: una sola especie — modo desactivado');
+      self.postMessage({ t: 'f1-note', kind: 'single' });
+    }
+    if (ev & (1 << 12)) {
       log('F1: más de 2 especies — límites de ciclos/población desactivados');
+      self.postMessage({ t: 'f1-note', kind: 'many' });
+    }
     if (ev & (1 << 1)) log('evo: Mutate extinguido (evo perdido)');
     if (ev & (1 << 2)) log('evo: Base extinguido (evo ganado)');
     if (ev & (1 << 3)) log('seeding: ronda completada (ciclo 2000)');
@@ -1356,6 +1365,7 @@ self.onmessage = (e) => {
       const ts = api.f1Start(sim);
       log(ts ? `contest F1: ${ts} especies en liza`
              : 'contest F1 no activo (¿opción F1 apagada?)');
+      self.postMessage({ t: 'f1-started', n: ts });
       postFrame();
       break;
     }
