@@ -248,6 +248,34 @@
   .ct-wins.lead { color: #ffd166; font-weight: 600; }
   .ct-winner { margin-top: 6px; font-size: 15px; color: #ffd166; text-align: center; }
   .ct-liverow { display: flex; gap: 6px; margin-top: 6px; }
+  /* Canal F1 (channel.js) */
+  #ch-overlay { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+                max-width: calc(100% - 32px); pointer-events: none; text-align: center;
+                background: rgba(8, 11, 20, 0.82); border: 1px solid #2e3a55; border-radius: 6px;
+                padding: 6px 14px; box-shadow: 0 2px 10px #000a; }
+  #ch-overlay .ch-live { font-size: 11px; letter-spacing: 0.08em; color: #93a4c2; }
+  #ch-overlay .ch-live b { color: #ffd166; }
+  #ch-overlay .ch-vs { font-size: 16px; font-weight: 700; margin-top: 2px; overflow: hidden;
+                       text-overflow: ellipsis; white-space: nowrap; }
+  #ch-overlay .ch-vs i { color: #5c6b88; font-weight: 400; margin: 0 4px; }
+  #ch-overlay .ch-win { color: #ffd166; font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .ch-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #ff3b3b; margin-right: 6px; animation: ch-blink 1.2s infinite; }
+  @keyframes ch-blink { 50% { opacity: 0.25; } }
+  .ch-champ { color: #b7c6e0; font-size: 13px; }
+  .ch-next { color: #b7c6e0; font-size: 14px; margin-bottom: 4px; }
+  .ch-next b { color: #ffd166; }
+  .ch-sec summary { color: #93a4c2; cursor: pointer; font-weight: 600; }
+  #ch-recent { max-height: 140px; overflow: auto; }
+  .ch-res { color: #b9c8e0; padding: 1px 0; }
+  .ch-res span { color: #5c6b88; }
+  .ch-res i { color: #93a4c2; }
+  .ch-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .ch-table th { color: #93a4c2; font-weight: 400; text-align: right; }
+  .ch-table td { text-align: right; padding: 1px 4px; color: #b9c8e0; }
+  .ch-table td.ch-n, .ch-table th:nth-child(2) { text-align: left; max-width: 190px; overflow: hidden;
+                                                  text-overflow: ellipsis; white-space: nowrap; }
+  .ch-small { font-size: 11px; padding: 1px 6px; margin-top: 4px; }
   /* Inventario de bots (inventory.js) */
   .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
   .inv-win .win-body { flex: 1; min-height: 0; font-size: 12px; }
@@ -398,6 +426,7 @@
     <button id="btn-step">Paso</button>
     <button id="btn-reset">Reiniciar</button>
     <button id="btn-contest" title="Contest F1: elegir contrincantes, arrancar el torneo en un clic y ver el marcador">🏆 Contest</button>
+    <button id="btn-channel" title="Canal F1: peleas encadenadas al azar, rey de la colina y Salón de la fama">📺 Canal</button>
   </div>
   <div class="sep"></div>
   <div class="group">
@@ -449,7 +478,7 @@
 </header>
 
 <main>
-  <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas><div id="im-badge" hidden>Internet Mode</div></div>
+  <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas><div id="im-badge" hidden>Internet Mode</div><div id="ch-overlay" hidden></div></div>
   <div id="tip" hidden></div>
   <aside>
     <h2>Inspector de bot</h2>
@@ -667,6 +696,7 @@
 <script src="inventory.js"></script>
 <script src="lab.js"></script>
 <script src="contest.js"></script>
+<script src="channel.js"></script>
 <script>
 'use strict';
 
@@ -3693,6 +3723,7 @@ document.getElementById('btn-seed').onclick = seedFromForm;
 document.getElementById('btn-inventory').onclick = () => openInventory();
 document.getElementById('btn-lab').onclick = () => openLab();
 document.getElementById('btn-contest').onclick = () => openContest();
+document.getElementById('btn-channel').onclick = () => openChannel();
 // E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
 // vive en el panel dinámico (se construye en onReady): delegación.
 document.addEventListener('click', (e) => {

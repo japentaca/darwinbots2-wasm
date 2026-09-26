@@ -2203,6 +2203,51 @@ DB_EXPORT int db_sim_f1_start(void* h) {
   return 0;
 }
 
+// Adaptacion de host (Canal F1 de la web, fuera de la fidelidad): tope de
+// ciclos por ronda para N especies. Generaliza el "kill losing species" de
+// F1Mode.bas:333-347, que el original solo aplica a duelos (FindSpecies lo
+// apaga con mas de 2): queda viva la especie con mas bots y se matan las
+// demas, asi el Countpop siguiente da la ronda por ganada. Empate en
+// poblacion: desempata nrg + body*10 (la medida de la poda por MaxPop,
+// F1Mode.bas:268-300). Devuelve cuantas especies elimino.
+DB_EXPORT int db_sim_f1_cap(void* h) {
+  db::Sim& sim = S(h);
+  auto& F = sim.f1;
+  if (!F.ContestMode || F.Over || F.TotSpecies < 2) return 0;
+  const int n = std::min<int>(F.TotSpecies, 20);
+  std::array<long, 21> pop{};
+  std::array<double, 21> score{};
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!b.exist || b.Veg || b.Corpse) continue;
+    const std::string rn = db::RealName(b.FName);
+    for (int i = 1; i <= n; ++i)
+      if (rn == F.PopArray[i].SpName) {
+        ++pop[i];
+        score[i] += static_cast<double>(b.nrg) + static_cast<double>(b.body) * 10.0;
+        break;
+      }
+  }
+  int best = 0, alive = 0;
+  for (int i = 1; i <= n; ++i) {
+    if (!pop[i]) continue;
+    ++alive;
+    if (!best || pop[i] > pop[best] ||
+        (pop[i] == pop[best] && score[i] > score[best]))
+      best = i;
+  }
+  if (alive < 2) return 0;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!b.exist || b.Veg || b.Corpse) continue;
+    const std::string rn = db::RealName(b.FName);
+    if (rn != F.PopArray[best].SpName)
+      for (int i = 1; i <= n; ++i)
+        if (rn == F.PopArray[i].SpName) { db::KillRobot(sim, t); break; }
+  }
+  return alive - 1;
+}
+
 DB_EXPORT int db_sim_f1_contests(void* h) { return S(h).f1.Contests; }
 DB_EXPORT int db_sim_f1_totspecies(void* h) { return S(h).f1.TotSpecies; }
 DB_EXPORT int db_sim_f1_over(void* h) { return S(h).f1.Over ? 1 : 0; }

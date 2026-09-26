@@ -33,6 +33,7 @@
 //                                          polar|trash (Obstacles.bas:45-181)
 //   {t:'tp-del', n} · {t:'tp-clear'}       E3: borrar teleporter(s)
 //   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
+//   {t:'f1-cap', cycles}                   Canal: tope de ciclos por ronda
 //   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
 //   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
 //   {t:'select', n, seq?}                  bot con foco (0 = ninguno); su
@@ -82,7 +83,7 @@
 //   {t:'ready'} · {t:'log', msg} · {t:'saved', bytes, cycle} ·
 //   {t:'stopped'}                          E5: el core pidió parar la sim
 //                                          (Form1.Active = False del original)
-//   {t:'f1-note', kind}                    contest: 'single' | 'many'
+//   {t:'f1-note', kind}                    contest: 'single' | 'many' | 'cap'
 //   {t:'f1-started', n}                    respuesta a f1start (nº especies)
 //   {t:'f1-over', winner}                  E5: contest terminado ·
 //   {t:'bot-text', n, text} ·
@@ -209,6 +210,7 @@ function bindApi() {
     f1Contests:    C('db_sim_f1_contests', 'number', ['number']),
     f1TotSpecies:  C('db_sim_f1_totspecies', 'number', ['number']),
     f1Over:        C('db_sim_f1_over', 'number', ['number']),
+    f1Cap:         C('db_sim_f1_cap', 'number', ['number']),
     f1Pop:         C('db_sim_f1_pop', 'number', ['number', 'number']),
     f1Wins:        C('db_sim_f1_wins', 'number', ['number', 'number']),
     f1Name:        C('db_sim_f1_name', 'number', ['number', 'number']),
@@ -1092,6 +1094,19 @@ function imRebind() {
 
 
 
+// Canal F1 (capa host): tope de ciclos por ronda para N especies. Vive en el
+// worker, no en la sim: sobrevive a rondas y reinicios hasta que la página
+// lo cambie ({t:'f1-cap', cycles}; 0 = sin tope).
+let f1CapCycles = 0;
+function f1CapCheck() {
+  if (!f1CapCycles || api.cycle(sim) <= f1CapCycles) return;
+  const k = api.f1Cap(sim);
+  if (k) {
+    log(`F1: tope de ${f1CapCycles} ciclos — gana la ronda la especie más numerosa`);
+    self.postMessage({ t: 'f1-note', kind: 'cap' });
+  }
+}
+
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
   // El chequeo E5 corre tras CADA tick (como el loop de main.frm:2079-2081):
@@ -1101,6 +1116,7 @@ function runTicks(n) {
     tickOnce();
     if (imCfg) imDrainOutbox();              // E7
     const restarted = checkGameState();
+    if (!restarted) f1CapCheck();
     if (imCfg && !restarted) imAfterTick();  // E7
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
     // solo los charts visibles. RV-41: no en el tick que abrió la ronda (el
@@ -1361,6 +1377,9 @@ self.onmessage = (e) => {
       postFrame();  // con la sim pausada el foco tiene que verse igual
       break;
     // ---- E5: modos de juego ----
+    case 'f1-cap':
+      f1CapCycles = Math.max(0, msg.cycles | 0);
+      break;
     case 'f1start': {
       const ts = api.f1Start(sim);
       log(ts ? `contest F1: ${ts} especies en liza`

@@ -92,6 +92,32 @@ function contestSetOpt(id, v) {
   el.dispatchEvent(new Event('change'));
 }
 
+// Lanza un contest con estos luchadores ({name, color, qty, src, file|dna}).
+// Lo usan la ventana de contest y el Canal (channel.js). Lanza excepción si
+// algún ADN no se puede leer (antes de tocar la sim).
+//   o = { nrg, f1, rounds, maxcyc, maxpop, cap, newSeed }
+async function contestLaunch(fighters, o) {
+  // Todo el ADN antes de reiniciar: la sim nueva no espera a la red.
+  const dnas = [];
+  for (const r of fighters) dnas.push(await contestDna(r));
+  if (o.f1) applyF1Settings();
+  contestSetOpt(91, 1);                                  // Modo F1
+  contestSetOpt(97, o.rounds);
+  const duel = fighters.length === 2;
+  contestSetOpt(99, duel ? o.maxcyc || 0 : 0);
+  contestSetOpt(100, duel ? o.maxpop || 0 : 0);
+  if (o.newSeed) document.getElementById('seed').value = Math.floor(Math.random() * 100000);
+  worker.postMessage({ t: 'f1-cap', cycles: o.cap || 0 });
+  document.getElementById('btn-reset').click();           // Reiniciar
+  fighters.forEach((r, i) => worker.postMessage({
+    t: 'seed-species',
+    sp: { dna: dnas[i], name: r.name + '.txt', veg: false, qty: r.qty, nrg: o.nrg,
+          color: cssToVbColor(r.color) },
+  }));
+  worker.postMessage({ t: 'f1start' });                   // FindSpecies
+  setRunning(true);
+}
+
 async function contestStart(opts = {}) {
   const w = contest.win;
   const $ = (id) => w.querySelector('#' + id);
@@ -104,44 +130,30 @@ async function contestStart(opts = {}) {
   }
   note.textContent = 'Preparando…';
   note.className = 'ct-note';
-  // Todo el ADN antes de reiniciar: la sim nueva no espera a la red.
-  const dnas = [];
+  if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
+  contest.rounds = Math.max(1, parseInt($('ct-rounds').value, 10) || 5);
   try {
-    for (const r of fighters) dnas.push(await contestDna(r));
+    await contestLaunch(fighters, {
+      nrg: parseFloat($('ct-nrg').value) || 3000, f1: $('ct-f1').checked,
+      rounds: contest.rounds, newSeed: opts.newSeed,
+      maxcyc: parseInt($('ct-maxcyc').value, 10) || 0,
+      maxpop: parseInt($('ct-maxpop').value, 10) || 0,
+    });
   } catch (e) {
     note.textContent = e.message;
     note.className = 'ct-note warn';
     return;
   }
-  const nrg = parseFloat($('ct-nrg').value) || 3000;
-  if ($('ct-f1').checked) applyF1Settings();
-  contestSetOpt(91, 1);                                  // Modo F1
-  contest.rounds = Math.max(1, parseInt($('ct-rounds').value, 10) || 5);
-  contestSetOpt(97, contest.rounds);
-  const duel = fighters.length === 2;
-  contestSetOpt(99, duel ? parseInt($('ct-maxcyc').value, 10) || 0 : 0);
-  contestSetOpt(100, duel ? parseInt($('ct-maxpop').value, 10) || 0 : 0);
-  if (opts.newSeed) {
-    const seedEl = document.getElementById('seed');
-    seedEl.value = Math.floor(Math.random() * 100000);
-  }
-  document.getElementById('btn-reset').click();           // Reiniciar
-  fighters.forEach((r, i) => worker.postMessage({
-    t: 'seed-species',
-    sp: { dna: dnas[i], name: r.name + '.txt', veg: false, qty: r.qty, nrg,
-          color: cssToVbColor(r.color) },
-  }));
-  worker.postMessage({ t: 'f1start' });                   // FindSpecies
   contest.running = true;
   contest.lastWins = null;
   contest.winner = '';
-  setRunning(true);
   contestRender();
   log(`🏆 contest: ${fighters.map((r) => r.name).join(' vs ')}`);
 }
 
 // ---- Mensajes del worker (los reenvía index.html) ----------------------------
 function contestOnMessage(msg) {
+  if (typeof channelOnMessage === 'function') channelOnMessage(msg);
   if (!contest.win || !contest.running) return;
   const note = contest.win.querySelector('#ct-note');
   if (msg.t === 'f1-started') {
@@ -157,6 +169,7 @@ function contestOnMessage(msg) {
   } else if (msg.t === 'f1-note') {
     note.textContent = msg.kind === 'single'
       ? 'Solo quedó una especie en el censo: el modo F1 se desactivó.'
+      : msg.kind === 'cap' ? 'Tope de ciclos: la ronda es para la especie más numerosa.'
       : 'Más de 2 especies: el tope de ciclos y la población máxima se desactivan (como en el original).';
     note.className = 'ct-note warn';
     if (msg.kind === 'single') { contest.running = false; contestRender(); }
@@ -166,32 +179,27 @@ function contestOnMessage(msg) {
   }
 }
 
-// Marcador: se llama en cada frame con las stats del worker.
-function contestOnStats(st) {
-  if (!contest.win || !contest.running) return;
+// Nombre de quien sumó una victoria entre dos frames (o '').
+function contestRoundWinner(prev, f1) {
+  if (!prev) return '';
+  const s = f1.sp.find((x, i) => x.wins > (prev[i] || 0));
+  return s ? s.name : '';
+}
+
+// HTML del marcador (Contest_Form del original) para las stats de un frame.
+// color: Map nombre → css; rounds: rondas mínimas pedidas; winner: '' o
+// ganador del contest.
+function contestBoardHtml(st, color, rounds, winner) {
   const f1 = st.f1;
-  const board = contest.win.querySelector('#ct-board');
-  if (!f1) return;
-  const color = new Map(contest.roster.map((r) => [r.name, r.color]));
   const total = f1.sp.reduce((a, s) => a + s.pop, 0) || 1;
   const maxWins = Math.max(0, ...f1.sp.map((s) => s.wins));
-  // Ronda ganada: alguien sumó una victoria desde el frame anterior.
-  if (contest.lastWins) {
-    f1.sp.forEach((s, i) => {
-      if (s.wins > (contest.lastWins[i] || 0))
-        contest.win.querySelector('#ct-note').textContent =
-          `Ronda ${f1.contests} para ${s.name}.`;
-    });
-  }
-  contest.lastWins = f1.sp.map((s) => s.wins);
   const round = Math.min(f1.contests + 1, f1.minrounds);
-  const done = f1.over || contest.winner;
-  const extended = f1.minrounds > contest.rounds;
-  board.innerHTML =
-    `<div class="ct-round">${done ? 'Terminado' : `Ronda ${round} / ${f1.minrounds}`}` +
+  const done = f1.over || winner;
+  const extended = f1.minrounds > rounds;
+  return `<div class="ct-round">${done ? 'Terminado' : `Ronda ${round} / ${f1.minrounds}`}` +
     ` · ciclo ${st.cycle}${f1.restarts ? ` · restarts ${f1.restarts}` : ''}</div>` +
     (done ? '' : `<div class="ct-rule">Gana quien sume ${contestWinsNeeded(f1.minrounds)}🏅 o más` +
-      (extended ? ` · alargado de ${contest.rounds} a ${f1.minrounds} rondas por empate estadístico` : '') +
+      (extended ? ` · alargado de ${rounds} a ${f1.minrounds} rondas por empate estadístico` : '') +
       '</div>') +
     f1.sp.map((s) => {
       const c = color.get(s.name) || '#8899bb';
@@ -204,8 +212,20 @@ function contestOnStats(st) {
         `<span class="ct-pop">${s.pop}🤖</span>` +
         `<span class="ct-wins${lead ? ' lead' : ''}">${s.wins}🏅</span></div>`;
     }).join('') +
-    (contest.winner
-      ? `<div class="ct-winner">🏆 Gana <b>${escHtml(contest.winner)}</b></div>` : '');
+    (winner ? `<div class="ct-winner">🏆 Gana <b>${escHtml(winner)}</b></div>` : '');
+}
+
+// Marcador: se llama en cada frame con las stats del worker.
+function contestOnStats(st) {
+  if (typeof channelOnStats === 'function') channelOnStats(st);
+  if (!contest.win || !contest.running || !st.f1) return;
+  const rw = contestRoundWinner(contest.lastWins, st.f1);
+  if (rw) contest.win.querySelector('#ct-note').textContent =
+    `Ronda ${st.f1.contests} para ${rw}.`;
+  contest.lastWins = st.f1.sp.map((s) => s.wins);
+  contest.win.querySelector('#ct-board').innerHTML = contestBoardHtml(
+    st, new Map(contest.roster.map((r) => [r.name, r.color])), contest.rounds,
+    contest.winner);
 }
 
 // ---- Render -----------------------------------------------------------------
