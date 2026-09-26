@@ -3339,8 +3339,8 @@ std::string Lint(const std::string& text) {
         const std::string& name = bot->vars.back().name;
         if (IsSysvarName(lcase(name), sv))
           report.add("sombra", "def " + name, lineNo,
-                     "la variable propia tapa a la sysvar ." + name +
-                         " en todo el bot");
+                     "the private variable shadows the sysvar ." + name +
+                         " in the whole bot");
         continue;
       }
 
@@ -3374,15 +3374,15 @@ std::string Lint(const std::string& text) {
             else if (lcase(d) == lcase(name)) otherCase = true;
           }
           if (digitsOnly)
-            hint = "¿la dirección " + name + "? va sin punto: " + name;
+            hint = "did you mean address " + name + "? Addresses go without a dot: " + name;
           else if (definedLater)
-            hint = "su def está más abajo; el cargador resuelve al leer: sube el def";
+            hint = "its def is further down; the loader resolves while reading: move the def up";
           else if (otherCase)
-            hint = "las variables propias distinguen mayúsculas";
+            hint = "private variables are case-sensitive";
           else if (!(hint = NearestSysvar(lcase(name), sv)).empty())
-            hint = "¿." + hint + "?";
+            hint = "did you mean ." + hint + "?";
           else
-            hint = "no es una sysvar ni tiene def (¿de otra versión de DB?)";
+            hint = "not a sysvar and has no def (from another DB version?)";
           report.add("nombre", word, lineNo, hint);
           continue;
         }
@@ -3393,17 +3393,17 @@ std::string Lint(const std::string& text) {
           std::string hint;
           const std::string clean = lcase(StripNonAscii(operand));
           if (HasNonAscii(operand) && IsCommand(clean))
-            hint = "'" + clean + "' con un carácter invisible: no se reconoce";
+            hint = "'" + clean + "' with an invisible character: not recognized";
           else if (HasNonAscii(operand))
-            hint = "caracteres invisibles o de codificación";
+            hint = "invisible or encoding characters";
           else if (IsSysvarName(lcase(operand), sv))
-            hint = "¿falta el punto? ." + operand;
+            hint = "missing dot? ." + operand;
           else {
             std::string near;
             for (const char* c : kCommandWords)
               if (EditDistance(lc, c) == 1 && lc.size() >= 4) near = c;
-            hint = near.empty() ? "no es comando ni número (¿texto sin ' de comentario?)"
-                                : "¿" + near + "?";
+            hint = near.empty() ? "not a command or a number (text without a ' comment mark?)"
+                                : "did you mean " + near + "?";
           }
           report.add("palabra", word, lineNo, hint);
           continue;
@@ -3411,13 +3411,13 @@ std::string Lint(const std::string& text) {
         to_vb_integer(db::loader_detail::vb_val(operand));  // fuera de +-32767: error 6
         if (used < operand.size())
           report.add("pegado", word, lineNo,
-                     "se lee como " + operand.substr(0, used) + "; \"" +
-                         operand.substr(used) + "\" se pierde (¿falta un espacio?)");
+                     "reads as " + operand.substr(0, used) + "; \"" +
+                         operand.substr(used) + "\" is lost (missing space?)");
       }
     }
   } catch (const VbError& e) {
     report.add("error", "error " + std::to_string(e.number), 0,
-               "el cargador rechaza el archivo (literal fuera de ±32767 o def mal formado)");
+               "the loader rejects the file (literal outside ±32767 or malformed def)");
     return report.text();
   }
 
@@ -3426,7 +3426,7 @@ std::string Lint(const std::string& text) {
   if (useref && !firstToken.empty() &&
       FlowTok(lcase(firstToken)).value == 0)
     report.add("primero", firstToken, 0,
-               "con def, el primer token que no es de flujo se pierde (bug A2-2 del original)");
+               "with defs, a first token that is not flow control is lost (bug A2-2 of the original)");
   return report.text();
 }
 
