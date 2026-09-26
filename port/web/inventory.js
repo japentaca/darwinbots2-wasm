@@ -116,9 +116,9 @@ const archLabel = (k) => (inv.profiles && inv.profiles.archetypes[k]) || k || '�
 const SIZE_LABEL = { S: 'S (≤5 genes)', M: 'M (6-20)', L: 'L (21-60)', XL: 'XL (>60)' };
 // Capacidades que casi todos tienen: no se muestran en la lista (sí en la ficha).
 const CAP_COMMON = new Set(['mueve', 'gira', 'vision', 'repro-asex']);
-const GROUP_HUE = { Movimiento: 210, Ataque: 0, Defensa: 35, Energía: 120,
-                    Reproducción: 300, Multicelular: 180, Social: 260,
-                    Sentidos: 55, Genoma: 330 };
+const GROUP_HUE = { Movement: 210, Attack: 0, Defense: 35, Energy: 120,
+                    Reproduction: 300, Multicellular: 180, Social: 260,
+                    Senses: 55, Genome: 330 };
 
 // ---- Filtros y agrupación ---------------------------------------------------
 function invFilterState() {

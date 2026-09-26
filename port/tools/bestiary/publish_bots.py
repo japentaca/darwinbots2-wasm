@@ -23,7 +23,7 @@ def clean_name(title):
     s = title.strip()
     s = re.sub(r"\s*\((veg|F1|F2|F3)\)\s*$", "", s, flags=re.I)
     s = re.sub(r'[<>:"/\\|?*]+', "", s)
-    return s.strip() or "sin_titulo"
+    return s.strip() or "untitled"
 
 
 def main():

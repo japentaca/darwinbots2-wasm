@@ -56,7 +56,7 @@ cuáles lee (`*.x`) y el valor literal de `.shoot` y `.tieloc`. Salida:
 capacidades por bot y por gen, arquetipo, tamaño (S/M/L/XL por genes),
 nº de tokens y un hash del ADN canónico (clave de los datos del usuario en
 el Inventario de la página). Heurística, no fidelidad: un valor calculado
-en ejecución se marca "dispara (valor calculado)" en vez de adivinarlo.
+en ejecución se marca "shoots (computed value)" en vez de adivinarlo.
 
 `genes.json` (solo lo carga el Laboratorio de híbridos) guarda por gen su
 texto decompilado, la memoria propia que escribe (`w`) y lee (`r`) —las

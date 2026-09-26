@@ -42,46 +42,46 @@ const SV_BY_ADDR = (() => {
 // ---- Catálogo de capacidades -------------------------------------------
 // key: [etiqueta, grupo, descripción]. El orden es el de presentación.
 const CAPS = {
-  mueve:        ['se mueve', 'Movimiento', 'escribe .up/.dn/.sx/.dx'],
-  gira:         ['gira', 'Movimiento', 'escribe .aimdx/.aimsx/.setaim'],
-  ancla:        ['se ancla', 'Movimiento', 'escribe .fixpos'],
-  'caza-nrg':   ['caza (energía)', 'Ataque', '.shoot -1: roba energía'],
-  'caza-cuerpo':['caza (cuerpo)', 'Ataque', '.shoot -6: roba cuerpo'],
-  dispara:      ['dispara (valor calculado)', 'Ataque', '.shoot con un valor que se calcula en ejecución'],
-  veneno:       ['veneno', 'Ataque', '.strvenom/.venval o .shoot -3'],
-  toxina:       ['toxina', 'Defensa', '.strpoison: veneno defensivo que se suelta al ser atacado'],
-  virus:        ['virus', 'Ataque', '.mkvirus/.vshoot: inyecta un gen'],
-  residuos:     ['tira residuos', 'Energía', '.shoot -4: se deshace de los residuos'],
-  'dona-nrg':   ['dona energía', 'Social', '.shoot -2'],
-  'dispara-info':['dispara info', 'Social', '.shoot positivo: escribe en la memoria del otro'],
-  caparazon:    ['caparazón', 'Defensa', '.mkshell'],
-  limo:         ['limo', 'Defensa', '.mkslime'],
-  fotosintesis: ['fotosíntesis', 'Energía', '.mkchlr/.rmchlr (cloroplastos)'],
-  cuerpo:       ['gestiona cuerpo', 'Energía', '.strbody/.fdbody'],
-  'repro-asex': ['reproducción asexual', 'Reproducción', '.repro/.mrepro'],
-  'repro-sex':  ['reproducción sexual', 'Reproducción', '.sexrepro o .shoot -8 (esperma)'],
-  lazos:        ['usa lazos', 'Multicelular', '.tie/.deltie/.tienum/.tieval'],
-  'come-lazo':  ['come con lazos', 'Ataque', '.tieloc -1: chupa energía del otro por el lazo'],
-  estructura:   ['estructura multicelular', 'Multicelular', '.stifftie/.fixang/.fixlen/.tieang/.tielen: forma cuerpos rígidos'],
-  comparte:     ['comparte recursos', 'Multicelular', '.sharenrg/.sharewaste/.shareshell/.shareslime/.sharechlr'],
-  comunica:     ['comunica', 'Social', 'escribe .out1-10 o .tout1-10'],
-  'lee-memoria':['lee memoria ajena', 'Social', 'escribe .memloc/.tmemloc'],
-  vision:       ['visión', 'Sentidos', 'lee .eye1-9 o .ref*'],
-  ojos:         ['ojos configurables', 'Sentidos', 'escribe .focuseye/.eyeNdir/.eyeNwidth'],
-  reconoce:     ['reconoce a los suyos', 'Sentidos', 'lee .my* o .in1-10 (compara con el otro)'],
-  reacciona:    ['reacciona a golpes', 'Sentidos', 'lee .shflav/.hit*/.shang/.pain'],
-  luz:          ['sensible a la luz', 'Sentidos', 'lee .daytime/.sun/.light'],
-  autoedita:    ['se autoedita', 'Genoma', 'escribe .delgene'],
+  mueve:        ['moves', 'Movement', 'writes .up/.dn/.sx/.dx'],
+  gira:         ['turns', 'Movement', 'writes .aimdx/.aimsx/.setaim'],
+  ancla:        ['anchors', 'Movement', 'writes .fixpos'],
+  'caza-nrg':   ['hunts (energy)', 'Attack', '.shoot -1: steals energy'],
+  'caza-cuerpo':['hunts (body)', 'Attack', '.shoot -6: steals body'],
+  dispara:      ['shoots (computed value)', 'Attack', '.shoot with a value computed at run time'],
+  veneno:       ['venom', 'Attack', '.strvenom/.venval or .shoot -3'],
+  toxina:       ['poison', 'Defense', '.strpoison: defensive poison released when attacked'],
+  virus:        ['virus', 'Attack', '.mkvirus/.vshoot: injects a gene'],
+  residuos:     ['dumps waste', 'Energy', '.shoot -4: gets rid of waste'],
+  'dona-nrg':   ['gives energy', 'Social', '.shoot -2'],
+  'dispara-info':['shoots info', 'Social', 'positive .shoot: writes into the memory of another bot'],
+  caparazon:    ['shell', 'Defense', '.mkshell'],
+  limo:         ['slime', 'Defense', '.mkslime'],
+  fotosintesis: ['photosynthesis', 'Energy', '.mkchlr/.rmchlr (chloroplasts)'],
+  cuerpo:       ['manages body', 'Energy', '.strbody/.fdbody'],
+  'repro-asex': ['asexual reproduction', 'Reproduction', '.repro/.mrepro'],
+  'repro-sex':  ['sexual reproduction', 'Reproduction', '.sexrepro or .shoot -8 (sperm)'],
+  lazos:        ['uses ties', 'Multicellular', '.tie/.deltie/.tienum/.tieval'],
+  'come-lazo':  ['feeds through ties', 'Attack', '.tieloc -1: drains energy from the tied bot'],
+  estructura:   ['multicellular structure', 'Multicellular', '.stifftie/.fixang/.fixlen/.tieang/.tielen: builds rigid bodies'],
+  comparte:     ['shares resources', 'Multicellular', '.sharenrg/.sharewaste/.shareshell/.shareslime/.sharechlr'],
+  comunica:     ['communicates', 'Social', 'writes .out1-10 or .tout1-10'],
+  'lee-memoria':['reads foreign memory', 'Social', 'writes .memloc/.tmemloc'],
+  vision:       ['vision', 'Senses', 'reads .eye1-9 or .ref*'],
+  ojos:         ['configurable eyes', 'Senses', 'writes .focuseye/.eyeNdir/.eyeNwidth'],
+  reconoce:     ['recognizes kin', 'Senses', 'reads .my* or .in1-10 (compares with the other bot)'],
+  reacciona:    ['reacts to hits', 'Senses', 'reads .shflav/.hit*/.shang/.pain'],
+  luz:          ['light-sensitive', 'Senses', 'reads .daytime/.sun/.light'],
+  autoedita:    ['self-editing', 'Genome', 'writes .delgene'],
 };
 
 // Arquetipo (uno por bot, para agrupar): el primero que cumple.
 const ARCHETYPES = [
-  ['multicelular', 'Multicelular', (c, b) => b.board === 'Multi-Bots' || c.has('estructura')],
-  ['vegetal', 'Vegetal', (c, b) => b.veg || c.has('fotosintesis')],
-  ['depredador', 'Depredador', (c) => c.has('caza-nrg') || c.has('caza-cuerpo') || c.has('dispara') ||
+  ['multicelular', 'Multicellular', (c, b) => b.board === 'Multi-Bots' || c.has('estructura')],
+  ['vegetal', 'Vegetable', (c, b) => b.veg || c.has('fotosintesis')],
+  ['depredador', 'Predator', (c) => c.has('caza-nrg') || c.has('caza-cuerpo') || c.has('dispara') ||
                                       c.has('veneno') || c.has('virus') || c.has('come-lazo')],
-  ['defensivo', 'Defensivo', (c) => c.has('caparazon') || c.has('limo') || c.has('toxina')],
-  ['pasivo', 'Pasivo', () => true],
+  ['defensivo', 'Defensive', (c) => c.has('caparazon') || c.has('limo') || c.has('toxina')],
+  ['pasivo', 'Passive', () => true],
 ];
 
 const STORE_VAL = new Set(['store', 'addstore', 'substore', 'multstore', 'divstore',
@@ -254,7 +254,7 @@ function headerName(raw) {
       .replace(/\s+bot$/i, '').replace(/[.,:;]+$/, '').trim();
     if (!s || /^gene?\b/i.test(s) || s.startsWith('#')) continue;
     const evo = s.match(/^evolved from (\w+)/i);
-    if (evo) return { name: `${evo[1][0].toUpperCase()}${evo[1].slice(1)} evolucionado`, author };
+    if (evo) return { name: `Evolved ${evo[1][0].toUpperCase()}${evo[1].slice(1)}`, author };
     if (s.length <= 32 && s.split(/\s+/).length <= 4) return { name: s, author };
   }
   return { name: '', author };
@@ -288,13 +288,13 @@ function uniqueNames(index, out, genesOut) {
       ...headerName(fs.readFileSync(path.join(BOTS, b.file), 'utf8')),
     }));
     const distinct = (f) => new Set(info.map(f)).size === info.length;
-    const genes = (n) => `${n} gen${n === 1 ? '' : 'es'}`;
+    const genes = (n) => `${n} gene${n === 1 ? '' : 's'}`;
     const arch = (p) => ARCHETYPES.find(([k]) => k === p.arch)[1];
     if (!/[A-Za-z]{2}/.test(title)) {
       // título sin nombre: el de la cabecera, o el arquetipo y sus genes
       for (const x of info) {
         x.b.name = x.name ||
-          `${arch(x.p)} de ${genes(x.p.genes)}${x.author ? ` (${x.author})` : ''}`;
+          `${arch(x.p)} with ${genes(x.p.genes)}${x.author ? ` (${x.author})` : ''}`;
       }
       if (new Set(info.map((x) => x.b.name)).size < info.length) {
         for (const x of info) x.b.name += ` #${x.p.hash.slice(0, 4)}`;
@@ -307,7 +307,7 @@ function uniqueNames(index, out, genesOut) {
         (x) => arch(x.p).toLowerCase(),
         (x) => `${x.p.tokens} tokens`,
       ].find((f) => info.every((x) => f(x)) && distinct(f)) ||
-        ((x) => `ADN ${x.p.hash.slice(0, 6)}`);
+        ((x) => `DNA ${x.p.hash.slice(0, 6)}`);
       for (const x of info) x.b.name = `${title} · ${tags(x)}`;
     }
     for (const x of info) console.log(`  nombre: ${x.b.file} → ${x.b.name}`);
