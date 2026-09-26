@@ -195,10 +195,14 @@ function channelOnStats(st) {
 // ---- Encender / apagar -------------------------------------------------------
 function chReadCfg() {
   const $ = (id) => ch.win.querySelector('#' + id);
-  const int = (id, lo, hi, d) => Math.min(hi, Math.max(lo, parseInt($(id).value, 10) || d));
+  // Vacío o ilegible → el valor por defecto; un 0 escrito vale (pausa 0, sin tope).
+  const int = (id, lo, hi, d) => {
+    const n = parseInt($(id).value, 10);
+    return Math.min(hi, Math.max(lo, Number.isNaN(n) ? d : n));
+  };
   return {
     k: int('ch-k', 2, 20, 2), rounds: int('ch-rounds', 1, 99, 5),
-    wins: Math.min(99, Math.max(0, parseInt($('ch-wins').value, 10) || 0)),
+    wins: int('ch-wins', 0, 99, 3),
     retire: int('ch-retire', 1, 999, 5), cap: int('ch-cap', 100, 1e6, 5000),
     qty: int('ch-qty', 1, 200, 5), nrg: int('ch-nrg', 1, 1e6, 3000),
     pause: int('ch-pause', 0, 60, 5), f1: $('ch-f1').checked, pool: $('ch-pool').value,

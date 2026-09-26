@@ -119,6 +119,7 @@ async function contestLaunch(fighters, o) {
   contestSetOpt(100, duel ? o.maxpop || 0 : 0);
   if (o.newSeed) document.getElementById('seed').value = Math.floor(Math.random() * 100000);
   worker.postMessage({ t: 'f1-cap', cycles: o.cap || 0 });
+  quietF1Census = true;                                   // el censo va abajo
   document.getElementById('btn-reset').click();           // Reiniciar
   fighters.forEach((r, i) => worker.postMessage({
     t: 'seed-species',

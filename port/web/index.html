@@ -3633,13 +3633,17 @@ document.getElementById('btn-eye').onclick = openEyeDesigner;
 document.getElementById('btn-bg-load').onclick = bgLoad;
 document.getElementById('btn-bg-remove').onclick = bgRemove;
 
+// El contest siembra sus especies y hace el censo F1 después del reinicio:
+// el aviso de "sin especies de combate" del reinicio sobra (contest.js).
+let quietF1Census = false;
+
 function newSim() {
   clearRichState();
   bgOnSimStart();                // E8: main.frm:1241
   const seed = parseFloat(document.getElementById('seed').value) || 0;
   const alga = PRESETS.alga;
   worker.postMessage({
-    t: 'reset', seed,
+    t: 'reset', seed, quietF1: quietF1Census,
     // Todo sale del panel de opciones (E1); los defaults reproducen la
     // demo de M10 (campo 32000², economía vegetal viva).
     options: collectOptions(),
@@ -3647,6 +3651,7 @@ function newSim() {
     species: [{ dna: alga.dna, name: alga.name, veg: true, qty: alga.qty,
                 nrg: alga.nrg, color: cssToVbColor(alga.color) }],
   });
+  quietF1Census = false;
 }
 
 // ---- Aviso de lint al sembrar ---------------------------------------------

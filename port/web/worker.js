@@ -1276,8 +1276,8 @@ function resetSim(msg, carryTeleporters) {
   // E5: con F1 activo el arranque corre FindSpecies (main.frm:1337-1340).
   if (api.getOpt(sim, 91)) {
     const ts = api.f1Start(sim);
-    log(ts ? `F1 contest: ${ts} species competing`
-           : 'F1: no combat species — seed 2+ and "Start contest"');
+    if (ts) log(`F1 contest: ${ts} species competing`);
+    else if (!msg.quietF1) log('F1: no combat species — seed 2+ and "Start contest"');
   }
   // PP-03 — main.frm:1357-1365: después de loadrobs y FindSpecies, StartSimul
   // re-crea las formas de xObstacle escaladas al campo.
