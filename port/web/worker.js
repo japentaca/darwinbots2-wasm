@@ -312,6 +312,8 @@ function bindApi() {
 }
 
 function log(msg) { self.postMessage({ t: 'log', msg }); }
+// "1 shape" / "3 shapes"
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 // String malloc'd del core -> JS (y liberar).
 function takeStr(p) {
@@ -1009,7 +1011,7 @@ function imEnable(cfg) {
   imArrivals = [];
   imInboxKnown = 0;
   const held = imFlushHeld(i);
-  if (held) log(`Internet: ${held} held organisms enter the new port`);
+  if (held) log(`Internet: ${plural(held, 'held organism')} moved into the new port`);
   ImNet.start({ name: imName, simId: simStartOf(), kind: cfg.kind,
                 url: cfg.url, room: cfg.room },
               { onDbo: imOnDbo, onChange: imState, onLog: imLog });
@@ -1032,7 +1034,7 @@ function imDisable(why) {
   imHoldInbox();
   const n = sim ? api.imDisable(sim) : 0;
   log(`Internet Mode off${why ? ' — ' + why : ''}` +
-      (n ? ` (${n} port deleted)` : '') +
+      (n ? ` (${plural(n, 'port')} deleted)` : '') +
       (out ? `; ${out} waiting to leave` : '') +
       (imHeld.length ? `; ${imHeld.length} received waiting for a port` : ''));
   imState();
@@ -1497,14 +1499,14 @@ self.onmessage = (e) => {
     case 'shapes-add10': {
       const before = api.numObstacles(sim);
       api.addRandObs(sim, 10, +msg.dw, +msg.dh);
-      log(`+${recolorObstacles(before)} random shapes ` +
+      log(`+${plural(recolorObstacles(before), 'random shape')} ` +
           `(${api.numObstacles(sim)} total)`);
       postFrame();
       break;
     }
     case 'shapes-del10':
       api.delTenObs(sim);
-      log(`deleted 10 at random; ${api.numObstacles(sim)} shapes left`);
+      log(`deleted 10 at random; ${plural(api.numObstacles(sim), 'shape')} left`);
       postFrame();
       break;
     case 'shape-del':
@@ -1535,7 +1537,7 @@ self.onmessage = (e) => {
         self.postMessage({ t: 'opts', vals: { 83: api.getOpt(sim, 83),
                                               84: api.getOpt(sim, 84),
                                               85: api.getOpt(sim, 85) } });
-      log(`maze ${msg.kind}: +${n} shapes`);
+      log(`maze ${msg.kind}: +${plural(n, 'shape')}`);
       postFrame();
       break;
     }
