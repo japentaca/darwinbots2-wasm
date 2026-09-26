@@ -155,6 +155,7 @@ function bindApi() {
     fieldW:        C('db_sim_field_width', 'number', ['number']),
     fieldH:        C('db_sim_field_height', 'number', ['number']),
     setMinVegs:    C('db_sim_set_minvegs', null, ['number', 'number']),
+    setMaxPop:     C('db_sim_set_maxpop', null, ['number', 'number']),
     setRepop:      C('db_sim_set_repop', null, ['number', 'number', 'number']),
     setMaxEnergy:  C('db_sim_set_max_energy', null, ['number', 'number']),
     setMutations:  C('db_sim_set_mutations', null, ['number', 'number']),
@@ -598,6 +599,7 @@ function newRound() {
                         minVegs: base(0), repopAmount: base(1),
                         repopCooldown: base(2), maxEnergy: base(3),
                         startChlr: base(4), mutations: !!base(5),
+                        maxPopulation: base(6),
                         opts, costs } }, true);
   if (imCfg) imInboxKnown = imPort() ? api.tpGet(sim, imPort(), 13) : 0;
   api.setOpt(sim, 90, keep.restart);
@@ -1199,6 +1201,8 @@ function resetSim(msg, carryTeleporters) {
   const o = msg.options;
   api.setField(sim, o.fieldW, o.fieldH);
   api.setMinVegs(sim, o.minVegs);
+  // MaxPopulation (OptionsForm MaxPopText): sin dato, el default del core.
+  if (o.maxPopulation !== undefined) api.setMaxPop(sim, o.maxPopulation);
   api.setRepop(sim, o.repopAmount, o.repopCooldown);
   api.setMaxEnergy(sim, o.maxEnergy);
   api.setStartChlr(sim, o.startChlr);

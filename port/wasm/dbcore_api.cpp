@@ -296,6 +296,7 @@ DB_EXPORT void db_sim_startnew_carry(void* dst, void* src) {
 // una carga son los del archivo (RV-38).
 //   0 MinVegs · 1 RepopAmount · 2 RepopCooldown · 3 MaxEnergy
 //   4 StartChlr (global del gset, RV-39) · 5 mutaciones (Not DisableMutations)
+//   6 MaxPopulation (tope de vegetales, en unidades de 16000 cloroplastos)
 DB_EXPORT double db_sim_get_base(void* h, int k) {
   const db::Sim& sim = S(h);
   switch (k) {
@@ -305,6 +306,7 @@ DB_EXPORT double db_sim_get_base(void* h, int k) {
     case 3: return static_cast<double>(sim.opts.MaxEnergy);
     case 4: return sim.StartChlr;
     case 5: return sim.opts.DisableMutations ? 0 : 1;
+    case 6: return static_cast<double>(sim.opts.MaxPopulation);
     default: return 0;
   }
 }

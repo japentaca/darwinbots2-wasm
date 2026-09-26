@@ -746,6 +746,7 @@ const OPT_GROUPS = [
   { name: 'Energía y vegetales', items: [
     { key: 'maxEnergy', label: 'Reparto solar por ciclo', def: 10 },
     { key: 'minVegs', label: 'Repoblar bajo (cloroplastos)', def: 15 },
+    { key: 'maxPopulation', label: 'Tope de vegetales (MaxPopulation)', def: 100 },
     { key: 'repopAmount', label: 'Vegs por repoblación', def: 10 },
     { key: 'repopCooldown', label: 'Ciclos entre repoblaciones', def: 10 },
     { key: 'startChlr', label: 'Cloroplastos iniciales', def: 16000 },
@@ -771,6 +772,28 @@ const OPT_GROUPS = [
     { id: 93, label: 'Descalificación', sel: [[0, 'off'],
         [1, 'nivel 1 (ties/virus)'], [2, 'nivel 2 (todo)']], def: 0 },
     { btn: 'btn-f1start', label: 'Arrancar contest (censo de especies)' },
+    { btn: 'btn-setf1', label: 'Ajustes F1 (btnSetF1 del original)' },
+  ]},
+  // Costes por acción y de mantenimiento (CostsForm.frm; índices de
+  // SimOptions.bas:2-38). Default 0 como el core: sin ellos un bot no gasta
+  // energía. "Ajustes F1" carga los valores de liga.
+  { name: 'Costes', items: [
+    { cost: 30, label: 'Mantenimiento de body (BODYUPKEEP)', def: 0 },
+    { cost: 31, label: 'Coste por edad (AGECOST)', def: 0 },
+    { cost: 32, label: 'Edad de inicio del coste', def: 0 },
+    { cost: 24, label: 'Por ciclo y largo de ADN (DNACYCCOST)', def: 0 },
+    { cost: 25, label: 'Copia de ADN al reproducir', def: 0 },
+    { cost: 20, label: 'Moverse (MOVECOST)', def: 0 },
+    { cost: 21, label: 'Girar (TURNCOST)', def: 0 },
+    { cost: 23, label: 'Disparar (SHOTCOST)', def: 0 },
+    { cost: 22, label: 'Atar (TIECOST)', def: 0 },
+    { cost: 7, label: 'Store (COSTSTORE)', def: 0 },
+    { cost: 5, label: 'Condición (CONDCOST)', def: 0 },
+    { cost: 8, label: 'Cloroplasto nuevo (CHLRCOST)', def: 0 },
+    { cost: 26, label: 'Venom', def: 0 },
+    { cost: 27, label: 'Poison', def: 0 },
+    { cost: 28, label: 'Slime', def: 0 },
+    { cost: 29, label: 'Shell', def: 0 },
   ]},
   // E4: costes dinámicos (CostsForm.frm, tab "Dynamic Costs"; índices de
   // SimOptions.bas:28-39). Los items con `cost:` viajan por db_sim_set_cost
@@ -3626,7 +3649,62 @@ document.getElementById('btn-lab').onclick = () => openLab();
 document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'btn-f1start')
     worker.postMessage({ t: 'f1start' });
+  if (e.target && e.target.id === 'btn-setf1') applyF1Settings();
 });
+
+// OptionsForm.frm:2579-2668 (btnSetF1_Click): ajustes de liga F1. El
+// original los deja en TmpOpts hasta el OK/Start New; aquí los campos con
+// id o coste aplican en vivo (como todo el panel) y el campo, la economía
+// vegetal y las mutaciones al reiniciar. Por especie (Fixed, Mutations,
+// qty 5...) no hay lista persistente: se fija el nº del formulario de
+// siembra y se apagan las mutaciones globales.
+const F1_COSTS = {
+  23: 2, 7: 0.04, 5: 0.004, 20: 0.05, 22: 2, 26: 0.01, 27: 0.01,
+  28: 0.1, 29: 0.1, 54: 1, 30: 0.00001, 31: 0.01, 8: 0.2,
+};
+const F1_OPTS = {
+  50: 0, 33: 0, 40: 1, 30: 0, 13: 0, 56: 10000, 21: 0, 54: 0, 55: 0,
+  70: 0, 71: 0, 72: 0, 11: 180, 63: 0.5, 35: 0, 37: 0, 18: 0, 20: 0,
+  19: 2, 16: 0.6, 17: 0.4, 15: 0, 14: 0, 62: 1, 60: 1,
+};
+const F1_KEYS = {
+  maxEnergy: 40, maxPopulation: 25, minVegs: 10, repopAmount: 10,
+  repopCooldown: 25, mutations: false,
+};
+function setInput(el, v) {
+  if (el.type === 'checkbox') el.checked = !!v;
+  else el.value = v;
+}
+function applyF1Settings() {
+  const panel = document.getElementById('opts-panel');
+  // "Zero out all Costs" (For t = 1 To 70): los del panel y los ocultos.
+  const shown = new Set();
+  panel.querySelectorAll('[data-cost]').forEach((el) => {
+    const i = +el.dataset.cost;
+    shown.add(i);
+    setInput(el, F1_COSTS[i] ?? 0);  // incluye DynamicCosts = False (56)
+    el.dispatchEvent(new Event('change'));
+  });
+  for (let i = 1; i <= 70; i++)
+    if (!shown.has(i))
+      worker.postMessage({ t: 'setcost', i, v: F1_COSTS[i] ?? 0 });
+  for (const id in F1_OPTS) {
+    const el = document.getElementById('o-' + id);
+    setInput(el, F1_OPTS[id]);
+    el.dispatchEvent(new Event('change'));
+  }
+  for (const k in F1_KEYS) setInput(document.getElementById('o-' + k), F1_KEYS[k]);
+  // FieldSize 1 (9237×6928) y Toroidal + Updn + Dxsx.
+  const fs = document.getElementById('o-fsize');
+  fs.value = '1';
+  fs.dispatchEvent(new Event('change'));
+  const shape = document.getElementById('o-shape');
+  shape.value = 'tor';
+  shape.dispatchEvent(new Event('change'));
+  document.getElementById('sp-qty').value = 5;
+  log('Ajustes F1 cargados: costes de liga en vivo; campo 9237×6928, ' +
+      'vegetales y mutaciones al pulsar Reiniciar.');
+}
 
 document.getElementById('speed').onchange = (e) =>
   worker.postMessage({ t: 'speed', n: parseInt(e.target.value, 10) });
