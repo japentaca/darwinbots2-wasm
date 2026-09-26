@@ -1,4 +1,4 @@
-# Prompt de continuación — sesión nueva (post-PP-01, plan de extensiones completo)
+# Prompt de continuación — sesión nueva (post-PP-03, plan de extensiones completo)
 
 Artefacto **regenerable** (no es historia): lo reescribe `/prompt-continuacion` al
 cerrar cada etapa o pendiente. Pegá el bloque de abajo como **primer mensaje** de
@@ -7,8 +7,8 @@ una sesión nueva de Claude Code abierta en el directorio del repo
 prompt es autocontenido: no referencia nada de la conversación anterior, solo
 archivos del repo y hashes de commit.
 
-Generado el 2026-09-24, tras cerrar el pendiente post-plan **PP-01** (rejilla de
-buckets con campo chico).
+Generado el 2026-09-24, tras cerrar el pendiente post-plan **PP-03** (formas en
+la ronda nueva, capa host).
 
 ---
 
@@ -32,13 +32,14 @@ El port vive en `port/`: core C++20 de headers puros
 `port/wasm/dbcore_api.cpp`. **El port del core está completo** (M1..M10 +
 extensiones Rendimiento y Bestiary) y **el plan de extensiones de
 `spec/PLAN-EXTENSIONES.md` también** (E1..E8 + E6.5). Lo que sigue son los
-pendientes que el plan dejó anotados; el primero ya cerrado es PP-01.
+pendientes que el plan dejó anotados; ya cerrados PP-01 (core) y PP-03 (host).
 
 **Estado actual** (verificado 2026-09-24):
 - Suite: **181 casos / 3851 aserciones en verde** en los tres modos (g++ 14.2,
   clang 19.1.7, WASM/Emscripten 6.0.8 bajo node).
 - Hashes: E7 merge `14e08fd`, E8 merge `ce82492`, **PP-01**: `8c772f1` +
-  revisión `fca3a15` → merge `a117509`. Línea base de fuentes VB6: `02b20d7`.
+  revisión `fca3a15` → merge `a117509`; **PP-03**: `35343c4` + revisión
+  `21673fe` → merge `abe2ce8`. Línea base de fuentes VB6: `02b20d7`.
 - **PP-01** (core, 2026-09-24): sembrar 15 algas en 4000×3000 desbordaba la
   pila. Era una recursión **del port**: con un eje < 4000, `Int(eje/4000) = 0`
   dejaba la rejilla de `Quads.bas` vacía y `EnsureBuckets` (construcción del
@@ -47,6 +48,18 @@ pendientes que el plan dejó anotados; el primero ya cerrado es PP-01.
   `Quads.bas:91/:115`) inalcanzable desde su UI. Decisión: al menos 1 celda por
   eje (`BucketCount`) + `SimDiag::err9_bucket_field`; familia PP-01/PP-01b/PP-02
   en `port/tests/test_buckets.cpp`. Detalle en `70-CASOS-DORADOS.md §15`.
+- **PP-03** (capa host, 2026-09-24): la sim y la ronda nueva re-crean las
+  formas de `xObstacle` como `StartSimul` (`main.frm:1357-1365`). La copia
+  (global del módulo wasm, como en el original) la toma `db_sim_obs_repop`
+  (`ObsRepop`, `OptionsForm.frm:4550-4563`) en "Nueva sim" y en cada cambio
+  del panel de opciones/costes, salvo toggles de menú de `MDIForm1` (ids
+  54/55/70-72/111/112) y eye designer (`nocap`). `db_sim_obs_carry` pasa el
+  array global de formas (apagado) y `leftCompactor`/`rightCompactor` al
+  handle nuevo; `db_sim_load` también los conserva. La ronda nueva hereda las
+  opciones E1/E6 y los `Costs` de la sim que termina (`SimOpts` sobrevive).
+  Los 3 `Rnd` del color de `NewObstacle` **no** se replican (Rnd crudo de
+  arranque, B7-5/Q01). Mensaje de worker nuevo de solo lectura:
+  `{t:'getopt', id}` → `{t:'opt', id, v}`.
 - **Contratos de host vigentes**: el frame del worker tiene **cabecera de 13
   floats** (`…, focus, rich, nBirths, nDeaths, cycle, extras`), después los
   bloques de bots/shots/ties/obstáculos/teleporters, foco, vista enriquecida
@@ -62,8 +75,8 @@ pendientes que el plan dejó anotados; el primero ya cerrado es PP-01.
   1 (F12), 11 (inspector) y 25 (autosave a disco); el 23 (monitor) corre en
   la capa host.
 - CI en GitHub: `ci.yml` (suite en los tres modos + fuentes VB6 intactos) y
-  `pages.yml` (demo viva). Los commits de PP-01 están en `main` local; no se
-  hizo push.
+  `pages.yml` (demo viva). Los commits de PP-01 y PP-03 están en `main`
+  local; no se hizo push.
 
 **Orden de lectura al arrancar:**
 1. `spec/PROGRESO.md` entero — fuente de verdad del estado (incluida la
@@ -89,7 +102,7 @@ pendientes que el plan dejó anotados; el primero ya cerrado es PP-01.
    verificación es smoke test bajo node + prueba en Chrome. La revisión de
    rama con un agente independiente contra el fuente rindió en todas las
    etapas (E5-E8: 5, 4, 7 y 3 hallazgos; PP-01: 0 bugs, pero citas corridas
-   y un subcaso que faltaba).
+   y un subcaso que faltaba; PP-03: 1 bug de carga y 2 huecos de fidelidad).
 3. Los `[PROBABLE BUG]` se replican tal cual; los sitios de error 6/9/11
    llevan decisión de port documentada + registro en `VmDiag`/`SimDiag`.
 4. Salvaguardas numéricas de `PLAN.md`: redondeo bancario centralizado
@@ -115,6 +128,7 @@ cmake --preset wasm         && cmake --build --preset wasm         && node build
 node tools/imrelay/smoke_im.mjs      # smoke de Internet Mode (44 checks)
 node tools/e8/smoke_e8.mjs           # smoke de E8 (30 checks)
 node tools/pp/smoke_campo.mjs        # smoke de PP-01 (8 checks)
+node tools/pp/smoke_formas.mjs       # smoke de PP-03 (21 checks)
 ```
 El preset `wasm` necesita `EMSDK` en el entorno (en esta máquina:
 `EMSDK=C:/Users/jntac/emsdk`; en bash: `export EMSDK=/c/Users/jntac/emsdk &&
@@ -152,7 +166,7 @@ node 24.
 
 **La tarea: después del plan — pendientes anotados.** No hay etapa en
 curso. Arrancá leyendo lo de arriba y **preguntale al usuario cuál tomar**
-(el 1 es decisión suya):
+(1 y 2 piden decisión suya):
 1. **El `Redraw` del original escribe en la sim** (`main.frm:422-469`):
    antes de dibujar corre cada bot `pos -= vel − actvel` y al final lo
    devuelve; en `Single`, `(x − d) + d` no siempre vuelve (~0,35 % de las
@@ -163,11 +177,22 @@ curso. Arrancá leyendo lo de arriba y **preguntale al usuario cuál tomar**
    (`visualize = False`). Opciones a plantear: dejarlo documentado, o una
    opción de host "video del original" que aplique el ida-y-vuelta tras cada
    tick (O(n), sin core; pero modifica la sim desde el host — decisión).
-2. **La ronda nueva no regenera las formas** desde `xObstacle`
-   (`main.frm:1353`, límite heredado de E5; los teleporters sí pasan desde
-   E7). Probablemente capa host (el worker reconstruye la ronda) — verificar
-   contra el fuente qué guarda `xObstacle` y cuándo se lee.
-3. Lo que queda fuera por decisión (balance del plan en `PROGRESO.md`): la
+2. **El Rnd crudo del arranque que el port omite** (hallazgo de la revisión
+   de PP-03): el original consume Rnd crudo (mismo LCG que `rndy`) en el
+   preludio de `StartSimul` (skin de la sim, `SunOnRnd`, `SimGUID`,
+   `main.frm:1210-1236`), en los colores de cada `NewObstacle` (3 por forma,
+   `Obstacles.bas:201`: altas de E3 y regeneración de PP-03); el port los
+   omite por decisión (B7-5/Q01) y el LCG del arranque queda desfasado del
+   original. Opciones: dejarlo documentado, o replicar todas las
+   extracciones (capa host en `db_sim_start`/altas de formas; cambia las
+   trayectorias sembradas y los smokes que replican el LCG).
+3. **Dos detalles de core anteriores a PP-03**: citas corridas en
+   `physics.hpp` (`NewObstacle` es `Obstacles.bas:183-205`,
+   `TrashCompactorMove` `:146-155`) y `TrashCompactorMove` indexando sin
+   chequear si solo el segundo muro no entró (`rightCompactor = −1`: error 9
+   en el original, UB en el port) — sitio de error 9 con decisión + registro
+   en `SimDiag` y caso PP nuevo; rama con revisión.
+4. Lo que queda fuera por decisión (balance del plan en `PROGRESO.md`): la
    carrera evo de `Evo.bas` y eco-IM, la liga por disco
    (`MDIForm1.frm:2536-2790`), `SafeModeBackup.exe`, los pasos ⚙ 1/11/25.
    Solo si el usuario lo pide.
