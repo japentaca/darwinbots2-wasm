@@ -11,6 +11,7 @@
 > on modern machines.
 >
 > **Live demo:** https://japentaca.github.io/darwinbots2-wasm/
+> (the demo's interface is in English, like the original program).
 
 ## The original project and its community
 
