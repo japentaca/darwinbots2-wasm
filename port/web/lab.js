@@ -462,6 +462,7 @@ async function openLab() {
     document.getElementById('dna').value = sp.dna;
     document.getElementById('sp-name').value = sp.name;
     document.getElementById('sp-veg').checked = sp.veg;
+    document.getElementById('sp-color').value = invColor();
     const sel = document.getElementById('preset');
     let o = sel.querySelector('option[value="inv"]');
     if (!o) { o = document.createElement('option'); o.value = 'inv'; sel.appendChild(o); }
@@ -476,7 +477,7 @@ async function openLab() {
       ...sp,
       qty: parseInt($('lab-qty').value, 10) || 5,
       nrg: parseFloat($('lab-nrg').value) || 3000,
-      color: cssToVbColor(invColor(lab.parts.length + 3)),
+      color: cssToVbColor(invColor()),
     } });
   };
 

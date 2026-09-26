@@ -351,6 +351,7 @@ async function invToForm(it) {
   document.getElementById('sp-veg').checked = it.b.veg;
   document.getElementById('sp-qty').value = it.b.veg ? 15 : 5;
   document.getElementById('sp-nrg').value = 3000;
+  document.getElementById('sp-color').value = invColor();
   const sel = document.getElementById('preset');
   let o = sel.querySelector('option[value="inv"]');
   if (!o) { o = document.createElement('option'); o.value = 'inv'; sel.appendChild(o); }
@@ -359,15 +360,26 @@ async function invToForm(it) {
   log(`inventario: ${it.b.name} en el formulario`);
 }
 
-// Colores bien separados para una siembra en lote (ángulo áureo en el tono).
-function invColor(i) {
-  const h = (i * 137.508 + 10) % 360, s = 0.75, l = 0.58;
-  const f = (n) => {
+// Color al azar para cada especie que se agrega desde el Inventario o el
+// Laboratorio. Nunca oscuro: el campo es casi negro, así que además de la
+// luminosidad HSL (55-68 %) se exige luminancia percibida ≥ 0,2 — los
+// azules y violetas con la misma L se ven mucho más oscuros y se aclaran
+// hasta llegar. Para que los seguidos no se confundan, el tono avanza desde
+// el anterior por el ángulo áureo con un poco de ruido.
+let invHue = Math.random() * 360;
+function invColor() {
+  invHue = (invHue + 137.508 + (Math.random() - 0.5) * 40 + 360) % 360;
+  const h = invHue, s = 0.65 + Math.random() * 0.25;
+  const rgb = (l) => [0, 8, 4].map((n) => {
     const k = (n + h / 30) % 12;
-    const c = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return Math.round(c * 255).toString(16).padStart(2, '0');
-  };
-  return '#' + f(0) + f(8) + f(4);
+    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  });
+  const lum = ([r, g, b]) => [r, g, b]
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+    .reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+  let l = 0.55 + Math.random() * 0.13;
+  while (lum(rgb(l)) < 0.2 && l < 0.85) l += 0.02;
+  return '#' + rgb(l).map((c) => Math.round(c * 255).toString(16).padStart(2, '0')).join('');
 }
 
 async function invSeed(list) {
@@ -382,7 +394,7 @@ async function invSeed(list) {
     worker.postMessage({
       t: 'seed-species',
       sp: { dna, name: it.b.name + '.txt', veg: it.b.veg, qty: it.b.veg ? vqty : qty,
-            nrg, color: cssToVbColor(invColor(n)) },
+            nrg, color: cssToVbColor(invColor()) },
     });
     n++;
   }
