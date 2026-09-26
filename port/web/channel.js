@@ -27,6 +27,14 @@ const ch = {
   hof: {},             // nombre → {name, file, fights, wins, titles, best}
   fails: 0,            // lanzamientos fallidos seguidos
 };
+// Colores fijos de los luchadores, claros para el campo oscuro y ordenados
+// para que los primeros sean los más distintos entre sí (las peleas chicas
+// solo usan el principio). Hasta 20, el máximo de especies por pelea.
+const CH_COLORS = [
+  '#ff4040', '#3d9bff', '#ffd83a', '#ff5ce1', '#3fe8e0', '#ff9020', '#a46bff',
+  '#8ce83c', '#ffffff', '#ff9eb0', '#1fbf7a', '#c79a62', '#b8c8ff', '#f0ff80',
+  '#8a8aff', '#ffc6f0', '#e05a2a', '#7fd8ff', '#b0b0b0', '#c0ffc8',
+];
 const CH_HOF_KEY = 'db-channel-hof';
 const CH_CFG_KEY = 'db-channel-cfg';
 
@@ -87,8 +95,10 @@ function chNext() {
     channelStop();
     return;
   }
-  const picked = chSample(pool, need).map((it) => ({
-    name: it.b.name, src: 'bestiary', file: it.b.file, qty: c.qty, color: invColor(),
+  // el campeón conserva su color; los retadores toman los siguientes libres
+  const free = CH_COLORS.filter((col) => !ch.champ || col !== ch.champ.color);
+  const picked = chSample(pool, need).map((it, i) => ({
+    name: it.b.name, src: 'bestiary', file: it.b.file, qty: c.qty, color: free[i],
   }));
   ch.fighters = ch.champ ? [{ ...ch.champ, src: 'bestiary', qty: c.qty }, ...picked] : picked;
   ch.fightNo++;
