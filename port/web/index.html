@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>DarwinBots — port WASM</title>
+<title>DarwinBots — WASM port</title>
 <!--
   Capa de presentación web sobre dbcore.wasm (M10 + extensión Rendimiento,
   spec/PROGRESO.md). Regla 4 del brief del port: esta capa NUNCA recalcula
@@ -422,15 +422,15 @@
 
 <header>
   <div class="group">
-    <button id="btn-run" class="primary">▶ Iniciar</button>
-    <button id="btn-step">Paso</button>
-    <button id="btn-reset">Reiniciar</button>
-    <button id="btn-contest" title="Contest F1: elegir contrincantes, arrancar el torneo en un clic y ver el marcador">🏆 Contest</button>
-    <button id="btn-channel" title="Canal F1: peleas encadenadas al azar, rey de la colina y Salón de la fama">📺 Canal</button>
+    <button id="btn-run" class="primary">▶ Start</button>
+    <button id="btn-step">Step</button>
+    <button id="btn-reset">Reset</button>
+    <button id="btn-contest" title="F1 Contest: pick the contenders, start the tournament in one click and watch the scoreboard">🏆 Contest</button>
+    <button id="btn-channel" title="F1 Channel: back-to-back random fights, king of the hill and Hall of Fame">📺 Channel</button>
   </div>
   <div class="sep"></div>
   <div class="group">
-    <label for="speed">Velocidad</label>
+    <label for="speed">Speed</label>
     <select id="speed">
       <option value="1">1 tick/frame</option>
       <option value="2">2</option>
@@ -438,7 +438,7 @@
       <option value="8">8</option>
       <option value="16">16</option>
       <option value="32">32</option>
-      <option value="0">máx</option>
+      <option value="0">max</option>
     </select>
   </div>
   <div class="sep"></div>
@@ -447,90 +447,90 @@
     <input type="number" id="seed" value="1234">
   </div>
   <div class="sep"></div>
-  <div class="group" id="view-toggles" title="Menú View del original (todos activados por defecto, como en MDIForm1)">
-    <label><input type="checkbox" id="tg-impacts" checked> impactos</label>
-    <label><input type="checkbox" id="tg-vision" checked> visión</label>
-    <label><input type="checkbox" id="tg-vectors" checked> vectores</label>
+  <div class="group" id="view-toggles" title="The original's View menu (all on by default, as in MDIForm1)">
+    <label><input type="checkbox" id="tg-impacts" checked> impacts</label>
+    <label><input type="checkbox" id="tg-vision" checked> vision</label>
+    <label><input type="checkbox" id="tg-vectors" checked> vectors</label>
     <label><input type="checkbox" id="tg-gauges" checked> gauges</label>
-    <label title="E8: Form1.dispskin (DrawRobSkin, main.frm:838) — arranca activado (main.frm:394)"><input type="checkbox" id="tg-skins" checked> skins</label>
-    <label title="E8: RGB Memory Monitor (MonitorOn, MDIForm1.frm:1521) — pide configurarlo antes"><input type="checkbox" id="tg-monitor"> monitor RGB</label>
-    <label title="E5: el bot con foco (y los resaltados) apuntan al puntero; flechas = motor, espacio = disparo"><input type="checkbox" id="pb-on"> Player Bot</label>
+    <label title="E8: Form1.dispskin (DrawRobSkin, main.frm:838) — starts on (main.frm:394)"><input type="checkbox" id="tg-skins" checked> skins</label>
+    <label title="E8: RGB Memory Monitor (MonitorOn, MDIForm1.frm:1521) — asks you to configure it first"><input type="checkbox" id="tg-monitor"> RGB monitor</label>
+    <label title="E5: the focused bot (and the highlighted ones) aim at the pointer; arrows = motor, space = shoot"><input type="checkbox" id="pb-on"> Player Bot</label>
   </div>
   <div class="sep"></div>
-  <div class="group" title="E6.5: la vista original es el render de main.frm; la enriquecida es una lectura aparte (no es del original)">
-    <label for="view-mode">Vista</label>
+  <div class="group" title="E6.5: the original view is main.frm's render; the enriched one is a separate reading (not from the original)">
+    <label for="view-mode">View</label>
     <select id="view-mode">
       <option value="orig" selected>Original</option>
-      <option value="rich">Enriquecida</option>
+      <option value="rich">Enriched</option>
     </select>
-    <label for="lens" class="rich-only">Color por</label>
+    <label for="lens" class="rich-only">Color by</label>
     <select id="lens" class="rich-only"></select>
-    <button id="btn-cam" title="Cámara: zoom 1 y sin paneo (rueda = zoom, arrastrar = paneo)">⤢</button>
+    <button id="btn-cam" title="Camera: zoom 1 and no pan (wheel = zoom, drag = pan)">⤢</button>
   </div>
   <div class="sep"></div>
   <div class="group">
-    <button id="btn-save">Guardar sim</button>
-    <button id="btn-load">Cargar sim</button>
+    <button id="btn-save">Save sim</button>
+    <button id="btn-load">Load sim</button>
     <input type="file" id="file-load" accept=".dbsim,.sim" style="display:none">
-    <button id="btn-teleporter">+ Teleporter local</button>
+    <button id="btn-teleporter">+ Local teleporter</button>
   </div>
-  <div id="stats">cargando dbcore.wasm…</div>
+  <div id="stats">loading dbcore.wasm…</div>
 </header>
 
 <main>
   <div id="field-wrap"><canvas id="field" width="900" height="900"></canvas><div id="im-badge" hidden>Internet Mode</div><div id="ch-overlay" hidden></div></div>
   <div id="tip" hidden></div>
   <aside>
-    <h2>Inspector de bot</h2>
+    <h2>Bot inspector</h2>
     <div id="insp-none" style="color:#5c6b88;font-size:12px">
-      clic en un bot del campo para seleccionarlo</div>
+      click a bot on the field to select it</div>
     <div id="inspector" style="display:none">
       <div class="row" style="justify-content:space-between">
         <span id="insp-head" style="font-variant-numeric:tabular-nums"></span>
         <span>
-          <label title="E6.5: la cámara centra al bot (arrastrar la suelta)" style="font-size:12px;color:#93a4c2"><input type="checkbox" id="insp-follow"> seguir</label>
-          <button id="insp-refresh" title="Releer el ADN (db_sim_bot_text)">↻ ADN</button>
-          <button id="insp-close" title="Deseleccionar">✕</button>
+          <label title="E6.5: the camera centers on the bot (dragging releases it)" style="font-size:12px;color:#93a4c2"><input type="checkbox" id="insp-follow"> follow</label>
+          <button id="insp-refresh" title="Re-read the DNA (db_sim_bot_text)">↻ DNA</button>
+          <button id="insp-close" title="Deselect">✕</button>
         </span>
       </div>
       <textarea id="insp-text" readonly spellcheck="false"
-                style="height:150px" placeholder="ADN del bot…"></textarea>
+                style="height:150px" placeholder="Bot DNA…"></textarea>
     </div>
-    <h2 class="rich-only">Vista enriquecida</h2>
+    <h2 class="rich-only">Enriched view</h2>
     <div id="rich-legend" class="rich-only"></div>
-    <h2>Opciones de sim</h2>
+    <h2>Sim options</h2>
     <div id="opts-panel"></div>
-    <h2>Objetos (menú Objects)</h2>
-    <details class="optgrp"><summary>Formas (shapes)</summary>
+    <h2>Objects (Objects menu)</h2>
+    <details class="optgrp"><summary>Shapes</summary>
       <div class="optrows">
-        <label>Tamaño default (fracción del campo)</label>
+        <label>Default size (fraction of the field)</label>
         <span><input type="number" id="obj-dw" value="0.2" step="0.05" min="0.01" max="1" style="width:60px">
               × <input type="number" id="obj-dh" value="0.2" step="0.05" min="0.01" max="1" style="width:60px"></span>
         <span class="full row">
-          <button id="btn-shape">Nueva forma</button>
-          <button id="btn-shapes-add10">+10 al azar</button>
-          <button id="btn-shapes-del10">−10 al azar</button>
+          <button id="btn-shape">New shape</button>
+          <button id="btn-shapes-add10">+10 random</button>
+          <button id="btn-shapes-del10">−10 random</button>
         </span>
         <span class="full row">
-          <button id="btn-shape-del" disabled>Borrar seleccionada</button>
-          <button id="btn-shapes-clear">Borrar todas</button>
+          <button id="btn-shape-del" disabled>Delete selected</button>
+          <button id="btn-shapes-clear">Delete all</button>
         </span>
         <span class="full" style="color:#5c6b88;font-size:11px">
-          Como en el original, las formas se guardan al pulsar "Nueva sim" o
-          al cambiar una opción del panel (= abrir el diálogo de opciones) y
-          se re-crean, escaladas al campo, en la sim nueva y en cada ronda.</span>
+          As in the original, shapes are stored when you press "New sim" or
+          change an option in the panel (= opening the options dialog) and
+          are re-created, scaled to the field, in the new sim and every round.</span>
       </div>
     </details>
     <details class="optgrp"><summary>Mazes</summary>
       <div class="optrows">
-        <label for="obj-cw">Pasillo (mazeCorridorWidth)</label>
+        <label for="obj-cw">Corridor (mazeCorridorWidth)</label>
         <input type="number" id="obj-cw" value="500" step="50">
-        <label for="obj-wt">Muro (mazeWallThickness)</label>
+        <label for="obj-wt">Wall (mazeWallThickness)</label>
         <input type="number" id="obj-wt" value="50" step="10">
         <span class="full row">
           <button data-maze="h">Horizontal</button>
           <button data-maze="v">Vertical</button>
-          <button data-maze="spiral">Espiral</button>
+          <button data-maze="spiral">Spiral</button>
         </span>
         <span class="full row">
           <button data-maze="checker">Checkerboard</button>
@@ -538,97 +538,97 @@
           <button data-maze="trash">Trash Compactor</button>
         </span>
         <span class="full" style="color:#5c6b88;font-size:11px">
-          Suman formas al campo actual (defaults del original: 500 / 50;
-          Polar Ice enciende la deriva a tasa 20).</span>
+          They add shapes to the current field (original defaults: 500 / 50;
+          Polar Ice turns drift on at rate 20).</span>
       </div>
     </details>
     <details class="optgrp"><summary>Teleporters</summary>
       <div class="optrows">
         <span class="full row">
           <label><input type="checkbox" id="tg-tphl" checked>
-            resaltar (Hilight Teleporters)</label>
+            highlight (Hilight Teleporters)</label>
         </span>
         <span class="full row">
-          <button id="btn-tp-del" disabled>Borrar seleccionado</button>
-          <button id="btn-tp-clear">Borrar todos</button>
+          <button id="btn-tp-del" disabled>Delete selected</button>
+          <button id="btn-tp-clear">Delete all</button>
         </span>
       </div>
     </details>
-    <h2>Internet (menú Internet)</h2>
+    <h2>Internet (Internet menu)</h2>
     <details class="optgrp" id="im-panel"><summary>Internet Mode</summary>
       <div class="optrows">
         <label class="full" style="color:#5c6b88">
-          Un teleporter Internet expulsa organismos hacia otra sim conectada
-          y deja entrar los que llegan (F1Internet_Click, MDIForm1.frm:1259).
-          El original lanzaba DarwinbotsIM.exe; aquí el cliente vive en el
+          An Internet teleporter sends organisms out to another connected sim
+          and lets the arriving ones in (F1Internet_Click, MDIForm1.frm:1259).
+          The original launched DarwinbotsIM.exe; here the client lives in the
           worker.</label>
-        <label for="im-name" title="IntOpts.IName: viaja como LastOwner de cada organismo que sale">Apodo</label>
-        <input type="text" id="im-name" maxlength="40" placeholder="vacío = Newbie N" style="width:150px">
-        <label for="im-kind">Transporte</label>
+        <label for="im-name" title="IntOpts.IName: travels as the LastOwner of every organism that leaves">Nickname</label>
+        <input type="text" id="im-name" maxlength="40" placeholder="empty = Newbie N" style="width:150px">
+        <label for="im-kind">Transport</label>
         <select id="im-kind">
-          <option value="bc">Pestañas de este navegador</option>
-          <option value="ws">Relay WebSocket</option>
+          <option value="bc">Tabs of this browser</option>
+          <option value="ws">WebSocket relay</option>
         </select>
         <label for="im-url" class="im-ws">Relay</label>
         <input type="text" id="im-url" class="im-ws" style="width:150px">
-        <label for="im-room">Sala</label>
+        <label for="im-room">Room</label>
         <input type="text" id="im-room" value="publica" maxlength="64" style="width:150px">
         <span class="full row">
-          <button id="btn-im" class="primary">Conectar Internet Mode</button>
+          <button id="btn-im" class="primary">Connect Internet Mode</button>
         </span>
-        <div class="full" id="im-status">apagado</div>
+        <div class="full" id="im-status">off</div>
         <div class="full" id="im-peers"></div>
       </div>
     </details>
-    <h2>Registro y análisis</h2>
-    <details class="optgrp"><summary>Gráficas (18 series)</summary>
+    <h2>Recording and analysis</h2>
+    <details class="optgrp"><summary>Graphs (18 series)</summary>
       <div class="optrows">
         <label class="full" style="color:#5c6b88">
-          El loop alimenta cada <i>chartingInterval</i> ciclos y solo los
-          gráficos abiertos (main.frm:2098-2107).</label>
-        <label>Intervalo (ciclos)</label>
+          The loop feeds only the open graphs, every <i>chartingInterval</i>
+          cycles (main.frm:2098-2107).</label>
+        <label>Interval (cycles)</label>
         <input type="number" id="o-110" data-id="110" value="200" min="1" max="32000">
         <div class="full row">
           <select id="graph-pick" style="flex:1"></select>
-          <button id="btn-graph-open">Abrir</button>
+          <button id="btn-graph-open">Open</button>
         </div>
         <div class="full row">
-          <button id="btn-graph-reset">Reset de todos</button>
-          <button id="btn-graph-close">Cerrar todos</button>
+          <button id="btn-graph-reset">Reset all</button>
+          <button id="btn-graph-close">Close all</button>
         </div>
         <div class="full" id="graph-open-list"
-             style="font-size:11px;color:#5c6b88">ningún gráfico abierto</div>
+             style="font-size:11px;color:#5c6b88">no graph open</div>
         <label class="full" style="color:#5c6b88;margin-top:4px">
-          Consultas de los 3 gráficos personalizables (notación polaca
-          inversa; variables: pop avgmut avgage avgsons avgnrg avglen avgcond
-          simnrg specidiv maxgd simpgenetic; operadores: add sub mult div pow).
+          Queries for the 3 customizable graphs (reverse Polish notation;
+          variables: pop avgmut avgage avgsons avgnrg avglen avgcond
+          simnrg specidiv maxgd simpgenetic; operators: add sub mult div pow).
         </label>
         <label>Custom 1</label><input type="text" id="gq1" style="width:150px"
-               placeholder="p. ej. pop 2 mult">
+               placeholder="e.g. pop 2 mult">
         <label>Custom 2</label><input type="text" id="gq2" style="width:150px">
         <label>Custom 3</label><input type="text" id="gq3" style="width:150px">
       </div>
     </details>
-    <details class="optgrp"><summary>Snapshots (menú Recording)</summary>
+    <details class="optgrp"><summary>Snapshots (Recording menu)</summary>
       <div class="optrows">
         <div class="full row">
           <button id="btn-snap-living">Snapshot of the living</button>
           <label><input type="checkbox" id="snap-mut" checked>
-            + mutaciones</label>
+            + mutations</label>
         </div>
         <label>Snapshot of the dead</label>
         <input type="checkbox" id="o-111" data-id="111">
-        <label title="SnpExcludeVegs">Excluir repobladores (vegetales)</label>
+        <label title="SnpExcludeVegs">Exclude repopulators (vegetables)</label>
         <input type="checkbox" id="o-112" data-id="112">
         <div class="full row">
-          <button id="btn-dead-save">Descargar muertos</button>
-          <button id="btn-dead-reset">Borrar registro</button>
+          <button id="btn-dead-save">Download the dead</button>
+          <button id="btn-dead-reset">Clear record</button>
         </div>
         <div class="full" id="dead-count"
-             style="font-size:11px;color:#5c6b88">0 registros</div>
+             style="font-size:11px;color:#5c6b88">0 records</div>
       </div>
     </details>
-    <details class="optgrp"><summary>Menú View (extras)</summary>
+    <details class="optgrp"><summary>View menu (extras)</summary>
       <div class="optrows">
         <div class="full row">
           <button id="btn-bg-load" title="loadpiccy_Click (MDIForm1.frm:1433)">Import Background Picture</button>
@@ -639,49 +639,49 @@
         </div>
       </div>
     </details>
-    <details class="optgrp"><summary>Menú Robot</summary>
+    <details class="optgrp"><summary>Robot menu</summary>
       <div class="optrows">
         <div class="full row">
-          <button id="btn-findbest" title="Ctrl+B en el original">Find Best</button>
-          <button id="btn-console">Consola del bot</button>
+          <button id="btn-findbest" title="Ctrl+B in the original">Find Best</button>
+          <button id="btn-console">Bot console</button>
           <button id="btn-activ">Gene activations</button>
         </div>
         <div class="full row">
           <button id="btn-family">Philogeny</button>
-          <label>niveles</label>
+          <label>levels</label>
           <input type="number" id="fam-rec" value="1000" min="1" style="width:70px">
-          <button id="btn-family-clear">Limpiar</button>
+          <button id="btn-family-clear">Clear</button>
         </div>
         <div class="full row">
-          <button id="btn-eye" title="frmEYE.frm (MDIForm1.frm:1635); deshabilitado en F1">Go to eye designer...</button>
+          <button id="btn-eye" title="frmEYE.frm (MDIForm1.frm:1635); disabled in F1">Go to eye designer...</button>
         </div>
         <div class="full" id="family-info"
              style="font-size:11px;color:#5c6b88">—</div>
       </div>
     </details>
-    <h2>Sembrar especie</h2>
+    <h2>Seed species</h2>
     <div class="row">
       <select id="preset">
         <option value="animal">Animal Minimalis</option>
         <option value="alga">Alga Minimalis (veg)</option>
-        <option value="custom">— ADN propio —</option>
+        <option value="custom">— Custom DNA —</option>
       </select>
-      <button id="btn-inventory" title="Bots del Bestiary: buscar, filtrar por capacidades, tags, favoritos y siembra en lote">📚 Inventario…</button>
-      <button id="btn-lab" title="Laboratorio de híbridos: armar un ADN con genes de distintos bots">🧬</button>
+      <button id="btn-inventory" title="Bestiary bots: search, filter by capabilities, tags, favorites and batch seeding">📚 Inventory…</button>
+      <button id="btn-lab" title="Hybrid lab: build a DNA from genes of different bots">🧬</button>
     </div>
     <textarea id="dna" spellcheck="false"></textarea>
     <div class="row">
-      <label>Nombre</label><input type="text" id="sp-name" value="Animal_Minimalis.txt">
-      <input type="color" id="sp-color" value="#ff4040" title="Color de la especie (Q01: decide el host)">
+      <label>Name</label><input type="text" id="sp-name" value="Animal_Minimalis.txt">
+      <input type="color" id="sp-color" value="#ff4040" title="Species color (Q01: the host decides)">
     </div>
     <div class="row">
-      <label><input type="checkbox" id="sp-veg"> vegetal</label>
-      <label>nº</label><input type="number" id="sp-qty" value="5" min="1" style="width:60px">
+      <label><input type="checkbox" id="sp-veg"> vegetable</label>
+      <label>qty</label><input type="number" id="sp-qty" value="5" min="1" style="width:60px">
       <label>nrg</label><input type="number" id="sp-nrg" value="3000" min="1" style="width:80px">
     </div>
-    <div class="row"><button id="btn-seed" class="primary">Sembrar</button></div>
+    <div class="row"><button id="btn-seed" class="primary">Seed</button></div>
     <div id="seed-lint" role="status" hidden></div>
-    <h2>Registro</h2>
+    <h2>Log</h2>
     <div id="log"></div>
   </aside>
 </main>
@@ -689,8 +689,8 @@
 <div id="windows"></div>
 
 <footer>
-  DarwinBots 2.48.32 · core C++→WASM (178 casos dorados en verde) · la sim corre
-  en un Web Worker — física y RNG viven en dbcore.wasm; la página solo presenta
+  DarwinBots 2.48.32 · C++→WASM core (178 golden cases passing) · the sim runs
+  in a Web Worker — physics and RNG live in dbcore.wasm; the page only presents
 </footer>
 
 <script src="inventory.js"></script>
@@ -781,89 +781,89 @@ function vbColorToCss(c) {
 // mutaciones) y el tamaño/forma del campo aplican al reiniciar.
 // Defaults = los del core (sim.hpp SimOptsT) salvo los ya elegidos en M10.
 const OPT_GROUPS = [
-  { name: 'Física', preset: true, items: [
-    { id: 11, label: 'Velocidad máxima', def: 40 },
-    { id: 12, label: 'Fricción de motor (PhysMoving)', def: 0.66 },
-    { id: 13, label: 'Movimiento browniano', def: 0 },
-    { id: 14, label: 'Densidad del medio', def: 0 },
-    { id: 15, label: 'Viscosidad', def: 0 },
-    { id: 16, label: 'Fricción estática', def: 0 },
-    { id: 17, label: 'Fricción cinética', def: 0 },
-    { id: 18, label: 'Elasticidad de choques', def: 0 },
-    { id: 19, label: 'Gravedad Z (contra el suelo)', def: 0 },
-    { id: 20, label: 'Gravedad Y (hacia abajo)', def: 0 },
-    { id: 10, label: 'Sin inercia (ZeroMomentum)', bool: true, def: false },
-    { id: 21, label: 'Radios de bot fijos', bool: true, def: false },
+  { name: 'Physics', preset: true, items: [
+    { id: 11, label: 'Max speed', def: 40 },
+    { id: 12, label: 'Motor friction (PhysMoving)', def: 0.66 },
+    { id: 13, label: 'Brownian motion', def: 0 },
+    { id: 14, label: 'Medium density', def: 0 },
+    { id: 15, label: 'Viscosity', def: 0 },
+    { id: 16, label: 'Static friction', def: 0 },
+    { id: 17, label: 'Kinetic friction', def: 0 },
+    { id: 18, label: 'Collision elasticity', def: 0 },
+    { id: 19, label: 'Z gravity (against the floor)', def: 0 },
+    { id: 20, label: 'Y gravity (downwards)', def: 0 },
+    { id: 10, label: 'No inertia (ZeroMomentum)', bool: true, def: false },
+    { id: 21, label: 'Fixed bot radii', bool: true, def: false },
   ]},
-  { name: 'Luz y día/noche', items: [
-    { id: 33, label: 'Ciclo día/noche', bool: true, def: false },
-    { id: 34, label: 'Medio ciclo (ciclos)', def: 500 },
-    { id: 40, label: 'Sol aleatorio (SunOnRnd)', bool: true, def: false },
-    { id: 35, label: 'Sol ON bajo umbral de nrg', bool: true, def: false },
-    { id: 36, label: 'Umbral de encendido', def: 500000 },
-    { id: 37, label: 'Sol OFF sobre umbral', bool: true, def: false },
-    { id: 38, label: 'Umbral de apagado', def: 1000000 },
-    { id: 30, label: 'Pondmode (luz por profundidad)', bool: true, def: false },
-    { id: 31, label: 'Intensidad de luz', def: 0 },
-    { id: 32, label: 'Gradiente de profundidad', def: 1.02 },
+  { name: 'Light and day/night', items: [
+    { id: 33, label: 'Day/night cycle', bool: true, def: false },
+    { id: 34, label: 'Half period (cycles)', def: 500 },
+    { id: 40, label: 'Random sun (SunOnRnd)', bool: true, def: false },
+    { id: 35, label: 'Sun ON below nrg threshold', bool: true, def: false },
+    { id: 36, label: 'On threshold', def: 500000 },
+    { id: 37, label: 'Sun OFF above threshold', bool: true, def: false },
+    { id: 38, label: 'Off threshold', def: 1000000 },
+    { id: 30, label: 'Pondmode (light by depth)', bool: true, def: false },
+    { id: 31, label: 'Light intensity', def: 0 },
+    { id: 32, label: 'Depth gradient', def: 1.02 },
   ]},
-  { name: 'Muerte y decay', items: [
-    { id: 50, label: 'Cadáveres (corpses)', bool: true, def: true },
-    { id: 51, label: 'Decay de body por ciclo', def: 0 },
-    { id: 52, label: 'Retraso del decay (ciclos)', def: 100 },
-    { id: 53, label: 'Tipo de decay', sel: [[0, 'sin shot'], [2, 'shot waste'],
+  { name: 'Death and decay', items: [
+    { id: 50, label: 'Corpses', bool: true, def: true },
+    { id: 51, label: 'Body decay per cycle', def: 0 },
+    { id: 52, label: 'Decay delay (cycles)', def: 100 },
+    { id: 53, label: 'Decay type', sel: [[0, 'no shot'], [2, 'shot waste'],
                                             [3, 'shot nrg']], def: 0 },
-    { id: 54, label: 'No decaen shots de nrg', bool: true, def: false },
-    { id: 55, label: 'No decaen shots de waste', bool: true, def: false },
-    { id: 56, label: 'Waste tóxico desde', def: 400 },
+    { id: 54, label: 'Nrg shots do not decay', bool: true, def: false },
+    { id: 55, label: 'Waste shots do not decay', bool: true, def: false },
+    { id: 56, label: 'Waste is toxic from', def: 400 },
   ]},
-  { name: 'Energía y vegetales', items: [
-    { key: 'maxEnergy', label: 'Reparto solar por ciclo', def: 10 },
-    { key: 'minVegs', label: 'Repoblar bajo (cloroplastos)', def: 15 },
-    { key: 'maxPopulation', label: 'Tope de vegetales (MaxPopulation)', def: 100 },
-    { key: 'repopAmount', label: 'Vegs por repoblación', def: 10 },
-    { key: 'repopCooldown', label: 'Ciclos entre repoblaciones', def: 10 },
-    { key: 'startChlr', label: 'Cloroplastos iniciales', def: 16000 },
-    { key: 'mutations', label: 'Mutaciones', bool: true, def: true },
-    { id: 60, label: 'Intercambio de nrg', sel: [[1, 'proporcional'],
-                                                 [0, 'fijo']], def: 1 },
-    { id: 61, label: 'Cantidad fija', def: 200 },
-    { id: 62, label: 'Proporción', def: 1 },
-    { id: 63, label: 'Comer veg: fracción a body', def: 0.75 },
-    { id: 64, label: 'Mareas (ciclos; 0 = off)', def: 0 },
+  { name: 'Energy and vegetables', items: [
+    { key: 'maxEnergy', label: 'Solar share per cycle', def: 10 },
+    { key: 'minVegs', label: 'Repopulate below (chloroplasts)', def: 15 },
+    { key: 'maxPopulation', label: 'Vegetable cap (MaxPopulation)', def: 100 },
+    { key: 'repopAmount', label: 'Vegs per repopulation', def: 10 },
+    { key: 'repopCooldown', label: 'Cycles between repopulations', def: 10 },
+    { key: 'startChlr', label: 'Starting chloroplasts', def: 16000 },
+    { key: 'mutations', label: 'Mutations', bool: true, def: true },
+    { id: 60, label: 'Nrg exchange', sel: [[1, 'proportional'],
+                                           [0, 'fixed']], def: 1 },
+    { id: 61, label: 'Fixed amount', def: 200 },
+    { id: 62, label: 'Proportion', def: 1 },
+    { id: 63, label: 'Eating veg: fraction to body', def: 0.75 },
+    { id: 64, label: 'Tides (cycles; 0 = off)', def: 0 },
   ]},
   // E5: modos de juego (tab "Restart and League" de OptionsForm.frm +
   // F1Mode.bas). Los ids 90-101 van a Sim/F1State via db_sim_set_opt; el
   // worker corre las rondas (StartAnotherRound) y reporta el contest en
   // las stats de cada frame.
-  { name: 'Modos de juego (F1 / rondas)', items: [
-    { id: 90, label: 'Reiniciar ronda sin heterótrofos', bool: true, def: false },
-    { id: 91, label: 'Modo F1 (contest de especies)', bool: true, def: false },
-    { id: 97, label: 'Rondas mínimas (MinRounds)', def: 5 },
-    { id: 98, label: 'Tope de rondas ganadas (0 = off)', def: 0 },
-    { id: 99, label: 'Tope de ciclos por ronda (0 = off)', def: 0 },
-    { id: 100, label: 'Población máx por especie (0 = off)', def: 0 },
-    { id: 93, label: 'Descalificación', sel: [[0, 'off'],
-        [1, 'nivel 1 (ties/virus)'], [2, 'nivel 2 (todo)']], def: 0 },
-    { btn: 'btn-f1start', label: 'Arrancar contest (censo de especies)' },
-    { btn: 'btn-setf1', label: 'Ajustes F1 (btnSetF1 del original)' },
+  { name: 'Game modes (F1 / rounds)', items: [
+    { id: 90, label: 'Restart round with no heterotrophs', bool: true, def: false },
+    { id: 91, label: 'F1 mode (species contest)', bool: true, def: false },
+    { id: 97, label: 'Minimum rounds (MinRounds)', def: 5 },
+    { id: 98, label: 'Rounds-won cap (0 = off)', def: 0 },
+    { id: 99, label: 'Cycle cap per round (0 = off)', def: 0 },
+    { id: 100, label: 'Max population per species (0 = off)', def: 0 },
+    { id: 93, label: 'Disqualification', sel: [[0, 'off'],
+        [1, 'level 1 (ties/virus)'], [2, 'level 2 (everything)']], def: 0 },
+    { btn: 'btn-f1start', label: 'Start contest (species census)' },
+    { btn: 'btn-setf1', label: 'F1 settings (the original\'s btnSetF1)' },
   ]},
   // Costes por acción y de mantenimiento (CostsForm.frm; índices de
   // SimOptions.bas:2-38). Default 0 como el core: sin ellos un bot no gasta
   // energía. "Ajustes F1" carga los valores de liga.
-  { name: 'Costes', items: [
-    { cost: 30, label: 'Mantenimiento de body (BODYUPKEEP)', def: 0 },
-    { cost: 31, label: 'Coste por edad (AGECOST)', def: 0 },
-    { cost: 32, label: 'Edad de inicio del coste', def: 0 },
-    { cost: 24, label: 'Por ciclo y largo de ADN (DNACYCCOST)', def: 0 },
-    { cost: 25, label: 'Copia de ADN al reproducir', def: 0 },
-    { cost: 20, label: 'Moverse (MOVECOST)', def: 0 },
-    { cost: 21, label: 'Girar (TURNCOST)', def: 0 },
-    { cost: 23, label: 'Disparar (SHOTCOST)', def: 0 },
-    { cost: 22, label: 'Atar (TIECOST)', def: 0 },
+  { name: 'Costs', items: [
+    { cost: 30, label: 'Body upkeep (BODYUPKEEP)', def: 0 },
+    { cost: 31, label: 'Age cost (AGECOST)', def: 0 },
+    { cost: 32, label: 'Age at which the cost starts', def: 0 },
+    { cost: 24, label: 'Per cycle and DNA length (DNACYCCOST)', def: 0 },
+    { cost: 25, label: 'DNA copy on reproduction', def: 0 },
+    { cost: 20, label: 'Move (MOVECOST)', def: 0 },
+    { cost: 21, label: 'Turn (TURNCOST)', def: 0 },
+    { cost: 23, label: 'Shoot (SHOTCOST)', def: 0 },
+    { cost: 22, label: 'Tie (TIECOST)', def: 0 },
     { cost: 7, label: 'Store (COSTSTORE)', def: 0 },
-    { cost: 5, label: 'Condición (CONDCOST)', def: 0 },
-    { cost: 8, label: 'Cloroplasto nuevo (CHLRCOST)', def: 0 },
+    { cost: 5, label: 'Condition (CONDCOST)', def: 0 },
+    { cost: 8, label: 'New chloroplast (CHLRCOST)', def: 0 },
     { cost: 26, label: 'Venom', def: 0 },
     { cost: 27, label: 'Poison', def: 0 },
     { cost: 28, label: 'Slime', def: 0 },
@@ -875,33 +875,33 @@ const OPT_GROUPS = [
   // nivel cero-costes -1, CostX 1) y 0 el resto. El checkbox maestro
   // escribe -1 como la UI original (DynamicCosts.value * True,
   // CostsForm.frm:1142); "permitir negativos" escribe 0/1 (:1081).
-  { name: 'Costes dinámicos', items: [
-    { cost: 56, label: 'Ajuste dinámico de costes', bool: true, def: false, on: -1 },
-    { cost: 53, label: 'Población objetivo', def: 0 },
-    { cost: 55, label: 'Sensibilidad', def: 50 },
-    { cost: 57, label: 'Rango superior (% del objetivo)', def: 0 },
-    { cost: 58, label: 'Rango inferior (% del objetivo)', def: 0 },
-    { cost: 61, label: 'Contar también vegetales', bool: true, def: false },
-    { cost: 54, label: 'Multiplicador de costes (CostX)', def: 1 },
-    { cost: 62, label: 'Permitir CostX negativo', bool: true, def: false },
-    { cost: 52, label: 'Cero costes bajo población', def: -1 },
-    { cost: 59, label: 'Reinstaurar sobre población', def: 0 },
+  { name: 'Dynamic costs', items: [
+    { cost: 56, label: 'Dynamic cost adjustment', bool: true, def: false, on: -1 },
+    { cost: 53, label: 'Target population', def: 0 },
+    { cost: 55, label: 'Sensitivity', def: 50 },
+    { cost: 57, label: 'Upper range (% of target)', def: 0 },
+    { cost: 58, label: 'Lower range (% of target)', def: 0 },
+    { cost: 61, label: 'Count vegetables too', bool: true, def: false },
+    { cost: 54, label: 'Cost multiplier (CostX)', def: 1 },
+    { cost: 62, label: 'Allow negative CostX', bool: true, def: false },
+    { cost: 52, label: 'Zero costs below population', def: -1 },
+    { cost: 59, label: 'Reinstate above population', def: 0 },
   ]},
-  { name: 'Restricciones', items: [
-    { id: 70, label: 'Deshabilitar ties', bool: true, def: false },
-    { id: 71, label: 'Sin repro asexual (no repob.)', bool: true, def: false },
-    { id: 72, label: 'Nadie puede fijarse', bool: true, def: false },
+  { name: 'Restrictions', items: [
+    { id: 70, label: 'Disable ties', bool: true, def: false },
+    { id: 71, label: 'No asexual repro (non-repop.)', bool: true, def: false },
+    { id: 72, label: 'Nobody can fix position', bool: true, def: false },
   ]},
   // E3: los ids 80-85 existían en la API desde E1; aquí se exponen junto al
   // panel de objetos. Defaults = SimOptsT del core (todo apagado). Polar Ice
   // enciende 83/84/85 desde el core y el worker lo refleja aquí ({t:'opts'}).
-  { name: 'Formas (visión y deriva)', items: [
-    { id: 80, label: 'Los bots ven las formas', bool: true, def: false },
-    { id: 81, label: 'Transparentes a la visión', bool: true, def: false },
-    { id: 82, label: 'Absorben shots', bool: true, def: false },
-    { id: 84, label: 'Deriva horizontal', bool: true, def: false },
-    { id: 83, label: 'Deriva vertical', bool: true, def: false },
-    { id: 85, label: 'Tasa de deriva (shapeDriftRate)', def: 0 },
+  { name: 'Shapes (vision and drift)', items: [
+    { id: 80, label: 'Bots see the shapes', bool: true, def: false },
+    { id: 81, label: 'Transparent to vision', bool: true, def: false },
+    { id: 82, label: 'Absorb shots', bool: true, def: false },
+    { id: 84, label: 'Horizontal drift', bool: true, def: false },
+    { id: 83, label: 'Vertical drift', bool: true, def: false },
+    { id: 85, label: 'Drift rate (shapeDriftRate)', def: 0 },
   ]},
 ];
 
@@ -922,39 +922,39 @@ function fieldSizeDims(n) {
 
 function buildOptsPanel() {
   const panel = document.getElementById('opts-panel');
-  let sizeOpts = '<option value="0">personalizado</option>';
+  let sizeOpts = '<option value="0">custom</option>';
   for (let n = 1; n <= 15; n++) {
     const [w, h] = fieldSizeDims(n);
     sizeOpts += `<option value="${n}">${n} · ${w}×${h}${n === 1 ? ' (F1)' : ''}</option>`;
   }
   let html = `
-  <details class="optgrp" open><summary>Campo y forma</summary>
+  <details class="optgrp" open><summary>Field and shape</summary>
     <div class="optrows">
-      <label for="o-fsize">Tamaño (slider del original)</label>
+      <label for="o-fsize">Size (the original's slider)</label>
       <select id="o-fsize">${sizeOpts}</select>
-      <label>Ancho × alto</label>
+      <label>Width × height</label>
       <span><input type="number" id="o-fw" value="32000" style="width:72px">
             × <input type="number" id="o-fh" value="32000" style="width:72px"></span>
-      <label for="o-shape">Bordes del mundo</label>
+      <label for="o-shape">World edges</label>
       <select id="o-shape">
-        <option value="wall">cerrados (paredes)</option>
+        <option value="wall">closed (walls)</option>
         <option value="tor">toroidal</option>
-        <option value="h">cilindro horizontal (izq↔der)</option>
-        <option value="v">cilindro vertical (arr↔abajo)</option>
+        <option value="h">horizontal cylinder (left↔right)</option>
+        <option value="v">vertical cylinder (top↔bottom)</option>
       </select>
       <span class="full" style="color:#5c6b88;font-size:11px">
-        El tamaño aplica al reiniciar; los bordes cambian en vivo.</span>
+        Size applies on reset; edges change live.</span>
     </div>
   </details>`;
   for (const g of OPT_GROUPS) {
     html += `<details class="optgrp"><summary>${g.name}</summary><div class="optrows">`;
     if (g.preset) {
-      html += `<label for="o-phys">Preset del medio</label>
+      html += `<label for="o-phys">Medium preset</label>
         <select id="o-phys">
-          <option value="">— elegir —</option>
-          <option value="fluido">fluido (agua)</option>
-          <option value="solido">sólido (superficie)</option>
-          <option value="espacio">espacio (nada)</option>
+          <option value="">— choose —</option>
+          <option value="fluido">fluid (water)</option>
+          <option value="solido">solid (surface)</option>
+          <option value="espacio">space (nothing)</option>
         </select>`;
     }
     for (const it of g.items) {
@@ -1074,7 +1074,7 @@ async function loadBestiary() {
     const r = await fetch('bots/bots.json');
     if (!r.ok) return;
     BESTIARY = await r.json();
-    if (BESTIARY.length) log(`bestiary: ${BESTIARY.length} bots del foro en el Inventario`);
+    if (BESTIARY.length) log(`bestiary: ${BESTIARY.length} forum bots in the Inventory`);
   } catch (e) { /* sin bots.json (p. ej. file://): la página sigue igual */ }
 }
 
@@ -1099,7 +1099,7 @@ let frames = 0, lastFpsT = performance.now(), fps = 0;
 let drawMs = 0;          // media móvil del costo de draw() (¿hace falta WebGL?)
 
 worker.onerror = (e) =>
-  log(`Error en worker: ${e.message} (${e.filename}:${e.lineno})`);
+  log(`Worker error: ${e.message} (${e.filename}:${e.lineno})`);
 
 worker.onmessage = (e) => {
   const msg = e.data;
@@ -1127,7 +1127,7 @@ worker.onmessage = (e) => {
       break;
     case 'gendist-off':      // E6.5: la referencia murió o la sim cambió
       gendistRef = 0;
-      gendistNote = 'la referencia ya no existe (murió, reset o carga): seleccioná otro bot';
+      gendistNote = 'the reference no longer exists (died, reset or load): select another bot';
       renderLegend();
       break;
     case 'eye-vals':             // E8: showEyeDesign_Click
@@ -1151,7 +1151,7 @@ worker.onmessage = (e) => {
       // pedido y la respuesta llega texto vacío.
       if (msg.n === selBot)
         document.getElementById('insp-text').value =
-          msg.text || '(el bot ya no existe)';
+          msg.text || '(the bot no longer exists)';
       break;
     case 'stopped':
       // E5: el core pidió parar (Form1.Active = False del original) —
@@ -1159,15 +1159,15 @@ worker.onmessage = (e) => {
       setRunning(false);
       break;
     case 'f1-over':
-      log(`🏆 Contest terminado: gana ${msg.winner}`);
+      log(`🏆 Contest over: ${msg.winner} wins`);
       break;
     case 'saved': {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([msg.bytes]));
-      a.download = `darwinbots-ciclo${msg.cycle}.dbsim`;
+      a.download = `darwinbots-cycle${msg.cycle}.dbsim`;
       a.click();
       URL.revokeObjectURL(a.href);
-      log(`sim guardada (${msg.bytes.byteLength} bytes, formato binario de VB6)`);
+      log(`sim saved (${msg.bytes.byteLength} bytes, VB6 binary format)`);
       break;
     }
     // ---- E6: registro y análisis ----
@@ -1192,15 +1192,15 @@ worker.onmessage = (e) => {
       break;
     }
     case 'snapshot-done':
-      download(`snapshot-ciclo${stats.cycle}.snp`, msg.snp);
-      if (msg.mut) download(`snapshot-ciclo${stats.cycle}_Mutations.txt`, msg.mut);
+      download(`snapshot-cycle${stats.cycle}.snp`, msg.snp);
+      if (msg.mut) download(`snapshot-cycle${stats.cycle}_Mutations.txt`, msg.mut);
       log(`Snapshot of the living: ${msg.records} robots`);
       break;
     case 'dead-data':
-      if (!msg.records) { log('no hay muertos registrados'); break; }
+      if (!msg.records) { log('no dead bots recorded'); break; }
       download('DeadRobots.snp', msg.snp);
       download('DeadRobots_Mutations.txt', msg.mut);
-      log(`DeadRobots.snp descargado (${msg.records} registros)`);
+      log(`DeadRobots.snp downloaded (${msg.records} records)`);
       break;
     case 'focus':
       setSelection(msg.n, true);
@@ -1209,7 +1209,7 @@ worker.onmessage = (e) => {
       familyLines = (msg.lines && msg.lines.length)
         ? Float32Array.from(msg.lines) : null;
       document.getElementById('family-info').textContent = msg.n
-        ? `bot #${msg.n}: ${msg.total} descendientes · ${msg.highlighted} resaltados`
+        ? `bot #${msg.n}: ${msg.total} descendants · ${msg.highlighted} highlighted`
         : '—';
       break;
     case 'console-open':
@@ -1238,8 +1238,8 @@ worker.onmessage = (e) => {
       imRender(null);
       break;
     case 'error':
-      statsEl.textContent = 'error cargando dbcore.wasm';
-      log('Error: ' + msg.msg + '\n¿Está compilado el preset wasm? ' +
+      statsEl.textContent = 'error loading dbcore.wasm';
+      log('Error: ' + msg.msg + '\nIs the wasm preset built? ' +
           '(cmake --preset wasm && cmake --build --preset wasm)');
       break;
   }
@@ -1271,17 +1271,17 @@ function updateStats() {
   // E5: estado del contest F1 (Contest_Form del original, en una línea).
   let f1 = '';
   if (stats.f1) {
-    f1 = ` · F1 ronda ${stats.f1.contests + 1}/${stats.f1.minrounds}: ` +
+    f1 = ` · F1 round ${stats.f1.contests + 1}/${stats.f1.minrounds}: ` +
          stats.f1.sp.map((s) => `${s.name} ${s.pop}🤖 ${s.wins}🏅`)
            .join(' vs ') +
-         (stats.f1.over ? ' · TERMINADO' : '');
+         (stats.f1.over ? ' · OVER' : '');
     if (stats.f1.restarts) f1 += ` · restarts ${stats.f1.restarts}`;
   }
   contestOnStats(stats);
   const dc = document.getElementById('dead-count');
-  if (dc) dc.textContent = (stats.dead || 0) + ' registros';
+  if (dc) dc.textContent = (stats.dead || 0) + ' records';
   statsEl.textContent =
-    `ciclo ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
+    `cycle ${stats.cycle} · bots ${stats.bots} · vegs ${stats.vegs}` +
     ` · ${stats.tps} ticks/s · ${fps} fps · draw ${drawMs.toFixed(1)} ms` +
     (cx !== false && cx !== 1 ? ` · CostX ${cx}` : '') + f1;
 }
@@ -1772,17 +1772,17 @@ const LOD_RING = 1.5, LOD_BODY = 2.5, LOD_DETAIL = 6, LOD_FINE = 10;  // px
 // Movimiento (bit 4) no lleva anillo — se lee en la nariz, como "deambular"
 // en la v1.5. El disparo toma el color FlashColor de su shottype.
 const ACTION_RINGS = [
-  { bit: 1, label: 'reproducción', color: '#ff4fa3', pulse: true },
-  { bit: 0, label: 'disparo (color del tipo de shot)', color: null, pulse: true },
-  { bit: 3, label: 'tie nueva', color: '#e0c070' },
+  { bit: 1, label: 'reproduction', color: '#ff4fa3', pulse: true },
+  { bit: 0, label: 'shot (color of the shot type)', color: null, pulse: true },
+  { bit: 3, label: 'new tie', color: '#e0c070' },
   { bit: 6, label: 'venom / poison', color: '#8c7bff' },
   { bit: 5, label: 'shell / slime', color: '#ff9100' },
   { bit: 8, label: 'body (strbody/fdbody)', color: '#c9a0ff' },
-  { bit: 7, label: 'gana nrg o mata', color: '#76ff03' },
-  { bit: 2, label: 'fecundado', color: '#ff80c0' },
+  { bit: 7, label: 'gains nrg or kills', color: '#76ff03' },
+  { bit: 2, label: 'fertilized', color: '#ff80c0' },
 ];
-const ACTION_NAMES = ['disparo', 'reproducción', 'fecundado', 'tie',
-                      'movimiento', 'shell/slime', 'venom/poison', 'gana nrg',
+const ACTION_NAMES = ['shot', 'reproduction', 'fertilized', 'tie',
+                      'movement', 'shell/slime', 'venom/poison', 'gains nrg',
                       'body'];
 function shotRingColor(st) {
   if (st < 0 && st >= -7) return FLASH_COLORS[st];
@@ -1792,14 +1792,14 @@ function shotRingColor(st) {
 
 // Lentes "Color por": fuente = bot (registro de 20) o vis (registro de 24).
 const LENSES = {
-  species: { label: 'especie (color del original)' },
+  species: { label: 'species (the original\'s color)' },
   nrg:     { label: 'nrg', bot: 5 },
   body:    { label: 'body', bot: 8 },
-  gen:     { label: 'generación', vis: 2 },
-  mut:     { label: 'mutaciones', vis: 3 },
-  age:     { label: 'edad', vis: 4 },
-  dna:     { label: 'longitud del ADN', vis: 5 },
-  gendist: { label: 'distancia genética al seleccionado', vis: 21 },
+  gen:     { label: 'generation', vis: 2 },
+  mut:     { label: 'mutations', vis: 3 },
+  age:     { label: 'age', vis: 4 },
+  dna:     { label: 'DNA length', vis: 5 },
+  gendist: { label: 'genetic distance to the selected bot', vis: 21 },
 };
 // Rampa tipo viridis (la de organismColors.js de la v1.5), 32 niveles.
 const RAMP = (() => {
@@ -1948,7 +1948,7 @@ lensSel.addEventListener('change', () => {
 });
 function setGendistRef(n) {
   gendistRef = n;
-  gendistNote = n ? '' : 'seleccioná un bot: la distancia es a él';
+  gendistNote = n ? '' : 'select a bot: distance is measured to it';
   worker.postMessage({ t: 'gendist', n });
   renderLegend();
 }
@@ -1965,7 +1965,7 @@ function renderLegend() {
   const lens = LENSES[lensSel.value];
   let lensHtml;
   if (lensSel.value === 'species') {
-    lensHtml = 'tono = especie (el color del original); brillo = nrg';
+    lensHtml = 'hue = species (the original\'s color); brightness = nrg';
   } else {
     const f = (x) => Number.isFinite(x) ? fmtNum(x) : '—';
     lensHtml = `<div class="ramp"></div><div class="lensx"><span id="lens-min">` +
@@ -1976,19 +1976,19 @@ function renderLegend() {
   }
   legendEl.innerHTML =
     '<h3>Color</h3>' + lensHtml +
-    '<h3>Forma</h3>⬡ vegetal · ● animal (la nariz marca el rumbo) · ' +
-    'ties gruesas = multibot · gris = cadáver' +
-    '<h3>Anillo = lo que hizo desde el último frame</h3>' +
+    '<h3>Shape</h3>⬡ vegetable · ● animal (the nose shows the heading) · ' +
+    'thick ties = multibot · gray = corpse' +
+    '<h3>Ring = what it did since the last frame</h3>' +
     ACTION_RINGS.map((a) =>
       `<div><span class="sw" style="border-color:${a.color || '#ff0000'}"></span>` +
       `${esc(a.label)}</div>`).join('') +
-    '<h3>Con zoom (rueda)</h3>borde = shell · halo = slime · púas azules = ' +
-    'venom, amarillas = poison · tinte verde = cloroplastos · puntos = ojos ' +
-    '(llenos si ven) · punteado = paralizado · contorno amarillo = envenenado ' +
-    '· puntos cian = virus' +
-    '<h3>Eventos</h3>destello + línea a la madre = nacimiento · se encoge y ' +
-    'apaga = muerte · anillo cian = salió por un teleporter · rastro del ' +
-    'bot con foco · tooltip al pasar el ratón';
+    '<h3>When zoomed in (wheel)</h3>border = shell · halo = slime · blue spikes = ' +
+    'venom, yellow = poison · green tint = chloroplasts · dots = eyes ' +
+    '(filled if they see) · dotted = paralyzed · yellow outline = poisoned ' +
+    '· cyan dots = virus' +
+    '<h3>Events</h3>flash + line to the mother = birth · shrinks and ' +
+    'fades = death · cyan ring = left through a teleporter · trail of the ' +
+    'focused bot · tooltip on mouse hover';
 }
 renderLegend();
 
@@ -2440,16 +2440,16 @@ function updateTip() {
   const acts = m && performance.now() - m.t < 1000
     ? ACTION_NAMES.filter((_, k) => m.bits & (1 << k)).join(', ') : '—';
   const flags = tipBots[b + 7];
-  const kind = flags & 4 ? 'cadáver' : flags & 1 ? 'vegetal' : 'animal';
+  const kind = flags & 4 ? 'corpse' : flags & 1 ? 'vegetable' : 'animal';
   tipEl.innerHTML =
     `<b>${esc(speciesNames[tipVis[q + 10]] || '?')}</b> · #${n} · ${kind}` +
     `${flags & 8 ? ' · multibot' : ''}<br>` +
     `nrg ${fmtNum(tipBots[b + 5])} · body ${fmtNum(tipBots[b + 8])} · ` +
-    `edad ${tipVis[q + 4]}<br>` +
-    `gen ${tipVis[q + 2]} · mut ${tipVis[q + 3]} · ADN ${tipVis[q + 5]} · ` +
+    `age ${tipVis[q + 4]}<br>` +
+    `gen ${tipVis[q + 2]} · mut ${tipVis[q + 3]} · DNA ${tipVis[q + 5]} · ` +
     `kills ${tipVis[q + 6]} · ties ${tipVis[q + 11]}` +
-    (tipVis[q + 21] >= 0 ? `<br>distancia genética ${tipVis[q + 21].toFixed(3)}` : '') +
-    `<br>acciones: ${acts}`;
+    (tipVis[q + 21] >= 0 ? `<br>genetic distance ${tipVis[q + 21].toFixed(3)}` : '') +
+    `<br>actions: ${acts}`;
   tipEl.style.left = (tip.cx + 14) + 'px';
   tipEl.style.top = (tip.cy + 14) + 'px';
   tipEl.hidden = false;
@@ -2503,7 +2503,7 @@ function setSelection(n, askDna) {
 
 function updateInspectorLive(n, age, nrg, body) {
   inspHeadEl.textContent =
-    `bot #${n} · edad ${age} · nrg ${nrg.toFixed(0)} · body ${body.toFixed(0)}`;
+    `bot #${n} · age ${age} · nrg ${nrg.toFixed(0)} · body ${body.toFixed(0)}`;
 }
 
 // Teleport.bas:466-477 — whichTeleporter: primer teleporter (ascendente)
@@ -2586,8 +2586,8 @@ tgPb.addEventListener('change', () => {
       ({ memloc: k.memloc, value: k.value, invert: false })) });
     // Mouse_loc arranca en (0,0) = sin overwrite de aim (MDIForm1:1544).
     worker.postMessage({ t: 'pb-mouse', x: 0, y: 0 });
-    log('Player Bot ON: clic para el foco; el bot apunta al puntero; ' +
-        'flechas = motor, espacio = disparo');
+    log('Player Bot ON: click to focus; the bot aims at the pointer; ' +
+        'arrows = motor, space = shoot');
   }
 });
 function pbKey(e, down) {
@@ -2653,7 +2653,7 @@ function makeWindow(title, w, h, onClose) {
   el.style.width = w + 'px';
   el.innerHTML =
     '<div class="win-bar"><span class="win-title"></span>' +
-    '<button class="win-x" title="Cerrar">✕</button></div>' +
+    '<button class="win-x" title="Close">✕</button></div>' +
     '<div class="win-body"></div>';
   el.querySelector('.win-title').textContent = title;
   el.querySelector('.win-x').onclick = () => { el.remove(); if (onClose) onClose(); };
@@ -2884,7 +2884,7 @@ class Chart {
                 '</span></div>');
     }
     this.legend.innerHTML = rows.join('') ||
-      '<div style="color:#5c6b88">sin series</div>';
+      '<div style="color:#5c6b88">no series</div>';
   }
   // grafico.frm:4078-4104 — el .gsave: consulta del gráfico, cabeceras
   // color:etiqueta y 999 filas de valores separados por tab. El original
@@ -3012,9 +3012,9 @@ function imRender(st) {
   imOn = !!(st && st.enabled);
   document.getElementById('im-badge').hidden = !imOn;
   document.getElementById('btn-im').textContent =
-    imOn ? 'Desconectar Internet Mode' : 'Conectar Internet Mode';
+    imOn ? 'Disconnect Internet Mode' : 'Connect Internet Mode';
   if (!imOn) {
-    document.getElementById('im-status').textContent = 'apagado';
+    document.getElementById('im-status').textContent = 'off';
     document.getElementById('im-peers').innerHTML = '';
     internetSpecies = [];
     return;
@@ -3026,20 +3026,20 @@ function imRender(st) {
   const c = st.counters;
   const alive = st.peers.filter((p) => p.alive).length;
   document.getElementById('im-status').textContent =
-    `${st.status} · puerto #${st.port || '—'} · ${alive} par(es) · ` +
-    `salieron ${st.outTotal} (enviados ${c.sent}, confirmados ${c.acked}` +
-    (c.resent ? `, re-sorteados ${c.resent}` : '') + ') · ' +
-    `llegaron ${st.inTotal} (recibidos ${c.recv}, en inbox ${st.inbox})` +
-    (st.pending ? ` · ${st.pending} esperando un par` : '') +
-    (c.dropped ? ` · ${c.dropped} descartados` : '') +
-    ` · especies de Internet: ${internetSpecies.length}`;
+    `${st.status} · port #${st.port || '—'} · ${alive} peer(s) · ` +
+    `${st.outTotal} left (sent ${c.sent}, acked ${c.acked}` +
+    (c.resent ? `, re-drawn ${c.resent}` : '') + ') · ' +
+    `${st.inTotal} arrived (received ${c.recv}, in inbox ${st.inbox})` +
+    (st.pending ? ` · ${st.pending} waiting for a peer` : '') +
+    (c.dropped ? ` · ${c.dropped} dropped` : '') +
+    ` · Internet species: ${internetSpecies.length}`;
   let html = '';
   for (const p of st.peers) {
     html += `<div class="peer"><b>${escHtml(p.name || p.id)}</b>` +
-            (p.alive ? '' : ' (sin latido)') +
+            (p.alive ? '' : ' (no heartbeat)') +
             (p.simId ? ` · sim ${escHtml(p.simId)}` : '');
     if (p.census && p.census.pop) {
-      html += `<br>ciclo ${p.census.cycle}: ` + p.census.pop
+      html += `<br>cycle ${p.census.cycle}: ` + p.census.pop
         .slice().sort((a, b) => b.count - a.count).slice(0, 6)
         .map((x) => `${escHtml(x.botName)}${x.repopulating ? ' (veg)' : ''} ${x.count}`)
         .join(' · ');
@@ -3047,7 +3047,7 @@ function imRender(st) {
     html += '</div>';
   }
   document.getElementById('im-peers').innerHTML =
-    html || '<span style="color:#5c6b88">sin pares en la sala</span>';
+    html || '<span style="color:#5c6b88">no peers in the room</span>';
 }
 
 // El form del chart original tenía fondo blanco (grafico.frm: BackColor
@@ -3093,7 +3093,7 @@ function openChart(n) {
   // MDIForm1.frm:1893-1909: sin consulta no se abre el gráfico.
   if (n >= 16) {
     const q = queryOf(n - 15);
-    if (!q) { log('gráfico personalizable ' + (n - 15) + ': falta la consulta'); return; }
+    if (!q) { log('customizable graph ' + (n - 15) + ': query missing'); return; }
     worker.postMessage({ t: 'graph-query', which: n - 15, q });
   }
   charts.set(n, new Chart(n));
@@ -3107,8 +3107,8 @@ function syncGraphList() {
   if (!el) return;
   const open = [...charts.keys()].sort((a, b) => a - b);
   el.textContent = open.length
-    ? 'abiertos: ' + open.map((n) => GRAPH_CAPTION.get(n)).join(', ')
-    : 'ningún gráfico abierto';
+    ? 'open: ' + open.map((n) => GRAPH_CAPTION.get(n)).join(', ')
+    : 'no graph open';
 }
 
 // Un solo rAF para todos los charts sucios (ver la nota de Chart.redraw).
@@ -3127,7 +3127,7 @@ function scheduleChartPaint() {
 const consoles = new Map();   // n -> {win, out, in, hist, hpos}
 
 function openConsole(n) {
-  if (!n) { log('consola: seleccioná un bot primero'); return; }
+  if (!n) { log('console: select a bot first'); return; }
   if (consoles.has(n)) { consoles.get(n).win.style.zIndex = ++winZ; return; }
   const el = makeWindow('Robot console', 420, 300, () => {
     consoles.delete(n);
@@ -3135,7 +3135,7 @@ function openConsole(n) {
   });
   el.body.innerHTML =
     '<div class="con-btns">' +
-    '<button data-c="cycle 1">▶| ciclo</button>' +
+    '<button data-c="cycle 1">▶| cycle</button>' +
     '<button data-c="play">▶ play</button>' +
     '<button data-c="pause">❚❚ pause</button>' +
     '<button data-c="printeye">eye</button>' +
@@ -3146,7 +3146,7 @@ function openConsole(n) {
     '<button data-c="help">help</button>' +
     '<button class="con-clr">clear</button></div>' +
     '<textarea class="con-out" readonly spellcheck="false"></textarea>' +
-    '<input class="con-in" type="text" placeholder="comando… (help)">';
+    '<input class="con-in" type="text" placeholder="command… (help)">';
   el.style.left = '80px';
   el.style.top = '100px';
   const c = { win: el, out: el.querySelector('.con-out'),
@@ -3196,9 +3196,9 @@ function openActivations() {
     worker.postMessage({ t: 'activ', on: false });
   });
   activWin.body.innerHTML =
-    '<div class="act-lab">estático (verde = ejecutó este ciclo)</div>' +
+    '<div class="act-lab">static (green = ran this cycle)</div>' +
     '<canvas class="act-a" width="356" height="26"></canvas>' +
-    '<div class="act-lab">dinámico (media móvil, ActivForm.DrawDyn)</div>' +
+    '<div class="act-lab">dynamic (moving average, ActivForm.DrawDyn)</div>' +
     '<canvas class="act-b" width="356" height="42"></canvas>' +
     '<div class="act-x"></div>';
   activWin.style.left = '120px';
@@ -3217,7 +3217,7 @@ function drawActivations(ga) {
   const b = activWin.querySelector('.act-b').getContext('2d');
   const W = 356;
   a.clearRect(0, 0, W, 26); b.clearRect(0, 0, W, 42);
-  if (!gn) { activWin.querySelector('.act-x').textContent = 'sin genes'; return; }
+  if (!gn) { activWin.querySelector('.act-x').textContent = 'no genes'; return; }
   if (activGb.length !== gn) activGb = new Array(gn).fill(0);
   const stp = W / gn;
   for (let t = 0; t < gn; t++) {
@@ -3232,7 +3232,7 @@ function drawActivations(ga) {
     b.fillStyle = '#00c8c8'; b.fillRect(stp * t, 1 + reh, Math.max(stp - 1, 1), grh);
   }
   activWin.querySelector('.act-x').textContent =
-    gn + ' genes · ' + ga.filter(Boolean).length + ' ejecutados el último ciclo';
+    gn + ' genes · ' + ga.filter(Boolean).length + ' ran in the last cycle';
 }
 
 // ---- Philogeny (parentele.frm) -------------------------------------------
@@ -3321,7 +3321,7 @@ bgInput.onchange = () => {
     URL.revokeObjectURL(img.src);
   };
   img.onerror = () => {         // LoadPicture falla → On Error GoTo fine
-    log(`imagen de fondo: no se pudo leer ${f.name}`);
+    log(`background picture: could not read ${f.name}`);
     URL.revokeObjectURL(img.src);
   };
   img.src = URL.createObjectURL(f);
@@ -3450,7 +3450,7 @@ function openMonitorSettings() {
       const m = vbTextToInteger(q('m-mem', c).value);
       if (m === null || m < 1 || m > 999) {
         await memLost(c);
-        log(`monitor: dirección ${names[c]} fuera de 1..999, acotada a ${q('m-mem', c).value}`);
+        log(`monitor: ${names[c]} address out of 1..999, clamped to ${q('m-mem', c).value}`);
       }
       monitorCfg.mem[c] = vbTextToInteger(q('m-mem', c).value) ?? 1;
       monitorCfg.floor[c] = vbTextToInteger(q('m-floor', c).value) ?? 0;
@@ -3469,7 +3469,7 @@ function openMonitorSettings() {
     const dv = new DataView(new ArrayBuffer(18));
     for (let i = 0; i < 9; i++) {
       const v = vbTextToInteger(q(order[i][0], order[i][1]).value);
-      if (v === null) { log('monitor: el preset no se guardó (CInt falla)'); return; }
+      if (v === null) { log('monitor: the preset was not saved (CInt fails)'); return; }
       dv.setInt16(i * 2, v, true);
     }
     downloadBytes('monitor.mtrp', new Uint8Array(dv.buffer));
@@ -3572,7 +3572,7 @@ let eyeWin = null;
 const EYE_DIR0 = 521, EYE_WTH0 = 531;          // Robots.bas:106, :115
 const SETAIM = 19;                              // Robots.bas:21
 function openEyeDesigner() {
-  if (stats && stats.f1) { log('Eye designer: deshabilitado en modo F1'); return; }
+  if (stats && stats.f1) { log('Eye designer: disabled in F1 mode'); return; }
   if (eyeWin) { eyeWin.remove(); eyeWin = null; }
   const w = makeWindow('Eye Designer', 260, 0, () => { eyeWin = null; });
   w.style.left = '80px'; w.style.top = '70px';
@@ -3653,12 +3653,12 @@ function newSim() {
 // El cargador no rechaza tokens desconocidos: valen 0 sin aviso (igual que en
 // el original). El worker pasa aquí lo que encontró db_dna_lint.
 const LINT_KINDS = {
-  nombre:  'nombre desconocido (vale 0)',
-  palabra: 'palabra no reconocida (vale 0)',
-  pegado:  'número pegado a otro símbolo',
-  primero: 'primer token perdido',
-  sombra:  'variable propia tapa una sysvar',
-  error:   'el cargador rechaza el archivo',
+  nombre:  'unknown name (evaluates to 0)',
+  palabra: 'unrecognized word (evaluates to 0)',
+  pegado:  'number stuck to another symbol',
+  primero: 'first token lost',
+  sombra:  'own variable shadows a sysvar',
+  error:   'the loader rejects the file',
 };
 function escHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) =>
@@ -3674,16 +3674,16 @@ function showSeedLint(name, issues) {
     `<div>${i.line ? `l.${i.line} ` : ''}<code>${escHtml(i.token)}</code>` +
     `${i.count > 1 ? ` ×${i.count}` : ''} — ${escHtml(LINT_KINDS[i.kind] || i.kind)}` +
     `<div class="hint">↳ ${escHtml(i.hint)}</div></div>`).join('');
-  const more = issues.length > MAX ? `<div>… y ${issues.length - MAX} más</div>` : '';
+  const more = issues.length > MAX ? `<div>… and ${issues.length - MAX} more</div>` : '';
   box.innerHTML =
-    '<button class="close" title="Cerrar" aria-label="Cerrar aviso">✕</button>' +
-    `<b>⚠ ${escHtml(name)}: ${issues.length} aviso${issues.length > 1 ? 's' : ''}` +
-    `${zeros ? ` (${zeros} token${zeros > 1 ? 's' : ''} valen 0)` : ''}</b>` +
-    '<div class="hint">El bot se siembra igual que en el original, pero puede no hacer lo que su autor quería.</div>' +
+    '<button class="close" title="Close" aria-label="Close warning">✕</button>' +
+    `<b>⚠ ${escHtml(name)}: ${issues.length} warning${issues.length > 1 ? 's' : ''}` +
+    `${zeros ? ` (${zeros} token${zeros > 1 ? 's' : ''} evaluate${zeros > 1 ? '' : 's'} to 0)` : ''}</b>` +
+    '<div class="hint">The bot is seeded just as in the original, but it may not do what its author intended.</div>' +
     rows + more;
   box.querySelector('.close').onclick = () => { box.hidden = true; };
   box.hidden = false;
-  log(`⚠ ${name}: ${issues.length} aviso(s) del ADN — ver panel Sembrar`);
+  log(`⚠ ${name}: ${issues.length} DNA warning(s) — see the Seed panel`);
 }
 
 function seedFromForm() {
@@ -3706,7 +3706,7 @@ const btnRun = document.getElementById('btn-run');
 
 function setRunning(r) {
   running = r;
-  btnRun.textContent = running ? '⏸ Pausar' : '▶ Iniciar';
+  btnRun.textContent = running ? '⏸ Pause' : '▶ Start';
   worker.postMessage({ t: 'run', running });
 }
 
@@ -3782,8 +3782,8 @@ function applyF1Settings() {
   shape.value = 'tor';
   shape.dispatchEvent(new Event('change'));
   document.getElementById('sp-qty').value = 5;
-  log('Ajustes F1 cargados: costes de liga en vivo; campo 9237×6928, ' +
-      'vegetales y mutaciones al pulsar Reiniciar.');
+  log('F1 settings loaded: league costs live; field 9237×6928, ' +
+      'vegetables and mutations when you press Reset.');
 }
 
 document.getElementById('speed').onchange = (e) =>
@@ -3834,7 +3834,7 @@ document.getElementById('file-load').onchange = async (e) => {
   setRunning(false);
   worker.postMessage({ t: 'load', bytes, name: f.name }, [bytes]);
   bgOnSimStart();                // E8: main.frm:1422
-  log(`cargando ${f.name}…`);
+  log(`loading ${f.name}…`);
   e.target.value = '';
 };
 
@@ -3903,7 +3903,7 @@ tgTpHl.addEventListener('change', () =>
       c.resetGraph();
       worker.postMessage({ t: 'graph-update', n: c.n });
     }
-    log('gráficos reiniciados');
+    log('graphs reset');
   };
   document.getElementById('btn-graph-close').onclick = () => {
     for (const c of [...charts.values()]) c.win.querySelector('.win-x').click();
@@ -3932,10 +3932,10 @@ tgTpHl.addEventListener('change', () =>
   document.getElementById('btn-activ').onclick = () => {
     openActivations();
     if (selBot) worker.postMessage({ t: 'genes', n: selBot });
-    else log('gene activations: seleccioná un bot (solo se puebla el del foco)');
+    else log('gene activations: select a bot (only the focused one is filled in)');
   };
   document.getElementById('btn-family').onclick = () => {
-    if (!selBot) { log('philogeny: seleccioná un bot primero'); return; }
+    if (!selBot) { log('philogeny: select a bot first'); return; }
     worker.postMessage({ t: 'family', n: selBot, lines: true,
                          maxrec: parseInt(document.getElementById('fam-rec').value, 10) });
   };
@@ -3955,7 +3955,7 @@ function onReady() {
   imInit();          // E7: apodo/transporte guardados + IntOpts.IName
   newSim();
   loadBestiary();
-  log('dbcore.wasm cargado (en worker)');
+  log('dbcore.wasm loaded (in worker)');
   updateStats();
 }
 </script>
