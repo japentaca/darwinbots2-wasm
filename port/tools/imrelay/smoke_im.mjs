@@ -169,17 +169,17 @@ async function pair(kind, url) {
 
   // El registro viaja en tandas (im-log, ~250 ms) y puede llegar después
   // del im-state que ya cuenta la llegada.
-  await B.until(() => B.imLog.some((l) => /^llegó .* de Ana$/.test(l)), 10000);
-  await A.until(() => A.imLog.some((l) => l.endsWith(' de ' + bName)), 10000);
-  const bFromAna = B.imLog.filter((l) => /^llegó .* de Ana$/.test(l));
+  await B.until(() => B.imLog.some((l) => /^arrived .* from Ana$/.test(l)), 10000);
+  await A.until(() => A.imLog.some((l) => l.endsWith(' from ' + bName)), 10000);
+  const bFromAna = B.imLog.filter((l) => /^arrived .* from Ana$/.test(l));
   check('B recibe organismos con LastOwner = "Ana" (Sim::fmt, E7-01)',
         bFromAna.length > 0, bFromAna[0] || B.imLog.slice(0, 3).join(' | '));
-  const aFromB = A.imLog.filter((l) => l.endsWith(' de ' + bName));
+  const aFromB = A.imLog.filter((l) => l.endsWith(' from ' + bName));
   check(`A recibe organismos con LastOwner = "${bName}"`, aFromB.length > 0, aFromB[0] || '');
   // La llegada consume RNG del receptor en el momento en que ocurre: la
   // trayectoria no es reproducible entre corridas y el Nadador puede tardar.
   const nadador = await B.until(() =>
-    B.imLog.some((l) => l.startsWith('llegó Nadador.txt')), 60000);
+    B.imLog.some((l) => l.startsWith('arrived Nadador.txt')), 60000);
   check('un heterótrofo de A llegó a B (teleportHeterotrophs = True)', nadador);
 
   const census = await A.until(() => {
@@ -215,7 +215,7 @@ async function pair(kind, url) {
           `pending ${A.im.pending}, C recibió ${B.im ? B.im.counters.recv : 0}`);
     B.send({ t: 'speed', n: 0 });
     B.send({ t: 'run', running: true });
-    const loaded = await B.until(() => B.imLog.some((l) => / de Ana$/.test(l)), 30000);
+    const loaded = await B.until(() => B.imLog.some((l) => / from Ana$/.test(l)), 30000);
     check('C carga lo que esperaba (LastOwner = "Ana")', loaded);
   }
 
@@ -392,7 +392,7 @@ async function rounds() {
   D.send({ t: 'setopt', id: 90, v: 1 });
   D.send({ t: 'speed', n: 0 });
   D.send({ t: 'run', running: true });
-  const n = () => D.logs.filter((l) => l.startsWith('ronda nueva')).length;
+  const n = () => D.logs.filter((l) => l.startsWith('new round')).length;
   const ok = await D.until(() => n() >= 5, 20000);
   D.send({ t: 'run', running: false });
   D.send({ t: 'redraw' });

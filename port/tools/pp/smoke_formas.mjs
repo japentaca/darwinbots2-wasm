@@ -283,7 +283,7 @@ console.log('\n== worker.js: sim nueva y rondas ==');
   A.send({ t: 'maze', kind: 'h', corridor: 500, wall: 50 });
   const before = nObsOf(await A.frameNow());
   A.send(resetMsg(100, 16000, 12000));
-  await A.until(() => A.logs.some((l) => l.startsWith('formas regeneradas')));
+  await A.until(() => A.logs.some((l) => l.startsWith('shapes regenerated')));
   const f = await A.frameNow();
   check('sim nueva: re-crea las formas que había al pulsar "Nueva sim"',
         before > 2 && nObsOf(f) === before, `${before} → ${nObsOf(f)}`);
@@ -296,14 +296,14 @@ console.log('\n== worker.js: sim nueva y rondas ==');
   A.send({ t: 'shapes-clear' });
   A.send({ t: 'speed', n: 0 });
   A.send({ t: 'run', running: true });
-  const rounds = () => A.logs.filter((l) => l.startsWith('ronda nueva')).length;
+  const rounds = () => A.logs.filter((l) => l.startsWith('new round')).length;
   const ok = await A.until(() => rounds() >= 5);
   A.send({ t: 'run', running: false });
   await sleep(200);
   const g = await A.frameNow();
   check('rondas nuevas: cada ronda re-crea las formas de xObstacle (ni se pierden ni se acumulan)',
         ok && nObsOf(g) === before, `${rounds()} rondas, ${nObsOf(g)} formas`);
-  const regenLogs = A.logs.filter((l) => l === `formas regeneradas: ${before}`).length;
+  const regenLogs = A.logs.filter((l) => l === `shapes regenerated: ${before}`).length;
   check('rondas nuevas: una regeneración por ronda (+1 de la sim nueva)', regenLogs === rounds() + 1,
         `${regenLogs} regeneraciones, ${rounds()} rondas`);
 

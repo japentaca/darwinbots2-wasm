@@ -622,8 +622,8 @@ function newRound() {
   // (en StartSimul va antes, main.frm:1337-1340 vs :1357): no consume RNG ni
   // lee formas, así que el orden no se observa.
   const ts = api.f1Start(sim);
-  log(`ronda nueva (seed ${seed})` +
-      (ts ? ` — contest: ronda ${api.f1Contests(sim) + 1}` : ''));
+  log(`new round (seed ${seed})` +
+      (ts ? ` — contest: round ${api.f1Contests(sim) + 1}` : ''));
   running = wasRunning;
 }
 
@@ -637,23 +637,23 @@ function checkGameState() {
       for (const line of takeStr(api.eventsDq(sim)).split('\n'))
         if (line) log('DQ: ' + line);
     if (ev & (1 << 10))
-      log(`F1: gana ${takeStr(api.eventsWinner(sim))} ` +
-          `(${api.f1Contests(sim) + 1} rondas)`);
+      log(`F1: winner ${takeStr(api.eventsWinner(sim))} ` +
+          `(${api.f1Contests(sim) + 1} rounds)`);
     if (ev & (1 << 11)) {
-      log('F1: una sola especie — modo desactivado');
+      log('F1: only one species — mode disabled');
       self.postMessage({ t: 'f1-note', kind: 'single' });
     }
     if (ev & (1 << 12)) {
-      log('F1: más de 2 especies — límites de ciclos/población desactivados');
+      log('F1: more than 2 species — cycle/population limits disabled');
       self.postMessage({ t: 'f1-note', kind: 'many' });
     }
-    if (ev & (1 << 1)) log('evo: Mutate extinguido (evo perdido)');
-    if (ev & (1 << 2)) log('evo: Base extinguido (evo ganado)');
-    if (ev & (1 << 3)) log('seeding: ronda completada (ciclo 2000)');
-    if (ev & (1 << 4)) log('zerobot: reinicio necesario');
-    if (ev & (1 << 6)) log('zerobot: listo para la etapa de test');
-    if (ev & (1 << 8)) log('zerobot: test superado');
-    if (ev & (1 << 9)) log('zerobot: test fallido');
+    if (ev & (1 << 1)) log('evo: Mutate extinct (evo lost)');
+    if (ev & (1 << 2)) log('evo: Base extinct (evo won)');
+    if (ev & (1 << 3)) log('seeding: round complete (cycle 2000)');
+    if (ev & (1 << 4)) log('zerobot: restart needed');
+    if (ev & (1 << 6)) log('zerobot: ready for the test stage');
+    if (ev & (1 << 8)) log('zerobot: test passed');
+    if (ev & (1 << 9)) log('zerobot: test failed');
     const winner = (ev & (1 << 10)) ? takeStr(api.eventsWinner(sim)) : '';
     stopped = !!(ev & 1);
     api.eventsClear(sim);
@@ -801,7 +801,7 @@ function consoleCmd(n, line) {
         if (!checkGameState() && imCfg) imAfterTick();
       }
       postFrame();
-      conOut(n, k + ' ciclo(s) ejecutado(s) — ciclo ' + api.cycle(sim));
+      conOut(n, k + ' cycle(s) run — cycle ' + api.cycle(sim));
       sendGenes(n);
       break;
     }
@@ -895,7 +895,7 @@ function imLog(line) {
       const lines = imLogBuf;
       imLogBuf = [];
       if (lines.length > 40)
-        lines.splice(20, lines.length - 40, `… (${lines.length - 40} más)`);
+        lines.splice(20, lines.length - 40, `… (${lines.length - 40} more)`);
       self.postMessage({ t: 'im-log', lines });
     }, 250);
 }
@@ -924,9 +924,9 @@ function imPort() {
 
 function peekLabel(p, len) {
   const f = takeStr(api.dboPeek(p, len)).split('\t');
-  if (f.length < 7) return { label: 'organismo', owner: '' };
+  if (f.length < 7) return { label: 'organism', owner: '' };
   const cells = +f[0];
-  return { label: f[1] + (cells > 1 ? ` (${cells} células)` : ''),
+  return { label: f[1] + (cells > 1 ? ` (${cells} cells)` : ''),
            owner: f[2] };
 }
 
@@ -940,7 +940,7 @@ function imOnDbo(bytes, from) {
   const meta = peekLabel(p, bytes.length);
   api.inboxPush(sim, tp, p, bytes.length);
   M._free(p);
-  imArrivals.push({ label: `${meta.label} de ${meta.owner || from}`, bytes });
+  imArrivals.push({ label: `${meta.label} from ${meta.owner || from}`, bytes });
   imInboxKnown += 1;
   imState();
   return true;
@@ -996,12 +996,12 @@ function imEnable(cfg) {
   const i = api.imEnable(sim, tpDefaultWidth);
   if (i <= -100) {
     const mode = -100 - i;
-    log(`Internet: no se puede activar con el modo de reinicio ${mode} ` +
+    log(`Internet: cannot be enabled with restart mode ${mode} ` +
         '(MDIForm1.frm:1264-1296)');
     return false;
   }
   if (i < 0) {
-    log('Internet: tope de teleporters (10) — no se pudo crear el puerto');
+    log('Internet: teleporter cap (10) — could not create the port');
     return false;
   }
   imName = takeStr(api.getIName(sim));   // "Newbie N" si venía vacío
@@ -1009,12 +1009,12 @@ function imEnable(cfg) {
   imArrivals = [];
   imInboxKnown = 0;
   const held = imFlushHeld(i);
-  if (held) log(`Internet: ${held} organismos retenidos entran al puerto nuevo`);
+  if (held) log(`Internet: ${held} held organisms enter the new port`);
   ImNet.start({ name: imName, simId: simStartOf(), kind: cfg.kind,
                 url: cfg.url, room: cfg.room },
               { onDbo: imOnDbo, onChange: imState, onLog: imLog });
-  log(`Internet Mode: puerto #${i} (${cfg.kind === 'ws' ? 'relay ' + cfg.url
-      : 'pestañas de este navegador'}, sala "${cfg.room}") como "${imName}"`);
+  log(`Internet Mode: port #${i} (${cfg.kind === 'ws' ? 'relay ' + cfg.url
+      : 'tabs of this browser'}, room "${cfg.room}") as "${imName}"`);
   imState();
   postFrame();
   return true;
@@ -1031,10 +1031,10 @@ function imDisable(why) {
   const out = ImNet.stop();
   imHoldInbox();
   const n = sim ? api.imDisable(sim) : 0;
-  log(`Internet Mode apagado${why ? ' — ' + why : ''}` +
-      (n ? ` (${n} puerto borrado)` : '') +
-      (out ? `; ${out} por salir` : '') +
-      (imHeld.length ? `; ${imHeld.length} recibidos esperan un puerto` : ''));
+  log(`Internet Mode off${why ? ' — ' + why : ''}` +
+      (n ? ` (${n} port deleted)` : '') +
+      (out ? `; ${out} waiting to leave` : '') +
+      (imHeld.length ? `; ${imHeld.length} received waiting for a port` : ''));
   imState();
   self.postMessage({ t: 'im-off' });
   postFrame();
@@ -1071,7 +1071,7 @@ function imAfterTick() {
   const now = tpIn ? api.tpGet(sim, tpIn, 13) : 0;
   if (now < imInboxKnown) {
     for (let k = imInboxKnown - now; k > 0 && imArrivals.length; k--)
-      imLog('llegó ' + imArrivals.shift().label);
+      imLog('arrived ' + imArrivals.shift().label);
     imState();
   }
   imInboxKnown = now;
@@ -1102,7 +1102,7 @@ function f1CapCheck() {
   if (!f1CapCycles || api.cycle(sim) <= f1CapCycles) return;
   const k = api.f1Cap(sim);
   if (k) {
-    log(`F1: tope de ${f1CapCycles} ciclos — gana la ronda la especie más numerosa`);
+    log(`F1: ${f1CapCycles}-cycle cap — the most numerous species wins the round`);
     self.postMessage({ t: 'f1-note', kind: 'cap' });
   }
 }
@@ -1192,9 +1192,9 @@ function seedIndex(idx) {
   const name = takeStr(api.speciesName(sim, idx));
   const missing = api.speciesMissing(sim, idx);
   const n = api.seedSpecies(sim, idx, 0);
-  log(n > 0 ? `sembrados ${n} × ${name}`
-            : missing ? `sin ADN para ${name} (el .txt no está: no se siembra)`
-            : `ADN rechazado por el cargador (${name})`);
+  log(n > 0 ? `seeded ${n} × ${name}`
+            : missing ? `no DNA for ${name} (the .txt is missing: not seeded)`
+            : `DNA rejected by the loader (${name})`);
   return n;
 }
 
@@ -1256,7 +1256,7 @@ function resetSim(msg, carryTeleporters) {
     if (carryTeleporters) api.roundSpecies(sim, old);
     api.destroy(old);
   }
-  log(`sim nueva (seed ${msg.seed})`);
+  log(`new sim (seed ${msg.seed})`);
   if (carryTeleporters) {
     dnaResolve();
     for (let i = 0; i < api.numSpecies(sim); i++) seedIndex(i);
@@ -1274,13 +1274,13 @@ function resetSim(msg, carryTeleporters) {
   // E5: con F1 activo el arranque corre FindSpecies (main.frm:1337-1340).
   if (api.getOpt(sim, 91)) {
     const ts = api.f1Start(sim);
-    log(ts ? `contest F1: ${ts} especies en liza`
-           : 'F1: sin especies de combate — sembrá 2+ y "Arrancar contest"');
+    log(ts ? `F1 contest: ${ts} species competing`
+           : 'F1: no combat species — seed 2+ and "Start contest"');
   }
   // PP-03 — main.frm:1357-1365: después de loadrobs y FindSpecies, StartSimul
   // re-crea las formas de xObstacle escaladas al campo.
   const nObs = api.obsRegen(sim);
-  if (nObs) log(`formas regeneradas: ${nObs}`);
+  if (nObs) log(`shapes regenerated: ${nObs}`);
   postFrame();
 }
 
@@ -1289,7 +1289,7 @@ function saveSim() {
   const p = api.save(sim, lenP);
   const len = M.HEAP32[lenP >> 2];
   M._free(lenP);
-  if (!p || len <= 0) { log('guardado vacío'); return; }
+  if (!p || len <= 0) { log('empty save'); return; }
   const bytes = new Uint8Array(M.HEAPU8.buffer, p, len).slice();
   api.free(p);
   self.postMessage({ t: 'saved', bytes: bytes.buffer, cycle: api.cycle(sim) },
@@ -1315,8 +1315,8 @@ function loadSim(msg) {
   // en el inbox queda retenido para el próximo puerto.
   if (imCfg) {
     imHoldInbox();
-    log('Internet Mode sigue conectado sin puerto: LoadSimulation borró el ' +
-        'teleporter Internet — desconectá y conectá para recrearlo');
+    log('Internet Mode still connected without a port: LoadSimulation deleted the ' +
+        'Internet teleporter — disconnect and reconnect to recreate it');
     imState();
   }
   running = false;
@@ -1324,7 +1324,7 @@ function loadSim(msg) {
   speciesVersion = -1;
   gdDrop();
   visPrime();
-  log(`sim cargada (${bytes.length} bytes), ciclo ${api.cycle(sim)}, ` +
+  log(`sim loaded (${bytes.length} bytes), cycle ${api.cycle(sim)}, ` +
       `${api.totalRobots(sim)} bots`);
   // E6 — HDRoutines.bas:1482-1519: el archivo dice qué charts estaban
   // visibles y el original los reabre uno a uno al cargar.
@@ -1345,7 +1345,7 @@ self.onmessage = (e) => {
       focusBot = 0;
       // E7: StartNew_Click hace `If InternetMode Then F1Internet_Click`
       // (OptionsForm.frm:4802) — el toggle, con el modo encendido, lo APAGA.
-      if (imCfg) imDisable('sim nueva (OptionsForm.frm:4802)');
+      if (imCfg) imDisable('new sim (OptionsForm.frm:4802)');
       // PP-03: para llegar a "Start New" el original activa el diálogo de
       // opciones, y con la sim visible eso corre ObsRepop
       // (OptionsForm.frm:4546): las formas de ahora son las de la sim
@@ -1356,7 +1356,7 @@ self.onmessage = (e) => {
     // ---- E7: Internet Mode ----
     case 'im':
       if (msg.on) {
-        if (imCfg) imDisable('reconexión');
+        if (imCfg) imDisable('reconnection');
         imEnable({ name: msg.name || '', kind: msg.kind, url: msg.url || '',
                    room: msg.room || 'public' });
         if (!imCfg) self.postMessage({ t: 'im-off' });
@@ -1382,8 +1382,8 @@ self.onmessage = (e) => {
       break;
     case 'f1start': {
       const ts = api.f1Start(sim);
-      log(ts ? `contest F1: ${ts} especies en liza`
-             : 'contest F1 no activo (¿opción F1 apagada?)');
+      log(ts ? `F1 contest: ${ts} species competing`
+             : 'F1 contest not active (is the F1 option off?)');
       self.postMessage({ t: 'f1-started', n: ts });
       postFrame();
       break;
@@ -1434,9 +1434,9 @@ self.onmessage = (e) => {
       for (const e of msg.entries || []) dnaLib.set(String(e.name), String(e.dna));
       const left = dnaResolve();
       const got = (msg.entries || []).length;
-      if (got) log(`ADN por nombre: ${got} especie(s) de la biblioteca de la página`);
+      if (got) log(`DNA by name: ${got} species from the page library`);
       if (left.length)
-        log(`sin ADN (como el .txt ausente del original): ${left.join(', ')}`);
+        log(`no DNA (like the missing .txt in the original): ${left.join(', ')}`);
       break;
     }
     case 'setopt':
@@ -1480,8 +1480,8 @@ self.onmessage = (e) => {
       tpDefaultWidth = 300;   // TeleportForm.frm:378 (el form se abrió)
       const i = api.addTeleporter(sim, 0, 0, 300, 0, 1, 1, 1, 10, 10);
       if (i > 0) api.tpSet(sim, i, 6, 1);                // heterótrofos
-      log(i > 0 ? `teleporter local #${i} creado`
-                : 'tope de teleporters (10) alcanzado');
+      log(i > 0 ? `local teleporter #${i} created`
+                : 'teleporter cap (10) reached');
       postFrame();
       break;
     }
@@ -1490,21 +1490,21 @@ self.onmessage = (e) => {
       const before = api.numObstacles(sim);
       const i = api.makeShape(sim, +msg.dw, +msg.dh);
       recolorObstacles(before);
-      log(i > 0 ? `forma #${i} creada` : 'tope de formas (1000) alcanzado');
+      log(i > 0 ? `shape #${i} created` : 'shape cap (1000) reached');
       postFrame();
       break;
     }
     case 'shapes-add10': {
       const before = api.numObstacles(sim);
       api.addRandObs(sim, 10, +msg.dw, +msg.dh);
-      log(`+${recolorObstacles(before)} formas aleatorias ` +
-          `(${api.numObstacles(sim)} en total)`);
+      log(`+${recolorObstacles(before)} random shapes ` +
+          `(${api.numObstacles(sim)} total)`);
       postFrame();
       break;
     }
     case 'shapes-del10':
       api.delTenObs(sim);
-      log(`borradas 10 al azar; quedan ${api.numObstacles(sim)} formas`);
+      log(`deleted 10 at random; ${api.numObstacles(sim)} shapes left`);
       postFrame();
       break;
     case 'shape-del':
@@ -1513,7 +1513,7 @@ self.onmessage = (e) => {
       break;
     case 'shapes-clear':
       api.delAllObs(sim);
-      log('todas las formas borradas');
+      log('all shapes deleted');
       postFrame();
       break;
     case 'maze': {
@@ -1535,7 +1535,7 @@ self.onmessage = (e) => {
         self.postMessage({ t: 'opts', vals: { 83: api.getOpt(sim, 83),
                                               84: api.getOpt(sim, 84),
                                               85: api.getOpt(sim, 85) } });
-      log(`maze ${msg.kind}: +${n} formas`);
+      log(`maze ${msg.kind}: +${n} shapes`);
       postFrame();
       break;
     }
@@ -1545,7 +1545,7 @@ self.onmessage = (e) => {
       break;
     case 'tp-clear':
       api.delAllTps(sim);
-      log('todos los teleporters borrados');
+      log('all teleporters deleted');
       postFrame();
       break;
     // ---- E6: registro y analisis ----
@@ -1596,14 +1596,14 @@ self.onmessage = (e) => {
       break;
     case 'dead-reset':
       api.deadReset(sim);
-      log('registro de muertos reiniciado');
+      log('dead robots log reset');
       break;
     case 'findbest': {            // MDIForm1.frm:1398 — robfocus = fittest
       const n = api.fittest(sim);
       focusBot = n;
       self.postMessage({ t: 'focus', n });
       log(n ? `Find Best: bot #${n} (${takeStr(api.botName(sim, n))})`
-            : 'Find Best: sin candidatos (fittest ignora vegetales)');
+            : 'Find Best: no candidates (fittest ignores vegetables)');
       postFrame();
       break;
     }
@@ -1619,7 +1619,7 @@ self.onmessage = (e) => {
       if (msg.lines) {
         ensure(scratch.fam, 4096 * 7);
         const c = api.familyLines(sim, n, scratch.fam.p, 4096);
-        if (c >= 4096) log('philogeny: arbol recortado a 4096 enlaces');
+        if (c >= 4096) log('philogeny: tree trimmed to 4096 links');
         lines = Array.from(heapView(scratch.fam.p, Math.max(c, 1) * 7)
                              .subarray(0, c * 7));
       }

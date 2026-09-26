@@ -104,7 +104,7 @@ const resetMsg = (seed) => ({
              maxEnergy: 40, startChlr: 3000, mutations: false },
   species: [{ dna: ALGA, name: 'AlgaSola.txt', veg: true, qty: 5, nrg: 3000, color: 0x30d030 }],
 });
-const roundSeeds = (w) => w.logs.filter((l) => l.startsWith('ronda nueva'))
+const roundSeeds = (w) => w.logs.filter((l) => l.startsWith('new round'))
   .map((l) => +/seed (-?\d+)/.exec(l)[1]);
 
 // RV-34/RV-35 — rondas del modo Restart (id 90; sin heterotrofos, una ronda
@@ -197,12 +197,12 @@ console.log('\n== ronda tras cargar ==');
   A.send({ t: 'setopt', id: 90, v: 1 });
   A.logs.length = 0;
   A.send({ t: 'step' });
-  await A.until(() => A.logs.some((l) => l.startsWith('ronda nueva')));
+  await A.until(() => A.logs.some((l) => l.startsWith('new round')));
   const f = await A.frameNow();
   check('RV-38: campo de la ronda = el del archivo', f[0] === 8000, `${f[0]} × ${f[1]}`);
   check('RV-38: la ronda siembra las especies del archivo',
-        A.logs.includes('sembrados 5 × Archivo.txt') &&
-        !A.logs.some((l) => l.includes('Pagina.txt')), A.logs.filter((l) => l.startsWith('sembrados')).join('; '));
+        A.logs.includes('seeded 5 × Archivo.txt') &&
+        !A.logs.some((l) => l.includes('Pagina.txt')), A.logs.filter((l) => l.startsWith('seeded')).join('; '));
   await A.w.terminate();
 }
 
@@ -229,21 +229,21 @@ console.log('\n== ADN de las especies cargadas ==');
   B.send({ t: 'setopt', id: 90, v: 1 });
   B.logs.length = 0;
   B.send({ t: 'step' });
-  await B.until(() => B.logs.some((l) => l.startsWith('ronda nueva')));
+  await B.until(() => B.logs.some((l) => l.startsWith('new round')));
   await B.frameNow();
   check('RV-40: sin ADN la ronda no siembra la especie (el .txt ausente)',
-        B.logs.some((l) => l.startsWith('sin ADN para Archivo.txt')) &&
-        !B.logs.some((l) => l.startsWith('sembrados')), B.logs.join(' | '));
+        B.logs.some((l) => l.startsWith('no DNA for Archivo.txt')) &&
+        !B.logs.some((l) => l.startsWith('seeded')), B.logs.join(' | '));
   B.send({ t: 'load', bytes: saved.bytes });
   await B.wait((m) => m.t === 'dna-missing');
   B.send({ t: 'setopt', id: 90, v: 1 });
   B.logs.length = 0;
   B.send({ t: 'dna-lib', entries: [{ name: 'Archivo.txt', dna: ALGA }] });
   B.send({ t: 'step' });
-  await B.until(() => B.logs.some((l) => l.startsWith('ronda nueva')));
+  await B.until(() => B.logs.some((l) => l.startsWith('new round')));
   await B.frameNow();
   check('RV-40: con el ADN de la página la ronda la siembra',
-        B.logs.includes('sembrados 5 × Archivo.txt'), B.logs.join(' | '));
+        B.logs.includes('seeded 5 × Archivo.txt'), B.logs.join(' | '));
   await B.w.terminate();
 }
 
@@ -330,7 +330,7 @@ console.log('\n== "Start New" y los globales de proceso ==');
   A.send({ t: 'setopt', id: 90, v: 1 });
   A.logs.length = 0;
   A.send({ t: 'step' });
-  await A.until(() => A.logs.some((l) => l.startsWith('ronda nueva')));
+  await A.until(() => A.logs.some((l) => l.startsWith('new round')));
   await A.frameNow();
   check('RV-44: y sigue tras la ronda',
         (await ev('takeStr(api.graphGetQuery(sim, 1))')) === 'consulta');
