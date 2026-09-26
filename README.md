@@ -44,7 +44,7 @@ todo, **escribió bots**. Esa comunidad es la razón de ser de este port.
 
 ### De dónde salen los bots de la demo
 
-La página incluye un **Bestiary de 588 bots reales**, escritos por la
+La página incluye un **Bestiary de 568 bots reales**, escritos por la
 comunidad y publicados a lo largo de los años en el
 [Bestiary del foro](http://forum.darwinbots.com/) (el board 13 y sus
 sub-boards). Ninguno fue escrito ni modificado para este port:
@@ -59,10 +59,15 @@ sub-boards). Ninguno fue escrito ni modificado para este port:
   espacios de ancho cero) que el foro había introducido.
 - Cada candidato se validó **con el propio motor portado**, no con
   heurísticas: se carga, se siembra y corre 50 ciclos. Los 753 candidatos
-  pasaron y se publicó uno por tema.
+  pasaron y se publicó uno por tema; después se quitaron 20 copias con
+  ADN idéntico (el mismo bot publicado en varios sub-boards).
 - En el selector de la página cada bot conserva el nombre con que lo
-  publicó su autor, y `port/web/bots/bots.json` guarda el enlace al tema
-  original del foro, donde está la autoría y la discusión.
+  publicó su autor. Cuando dos temas compartían título con ADN distinto, el
+  nombre sale del propio ADN: el que el autor puso en la cabecera del
+  código (varios adjuntos titulados "1" son en realidad *Saber*, *Slam
+  Funk 1.0*, *Pacifist*…) o el título más lo que distingue a cada versión
+  (nº de genes, por ejemplo). `port/web/bots/bots.json` guarda además el
+  enlace al tema original del foro, donde está la autoría y la discusión.
 
 El detalle del proceso está en
 [`port/tools/bestiary/README.md`](port/tools/bestiary/README.md).
@@ -109,7 +114,7 @@ original y conservadas sin tocar.
   por tests: la fidelidad incluye los bugs.
 - Página web con la sim completa: la física y el RNG viven en `dbcore.wasm`
   dentro de un Web Worker; la página solo presenta. Incluye guardar/cargar
-  la sim en el formato binario de VB6 y el **Bestiary de 588 bots de la
+  la sim en el formato binario de VB6 y el **Bestiary de 568 bots de la
   comunidad** (ver [De dónde salen los bots](#de-dónde-salen-los-bots-de-la-demo)).
 
 El detalle milestone por milestone, con hashes y fechas, está en
@@ -137,6 +142,27 @@ cd port && python -m http.server 8000
 
 (Necesita el preset `wasm` compilado: produce `build-wasm/dbcore.js` +
 `dbcore.wasm`, que consume el worker.)
+
+## Contest y Canal de TV
+
+Sobre la sim fiel, la página suma dos ventanas para ver pelear a los bots
+del Bestiary con las reglas de la liga F1 del original (capa host: no
+tocan el core):
+
+- **Contest**: un torneo a mano. Se eligen de 2 a 20 contrincantes, se
+  aplican los ajustes F1 y un solo clic reinicia, siembra y arranca; el
+  marcador lleva población, victorias por ronda y ganador, con revancha.
+- **Canal de TV** (botón *Canal*): peleas encadenadas sin intervención,
+  como un canal que transmite en vivo. Sortea los luchadores del
+  Inventario (todo, favoritos, un tag o una selección guardada) en formato
+  *rey de la colina*: el ganador se queda y recibe retadores nuevos, y con
+  R victorias seguidas se retira invicto. Cada ronda tiene un tope de
+  ciclos, así ninguna pelea queda colgada. Entre pelea y pelea hay una
+  cortinilla; el campo muestra el rótulo EN VIVO, y la ventana las últimas
+  peleas y un **Salón de la fama** (guardado en el navegador).
+  Cada luchador tiene un color fijo de una paleta pensada para distinguirse
+  sobre el campo oscuro (el campeón conserva el suyo mientras dura su
+  racha).
 
 ## Reglas del proyecto
 
