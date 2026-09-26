@@ -110,7 +110,7 @@ source drop and kept untouched.
 
 **The port is complete and usable.** All 10 milestones closed and verified:
 
-- **143 golden cases / 2,962 assertions passing in three build modes** —
+- **270 test cases / 4,092 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
   native g++, native clang and WASM under node — without a single numeric
   divergence (VB6 banker's rounding, exact LCG, `Single`/`Double` with VB6
   semantics, no `-ffast-math`, no implicit FMA).

@@ -568,6 +568,31 @@ bots), el tramo parcial de una skin que falla, la `r` vieja del bucle de
 visibilidad de `main.frm:1100-1112`, y `AssignSkin` sobre bytes UTF-8 (el
 original usa `Asc` ANSI: otra skin para nombres con tildes).
 
+## Añadidos fuera del plan (2026-09-25/26) — capa host
+
+Trabajo pedido por el usuario después de cerrar el plan, con la revisión
+del port contra VB6 en pausa (`REVISION-PORT.md`, tras el piloto 14). No se
+planificó por etapas; se registra aquí para que el plan refleje lo que
+existe. Todo es capa host: `port/core/` sin cambios y suite intacta
+(270/4092).
+
+| Pieza | Commits | Qué es | Relación con el plan |
+|---|---|---|---|
+| Inventario de bots | `a3a41ea`, `9e85cea` | `web/inventory.js`: búsqueda, filtros por 30 capacidades, arquetipos, tags, favoritos, notas, selecciones con nombre y siembra en lote (IndexedDB). Perfil genético offline con `tools/bestiary/analyze_bots.js` | amplía la extensión Bestiary; no es superficie del original |
+| Laboratorio de híbridos | `a3a41ea` | `web/lab.js`: un ADN con genes de varios bots, con avisos de memoria propia y remapeo de colisiones; guarda los híbridos y los resuelve por nombre al cargar una sim (RV-40) | no es superficie del original |
+| Ajustes F1 y panel de costes | `1750216` | `btnSetF1_Click` (`OptionsForm.frm:2579-2668`) y el grupo "Costs" editable, más `MaxPopulation`. Antes los costes llegaban siempre en 0 | **completa E1/E5**: es superficie del original que había quedado fuera |
+| Contest F1 | `1384c9d`, `5fc5d36`, `8f8323e` | `web/contest.js`: prepara y arranca el torneo en un clic, con marcador y revancha. "Wins to take it" fija `Maxrounds` (opción 98, `F1Mode.bas:352-359`) | amplía E5 (el contest ya existía en el core; esto es la UI) |
+| Canal de TV F1 | `50e9a86`, `ef1a16f`, `5fc5d36`, `8f8323e` | `web/channel.js`: peleas encadenadas al azar, rey de la colina, "Hall of Fame". Tope de ciclos por ronda con `db_sim_f1_cap` (generaliza a N especies el "kill losing species" de `F1Mode.bas:333-347`) | no es superficie del original |
+| Bestiary sin duplicados | `fd1774f` | quita las 20 copias con ADN idéntico y da nombres únicos: 568 bots | extensión Bestiary |
+| Cache busting de Pages | `42837c2` | `?v=<commit>` en scripts, worker y wasm | despliegue |
+| Interfaz en inglés | `f5b03ef`, `1160031`, `39afa70`, `5e86d67`, `9ed1f99`, `64c62a3`, `23b4587` | T1-T6: página, módulos, worker, pistas del lint y Bestiary. Los comentarios y las claves internas siguen en español | ver la nota de abajo |
+
+**Nota para leer las etapas anteriores**: las secciones E1-E8 y E6.5 citan
+etiquetas de la UI en español ("Vista: Original / Enriquecida",
+"seguir", "Menú View (extras)"…). Es el texto del diseño y se deja tal
+cual. En la página actual son "View: Original / Enriched", "Color by",
+"follow", "View menu (extras)", etc.
+
 ## E9 · Sexualidad visible — capa host
 
 Añadida el 2026-09-26 a petición del usuario. **No es superficie del
@@ -626,7 +651,7 @@ donante con el mismo ADN (se elige el shot más cercano).
      al registro de 24 floats en el campo reservado, o como float 25.
    - El evento de nacimiento gana las coordenadas del padre: un hijo sexual
      dibuja dos líneas (madre y padre) en vez de una.
-   - **Lente "Color por: fertilidad"**, categórica en lugar de viridis:
+   - **Lente "fertility"** (selector "Color by"; la UI está en inglés desde T1-T6), categórica en lugar de viridis:
      fecundado (tono según los ciclos que le quedan, 9…0), bloqueado por
      rechazo (`< −10`) y sin esperma. Leyenda con las 3 clases.
    - En el inspector: `fertilized`, AbsNum y especie del donante, y la
@@ -657,7 +682,7 @@ donante con el mismo ADN (se elige el shot más cercano).
    gráficas y la vista fiel sin cambios. Medición de ticks/s con el
    observador siempre encendido.
 
-**Cierre**: suite 181/3851 en verde en los tres modos y `port/core/` sin
+**Cierre**: suite 270/4092 (o la vigente) en verde en los tres modos y `port/core/` sin
 diff. Smoke E9 en verde, más `smoke_e8`, `smoke_im`, `smoke_formas` y
 `smoke_campo`. Verificación en Chrome con la consola limpia. Fila en
 `PROGRESO.md`.

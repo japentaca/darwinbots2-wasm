@@ -107,7 +107,7 @@ original y conservadas sin tocar.
 
 **El port está completo y usable.** Los 10 milestones cerrados y verificados:
 
-- **143 casos dorados / 2 962 aserciones en verde en tres modos de build** —
+- **270 casos / 4 092 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
   g++ nativo, clang nativo y WASM bajo node — sin una sola divergencia
   numérica (redondeo bancario de VB6, LCG exacto, `Single`/`Double` con
   semántica VB6, sin `-ffast-math`, sin FMA implícita).

@@ -195,12 +195,12 @@ Emscripten; presentación web separada.
   1 celda por eje y se registra en `SimDiag::err9_bucket_field` (en el
   original era un error 9 inalcanzable desde su UI). Smoke:
   `node tools/pp/smoke_campo.mjs`. PP-03 (capa host) — la sim y la ronda
-  nueva re-crean las formas guardadas en `xObstacle` (capturadas en "Nueva
-  sim" y al cambiar opciones del panel), escaladas al campo, como
+  nueva re-crean las formas guardadas en `xObstacle` (capturadas en "Reset"
+  (sim nueva) y al cambiar opciones del panel), escaladas al campo, como
   `StartSimul` (`main.frm:1357-1365`); el compactor sobrevive y la ronda
   hereda las opciones. Smoke: `node tools/pp/smoke_formas.mjs`.
 
-Estado verificado: 181 casos / 3851 aserciones en verde (en los tres modos), con el plan de extensiones completo (E1..E8 y E6.5) y PP-01/PP-03 (ver `spec/PROGRESO.md`).
+Estado verificado (2026-09-26): 270 casos / 4092 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -252,7 +252,7 @@ README); si `bots.json` no está, la página funciona igual con los dos
 presets de siempre.
 
 Los bots del Bestiary no van al `<select>`: se eligen desde el
-**Inventario** (botón "📚 Inventario…", `web/inventory.js`), una ventana
+**Inventario** (botón "📚 Inventory…", `web/inventory.js`), una ventana
 flotante con búsqueda, filtros y agrupación (foro, arquetipo, capacidad,
 tag, tamaño, favoritos), ficha por bot, tags libres, favoritos, notas,
 selecciones con nombre y siembra en lote (un color por especie). El
@@ -264,15 +264,15 @@ sysvars escribe y lee y el tipo de disparo, lo que da 30 capacidades
 un arquetipo (depredador, multicelular, vegetal, defensivo, pasivo). Lo del
 usuario vive en IndexedDB (`darwinbots-inventario`), identificado por
 un hash del ADN canónico, así que sobrevive a una nueva corrida del
-archivador; se respalda con Exportar/Importar (JSON).
+archivador; se respalda con Export/Import (JSON).
 
-El **Laboratorio de híbridos** (botón 🧬, o "🧬 Laboratorio" en la ficha y
+El **Laboratorio de híbridos** (botón 🧬, o "🧬 Lab" en la ficha y
 en la selección del Inventario, `web/lab.js`) arma un ADN nuevo con genes
 de distintos bots: se buscan por capacidad en todo el Bestiary (o se
 recorren los de un bot), se ordenan y se siembran, se llevan al formulario
 o se guardan en IndexedDB. Los genes vienen de `web/bots/genes.json`, el
 texto de cada gen tal como lo dejó el core (verificado con una ida y
-vuelta por el core para los 588 bots). El Laboratorio avisa de lo que se
+vuelta por el core para los 568 bots). El Laboratorio avisa de lo que se
 rompe al mezclar: un gen que lee memoria propia que en su bot escribía otro
 gen ("+ gen N" lo agrega), dos bots que usan la misma dirección propia (por
 defecto se remapea la del segundo a una libre, empezando por 971-990) y los
@@ -282,7 +282,7 @@ sembró un híbrido recupera su ADN por nombre (RV-40) desde los guardados.
 ### Registro y análisis (etapa E6)
 
 El menú "Recording" y el aparato de gráficas del original, en el panel
-"Registro y análisis":
+"Recording and analysis":
 
 - **Gráficas** (`grafico.frm` + `main.frm` NewGraph/FeedGraph/CalcStats): las
   18 series de `Globals.bas:127-151`, cada una en su ventana flotante con
@@ -317,8 +317,8 @@ más rápido de lo que el hilo de la página dibuja.
 
 **No es superficie del original**: es una segunda forma de mirar la misma
 sim, con ideas visuales de otro simulador derivado de DarwinBots (sin código
-portado). El selector "Vista" de la barra alterna entre **Original** (el
-render de `main.frm` de siempre, idéntico píxel a píxel) y **Enriquecida**:
+portado). El selector "View" de la barra alterna entre **Original** (el
+render de `main.frm` de siempre, idéntico píxel a píxel) y **Enriched**:
 
 - **forma**: hexágono = vegetal, círculo con nariz al rumbo = animal, ties
   gruesas = multibot; **tono** = color de la especie; **brillo** = nrg (log).
@@ -332,10 +332,10 @@ render de `main.frm` de siempre, idéntico píxel a píxel) y **Enriquecida**:
   tinte verde = cloroplastos, ojos (llenos si ven), estados.
 - **eventos**: nacimiento con línea a la madre, muerte que se encoge y apaga,
   salida por teleporter.
-- **"Color por"**: especie, nrg, body, generación, mutaciones, edad, longitud
+- **"Color by"**: especie, nrg, body, generación, mutaciones, edad, longitud
   del ADN y distancia genética al bot seleccionado (`DoGeneticDistance` en
   rebanadas de 3 ms, ≤ 1 vuelta/s).
-- **inspección**: rueda = zoom, arrastrar = paneo, "seguir" en el inspector,
+- **inspección**: rueda = zoom, arrastrar = paneo, "follow" en el inspector,
   rastro del bot con foco y tooltip. La cámara sirve también a la vista
   original y arranca en zoom 1 (el encuadre de siempre).
 
@@ -373,8 +373,8 @@ de la página:
 - **Apodo** (`IntOpts.IName`): viaja como `LastOwner` en cada organismo que
   sale; vacío, el toggle sortea "Newbie N" con el RNG de la sim, como el
   original.
-- **Transporte**: *Pestañas de este navegador* (`BroadcastChannel`, sin
-  servidor: sirve también en la demo de Pages) o *Relay WebSocket*.
+- **Transporte**: *Tabs of this browser* (`BroadcastChannel`, sin
+  servidor: sirve también en la demo de Pages) o *WebSocket relay*.
 - **Sala**: sims que se ven entre sí. El destino de cada organismo lo sortea
   el emisor entre los pares vivos; sin pares espera en cola, y lo que no se
   confirma en 8 s se re-sortea (un par que se cae no se lleva organismos).
@@ -425,7 +425,7 @@ Capa host pura (el core no cambia; `spec/PLAN-EXTENSIONES.md §E8`):
   (`db_sim_species_assign_skin`, determinista por nombre + ADN salvo el
   `Randomize` del reloj). Con las skins a la vista el cuerpo del bot se
   pinta hueco, como el original.
-- **Monitor RGB** (menú View (extras) → "Settings for RGB Memory
+- **Monitor RGB** (grupo "View menu (extras)" → "Settings for RGB Memory
   Monitor..." y toggle "monitor RGB"): el paso 23 del tick corre en el
   worker tras cada tick (`db_sim_monitor_capture`) y `DrawMonitor` en la
   página, con su aritmética de `Integer` (un rango `ceil − floor` mayor que
@@ -443,6 +443,41 @@ directa + `worker.js` real):
 ```
 cd port && node tools/e8/smoke_e8.mjs
 ```
+
+### Ajustes F1, Contest y Canal de TV (después del plan)
+
+Capa host, añadida el 2026-09-26 (`spec/PLAN-EXTENSIONES.md` §"Añadidos
+fuera del plan"):
+
+- **Ajustes F1** (botón "F1 settings (the original's btnSetF1)" del panel
+  de opciones): replica `btnSetF1_Click` (`OptionsForm.frm:2579-2668`):
+  costes de liga, física, luz, vegetales y campo 9237×6928 toroidal. El
+  grupo **"Costs"** del panel los deja editables; antes llegaban siempre
+  en 0 y los bots no gastaban energía. `MaxPopulation` también es
+  editable, y la ronda nueva lo conserva (`db_sim_get_base(6)`).
+- **Contest** (botón "🏆 Contest", `web/contest.js`): torneo F1 de 2 a 20
+  contrincantes, tomados del Bestiary, los híbridos, una selección del
+  Inventario o el formulario. Un clic aplica los ajustes F1, activa el
+  modo, reinicia, siembra, hace el censo y arranca. El marcador muestra
+  población, victorias, ronda, ganador y revancha. Explica la regla de
+  empate del original (más de √N + N/2 victorias, `F1Mode.bas:361-426`).
+  "Wins to take it (0 = no cap)" fija `Maxrounds` (opción 98, `F1Mode.bas:352-359`); por
+  defecto 3, y con 0 solo vale la regla estadística.
+- **Canal de TV** (botón "📺 Channel", `web/channel.js`): peleas
+  encadenadas sin intervención. Sortea los luchadores del Inventario
+  (todo, favoritos, un tag o una selección) en formato rey de la colina:
+  el ganador se queda y, con R victorias seguidas, se retira invicto. Hay
+  una cortinilla entre peleas, un rótulo LIVE sobre el campo, una lista
+  de las últimas peleas y un "Hall of Fame" (en `localStorage`). Los
+  colores salen de una paleta fija de 20 tonos claros, y el campeón
+  conserva el suyo. "Wins to take the fight" funciona como en el Contest.
+  Cada ronda tiene un tope de ciclos: `db_sim_f1_cap` generaliza a N
+  especies el "kill losing species" de `F1Mode.bas:333-347` (en el
+  original, solo para duelos). El worker lo llama después de cada tick.
+
+La interfaz de la página está en inglés desde el 2026-09-26, como el
+programa original. Los comentarios del código y las claves internas
+siguen en español.
 
 ### Toolchain verificado (Windows 11, 2026-08-26)
 
