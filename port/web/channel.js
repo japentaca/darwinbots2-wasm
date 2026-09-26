@@ -127,7 +127,8 @@ async function chLaunch() {
   try {
     // Ajustes F1 solo en la primera pelea: después ya están en el panel.
     await contestLaunch(ch.fighters, { nrg: c.nrg, f1: c.f1 && !ch.f1Applied,
-                                       rounds: c.rounds, cap: c.cap, newSeed: true });
+                                       rounds: c.rounds, wins: c.wins, cap: c.cap,
+                                       newSeed: true });
     ch.f1Applied = true;
     ch.fails = 0;
   } catch (e) {
@@ -187,7 +188,7 @@ function channelOnStats(st) {
   ch.lastWins = st.f1.sp.map((s) => s.wins);
   const color = new Map(ch.fighters.map((f) => [f.name, f.color]));
   if (ch.win) ch.win.querySelector('#ch-board').innerHTML =
-    contestBoardHtml(st, color, ch.cfg.rounds, ch.winner);
+    contestBoardHtml(st, color, ch.cfg.rounds, ch.winner, ch.cfg.wins);
   chOverlay(st);
 }
 
@@ -197,6 +198,7 @@ function chReadCfg() {
   const int = (id, lo, hi, d) => Math.min(hi, Math.max(lo, parseInt($(id).value, 10) || d));
   return {
     k: int('ch-k', 2, 20, 2), rounds: int('ch-rounds', 1, 99, 5),
+    wins: Math.min(99, Math.max(0, parseInt($('ch-wins').value, 10) || 0)),
     retire: int('ch-retire', 1, 999, 5), cap: int('ch-cap', 100, 1e6, 5000),
     qty: int('ch-qty', 1, 200, 5), nrg: int('ch-nrg', 1, 1e6, 3000),
     pause: int('ch-pause', 0, 60, 5), f1: $('ch-f1').checked, pool: $('ch-pool').value,
@@ -322,6 +324,7 @@ async function openChannel() {
     '<div class="ct-rules">' +
     `<label>Fighters per fight</label><input type="number" id="ch-k" min="2" max="20" value="${v('k', 2)}">` +
     `<label>Minimum rounds per fight</label><input type="number" id="ch-rounds" min="1" value="${v('rounds', 5)}">` +
+    `<label title="The original's Maxrounds: the first fighter to win this many rounds takes the fight. 0 = only the statistical rule, which with 3+ fighters can drag on for a long time">Wins to take the fight</label><input type="number" id="ch-wins" min="0" value="${v('wins', 3)}">` +
     `<label title="Consecutive wins the champion needs to retire undefeated">Champion retires after</label><input type="number" id="ch-retire" min="1" value="${v('retire', 5)}">` +
     `<label title="Past it, the round goes to the most numerous species">Cycle cap per round</label><input type="number" id="ch-cap" min="100" step="500" value="${v('cap', 5000)}">` +
     `<label>Bots per species</label><input type="number" id="ch-qty" min="1" value="${v('qty', 5)}">` +

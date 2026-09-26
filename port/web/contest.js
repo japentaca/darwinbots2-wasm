@@ -18,6 +18,7 @@ const contest = {
   roster: [],      // {name, src, file?, dna?, color, qty}
   running: false,  // hay un contest lanzado desde esta ventana
   rounds: 5,       // rondas mínimas pedidas (el original puede alargarlas)
+  wins: 3,         // victorias que ganan el torneo (Maxrounds, id 98; 0 = sin tope)
   lastWins: null,  // victorias del frame anterior (para anunciar la ronda)
   winner: '',
 };
@@ -33,6 +34,15 @@ const contestWinsNeeded = (n) => Math.floor(Math.sqrt(n) + n / 2) + 1;
 function contestMinLength(n) {
   while (contestWinsNeeded(n) > n) n++;
   return n;
+}
+// Con 3+ especies la regla estadística puede no cumplirse nunca (el mejor
+// rara vez gana mucho más de la mitad): el tope de victorias Maxrounds del
+// original (F1Mode.bas:352-359, se mira antes) sí termina siempre.
+function contestRuleText(n, wins) {
+  const need = contestWinsNeeded(n);
+  if (!wins) return `Whoever reaches ${need}🏅 or more wins`;
+  return wins <= need ? `First to ${wins}🏅 wins`
+                      : `First to ${wins}🏅 wins, or ${need}🏅 by round ${n}`;
 }
 
 function contestSaveRoster() {
@@ -95,7 +105,7 @@ function contestSetOpt(id, v) {
 // Lanza un contest con estos luchadores ({name, color, qty, src, file|dna}).
 // Lo usan la ventana de contest y el Canal (channel.js). Lanza excepción si
 // algún ADN no se puede leer (antes de tocar la sim).
-//   o = { nrg, f1, rounds, maxcyc, maxpop, cap, newSeed }
+//   o = { nrg, f1, rounds, wins, maxcyc, maxpop, cap, newSeed }
 async function contestLaunch(fighters, o) {
   // Todo el ADN antes de reiniciar: la sim nueva no espera a la red.
   const dnas = [];
@@ -103,6 +113,7 @@ async function contestLaunch(fighters, o) {
   if (o.f1) applyF1Settings();
   contestSetOpt(91, 1);                                  // Modo F1
   contestSetOpt(97, o.rounds);
+  contestSetOpt(98, o.wins || 0);                         // Maxrounds
   const duel = fighters.length === 2;
   contestSetOpt(99, duel ? o.maxcyc || 0 : 0);
   contestSetOpt(100, duel ? o.maxpop || 0 : 0);
@@ -132,10 +143,11 @@ async function contestStart(opts = {}) {
   note.className = 'ct-note';
   if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
   contest.rounds = Math.max(1, parseInt($('ct-rounds').value, 10) || 5);
+  contest.wins = Math.max(0, parseInt($('ct-wins').value, 10) || 0);
   try {
     await contestLaunch(fighters, {
       nrg: parseFloat($('ct-nrg').value) || 3000, f1: $('ct-f1').checked,
-      rounds: contest.rounds, newSeed: opts.newSeed,
+      rounds: contest.rounds, wins: contest.wins, newSeed: opts.newSeed,
       maxcyc: parseInt($('ct-maxcyc').value, 10) || 0,
       maxpop: parseInt($('ct-maxpop').value, 10) || 0,
     });
@@ -189,7 +201,7 @@ function contestRoundWinner(prev, f1) {
 // HTML del marcador (Contest_Form del original) para las stats de un frame.
 // color: Map nombre → css; rounds: rondas mínimas pedidas; winner: '' o
 // ganador del contest.
-function contestBoardHtml(st, color, rounds, winner) {
+function contestBoardHtml(st, color, rounds, winner, wins) {
   const f1 = st.f1;
   const total = f1.sp.reduce((a, s) => a + s.pop, 0) || 1;
   const maxWins = Math.max(0, ...f1.sp.map((s) => s.wins));
@@ -198,7 +210,7 @@ function contestBoardHtml(st, color, rounds, winner) {
   const extended = f1.minrounds > rounds;
   return `<div class="ct-round">${done ? 'Over' : `Round ${round} / ${f1.minrounds}`}` +
     ` · cycle ${st.cycle}${f1.restarts ? ` · restarts ${f1.restarts}` : ''}</div>` +
-    (done ? '' : `<div class="ct-rule">Whoever reaches ${contestWinsNeeded(f1.minrounds)}🏅 or more wins` +
+    (done ? '' : `<div class="ct-rule">${contestRuleText(f1.minrounds, wins)}` +
       (extended ? ` · extended from ${rounds} to ${f1.minrounds} rounds by statistical draw` : '') +
       '</div>') +
     f1.sp.map((s) => {
@@ -225,7 +237,7 @@ function contestOnStats(st) {
   contest.lastWins = st.f1.sp.map((s) => s.wins);
   contest.win.querySelector('#ct-board').innerHTML = contestBoardHtml(
     st, new Map(contest.roster.map((r) => [r.name, r.color])), contest.rounds,
-    contest.winner);
+    contest.winner, contest.wins);
 }
 
 // ---- Render -----------------------------------------------------------------
@@ -307,6 +319,7 @@ async function openContest() {
     '<div class="ct-h">Rules</div>' +
     '<div class="ct-rules">' +
     '<label>Minimum rounds</label><input type="number" id="ct-rounds" min="1" value="5">' +
+    '<label title="Maxrounds of the original: the first species to reach this many round wins takes the tournament">Wins to take it (0 = no cap)</label><input type="number" id="ct-wins" min="0" value="3">' +
     '<div id="ct-rhint" class="ct-wide ct-rule"></div>' +
     '<label>Starting energy</label><input type="number" id="ct-nrg" min="1" value="3000">' +
     '<label class="ct-wide"><input type="checkbox" id="ct-f1" checked> Use F1 league settings (costs, 9237×6928 field, physics)</label>' +
@@ -372,12 +385,17 @@ async function openContest() {
   const rhint = () => {
     const n = Math.max(1, parseInt($('ct-rounds').value, 10) || 1);
     const m = contestMinLength(n);
-    $('ct-rhint').textContent =
+    const wins = Math.max(0, parseInt($('ct-wins').value, 10) || 0);
+    $('ct-rhint').textContent = wins
+      ? `The first species to win ${wins} rounds takes it (the original's Maxrounds). ` +
+        `Otherwise, from round ${n} on, whoever has ${contestWinsNeeded(n)}🏅 or more (√N + N/2).`
+      :
       `Whoever reaches ${contestWinsNeeded(n)} wins or more takes it (more than √N + N/2, the original's rule). ` +
       (m > n ? `With ${n}, not even winning them all is enough: the tournament will run at least ${m} rounds.`
              : 'If nobody gets there, one more round is played.');
   };
   $('ct-rounds').oninput = rhint;
+  $('ct-wins').oninput = rhint;
   rhint();
   $('ct-go').onclick = () => contestStart();
   $('ct-again').onclick = () => contestStart({ newSeed: true });
