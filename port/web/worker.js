@@ -1358,7 +1358,7 @@ self.onmessage = (e) => {
       if (msg.on) {
         if (imCfg) imDisable('reconexión');
         imEnable({ name: msg.name || '', kind: msg.kind, url: msg.url || '',
-                   room: msg.room || 'publica' });
+                   room: msg.room || 'public' });
         if (!imCfg) self.postMessage({ t: 'im-off' });
       } else {
         imDisable('');

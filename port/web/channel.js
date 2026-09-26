@@ -91,7 +91,7 @@ function chNext() {
   const pool = chPool(c.pool).filter((it) => !ch.champ || it.b.name !== ch.champ.name);
   const need = ch.champ ? c.k - 1 : c.k;
   if (pool.length < need) {
-    chNote(`El sorteo tiene ${pool.length} bestias y hacen falta ${need}: amplía el filtro.`, true);
+    chNote(`The draw pool has ${pool.length} beasts and ${need} are needed: widen the filter.`, true);
     channelStop();
     return;
   }
@@ -133,12 +133,12 @@ async function chLaunch() {
   } catch (e) {
     // Bot ilegible: se anula la pelea y se sortea otra.
     ch.recent.unshift({ no: ch.fightNo, names: ch.fighters.map((f) => f.name),
-                        winner: '', note: 'anulada: ' + e.message });
-    if (++ch.fails > 5) { chNote('Demasiados bots ilegibles seguidos: canal apagado.', true); channelStop(); return; }
+                        winner: '', note: 'void: ' + e.message });
+    if (++ch.fails > 5) { chNote('Too many unreadable bots in a row: channel off.', true); channelStop(); return; }
     chNext();
     return;
   }
-  log(`📺 pelea #${ch.fightNo}: ${ch.fighters.map((f) => f.name).join(' vs ')}`);
+  log(`📺 fight #${ch.fightNo}: ${ch.fighters.map((f) => f.name).join(' vs ')}`);
   chRender();
 }
 
@@ -158,8 +158,8 @@ function chResult(winner, note) {
     rec.best = Math.max(rec.best, ch.streak);
     if (ch.streak >= ch.cfg.retire) {
       rec.titles++;
-      r.note = `👑 se retira invicto tras ${ch.streak} victorias`;
-      log(`📺 ${winner} se retira invicto (${ch.streak} victorias seguidas)`);
+      r.note = `👑 retires undefeated after ${ch.streak} wins`;
+      log(`📺 ${winner} retires undefeated (${ch.streak} wins in a row)`);
       ch.champ = null;
       ch.streak = 0;
     }
@@ -174,16 +174,16 @@ function chResult(winner, note) {
 // ---- Mensajes y frames (los reenvía contest.js) --------------------------------
 function channelOnMessage(msg) {
   if (!ch.on || ch.phase !== 'fight') return;
-  if (msg.t === 'f1-started' && !msg.n) chResult('', 'anulada: el censo no encontró luchadores');
-  else if (msg.t === 'f1-note' && msg.kind === 'single') chResult('', 'anulada: una sola especie en el censo');
-  else if (msg.t === 'f1-note' && msg.kind === 'cap') chNote('Tope de ciclos: la ronda es para la especie más numerosa.');
+  if (msg.t === 'f1-started' && !msg.n) chResult('', 'void: the census found no fighters');
+  else if (msg.t === 'f1-note' && msg.kind === 'single') chResult('', 'void: only one species in the census');
+  else if (msg.t === 'f1-note' && msg.kind === 'cap') chNote('Cycle cap reached: the round goes to the most numerous species.');
   else if (msg.t === 'f1-over') chResult(msg.winner);
 }
 
 function channelOnStats(st) {
   if (!ch.on || ch.phase !== 'fight' || !st.f1) return;
   const rw = contestRoundWinner(ch.lastWins, st.f1);
-  if (rw) chNote(`Ronda ${st.f1.contests} para ${rw}.`);
+  if (rw) chNote(`Round ${st.f1.contests} goes to ${rw}.`);
   ch.lastWins = st.f1.sp.map((s) => s.wins);
   const color = new Map(ch.fighters.map((f) => [f.name, f.color]));
   if (ch.win) ch.win.querySelector('#ch-board').innerHTML =
@@ -236,11 +236,11 @@ function chOverlay(st) {
   const champ = ch.champ
     ? ` · 👑 ${escHtml(ch.champ.name)} <b>${ch.streak}/${ch.cfg.retire}</b>` : '';
   if (ch.phase === 'break') {
-    el.innerHTML = `<div class="ch-live">📺 PRÓXIMA PELEA · #${ch.fightNo}</div><div class="ch-vs">${vs}</div>`;
+    el.innerHTML = `<div class="ch-live">📺 NEXT FIGHT · #${ch.fightNo}</div><div class="ch-vs">${vs}</div>`;
   } else {
     const f1 = st && st.f1;
-    const round = f1 ? ` · ronda ${Math.min(f1.contests + 1, f1.minrounds)}/${f1.minrounds}` : '';
-    el.innerHTML = `<div class="ch-live"><span class="ch-dot"></span>EN VIVO · pelea #${ch.fightNo}${round}${champ}</div>` +
+    const round = f1 ? ` · round ${Math.min(f1.contests + 1, f1.minrounds)}/${f1.minrounds}` : '';
+    el.innerHTML = `<div class="ch-live"><span class="ch-dot"></span>LIVE · fight #${ch.fightNo}${round}${champ}</div>` +
       `<div class="ch-vs">${vs}</div>` +
       (ch.winner ? `<div class="ch-win">🏆 ${escHtml(ch.winner)}</div>` : '');
   }
@@ -249,7 +249,7 @@ function chOverlay(st) {
 function chRenderBreak(left) {
   if (!ch.win) { chOverlay(); return; }
   ch.win.querySelector('#ch-board').innerHTML =
-    `<div class="ch-next">Próxima pelea #${ch.fightNo} en <b>${left}</b>…</div>` +
+    `<div class="ch-next">Next fight #${ch.fightNo} in <b>${left}</b>…</div>` +
     ch.fighters.map((f) => `<div class="ct-row"><span class="ct-dot" style="background:${f.color}"></span>` +
       `<span class="ct-name">${escHtml(f.name)}</span>` +
       `<span></span><span></span><span class="ct-wins">${ch.champ && f.name === ch.champ.name ? '👑' : ''}</span></div>`).join('');
@@ -260,12 +260,12 @@ function chRenderHof() {
   const rows = Object.values(ch.hof)
     .sort((a, b) => b.titles - a.titles || b.wins - a.wins || a.fights - b.fights).slice(0, 15);
   ch.win.querySelector('#ch-hof').innerHTML = rows.length
-    ? '<table class="ch-table"><tr><th></th><th>Bestia</th><th title="Peleas">⚔</th>' +
-      '<th title="Victorias">🏅</th><th title="Retiros invicto">👑</th><th title="Mejor racha">🔥</th></tr>' +
+    ? '<table class="ch-table"><tr><th></th><th>Beast</th><th title="Fights">⚔</th>' +
+      '<th title="Wins">🏅</th><th title="Undefeated retirements">👑</th><th title="Best streak">🔥</th></tr>' +
       rows.map((r, i) => `<tr><td>${i + 1}</td><td class="ch-n" title="${escHtml(r.name)}">${escHtml(r.name)}</td>` +
         `<td>${r.fights}</td><td>${r.wins}</td><td>${r.titles}</td><td>${r.best}</td></tr>`).join('') +
       '</table>'
-    : '<div class="ct-empty">Todavía no hay peleas registradas.</div>';
+    : '<div class="ct-empty">No fights recorded yet.</div>';
 }
 
 function chRender() {
@@ -274,11 +274,11 @@ function chRender() {
   const $ = (id) => ch.win.querySelector('#' + id);
   $('ch-setup').hidden = ch.on;
   $('ch-live').hidden = !ch.on;
-  $('ch-toggle').textContent = ch.on ? '⏹ Apagar el canal' : '📺 Encender el canal';
+  $('ch-toggle').textContent = ch.on ? '⏹ Turn the channel off' : '📺 Turn the channel on';
   $('ch-toggle').classList.toggle('primary', !ch.on);
   $('ch-champ').innerHTML = ch.champ
-    ? `👑 Campeón: <b style="color:${ch.champ.color}">${escHtml(ch.champ.name)}</b> · racha ${ch.streak}/${ch.cfg.retire}`
-    : (ch.on ? 'Sin campeón: pelea abierta' : '');
+    ? `👑 Champion: <b style="color:${ch.champ.color}">${escHtml(ch.champ.name)}</b> · streak ${ch.streak}/${ch.cfg.retire}`
+    : (ch.on ? 'No champion: open fight' : '');
   $('ch-recent').innerHTML = ch.recent.map((r) =>
     `<div class="ch-res"><span>#${r.no}</span> ${r.names.map(escHtml).join(' vs ')} → ` +
     (r.winner ? `<b>${escHtml(r.winner)}</b>` : '—') +
@@ -291,14 +291,14 @@ async function chRenderPools() {
   const sel = ch.win.querySelector('#ch-pool');
   const cur = sel.value;
   const tags = allTags();
-  sel.innerHTML = '<option value="all">todo el Bestiary</option>' +
-    '<option value="fav">★ favoritos</option>' +
+  sel.innerHTML = '<option value="all">the whole Bestiary</option>' +
+    '<option value="fav">★ favorites</option>' +
     tags.map(([t, n]) => `<option value="tag:${escHtml(t)}">#${escHtml(t)} (${n})</option>`).join('') +
-    [...inv.sets.keys()].map((n) => `<option value="set:${escHtml(n)}">selección: ${escHtml(n)}</option>`).join('');
+    [...inv.sets.keys()].map((n) => `<option value="set:${escHtml(n)}">selection: ${escHtml(n)}</option>`).join('');
   if (cur) sel.value = cur;
   const upd = () => {
     const n = chPool(sel.value).length;
-    ch.win.querySelector('#ch-pooln').textContent = `${n} bestias`;
+    ch.win.querySelector('#ch-pooln').textContent = `${n} beasts`;
   };
   sel.onchange = upd;
   upd();
@@ -306,42 +306,42 @@ async function chRenderPools() {
 
 async function openChannel() {
   if (ch.win) { winLayer.appendChild(ch.win); return; }
-  if (!BESTIARY.length) { log('canal: no hay bots/bots.json (¿la página se sirve por http?)'); return; }
+  if (!BESTIARY.length) { log('channel: no bots/bots.json (is the page served over http?)'); return; }
   chLoad();
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(CH_CFG_KEY) || '{}') || {}; } catch (e) { saved = {}; }
   const v = (k, d) => (saved[k] !== undefined ? saved[k] : d);
-  const w = makeWindow('📺 Canal F1', Math.min(460, innerWidth - 40), 0, () => { ch.win = null; });
+  const w = makeWindow('📺 F1 Channel', Math.min(460, innerWidth - 40), 0, () => { ch.win = null; });
   ch.win = w;
   w.classList.add('ct-win');
   w.style.left = Math.max(20, innerWidth - 520) + 'px';
   w.style.top = '70px';
   w.body.innerHTML =
     '<div id="ch-setup">' +
-    '<div class="ct-h">Parrilla</div>' +
+    '<div class="ct-h">Lineup</div>' +
     '<div class="ct-rules">' +
-    `<label>Luchadores por pelea</label><input type="number" id="ch-k" min="2" max="20" value="${v('k', 2)}">` +
-    `<label>Rondas mínimas por pelea</label><input type="number" id="ch-rounds" min="1" value="${v('rounds', 5)}">` +
-    `<label title="Victorias seguidas del campeón antes de retirarse invicto">Retiro del campeón tras</label><input type="number" id="ch-retire" min="1" value="${v('retire', 5)}">` +
-    `<label title="Al pasarlo, la ronda es para la especie más numerosa">Tope de ciclos por ronda</label><input type="number" id="ch-cap" min="100" step="500" value="${v('cap', 5000)}">` +
-    `<label>Bots por especie</label><input type="number" id="ch-qty" min="1" value="${v('qty', 5)}">` +
-    `<label>Energía inicial</label><input type="number" id="ch-nrg" min="1" value="${v('nrg', 3000)}">` +
-    `<label>Pausa entre peleas (s)</label><input type="number" id="ch-pause" min="0" max="60" value="${v('pause', 5)}">` +
-    `<label class="ct-wide"><input type="checkbox" id="ch-f1" ${v('f1', true) ? 'checked' : ''}> Usar ajustes de liga F1</label>` +
+    `<label>Fighters per fight</label><input type="number" id="ch-k" min="2" max="20" value="${v('k', 2)}">` +
+    `<label>Minimum rounds per fight</label><input type="number" id="ch-rounds" min="1" value="${v('rounds', 5)}">` +
+    `<label title="Consecutive wins the champion needs to retire undefeated">Champion retires after</label><input type="number" id="ch-retire" min="1" value="${v('retire', 5)}">` +
+    `<label title="Past it, the round goes to the most numerous species">Cycle cap per round</label><input type="number" id="ch-cap" min="100" step="500" value="${v('cap', 5000)}">` +
+    `<label>Bots per species</label><input type="number" id="ch-qty" min="1" value="${v('qty', 5)}">` +
+    `<label>Starting energy</label><input type="number" id="ch-nrg" min="1" value="${v('nrg', 3000)}">` +
+    `<label>Pause between fights (s)</label><input type="number" id="ch-pause" min="0" max="60" value="${v('pause', 5)}">` +
+    `<label class="ct-wide"><input type="checkbox" id="ch-f1" ${v('f1', true) ? 'checked' : ''}> Use F1 league settings</label>` +
     '</div>' +
-    '<div class="ct-h">Sorteo <span id="ch-pooln"></span></div>' +
+    '<div class="ct-h">Draw pool <span id="ch-pooln"></span></div>' +
     '<select id="ch-pool"></select>' +
-    '<div class="ct-rule">Favoritos, tags y selecciones se arman en el 📚 Inventario.</div>' +
+    '<div class="ct-rule">Favorites, tags and selections are set up in the 📚 Inventory.</div>' +
     '</div>' +
-    '<button id="ch-toggle" class="primary ct-go">📺 Encender el canal</button>' +
+    '<button id="ch-toggle" class="primary ct-go">📺 Turn the channel on</button>' +
     '<div id="ch-live" hidden>' +
     '<div id="ch-champ" class="ch-champ"></div>' +
     '<div id="ch-board"></div>' +
     '</div>' +
     '<div id="ch-note" class="ct-note"></div>' +
-    '<details class="ch-sec"><summary>Últimas peleas</summary><div id="ch-recent"></div></details>' +
-    '<details class="ch-sec" open><summary>Salón de la fama</summary><div id="ch-hof"></div>' +
-    '<button id="ch-hofclear" class="ch-small">Borrar el salón</button></details>';
+    '<details class="ch-sec"><summary>Recent fights</summary><div id="ch-recent"></div></details>' +
+    '<details class="ch-sec" open><summary>Hall of Fame</summary><div id="ch-hof"></div>' +
+    '<button id="ch-hofclear" class="ch-small">Clear the Hall</button></details>';
   const $ = (id) => w.querySelector('#' + id);
   $('ch-toggle').onclick = () => (ch.on ? channelStop() : channelStart());
   $('ch-hofclear').onclick = () => {

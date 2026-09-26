@@ -38,7 +38,7 @@ async function labLoadGenes() {
     lab.sys = new Set(lab.genes.sysAddrs || []);
     return true;
   } catch (e) {
-    log('laboratorio: no pude leer bots/genes.json (corré tools/bestiary/analyze_bots.js)');
+    log('lab: could not read bots/genes.json (run tools/bestiary/analyze_bots.js)');
     return false;
   }
 }
@@ -74,14 +74,14 @@ function labAnalyze() {
           .filter((j) => j >= 0);
         if (writers.length)
           warns.push({ kind: 'dep', file, gi, addr: a, writers,
-            text: `${name(file)} gen ${gi + 1} lee ${a}, que en su bot ` +
-                  `${writers.length > 1 ? 'escriben los genes' : 'escribe el gen'} ` +
+            text: `${name(file)} gene ${gi + 1} reads ${a}, which in its bot is written by ` +
+                  `${writers.length > 1 ? 'genes' : 'gene'} ` +
                   writers.map((j) => j + 1).join(', ') });
       }
       if (g.gl)
         warns.push({ kind: 'gl', file, gi,
-          text: `${name(file)} gen ${gi + 1} usa un número de gen literal en .delgene/.mkvirus: ` +
-                'en el híbrido la numeración cambia' });
+          text: `${name(file)} gene ${gi + 1} uses a literal gene number in .delgene/.mkvirus: ` +
+                'gene numbering changes in the hybrid' });
     }
   }
 
@@ -109,7 +109,7 @@ function labAnalyze() {
     if (files.length < 2) continue;
     if (!lab.remap) {
       warns.push({ kind: 'col', addr: a,
-        text: `memoria ${a}: la usan ${files.map(name).join(' y ')} (sin remapear)` });
+        text: `memory ${a}: used by ${files.map(name).join(' and ')} (not remapped)` });
       continue;
     }
     const moved = [];
@@ -121,15 +121,15 @@ function labAnalyze() {
       moved.push(`${name(f)} → ${b}`);
     }
     warns.push({ kind: 'remap', addr: a,
-      text: `memoria ${a}: la usan ${files.length} bots; remapeado ${moved.join(', ')}` });
+      text: `memory ${a}: used by ${files.length} bots; remapped ${moved.join(', ')}` });
   }
 
   if (lab.parts.length) {
     if (!caps.has('repro-asex') && !caps.has('repro-sex'))
-      warns.push({ kind: 'info', text: 'ningún gen reproduce: el híbrido no deja descendencia' });
+      warns.push({ kind: 'info', text: 'no gene reproduces: the hybrid leaves no offspring' });
     if (!['caza-nrg', 'caza-cuerpo', 'dispara', 'come-lazo', 'fotosintesis']
       .some((c) => caps.has(c)))
-      warns.push({ kind: 'info', text: 'ningún gen consigue energía (ni caza ni fotosíntesis)' });
+      warns.push({ kind: 'info', text: 'no gene gets energy (neither hunting nor photosynthesis)' });
   }
   return { remaps, warns, caps };
 }
@@ -155,13 +155,13 @@ function labCompose(hname) {
   const { remaps } = labAnalyze();
   const name = (f) => (labItem(f) || { b: { name: f } }).b.name;
   const head = [
-    `' Híbrido: ${hname}`,
-    `' Armado en el Laboratorio de híbridos (${new Date().toISOString().slice(0, 10)})`,
+    `' Hybrid: ${hname}`,
+    `' Built in the Hybrid lab (${new Date().toISOString().slice(0, 10)})`,
     "' Genes:",
-    ...lab.parts.map((p, k) => `'  ${k + 1}. ${name(p.file)} · gen ${p.gi + 1}`),
+    ...lab.parts.map((p, k) => `'  ${k + 1}. ${name(p.file)} · gene ${p.gi + 1}`),
   ];
   const body = lab.parts.map((p, k) =>
-    `' --- ${k + 1}. ${name(p.file)} · gen ${p.gi + 1} ---\n` +
+    `' --- ${k + 1}. ${name(p.file)} · gene ${p.gi + 1} ---\n` +
     labGeneText(p.file, p.gi, remaps.get(p.file)));
   return head.join('\n') + '\n\n' + body.join('\n\n') + '\n';
 }
@@ -171,10 +171,10 @@ function labGeneRow(file, gi, extra) {
   const g = labGene(file, gi);
   const it = labItem(file);
   const caps = labGeneCaps(file, gi);
-  const mem = (g.w || g.r) ? '<span class="lab-mem" title="usa memoria propia">mem</span>' : '';
+  const mem = (g.w || g.r) ? '<span class="lab-mem" title="uses its own memory">mem</span>' : '';
   return `<div class="lab-g" data-f="${escHtml(file)}" data-gi="${gi}">` +
     `<span class="lab-src" title="${escHtml(it ? it.b.name : file)}">${escHtml(it ? it.b.name : file)}</span>` +
-    `<span class="lab-gi">gen ${gi + 1}</span>` +
+    `<span class="lab-gi">gene ${gi + 1}</span>` +
     `<span class="lab-tk">${labTokens(g)} tk</span>` +
     `<span class="inv-caps">${mem}${caps.map((c) => capChip(c)).join('')}</span>` +
     extra + '</div>';
@@ -207,12 +207,12 @@ function labRenderSource() {
   }
   const MAX = 300;
   w.querySelector('#lab-srccount').textContent =
-    `${rows.length} gen${rows.length === 1 ? '' : 'es'}${rows.length > MAX ? ` (se muestran ${MAX})` : ''}`;
+    `${rows.length} gene${rows.length === 1 ? '' : 's'}${rows.length > MAX ? ` (showing ${MAX})` : ''}`;
   w.querySelector('#lab-srclist').innerHTML = rows.slice(0, MAX).map((r) =>
     labGeneRow(r.file, r.gi,
-      '<button class="lab-see" title="Ver el código">👁</button>' +
-      '<button class="lab-add" title="Agregar al híbrido">+</button>')).join('') ||
-    '<div class="inv-empty">Sin genes para mostrar.</div>';
+      '<button class="lab-see" title="View the code">👁</button>' +
+      '<button class="lab-add" title="Add to the hybrid">+</button>')).join('') ||
+    '<div class="inv-empty">No genes to show.</div>';
 }
 
 function labRenderBots() {
@@ -220,7 +220,7 @@ function labRenderBots() {
   const cur = sel.value;
   sel.innerHTML = lab.sources.length
     ? lab.sources.map((f) => `<option value="${escHtml(f)}">${escHtml((labItem(f) || { b: { name: f } }).b.name)}</option>`).join('')
-    : '<option value="">(mandá bots desde el Inventario: 🧬)</option>';
+    : '<option value="">(send bots from the Inventory: 🧬)</option>';
   if (lab.sources.includes(cur)) sel.value = cur;
 }
 
@@ -229,13 +229,13 @@ function labRenderHybrid() {
   const { warns, caps } = labAnalyze();
   w.querySelector('#lab-parts').innerHTML = lab.parts.map((p, k) =>
     labGeneRow(p.file, p.gi,
-      '<button class="lab-see" title="Ver el código">👁</button>' +
-      `<button class="lab-up" data-k="${k}" title="Subir">↑</button>` +
-      `<button class="lab-dn" data-k="${k}" title="Bajar">↓</button>` +
-      `<button class="lab-rm" data-k="${k}" title="Quitar">✕</button>`)
+      '<button class="lab-see" title="View the code">👁</button>' +
+      `<button class="lab-up" data-k="${k}" title="Move up">↑</button>` +
+      `<button class="lab-dn" data-k="${k}" title="Move down">↓</button>` +
+      `<button class="lab-rm" data-k="${k}" title="Remove">✕</button>`)
       .replace('<div class="lab-g"', `<div class="lab-g" data-k="${k}"`)
       .replace('<span class="lab-src"', `<span class="lab-k">${k + 1}</span><span class="lab-src"`)).join('') ||
-    '<div class="inv-empty">Agregá genes desde la izquierda (+).</div>';
+    '<div class="inv-empty">Add genes from the left (+).</div>';
   const order = Object.keys((inv.profiles && inv.profiles.caps) || {});
   w.querySelector('#lab-caps').innerHTML =
     order.filter((c) => caps.has(c)).map((c) => capChip(c)).join('') ||
@@ -243,11 +243,11 @@ function labRenderHybrid() {
   w.querySelector('#lab-warns').innerHTML = warns.map((x) =>
     `<div class="lab-w lab-w-${x.kind}">${x.kind === 'remap' || x.kind === 'info' ? 'ℹ' : '⚠'} ${escHtml(x.text)}` +
     (x.kind === 'dep' ? ' ' + x.writers.map((j) =>
-      `<button class="lab-adddep" data-f="${escHtml(x.file)}" data-gi="${j}">+ gen ${j + 1}</button>`).join('') : '') +
+      `<button class="lab-adddep" data-f="${escHtml(x.file)}" data-gi="${j}">+ gene ${j + 1}</button>`).join('') : '') +
     '</div>').join('');
   const nTok = lab.parts.reduce((n, p) => n + labTokens(labGene(p.file, p.gi)), 0);
   w.querySelector('#lab-sum').textContent =
-    `${lab.parts.length} genes · ${nTok} tokens · ${new Set(lab.parts.map((p) => p.file)).size} bots de origen`;
+    `${lab.parts.length} genes · ${nTok} tokens · ${new Set(lab.parts.map((p) => p.file)).size} source bots`;
   const dna = w.querySelector('#lab-dna');
   if (!dna.hidden) dna.value = labCompose(labName());
 }
@@ -258,18 +258,18 @@ function labRenderPreview() {
   if (!p) { box.hidden = true; return; }
   const it = labItem(p.file);
   box.hidden = false;
-  box.querySelector('b').textContent = `${it ? it.b.name : p.file} · gen ${p.gi + 1}`;
+  box.querySelector('b').textContent = `${it ? it.b.name : p.file} · gene ${p.gi + 1}`;
   box.querySelector('pre').textContent = labGene(p.file, p.gi).t;
 }
 
 function labRenderSaved() {
   const sel = lab.win.querySelector('#lab-saved');
-  sel.innerHTML = '<option value="">híbridos guardados…</option>' +
+  sel.innerHTML = '<option value="">saved hybrids…</option>' +
     [...lab.hybrids.values()].sort((a, b) => a.name.localeCompare(b.name))
       .map((h) => `<option value="${escHtml(h.name)}">${escHtml(h.name)} (${h.parts.length} genes)</option>`).join('');
 }
 
-const labName = () => (lab.win.querySelector('#lab-name').value.trim() || 'Hibrido');
+const labName = () => (lab.win.querySelector('#lab-name').value.trim() || 'Hybrid');
 
 // ---- Acciones ---------------------------------------------------------------
 function labAdd(file, gi) {
@@ -287,12 +287,12 @@ async function labSave() {
   const h = { name: labName(), veg: lab.win.querySelector('#lab-veg').checked,
               remap: lab.remap, parts: lab.parts.map((p) => ({ ...p })),
               updated: new Date().toISOString() };
-  if (!h.parts.length) { log('laboratorio: el híbrido no tiene genes'); return; }
+  if (!h.parts.length) { log('lab: the hybrid has no genes'); return; }
   lab.hybrids.set(h.name, h);
-  if (inv.dbOk) await InvDB.put('hybrids', h).catch((e) => log('laboratorio: ' + e.message));
+  if (inv.dbOk) await InvDB.put('hybrids', h).catch((e) => log('lab: ' + e.message));
   labRenderSaved();
   lab.win.querySelector('#lab-saved').value = h.name;
-  log(`laboratorio: híbrido "${h.name}" guardado (${h.parts.length} genes)`);
+  log(`lab: hybrid "${h.name}" saved (${h.parts.length} genes)`);
 }
 
 function labLoadHybrid(name) {
@@ -300,7 +300,7 @@ function labLoadHybrid(name) {
   if (!h) return;
   lab.parts = h.parts.filter((p) => labGene(p.file, p.gi)).map((p) => ({ ...p }));
   if (lab.parts.length < h.parts.length)
-    log(`laboratorio: ${h.parts.length - lab.parts.length} gen(es) de "${name}" ya no están en el Bestiary`);
+    log(`lab: ${h.parts.length - lab.parts.length} gene(s) of "${name}" are no longer in the Bestiary`);
   lab.remap = h.remap !== false;
   const w = lab.win;
   w.querySelector('#lab-name').value = h.name;
@@ -342,15 +342,15 @@ async function labAddSources(files) {
 // ---- Ventana ----------------------------------------------------------------
 async function openLab() {
   if (lab.win) { winLayer.appendChild(lab.win); return; }
-  if (!BESTIARY.length) { log('laboratorio: no hay bots/bots.json (¿la página se sirve por http?)'); return; }
+  if (!BESTIARY.length) { log('lab: no bots/bots.json (is the page served over http?)'); return; }
   if (!inv.items.length) await invLoad();
-  if (!inv.profiles) { log('laboratorio: falta bots/profiles.json'); return; }
+  if (!inv.profiles) { log('lab: bots/profiles.json is missing'); return; }
   if (!(await labLoadGenes())) return;
   try {
     lab.hybrids = new Map((await InvDB.all('hybrids')).map((h) => [h.name, h]));
   } catch (e) { /* sin IndexedDB: los híbridos no se guardan */ }
 
-  const w = makeWindow('Laboratorio de híbridos', Math.min(1100, innerWidth - 40), 0,
+  const w = makeWindow('Hybrid lab', Math.min(1100, innerWidth - 40), 0,
                        () => { lab.win = null; });
   lab.win = w;
   w.classList.add('inv-win', 'lab-win');
@@ -362,44 +362,44 @@ async function openLab() {
   w.body.innerHTML =
     '<div class="inv-main">' +
     '<div class="lab-col">' +
-    '<div class="lab-h">Genes disponibles</div>' +
+    '<div class="lab-h">Available genes</div>' +
     '<div class="inv-bar">' +
-    '<select id="lab-mode"><option value="cap">por capacidad (todo el Bestiary)</option>' +
-    '<option value="bot">de un bot</option></select>' +
+    '<select id="lab-mode"><option value="cap">by capability (whole Bestiary)</option>' +
+    '<option value="bot">from one bot</option></select>' +
     `<select id="lab-capsel">${capOpts}</select>` +
     '<select id="lab-botsel" hidden></select>' +
-    '<input type="search" id="lab-q" placeholder="filtrar por bot…" style="width:130px">' +
-    '<label title="Sin memoria propia: se trasplantan sin dependencias ni colisiones">' +
-    '<input type="checkbox" id="lab-auto"> solo autónomos</label>' +
+    '<input type="search" id="lab-q" placeholder="filter by bot…" style="width:130px">' +
+    '<label title="No own memory: they transplant with no dependencies or collisions">' +
+    '<input type="checkbox" id="lab-auto"> self-contained only</label>' +
     '<span class="inv-sp"></span><span id="lab-srccount" class="inv-n"></span>' +
     '</div>' +
     '<div id="lab-srclist" class="lab-list"></div>' +
     '<div id="lab-preview" hidden><div class="lab-h"><b></b>' +
-    '<button id="lab-prevx" title="Cerrar">✕</button></div><pre></pre></div>' +
+    '<button id="lab-prevx" title="Close">✕</button></div><pre></pre></div>' +
     '</div>' +
     '<div class="lab-col">' +
-    '<div class="lab-h">Híbrido <span id="lab-sum" class="inv-n"></span></div>' +
+    '<div class="lab-h">Hybrid <span id="lab-sum" class="inv-n"></span></div>' +
     '<div class="inv-bar">' +
-    '<input type="text" id="lab-name" value="Hibrido" style="width:150px" title="Nombre de la especie">' +
-    '<label><input type="checkbox" id="lab-veg"> vegetal</label>' +
-    '<label title="Si dos bots usan la misma dirección de memoria propia, mover la del segundo a una libre">' +
-    '<input type="checkbox" id="lab-remap" checked> remapear memoria</label>' +
+    '<input type="text" id="lab-name" value="Hybrid" style="width:150px" title="Species name">' +
+    '<label><input type="checkbox" id="lab-veg"> vegetable</label>' +
+    '<label title="If two bots use the same own-memory address, move the second one\'s to a free one">' +
+    '<input type="checkbox" id="lab-remap" checked> remap memory</label>' +
     '<span class="inv-sp"></span>' +
-    '<button id="lab-new">Nuevo</button>' +
+    '<button id="lab-new">New</button>' +
     '<select id="lab-saved"></select>' +
-    '<button id="lab-del" title="Borrar el híbrido guardado elegido">🗑</button>' +
+    '<button id="lab-del" title="Delete the chosen saved hybrid">🗑</button>' +
     '</div>' +
     '<div id="lab-parts" class="lab-list"></div>' +
-    '<div class="lab-caps"><span class="inv-n">Capacidades:</span> <span id="lab-caps"></span></div>' +
+    '<div class="lab-caps"><span class="inv-n">Capabilities:</span> <span id="lab-caps"></span></div>' +
     '<div id="lab-warns"></div>' +
     '<textarea id="lab-dna" readonly spellcheck="false" hidden></textarea>' +
     '<div class="inv-foot">' +
-    '<button id="lab-showdna">Ver ADN</button>' +
-    '<button id="lab-save">Guardar</button>' +
-    '<button id="lab-toform">Al formulario</button>' +
-    '<label>nº</label><input type="number" id="lab-qty" value="5" min="1" style="width:52px">' +
+    '<button id="lab-showdna">Show DNA</button>' +
+    '<button id="lab-save">Save</button>' +
+    '<button id="lab-toform">To the form</button>' +
+    '<label>qty</label><input type="number" id="lab-qty" value="5" min="1" style="width:52px">' +
     '<label>nrg</label><input type="number" id="lab-nrg" value="3000" min="1" style="width:70px">' +
-    '<button id="lab-seed" class="primary">Sembrar</button>' +
+    '<button id="lab-seed" class="primary">Seed</button>' +
     '</div>' +
     '</div></div>';
 
@@ -436,7 +436,7 @@ async function openLab() {
 
   $('lab-new').onclick = () => {
     lab.parts = [];
-    $('lab-name').value = 'Hibrido';
+    $('lab-name').value = 'Hybrid';
     $('lab-veg').checked = false;
     $('lab-saved').value = '';
     labRenderHybrid();
@@ -452,12 +452,12 @@ async function openLab() {
   $('lab-showdna').onclick = () => {
     const dna = $('lab-dna');
     dna.hidden = !dna.hidden;
-    $('lab-showdna').textContent = dna.hidden ? 'Ver ADN' : 'Ocultar ADN';
+    $('lab-showdna').textContent = dna.hidden ? 'Show DNA' : 'Hide DNA';
     labRenderHybrid();
   };
   $('lab-save').onclick = labSave;
   $('lab-toform').onclick = () => {
-    if (!lab.parts.length) { log('laboratorio: el híbrido no tiene genes'); return; }
+    if (!lab.parts.length) { log('lab: the hybrid has no genes'); return; }
     const sp = labSpecies();
     document.getElementById('dna').value = sp.dna;
     document.getElementById('sp-name').value = sp.name;
@@ -466,12 +466,12 @@ async function openLab() {
     const sel = document.getElementById('preset');
     let o = sel.querySelector('option[value="inv"]');
     if (!o) { o = document.createElement('option'); o.value = 'inv'; sel.appendChild(o); }
-    o.textContent = 'Híbrido: ' + labName();
+    o.textContent = 'Hybrid: ' + labName();
     sel.value = 'inv';
-    log(`laboratorio: ${sp.name} en el formulario`);
+    log(`lab: ${sp.name} loaded into the form`);
   };
   $('lab-seed').onclick = () => {
-    if (!lab.parts.length) { log('laboratorio: el híbrido no tiene genes'); return; }
+    if (!lab.parts.length) { log('lab: the hybrid has no genes'); return; }
     const sp = labSpecies();
     worker.postMessage({ t: 'seed-species', sp: {
       ...sp,

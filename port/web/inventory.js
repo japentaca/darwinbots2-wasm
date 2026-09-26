@@ -87,8 +87,8 @@ async function invLoad() {
     inv.sets = new Map(s.map((r) => [r.name, r]));
   } catch (e) {
     inv.dbOk = false;
-    log('inventario: IndexedDB no disponible (¿file:// o modo privado?): ' +
-        'tags y favoritos no se guardarán');
+    log('inventory: IndexedDB unavailable (file:// or private mode?): ' +
+        'tags and favorites will not be saved');
   }
 }
 
@@ -103,7 +103,7 @@ async function saveUser(rec) {
   if (!inv.dbOk) return;
   try {
     if (empty) await InvDB.del('bots', rec.key); else await InvDB.put('bots', rec);
-  } catch (e) { log('inventario: no pude guardar (' + e.message + ')'); }
+  } catch (e) { log('inventory: could not save (' + e.message + ')'); }
 }
 function allTags() {
   const t = new Map();
@@ -165,13 +165,13 @@ function invGroupsOf(it, how) {
     case 'board': return [it.b.board];
     case 'arch': return [archLabel(it.p && it.p.arch)];
     case 'size': return [it.p ? SIZE_LABEL[it.p.size] : '—'];
-    case 'fav': return [u.fav ? '★ Favoritos' : 'Resto'];
-    case 'tag': return u.tags.length ? u.tags : ['(sin tags)'];
+    case 'fav': return [u.fav ? '★ Favorites' : 'Others'];
+    case 'tag': return u.tags.length ? u.tags : ['(no tags)'];
     case 'cap': {
       const cs = it.p ? it.p.caps.filter((c) => !CAP_COMMON.has(c)) : [];
-      return cs.length ? cs.map((c) => capInfo(c).label) : ['(solo básicas)'];
+      return cs.length ? cs.map((c) => capInfo(c).label) : ['(basics only)'];
     }
-    default: return ['Todos'];
+    default: return ['All'];
   }
 }
 
@@ -191,7 +191,7 @@ function capChip(k, extra) {
 }
 function tagChip(t, removable) {
   return `<span class="inv-tag" data-tag="${escHtml(t)}">#${escHtml(t)}` +
-         (removable ? '<button class="inv-tag-x" title="Quitar tag">×</button>' : '') +
+         (removable ? '<button class="inv-tag-x" title="Remove tag">×</button>' : '') +
          '</span>';
 }
 
@@ -217,7 +217,7 @@ function invRenderList() {
     const closed = inv.collapsed.has(f.group + '|' + g);
     html.push(`<div class="inv-grp${closed ? ' closed' : ''}" data-g="${escHtml(g)}">` +
       `<div class="inv-gh"><span class="inv-tw">${closed ? '▸' : '▾'}</span>` +
-      `<input type="checkbox" class="inv-gsel" title="Seleccionar el grupo"` +
+      `<input type="checkbox" class="inv-gsel" title="Select the group"` +
       `${nSel === list.length ? ' checked' : ''}>` +
       `<b>${escHtml(g)}</b> <span class="inv-n">${list.length}` +
       `${nSel ? ` · ${nSel} sel.` : ''}</span></div>`);
@@ -228,7 +228,7 @@ function invRenderList() {
         html.push(
           `<div class="inv-row${inv.cur === it.key ? ' cur' : ''}" data-k="${escHtml(it.key)}">` +
           `<input type="checkbox" class="inv-sel"${inv.sel.has(it.key) ? ' checked' : ''}>` +
-          `<button class="inv-star${u.fav ? ' on' : ''}" title="Favorito">${u.fav ? '★' : '☆'}</button>` +
+          `<button class="inv-star${u.fav ? ' on' : ''}" title="Favorite">${u.fav ? '★' : '☆'}</button>` +
           `<span class="inv-name">${escHtml(it.b.name)}${it.b.veg ? ' <i>(veg)</i>' : ''}</span>` +
           `<span class="inv-meta">${it.p ? it.p.genes + ' g' : ''}</span>` +
           `<span class="inv-caps">${u.tags.map((t) => tagChip(t)).join('')}` +
@@ -240,18 +240,18 @@ function invRenderList() {
   const listEl = w.querySelector('#inv-list');
   const top = listEl.scrollTop;
   listEl.innerHTML = html.join('') ||
-    '<div class="inv-empty">Ningún bot cumple los filtros.</div>';
+    '<div class="inv-empty">No bot matches the filters.</div>';
   listEl.scrollTop = top;
   w.querySelector('#inv-count').textContent =
-    `${vis.length} de ${inv.items.length} bots · ${inv.sel.size} seleccionados`;
+    `${vis.length} of ${inv.items.length} bots · ${inv.sel.size} selected`;
 }
 
 function invRenderCaps() {
   const w = inv.win;
   const box = w.querySelector('#inv-capf');
   if (!inv.profiles) {
-    box.innerHTML = '<span class="inv-empty">Sin bots/profiles.json: corré ' +
-      'tools/bestiary/analyze_bots.js para tener las capacidades.</span>';
+    box.innerHTML = '<span class="inv-empty">No bots/profiles.json: run ' +
+      'tools/bestiary/analyze_bots.js to get the capabilities.</span>';
     return;
   }
   const count = {};
@@ -274,13 +274,13 @@ function invRenderTagOptions() {
   const sel = w.querySelector('#inv-tag');
   const cur = sel.value;
   const tags = allTags();
-  sel.innerHTML = '<option value="">tag: todos</option><option value="\u0000">(sin tags)</option>' +
+  sel.innerHTML = '<option value="">tag: all</option><option value="\u0000">(no tags)</option>' +
     tags.map(([t, n]) => `<option value="${escHtml(t)}">#${escHtml(t)} (${n})</option>`).join('');
   sel.value = [...sel.options].some((o) => o.value === cur) ? cur : '';
   w.querySelector('#inv-taglist').innerHTML =
     tags.map(([t]) => `<option value="${escHtml(t)}">`).join('');
   const sets = w.querySelector('#inv-sets');
-  sets.innerHTML = '<option value="">selecciones guardadas…</option>' +
+  sets.innerHTML = '<option value="">saved selections…</option>' +
     [...inv.sets.values()].sort((a, b) => a.name.localeCompare(b.name))
       .map((s) => `<option value="${escHtml(s.name)}">${escHtml(s.name)} (${s.keys.length})</option>`).join('');
 }
@@ -290,12 +290,12 @@ function invRenderDetail() {
   const box = w.querySelector('#inv-detail');
   const it = inv.cur && inv.byKey.get(inv.cur);
   if (!it) {
-    box.innerHTML = '<div class="inv-empty">Elegí un bot de la lista para ver su perfil genético.</div>';
+    box.innerHTML = '<div class="inv-empty">Pick a bot from the list to see its genetic profile.</div>';
     return;
   }
   const u = userRec(it.key), p = it.p;
   const url = /^https?:\/\//.test(it.b.url || '') ? it.b.url : '';
-  let capsHtml = '<div class="inv-empty">sin perfil</div>', genesHtml = '';
+  let capsHtml = '<div class="inv-empty">no profile</div>', genesHtml = '';
   if (p) {
     const byGroup = new Map();
     for (const c of p.caps) {
@@ -305,28 +305,28 @@ function invRenderDetail() {
     }
     capsHtml = [...byGroup.entries()].map(([g, cs]) =>
       `<div class="inv-dl"><span>${escHtml(g)}</span><span>${cs.map((c) => capChip(c)).join('')}</span></div>`).join('');
-    genesHtml = '<details class="inv-genes"><summary>Capacidades por gen (' + p.genes + ')</summary>' +
-      p.geneCaps.map((cs, i) => `<div class="inv-dl"><span>gen ${i + 1}</span><span>` +
+    genesHtml = '<details class="inv-genes"><summary>Capabilities per gene (' + p.genes + ')</summary>' +
+      p.geneCaps.map((cs, i) => `<div class="inv-dl"><span>gene ${i + 1}</span><span>` +
         (cs.length ? cs.map((c) => capChip(c)).join('') : '<i>—</i>') + '</span></div>').join('') +
       '</details>';
   }
   box.innerHTML =
     `<h3>${escHtml(it.b.name)}</h3>` +
-    `<div class="inv-sub">${escHtml(it.b.board)}${it.b.veg ? ' · vegetal' : ''}` +
+    `<div class="inv-sub">${escHtml(it.b.board)}${it.b.veg ? ' · vegetable' : ''}` +
     (p ? ` · ${escHtml(archLabel(p.arch))} · ${p.genes} genes · ${p.tokens} tokens` : '') +
-    (url ? ` · <a href="${escHtml(url)}" target="_blank" rel="noopener">foro</a>` : '') + '</div>' +
-    '<div class="row"><button id="inv-toform">Al formulario</button>' +
-    '<button id="inv-seedone" class="primary">Sembrar</button>' +
-    `<button id="inv-favone">${u.fav ? '★ Favorito' : '☆ Favorito'}</button>` +
-    '<button id="inv-tolab" title="Usar sus genes en el Laboratorio de híbridos">🧬 Laboratorio</button></div>' +
+    (url ? ` · <a href="${escHtml(url)}" target="_blank" rel="noopener">forum</a>` : '') + '</div>' +
+    '<div class="row"><button id="inv-toform">To the form</button>' +
+    '<button id="inv-seedone" class="primary">Seed</button>' +
+    `<button id="inv-favone">${u.fav ? '★ Favorite' : '☆ Favorite'}</button>` +
+    '<button id="inv-tolab" title="Use its genes in the Hybrid lab">🧬 Lab</button></div>' +
     '<h4>Tags</h4>' +
-    `<div class="inv-tags">${u.tags.map((t) => tagChip(t, true)).join('') || '<i class="inv-empty">sin tags</i>'}</div>` +
-    '<div class="row"><input type="text" id="inv-newtag" list="inv-taglist" placeholder="nuevo tag…">' +
+    `<div class="inv-tags">${u.tags.map((t) => tagChip(t, true)).join('') || '<i class="inv-empty">no tags</i>'}</div>` +
+    '<div class="row"><input type="text" id="inv-newtag" list="inv-taglist" placeholder="new tag…">' +
     '<button id="inv-addtag">+ tag</button></div>' +
-    '<h4>Notas</h4>' +
-    `<textarea id="inv-notes" placeholder="notas libres…">${escHtml(u.notes)}</textarea>` +
-    '<h4>Capacidades genéticas</h4>' + capsHtml + genesHtml +
-    (p ? `<div class="inv-sub">ADN ${escHtml(p.hash)} · ${escHtml(it.b.file)}</div>` : '');
+    '<h4>Notes</h4>' +
+    `<textarea id="inv-notes" placeholder="free notes…">${escHtml(u.notes)}</textarea>` +
+    '<h4>Genetic capabilities</h4>' + capsHtml + genesHtml +
+    (p ? `<div class="inv-sub">DNA ${escHtml(p.hash)} · ${escHtml(it.b.file)}</div>` : '');
 }
 
 function invRenderAll() {
@@ -339,7 +339,7 @@ function invRenderAll() {
 // ---- Acciones ---------------------------------------------------------------
 async function invFetchDna(b) {
   const r = await fetch('bots/' + b.file);
-  if (!r.ok) throw new Error(`no pude leer bots/${b.file}`);
+  if (!r.ok) throw new Error(`could not read bots/${b.file}`);
   return r.text();
 }
 
@@ -355,9 +355,9 @@ async function invToForm(it) {
   const sel = document.getElementById('preset');
   let o = sel.querySelector('option[value="inv"]');
   if (!o) { o = document.createElement('option'); o.value = 'inv'; sel.appendChild(o); }
-  o.textContent = 'Inventario: ' + it.b.name;
+  o.textContent = 'Inventory: ' + it.b.name;
   sel.value = 'inv';
-  log(`inventario: ${it.b.name} en el formulario`);
+  log(`inventory: ${it.b.name} loaded into the form`);
 }
 
 // Color al azar para cada especie que se agrega desde el Inventario o el
@@ -398,7 +398,7 @@ async function invSeed(list) {
     });
     n++;
   }
-  log(`inventario: ${n} especie(s) sembradas`);
+  log(`inventory: ${n} species seeded`);
 }
 
 async function invToggleFav(key) {
@@ -432,15 +432,15 @@ function invExport() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 1)],
                                         { type: 'application/json' }));
-  a.download = 'inventario-darwinbots.json';
+  a.download = 'darwinbots-inventory.json';
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 async function invImport(file) {
   let doc;
-  try { doc = JSON.parse(await file.text()); } catch (e) { log('inventario: JSON inválido'); return; }
-  if (!doc || doc.format !== 'darwinbots-inventario') { log('inventario: no es un respaldo del inventario'); return; }
+  try { doc = JSON.parse(await file.text()); } catch (e) { log('inventory: invalid JSON'); return; }
+  if (!doc || doc.format !== 'darwinbots-inventario') { log('inventory: not an inventory backup'); return; }
   let nb = 0, ns = 0;
   for (const r of doc.bots || []) {
     if (!r || !r.key) continue;
@@ -460,16 +460,16 @@ async function invImport(file) {
     if (inv.dbOk) await InvDB.put('sets', rec).catch(() => {});
     ns++;
   }
-  log(`inventario: importados ${nb} bot(s) y ${ns} selección(es)`);
+  log(`inventory: imported ${nb} bot(s) and ${ns} selection(s)`);
   invRenderAll();
 }
 
 // ---- Ventana ----------------------------------------------------------------
 async function openInventory() {
   if (inv.win) { winLayer.appendChild(inv.win); return; }   // al frente
-  if (!BESTIARY.length) { log('inventario: no hay bots/bots.json (¿la página se sirve por http?)'); return; }
+  if (!BESTIARY.length) { log('inventory: no bots/bots.json (is the page served over http?)'); return; }
   await invLoad();
-  const w = makeWindow('Inventario de bots', Math.min(1040, innerWidth - 40), 0,
+  const w = makeWindow('Bot inventory', Math.min(1040, innerWidth - 40), 0,
                        () => { inv.win = null; });
   inv.win = w;
   w.classList.add('inv-win');
@@ -480,50 +480,50 @@ async function openInventory() {
   const archs = inv.profiles ? Object.entries(inv.profiles.archetypes) : [];
   w.body.innerHTML =
     '<div class="inv-bar">' +
-    '<input type="search" id="inv-q" placeholder="buscar nombre, tag o nota…">' +
-    '<select id="inv-board"><option value="">foro: todos</option>' +
+    '<input type="search" id="inv-q" placeholder="search name, tag or note…">' +
+    '<select id="inv-board"><option value="">forum: all</option>' +
     boards.map((b) => `<option>${escHtml(b)}</option>`).join('') + '</select>' +
-    '<select id="inv-arch"><option value="">arquetipo: todos</option>' +
+    '<select id="inv-arch"><option value="">archetype: all</option>' +
     archs.map(([k, l]) => `<option value="${k}">${escHtml(l)}</option>`).join('') + '</select>' +
-    '<select id="inv-size"><option value="">tamaño: todos</option>' +
+    '<select id="inv-size"><option value="">size: all</option>' +
     Object.entries(SIZE_LABEL).map(([k, l]) => `<option value="${k}">${l}</option>`).join('') + '</select>' +
     '<select id="inv-tag"></select>' +
-    '<label><input type="checkbox" id="inv-fav"> ★ solo</label>' +
-    '<label><input type="checkbox" id="inv-onlysel"> solo selección</label>' +
+    '<label><input type="checkbox" id="inv-fav"> ★ only</label>' +
+    '<label><input type="checkbox" id="inv-onlysel"> selection only</label>' +
     '<span class="inv-sp"></span>' +
-    '<label>agrupar</label><select id="inv-group">' +
-    '<option value="board">foro</option><option value="arch" selected>arquetipo</option>' +
-    '<option value="cap">capacidad</option><option value="tag">tag</option>' +
-    '<option value="size">tamaño</option><option value="fav">favoritos</option>' +
-    '<option value="none">sin agrupar</option></select>' +
-    '<select id="inv-sort"><option value="name">orden: nombre</option>' +
-    '<option value="genes">orden: genes</option><option value="caps">orden: nº capacidades</option></select>' +
+    '<label>group by</label><select id="inv-group">' +
+    '<option value="board">forum</option><option value="arch" selected>archetype</option>' +
+    '<option value="cap">capability</option><option value="tag">tag</option>' +
+    '<option value="size">size</option><option value="fav">favorites</option>' +
+    '<option value="none">no grouping</option></select>' +
+    '<select id="inv-sort"><option value="name">sort: name</option>' +
+    '<option value="genes">sort: genes</option><option value="caps">sort: # capabilities</option></select>' +
     '</div>' +
-    '<div id="inv-capf" title="Clic: requerida (verde) → excluida (roja) → sin filtro"></div>' +
+    '<div id="inv-capf" title="Click: required (green) → excluded (red) → no filter"></div>' +
     '<div class="inv-main"><div id="inv-list"></div><div id="inv-detail"></div></div>' +
     '<div class="inv-foot">' +
     '<span id="inv-count"></span>' +
-    '<button id="inv-selvis" title="Seleccionar todos los visibles">☑ visibles</button>' +
-    '<button id="inv-selnone">☐ ninguno</button>' +
+    '<button id="inv-selvis" title="Select all visible">☑ visible</button>' +
+    '<button id="inv-selnone">☐ none</button>' +
     '<span class="inv-sep"></span>' +
     '<input type="text" id="inv-seltag" list="inv-taglist" placeholder="tag…" style="width:90px">' +
-    '<button id="inv-seltag-add" title="Agregar el tag a la selección">+ tag</button>' +
-    '<button id="inv-seltag-del" title="Quitar el tag de la selección">− tag</button>' +
-    '<button id="inv-selfav" title="Marcar la selección como favorita">★</button>' +
+    '<button id="inv-seltag-add" title="Add the tag to the selection">+ tag</button>' +
+    '<button id="inv-seltag-del" title="Remove the tag from the selection">− tag</button>' +
+    '<button id="inv-selfav" title="Mark the selection as favorite">★</button>' +
     '<span class="inv-sep"></span>' +
-    '<input type="text" id="inv-setname" placeholder="nombre…" style="width:90px">' +
-    '<button id="inv-setsave" title="Guardar la selección con ese nombre">Guardar sel.</button>' +
+    '<input type="text" id="inv-setname" placeholder="name…" style="width:90px">' +
+    '<button id="inv-setsave" title="Save the selection under that name">Save sel.</button>' +
     '<select id="inv-sets"></select>' +
-    '<button id="inv-setdel" title="Borrar la selección guardada elegida">🗑</button>' +
+    '<button id="inv-setdel" title="Delete the chosen saved selection">🗑</button>' +
     '<span class="inv-sep"></span>' +
-    '<label>nº</label><input type="number" id="inv-qty" value="5" min="1" style="width:52px">' +
+    '<label>qty</label><input type="number" id="inv-qty" value="5" min="1" style="width:52px">' +
     '<label>veg</label><input type="number" id="inv-vqty" value="15" min="1" style="width:52px">' +
     '<label>nrg</label><input type="number" id="inv-nrg" value="3000" min="1" style="width:70px">' +
-    '<button id="inv-seedsel" class="primary">Sembrar selección</button>' +
-    '<button id="inv-sellab" title="Llevar la selección al Laboratorio de híbridos">🧬</button>' +
+    '<button id="inv-seedsel" class="primary">Seed selection</button>' +
+    '<button id="inv-sellab" title="Send the selection to the Hybrid lab">🧬</button>' +
     '<span class="inv-sp"></span>' +
-    '<button id="inv-export" title="Descargar tags, favoritos, notas y selecciones">Exportar</button>' +
-    '<button id="inv-import">Importar</button>' +
+    '<button id="inv-export" title="Download tags, favorites, notes and selections">Export</button>' +
+    '<button id="inv-import">Import</button>' +
     '<input type="file" id="inv-importf" accept=".json,application/json" hidden>' +
     '</div><datalist id="inv-taglist"></datalist>';
 
@@ -614,7 +614,7 @@ async function openInventory() {
   $('inv-selvis').onclick = () => { visibleKeys().forEach((k) => inv.sel.add(k)); invRenderList(); };
   $('inv-selnone').onclick = () => { inv.sel.clear(); invRenderList(); };
   $('inv-seltag-add').onclick = async () => {
-    if (!inv.sel.size) { log('inventario: no hay bots seleccionados'); return; }
+    if (!inv.sel.size) { log('inventory: no bots selected'); return; }
     await invAddTag([...inv.sel], $('inv-seltag').value);
     invRenderTagOptions(); invRenderList(); invRenderDetail();
   };
@@ -630,13 +630,13 @@ async function openInventory() {
   };
   $('inv-setsave').onclick = async () => {
     const name = $('inv-setname').value.trim();
-    if (!name || !inv.sel.size) { log('inventario: poné un nombre y seleccioná bots'); return; }
+    if (!name || !inv.sel.size) { log('inventory: enter a name and select some bots'); return; }
     const rec = { name, keys: [...inv.sel] };
     inv.sets.set(name, rec);
-    if (inv.dbOk) await InvDB.put('sets', rec).catch((er) => log('inventario: ' + er.message));
+    if (inv.dbOk) await InvDB.put('sets', rec).catch((er) => log('inventory: ' + er.message));
     invRenderTagOptions();
     $('inv-sets').value = name;
-    log(`inventario: selección "${name}" guardada (${rec.keys.length} bots)`);
+    log(`inventory: selection "${name}" saved (${rec.keys.length} bots)`);
   };
   $('inv-sets').onchange = () => {
     const s = inv.sets.get($('inv-sets').value);
@@ -654,12 +654,12 @@ async function openInventory() {
   };
   $('inv-seedsel').onclick = () => {
     const list = [...inv.sel].map((k) => inv.byKey.get(k)).filter(Boolean);
-    if (!list.length) { log('inventario: no hay bots seleccionados'); return; }
+    if (!list.length) { log('inventory: no bots selected'); return; }
     invSeed(list);
   };
   $('inv-sellab').onclick = () => {
     const files = [...inv.sel].map((k) => inv.byKey.get(k)).filter(Boolean).map((it) => it.b.file);
-    if (!files.length) { log('inventario: no hay bots seleccionados'); return; }
+    if (!files.length) { log('inventory: no bots selected'); return; }
     labAddSources(files);
   };
   $('inv-export').onclick = invExport;

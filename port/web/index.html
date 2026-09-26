@@ -572,7 +572,7 @@
         <label for="im-url" class="im-ws">Relay</label>
         <input type="text" id="im-url" class="im-ws" style="width:150px">
         <label for="im-room">Room</label>
-        <input type="text" id="im-room" value="publica" maxlength="64" style="width:150px">
+        <input type="text" id="im-room" value="public" maxlength="64" style="width:150px">
         <span class="full row">
           <button id="btn-im" class="primary">Connect Internet Mode</button>
         </span>
@@ -2987,7 +2987,7 @@ function imInit() {
   document.getElementById('im-name').value = p.name || '';
   document.getElementById('im-kind').value = p.kind === 'ws' ? 'ws' : 'bc';
   document.getElementById('im-url').value = p.url || imDefaultUrl();
-  document.getElementById('im-room').value = p.room || 'publica';
+  document.getElementById('im-room').value = p.room || 'public';
   imKindChanged();
   worker.postMessage({ t: 'im-name', name: document.getElementById('im-name').value.trim() });
   document.getElementById('im-kind').onchange = () => { imKindChanged(); imSavePrefs(); };
@@ -3004,7 +3004,7 @@ function imInit() {
       name: document.getElementById('im-name').value.trim(),
       kind: document.getElementById('im-kind').value,
       url: document.getElementById('im-url').value.trim(),
-      room: document.getElementById('im-room').value.trim() || 'publica' });
+      room: document.getElementById('im-room').value.trim() || 'public' });
   };
 }
 

@@ -58,7 +58,7 @@ function contestUniqueName(name) {
 
 function contestAdd(entry) {
   if (contest.roster.length >= CONTEST_MAX) {
-    log(`contest: máximo ${CONTEST_MAX} especies (como el original)`);
+    log(`contest: at most ${CONTEST_MAX} species (as in the original)`);
     return;
   }
   contest.roster.push({ qty: 5, color: invColor(), ...entry,
@@ -71,17 +71,17 @@ function contestAdd(entry) {
 async function contestDna(r) {
   if (r.src === 'bestiary') {
     const b = BESTIARY.find((x) => x.file === r.file);
-    if (!b) throw new Error(`${r.name}: ya no está en el Bestiary`);
+    if (!b) throw new Error(`${r.name}: no longer in the Bestiary`);
     return invFetchDna(b);
   }
   if (r.src === 'hybrid') {
     const dna = await labDnaByName(r.file + '.txt');
-    if (!dna) throw new Error(`${r.name}: no encuentro el híbrido "${r.file}"`);
+    if (!dna) throw new Error(`${r.name}: hybrid "${r.file}" not found`);
     return dna;
   }
   if (r.src === 'preset') return PRESETS[r.file].dna;
   if (r.dna) return r.dna;                     // 'form': el ADN va en la lista
-  throw new Error(`${r.name}: sin ADN`);
+  throw new Error(`${r.name}: no DNA`);
 }
 
 // ---- Arranque -----------------------------------------------------------------
@@ -124,11 +124,11 @@ async function contestStart(opts = {}) {
   const note = $('ct-note');
   const fighters = contest.roster.filter((r) => r.qty > 0);
   if (fighters.length < 2) {
-    note.textContent = 'Hacen falta al menos 2 especies para un contest.';
+    note.textContent = 'A contest needs at least 2 species.';
     note.className = 'ct-note warn';
     return;
   }
-  note.textContent = 'Preparando…';
+  note.textContent = 'Preparing…';
   note.className = 'ct-note';
   if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
   contest.rounds = Math.max(1, parseInt($('ct-rounds').value, 10) || 5);
@@ -158,19 +158,19 @@ function contestOnMessage(msg) {
   const note = contest.win.querySelector('#ct-note');
   if (msg.t === 'f1-started') {
     if (!msg.n) {
-      note.textContent = 'El censo no encontró contrincantes: el contest no arrancó.';
+      note.textContent = 'The census found no contenders: the contest did not start.';
       note.className = 'ct-note warn';
       contest.running = false;
       contestRender();
     } else {
-      note.textContent = `${msg.n} especies en liza.`;
+      note.textContent = `${msg.n} species in the running.`;
       note.className = 'ct-note';
     }
   } else if (msg.t === 'f1-note') {
     note.textContent = msg.kind === 'single'
-      ? 'Solo quedó una especie en el censo: el modo F1 se desactivó.'
-      : msg.kind === 'cap' ? 'Tope de ciclos: la ronda es para la especie más numerosa.'
-      : 'Más de 2 especies: el tope de ciclos y la población máxima se desactivan (como en el original).';
+      ? 'Only one species left in the census: F1 mode was turned off.'
+      : msg.kind === 'cap' ? 'Cycle cap reached: the round goes to the most numerous species.'
+      : 'More than 2 species: the cycle cap and max population are turned off (as in the original).';
     note.className = 'ct-note warn';
     if (msg.kind === 'single') { contest.running = false; contestRender(); }
   } else if (msg.t === 'f1-over') {
@@ -196,10 +196,10 @@ function contestBoardHtml(st, color, rounds, winner) {
   const round = Math.min(f1.contests + 1, f1.minrounds);
   const done = f1.over || winner;
   const extended = f1.minrounds > rounds;
-  return `<div class="ct-round">${done ? 'Terminado' : `Ronda ${round} / ${f1.minrounds}`}` +
-    ` · ciclo ${st.cycle}${f1.restarts ? ` · restarts ${f1.restarts}` : ''}</div>` +
-    (done ? '' : `<div class="ct-rule">Gana quien sume ${contestWinsNeeded(f1.minrounds)}🏅 o más` +
-      (extended ? ` · alargado de ${rounds} a ${f1.minrounds} rondas por empate estadístico` : '') +
+  return `<div class="ct-round">${done ? 'Over' : `Round ${round} / ${f1.minrounds}`}` +
+    ` · cycle ${st.cycle}${f1.restarts ? ` · restarts ${f1.restarts}` : ''}</div>` +
+    (done ? '' : `<div class="ct-rule">Whoever reaches ${contestWinsNeeded(f1.minrounds)}🏅 or more wins` +
+      (extended ? ` · extended from ${rounds} to ${f1.minrounds} rounds by statistical draw` : '') +
       '</div>') +
     f1.sp.map((s) => {
       const c = color.get(s.name) || '#8899bb';
@@ -212,7 +212,7 @@ function contestBoardHtml(st, color, rounds, winner) {
         `<span class="ct-pop">${s.pop}🤖</span>` +
         `<span class="ct-wins${lead ? ' lead' : ''}">${s.wins}🏅</span></div>`;
     }).join('') +
-    (winner ? `<div class="ct-winner">🏆 Gana <b>${escHtml(winner)}</b></div>` : '');
+    (winner ? `<div class="ct-winner">🏆 <b>${escHtml(winner)}</b> wins</div>` : '');
 }
 
 // Marcador: se llama en cada frame con las stats del worker.
@@ -221,7 +221,7 @@ function contestOnStats(st) {
   if (!contest.win || !contest.running || !st.f1) return;
   const rw = contestRoundWinner(contest.lastWins, st.f1);
   if (rw) contest.win.querySelector('#ct-note').textContent =
-    `Ronda ${st.f1.contests} para ${rw}.`;
+    `Round ${st.f1.contests} goes to ${rw}.`;
   contest.lastWins = st.f1.sp.map((s) => s.wins);
   contest.win.querySelector('#ct-board').innerHTML = contestBoardHtml(
     st, new Map(contest.roster.map((r) => [r.name, r.color])), contest.rounds,
@@ -233,19 +233,19 @@ function contestRenderRoster() {
   const w = contest.win;
   const list = w.querySelector('#ct-roster');
   if (!contest.roster.length) {
-    list.innerHTML = '<div class="ct-empty">Agrega al menos 2 especies desde las fuentes de abajo.</div>';
+    list.innerHTML = '<div class="ct-empty">Add at least 2 species from the sources below.</div>';
   } else {
     list.innerHTML = contest.roster.map((r, i) =>
       `<div class="ct-fighter" data-i="${i}">` +
       `<input type="color" class="ct-color" value="${r.color}" title="Color">` +
       `<span class="ct-name" title="${escHtml(r.name)}">${escHtml(r.name)}</span>` +
-      `<span class="ct-src">${{ bestiary: 'Bestiary', hybrid: 'híbrido', preset: 'preset', form: 'formulario' }[r.src] || ''}</span>` +
-      `<label>nº <input type="number" class="ct-qty" min="1" max="200" value="${r.qty}"></label>` +
-      `<button class="ct-del" title="Quitar">✕</button></div>`).join('');
+      `<span class="ct-src">${{ bestiary: 'Bestiary', hybrid: 'hybrid', preset: 'preset', form: 'form' }[r.src] || ''}</span>` +
+      `<label>qty <input type="number" class="ct-qty" min="1" max="200" value="${r.qty}"></label>` +
+      `<button class="ct-del" title="Remove">✕</button></div>`).join('');
   }
   const n = contest.roster.length;
   w.querySelector('#ct-count').textContent =
-    `${n} especie${n === 1 ? '' : 's'}` + (n > 2 ? ' · sin topes de duelo' : '');
+    `${n} species` + (n > 2 ? ' · no duel caps' : '');
   w.querySelector('#ct-duel').hidden = n !== 2;
   w.querySelector('#ct-go').disabled = n < 2;
 }
@@ -259,14 +259,14 @@ function contestRenderSearch() {
   res.innerHTML = hits.length
     ? hits.map((b) => `<button class="ct-hit" data-file="${escHtml(b.file)}" ` +
         `title="${escHtml(b.board || '')}">+ ${escHtml(b.name)}</button>`).join('')
-    : '<div class="ct-empty">Sin resultados.</div>';
+    : '<div class="ct-empty">No results.</div>';
 }
 
 async function contestRenderHybrids() {
   const sel = contest.win.querySelector('#ct-hyb');
   let hs = [];
   try { hs = (await InvDB.all('hybrids')).filter((h) => !h.veg); } catch (e) { /* sin IndexedDB */ }
-  sel.innerHTML = '<option value="">— híbrido —</option>' +
+  sel.innerHTML = '<option value="">— hybrid —</option>' +
     hs.map((h) => `<option>${escHtml(h.name)}</option>`).join('');
   sel.disabled = !hs.length;
 }
@@ -285,7 +285,7 @@ function contestRender() {
 async function openContest() {
   if (contest.win) { winLayer.appendChild(contest.win); return; }   // al frente
   if (!contest.roster.length) contestLoadRoster();
-  const w = makeWindow('🏆 Contest F1', Math.min(460, innerWidth - 40), 0,
+  const w = makeWindow('🏆 F1 Contest', Math.min(460, innerWidth - 40), 0,
                        () => { contest.win = null; });
   contest.win = w;
   w.classList.add('ct-win');
@@ -293,34 +293,34 @@ async function openContest() {
   w.style.top = '50px';
   w.body.innerHTML =
     '<div id="ct-setup">' +
-    '<div class="ct-h">Contrincantes <span id="ct-count"></span></div>' +
+    '<div class="ct-h">Contenders <span id="ct-count"></span></div>' +
     '<div id="ct-roster"></div>' +
-    '<div class="ct-h">Agregar</div>' +
-    '<input type="search" id="ct-q" placeholder="buscar en el Bestiary…">' +
+    '<div class="ct-h">Add</div>' +
+    '<input type="search" id="ct-q" placeholder="search the Bestiary…">' +
     '<div id="ct-results"></div>' +
     '<div class="ct-srcrow">' +
     '<select id="ct-hyb"></select>' +
-    '<button id="ct-addsel" title="Los bots seleccionados en el Inventario (no vegetales)">📚 Selección del Inventario</button>' +
-    '<button id="ct-addform" title="El ADN y el nombre del panel Sembrar especie">ADN del formulario</button>' +
+    '<button id="ct-addsel" title="The bots selected in the Inventory (non-vegetables)">📚 Inventory selection</button>' +
+    '<button id="ct-addform" title="The DNA and name from the Seed species panel">DNA from the form</button>' +
     '<button id="ct-addanimal">Animal Minimalis</button>' +
     '</div>' +
-    '<div class="ct-h">Reglas</div>' +
+    '<div class="ct-h">Rules</div>' +
     '<div class="ct-rules">' +
-    '<label>Rondas mínimas</label><input type="number" id="ct-rounds" min="1" value="5">' +
+    '<label>Minimum rounds</label><input type="number" id="ct-rounds" min="1" value="5">' +
     '<div id="ct-rhint" class="ct-wide ct-rule"></div>' +
-    '<label>Energía inicial</label><input type="number" id="ct-nrg" min="1" value="3000">' +
-    '<label class="ct-wide"><input type="checkbox" id="ct-f1" checked> Usar ajustes de liga F1 (costes, campo 9237×6928, física)</label>' +
+    '<label>Starting energy</label><input type="number" id="ct-nrg" min="1" value="3000">' +
+    '<label class="ct-wide"><input type="checkbox" id="ct-f1" checked> Use F1 league settings (costs, 9237×6928 field, physics)</label>' +
     '<div id="ct-duel" class="ct-wide ct-rules" hidden>' +
-    '<label title="Solo en duelos (2 especies), como el original">Tope de ciclos por ronda (0 = sin tope)</label><input type="number" id="ct-maxcyc" min="0" value="0">' +
-    '<label title="Solo en duelos (2 especies), como el original">Población máx por especie (0 = sin tope)</label><input type="number" id="ct-maxpop" min="0" value="0">' +
+    '<label title="Duels only (2 species), as in the original">Cycle cap per round (0 = no cap)</label><input type="number" id="ct-maxcyc" min="0" value="0">' +
+    '<label title="Duels only (2 species), as in the original">Max population per species (0 = no cap)</label><input type="number" id="ct-maxpop" min="0" value="0">' +
     '</div></div>' +
-    '<button id="ct-go" class="primary ct-go">🏆 ¡Empezar!</button>' +
+    '<button id="ct-go" class="primary ct-go">🏆 Start!</button>' +
     '</div>' +
     '<div id="ct-live" hidden>' +
-    '<div id="ct-board"><div class="ct-empty">Esperando el censo…</div></div>' +
+    '<div id="ct-board"><div class="ct-empty">Waiting for the census…</div></div>' +
     '<div class="ct-liverow">' +
-    '<button id="ct-again" class="primary" hidden title="Mismas especies y reglas, semilla nueva">🔁 Revancha</button>' +
-    '<button id="ct-edit" title="Volver a la preparación (la sim sigue)">✎ Cambiar contrincantes</button>' +
+    '<button id="ct-again" class="primary" hidden title="Same species and rules, new seed">🔁 Rematch</button>' +
+    '<button id="ct-edit" title="Back to setup (the sim keeps running)">✎ Change contenders</button>' +
     '</div></div>' +
     '<div id="ct-note" class="ct-note"></div>';
 
@@ -342,14 +342,14 @@ async function openContest() {
     if (!inv.items.length) await invLoad();
     const picked = [...inv.sel].map((k) => inv.byKey.get(k)).filter((it) => it && !it.b.veg);
     if (!picked.length) {
-      $('ct-note').textContent = 'No hay bots (no vegetales) seleccionados en el Inventario.';
+      $('ct-note').textContent = 'No (non-vegetable) bots are selected in the Inventory.';
       return;
     }
     for (const it of picked) contestAdd({ name: it.b.name, src: 'bestiary', file: it.b.file });
   };
   $('ct-addform').onclick = () => {
     const dna = document.getElementById('dna').value;
-    if (!dna.trim()) { $('ct-note').textContent = 'El formulario no tiene ADN.'; return; }
+    if (!dna.trim()) { $('ct-note').textContent = 'The form has no DNA.'; return; }
     const name = (document.getElementById('sp-name').value || 'bot.txt').replace(/\.txt$/i, '');
     contestAdd({ name, src: 'form', dna });
   };
@@ -373,9 +373,9 @@ async function openContest() {
     const n = Math.max(1, parseInt($('ct-rounds').value, 10) || 1);
     const m = contestMinLength(n);
     $('ct-rhint').textContent =
-      `Gana quien sume ${contestWinsNeeded(n)} victorias o más (más de √N + N/2, regla del original). ` +
-      (m > n ? `Con ${n} ni ganándolas todas alcanza: el torneo se alargará al menos a ${m} rondas.`
-             : 'Si nadie llega, se juega una ronda más.');
+      `Whoever reaches ${contestWinsNeeded(n)} wins or more takes it (more than √N + N/2, the original's rule). ` +
+      (m > n ? `With ${n}, not even winning them all is enough: the tournament will run at least ${m} rounds.`
+             : 'If nobody gets there, one more round is played.');
   };
   $('ct-rounds').oninput = rhint;
   rhint();

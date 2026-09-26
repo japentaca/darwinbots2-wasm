@@ -77,8 +77,8 @@
     simId: '',
     kind: 'bc',
     url: '',
-    room: 'publica',
-    status: 'apagado',
+    room: 'public',
+    status: 'off',
     peers: new Map(),     // id -> {name, simId, last, census}
     pending: [],          // {file, data(b64), label}
     inflight: new Map(),  // file -> {item, to, t}
@@ -111,8 +111,8 @@
         send: (o) => { if (ws.readyState === 1) ws.send(JSON.stringify(o)); },
         close: () => { try { ws.onclose = null; ws.close(); } catch { /* */ } },
       };
-      setStatus('conectando…');
-      ws.onopen = () => { im._backoff = 1000; setStatus('conectado'); hello(); };
+      setStatus('connecting…');
+      ws.onopen = () => { im._backoff = 1000; setStatus('connected'); hello(); };
       ws.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch { return; }
@@ -122,7 +122,7 @@
       ws.onclose = () => {
         im._tr = null;
         lostAllPeers();
-        if (im.on) { setStatus('sin relay — reintentando'); scheduleRetry(); }
+        if (im.on) { setStatus('no relay — retrying'); scheduleRetry(); }
       };
     } else {
       const ch = new BroadcastChannel('darwinbots-im:' + im.room);
@@ -131,7 +131,7 @@
         close: () => ch.close(),
       };
       ch.onmessage = (ev) => onMessage(ev.data);
-      setStatus('conectado (pestañas)');
+      setStatus('connected (tabs)');
       hello();
     }
   }
@@ -177,7 +177,7 @@
       ImNet.peers.set(m.from, p);
       p.last = Date.now();
       if (typeof m.name === 'string') p.name = m.name;
-      logLine(`par conectado: ${p.name || m.from}`);
+      logLine(`peer connected: ${p.name || m.from}`);
       changed();
       setTimeout(flush, 0);
     }
@@ -198,7 +198,7 @@
     const p = ImNet.peers.get(id);
     if (!p) return;
     ImNet.peers.delete(id);
-    logLine(`par desconectado: ${p.name || id}${why ? ' (' + why + ')' : ''}`);
+    logLine(`peer disconnected: ${p.name || id}${why ? ' (' + why + ')' : ''}`);
     // Lo que iba hacia él vuelve a la cola: se re-sortea.
     for (const [file, f] of ImNet.inflight)
       if (f.to === id) { ImNet.inflight.delete(file); requeue(f.item); }
@@ -206,14 +206,14 @@
   }
 
   function lostAllPeers() {
-    for (const id of [...ImNet.peers.keys()]) dropPeer(id, 'sin conexión');
+    for (const id of [...ImNet.peers.keys()]) dropPeer(id, 'no connection');
   }
 
   function heartbeat() {
     send({ t: 'here', name: ImNet.name, simId: ImNet.simId });
     const now = Date.now();
     for (const [id, p] of ImNet.peers)
-      if (now - p.last > PEER_TTL_MS) dropPeer(id, 'sin latido');
+      if (now - p.last > PEER_TTL_MS) dropPeer(id, 'no heartbeat');
     for (const [file, f] of ImNet.inflight)
       if (now - f.t > ACK_TIMEOUT_MS) {
         ImNet.inflight.delete(file);
@@ -247,7 +247,7 @@
       send({ t: 'dbo', to, file: item.file, data: item.data });
       ImNet.counters.sent += 1;
       const p = ImNet.peers.get(to);
-      logLine(`salió ${item.label} → ${p ? p.name || to : to}`);
+      logLine(`sent ${item.label} → ${p ? p.name || to : to}`);
     }
     changed();
   }
@@ -326,7 +326,7 @@
     Object.assign(ImNet, {
       name: opts.name || '', simId: opts.simId || '',
       kind: opts.kind === 'ws' ? 'ws' : 'bc', url: opts.url || '',
-      room: opts.room || 'publica',
+      room: opts.room || 'public',
     });
     ImNet.hooks = hooks || {};
     for (const k in ImNet.counters) ImNet.counters[k] = 0;
@@ -349,7 +349,7 @@
     for (const f of ImNet.inflight.values()) ImNet.pending.unshift(f.item);
     ImNet.inflight.clear();
     trimPending();
-    ImNet.status = 'apagado';
+    ImNet.status = 'off';
     if (had) changed();
     return ImNet.pending.length;
   };
@@ -364,7 +364,7 @@
   ImNet.push = function (bytes, label) {
     ImNet.fileSeq += 1;
     ImNet.pending.push({ file: ImNet.id + '-' + ImNet.fileSeq,
-                         data: b64encode(bytes), label: label || 'organismo' });
+                         data: b64encode(bytes), label: label || 'organism' });
     trimPending();
     flush();
     changed();
