@@ -1353,6 +1353,237 @@ grandes como el Bestiary entero, con menos épica que la copa.
 
 ---
 
+## E13 · Backend: cuentas, catálogo de bots y torneos en el servidor — capa host + servidor
+
+Añadida el 2026-09-27 a petición del usuario: "planifica la posibilidad
+de que este sistema tenga un backend". **No es superficie del original.**
+Hoy todo vive en el navegador: el motor en el worker, el Inventario y los
+torneos en IndexedDB (`darwinbots-inventario`, `darwinbots-ligas`), y el
+único proceso servidor es el relay de E7 (`tools/imrelay/relay.mjs`),
+que no guarda nada. E13 suma un servidor con cuentas de Google donde los
+usuarios **suben bots** a un catálogo común y **crean torneos** que
+persisten y comparten. Rama sugerida: `e13-backend`, desde `main`.
+
+**Reglas**: cero cambios en `port/core/` y en el wasm; suite intacta (270
+/ 4092 en los tres modos). La app sin login sigue funcionando exactamente
+igual que antes de E13, también desde GitHub Pages.
+
+### Decisiones tomadas (del usuario, 2026-09-27)
+
+**1 · Rol del servidor: híbrido.** El servidor guarda usuarios, bots,
+torneos y resultados; **los partidos los juega el navegador** del
+organizador, como hoy. Cada resultado sube con su **receta** (semilla,
+versiones exactas de los bots, reglas y opciones: la misma de la
+repetición de E10). Como el motor es determinista, el servidor puede
+**re-ejecutar** cualquier partido con el mismo wasm en Node y comprobarlo.
+Descartados: servidor como mero almacén (resultados falsificables sin
+remedio) y servidor árbitro que juega todo (CPU y cola de trabajos para
+cada partido).
+
+**2 · Anónimo frente a registrado.**
+- La **persistencia local** (IndexedDB) es para todos, con o sin cuenta,
+  como hoy.
+- El anónimo usa todo lo local, pero **no persiste nada en el backend**:
+  no sube bots ni crea torneos en el servidor ni se inscribe.
+- El anónimo **ve** el catálogo y los torneos del servidor (solo lectura)
+  y puede **descargar** bots del catálogo a su Inventario local.
+- En el **primer login** se ofrece subir a la cuenta lo que ya tiene en
+  local (bots del Inventario y torneos).
+
+**3 · Bots subidos.**
+- **Siempre públicos**: subir un bot = publicarlo en el catálogo.
+- **Versiones inmutables**: editar crea una versión nueva; ninguna se
+  pisa. Un partido referencia la versión exacta que jugó (encaja con el
+  "ADN congelado" de E10).
+- **Duplicados**: con el `Hash` del ADN (M5); un ADN idéntico a uno ya
+  subido no se bloquea, se marca "idéntico a X de <apodo>".
+- **Evolucionados también**: se guardan generación y mutaciones del
+  formato (`'#`), y si el bot desciende de una versión del catálogo, el
+  vínculo **padre → hijo** (linaje).
+- **Retirar, no borrar**: un bot que jugó partidos en el servidor no se
+  borra (rompería las re-ejecuciones); el dueño lo **retira** (sale del
+  catálogo y de las búsquedas, sus versiones siguen para el historial).
+  Uno que nunca jugó sí se puede borrar.
+- **Límites**: 64 KB de ADN por versión y 200 bots por usuario.
+- **Licencia MIT**: todo bot subido queda bajo MIT (lo dicen los
+  términos). La descarga desde el catálogo antepone un comentario con
+  nombre, versión, autor y licencia (comprobar que no cambie el `Hash`).
+- **Moderación**: botón "denunciar" (bots, torneos, usuarios) con motivo.
+
+**4 · Torneos en el servidor.**
+- Los crean solo usuarios registrados, con **cualquiera de los 5
+  formatos** de E11/E12.
+- **Cerrado**: el organizador elige los participantes del catálogo (todos
+  los bots son públicos, así que puede usar bots de cualquiera).
+- **Abierto** (entra en la primera versión): se publica con fecha de
+  cierre de inscripción y cada usuario inscribe uno de *sus* bots.
+- Los partidos los juega el **navegador del organizador**; cada resultado
+  se sube al terminar y los demás ven avanzar la tabla. Descartado por
+  ahora repartir partidos entre navegadores de participantes.
+- **Verificación**: (a) **impugnación**: el dueño de cualquier bot
+  participante puede impugnar un partido y el servidor lo re-ejecuta;
+  (b) **muestreo**: el servidor re-ejecuta al azar ~10 % de los partidos
+  de cada torneo; (c) **a pedido del admin** (ver 6). Si no coincide, el
+  partido queda **en disputa**, se corrige con el resultado del servidor
+  y el torneo lo muestra.
+- La **tabla la recalcula el servidor** a partir de los resultados, con
+  la misma lógica de formatos del navegador (ver B3).
+
+**5 · Stack y hosting.**
+- **Node** (24 en desarrollo; ≥ 22.5 por `node:sqlite`) y **SQLite** con
+  `node:sqlite`: sin dependencias, la línea del relay de E7.
+- **Un solo proceso** sirve el front estático, la API (`/api/...`) y el
+  relay WebSocket (`/im`, reusando el código de `relay.mjs`). Un solo
+  origen: sesión en cookie `httpOnly` + `SameSite=Lax`, sin CORS.
+- **Login con Google**: Google Identity Services en el navegador → ID
+  token → el servidor lo verifica (RS256 contra las JWKS de Google con
+  `node:crypto`, `aud` = client id, `iss`, `exp`) y abre su propia sesión.
+- **Hosting**: el servidor que el usuario ya tiene en su proveedor, en
+  un **subdominio suyo**; proxy inverso con TLS delante (el que ya use) y
+  el proceso bajo systemd o pm2. La demo de GitHub Pages sigue como espejo
+  solo anónimo.
+- **Backups**: Litestream a un bucket (o `.backup` nocturno copiado fuera
+  de la máquina).
+- La re-ejecución corre en `worker_threads`, en una cola de baja
+  prioridad, para no frenar la API.
+
+**6 · Cuentas y administración.**
+- **Apodo**: se elige en el primer login (único, 3-20 caracteres, letras,
+  dígitos, `_` y `-`; se sugiere uno desde el nombre de Google) y **queda
+  fijo**; solo un admin puede cambiar uno ofensivo. Se muestra con el
+  **avatar** de Google; el email nunca. Es el `LastOwner` que estampa E7
+  cuando un usuario con sesión usa Internet Mode.
+- **Borrar la cuenta: inmediato**, sin gracia. Se confirma escribiendo el
+  apodo; antes se ofrece exportar. Se borran email, `sub` y avatar; el
+  apodo pasa a mostrarse "usuario eliminado" y queda **reservado**. Bots
+  que nunca jugaron en el servidor: se borran; los que jugaron: retirados
+  con autor anónimo. Torneos que organizó: los terminados quedan, los en
+  curso o con inscripción abierta se cancelan. Sus inscripciones en
+  torneos ajenos: se retiran si la inscripción sigue abierta; si el
+  torneo ya empezó, el bot sigue jugando.
+- **Exportar mis datos**: un `.zip` armado en el momento con
+  `bots/<nombre>/v<n>.txt` (todas las versiones), `torneos/<nombre>.json`
+  (los que organizó, en el JSON de exportar de E10, importables como
+  locales) y `cuenta.json`. Solo lo suyo. **Máximo un zip por día**; si
+  ya exportó hoy, el diálogo de borrado lo avisa en vez de ofrecer otro.
+- **Admin**:
+  - Tabla **`admin`** en la base; altas y bajas **solo por consola**
+    (`node server/admin.mjs agregar|quitar <email>`, sobre un usuario que
+    ya entró una vez). El panel no gestiona admins.
+  - Entra por una **ruta propia, `/admin`** (misma sesión de Google); para
+    quien no es admin responde 404. La API `/api/admin/...` comprueba la
+    tabla en cada llamada.
+  - Acciones: ocultar o mostrar un bot, suspender una cuenta (queda como
+    anónimo y sus bots ocultos), cambiar un apodo ofensivo, cancelar un
+    torneo, **re-ejecutar cualquier partido**, ver y resolver denuncias.
+  - Toda acción queda en **`admin_log`** (quién, qué, sobre qué, cuándo,
+    motivo).
+- **Privacidad y términos**: páginas estáticas `/privacidad` y
+  `/terminos` en **español e inglés** (Google las exige para sacar la
+  pantalla de consentimiento de "testing"). Privacidad: qué se guarda
+  (email, `sub`, avatar, apodo), solo cookie de sesión, sin analítica,
+  exportar y borrar. Términos: bots siempre públicos bajo MIT,
+  moderación, sin garantías. Contacto: **japedev@gmail.com**.
+
+### Modelo (SQLite)
+
+| Tabla | Campos principales |
+|---|---|
+| `usuario` | `id`, `google_sub` (único, nulo si eliminado), `email`, `avatar`, `apodo` (único, fijo), `alta`, `suspendido`, `eliminado`, `ultima_exportacion` |
+| `sesion` | `token_hash`, `usuario_id`, `alta`, `expira` |
+| `admin` | `usuario_id`, `alta`, `alta_por` |
+| `bot` | `id`, `usuario_id`, `nombre`, `alta`, `retirado`, `oculto` |
+| `bot_version` | `id`, `bot_id`, `n`, `adn`, `hash`, `generacion`, `mutaciones`, `padre_id` (→ `bot_version`), `alta` |
+| `torneo` | `id`, `organizador_id`, `nombre`, `fmt` (JSON), `reglas` (JSON), `modo` (`cerrado`/`abierto`), `cierre_inscripcion`, `estado` (`inscripcion`/`en_curso`/`terminado`/`cancelado`), `grupos` (JSON, copa) |
+| `inscripcion` | `torneo_id`, `bot_version_id`, `usuario_id`, `alta` |
+| `partido` | `id`, `torneo_id`, `receta` (JSON), `resultado` (JSON), `estado` (`aceptado`/`verificado`/`en_disputa`), `subido_por`, `alta`, `verificado_en` |
+| `impugnacion` | `partido_id`, `usuario_id`, `alta`, `resuelta` |
+| `denuncia` | `id`, `usuario_id`, `objeto` (`bot`/`torneo`/`usuario`), `objeto_id`, `motivo`, `alta`, `resuelta_por` |
+| `admin_log` | `id`, `admin_id`, `accion`, `objeto`, `objeto_id`, `motivo`, `alta` |
+
+Migraciones numeradas en `server/migraciones/NNN.sql`, aplicadas al
+arrancar (`PRAGMA user_version`). WAL activado.
+
+### A confirmar al empezar B1
+
+- Cuántos bots puede inscribir un usuario en un torneo abierto
+  (propuesta: 1).
+- Duración de la sesión (propuesta: 30 días, renovada con el uso).
+- Porcentaje de muestreo (propuesta: 10 %) y si el organizador puede
+  pedir "verificar todo" en su torneo.
+- Ubicación del servidor en el repo (propuesta: `port/server/`, que sirve
+  `port/web/` y el wasm de `port/build-wasm/`).
+
+### Piezas y trabajo
+
+**B1 · Servidor base y cuentas**
+1. `server/main.mjs`: `node:http`, estático, `/im` (relay de E7
+   importado, no copiado), migraciones y WAL.
+2. Login con Google (verificación del ID token sin dependencias), sesión,
+   primer login con elección de apodo, `/api/yo`, cerrar sesión.
+3. Páginas `/privacidad` y `/terminos` (ES/EN).
+4. `server/admin.mjs agregar|quitar <email>`.
+5. Front: botón "Sign in with Google" y el apodo con avatar en la barra;
+   sin sesión, nada cambia.
+6. Smoke `tools/e13/smoke_cuentas.mjs` (servidor en un puerto libre con
+   base temporal; token de Google simulado con una JWKS de prueba).
+
+**B2 · Catálogo de bots**
+1. API: subir (bot nuevo o versión nueva), listar y buscar, ver versiones
+   y linaje, descargar con cabecera MIT, retirar, borrar si nunca jugó,
+   denunciar. Límites y marca de duplicados.
+2. Front: ventana "Catalog" (lectura para todos) y en el Inventario
+   "Upload" / "Download to Inventory"; oferta de subir el Inventario en el
+   primer login.
+3. Smoke `tools/e13/smoke_catalogo.mjs`.
+
+**B3 · Torneos en el servidor**
+1. Extraer la lógica pura de formatos de `league.js` (`lgRrFixtures`,
+   `lgCupState`, `lgStandings`, Elo…) a un módulo compartido que carguen
+   el navegador y Node sin duplicarla; `smoke_torneos` y `smoke_copa`
+   siguen en verde.
+2. API: crear (cerrado/abierto), inscribirse y retirarse, cerrar la
+   inscripción, subir resultado con receta, ver torneo con tabla
+   recalculada, cancelar.
+3. Front: los torneos del servidor dentro de "🏆 Tournaments" junto a los
+   locales (marca de nube); jugar uno del servidor sube cada partido;
+   inscripción en abiertos; oferta de subir los torneos locales en el
+   primer login.
+4. Smoke `tools/e13/smoke_torneos_srv.mjs`.
+
+**B4 · Verificación**
+1. Runner headless: el wasm en `worker_threads` juega un partido desde su
+   receta y devuelve el resultado.
+2. Cola de baja prioridad; impugnación, muestreo y estado `en_disputa`
+   con corrección y recálculo de la tabla.
+3. Front: botón "Dispute" y la marca de verificado / en disputa.
+4. Smoke: un partido honesto verifica; uno adulterado queda en disputa y
+   se corrige.
+
+**B5 · Admin y cuenta**
+1. `/admin`: denuncias, ocultar/mostrar, suspender, renombrar apodo,
+   cancelar torneo, re-ejecutar partido; `admin_log`.
+2. Exportar mis datos (zip armado a mano con `zlib`, uno por día) y borrar
+   la cuenta con todas las reglas de 6.
+3. Smoke `tools/e13/smoke_admin.mjs` (incluye 404 de `/admin` para no
+   admins y el borrado).
+
+**B6 · Despliegue y cierre**
+1. Guía en `port/server/README.md`: subdominio, proxy con TLS, systemd,
+   variables (client id de Google, ruta de la base), backups.
+2. Cliente OAuth de Google con el origen del subdominio; pantalla de
+   consentimiento a producción con las dos páginas.
+3. README §Backend, PROGRESO (fila E13), "Resultado B1..B6" aquí.
+4. Chrome contra el servidor desplegado: login, apodo, subir y descargar
+   un bot, torneo abierto con dos cuentas, impugnación, `/admin`,
+   exportar y borrar una cuenta de prueba. Consola limpia.
+
+**Cierre de cada parte**: suite en verde en los tres modos, `port/core/`
+sin diff, los smokes de host de siempre en verde más los de E13, y fila
+en `PROGRESO.md`.
+
+---
+
 ## Orden recomendado
 
 **E1 → E2 → E3** (todo capa host, valor alto, riesgo nulo para el core) →
@@ -1366,4 +1597,6 @@ L1 → L2 → L3, **completa** el mismo día. **E11** (torneos unificados:
 una sola ventana para Contest, Canal y Ligas) se añadió el mismo día a
 pedido del usuario: R1 → R2 → R3, **completa** el mismo día. **E12** (copa: grupos + eliminatorias,
 un formato más de los torneos) se añadió el mismo día a pedido del
-usuario: C1 → C2 → C3, **completa** el mismo día.
+usuario: C1 → C2 → C3, **completa** el mismo día. **E13** (backend:
+cuentas de Google, catálogo de bots y torneos en el servidor, Node +
+SQLite) se añadió el mismo día a pedido del usuario: B1 → B6, pendiente.
