@@ -491,6 +491,12 @@ fuera del plan"):
   cada resultado queda en la liga. En todos contra todos, al terminar la
   temporada anuncia al campeón y se apaga. La ventana de ligas muestra
   además los enfrentamientos directos y los ciclos promedio.
+- **Compartir y repetir** (L3): ⬇ exporta la liga a un JSON (temporadas,
+  reglas, participantes con su ADN y partidos) y ⬆ la importa como liga
+  nueva. ↻ en cada partido del historial lo repite con las reglas de su
+  temporada, los mismos participantes en el mismo orden y la misma
+  semilla, y avisa si el resultado no coincide (no se registra). Tercer
+  formato: la **escalera** del original (`populateladder`).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas

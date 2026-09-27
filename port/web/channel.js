@@ -122,7 +122,7 @@ function chSyncChamp() {
   const S = lgSeason(ch.league);
   ch.champ = null;
   ch.streak = 0;
-  if (S.fmt.format === 'rr') return;
+  if (S.fmt.format !== 'koth') return;
   const k = lgKothState(S, lgSeasonMatches(S.no));
   const e = k.champ && S.entrants.find((x) => x.name === k.champ);
   if (e) { ch.champ = { name: e.name, color: e.color }; ch.streak = k.streak; }
@@ -142,7 +142,7 @@ function chNextLeague() {
   chTick();
 }
 
-// Calendario completo (todos contra todos): anuncia al campeón de la
+// Calendario completo (todos contra todos o escalera): anuncia al campeón de la
 // temporada, apaga el Canal y deja el rótulo unos segundos.
 function chSeasonOver(L) {
   const S = lgSeason(L);
@@ -173,7 +173,7 @@ function channelOnLeagueResult(rec) {
   if (rec.winner) {
     ch.fails = 0;
     // En rey de la colina el ganador queda de campeón salvo que se retire.
-    if (S.fmt.format !== 'rr' && !ch.champ) {
+    if (S.fmt.format === 'koth' && !ch.champ) {
       r.note = `👑 retires undefeated after ${S.fmt.retire} wins`;
       log(`📺 ${rec.winner} retires undefeated (${S.fmt.retire} wins in a row)`);
     }
@@ -360,9 +360,9 @@ function chOverlay(st) {
     `<span style="color:${f.color}">${escHtml(f.name)}</span>`).join(' <i>vs</i> ');
   const champ = ch.champ
     ? ` · 👑 ${escHtml(ch.champ.name)} <b>${ch.streak}/${ch.cfg.retire}</b>` : '';
-  // E10: con liga, su nombre y (todos contra todos) la jornada.
+  // E10: con liga, su nombre y (todos contra todos, escalera) la jornada.
   const lgTag = ch.league ? ` · 🏟 ${escHtml(ch.league.name)}` +
-    (!ch.champ && ch.fx && lgSeason(ch.league).fmt.format === 'rr' ? ` · ${escHtml(ch.fx.label)}` : '') : '';
+    (!ch.champ && ch.fx && lgSeason(ch.league).fmt.format !== 'koth' ? ` · ${escHtml(ch.fx.label)}` : '') : '';
   if (ch.phase === 'break') {
     el.innerHTML = `<div class="ch-live">📺 NEXT FIGHT · #${ch.fightNo}${lgTag}</div><div class="ch-vs">${vs}</div>`;
   } else {
@@ -419,7 +419,7 @@ function chRender() {
   $('ch-live').hidden = !ch.on;
   $('ch-toggle').textContent = ch.on ? '⏹ Turn the channel off' : '📺 Turn the channel on';
   $('ch-toggle').classList.toggle('primary', !ch.on);
-  const rr = ch.league && lgSeason(ch.league).fmt.format === 'rr';
+  const rr = ch.league && lgSeason(ch.league).fmt.format !== 'koth';   // con calendario
   $('ch-champ').innerHTML = ch.champ
     ? `👑 Champion: <b style="color:${ch.champ.color}">${escHtml(ch.champ.name)}</b> · streak ${ch.streak}/${ch.cfg.retire}`
     : rr ? `🏟 ${escHtml(ch.league.name)} · ${escHtml(ch.fx ? ch.fx.label : '')}`
@@ -448,13 +448,16 @@ function chRenderLeagueSum() {
   $('ch-free').hidden = !!L;
   if (!L) { $('ch-lgsum').innerHTML = ''; return; }
   const S = lgSeason(L), f = S.fmt, ms = lgSeasonMatches(S.no);
-  const fmt = f.format === 'rr'
-    ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
+  const fmt = f.format === 'rr' ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
+    : f.format === 'ladder' ? 'step ladder'
     : `king of the hill, ${f.k} per fight, retires after ${f.retire}`;
   let next = '';
   if (lg.cur === L && f.format === 'rr' && S.entrants.length >= 2) {
     const st = lgRrState(S, ms);
     next = st.next ? ` · ${st.played} of ${st.total} fixtures played` : ' · 🏁 season complete';
+  } else if (lg.cur === L && f.format === 'ladder' && S.entrants.length >= 2) {
+    const st = lgLadderState(S, ms);
+    next = st.next ? ` · ${st.placed} of ${st.total} on the ladder` : ' · 🏁 season complete';
   }
   $('ch-lgsum').innerHTML = `Season <b>${S.no}</b> · ${escHtml(fmt)} · ${S.entrants.length} entrants${next}` +
     '<div class="ct-rule">Rules, format and entrants come from the league (🏟 Leagues); ' +

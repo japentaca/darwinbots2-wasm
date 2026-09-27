@@ -69,13 +69,14 @@ const lg = {
   list: [],        // ligas
   cur: null,       // liga abierta
   matches: [],     // partidos de la liga abierta (todas las temporadas)
-  live: null,      // partido en curso (ver lgPlayNext)
+  live: null,      // partido en curso (ver lgPlayNext); live.replay = repetición
+  checked: new Map(), // id del partido → 'same' | 'diff' (repeticiones de esta sesión)
   confirm: '',     // botón de dos clics armado ('del' | 'season')
   confirmT: 0,
 };
 const LG_CUR_KEY = 'db-league-cur';
 const LG_FMT_DEFAULT = {
-  format: 'koth',   // 'koth' (rey de la colina) | 'rr' (todos contra todos)
+  format: 'koth',   // 'koth' (rey de la colina) | 'rr' (todos contra todos) | 'ladder' (escalera)
   k: 2,             // koth: luchadores por pelea
   retire: 5,        // koth: victorias seguidas para retirarse invicto
   legs: 1,          // rr: vueltas
@@ -242,6 +243,27 @@ function lgKothState(S, ms) {
   return { champ, streak, titles };
 }
 
+// Escalera (populateladder, F1Mode.bas:443-500): los participantes entran de
+// a uno en el orden de inscripción; el primero ocupa el peldaño 1 sin pelear.
+// Cada aspirante desafía desde el peldaño 1 hacia abajo: si gana, ocupa ese
+// peldaño y empuja a los demás un lugar; si pierde con todos, queda último.
+// Todo sale de recorrer el historial (solo cuentan los duelos esperados).
+function lgLadderState(S, ms) {
+  const E = S.entrants, ladder = [];
+  let ci = 0, pos = 0;
+  if (E.length) { ladder.push(E[0].name); ci = 1; }
+  for (const m of lgPlayed(ms)) {
+    if (ci >= E.length) break;
+    const c = E[ci].name, rung = ladder[pos];
+    if (m.fighters.length !== 2 || !m.fighters.includes(c) || !m.fighters.includes(rung)) continue;
+    if (m.winner === c) { ladder.splice(pos, 0, c); ci++; pos = 0; }
+    else if (++pos >= ladder.length) { ladder.push(c); ci++; pos = 0; }
+  }
+  const next = ci < E.length && E.length >= 2
+    ? [E.find((e) => e.name === ladder[pos]), E[ci]] : null;
+  return { ladder, next, rung: pos + 1, placed: ci, total: E.length };
+}
+
 function lgShuffle(list) {
   const a = list.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -258,6 +280,11 @@ function lgNextFixture(L) {
   if (S.fmt.format === 'rr') {
     const st = lgRrState(S, ms);
     return st.next && { fighters: st.next, label: `Fixture ${st.played + 1} of ${st.total}` };
+  }
+  if (S.fmt.format === 'ladder') {
+    const st = lgLadderState(S, ms);
+    return st.next && { fighters: st.next,
+      label: `Ladder: ${st.next[1].name} challenges rung ${st.rung} (entrant ${st.placed + 1} of ${st.total})` };
   }
   const { champ } = lgKothState(S, ms);
   const k = Math.min(Math.max(2, S.fmt.k), E.length, 20);
@@ -293,7 +320,12 @@ function lgStandings(S, ms) {
     }
   }
   const list = [...rows.values()];
-  if (S.fmt.format === 'rr') list.sort((a, b) => b.w - a.w || b.elo - a.elo || a.p - b.p);
+  if (S.fmt.format === 'ladder') {
+    // El orden de la escalera; los que aún no entraron, al final.
+    const at = new Map(lgLadderState(S, ms).ladder.map((n, i) => [n, i]));
+    const rank = (r) => (at.has(r.name) ? at.get(r.name) : 1e9);
+    list.sort((a, b) => rank(a) - rank(b) || b.elo - a.elo);
+  } else if (S.fmt.format === 'rr') list.sort((a, b) => b.w - a.w || b.elo - a.elo || a.p - b.p);
   else list.sort((a, b) => b.elo - a.elo || b.w - a.w);
   return list;
 }
@@ -313,6 +345,8 @@ async function lgSelect(L) {
   if (typeof ch !== 'undefined' && ch.on && ch.league && ch.league !== L) channelStop();
   lg.cur = L;
   lg.matches = [];
+  lg.pastNo = 0;
+  if (lg.win) lg.win.querySelector('#lg-past').innerHTML = '';
   if (L) {
     try { lg.matches = (await LgDB.all('matches')).filter((m) => m.league === L.id); } catch (e) { /* nada */ }
     try { localStorage.setItem(LG_CUR_KEY, L.id); } catch (e) { /* nada */ }
@@ -330,7 +364,7 @@ async function lgCreate(base) {
   let n = lg.list.length + 1;
   while (names.has('League ' + n)) n++;
   const L = {
-    id: 'L' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+    id: lgNewId(),
     name: 'League ' + n, notes: '', created: new Date().toISOString(),
     seasons: [{ no: 1, started: new Date().toISOString(), rules,
                 fmt: { ...LG_FMT_DEFAULT }, entrants: [] }],
@@ -355,6 +389,86 @@ async function lgNewSeason(L) {
                    entrants: S.entrants.map((e) => ({ ...e })) });
   await lgSave(L);
   lgRender();
+}
+
+// ---- Compartir (L3) ---------------------------------------------------------------
+// El archivo lleva la liga entera (temporadas con reglas, formato y
+// participantes con su ADN) y sus partidos sin id ni liga: al importar se
+// reasignan. Funciones puras (el smoke hace el ida y vuelta sin DOM).
+const LG_FILE_KIND = 'darwinbots-league', LG_FILE_VER = 1;
+
+function lgExportObj(L, matches) {
+  const { id, ...league } = L;
+  return {
+    kind: LG_FILE_KIND, version: LG_FILE_VER, exported: new Date().toISOString(),
+    league: JSON.parse(JSON.stringify(league)),
+    matches: matches.filter((m) => m.league === id)
+      .sort((a, b) => a.season - b.season || a.no - b.no)
+      .map(({ id: _i, league: _l, ...m }) => ({ ...m })),
+  };
+}
+
+// Valida el archivo y devuelve {L, matches} listos para guardar, con un id
+// nuevo y el nombre sin repetir entre `names`. Lanza Error si no sirve.
+function lgImportObj(o, names, newId) {
+  if (!o || o.kind !== LG_FILE_KIND) throw new Error('Not a DarwinBots league file.');
+  if (o.version > LG_FILE_VER) throw new Error(`League file version ${o.version} is newer than this page.`);
+  const src = o.league || {};
+  if (!Array.isArray(src.seasons) || !src.seasons.length) throw new Error('The league has no seasons.');
+  const seasons = src.seasons.map((s, i) => {
+    if (!s || typeof s.rules !== 'object' || !Array.isArray(s.entrants))
+      throw new Error(`Season ${i + 1} is incomplete.`);
+    const entrants = s.entrants.map((e) => {
+      if (!e || typeof e.name !== 'string' || typeof e.dna !== 'string')
+        throw new Error(`Season ${i + 1}: an entrant has no name or DNA.`);
+      return { name: e.name, dna: e.dna, hash: lgHash(e.dna), src: e.src || 'form',
+               file: e.file || '', color: e.color || '#8899bb' };
+    });
+    return { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
+             fmt: { ...LG_FMT_DEFAULT, ...(s.fmt || {}) }, entrants };
+  });
+  let name = String(src.name || 'League').trim() || 'League';
+  if (names.has(name)) {
+    const base = name + ' (imported)';
+    name = base;
+    for (let k = 2; names.has(name); k++) name = `${base} ${k}`;
+  }
+  const L = { id: newId, name, notes: String(src.notes || ''),
+              created: src.created || new Date().toISOString(), seasons };
+  const nos = new Set(seasons.map((s) => s.no));
+  const matches = (Array.isArray(o.matches) ? o.matches : [])
+    .filter((m) => m && nos.has(m.season) && Array.isArray(m.fighters))
+    .map(({ id: _i, ...m }) => ({ ...m, league: newId }));
+  return { L, matches };
+}
+
+const lgNewId = () => 'L' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+const lgFileName = (L) => (L.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'league') + '.league.json';
+
+function lgExport(L) {
+  const blob = new Blob([JSON.stringify(lgExportObj(L, lg.matches), null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = lgFileName(L);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  lgNote(`Exported to ${a.download}.`);
+}
+
+async function lgImport(file) {
+  let r;
+  try {
+    r = lgImportObj(JSON.parse(await file.text()), new Set(lg.list.map((L) => L.name)), lgNewId());
+  } catch (e) { lgNote(`Import failed: ${e.message}`, true); return; }
+  await lgSave(r.L);
+  for (const m of r.matches) {
+    try { await LgDB.put('matches', m); } catch (e) { log('leagues: could not save a match'); }
+  }
+  lg.list.push(r.L);
+  await lgSelect(r.L);
+  lgNote(`Imported "${r.L.name}": ${r.L.seasons.length} seasons, ${r.matches.length} matches.`);
 }
 
 // ---- Participantes ---------------------------------------------------------------
@@ -431,21 +545,25 @@ async function lgPlayNext() {
 // Juega una pelea de la liga (la lanza la ventana o el Canal, L2): aplica
 // las reglas de la temporada, abre lg.live y arranca con contestLaunch.
 // Lanza excepción si algún ADN no se puede sembrar (sin partido abierto).
-async function lgPlay(L, fx) {
+// L3: o.replay = partido del historial a repetir (su temporada y su semilla;
+// no se registra, se compara).
+async function lgPlay(L, fx, o = {}) {
   if (lg.live) throw new Error('A league match is already running.');
-  const S = lgSeason(L);
+  const S = o.replay ? L.seasons.find((s) => s.no === o.replay.season) : lgSeason(L);
   contest.running = false;
   if (typeof contestRender === 'function') contestRender();
   lgApplyRules(S.rules);
   const f = S.fmt;
   lg.live = { league: L.id, season: S.no, fighters: fx.fighters, label: fx.label,
-              ready: false, capRounds: 0, cycles: 0, f1: null, lastWins: null };
+              ready: false, capRounds: 0, cycles: 0, f1: null, lastWins: null,
+              replay: o.replay || null };
+  if (o.replay) document.getElementById('seed').value = o.replay.seed;
   lgNote('Preparing…');
   try {
     await contestLaunch(fx.fighters.map((e) => ({ name: e.name, src: 'form', dna: e.dna,
                                                   qty: f.qty, color: e.color })),
       { nrg: f.nrg, f1: false, rounds: f.rounds, wins: f.wins, cap: f.cap,
-        capMode: f.capMode, newSeed: true });
+        capMode: f.capMode, newSeed: !o.replay });
   } catch (e) {
     lg.live = null;
     lgRender();
@@ -457,11 +575,51 @@ async function lgPlay(L, fx) {
   lgRender();
 }
 
+// Repite un partido del historial: las reglas y el formato de SU temporada,
+// los mismos participantes (el ADN congelado) en el mismo orden de siembra y
+// la misma semilla. El core es determinista: debe salir lo mismo.
+async function lgReplay(id) {
+  const L = lg.cur, m = L && lg.matches.find((x) => x.id === id);
+  if (!m || lg.live) return;
+  const S = L.seasons.find((s) => s.no === m.season);
+  const fighters = m.fighters.map((n) => S && S.entrants.find((e) => e.name === n));
+  if (!S || fighters.some((e) => !e)) {
+    lgNote(`Match #${m.no} cannot be replayed: an entrant is no longer in season ${m.season}.`, true);
+    return;
+  }
+  if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
+  try {
+    await lgPlay(L, { fighters, label: `Replay of match #${m.no} (season ${m.season}, seed ${m.seed})` },
+                 { replay: m });
+  } catch (e) { lgNote(e.message, true); }
+}
+
+// Compara la repetición con lo registrado (ganador, victorias y ciclos). Los
+// partidos de antes de que f1-over trajera el marcador (0 ciclos) solo
+// guardan el ganador.
+function lgReplayCheck(m, got) {
+  const diffs = [], full = !!m.cycles;
+  if (got.winner !== (m.winner || '')) diffs.push(`winner ${got.winner || '—'} (was ${m.winner || '—'})`);
+  if (full && (m.wins || []).join() !== got.wins.join()) diffs.push(`wins ${got.wins.join('-')} (was ${(m.wins || []).join('-')})`);
+  if (full && m.cycles !== got.cycles) diffs.push(`${got.cycles} cycles (was ${m.cycles})`);
+  lg.checked.set(m.id, diffs.length ? 'diff' : 'same');
+  if (diffs.length) {
+    log(`🏟 replay of #${m.no} differs: ${diffs.join(' · ')}`);
+    lgNote(`⚠ Replay of match #${m.no} differs: ${diffs.join(' · ')}.`, true);
+  } else {
+    log(`🏟 replay of #${m.no} matches the record`);
+    lgNote(`✓ Replay of match #${m.no} matches: ${got.winner || 'void'}, ${got.wins.join('-')}, ${got.cycles} cycles` +
+           (full ? '.' : ' (only the winner was recorded).'));
+  }
+  lgRender();
+}
+
 // Abandona el partido en curso sin registrarlo (otro torneo toma la sim).
 function leagueAbort() {
   if (!lg.live) return;
+  const replay = lg.live.replay;
   lg.live = null;
-  lgNote('Match abandoned: not recorded.', true);
+  lgNote(replay ? `Replay of match #${replay.no} abandoned.` : 'Match abandoned: not recorded.', true);
   lgRender();
 }
 
@@ -472,6 +630,7 @@ async function lgRecord(winner, note) {
   const L = lg.list.find((x) => x.id === m.league);
   const sp = (m.f1 && m.f1.sp) || [];
   const wins = m.fighters.map((e) => (sp.find((s) => s.name === e.name) || {}).wins || 0);
+  if (m.replay) { lgReplayCheck(m.replay, { winner: winner || '', wins, cycles: m.cycles || 0 }); return; }
   const no = Math.max(0, ...lg.matches.filter((x) => x.league === m.league && x.season === m.season)
     .map((x) => x.no)) + 1;
   const rec = {
@@ -533,8 +692,10 @@ function lgFmtHtml(f, locked) {
   return '<div class="ct-rules">' +
     `<label>Format</label><select data-f="format"${d}>` +
     `<option value="koth"${f.format === 'koth' ? ' selected' : ''}>King of the hill</option>` +
-    `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option></select>` +
-    (f.format === 'rr'
+    `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option>` +
+    `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option></select>` +
+    (f.format === 'ladder' ? ''
+    : f.format === 'rr'
       ? num('legs', 'Legs (each pair meets)', f.legs, 1, 2, '1 = once; 2 = home and away, with the seeding order swapped')
       : num('k', 'Fighters per fight', f.k, 2, 20) +
         num('retire', 'Champion retires after', f.retire, 1, 999, 'Consecutive wins the champion needs to retire undefeated')) +
@@ -552,7 +713,7 @@ function lgFmtHtml(f, locked) {
 
 function lgStandingsHtml(S, ms) {
   const rows = lgStandings(S, ms);
-  const koth = S.fmt.format !== 'rr' ? lgKothState(S, ms) : null;
+  const koth = S.fmt.format === 'koth' ? lgKothState(S, ms) : null;
   if (!rows.length) return '<div class="ct-empty">No entrants yet.</div>';
   return '<table class="ch-table"><tr><th></th><th>Entrant</th><th title="Played">P</th>' +
     '<th title="Won">W</th><th title="Lost">L</th><th title="Win rate">%</th><th>Elo</th>' +
@@ -600,10 +761,18 @@ function lgH2HHtml(S, ms) {
     '</table>';
 }
 
+// Cada partido con su botón de repetir (L3) y la marca de la última
+// repetición de esta sesión (✓ igual, ≠ distinto).
 function lgHistoryHtml(ms) {
   if (!ms.length) return '<div class="ct-empty">No matches yet.</div>';
+  const busy = lg.live ? ' disabled' : '';
+  const mark = { same: '<b class="lg-up" title="The last replay matched">✓</b> ',
+                 diff: '<b class="lg-dn" title="The last replay differed">≠</b> ' };
   return ms.slice().reverse().slice(0, 60).map((m) =>
-    `<div class="ch-res"><span>#${m.no}</span> ` +
+    `<div class="ch-res">` +
+    (m.id !== undefined ? `<button class="ch-small lg-replay" data-replay="${m.id}"${busy}` +
+      ` title="Replay with the same rules, entrants, order and seed">↻</button> ` : '') +
+    (mark[lg.checked.get(m.id)] || '') + `<span>#${m.no}</span> ` +
     m.fighters.map((n, i) => escHtml(n) + (m.wins && m.wins[i] ? ` <span>${m.wins[i]}</span>` : '')).join(' vs ') +
     ' → ' + (m.winner ? `<b>${escHtml(m.winner)}</b>` : '—') +
     ` <i>${m.cycles || 0} cyc` + (m.capRounds ? ` · ${m.capRounds} by cap` : '') +
@@ -639,6 +808,7 @@ function lgRender() {
     : '<option value="">— no leagues —</option>';
   $('lg-del').textContent = lg.confirm === 'del' ? 'Delete it?' : '🗑';
   $('lg-del').disabled = !lg.cur;
+  $('lg-export').disabled = !lg.cur;
   const L = lg.cur;
   $('lg-main').hidden = !L;
   $('lg-empty').hidden = !!L;
@@ -665,11 +835,11 @@ function lgRender() {
     : '<div class="ct-empty">Add at least 2 entrants.</div>';
   const fx = live ? null : lgNextFixture(L);
   $('lg-next').innerHTML = live
-    ? `Playing: ${lg.live.fighters.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ')}`
+    ? `${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${lg.live.fighters.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ')}`
     : fx ? `Next: ${fx.fighters.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ')}` +
            ` <span class="ct-rule">${escHtml(fx.label)}</span>`
          : S.entrants.length < 2 ? '' : '🏁 Season complete.';
-  if (S.fmt.format !== 'rr') {
+  if (S.fmt.format === 'koth') {
     const k = lgKothState(S, ms);
     if (k.champ) $('lg-next').innerHTML += `<div class="ct-rule">👑 ${escHtml(k.champ)} · streak ${k.streak}/${S.fmt.retire}</div>`;
   }
@@ -681,6 +851,12 @@ function lgRender() {
   $('lg-table').innerHTML = lgStandingsHtml(S, ms);
   $('lg-hist').innerHTML = lgHistoryHtml(ms);
   $('lg-h2h').innerHTML = lgH2HHtml(S, ms);
+  if (lg.pastNo) {
+    const d = $('lg-past').querySelector('details');
+    const open = d && d.open;
+    lgShowSeason(lg.pastNo);
+    if (open) $('lg-past').querySelector('details').open = true;
+  }
   $('lg-newseason').textContent = lg.confirm === 'season'
     ? `Start season ${S.no + 1}? (click again)` : '📅 New season';
   $('lg-newseason').disabled = !locked;
@@ -697,7 +873,9 @@ function lgShowSeason(no) {
   const ms = lgSeasonMatches(no);
   lg.win.querySelector('#lg-past').innerHTML =
     `<div class="ct-h">Season ${no} · ${lgPlayed(ms).length} matches</div>` +
-    `<div class="lg-costs">${lgRulesSummary(S.rules)}</div>` + lgStandingsHtml(S, ms);
+    `<div class="lg-costs">${lgRulesSummary(S.rules)}</div>` + lgStandingsHtml(S, ms) +
+    `<details class="ch-sec"><summary>Matches of season ${no}</summary>${lgHistoryHtml(ms)}</details>`;
+  lg.pastNo = no;
 }
 
 function lgArm(kind, fn) {
@@ -731,6 +909,9 @@ async function openLeagues() {
     '<option value="free">the current Sim options, no costs</option></select>' +
     '<button id="lg-new" title="New league with the chosen rules">＋ New</button>' +
     '<button id="lg-del" title="Delete this league and its matches">🗑</button>' +
+    '<button id="lg-export" title="Download this league (rules, entrants with their DNA and matches) as a file">⬇</button>' +
+    '<button id="lg-import" title="Load a league from a file">⬆</button>' +
+    '<input id="lg-file" type="file" accept=".json,application/json" hidden>' +
     '</div>' +
     '<div id="lg-empty" class="ct-empty">No leagues yet: choose the rules and press ＋ New.</div>' +
     '<div id="lg-main">' +
@@ -846,6 +1027,18 @@ async function openLeagues() {
     await lgSave(lg.cur);
     lgRender();
   };
+  $('lg-export').onclick = () => lg.cur && lgExport(lg.cur);
+  $('lg-import').onclick = () => $('lg-file').click();
+  $('lg-file').onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (f) await lgImport(f);
+  };
+  // Repetir un partido: del historial de la temporada o de una pasada.
+  w.body.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-replay]');
+    if (b && !b.disabled) lgReplay(+b.dataset.replay);
+  });
   $('lg-play').onclick = () => lgPlayNext();
   $('lg-abort').onclick = () => leagueAbort();
   $('lg-newseason').onclick = () => lg.cur && lgArm('season', () => lgNewSeason(lg.cur));

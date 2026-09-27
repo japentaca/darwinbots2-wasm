@@ -92,7 +92,7 @@ console.log('\n== league.js: todos contra todos ==');
 const src = fs.readFileSync(path.join(PORT_DIR, 'web', 'league.js'), 'utf8');
 const ctx = { indexedDB: null };
 vm.createContext(ctx);
-vm.runInContext(src + '\nObject.assign(this, { lgRrFixtures, lgH2H, lgKothState, lgStandings });', ctx);
+vm.runInContext(src + '\nObject.assign(this, { lgRrFixtures, lgH2H, lgKothState, lgStandings, lgLadderState, lgExportObj, lgImportObj, lgHash });', ctx);
 for (const n of [2, 3, 4, 5, 6, 7]) {
   for (const legs of [1, 2]) {
     const fx = ctx.lgRrFixtures(n, legs);
@@ -145,6 +145,68 @@ console.log('\n== league.js: rey de la colina, enfrentamientos, Elo ==');
   const a = st.find((r) => r.name === 'A');
   check('Elo de suma cero y el nulo no cuenta', Math.abs(sum - 4500) < 1e-9 && a.p === 3 && a.w === 2,
         `suma ${sum.toFixed(6)} · A ${a.p} PJ ${a.w} G`);
+}
+
+console.log('\n== league.js: escalera (L3, populateladder) ==');
+{
+  const E = ['A', 'B', 'C', 'D'].map((name) => ({ name, color: '#fff' }));
+  const S = { entrants: E, fmt: { format: 'ladder' } };
+  const M = (winner, a, b) => ({ winner, fighters: [a, b] });
+  const st0 = ctx.lgLadderState(S, []);
+  check('arranque: A en el peldaño 1 y B lo desafía',
+        st0.ladder.join() === 'A' && st0.next[0].name === 'A' && st0.next[1].name === 'B');
+  // B pierde con A (queda último); C le gana a A (sube al 1); D pierde con C
+  // y con A, le gana a B (ocupa el peldaño 3); un nulo no cuenta.
+  const ms = [M('A', 'A', 'B'), M('C', 'A', 'C'), M('C', 'C', 'D'), M('', 'A', 'D'), M('A', 'A', 'D'), M('D', 'B', 'D')];
+  const mid = ctx.lgLadderState(S, ms.slice(0, 4));
+  check('a mitad: D desafía el peldaño 2 (A)', mid.next && mid.next[0].name === 'A' && mid.rung === 2,
+        `escalera ${mid.ladder.join(' ')}`);
+  const st = ctx.lgLadderState(S, ms);
+  const tab = ctx.lgStandings(S, ms).map((r) => r.name).join(' ');
+  check('escalera final C A D B, temporada completa y la tabla en su orden',
+        st.ladder.join(' ') === 'C A D B' && !st.next && tab === 'C A D B', `tabla ${tab}`);
+}
+
+console.log('\n== league.js: exportar e importar (L3) ==');
+{
+  const ent = (name, dna) => ({ name, dna, hash: ctx.lgHash(dna), src: 'form', file: '', color: '#123456' });
+  const L = {
+    id: 'Lviejo', name: 'Copa', notes: 'n', created: '2026-09-27T00:00:00.000Z',
+    seasons: [
+      { no: 1, started: 's1', rules: { 'o-fw': '9237', 'o-c1': '0' }, fmt: { format: 'rr', legs: 2, qty: 5 },
+        entrants: [ent('A', 'cond start 0 .up store stop'), ent('B', '10 .dx store')] },
+      { no: 2, started: 's2', rules: { 'o-fw': '1000' }, fmt: { format: 'koth', k: 3, retire: 4 },
+        entrants: [ent('A', 'cond start 0 .up store stop')] },
+    ],
+  };
+  const ms = [
+    { id: 7, league: 'Lviejo', season: 2, no: 1, fighters: ['A', 'B'], seed: 42, winner: 'A', wins: [3, 1], cycles: 900 },
+    { id: 3, league: 'Lviejo', season: 1, no: 1, fighters: ['B', 'A'], seed: 99, winner: 'B', wins: [3, 0], cycles: 500 },
+    { id: 5, league: 'Otra', season: 1, no: 1, fighters: ['X', 'Y'], seed: 1, winner: 'X', wins: [3, 0], cycles: 1 },
+  ];
+  const file = JSON.parse(JSON.stringify(ctx.lgExportObj(L, ms)));
+  check('el archivo no lleva ids ni los partidos de otra liga',
+        !('id' in file.league) && file.matches.length === 2 &&
+        file.matches.every((m) => !('id' in m) && !('league' in m)) && file.matches[0].seed === 99,
+        `${file.matches.length} partidos, el primero de la temporada ${file.matches[0].season}`);
+  const r = ctx.lgImportObj(file, new Set(['Copa', 'Copa (imported)']), 'Lnuevo');
+  const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+  const shape = (ss) => ss.map((s) => [s.no, s.rules, s.entrants.map((e) => [e.name, e.dna, e.hash])]);
+  check('ida y vuelta: temporadas, reglas, formato y ADN iguales',
+        same(shape(r.L.seasons), shape(L.seasons)) &&
+        r.L.seasons[0].fmt.legs === 2 && r.L.seasons[1].fmt.retire === 4 && r.L.seasons[1].fmt.cap === 5000);
+  check('id nuevo, nombre sin repetir y partidos reasignados',
+        r.L.id === 'Lnuevo' && r.L.name === 'Copa (imported) 2' &&
+        r.matches.length === 2 && r.matches.every((m) => m.league === 'Lnuevo' && !('id' in m)) &&
+        same(r.matches.map((m) => [m.season, m.seed, m.winner, m.wins, m.cycles]),
+             [[1, 99, 'B', [3, 0], 500], [2, 42, 'A', [3, 1], 900]]), r.L.name);
+  let bad = 0;
+  for (const o of [null, { kind: 'x' }, { kind: 'darwinbots-league', version: 99, league: L },
+                   { kind: 'darwinbots-league', version: 1, league: { seasons: [] } },
+                   { kind: 'darwinbots-league', version: 1, league: { seasons: [{ rules: {}, entrants: [{ name: 'A' }] }] } }]) {
+    try { ctx.lgImportObj(o, new Set(), 'L'); } catch (e) { bad++; }
+  }
+  check('rechaza archivos que no son ligas o están incompletos', bad === 5, `${bad}/5`);
 }
 
 console.log(`\n${pass} ok, ${fail} fallas`);

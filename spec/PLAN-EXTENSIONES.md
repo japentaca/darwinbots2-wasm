@@ -835,6 +835,42 @@ como el diseño, con estos ajustes:
   rótulo final, rey de la colina con retiro, cambio de liga con el Canal
   encendido y el Canal libre sin cambios. Consola limpia.
 
+### Resultado L3 (2026-09-27) — E10 completa
+
+- **Exportar / importar** (⬇ / ⬆ junto al selector de ligas): un JSON
+  `{kind: 'darwinbots-league', version: 1, league, matches}` con la liga
+  entera (temporadas con reglas, formato y participantes con su ADN) y
+  sus partidos sin id. Al importar, id nuevo, nombre con "(imported)" si
+  ya existe, partidos reasignados y validación (tipo, versión, temporadas,
+  nombre y ADN de cada participante). `lgExportObj` / `lgImportObj` son
+  puras: el smoke hace la ida y vuelta.
+- **Repetir** (↻ en cada fila de "Matches", también en las temporadas
+  pasadas): `lgPlay(L, fx, {replay})` aplica las reglas y el formato de
+  **esa** temporada, siembra los mismos participantes en el mismo orden y
+  fija `#seed` a la semilla del partido. No se registra: `lgRecord`
+  compara ganador, victorias y ciclos, avisa si difieren y marca la fila
+  (✓ / ≠, en memoria). Los partidos de antes de que `f1-over` trajera el
+  marcador (0 ciclos) comparan solo el ganador.
+- **Determinismo verificado en Chrome**: 10 repeticiones idénticas en
+  ganador, victorias y ciclos: duelos de todos contra todos con rondas
+  decididas por el tope ("most energy"), temporadas pasadas, rey de la
+  colina de 3 por pelea, a velocidad 4 con la pestaña en segundo plano,
+  cambiando la velocidad a mitad del partido, y desde una liga importada.
+  La semilla, las reglas, el ADN y el orden de siembra reproducen el
+  partido; el tope del host (`f1-cap`, después de cada tick) no depende de
+  los frames.
+- **Escalera** (`populateladder`, `F1Mode.bas:443-500`) como tercer
+  formato ("Step ladder"): los participantes entran en el orden de
+  inscripción, el primero ocupa el peldaño 1, y cada aspirante desafía
+  desde arriba hacia abajo (sembrado peldaño, aspirante, como robotA y
+  robotB); si gana, ocupa ese peldaño y empuja a los demás; si pierde con
+  todos, queda último. `lgLadderState` la deriva del historial; la tabla
+  sigue el orden de la escalera y el Canal la juega hasta el final como
+  todos contra todos.
+- Encender el Canal o el Contest abandona una repetición en curso, como
+  un partido normal. Smoke `smoke_liga` 25/25 (escalera y exportar e
+  importar); Chrome con consola limpia.
+
 ---
 
 ## Orden recomendado
@@ -846,4 +882,4 @@ como el diseño, con estos ajustes:
 `PROGRESO.md` §"Siguiente"). **E9** (sexualidad visible, capa host) se
 añadió el 2026-09-26 a petición del usuario y está pendiente. **E10**
 (ligas, capa host) se añadió el 2026-09-27, también pedida por el usuario:
-L1 → L2 → L3.
+L1 → L2 → L3, **completa** el mismo día.

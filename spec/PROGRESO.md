@@ -108,10 +108,11 @@ con evidencia.
   busting de Pages e interfaz en inglés (T1-T6).
 - **E9 · Sexualidad visible** (capa host): planificada el 2026-09-26 y
   pendiente (`PLAN-EXTENSIONES.md §E9`).
-- **E10 · Ligas** (capa host): L1 y L2 hechas el 2026-09-27 (ventana
-  "🏟 Leagues" con reglas, formato rey de la colina o todos contra todos,
-  participantes, historial, tabla, Elo y enfrentamientos directos; el Canal
-  de TV juega una liga). L3 pendiente (`PLAN-EXTENSIONES.md §E10`).
+- **E10 · Ligas** (capa host): **completa** el 2026-09-27 (ventana
+  "🏟 Leagues" con reglas, formato rey de la colina, todos contra todos o
+  escalera, participantes, historial, tabla, Elo y enfrentamientos
+  directos; el Canal de TV juega una liga; exportar, importar y repetir
+  partidos con su semilla). `PLAN-EXTENSIONES.md §E10`.
 
 **Balance del plan — lo que queda fuera de la superficie del original**
 (cada cosa con su evidencia en la etapa que la decidió):
@@ -171,7 +172,7 @@ ambos de core, anteriores a PP-03.
 | PP-01 · Rejilla con campo chico | ✅ cerrada | **Core** (rama `pp-buckets-campo-chico` + revisión de rama). Pendiente (2) de E8: sembrar 15 algas en 4000×3000 desbordaba la pila (wasm: `Maximum call stack size exceeded`; nativo: 0xC00000FD). Ubicado con `-finstrument-functions`: `Int(eje/4000) = 0` dejaba la rejilla de `Quads.bas` vacía y `EnsureBuckets` (construcción del port) re-inicializaba en cada llamada, también desde el re-registro de `InitBuckets` → `UpdateBotBucket` → `EnsureBuckets`… sin fin. **No es un bug del original**: allí es un sitio de error 9 (`UpdateBotBucket` clampa a −1, `Quads.bas:91`, y `Add_Bot` indexa `Buckets(x, −1)`, `:115`), inalcanzable desde su UI (slider: F1 9237×6928 o 8000×6000 × n) y solo con un archivo editado. **Decisión de port**: al menos 1 celda por eje (`BucketCount`; no finito o no positivo = 0 celdas) + `SimDiag::err9_bucket_field`, una vez por `Init_Buckets` que arma el sitio; campos ≥ 4000 sin cambio, suite heredada intacta. Familia nueva **PP-01/PP-01b/PP-02** (`70-CASOS-DORADOS.md §15`, `tests/test_buckets.cpp`): **181 casos / 3851 aserciones** en los tres modos, mutation-check. Revisión de rama: sin bugs de código; citas corridas, matiz de la carga `.sim` (con handler en `simload`), `Form_Resize` y el caso de achicar en marcha, corregidos. Smoke `tools/pp/smoke_campo.mjs` 8/8 (+ `smoke_e8` 30/30, `smoke_im` 44/44) y Chrome (4000×3000 y 3000×2000 con 15 algas corriendo, consola limpia). |
 | Añadidos de host post-plan | ✅ hechos | **Capa host** (2026-09-25/26, sin etapa; cero cambios en `port/core/`). Inventario y Laboratorio de híbridos (`a3a41ea`, `9e85cea`), ajustes F1 `btnSetF1` y panel de costes (`1750216`; completa E1/E5), Contest F1 (`1384c9d`, `5fc5d36`, `8f8323e`), Canal de TV F1 con `db_sim_f1_cap` (`50e9a86`, `ef1a16f`), Bestiary sin duplicados (568 bots, `fd1774f`), cache busting de Pages (`42837c2`) e interfaz en inglés T1-T6 (`f5b03ef`…`64c62a3`, `23b4587`). Detalle en `PLAN-EXTENSIONES.md` §"Añadidos fuera del plan". |
 | E9 · Sexualidad visible | ⏸ pendiente | **Capa host** (planificada el 2026-09-26 y postergada por el usuario). Contadores y gráfica "Reproduction" (fecundaciones, nacimientos sexuales/asexuales, rechazos), línea al donante y lente "fertility" en la vista enriquecida, y escenario "Sexual vs asexual". Sexos en el motor descartados. `PLAN-EXTENSIONES.md §E9`. |
-| E10 · Ligas | 🟡 L1 y L2 hechas | **Capa host** (2026-09-27, rama `e10-ligas`; cero cambios en `port/core/`, suite 270/4092 en los tres modos). L1: `web/league.js`, ventana "🏟 Leagues" con ligas en IndexedDB (`darwinbots-ligas`), reglas como foto del panel (base F1, panel actual o sin costes), formato elegible (rey de la colina / todos contra todos por el método del círculo, 1 o 2 vueltas), participantes con ADN congelado, temporadas con reglas bloqueadas, historial con semilla, tabla de posiciones, Elo y % de rondas por tope. `db_sim_f1_cap(h, mode)`: criterio "most energy" (nrg + body×10). `f1-over` trae marcador y ciclos. El Canal ignora los mensajes de la sim anterior hasta el censo. Smoke `tools/e10/smoke_liga.mjs` 15/15; Chrome con consola limpia. L2: el Canal juega una liga (selector "League", reglas en cada pelea, registro por la liga, fin de temporada con campeón), tabla de la liga en lugar del Hall of Fame, enfrentamientos directos y ciclos promedio; smoke 18/18. L3 (exportar, repetir) pendiente. |
+| E10 · Ligas | ✅ L1, L2 y L3 | **Capa host** (2026-09-27, rama `e10-ligas`; cero cambios en `port/core/`, suite 270/4092 en los tres modos). L1: `web/league.js`, ventana "🏟 Leagues" con ligas en IndexedDB (`darwinbots-ligas`), reglas como foto del panel (base F1, panel actual o sin costes), formato elegible (rey de la colina / todos contra todos por el método del círculo, 1 o 2 vueltas), participantes con ADN congelado, temporadas con reglas bloqueadas, historial con semilla, tabla de posiciones, Elo y % de rondas por tope. `db_sim_f1_cap(h, mode)`: criterio "most energy" (nrg + body×10). `f1-over` trae marcador y ciclos. El Canal ignora los mensajes de la sim anterior hasta el censo. Smoke `tools/e10/smoke_liga.mjs` 15/15; Chrome con consola limpia. L2: el Canal juega una liga (selector "League", reglas en cada pelea, registro por la liga, fin de temporada con campeón), tabla de la liga en lugar del Hall of Fame, enfrentamientos directos y ciclos promedio; smoke 18/18. L3: exportar e importar una liga a JSON (id nuevo, partidos reasignados), repetir un partido del historial con su semilla y compararlo (determinismo verificado en Chrome: 10 repeticiones idénticas, con tope, rey de la colina de 3 y a distintas velocidades) y la escalera del original (`populateladder`) como tercer formato; smoke 25/25. |
 
 ---
 
@@ -593,3 +594,10 @@ ambos de core, anteriores a PP-03.
   directos y ciclos promedio en la ventana de ligas. Suite **270 / 4092**
   en los tres modos, `smoke_liga` 18/18, smokes de host en verde, Chrome
   con consola limpia.
+- **2026-09-27** — **E10 · Ligas, L3** (cierra E10): exportar e importar
+  ligas (JSON con temporadas, reglas, participantes con ADN y partidos),
+  repetir un partido del historial con su semilla y comparar el resultado
+  (el core resultó determinista en todas las pruebas) y la escalera del
+  original como tercer formato, también en el Canal. Suite **270 / 4092**
+  en los tres modos, `port/core/` sin diff, `smoke_liga` 25/25, smokes de
+  host en verde, Chrome con consola limpia.
