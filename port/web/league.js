@@ -99,8 +99,10 @@ const LG_FMT_DEFAULT = {
 };
 const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup'];
 // Participantes de cada temporada: lista fija (a mano, se copia a la
-// temporada nueva) o sorteo de n del pool en cada temporada nueva. El pool
-// es un filtro de lgPool ('all', 'fav', 'sel', 'tag:…', 'set:…').
+// temporada nueva), sorteo de n del pool en cada temporada nueva ('random')
+// o sorteo en cada pelea ('fight', salvo la copa, que entonces sortea en
+// cada temporada: ver lgLiveFill). El pool es un filtro de lgPool ('all',
+// 'fav', 'sel', 'tag:…', 'set:…').
 const LG_DRAW_DEFAULT = { mode: 'fixed', pool: 'all', n: 8 };
 const LG_ELO0 = 1500, LG_K = 32;
 const LG_MAX_FIGHTERS = 20;   // PopArray(1 To 20), F1Mode.bas:59
@@ -125,7 +127,7 @@ const lgFind = (id) => (id === LG_SCRATCH_ID ? lg.scratch && lg.scratch.L : lg.l
 const lgDrawOf = (L) => lgDrawClean(L && L.draw);
 function lgDrawClean(d) {
   const o = { ...LG_DRAW_DEFAULT, ...(d && typeof d === 'object' ? d : {}) };
-  return { mode: o.mode === 'random' ? 'random' : 'fixed',
+  return { mode: o.mode === 'random' || o.mode === 'fight' ? o.mode : 'fixed',
            pool: typeof o.pool === 'string' && o.pool ? o.pool : LG_DRAW_DEFAULT.pool,
            n: Math.min(200, Math.max(2, parseInt(o.n, 10) || LG_DRAW_DEFAULT.n)) };
 }
@@ -285,7 +287,8 @@ function lgKothState(S, ms) {
   if (champ && !S.entrants.some((e) => e.name === champ)) champ = null;
   return { champ, streak, titles, first, played };
 }
-const lgKothCap = (S) => LG_KOTH_CAP * S.entrants.length;
+// Con sorteo en cada pelea, N es el n del sorteo (los inscriptos no paran de crecer).
+const lgKothCap = (S) => LG_KOTH_CAP * (S.live ? S.live.n : S.entrants.length);
 
 // ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
 // single: con su partido; rr y escalera: con el calendario completo; rey de
@@ -296,7 +299,7 @@ function lgSeasonDone(S, ms) {
   const f = S.fmt.format;
   if (f === 'single') return lgPlayed(ms).length > 0;
   if (f === 'rr') return !lgRrState(S, ms).next;
-  if (f === 'ladder') return !lgLadderState(S, ms).next;
+  if (f === 'ladder') return !lgLadderState(S, ms).next && !(S.live && S.entrants.length < S.live.n);
   if (f === 'cup') return lgCupState(S, ms).phase === 'done';
   const k = lgKothState(S, ms);
   return !!k.first || k.played >= lgKothCap(S);
@@ -566,9 +569,17 @@ function lgFixture(S, ms) {
     return st.next && { fighters: st.next, label: st.label };
   }
   const { champ, played } = lgKothState(S, ms);
-  const k = Math.min(Math.max(2, S.fmt.k), E.length, LG_MAX_FIGHTERS);
   const ce = champ ? E.find((e) => e.name === champ) : null;
-  const others = lgShuffle(E.filter((e) => e !== ce)).slice(0, ce ? k - 1 : k);
+  let others;
+  if (S.live) {
+    // Sorteo en cada pelea: los retadores que sorteó lgLiveFill para esta pelea.
+    const nx = S.next && S.next.at === ms.length ? S.next.names.map((n) => E.find((e) => e.name === n)) : null;
+    if (!nx || nx.some((e) => !e || e === ce) || nx.length + (ce ? 1 : 0) < 2) return null;
+    others = nx;
+  } else {
+    const k = Math.min(Math.max(2, S.fmt.k), E.length, LG_MAX_FIGHTERS);
+    others = lgShuffle(E.filter((e) => e !== ce)).slice(0, ce ? k - 1 : k);
+  }
   return { fighters: ce ? [ce, ...others] : others,
            label: (ce ? `👑 ${champ} defends the crown` : 'Open fight: no champion') +
                   ` · fight ${played + 1} of at most ${lgKothCap(S)}` };
@@ -796,15 +807,84 @@ function lgSeasonNext(S, draw) {
 }
 
 // Temporada nueva. Con el sorteo de la liga en 'random' (o o.draw, el TV
-// mode, que sortea siempre) los participantes salen de n del pool.
+// mode, que sortea siempre) los participantes salen de n del pool; en
+// 'fight' empieza vacía y se sortea al jugar (lgLiveFill).
 // Devuelve el resultado del sorteo ({added, failed}) o null.
 async function lgNewSeason(L, o = {}) {
   if (lg.live && lg.live.league === L.id) leagueAbort();
-  const d = lgDrawOf(L), draw = !!o.draw || d.mode === 'random';
-  L.seasons.push(lgSeasonNext(lgSeason(L), draw));
-  const r = draw ? await lgDrawRandom(L, lgPool(d.pool), d.n) : (await lgSave(L), null);
+  const d = lgDrawOf(L), fresh = !!o.draw || d.mode !== 'fixed';
+  L.seasons.push(lgSeasonNext(lgSeason(L), fresh));
+  lgLiveSync(L);
+  const r = fresh && !lgSeason(L).live ? await lgDrawRandom(L, lgPool(d.pool), d.n) : (await lgSave(L), null);
   lgRender();
   return r;
+}
+
+// ---- Sorteo en cada pelea -----------------------------------------------------------
+// Con el sorteo de la liga en 'fight' (y un formato que no sea copa) la
+// temporada lleva S.live = {pool, n}, la foto del sorteo que se congela con
+// su primer partido, y los participantes se inscriben (con el ADN congelado,
+// como siempre) a medida que hacen falta: en el rey de la colina, los
+// retadores de cada pelea (S.next = {at: partidos de la temporada, names}),
+// con un tope de 3 × n peleas; en la escalera, cada aspirante cuando le toca
+// entrar, hasta n; en todos contra todos y el partido único, n al lanzar el
+// primer partido.
+const lgLiveOn = (L) => lgDrawOf(L).mode === 'fight' && lgSeason(L).fmt.format !== 'cup';
+
+// Pone S.live al día con el sorteo de la liga mientras la temporada abierta
+// (la de lg.cur) no tiene partidos. true si cambió.
+function lgLiveSync(L) {
+  const S = lgSeason(L);
+  if (lgSeasonMatches(S.no).length) return false;
+  const d = lgDrawOf(L);
+  const live = lgLiveOn(L) ? { pool: d.pool, n: d.n } : undefined;
+  if (JSON.stringify(live) === JSON.stringify(S.live)) return false;
+  if (live) S.live = live; else delete S.live;
+  delete S.next;
+  return true;
+}
+
+// Un bot del pool como participante: el que ya tiene su ADN o uno nuevo.
+// null si su ADN no se puede leer.
+async function lgEnrollOne(S, it) {
+  let dna;
+  try { dna = await invFetchDna(it.b); } catch (e) { return null; }
+  const hash = lgHash(dna);
+  const have = S.entrants.find((x) => x.hash === hash);
+  if (have) return have;
+  lgAddEntrant(S, { name: it.b.name, dna, src: 'bestiary', file: it.b.file });
+  return S.entrants[S.entrants.length - 1];
+}
+
+// Inscribe lo que la próxima pelea de la temporada abierta de L (lg.cur)
+// necesita del pool; nada si no sortea en cada pelea. Con el pool corto, la
+// escalera termina con los que hay y los demás formatos juegan con menos.
+async function lgLiveFill(L) {
+  const S = lgSeason(L), live = S.live;
+  if (!live) return;
+  const ms = lgSeasonMatches(S.no);
+  if (lgSeasonDone(S, ms)) return;
+  const f = S.fmt.format;
+  if (f === 'koth') {
+    if (lgFixture(S, ms)) return;            // ya sorteada (p. ej. tras abandonarla)
+    const { champ } = lgKothState(S, ms);
+    const need = Math.min(Math.max(2, S.fmt.k), LG_MAX_FIGHTERS) - (champ ? 1 : 0);
+    const names = [];
+    for (const it of lgShuffle(lgPool(live.pool))) {
+      if (names.length >= need) break;
+      if (it.b.name === champ) continue;
+      const e = await lgEnrollOne(S, it);
+      if (e && e.name !== champ && !names.includes(e.name)) names.push(e.name);
+    }
+    S.next = { at: ms.length, names };
+    await lgSave(L);
+  } else if (f === 'ladder') {
+    const want = Math.min(live.n, Math.max(2, lgLadderState(S, ms).placed + 1));
+    if (S.entrants.length < want) await lgDrawRandom(L, lgPool(live.pool), want - S.entrants.length);
+    if (S.entrants.length < want) { live.n = S.entrants.length; await lgSave(L); }
+  } else if (!ms.length && S.entrants.length < live.n) {
+    await lgDrawRandom(L, lgPool(live.pool), live.n - S.entrants.length);
+  }
 }
 
 // Vuelve a sortear los participantes de la temporada abierta (solo si aún no
@@ -859,6 +939,9 @@ function lgImportObj(o, names, newId) {
     });
     const x = { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
                 fmt: { ...LG_FMT_DEFAULT, popCap: 0, ...(s.fmt || {}) }, entrants };
+    // Sorteo en cada pelea: la foto del sorteo de la temporada.
+    if (s.live && typeof s.live === 'object' && typeof s.live.pool === 'string')
+      x.live = { pool: s.live.pool, n: Math.min(200, Math.max(0, parseInt(s.live.n, 10) || 0)) };
     // E12: el reparto de los grupos de la copa, si reparte a estos participantes.
     if (Array.isArray(s.groups)) {
       x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));
@@ -1041,9 +1124,15 @@ async function lgPlayNext() {
     return;
   }
   await lgCupEnsure(L);
+  if (lgLiveSync(L)) await lgSave(L);
+  if (S.live) lgNote('Drawing from the pool…');
+  await lgLiveFill(L);
   const fx = lgNextFixture(L);
   if (!fx) {
-    lgNote(S.entrants.length < 2 ? 'A tournament needs at least 2 entrants.' : 'The season is complete.', true);
+    lgNote(lgSeasonDone(S, lgSeasonMatches(S.no)) ? 'The season is complete.'
+      : S.live ? 'The draw pool has too few readable bots for the next fight.'
+      : 'A tournament needs at least 2 entrants.', true);
+    lgRender();
     return;
   }
   try { await lgPlay(L, fx); } catch (e) { lgNote(e.message, true); }

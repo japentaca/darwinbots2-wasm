@@ -508,8 +508,14 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   repeticiones de sus partidos den lo mismo.
 - **Participantes** (Setup): búsqueda en el Bestiary, grupos del
   Inventario (favoritos, tags, selecciones), híbridos, el ADN del
-  formulario y Animal Minimalis, o **🎲 Draw** N al azar de un pool; con
-  "Draw new entrants at every new season", cada temporada nueva sortea.
+  formulario y Animal Minimalis, o **🎲 Draw** N al azar de un pool. El
+  selector "Entrants" elige entre la lista fija, un sorteo nuevo en cada
+  temporada o el **sorteo en cada pelea** (salvo la copa, que sortea por
+  temporada): el rey de la colina saca del pool los retadores de cada
+  pelea (tope de 3 × N peleas), la escalera sortea cada aspirante cuando
+  le toca entrar (hasta N) y todos contra todos y el partido único
+  sortean N al lanzar el primer partido. Los sorteados quedan inscriptos
+  con su ADN congelado, así que las repeticiones siguen valiendo.
 - **Play**: la próxima pelea, el marcador del partido (población,
   victorias, ronda y la regla de empate del original, más de √N + N/2
   victorias, `F1Mode.bas:361-426`) y el **📺 TV mode** (también el botón
@@ -526,7 +532,8 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   (versión 1).
 - Smokes: `node tools/e10/smoke_liga.mjs` (tope por energía, calendarios,
   Elo, exportar e importar), `node tools/e11/smoke_torneos.mjs` (fin de
-  temporada, sorteo, Hall of Fame, Scratch, migraciones) y
+  temporada, sorteo, Hall of Fame, Scratch, migraciones),
+  `node tools/e11/smoke_sorteo_pelea.mjs` (sorteo en cada pelea) y
   `node tools/e12/smoke_copa.mjs` (grupos, bombos, desempates, cuadro,
   3.er puesto, exportar e importar con los grupos).
 

@@ -56,7 +56,10 @@ function tnProgress(S, ms) {
   if (lgSeasonDone(S, ms)) return '🏁 complete';
   const f = S.fmt.format;
   if (f === 'rr') { const st = lgRrState(S, ms); return `${st.played} of ${st.total} fixtures played`; }
-  if (f === 'ladder') { const st = lgLadderState(S, ms); return `${st.placed} of ${st.total} on the ladder`; }
+  if (f === 'ladder') {
+    const st = lgLadderState(S, ms);
+    return `${st.placed} of ${S.live ? S.live.n : st.total} on the ladder`;
+  }
   if (f === 'cup') {
     if (!lgCupSizeOk(S)) return 'needs 8, 16 or 32 entrants';
     const st = lgCupState(S, ms);
@@ -220,15 +223,24 @@ async function tvStart() {
 }
 
 // Una edición: la temporada abierta si está a medias; si no tiene partidos,
-// se vuelve a sortear; si terminó, temporada nueva con sorteo nuevo.
+// se vuelve a sortear; si terminó, temporada nueva con sorteo nuevo. Con el
+// sorteo en cada pelea no se sortea nada aquí: lo hace tvNext.
 async function tvEdition() {
   const L = tv.L, S = lgSeason(L), ms = lgSeasonMatches(S.no);
   let r = null;
   tnNote('Drawing the entrants…');
-  if (!ms.length) r = await lgRedraw(L);
-  else if (lgSeasonDone(S, ms)) r = await lgNewSeason(L, { draw: true });
+  if (!ms.length) {
+    if (lgLiveSync(L)) await lgSave(L);
+    if (!S.live) r = await lgRedraw(L);
+  } else if (lgSeasonDone(S, ms)) r = await lgNewSeason(L, { draw: true });
   if (!tv.on || tv.L !== L) return;        // apagado mientras sorteaba
-  if (lgSeason(L).entrants.length < 2) {
+  if (lgSeason(L).live) {
+    if (lgPool(lgSeason(L).live.pool).length < 2) {
+      tnNote(`The draw pool (${tnPoolName(lgSeason(L).live.pool)}) has fewer than 2 bots: TV mode off.`, true);
+      tvStop();
+      return;
+    }
+  } else if (lgSeason(L).entrants.length < 2) {
     tnNote(`The draw pool (${tnPoolName(lgDrawOf(L).pool)}) has fewer than 2 readable bots: TV mode off.`, true);
     tvStop();
     return;
@@ -242,15 +254,24 @@ async function tvEdition() {
   await lgCupEnsure(L);                     // copa: los grupos de la edición
   if (!tv.on || tv.L !== L) return;
   if (r) log(`📺 ${L.name}: edition ${lgSeason(L).no}, ${r.added} entrants drawn`);
-  tnNote(`Edition ${lgSeason(L).no}: ${lgSeason(L).entrants.length} entrants.`);
+  tnNote(lgSeason(L).live ? `Edition ${lgSeason(L).no}: entrants drawn at every fight.`
+                          : `Edition ${lgSeason(L).no}: ${lgSeason(L).entrants.length} entrants.`);
   tn.resNo = 0;
   tvNext();
 }
 
-function tvNext() {
+async function tvNext() {
   clearTimeout(tv.timer);
   if (!tv.on) return;
-  const fx = lgNextFixture(tv.L);
+  const L = tv.L;
+  await lgLiveFill(L);                      // sorteo en cada pelea: los de esta
+  if (!tv.on || tv.L !== L) return;
+  const fx = lgNextFixture(L);
+  if (!fx && !lgSeasonDone(lgSeason(L), lgSeasonMatches(lgSeason(L).no))) {
+    tnNote('The draw pool has too few readable bots for the next fight: TV mode off.', true);
+    tvStop();
+    return;
+  }
   if (!fx) { tvSeasonOver(); return; }
   Object.assign(tv, { fx, phase: 'break', winner: '', st: null,
                       until: performance.now() + tv.pause * 1000 });
@@ -434,11 +455,13 @@ function tnRenderSetup(L, S, ms, locked) {
         `<input type="number" class="ct-qty" min="1" max="200" value="${e.qty || ''}" placeholder="${S.fmt.qty}"${d}></label>` +
         `<button class="ct-del" title="${playedBy.has(e.name) ? 'Already played this season' : 'Remove'}"` +
         `${playedBy.has(e.name) ? ' disabled' : ''}>✕</button></div>`).join('')
+    : S.live ? '<div class="ct-empty">Drawn from the pool as the season is played.</div>'
     : '<div class="ct-empty">Add at least 2 entrants, or draw them.</div>';
   const dr = lgDrawOf(L);
   if (document.activeElement !== $('tn-drawn')) $('tn-drawn').value = dr.n;
   if ($('tn-drawpool').value !== dr.pool) $('tn-drawpool').value = dr.pool;
-  $('tn-drawmode').checked = dr.mode === 'random';
+  $('tn-drawmode').value = dr.mode;
+  $('tn-drawhint').textContent = tnDrawHint(dr, S, locked);
   $('tn-draw').disabled = locked;
   $('tn-draw').title = locked ? 'This season has matches: start a new season to draw again'
                               : 'Replace the entrants with this many drawn at random from the pool';
@@ -454,16 +477,19 @@ function tnRenderPlay(L, S, ms, locked) {
   // Copa sin grupos (se sortean con el primer partido) o de un tamaño que no sirve.
   const cupWait = S.fmt.format === 'cup' && !fx && !lgSeasonDone(S, ms) && S.entrants.length >= 2
     ? (lgCupSizeOk(S) ? 'draw' : 'size') : '';
+  // Sorteo en cada pelea: los de la próxima salen del pool al lanzarla.
+  const liveWait = !!S.live && !fx && !lgSeasonDone(S, ms);
   const names = (list) => list.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ');
   $('tn-next').innerHTML = live
     ? `${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${names(lg.live.fighters)}`
     : tv.on && tv.fx && tv.phase !== 'banner' ? `Next: ${names(tv.fx.fighters)} <span class="ct-rule">${escHtml(tv.fx.label)}</span>`
     : fx ? `Next: ${names(fx.fighters)} <span class="ct-rule">${escHtml(fx.label)}</span>`
+    : liveWait ? `Next: <span class="ct-empty">drawn from ${escHtml(tnPoolName(S.live.pool))} when the fight starts</span>`
     : S.entrants.length < 2 ? '<span class="ct-empty">Add at least 2 entrants in Setup, or draw them.</span>'
     : cupWait === 'size' ? `<span class="ct-empty">${tnCupSizeMsg(S)}</span>`
     : cupWait === 'draw' ? '<span class="ct-empty">The groups are drawn when the first match starts (or in Setup).</span>'
     : lgChampionHtml(S, ms);
-  $('tn-play-next').hidden = tv.on || (!live && !fx && cupWait !== 'draw');
+  $('tn-play-next').hidden = tv.on || (!live && !fx && cupWait !== 'draw' && !liveWait);
   $('tn-play-next').disabled = busy;
   $('tn-abort').hidden = !live;
   $('tn-newseason').hidden = tv.on || !locked;
@@ -471,7 +497,7 @@ function tnRenderPlay(L, S, ms, locked) {
   const dr = lgDrawOf(L);
   $('tn-newseason').textContent = tn.confirm === 'season'
     ? `Start season ${S.no + 1}? (click again)`
-    : '📅 New season' + (dr.mode === 'random' ? ' (new draw)' : '');
+    : '📅 New season' + (dr.mode !== 'fixed' ? ' (new draw)' : '');
   $('tn-board').hidden = !live && !(tv.on && tv.phase === 'break');
   if (!live && !tv.on) $('tn-board').innerHTML = '';
   $('tn-tv').textContent = tv.on ? '⏹ Stop the TV mode' : '📺 TV mode';
@@ -480,8 +506,9 @@ function tnRenderPlay(L, S, ms, locked) {
     : 'Play this tournament on its own, season after season, each with entrants drawn at random';
   $('tn-tvhint').textContent = tv.on
     ? `📺 On air: edition ${lgSeason(tv.L).no}, fight #${tv.fightNo}. Every fight is recorded in the tournament.`
-    : `Plays the season to the end, shows the champion over the field and starts a new season with ` +
-      `${dr.n} entrants drawn from ${tnPoolName(dr.pool)} (Setup → Entrants), over and over.`;
+    : `Plays the season to the end, shows the champion over the field and starts a new season ` +
+      (lgLiveOn(L) ? `drawing from ${tnPoolName(dr.pool)} at every fight` : `with ${dr.n} entrants drawn from ${tnPoolName(dr.pool)}`) +
+      ` (Setup → Entrants), over and over.`;
   $('tn-recent').innerHTML = lgHistoryHtml(ms.slice(-6));
   if (tv.on && tv.phase === 'break') tnRenderTv(Math.ceil((tv.until - performance.now()) / 1000));
 }
@@ -558,10 +585,24 @@ async function tnAddItems(items) {
   tnRender();
 }
 
+// Qué hace el sorteo en cada pelea con el formato de la temporada.
+function tnDrawHint(dr, S, locked) {
+  if (dr.mode !== 'fight') return '';
+  const f = S.fmt.format;
+  if (f === 'cup') return 'A World cup needs its entrants before the first match: it draws them at every new season.';
+  if (locked && !S.live) return 'From the next season on (this one started with its list).';
+  const n = S.live ? S.live.n : dr.n;
+  return (locked ? 'This season: ' : '') + (
+    f === 'koth' ? `the challengers of every fight come from the pool; the season ends with a retirement or after ${LG_KOTH_CAP * n} fights (3 × ${n}).`
+    : f === 'ladder' ? `each newcomer is drawn when its turn comes, up to ${n} on the ladder.`
+    : `${n} are drawn when the first match starts.`);
+}
+
 async function tnSaveDraw(patch) {
   const L = lg.cur;
   if (!L) return;
   L.draw = lgDrawClean({ ...lgDrawOf(L), ...patch });
+  lgLiveSync(L);
   await lgSave(L);
   tnRender();
 }
@@ -633,7 +674,11 @@ async function openTournaments(tab) {
     '<button id="tn-draw">🎲 Draw</button><input type="number" id="tn-drawn" min="2" max="200" title="How many"> from ' +
     `<select id="tn-drawpool">${lgPoolOptions('')}</select>` +
     '</div>' +
-    '<label class="tn-chk"><input type="checkbox" id="tn-drawmode"> Draw new entrants at every new season</label>' +
+    '<label class="tn-chk">Entrants: <select id="tn-drawmode">' +
+    '<option value="fixed">the list, carried over to the next season</option>' +
+    '<option value="random">drawn again at every new season</option>' +
+    '<option value="fight">drawn from the pool at every fight</option></select></label>' +
+    '<div id="tn-drawhint" class="ct-rule"></div>' +
     '<div class="ct-rule">Each entrant keeps the DNA it had when it joined. The TV mode draws at every edition.</div>' +
     '</details>' +
     '<details id="tn-cupsetup" class="ch-sec" open hidden><summary>🌍 World cup groups</summary>' +
@@ -735,6 +780,7 @@ async function openTournaments(tab) {
       f[k] = Math.min(hi, Math.max(lo, Number.isNaN(n) ? LG_FMT_DEFAULT[k] : n));
     }
     if (k === 'format' || k === 'pots') delete S.groups;   // copa: otro sorteo
+    lgLiveSync(lg.cur);                                     // la copa no sortea en cada pelea
     await lgSave(lg.cur);
     tnRender();
   };
@@ -809,7 +855,7 @@ async function openTournaments(tab) {
   };
   $('tn-drawn').onchange = (e) => tnSaveDraw({ n: e.target.value });
   $('tn-drawpool').onchange = (e) => tnSaveDraw({ pool: e.target.value });
-  $('tn-drawmode').onchange = (e) => tnSaveDraw({ mode: e.target.checked ? 'random' : 'fixed' });
+  $('tn-drawmode').onchange = (e) => tnSaveDraw({ mode: e.target.value });
   $('tn-drawgroups').onclick = () => tnCupDrawGroups();
   $('tn-draw').onclick = async () => {
     const L = lg.cur;
