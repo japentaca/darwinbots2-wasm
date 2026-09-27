@@ -329,6 +329,18 @@ async function channelStart() {
     ch.cfg = { ...base, k: f.k, rounds: f.rounds, wins: f.wins, retire: f.retire,
                cap: f.cap, qty: f.qty, nrg: f.nrg, capMode: f.capMode };
     if (lg.cur !== ch.league) await lgSelect(ch.league);   // el calendario lee lg.matches
+    // Liga sin participantes: sorteo del pool del Canal (ADN congelado).
+    if (lgSeason(ch.league).entrants.length < 2) {
+      const n = Math.min(200, Math.max(2, parseInt(ch.win.querySelector('#ch-lgn').value, 10) || 8));
+      chNote(`Drawing ${n} entrants for ${ch.league.name}…`);
+      const { added } = await lgDrawRandom(ch.league, chPool(base.pool), n);
+      lgRender();
+      if (lgSeason(ch.league).entrants.length < 2) {
+        chNote('The draw pool has fewer than 2 readable bots.', true);
+        return;
+      }
+      log(`📺 ${ch.league.name}: ${added} entrants drawn at random`);
+    }
   }
   clearTimeout(ch.bannerT);
   ch.bannerT = 0;
@@ -446,8 +458,13 @@ function chRenderLeagueSum() {
   const L = chSelLeague();
   const $ = (id) => ch.win.querySelector('#' + id);
   $('ch-free').hidden = !!L;
+  const S = L && lgSeason(L);
+  // Liga sin participantes: el Canal los sortea del pool al encenderse.
+  const draw = !!L && S.entrants.length < 2;
+  $('ch-poolbox').hidden = !!L && !draw;
+  $('ch-lgdraw').hidden = !draw;
   if (!L) { $('ch-lgsum').innerHTML = ''; return; }
-  const S = lgSeason(L), f = S.fmt, ms = lgSeasonMatches(S.no);
+  const f = S.fmt, ms = lgSeasonMatches(S.no);
   const fmt = f.format === 'rr' ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
     : f.format === 'ladder' ? 'step ladder'
     : `king of the hill, ${f.k} per fight, retires after ${f.retire}`;
@@ -511,6 +528,10 @@ async function openChannel() {
     `<label>Starting energy</label><input type="number" id="ch-nrg" min="1" value="${v('nrg', 3000)}">` +
     `<label class="ct-wide"><input type="checkbox" id="ch-f1" ${v('f1', true) ? 'checked' : ''}> Use F1 league settings</label>` +
     '</div>' +
+    '</div>' +
+    '<div id="ch-poolbox">' +
+    '<div id="ch-lgdraw" class="ct-rule" hidden>This league has no entrants yet: turning the channel on draws ' +
+    '<input type="number" id="ch-lgn" min="2" max="200" value="8"> at random from the pool below.</div>' +
     '<div class="ct-h">Draw pool <span id="ch-pooln"></span></div>' +
     '<select id="ch-pool"></select>' +
     '<div class="ct-rule">Favorites, tags and selections are set up in the 📚 Inventory.</div>' +

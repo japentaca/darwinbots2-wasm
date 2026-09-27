@@ -496,7 +496,9 @@ fuera del plan"):
   nueva. ↻ en cada partido del historial lo repite con las reglas de su
   temporada, los mismos participantes en el mismo orden y la misma
   semilla, y avisa si el resultado no coincide (no se registra). Tercer
-  formato: la **escalera** del original (`populateladder`).
+  formato: la **escalera** del original (`populateladder`). Una liga sin
+  participantes los sortea: "🎲 N at random" en la ventana, o el Canal al
+  encenderse (N bots del pool del Canal).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas

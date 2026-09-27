@@ -489,16 +489,31 @@ function lgAddEntrant(S, e) {
   return true;
 }
 
-async function lgAddItems(items) {
-  const L = lg.cur, S = lgSeason(L);
+// Inscribe bots del Inventario (lee su ADN). Con `max`, para al llegar a
+// esa cantidad de altas (el sorteo salta los ilegibles y los repetidos).
+async function lgEnroll(L, items, max = Infinity) {
+  const S = lgSeason(L);
   let added = 0, failed = 0;
   for (const it of items) {
+    if (added >= max) break;
     try {
       const dna = await invFetchDna(it.b);
       if (lgAddEntrant(S, { name: it.b.name, dna, src: 'bestiary', file: it.b.file })) added++;
     } catch (e) { failed++; }
   }
   await lgSave(L);
+  return { added, failed };
+}
+
+// Sorteo de n participantes de un pool (lo usan la ventana y el Canal con
+// una liga vacía). Los que ya están en la temporada no cuentan.
+async function lgDrawRandom(L, pool, n) {
+  const have = new Set(lgSeason(L).entrants.map((e) => e.name));
+  return lgEnroll(L, lgShuffle(pool.filter((it) => !have.has(it.b.name))), n);
+}
+
+async function lgAddItems(items) {
+  const { added, failed } = await lgEnroll(lg.cur, items);
   lgNote(`${added} entrants added` + (failed ? ` · ${failed} unreadable` : '') +
          (items.length - added - failed ? ` · ${items.length - added - failed} already in` : '') + '.');
   lgRender();
@@ -930,6 +945,8 @@ async function openLeagues() {
     '<select id="lg-pool"></select>' +
     '<select id="lg-hyb"></select>' +
     '<button id="lg-addform" title="The DNA and name from the Seed species panel">DNA from the form</button>' +
+    '<span class="lg-rand"><button id="lg-rand" title="Draw this many bots at random from the whole Bestiary">🎲</button>' +
+    '<input type="number" id="lg-rn" min="1" max="200" value="8" title="How many to draw"> at random</span>' +
     '</div>' +
     '<div class="ct-rule">Each entrant keeps the DNA it had when it joined.</div></details>' +
     '<div class="ct-h">Play</div>' +
@@ -1010,6 +1027,14 @@ async function openLeagues() {
     const S = lgSeason(lg.cur);
     if (!lgAddEntrant(S, { name, dna, src: 'hybrid', file: name })) lgNote('Already in the league.');
     await lgSave(lg.cur);
+    lgRender();
+  };
+  $('lg-rand').onclick = async () => {
+    if (!lg.cur) return;
+    const n = Math.min(200, Math.max(1, parseInt($('lg-rn').value, 10) || 8));
+    lgNote(`Drawing ${n} bots…`);
+    const { added, failed } = await lgDrawRandom(lg.cur, lgPool('all'), n);
+    lgNote(`${added} entrants drawn at random` + (failed ? ` · ${failed} unreadable` : '') + '.');
     lgRender();
   };
   $('lg-addform').onclick = async () => {

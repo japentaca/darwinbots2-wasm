@@ -867,6 +867,12 @@ como el diseño, con estos ajustes:
   todos, queda último. `lgLadderState` la deriva del historial; la tabla
   sigue el orden de la escalera y el Canal la juega hasta el final como
   todos contra todos.
+- **Sorteo de participantes** (a pedido del usuario, tras probar la web
+  publicada): una liga vacía ya no apaga el Canal con "needs at least 2
+  entrants". Con menos de 2 participantes, el Canal muestra "draws N at
+  random from the pool" (el pool del Canal libre, 8 por defecto) y al
+  encenderse los inscribe con el ADN congelado (`lgDrawRandom`). En la
+  ventana de ligas, "🎲 N at random" sortea del Bestiary entero.
 - Encender el Canal o el Contest abandona una repetición en curso, como
   un partido normal. Smoke `smoke_liga` 25/25 (escalera y exportar e
   importar); Chrome con consola limpia.
