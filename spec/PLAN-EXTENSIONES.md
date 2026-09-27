@@ -879,6 +879,269 @@ como el diseño, con estos ajustes:
 
 ---
 
+## E11 · Torneos unificados — capa host (reingeniería de Contest, Canal y Ligas)
+
+Añadida el 2026-09-27 a petición del usuario, después de probar E10 en la
+web publicada: "aún es confuso el manejo de las ligas, los settings del
+componente ligas y del diálogo Channel". **No es superficie del original**
+(el Contest, el Canal y las Ligas son añadidos de host). Rama sugerida:
+`e11-torneos`, desde `main`.
+
+**Reglas**: cero cambios en `port/core/`, suite intacta (270 / 4092 en los
+tres modos) y ningún cambio en el wasm. Se conserva todo lo decidido en
+E10: ADN congelado al inscribir, reglas y formato bloqueados con el primer
+partido de la temporada, Elo con K = 32 / (N − 1), "most energy" = nrg +
+body×10, repetición con semilla, exportar e importar, escalera, sin
+`alert`/`confirm`/`prompt` nativos.
+
+### Diagnóstico: cómo están repartidos los valores hoy
+
+| Valor | Sim options (Game modes) | Contest | Channel (libre) | Liga (`fmt` / `rules`) |
+|---|---|---|---|---|
+| Rondas mínimas | `97` "Minimum rounds" | "Minimum rounds" | "…per fight" | "…per match" |
+| Victorias para ganar | `98` "Rounds-won cap" | "Wins to take it" | "Wins to take the fight" | "Wins to take the match" |
+| Tope de ciclos | `99` (core, solo duelos) | "Cycle cap" → `99`, solo duelos | tope del host (`f1-cap`), N especies | tope del host + criterio (bots / energía) |
+| Población máxima | `100` (solo duelos) | sí, solo duelos | — | — |
+| Bots por especie | `sp-qty` del formulario | uno por participante | uno para todos | uno para todos |
+| Energía inicial | — | sí | sí | sí |
+| Reglas del mundo | botón "F1 settings" | checkbox F1: pisa el panel | checkbox F1: pisa el panel solo en la 1.ª pelea | foto (F1 / panel / sin costes) + cargar/guardar |
+| Participantes | — | búsqueda, híbrido, selección, formulario, Animal Minimalis (localStorage) | sorteo por pelea desde un pool | pool, híbrido, formulario, 🎲 al azar; con liga vacía, el Canal sortea |
+| Luchadores por pelea / retiro | — | — | sí | sí (rey de la colina) |
+| Pausa entre peleas | — | — | sí | — (la toma del Canal) |
+| Resultados | — | solo el marcador | Hall of Fame (localStorage) | tabla, Elo, enfrentamientos, historial, ↻ |
+| Semilla | barra superior | nueva en cada Rematch | nueva por pelea | guardada por partido |
+
+**Solapamientos**: (1) el mismo valor con tres o cuatro nombres en tres o
+cuatro lugares, y `contestLaunch` reescribe `91` y `97-100` del panel en
+cada partido, así que editarlos ahí no sirve; (2) dos "topes de ciclos"
+distintos con el mismo nombre (el del core se apaga con más de 2
+especies); (3) tres formas de aplicar las reglas (checkbox que pisa el
+panel, foto de la liga, y el Canal con liga que oculta lo suyo); (4) el
+Canal es a la vez un torneo propio y un reproductor de ligas; (5) una liga
+se juega desde dos ventanas, de ahí "una sola liga activa" y "cambiar de
+liga apaga el Canal"; (6) dos selectores de participantes y dos sorteos
+distintos; (7) tres marcadores en vivo iguales.
+
+### Decisiones (del usuario, 2026-09-27)
+
+- **Todo es un torneo.** El Contest es una liga de un solo partido; el
+  Canal **no es un torneo sino un lanzador de ligas en bucle**.
+- **Una sola ventana, "🏆 Tournaments"**, que reemplaza a Contest, Channel
+  y Leagues, con pestañas **Setup / Play / Results**.
+- **Un único juego de valores del partido**, con un solo nombre cada uno:
+  bots por especie, energía inicial, rondas mínimas, victorias para ganar,
+  tope de ciclos + criterio. **El tope es siempre el del host** (sirve
+  para N especies); los topes `99` y `100` del core salen de los torneos
+  (siguen en Sim options para el F1 manual del original).
+- **Reglas del mundo siempre como foto** (presets F1 / sin costes / panel
+  actual; editar con "Load into the panel" y "Save the panel as rules").
+  Desaparecen los checkboxes "Use F1 league settings" que pisan el panel.
+- **Canal = TV mode de la pestaña Play**: se elige una liga (la plantilla:
+  reglas, formato y valores del partido); el Canal lanza una **edición**
+  (temporada nueva) que **sortea N bots al azar del pool**, juega el
+  calendario completo según el formato, anuncia al campeón (rótulo),
+  pausa y lanza la edición siguiente con un sorteo nuevo, sin fin.
+  Desaparece el Canal libre (rey de la colina con sorteo por pelea y
+  Hall of Fame propio).
+- **El sorteo es de la liga**: fuente de participantes *lista fija* (a
+  mano) o *sorteo de N del pool en cada temporada* (pool: Bestiary,
+  favoritos, tag o selección del Inventario). El TV mode sortea siempre en
+  cada edición con el pool y la N de la liga (por defecto el Bestiary y 8).
+- **Hall of Fame = tabla histórica de la liga**: suma todas sus
+  temporadas (títulos de temporada, temporadas jugadas, partidos, victorias
+  y Elo acumulado). La tabla de cada temporada sigue igual.
+- **El rey de la colina termina**: la temporada la gana **el primero que
+  se retira invicto** (R victorias seguidas); tope de seguridad de **3 × N
+  peleas**, y si se llega, gana el primero por Elo. Los demás formatos ya
+  terminan solos.
+- **Partido rápido**: al abrir la ventana hay un torneo **Scratch** sin
+  guardar, formato *Single match*, para jugar enseguida como el Contest de
+  hoy; "Save as tournament" lo convierte en liga.
+- **Botón 📺** de la barra: atajo a Tournaments → Play con el TV mode.
+  🏆 abre Tournaments; el botón 🏟 Leagues desaparece.
+- **Sim options → Game modes** queda para el F1 manual, con una nota:
+  "Tournaments set these for each match".
+
+### Modelo
+
+- **Formatos** (`fmt.format`): `single` (partido único con todos los
+  participantes, el Contest de hoy), `koth`, `rr`, `ladder`.
+- **`fmt`** único para todos: `{format, qty, nrg, rounds, wins, cap,
+  capMode, k, retire, legs}`; `entrant.qty` opcional pisa `fmt.qty` (el
+  Contest tenía cantidad por participante).
+- **`league.draw`** `{mode: 'fixed' | 'random', pool, n}`. Con `random`,
+  cada temporada nueva sortea (reusa `lgDrawRandom`).
+- **Fin de temporada** para todos: `lgNextFixture` devuelve `null` y un
+  `lgSeasonChampion(S, ms)` da el campeón (rey de la colina: el primer
+  retiro invicto o el primero por Elo al tope de 3 × N; `single`: el
+  ganador del partido; `rr` y `ladder`: el primero de la tabla).
+- **Tabla histórica** `lgAllTime(L, matches)`: derivada del historial,
+  nada guardado aparte.
+- **Scratch**: liga en memoria (id fijo, no se guarda en IndexedDB) con
+  sus partidos en memoria; "Save as tournament" la persiste con id nuevo.
+- **Exportar**: versión 2 del archivo (con `draw`); importar acepta la 1.
+- **Migración**: las ligas guardadas reciben `draw: {mode: 'fixed'}` y los
+  valores por defecto que les falten; el roster del Contest
+  (localStorage) pasa a los participantes de Scratch; la config del Canal
+  se descarta. El Hall of Fame viejo del Canal no tiene partidos de los
+  que derivarse: **se ofrece descargarlo como JSON** una vez y se borra
+  (confirmar con el usuario al llegar a R1 si prefiere otra salida).
+
+### Piezas y trabajo
+
+**R1 · Modelo** (funciones puras y migración, sin cambiar todavía la UI)
+1. Formato `single`; fin de temporada del rey de la colina con tope;
+   `lgSeasonChampion`; `entrant.qty`.
+2. `league.draw` y temporada nueva con sorteo; `lgAllTime`.
+3. Scratch en memoria y "Save as tournament"; exportar v2 e importar v1/v2.
+4. Migración de ligas, roster del Contest y Hall of Fame del Canal.
+5. Smoke nuevo `tools/e11/smoke_torneos.mjs` (o ampliar `smoke_liga`):
+   fin del rey de la colina (retiro y tope), `single`, sorteo sin
+   repetidos, tabla histórica, exportar v2 e importar v1.
+
+**R2 · Ventana "🏆 Tournaments"**
+1. **Setup**: selector de torneo (Scratch primero), nombre, formato,
+   valores del partido, reglas (foto y presets) y **Entrants**: un único
+   selector compartido (búsqueda del Bestiary, pool, 🎲 N al azar,
+   híbrido, formulario, Animal Minimalis) más la fuente (lista fija o
+   sorteo con pool y N).
+2. **Play**: un solo marcador, la próxima pelea, "▶ Play next" y el
+   interruptor **📺 TV mode** (pausa entre peleas, rótulo sobre el campo,
+   bucle de ediciones con sorteo nuevo).
+3. **Results**: tabla de la temporada, Hall of Fame (histórica),
+   enfrentamientos directos, historial con ↻, temporadas pasadas,
+   exportar/importar.
+4. Baja de las ventanas Contest y Channel (se conservan los helpers que
+   sigan en uso: `contestLaunch`, `contestBoardHtml`, `contestRoundWinner`,
+   el rótulo `#ch-overlay`); `contestLaunch` deja de recibir `f1`,
+   `maxcyc` y `maxpop` y pone `99` y `100` en 0. Botones de la barra.
+
+**R3 · Limpieza y cierre**
+1. Nota en Sim options → Game modes; CSS y código muertos (`ct-*`,
+   `ch-*` que ya no se usen); tooltips.
+2. Docs: README (§Ligas → §Torneos), PROGRESO (fila E11 y entrada),
+   "Resultado R1/R2/R3" aquí.
+3. Verificación en Chrome: partido rápido (Scratch) y guardarlo; cada
+   formato hasta su fin; TV mode con 2 ediciones seguidas (sorteos
+   distintos, rótulo, tabla histórica); repetir un partido; importar un
+   archivo exportado por E10 (v1). Consola limpia.
+
+**Cierre de cada parte**: suite en verde en los tres modos, `port/core/`
+sin diff, smokes de host en verde (`rv/smoke_host`, `e8/smoke_e8`,
+`pp/smoke_formas`, `pp/smoke_campo`, `imrelay/smoke_im`, `e10/smoke_liga`
+y el nuevo) y fila en `PROGRESO.md`.
+
+### Resultado R1 (2026-09-27)
+
+Todo en `web/league.js`, con funciones puras donde se pudo:
+
+- **Fin de temporada para todos los formatos**: `lgFixture(S, ms)` (pura;
+  `lgNextFixture(L)` la envuelve), `lgSeasonDone` y `lgSeasonChampion`
+  → `{name, how}` con `how` = `match` (single), `retired` (rey de la
+  colina: el primer retiro invicto), `elo` (rey de la colina al tope de
+  3 × N peleas jugadas; los nulos no cuentan) o `table` (rr y escalera).
+  `single` lleva a los primeros 20 participantes; un nulo no cierra la
+  temporada.
+- **`entrant.qty`** pisa `fmt.qty` (`lgLaunchList`); `lgAddEntrant`
+  respeta el color pedido si está libre.
+- **`league.draw`** `{mode, pool, n}` (limpio con `lgDrawClean`).
+  `lgNewSeason(L, {draw})`: con `random` (o `draw: true`, lo que usará el
+  TV mode) la temporada nueva sortea n del pool; `lgRedraw` vuelve a
+  sortear una temporada sin partidos.
+- **`lgAllTime`**: títulos, temporadas jugadas, partidos, victorias y un
+  Elo que sigue de temporada en temporada; solo los que jugaron.
+- **Scratch**: `lgScratchNew` / `lgScratch` (reglas F1, formato single, id
+  fijo `scratch`), no se guarda; sus partidos viven en memoria con id
+  negativo. `lgScratchSave(name)` lo persiste por el camino de exportar e
+  importar (`lgPromote`) y deja un Scratch limpio con los mismos
+  participantes.
+- **Archivo v2** (con `draw` y `qty`); importar acepta v1 (sorteo fijo).
+- **Migración**: `lgMigrate` al cargar (sorteo fijo y valores de formato
+  que falten; las ligas del usuario solo ganaron `draw`).
+  `lgMigrateRoster` (roster del Contest → Scratch, leyendo el ADN; los de
+  "form" no guardaban ADN y se pierden; borra la config del Canal) y el
+  Hall of Fame viejo (`lgOldHofFile`, `lgOldHofDownload`,
+  `lgOldHofDiscard`; **el usuario eligió ofrecer la descarga y borrarlo**)
+  quedan escritos y se conectan en R2, cuando desaparecen las ventanas
+  viejas.
+- Toques mínimos de UI: "Single match" en el selector de formato, el
+  campeón y su motivo al terminar la temporada (ventana y rótulo del
+  Canal).
+- Smoke `tools/e11/smoke_torneos.mjs` 38/38. En Chrome: single hasta el
+  campeón, temporada nueva con sorteo, rey de la colina cerrado por
+  retiro, Scratch jugado y guardado, y su partido repetido idéntico
+  desde la liga guardada. Consola limpia.
+
+### Resultado R2 (2026-09-27)
+
+- **`web/tournament.js`** (nuevo): la ventana "🏆 Tournaments". Arriba,
+  el selector (⚡ Scratch primero, luego los torneos guardados), ＋ New
+  (reglas F1), 💾 Save as tournament (solo con el Scratch), 🗑 (dos
+  clics; en el Scratch lo vacía), ⬇ / ⬆.
+  - **Setup**: nombre, temporada y candado; formato y valores del partido
+    con la regla de victorias explicada; reglas del mundo (resumen, "Load
+    into the panel", "Save the panel as rules", presets F1 y sin costes);
+    participantes con color y cantidad propia (vacía = la del formato),
+    búsqueda en el Bestiary, grupos del Inventario, híbrido, formulario y
+    Animal Minimalis; el sorteo ("🎲 Draw N from <pool>", que reemplaza la
+    lista si la temporada no tiene partidos) y "Draw new entrants at every
+    new season" (`draw.mode`).
+  - **Play**: resumen y avance, próxima pelea, ▶ Play next, ✕ Abandon,
+    📅 New season (dos clics), un solo marcador y el **📺 TV mode** con la
+    pausa entre peleas.
+  - **Results**: temporadas (1, 2, …), tabla con 🏆 en el campeón,
+    enfrentamientos, partidos con ↻, reglas de una temporada pasada y el
+    **Hall of Fame** de todas las temporadas (`lgAllTime`).
+- **TV mode** (el Canal de antes): juega el torneo abierto. Si la
+  temporada no tiene partidos la vuelve a sortear; si está a medias la
+  sigue; si terminó, abre otra con sorteo. Cortinilla con cuenta atrás,
+  rótulo en vivo (`#ch-overlay`) y rótulo del campeón (12 s) antes de la
+  edición siguiente, sin fin. Cambiar de torneo o repetir un partido lo
+  apaga; apagarlo no abandona el partido en curso. Más de 5 nulos o
+  fallos seguidos lo apagan.
+- **Bajas**: `channel.js` borrado (los colores pasan a `league.js` como
+  `LG_COLORS`); la ventana y el roster del Contest salen de `contest.js`,
+  que queda con `contestLaunch` (sin `f1`, `maxcyc` ni `maxpop`: pone 99 y
+  100 en 0), `contestDna`, el marcador y la regla de victorias. La
+  ventana de Ligas sale de `league.js` (`lgRender` y `lgNote` avisan a
+  `tournament.js`). `index.html`: botones 🏆 Tournaments y 📺 TV (abre
+  Play); los mensajes F1 van a `leagueOnMessage` y las stats a
+  `tnOnStats`.
+- **Migraciones conectadas**: al abrir la ventana por primera vez, el
+  roster del Contest pasa al Scratch (`lgMigrateRoster`) y, si queda el
+  Hall of Fame del Canal, un aviso ofrece "⬇ Download it" o "Discard it".
+- Verificado en Chrome: migración del roster (2 de 3; el de "form" no
+  tenía ADN), partido rápido en el Scratch hasta el campeón, "Save as
+  tournament", TV mode con 3 ediciones seguidas con sorteos distintos y
+  el Hall of Fame sumándolas, 📺 de la barra, repetición desde Results
+  idéntica, borrado en dos clics y "Discard it". Consola limpia.
+
+### Resultado R3 (2026-09-27) — E11 completa
+
+- **Sim options → Game modes**: nota "For the manual F1 of the original.
+  🏆 Tournaments set these for each match…" (renglón `note` nuevo del
+  panel, `.opt-note`).
+- **Limpieza**: CSS de las ventanas viejas (`#ct-roster`, `#ct-q`,
+  `#ct-results`, `.ct-h`, `#ch-recent`, `.lg-rand`, `.ch-lgsum`, `#lg-*`)
+  quitado o renombrado a `tn-*`; un cruce de selectores y de funciones
+  contra su uso no deja nada muerto. Tooltip del 📺 TV mode; la temporada
+  elegida en Results se resalta.
+- La escalera anuncia a su campeón como "holds the top rung" (`how:
+  'ladder'`).
+- **Docs**: README §"Torneos (E10 y E11)" en lugar de §"Ajustes F1,
+  Contest y Canal" y §"Ligas"; PROGRESO con E11 completa.
+- **Verificación en Chrome**: los cuatro formatos hasta su fin en un
+  mismo torneo (rey de la colina por retiro, todos contra todos, escalera
+  y single; el Hall of Fame suma las 4 temporadas), un archivo v1 como lo
+  exportaba E10 (sin `draw` ni `qty`) importado con sus 3 temporadas y 9
+  partidos, y la nota de Game modes. Consola limpia. Con la regla nueva,
+  una liga vieja de rey de la colina que ya tenía un retiro invicto
+  aparece con esa temporada completa.
+- Suite 270 / 4092 en los tres modos, `port/core/` sin diff, smokes en
+  verde (`smoke_torneos` 38/38).
+
+---
+
 ## Orden recomendado
 
 **E1 → E2 → E3** (todo capa host, valor alto, riesgo nulo para el core) →
@@ -888,4 +1151,6 @@ como el diseño, con estos ajustes:
 `PROGRESO.md` §"Siguiente"). **E9** (sexualidad visible, capa host) se
 añadió el 2026-09-26 a petición del usuario y está pendiente. **E10**
 (ligas, capa host) se añadió el 2026-09-27, también pedida por el usuario:
-L1 → L2 → L3, **completa** el mismo día.
+L1 → L2 → L3, **completa** el mismo día. **E11** (torneos unificados:
+una sola ventana para Contest, Canal y Ligas) se añadió el mismo día a
+pedido del usuario: R1 → R2 → R3, **completa** el mismo día.

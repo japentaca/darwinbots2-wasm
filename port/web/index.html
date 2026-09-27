@@ -209,10 +209,8 @@
   /* Contest F1 (contest.js) */
   .ct-win { max-height: calc(100vh - 70px); overflow: auto; }
   .ct-win .win-body { font-size: 12px; gap: 6px; }
-  .ct-h { color: #93a4c2; font-weight: 600; margin-top: 4px; }
-  .ct-h span { font-weight: 400; color: #5c6b88; margin-left: 6px; }
   .ct-empty { color: #5c6b88; padding: 4px 0; }
-  #ct-roster { display: flex; flex-direction: column; gap: 3px; }
+  .tn-list { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow: auto; }
   .ct-fighter { display: flex; align-items: center; gap: 6px; background: #0b0f19;
                 border: 1px solid #1c2333; border-radius: 4px; padding: 3px 6px; }
   .ct-fighter .ct-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
@@ -222,8 +220,8 @@
   .ct-qty { width: 48px; padding: 1px 3px; }
   .ct-color { width: 22px; height: 20px; padding: 0; border: none; background: none; }
   .ct-del { padding: 0 6px; }
-  #ct-q { width: 100%; box-sizing: border-box; }
-  #ct-results { display: flex; flex-wrap: wrap; gap: 3px; max-height: 120px; overflow: auto; }
+  #tn-q { width: 100%; box-sizing: border-box; }
+  #tn-hits { display: flex; flex-wrap: wrap; gap: 3px; max-height: 96px; overflow: auto; }
   .ct-hit { padding: 1px 6px; font-size: 11px; }
   .ct-srcrow { display: flex; flex-wrap: wrap; gap: 4px; }
   .ct-srcrow button, .ct-srcrow select { padding: 2px 6px; }
@@ -266,7 +264,6 @@
   .ch-next { color: #b7c6e0; font-size: 14px; margin-bottom: 4px; }
   .ch-next b { color: #ffd166; }
   .ch-sec summary { color: #93a4c2; cursor: pointer; font-weight: 600; }
-  #ch-recent { max-height: 140px; overflow: auto; }
   .ch-res { color: #b9c8e0; padding: 1px 0; }
   .ch-res span { color: #5c6b88; }
   .ch-res i { color: #93a4c2; }
@@ -277,12 +274,12 @@
                                                   text-overflow: ellipsis; white-space: nowrap; }
   .ch-small { font-size: 11px; padding: 1px 6px; margin-top: 4px; }
   .lg-top { display: flex; gap: 4px; flex-wrap: wrap; }
-  .lg-top #lg-pick { flex: 1; min-width: 120px; }
+  .lg-top #tn-pick { flex: 1; min-width: 120px; }
   .lg-name { font-size: 14px; font-weight: 600; padding: 2px 4px; width: 100%; box-sizing: border-box; }
   .lg-costs { color: #b9c8e0; font-size: 11px; margin: 2px 0; }
-  .lg-costs b, #lg-rules b { color: #dfe6f2; font-weight: 600; }
-  #lg-next { color: #b7c6e0; }
-  #lg-fmt .ct-rules { grid-template-columns: 1fr 140px; }
+  .lg-costs b, #tn-rules b { color: #dfe6f2; font-weight: 600; }
+  #tn-next { color: #b7c6e0; }
+  #tn-fmt .ct-rules { grid-template-columns: 1fr 140px; }
   .lg-dot { display: inline-block; margin-right: 4px; vertical-align: -1px; }
   .lg-h2h td { text-align: center; }
   .lg-h2h td.lg-up { color: #7fe08a; }
@@ -291,10 +288,24 @@
   .ch-res b.lg-up { color: #7fe08a; }
   .ch-res b.lg-dn { color: #f08a7a; }
   .lg-replay { padding: 0 4px; line-height: 14px; }
-  .lg-rand { white-space: nowrap; }
-  .lg-rand input, #ch-lgn { width: 48px; }
-  .ch-lgsum { color: #b9c8e0; font-size: 12px; }
-  #lg-rules { margin: 2px 0 4px; color: #b9c8e0; }
+  #tn-rules { margin: 2px 0 4px; color: #b9c8e0; }
+  /* Torneos (tournament.js, E11) */
+  .opt-note { grid-column: 1 / -1; color: #5c6b88; font-size: 11px; }
+  .tn-tabs { display: flex; gap: 2px; border-bottom: 1px solid #2e3a55; margin-top: 2px; }
+  .tn-tabs button { flex: 1; border-radius: 4px 4px 0 0; border-bottom: none; background: #10151f;
+                    color: #93a4c2; }
+  .tn-tabs button.on { background: #1f2a40; color: #ffd166; font-weight: 600; }
+  .tn-banner { background: #2a2114; border: 1px solid #6b5220; border-radius: 4px; padding: 4px 6px;
+               color: #f0d9a8; }
+  .tn-draw { align-items: center; color: #93a4c2; }
+  .tn-draw input { width: 52px; padding: 2px 4px; }
+  .tn-chk { color: #93a4c2; }
+  .tn-tvbox { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #1c2333;
+              padding-top: 6px; margin-top: 4px; }
+  .tn-tvbox label { color: #93a4c2; }
+  .tn-tvbox input { width: 52px; padding: 2px 4px; }
+  .tn-seasons { align-items: center; color: #93a4c2; flex-wrap: wrap; }
+  .ch-small.on { background: #3a3014; border-color: #ffd166; color: #ffd166; font-weight: 600; }
   /* Inventario de bots (inventory.js) */
   .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
   .inv-win .win-body { flex: 1; min-height: 0; font-size: 12px; }
@@ -444,9 +455,8 @@
     <button id="btn-run" class="primary">▶ Start</button>
     <button id="btn-step">Step</button>
     <button id="btn-reset">Reset</button>
-    <button id="btn-contest" title="F1 Contest: pick the contenders, start the tournament in one click and watch the scoreboard">🏆 Contest</button>
-    <button id="btn-channel" title="F1 Channel: back-to-back random fights, king of the hill and Hall of Fame">📺 Channel</button>
-    <button id="btn-leagues" title="Leagues: saved rules, entrants, format (king of the hill or round robin), match history and standings">🏟 Leagues</button>
+    <button id="btn-tournaments" title="Tournaments: a quick match or a saved tournament (single match, king of the hill, round robin or step ladder) with its rules, entrants, standings and Hall of Fame">🏆 Tournaments</button>
+    <button id="btn-tv" title="TV mode: a tournament played on its own, edition after edition, each with entrants drawn at random">📺 TV</button>
   </div>
   <div class="sep"></div>
   <div class="group">
@@ -716,8 +726,8 @@
 <script src="inventory.js"></script>
 <script src="lab.js"></script>
 <script src="contest.js"></script>
-<script src="channel.js"></script>
 <script src="league.js"></script>
+<script src="tournament.js"></script>
 <script>
 'use strict';
 
@@ -858,6 +868,9 @@ const OPT_GROUPS = [
   // worker corre las rondas (StartAnotherRound) y reporta el contest en
   // las stats de cada frame.
   { name: 'Game modes (F1 / rounds)', items: [
+    // E11: los torneos fijan estos valores en cada partido (y 99/100 en 0).
+    { note: 'For the manual F1 of the original. 🏆 Tournaments set these for each match ' +
+            '(their cycle cap is their own and works with any number of species).' },
     { id: 90, label: 'Restart round with no heterotrophs', bool: true, def: false },
     { id: 91, label: 'F1 mode (species contest)', bool: true, def: false },
     { id: 97, label: 'Minimum rounds (MinRounds)', def: 5 },
@@ -979,6 +992,10 @@ function buildOptsPanel() {
         </select>`;
     }
     for (const it of g.items) {
+      if (it.note) {  // E11: aclaración de todo el ancho
+        html += `<div class="opt-note">${it.note}</div>`;
+        continue;
+      }
       if (it.btn) {  // E5: boton suelto dentro del grupo
         html += `<span></span><button id="${it.btn}">${it.label}</button>`;
         continue;
@@ -1124,9 +1141,9 @@ worker.onerror = (e) =>
 
 worker.onmessage = (e) => {
   const msg = e.data;
-  // contest.js: estado del torneo para su ventana (no consume el mensaje).
+  // league.js: el partido de torneo en curso (no consume el mensaje).
   if (msg.t === 'f1-started' || msg.t === 'f1-note' || msg.t === 'f1-over')
-    contestOnMessage(msg);
+    leagueOnMessage(msg);
   switch (msg.t) {
     case 'ready':
       onReady();
@@ -1298,7 +1315,7 @@ function updateStats() {
          (stats.f1.over ? ' · OVER' : '');
     if (stats.f1.restarts) f1 += ` · restarts ${stats.f1.restarts}`;
   }
-  contestOnStats(stats);
+  tnOnStats(stats);
   const dc = document.getElementById('dead-count');
   if (dc) dc.textContent = (stats.dead || 0) + ' records';
   statsEl.textContent =
@@ -3748,9 +3765,8 @@ document.getElementById('btn-reset').onclick = () => {
 document.getElementById('btn-seed').onclick = seedFromForm;
 document.getElementById('btn-inventory').onclick = () => openInventory();
 document.getElementById('btn-lab').onclick = () => openLab();
-document.getElementById('btn-contest').onclick = () => openContest();
-document.getElementById('btn-channel').onclick = () => openChannel();
-document.getElementById('btn-leagues').onclick = () => openLeagues();
+document.getElementById('btn-tournaments').onclick = () => openTournaments();
+document.getElementById('btn-tv').onclick = () => openTournaments('play');
 // E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
 // vive en el panel dinámico (se construye en onReady): delegación.
 document.addEventListener('click', (e) => {

@@ -10,14 +10,21 @@
 // temporada.
 //
 // Los partidos se juegan con contestLaunch (contest.js): reinicio, siembra,
-// censo F1 y arranque. contest.js reenvía aquí los mensajes y las stats del
-// worker (leagueOnMessage / leagueOnStats).
+// censo F1 y arranque. index.html reenvía aquí los mensajes del worker
+// (leagueOnMessage); las stats de cada frame van a tournament.js.
+//
+// E11 (torneos unificados): todo es un torneo. Formato `single` (el Contest:
+// un partido con todos), toda temporada termina (lgSeasonDone) y tiene
+// campeón (lgSeasonChampion), el sorteo es de la liga (league.draw), la
+// tabla histórica sale del historial (lgAllTime) y el torneo "Scratch" vive
+// en memoria hasta "Save as tournament" (lgScratchSave).
 //
 // Usa globales de index.html (makeWindow, winLayer, log, escHtml, worker,
 // setInput, fieldSizeDims, F1_COSTS, F1_OPTS, F1_KEYS), de inventory.js (inv,
 // invLoad, invFetchDna, invColor, userRec, allTags, InvDB), de lab.js
-// (labDnaByName), de contest.js (contest, contestLaunch, contestBoardHtml,
-// contestRender, contestRoundWinner) y de channel.js (channelStop, CH_COLORS).
+// (labDnaByName), de contest.js (contestLaunch, contestDna) y de
+// tournament.js (tnRender, tnNote, tnOnResult, tvStop), estos últimos solo
+// si existen.
 
 // ---- IndexedDB (base propia: no toca la del Inventario) ----------------------
 const LgDB = (() => {
@@ -71,25 +78,53 @@ const lg = {
   matches: [],     // partidos de la liga abierta (todas las temporadas)
   live: null,      // partido en curso (ver lgPlayNext); live.replay = repetición
   checked: new Map(), // id del partido → 'same' | 'diff' (repeticiones de esta sesión)
-  confirm: '',     // botón de dos clics armado ('del' | 'season')
-  confirmT: 0,
+  scratch: null,   // E11: {L, matches, seq} torneo Scratch en memoria (ver lgScratchNew)
 };
 const LG_CUR_KEY = 'db-league-cur';
 const LG_FMT_DEFAULT = {
-  format: 'koth',   // 'koth' (rey de la colina) | 'rr' (todos contra todos) | 'ladder' (escalera)
+  // 'single' (un partido con todos) | 'koth' (rey de la colina) |
+  // 'rr' (todos contra todos) | 'ladder' (escalera)
+  format: 'koth',
   k: 2,             // koth: luchadores por pelea
   retire: 5,        // koth: victorias seguidas para retirarse invicto
   legs: 1,          // rr: vueltas
-  qty: 5, nrg: 3000, rounds: 5, wins: 3,
+  qty: 5,           // bots por especie (entrant.qty lo pisa)
+  nrg: 3000, rounds: 5, wins: 3,
   cap: 5000,        // tope de ciclos por ronda (0 = sin tope)
   capMode: 'pop',   // al llegar al tope: 'pop' (más bots) | 'nrg' (más nrg + body×10)
 };
+const LG_FORMATS = ['single', 'koth', 'rr', 'ladder'];
+// Participantes de cada temporada: lista fija (a mano, se copia a la
+// temporada nueva) o sorteo de n del pool en cada temporada nueva. El pool
+// es un filtro de lgPool ('all', 'fav', 'sel', 'tag:…', 'set:…').
+const LG_DRAW_DEFAULT = { mode: 'fixed', pool: 'all', n: 8 };
 const LG_ELO0 = 1500, LG_K = 32;
+const LG_MAX_FIGHTERS = 20;   // PopArray(1 To 20), F1Mode.bas:59
+const LG_KOTH_CAP = 3;        // rey de la colina: tope de 3 × N peleas por temporada
+const LG_SCRATCH_ID = 'scratch';
+// Colores de los participantes, claros para el campo oscuro y ordenados para
+// que los primeros sean los más distintos entre sí. Hasta 20 (el máximo de
+// especies por partido).
+const LG_COLORS = [
+  '#ff4040', '#3d9bff', '#ffd83a', '#ff5ce1', '#3fe8e0', '#ff9020', '#a46bff',
+  '#8ce83c', '#ffffff', '#ff9eb0', '#1fbf7a', '#c79a62', '#b8c8ff', '#f0ff80',
+  '#8a8aff', '#ffc6f0', '#e05a2a', '#7fd8ff', '#b0b0b0', '#c0ffc8',
+];
 
 const lgSeason = (L) => L.seasons[L.seasons.length - 1];
 const lgSeasonMatches = (no) => lg.matches.filter((m) => m.season === no)
   .sort((a, b) => a.no - b.no);
 const lgPlayed = (ms) => ms.filter((m) => m.winner);
+const lgIsScratch = (L) => !!L && L.id === LG_SCRATCH_ID;
+// Liga por id: la de la lista o el Scratch.
+const lgFind = (id) => (id === LG_SCRATCH_ID ? lg.scratch && lg.scratch.L : lg.list.find((L) => L.id === id));
+const lgDrawOf = (L) => lgDrawClean(L && L.draw);
+function lgDrawClean(d) {
+  const o = { ...LG_DRAW_DEFAULT, ...(d && typeof d === 'object' ? d : {}) };
+  return { mode: o.mode === 'random' ? 'random' : 'fixed',
+           pool: typeof o.pool === 'string' && o.pool ? o.pool : LG_DRAW_DEFAULT.pool,
+           n: Math.min(200, Math.max(2, parseInt(o.n, 10) || LG_DRAW_DEFAULT.n)) };
+}
 
 // FNV-1a de 32 bits: identifica el ADN congelado de cada participante.
 function lgHash(s) {
@@ -227,21 +262,58 @@ function lgRrState(S, ms) {
 }
 
 // Rey de la colina: el campeón y su racha salen de recorrer el historial.
+// E11: first = el primero que se retiró invicto (gana la temporada);
+// played = peleas jugadas (los nulos no cuentan).
 function lgKothState(S, ms) {
-  let champ = null, streak = 0;
+  let champ = null, streak = 0, first = null, played = 0;
   const titles = new Map();
   for (const m of lgPlayed(ms)) {
+    played++;
     if (champ === m.winner) streak++;
     else { champ = m.winner; streak = 1; }
     if (streak >= S.fmt.retire) {
       titles.set(champ, (titles.get(champ) || 0) + 1);
+      if (!first) first = champ;
       champ = null;
       streak = 0;
     }
   }
   if (champ && !S.entrants.some((e) => e.name === champ)) champ = null;
-  return { champ, streak, titles };
+  return { champ, streak, titles, first, played };
 }
+const lgKothCap = (S) => LG_KOTH_CAP * S.entrants.length;
+
+// ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
+// single: con su partido; rr y escalera: con el calendario completo; rey de
+// la colina: con el primer retiro invicto o al tope de 3 × N peleas.
+function lgSeasonDone(S, ms) {
+  if (S.entrants.length < 2) return false;
+  const f = S.fmt.format;
+  if (f === 'single') return lgPlayed(ms).length > 0;
+  if (f === 'rr') return !lgRrState(S, ms).next;
+  if (f === 'ladder') return !lgLadderState(S, ms).next;
+  const k = lgKothState(S, ms);
+  return !!k.first || k.played >= lgKothCap(S);
+}
+
+// Campeón de una temporada terminada: {name, how} o null si sigue en juego.
+// how: 'match' (single), 'retired' (rey de la colina), 'elo' (rey de la
+// colina al tope: el primero por Elo), 'table' (rr: el primero de la tabla),
+// 'ladder' (escalera: el peldaño 1).
+function lgSeasonChampion(S, ms) {
+  if (!lgSeasonDone(S, ms)) return null;
+  const f = S.fmt.format;
+  if (f === 'single') return { name: lgPlayed(ms)[0].winner, how: 'match' };
+  if (f === 'koth') {
+    const k = lgKothState(S, ms);
+    if (k.first) return { name: k.first, how: 'retired' };
+    return { name: lgStandings(S, ms)[0].name, how: 'elo' };
+  }
+  return { name: lgStandings(S, ms)[0].name, how: f === 'ladder' ? 'ladder' : 'table' };
+}
+const LG_HOW = { match: 'wins the match', retired: 'retires undefeated',
+                 elo: 'tops the Elo at the fight cap', table: 'tops the table',
+                 ladder: 'holds the top rung' };
 
 // Escalera (populateladder, F1Mode.bas:443-500): los participantes entran de
 // a uno en el orden de inscripción; el primero ocupa el peldaño 1 sin pelear.
@@ -273,10 +345,19 @@ function lgShuffle(list) {
   return a;
 }
 
-// Próxima pelea: {fighters, label} o null si la temporada terminó.
-function lgNextFixture(L) {
-  const S = lgSeason(L), ms = lgSeasonMatches(S.no), E = S.entrants;
-  if (E.length < 2) return null;
+// Próxima pelea de la temporada abierta de L (lee lg.matches).
+const lgNextFixture = (L) => lgFixture(lgSeason(L), lgSeasonMatches(lgSeason(L).no));
+
+// Próxima pelea: {fighters, label} o null si la temporada terminó (o tiene
+// menos de 2 participantes). Pura salvo el sorteo del rey de la colina.
+function lgFixture(S, ms) {
+  const E = S.entrants;
+  if (E.length < 2 || lgSeasonDone(S, ms)) return null;
+  if (S.fmt.format === 'single') {
+    const n = Math.min(E.length, LG_MAX_FIGHTERS);
+    return { fighters: E.slice(0, n),
+             label: `Single match: ${n} entrants` + (E.length > n ? ` (the first ${n} of ${E.length})` : '') };
+  }
   if (S.fmt.format === 'rr') {
     const st = lgRrState(S, ms);
     return st.next && { fighters: st.next, label: `Fixture ${st.played + 1} of ${st.total}` };
@@ -286,17 +367,29 @@ function lgNextFixture(L) {
     return st.next && { fighters: st.next,
       label: `Ladder: ${st.next[1].name} challenges rung ${st.rung} (entrant ${st.placed + 1} of ${st.total})` };
   }
-  const { champ } = lgKothState(S, ms);
-  const k = Math.min(Math.max(2, S.fmt.k), E.length, 20);
+  const { champ, played } = lgKothState(S, ms);
+  const k = Math.min(Math.max(2, S.fmt.k), E.length, LG_MAX_FIGHTERS);
   const ce = champ ? E.find((e) => e.name === champ) : null;
   const others = lgShuffle(E.filter((e) => e !== ce)).slice(0, ce ? k - 1 : k);
   return { fighters: ce ? [ce, ...others] : others,
-           label: ce ? `👑 ${champ} defends the crown` : 'Open fight: no champion' };
+           label: (ce ? `👑 ${champ} defends the crown` : 'Open fight: no champion') +
+                  ` · fight ${played + 1} of at most ${lgKothCap(S)}` };
 }
 
 // ---- Tabla -------------------------------------------------------------------
 // Elo: en una pelea de N, el ganador le gana a cada uno de los demás con
 // K / (N − 1), así una pelea de muchos no vale más que un duelo.
+function lgElo(f, w) {
+  const k = LG_K / Math.max(1, f.length - 1), before = w.elo;
+  for (const r of f) {
+    if (r === w) continue;
+    const exp = 1 / (1 + Math.pow(10, (r.elo - before) / 400));
+    const d = k * (1 - exp);
+    w.elo += d;
+    r.elo -= d;
+  }
+}
+
 function lgStandings(S, ms) {
   const rows = new Map();
   const row = (name) => rows.get(name) || rows.set(name, {
@@ -310,14 +403,7 @@ function lgStandings(S, ms) {
     w.w++;
     w.capR += m.capRounds || 0;
     w.rounds += m.rounds || 0;
-    const k = LG_K / Math.max(1, f.length - 1), before = w.elo;
-    for (const r of f) {
-      if (r === w) continue;
-      const exp = 1 / (1 + Math.pow(10, (r.elo - before) / 400));
-      const d = k * (1 - exp);
-      w.elo += d;
-      r.elo -= d;
-    }
+    lgElo(f, w);
   }
   const list = [...rows.values()];
   if (S.fmt.format === 'ladder') {
@@ -330,72 +416,211 @@ function lgStandings(S, ms) {
   return list;
 }
 
+// Tabla histórica (el Hall of Fame de la liga): todas las temporadas, en
+// orden, con un Elo que sigue de una a otra. Títulos = temporadas ganadas;
+// seasons = temporadas en las que jugó al menos un partido. Solo aparecen
+// los que jugaron. matches: los partidos de la liga (de cualquier temporada).
+function lgAllTime(L, matches) {
+  const rows = new Map();
+  const row = (name) => rows.get(name) || rows.set(name, {
+    name, color: '#8899bb', seasons: 0, titles: 0, p: 0, w: 0, elo: LG_ELO0 }).get(name);
+  for (const S of L.seasons) {
+    const ms = matches.filter((m) => m.season === S.no).sort((a, b) => a.no - b.no);
+    const seen = new Set();
+    for (const m of lgPlayed(ms)) {
+      const f = m.fighters.map(row);
+      for (const r of f) { r.p++; seen.add(r); }
+      const w = row(m.winner);
+      w.w++;
+      lgElo(f, w);
+    }
+    for (const r of seen) {
+      r.seasons++;
+      const e = S.entrants.find((x) => x.name === r.name);
+      if (e) r.color = e.color;
+    }
+    const c = lgSeasonChampion(S, ms);
+    if (c) row(c.name).titles++;
+  }
+  return [...rows.values()].filter((r) => r.p)
+    .sort((a, b) => b.titles - a.titles || b.w - a.w || b.elo - a.elo);
+}
+
 // ---- Persistencia ---------------------------------------------------------------
+// Migración (E11): el sorteo de la liga y los valores de formato que falten.
+// Devuelve true si cambió algo (hay que guardarla).
+function lgMigrate(L) {
+  let changed = false;
+  const d = lgDrawOf(L);
+  if (JSON.stringify(d) !== JSON.stringify(L.draw)) { L.draw = d; changed = true; }
+  for (const S of L.seasons) {
+    const f = { ...LG_FMT_DEFAULT, ...(S.fmt || {}) };
+    if (!LG_FORMATS.includes(f.format)) f.format = LG_FMT_DEFAULT.format;
+    if (JSON.stringify(f) !== JSON.stringify(S.fmt)) { S.fmt = f; changed = true; }
+  }
+  return changed;
+}
+
 async function lgLoadAll() {
   try {
     lg.list = (await LgDB.all('leagues')).sort((a, b) => a.created.localeCompare(b.created));
   } catch (e) { lg.list = []; log('leagues: no IndexedDB (' + e.message + ')'); }
+  for (const L of lg.list) if (lgMigrate(L)) await lgSave(L);
   let id = '';
   try { id = localStorage.getItem(LG_CUR_KEY) || ''; } catch (e) { /* nada */ }
-  await lgSelect(lg.list.find((L) => L.id === id) || lg.list[lg.list.length - 1] || null);
+  // E11: sin torneo recordado (o el Scratch), el Scratch.
+  await lgSelect(lg.list.find((L) => L.id === id) || lgScratch());
 }
 
 async function lgSelect(L) {
   // El Canal con liga lee el calendario de lg.cur: cambiar de liga lo apaga.
-  if (typeof ch !== 'undefined' && ch.on && ch.league && ch.league !== L) channelStop();
+  // El TV mode juega el torneo abierto: cambiar de torneo lo apaga.
+  if (lg.cur !== L && typeof tvStop === 'function') tvStop();
   lg.cur = L;
   lg.matches = [];
-  lg.pastNo = 0;
-  if (lg.win) lg.win.querySelector('#lg-past').innerHTML = '';
-  if (L) {
+  if (lgIsScratch(L)) lg.matches = lg.scratch.matches;   // el mismo arreglo: lgRecord lo llena
+  else if (L) {
     try { lg.matches = (await LgDB.all('matches')).filter((m) => m.league === L.id); } catch (e) { /* nada */ }
-    try { localStorage.setItem(LG_CUR_KEY, L.id); } catch (e) { /* nada */ }
   }
+  if (L) try { localStorage.setItem(LG_CUR_KEY, L.id); } catch (e) { /* nada */ }
   lgRender();
 }
 
+// El Scratch no se guarda (vive en memoria hasta "Save as tournament").
 async function lgSave(L) {
+  if (lgIsScratch(L)) return;
   try { await LgDB.put('leagues', L); } catch (e) { log('leagues: could not save (' + e.message + ')'); }
+}
+
+// Liga nueva (pura): o = {id, name, rules, fmt, entrants, draw}.
+function lgNewLeague(o) {
+  const now = new Date().toISOString();
+  return {
+    id: o.id || lgNewId(), name: o.name || 'League', notes: '', created: now,
+    draw: lgDrawClean(o.draw),
+    seasons: [{ no: 1, started: now, rules: { ...(o.rules || {}) },
+                fmt: { ...LG_FMT_DEFAULT, ...(o.fmt || {}) },
+                entrants: (o.entrants || []).map((e) => ({ ...e })) }],
+  };
+}
+
+// Nombre libre entre `names`: base, "base 2", "base 3"…
+function lgUniqueName(base, names) {
+  let name = base;
+  for (let k = 2; names.has(name); k++) name = `${base} ${k}`;
+  return name;
+}
+
+function lgNextName(prefix) {
+  const names = new Set(lg.list.map((L) => L.name));
+  let n = lg.list.length + 1;
+  while (names.has(`${prefix} ${n}`)) n++;
+  return `${prefix} ${n}`;
 }
 
 async function lgCreate(base) {
   const rules = base === 'f1' ? lgF1Rules() : base === 'free' ? lgNoCostRules() : lgCaptureRules();
-  const names = new Set(lg.list.map((L) => L.name));
-  let n = lg.list.length + 1;
-  while (names.has('League ' + n)) n++;
-  const L = {
-    id: lgNewId(),
-    name: 'League ' + n, notes: '', created: new Date().toISOString(),
-    seasons: [{ no: 1, started: new Date().toISOString(), rules,
-                fmt: { ...LG_FMT_DEFAULT }, entrants: [] }],
-  };
+  const L = lgNewLeague({ name: lgNextName('Tournament'), rules });
   lg.list.push(L);
   await lgSave(L);
   await lgSelect(L);
 }
 
+// ---- Scratch (E11): el partido rápido ---------------------------------------------
+// Un torneo en memoria (id fijo, no se guarda) de formato single, para jugar
+// enseguida como el Contest de antes. "Save as tournament" lo persiste con id
+// nuevo y deja un Scratch limpio con las mismas reglas, formato y
+// participantes. base: una liga de la que copiar eso (o nada: reglas F1).
+function lgScratchNew(base, rules) {
+  const S = base && lgSeason(base);
+  const L = lgNewLeague({
+    id: LG_SCRATCH_ID, name: 'Scratch',
+    rules: S ? S.rules : rules || {},
+    fmt: S ? S.fmt : { format: 'single' },
+    entrants: S ? S.entrants : [],
+    draw: base ? base.draw : null,
+  });
+  return { L, matches: [], seq: 0 };
+}
+
+// El Scratch, creado la primera vez con las reglas F1 (las del Contest).
+function lgScratch() {
+  if (!lg.scratch) lg.scratch = lgScratchNew(null, lgF1Rules());
+  return lg.scratch.L;
+}
+
+// Pura: el Scratch como liga nueva {L, matches} (id y nombre dados; los
+// partidos reasignados, sin id). Reusa el camino de exportar e importar.
+function lgPromote(L, matches, id, name) {
+  const r = lgImportObj(lgExportObj({ ...L, name }, matches), new Set(), id);
+  r.L.created = new Date().toISOString();
+  return r;
+}
+
+async function lgScratchSave(name) {
+  const sc = lg.scratch;
+  if (!sc) return null;
+  if (lg.live && lg.live.league === LG_SCRATCH_ID) leagueAbort();
+  const names = new Set(lg.list.map((L) => L.name));
+  const r = lgPromote(sc.L, sc.matches, lgNewId(),
+                      lgUniqueName((name || '').trim() || lgNextName('Tournament'), names));
+  await lgSave(r.L);
+  for (const m of r.matches) {
+    try { await LgDB.put('matches', m); } catch (e) { log('leagues: could not save a match'); }
+  }
+  lg.list.push(r.L);
+  lg.scratch = lgScratchNew(sc.L);
+  await lgSelect(r.L);
+  return r.L;
+}
+
 async function lgDelete(L) {
+  if (lgIsScratch(L)) return;
   if (lg.live && lg.live.league === L.id) leagueAbort();
   try { await LgDB.del('leagues', L.id); await LgDB.delMatches(L.id); } catch (e) { /* nada */ }
   lg.list = lg.list.filter((x) => x !== L);
   await lgSelect(lg.list[lg.list.length - 1] || null);
 }
 
-async function lgNewSeason(L) {
+// Temporada siguiente (pura): mismas reglas y formato; los participantes se
+// copian salvo que se vayan a sortear.
+function lgSeasonNext(S, draw) {
+  return { no: S.no + 1, started: new Date().toISOString(),
+           rules: { ...S.rules }, fmt: { ...S.fmt },
+           entrants: draw ? [] : S.entrants.map((e) => ({ ...e })) };
+}
+
+// Temporada nueva. Con el sorteo de la liga en 'random' (o o.draw, el TV
+// mode, que sortea siempre) los participantes salen de n del pool.
+// Devuelve el resultado del sorteo ({added, failed}) o null.
+async function lgNewSeason(L, o = {}) {
   if (lg.live && lg.live.league === L.id) leagueAbort();
-  const S = lgSeason(L);
-  L.seasons.push({ no: S.no + 1, started: new Date().toISOString(),
-                   rules: { ...S.rules }, fmt: { ...S.fmt },
-                   entrants: S.entrants.map((e) => ({ ...e })) });
-  await lgSave(L);
+  const d = lgDrawOf(L), draw = !!o.draw || d.mode === 'random';
+  L.seasons.push(lgSeasonNext(lgSeason(L), draw));
+  const r = draw ? await lgDrawRandom(L, lgPool(d.pool), d.n) : (await lgSave(L), null);
   lgRender();
+  return r;
+}
+
+// Vuelve a sortear los participantes de la temporada abierta (solo si aún no
+// tiene partidos).
+async function lgRedraw(L) {
+  const S = lgSeason(L);
+  if (lg.matches.some((m) => m.league === L.id && m.season === S.no)) return null;
+  const d = lgDrawOf(L);
+  S.entrants = [];
+  const r = await lgDrawRandom(L, lgPool(d.pool), d.n);
+  lgRender();
+  return r;
 }
 
 // ---- Compartir (L3) ---------------------------------------------------------------
 // El archivo lleva la liga entera (temporadas con reglas, formato y
 // participantes con su ADN) y sus partidos sin id ni liga: al importar se
 // reasignan. Funciones puras (el smoke hace el ida y vuelta sin DOM).
-const LG_FILE_KIND = 'darwinbots-league', LG_FILE_VER = 1;
+// Versión 2 (E11): la liga lleva su sorteo (draw) y los participantes su
+// cantidad (qty); la 1 se importa con el sorteo 'fixed'.
+const LG_FILE_KIND = 'darwinbots-league', LG_FILE_VER = 2;
 
 function lgExportObj(L, matches) {
   const { id, ...league } = L;
@@ -421,20 +646,21 @@ function lgImportObj(o, names, newId) {
     const entrants = s.entrants.map((e) => {
       if (!e || typeof e.name !== 'string' || typeof e.dna !== 'string')
         throw new Error(`Season ${i + 1}: an entrant has no name or DNA.`);
-      return { name: e.name, dna: e.dna, hash: lgHash(e.dna), src: e.src || 'form',
-               file: e.file || '', color: e.color || '#8899bb' };
+      const x = { name: e.name, dna: e.dna, hash: lgHash(e.dna), src: e.src || 'form',
+                  file: e.file || '', color: e.color || '#8899bb' };
+      const q = parseInt(e.qty, 10);
+      if (q > 0) x.qty = Math.min(200, q);
+      return x;
     });
     return { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
              fmt: { ...LG_FMT_DEFAULT, ...(s.fmt || {}) }, entrants };
   });
   let name = String(src.name || 'League').trim() || 'League';
-  if (names.has(name)) {
-    const base = name + ' (imported)';
-    name = base;
-    for (let k = 2; names.has(name); k++) name = `${base} ${k}`;
-  }
+  if (names.has(name)) name = lgUniqueName(name + ' (imported)', names);
   const L = { id: newId, name, notes: String(src.notes || ''),
-              created: src.created || new Date().toISOString(), seasons };
+              created: src.created || new Date().toISOString(),
+              draw: o.version >= 2 ? lgDrawClean(src.draw) : lgDrawClean(null), seasons };
+  lgMigrate(L);
   const nos = new Set(seasons.map((s) => s.no));
   const matches = (Array.isArray(o.matches) ? o.matches : [])
     .filter((m) => m && nos.has(m.season) && Array.isArray(m.fighters))
@@ -445,16 +671,73 @@ function lgImportObj(o, names, newId) {
 const lgNewId = () => 'L' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
 const lgFileName = (L) => (L.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'league') + '.league.json';
 
-function lgExport(L) {
-  const blob = new Blob([JSON.stringify(lgExportObj(L, lg.matches), null, 1)], { type: 'application/json' });
+function lgDownload(obj, fileName) {
+  const blob = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = lgFileName(L);
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  lgNote(`Exported to ${a.download}.`);
+}
+
+function lgExport(L) {
+  lgDownload(lgExportObj(L, lg.matches), lgFileName(L));
+  lgNote(`Exported to ${lgFileName(L)}.`);
+}
+
+// ---- Migración de lo que guardaban el Contest y el Canal (E11) -------------------
+// El roster del Contest pasa a los participantes del Scratch (el ADN se lee
+// ahora y queda congelado; los de 'form' no guardaban ADN y se pierden). La
+// config del Canal se descarta. Su Hall of Fame no tiene partidos de los que
+// derivarse: se ofrece descargarlo como JSON y se borra.
+const LG_OLD_ROSTER_KEY = 'db-contest-roster';
+const LG_OLD_HOF_KEY = 'db-channel-hof';
+const LG_OLD_CHCFG_KEY = 'db-channel-cfg';
+
+const lgStoreGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lgStoreDel = (k) => { try { localStorage.removeItem(k); } catch (e) { /* nada */ } };
+
+// dnaOf(r) → ADN del renglón del roster (contestDna de contest.js).
+async function lgMigrateRoster(L, dnaOf) {
+  const raw = lgStoreGet(LG_OLD_ROSTER_KEY);
+  lgStoreDel(LG_OLD_CHCFG_KEY);
+  if (raw === null) return null;
+  let list = [];
+  try { list = JSON.parse(raw) || []; } catch (e) { list = []; }
+  const S = lgSeason(L);
+  let added = 0, lost = 0;
+  for (const r of Array.isArray(list) ? list : []) {
+    if (!r || !r.name) continue;
+    try {
+      const dna = await dnaOf(r);
+      if (lgAddEntrant(S, { name: r.name, dna, src: r.src === 'hybrid' ? 'hybrid' : r.src === 'bestiary' ? 'bestiary' : 'form',
+                            file: r.file, qty: r.qty, color: r.color })) added++;
+    } catch (e) { lost++; }
+  }
+  lgStoreDel(LG_OLD_ROSTER_KEY);
+  await lgSave(L);
+  return { added, lost };
+}
+
+// El Hall of Fame del Canal viejo como archivo, o null si no hay.
+function lgOldHofFile() {
+  let hof = null;
+  try { hof = JSON.parse(lgStoreGet(LG_OLD_HOF_KEY) || 'null'); } catch (e) { hof = null; }
+  const rows = hof && typeof hof === 'object' ? Object.values(hof).filter((r) => r && r.name) : [];
+  if (!rows.length) return null;
+  return {
+    kind: 'darwinbots-channel-hof', exported: new Date().toISOString(),
+    note: 'Hall of Fame of the old F1 Channel (before Tournaments): fights, wins, undefeated retirements and best streak per bot.',
+    rows: rows.sort((a, b) => (b.titles || 0) - (a.titles || 0) || (b.wins || 0) - (a.wins || 0)),
+  };
+}
+const lgOldHofDiscard = () => lgStoreDel(LG_OLD_HOF_KEY);
+function lgOldHofDownload() {
+  const f = lgOldHofFile();
+  if (f) lgDownload(f, 'channel_hall_of_fame.json');
+  lgOldHofDiscard();
 }
 
 async function lgImport(file) {
@@ -474,20 +757,28 @@ async function lgImport(file) {
 // ---- Participantes ---------------------------------------------------------------
 function lgFreeColor(S) {
   const used = new Set(S.entrants.map((e) => e.color));
-  return CH_COLORS.find((c) => !used.has(c)) || invColor();
+  return LG_COLORS.find((c) => !used.has(c)) || invColor();
 }
 
-// Agrega {name, dna, src, file}. El mismo ADN no entra dos veces; un nombre
-// repetido con otro ADN lleva sufijo (el censo agrupa por nombre).
+// Agrega {name, dna, src, file, qty?, color?}. El mismo ADN no entra dos
+// veces; un nombre repetido con otro ADN lleva sufijo (el censo agrupa por
+// nombre). qty (E11) pisa los bots por especie del formato; el color pedido
+// se respeta si nadie lo usa.
 function lgAddEntrant(S, e) {
   const hash = lgHash(e.dna);
   if (S.entrants.some((x) => x.hash === hash)) return false;
-  const taken = new Set(S.entrants.map((x) => x.name));
-  let name = e.name;
-  for (let k = 2; taken.has(name); k++) name = `${e.name} ${k}`;
-  S.entrants.push({ name, dna: e.dna, hash, src: e.src, file: e.file || '', color: lgFreeColor(S) });
+  const name = lgUniqueName(e.name, new Set(S.entrants.map((x) => x.name)));
+  const color = e.color && !S.entrants.some((x) => x.color === e.color) ? e.color : lgFreeColor(S);
+  const x = { name, dna: e.dna, hash, src: e.src, file: e.file || '', color };
+  const q = parseInt(e.qty, 10);
+  if (q > 0) x.qty = Math.min(200, q);
+  S.entrants.push(x);
   return true;
 }
+
+// Lo que recibe contestLaunch: el ADN congelado y la cantidad de cada uno.
+const lgLaunchList = (f, fighters) => fighters.map((e) => ({
+  name: e.name, src: 'form', dna: e.dna, qty: e.qty || f.qty, color: e.color }));
 
 // Inscribe bots del Inventario (lee su ADN). Con `max`, para al llegar a
 // esa cantidad de altas (el sorteo salta los ilegibles y los repetidos).
@@ -512,13 +803,6 @@ async function lgDrawRandom(L, pool, n) {
   return lgEnroll(L, lgShuffle(pool.filter((it) => !have.has(it.b.name))), n);
 }
 
-async function lgAddItems(items) {
-  const { added, failed } = await lgEnroll(lg.cur, items);
-  lgNote(`${added} entrants added` + (failed ? ` · ${failed} unreadable` : '') +
-         (items.length - added - failed ? ` · ${items.length - added - failed} already in` : '') + '.');
-  lgRender();
-}
-
 // Pool del Inventario, como el del Canal (no vegetales, un nombre por especie).
 function lgPool(filter) {
   let items = inv.items.filter((it) => !it.b.veg);
@@ -537,23 +821,15 @@ function lgPool(filter) {
 }
 
 // ---- Partidos -------------------------------------------------------------------
-function lgNote(text, warn) {
-  if (!lg.win) return;
-  const n = lg.win.querySelector('#lg-note');
-  n.textContent = text;
-  n.className = 'ct-note' + (warn ? ' warn' : '');
-}
-
 async function lgPlayNext() {
   const L = lg.cur;
   if (!L || lg.live) return;
   const S = lgSeason(L);
   const fx = lgNextFixture(L);
   if (!fx) {
-    lgNote(S.entrants.length < 2 ? 'A league needs at least 2 entrants.' : 'The season is complete.', true);
+    lgNote(S.entrants.length < 2 ? 'A tournament needs at least 2 entrants.' : 'The season is complete.', true);
     return;
   }
-  if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
   try { await lgPlay(L, fx); } catch (e) { lgNote(e.message, true); }
 }
 
@@ -565,8 +841,6 @@ async function lgPlayNext() {
 async function lgPlay(L, fx, o = {}) {
   if (lg.live) throw new Error('A league match is already running.');
   const S = o.replay ? L.seasons.find((s) => s.no === o.replay.season) : lgSeason(L);
-  contest.running = false;
-  if (typeof contestRender === 'function') contestRender();
   lgApplyRules(S.rules);
   const f = S.fmt;
   lg.live = { league: L.id, season: S.no, fighters: fx.fighters, label: fx.label,
@@ -575,8 +849,7 @@ async function lgPlay(L, fx, o = {}) {
   if (o.replay) document.getElementById('seed').value = o.replay.seed;
   lgNote('Preparing…');
   try {
-    await contestLaunch(fx.fighters.map((e) => ({ name: e.name, src: 'form', dna: e.dna,
-                                                  qty: f.qty, color: e.color })),
+    await contestLaunch(lgLaunchList(f, fx.fighters),
       { nrg: f.nrg, f1: false, rounds: f.rounds, wins: f.wins, cap: f.cap,
         capMode: f.capMode, newSeed: !o.replay });
   } catch (e) {
@@ -602,7 +875,7 @@ async function lgReplay(id) {
     lgNote(`Match #${m.no} cannot be replayed: an entrant is no longer in season ${m.season}.`, true);
     return;
   }
-  if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
+  if (typeof tvStop === 'function') tvStop();   // la repetición toma la sim
   try {
     await lgPlay(L, { fighters, label: `Replay of match #${m.no} (season ${m.season}, seed ${m.seed})` },
                  { replay: m });
@@ -642,11 +915,16 @@ async function lgRecord(winner, note) {
   const m = lg.live;
   if (!m) return;
   lg.live = null;
-  const L = lg.list.find((x) => x.id === m.league);
+  const L = lgFind(m.league);
   const sp = (m.f1 && m.f1.sp) || [];
   const wins = m.fighters.map((e) => (sp.find((s) => s.name === e.name) || {}).wins || 0);
   if (m.replay) { lgReplayCheck(m.replay, { winner: winner || '', wins, cycles: m.cycles || 0 }); return; }
-  const no = Math.max(0, ...lg.matches.filter((x) => x.league === m.league && x.season === m.season)
+  // Los partidos del Scratch quedan en memoria (con id negativo); los demás,
+  // en la base y, si es la liga abierta, en lg.matches.
+  const scratch = m.league === LG_SCRATCH_ID;
+  const bucket = scratch ? lg.scratch && lg.scratch.matches
+    : lg.cur && lg.cur.id === m.league ? lg.matches : null;
+  const no = Math.max(0, ...(bucket || []).filter((x) => x.league === m.league && x.season === m.season)
     .map((x) => x.no)) + 1;
   const rec = {
     league: m.league, season: m.season, no, date: new Date().toISOString(),
@@ -654,12 +932,13 @@ async function lgRecord(winner, note) {
     seed: m.seed, winner: winner || '', wins, rounds: wins.reduce((a, b) => a + b, 0),
     cycles: m.cycles || 0, capRounds: m.capRounds, note: note || '',
   };
-  try { rec.id = await LgDB.put('matches', rec); } catch (e) { log('leagues: could not save the match'); }
-  if (lg.cur && lg.cur.id === m.league) lg.matches.push(rec);
+  if (scratch) rec.id = -(++lg.scratch.seq);
+  else try { rec.id = await LgDB.put('matches', rec); } catch (e) { log('leagues: could not save the match'); }
+  if (bucket) bucket.push(rec);
   log(winner ? `🏟 ${winner} wins (${rec.rounds} rounds, ${rec.cycles} cycles)` : `🏟 match void: ${note}`);
   lgNote(winner ? `🏆 ${winner} wins the match.` : note, !winner);
   lgRender();
-  if (typeof channelOnLeagueResult === 'function') channelOnLeagueResult(rec);
+  if (typeof tnOnResult === 'function') tnOnResult(rec);
 }
 
 // Hasta la respuesta al censo del partido (f1-started) llegan mensajes y
@@ -675,26 +954,17 @@ function leagueOnMessage(msg) {
   }
   if (!m.ready) return;
   if (msg.t === 'f1-note' && msg.kind === 'single') lgRecord('', 'void: only one species in the census');
-  else if (msg.t === 'f1-note' && msg.kind === 'cap') m.capRounds++;
+  else if (msg.t === 'f1-note' && msg.kind === 'cap') {
+    m.capRounds++;
+    const L = lgFind(m.league), f = L ? lgSeason(L).fmt : LG_FMT_DEFAULT;
+    lgNote('Cycle cap reached: the round goes to the ' +
+           (f.capMode === 'nrg' ? 'species with the most energy.' : 'most numerous species.'));
+  }
   else if (msg.t === 'f1-over') {
     // El worker manda el marcador final y los ciclos con el aviso.
     if (msg.f1) m.f1 = msg.f1;
     if (msg.cycles !== undefined) m.cycles = msg.cycles;
     lgRecord(msg.winner);
-  }
-}
-
-function leagueOnStats(st) {
-  const m = lg.live;
-  if (!m || !m.ready || !st.f1) return;
-  const rw = contestRoundWinner(m.lastWins, st.f1);
-  if (rw) lgNote(`Round ${st.f1.contests} goes to ${rw}.`);
-  m.lastWins = st.f1.sp.map((s) => s.wins);
-  if (lg.win) {
-    const L = lg.list.find((x) => x.id === m.league);
-    const f = L ? lgSeason(L).fmt : LG_FMT_DEFAULT;
-    lg.win.querySelector('#lg-board').innerHTML = contestBoardHtml(
-      st, new Map(m.fighters.map((e) => [e.name, e.color])), f.rounds, '', f.wins);
   }
 }
 
@@ -706,15 +976,16 @@ function lgFmtHtml(f, locked) {
     `<input type="number" data-f="${id}" min="${min}"${max ? ` max="${max}"` : ''} value="${v}"${d}>`;
   return '<div class="ct-rules">' +
     `<label>Format</label><select data-f="format"${d}>` +
-    `<option value="koth"${f.format === 'koth' ? ' selected' : ''}>King of the hill</option>` +
+    `<option value="single"${f.format === 'single' ? ' selected' : ''} title="One match with every entrant (up to ${LG_MAX_FIGHTERS})">Single match</option>` +
+    `<option value="koth"${f.format === 'koth' ? ' selected' : ''} title="The winner stays; the first to retire undefeated wins the season">King of the hill</option>` +
     `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option>` +
     `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option></select>` +
-    (f.format === 'ladder' ? ''
+    (f.format === 'ladder' || f.format === 'single' ? ''
     : f.format === 'rr'
       ? num('legs', 'Legs (each pair meets)', f.legs, 1, 2, '1 = once; 2 = home and away, with the seeding order swapped')
       : num('k', 'Fighters per fight', f.k, 2, 20) +
         num('retire', 'Champion retires after', f.retire, 1, 999, 'Consecutive wins the champion needs to retire undefeated')) +
-    num('qty', 'Bots per species', f.qty, 1, 200) +
+    num('qty', 'Bots per species', f.qty, 1, 200, 'Each entrant can set its own in the list below') +
     num('nrg', 'Starting energy', f.nrg, 1, 0) +
     num('rounds', 'Minimum rounds per match', f.rounds, 1, 99) +
     num('wins', 'Wins to take the match', f.wins, 0, 99, "The original's Maxrounds; 0 = only the statistical rule") +
@@ -723,20 +994,27 @@ function lgFmtHtml(f, locked) {
     `<select data-f="capMode"${d}>` +
     `<option value="pop"${f.capMode === 'pop' ? ' selected' : ''}>most bots</option>` +
     `<option value="nrg"${f.capMode === 'nrg' ? ' selected' : ''}>most energy</option></select>` +
+    `<div class="ct-wide ct-rule">${escHtml(contestRuleHint(f.rounds, f.wins))}</div>` +
     '</div>';
+}
+
+function lgChampionHtml(S, ms) {
+  const c = lgSeasonChampion(S, ms);
+  return c ? `🏁 Season complete: 🏆 <b>${escHtml(c.name)}</b> ${LG_HOW[c.how]}.` : '🏁 Season complete.';
 }
 
 function lgStandingsHtml(S, ms) {
   const rows = lgStandings(S, ms);
   const koth = S.fmt.format === 'koth' ? lgKothState(S, ms) : null;
   if (!rows.length) return '<div class="ct-empty">No entrants yet.</div>';
+  const champ = lgSeasonChampion(S, ms);
   return '<table class="ch-table"><tr><th></th><th>Entrant</th><th title="Played">P</th>' +
     '<th title="Won">W</th><th title="Lost">L</th><th title="Win rate">%</th><th>Elo</th>' +
     (koth ? '<th title="Undefeated retirements">👑</th>' : '') +
     '<th title="Share of the rounds it won that were decided by the cycle cap">cap</th>' +
     '<th title="Average cycles per match played">⏱</th></tr>' +
     rows.map((r, i) => `<tr><td>${i + 1}</td><td class="ch-n" title="${escHtml(r.name)}">` +
-      `<span class="ct-dot lg-dot" style="background:${r.color}"></span>${escHtml(r.name)}</td>` +
+      `<span class="ct-dot lg-dot" style="background:${r.color}"></span>${champ && champ.name === r.name ? '🏆 ' : ''}${escHtml(r.name)}</td>` +
       `<td>${r.p}</td><td>${r.w}</td><td>${r.p - r.w}</td>` +
       `<td>${r.p ? Math.round((r.w / r.p) * 100) : '–'}</td><td>${Math.round(r.elo)}</td>` +
       (koth ? `<td>${koth.titles.get(r.name) || ''}</td>` : '') +
@@ -794,289 +1072,17 @@ function lgHistoryHtml(ms) {
     ` · seed ${m.seed}${m.note ? ' · ' + escHtml(m.note) : ''}</i></div>`).join('');
 }
 
-function lgPoolOptions() {
-  return '<option value="">— from the Inventory —</option>' +
+// Filtros del Inventario para lgPool. head: primera opción vacía (o nada).
+function lgPoolOptions(head) {
+  return (head ? `<option value="">${head}</option>` : '<option value="all">the whole Bestiary</option>') +
     '<option value="sel">the Inventory selection</option>' +
     '<option value="fav">★ favorites</option>' +
     allTags().map(([t, n]) => `<option value="tag:${escHtml(t)}">#${escHtml(t)} (${n})</option>`).join('') +
     [...inv.sets.keys()].map((n) => `<option value="set:${escHtml(n)}">selection: ${escHtml(n)}</option>`).join('') +
-    '<option value="all">the whole Bestiary</option>';
+    (head ? '<option value="all">the whole Bestiary</option>' : '');
 }
 
-// El Canal abierto muestra las ligas y la tabla: se refresca con la liga.
-function lgSyncChannel() {
-  if (typeof ch === 'undefined' || !ch.win) return;
-  chRenderLeagueOpts();
-  // Con el Canal apagado y una liga elegida, sigue a la liga abierta aquí.
-  const sel = ch.win.querySelector('#ch-league');
-  if (!ch.on && sel.value && lg.cur && sel.value !== lg.cur.id) sel.value = lg.cur.id;
-  chRender();
-}
-
-function lgRender() {
-  if (!lg.win) { lgSyncChannel(); return; }
-  const w = lg.win;
-  const $ = (id) => w.querySelector('#' + id);
-  lgSyncChannel();
-  $('lg-pick').innerHTML = lg.list.length
-    ? lg.list.map((L) => `<option value="${L.id}"${L === lg.cur ? ' selected' : ''}>${escHtml(L.name)}</option>`).join('')
-    : '<option value="">— no leagues —</option>';
-  $('lg-del').textContent = lg.confirm === 'del' ? 'Delete it?' : '🗑';
-  $('lg-del').disabled = !lg.cur;
-  $('lg-export').disabled = !lg.cur;
-  const L = lg.cur;
-  $('lg-main').hidden = !L;
-  $('lg-empty').hidden = !!L;
-  if (!L) return;
-  const S = lgSeason(L), ms = lgSeasonMatches(S.no);
-  const locked = ms.length > 0;
-  const live = lg.live && lg.live.league === L.id;
-  if (document.activeElement !== $('lg-name')) $('lg-name').value = L.name;
-  $('lg-season').innerHTML = `Season <b>${S.no}</b> · ${lgPlayed(ms).length} matches` +
-    (locked ? ' · 🔒 rules and format locked' : ' · rules and format editable');
-  $('lg-fmt').innerHTML = lgFmtHtml(S.fmt, locked);
-  $('lg-rules').innerHTML = lgRulesSummary(S.rules);
-  $('lg-rsave').disabled = locked;
-  $('lg-rbase').disabled = locked;
-  $('lg-ecount').textContent = `${S.entrants.length}`;
-  const playedBy = new Set(ms.flatMap((m) => m.fighters));
-  $('lg-entrants').innerHTML = S.entrants.length
-    ? S.entrants.map((e, i) => `<div class="ct-fighter" data-i="${i}">` +
-        `<span class="ct-dot" style="background:${e.color}"></span>` +
-        `<span class="ct-name" title="${escHtml(e.name)} · DNA ${e.hash}">${escHtml(e.name)}</span>` +
-        `<span class="ct-src">${{ bestiary: 'Bestiary', hybrid: 'hybrid', form: 'form' }[e.src] || ''}</span>` +
-        `<button class="ct-del" title="${playedBy.has(e.name) ? 'Already played this season' : 'Remove'}"` +
-        `${playedBy.has(e.name) ? ' disabled' : ''}>✕</button></div>`).join('')
-    : '<div class="ct-empty">Add at least 2 entrants.</div>';
-  const fx = live ? null : lgNextFixture(L);
-  $('lg-next').innerHTML = live
-    ? `${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${lg.live.fighters.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ')}`
-    : fx ? `Next: ${fx.fighters.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ')}` +
-           ` <span class="ct-rule">${escHtml(fx.label)}</span>`
-         : S.entrants.length < 2 ? '' : '🏁 Season complete.';
-  if (S.fmt.format === 'koth') {
-    const k = lgKothState(S, ms);
-    if (k.champ) $('lg-next').innerHTML += `<div class="ct-rule">👑 ${escHtml(k.champ)} · streak ${k.streak}/${S.fmt.retire}</div>`;
-  }
-  $('lg-play').disabled = !!lg.live || !fx;
-  $('lg-play').hidden = !live && !fx;
-  $('lg-abort').hidden = !live;
-  $('lg-board').hidden = !live;
-  if (!live) $('lg-board').innerHTML = '';
-  $('lg-table').innerHTML = lgStandingsHtml(S, ms);
-  $('lg-hist').innerHTML = lgHistoryHtml(ms);
-  $('lg-h2h').innerHTML = lgH2HHtml(S, ms);
-  if (lg.pastNo) {
-    const d = $('lg-past').querySelector('details');
-    const open = d && d.open;
-    lgShowSeason(lg.pastNo);
-    if (open) $('lg-past').querySelector('details').open = true;
-  }
-  $('lg-newseason').textContent = lg.confirm === 'season'
-    ? `Start season ${S.no + 1}? (click again)` : '📅 New season';
-  $('lg-newseason').disabled = !locked;
-  $('lg-seasons').innerHTML = L.seasons.length > 1
-    ? 'Past seasons: ' + L.seasons.slice(0, -1).map((s) =>
-        `<button class="ch-small" data-season="${s.no}">${s.no}</button>`).join(' ')
-    : '';
-}
-
-// Tabla de una temporada pasada, en el lugar del historial.
-function lgShowSeason(no) {
-  const L = lg.cur, S = L && L.seasons.find((s) => s.no === no);
-  if (!S) return;
-  const ms = lgSeasonMatches(no);
-  lg.win.querySelector('#lg-past').innerHTML =
-    `<div class="ct-h">Season ${no} · ${lgPlayed(ms).length} matches</div>` +
-    `<div class="lg-costs">${lgRulesSummary(S.rules)}</div>` + lgStandingsHtml(S, ms) +
-    `<details class="ch-sec"><summary>Matches of season ${no}</summary>${lgHistoryHtml(ms)}</details>`;
-  lg.pastNo = no;
-}
-
-function lgArm(kind, fn) {
-  if (lg.confirm === kind) {
-    lg.confirm = '';
-    clearTimeout(lg.confirmT);
-    fn();
-    return;
-  }
-  lg.confirm = kind;
-  clearTimeout(lg.confirmT);
-  lg.confirmT = setTimeout(() => { lg.confirm = ''; lgRender(); }, 3000);
-  lgRender();
-}
-
-// ---- Ventana -------------------------------------------------------------------
-async function openLeagues() {
-  if (lg.win) { winLayer.appendChild(lg.win); return; }
-  if (!inv.items.length) await invLoad();
-  const w = makeWindow('🏟 Leagues', Math.min(480, innerWidth - 40), 0, () => { lg.win = null; });
-  lg.win = w;
-  w.classList.add('ct-win');
-  w.style.left = Math.max(20, innerWidth - 540) + 'px';
-  w.style.top = '60px';
-  w.body.innerHTML =
-    '<div class="lg-top">' +
-    '<select id="lg-pick"></select>' +
-    '<select id="lg-base" title="Rules for a new league">' +
-    '<option value="f1">F1 league rules</option>' +
-    '<option value="panel">the current Sim options</option>' +
-    '<option value="free">the current Sim options, no costs</option></select>' +
-    '<button id="lg-new" title="New league with the chosen rules">＋ New</button>' +
-    '<button id="lg-del" title="Delete this league and its matches">🗑</button>' +
-    '<button id="lg-export" title="Download this league (rules, entrants with their DNA and matches) as a file">⬇</button>' +
-    '<button id="lg-import" title="Load a league from a file">⬆</button>' +
-    '<input id="lg-file" type="file" accept=".json,application/json" hidden>' +
-    '</div>' +
-    '<div id="lg-empty" class="ct-empty">No leagues yet: choose the rules and press ＋ New.</div>' +
-    '<div id="lg-main">' +
-    '<input id="lg-name" class="lg-name" title="League name">' +
-    '<div id="lg-season" class="ct-rule"></div>' +
-    '<details class="ch-sec" open><summary>Format</summary><div id="lg-fmt"></div></details>' +
-    '<details class="ch-sec"><summary>Rules</summary><div id="lg-rules"></div>' +
-    '<div class="ct-srcrow">' +
-    '<button id="lg-rload" title="Write these rules into the Sim options panel">Load into the panel</button>' +
-    '<button id="lg-rsave" title="Replace the rules with the Sim options panel as it is now">Save the panel as rules</button>' +
-    '<button id="lg-rbase" title="Replace the rules with the F1 league settings (btnSetF1)">F1 rules</button>' +
-    '</div></details>' +
-    '<details class="ch-sec" open><summary>Entrants <span id="lg-ecount"></span></summary>' +
-    '<div id="lg-entrants"></div>' +
-    '<div class="ct-srcrow">' +
-    '<select id="lg-pool"></select>' +
-    '<select id="lg-hyb"></select>' +
-    '<button id="lg-addform" title="The DNA and name from the Seed species panel">DNA from the form</button>' +
-    '<span class="lg-rand"><button id="lg-rand" title="Draw this many bots at random from the whole Bestiary">🎲</button>' +
-    '<input type="number" id="lg-rn" min="1" max="200" value="8" title="How many to draw"> at random</span>' +
-    '</div>' +
-    '<div class="ct-rule">Each entrant keeps the DNA it had when it joined.</div></details>' +
-    '<div class="ct-h">Play</div>' +
-    '<div id="lg-next"></div>' +
-    '<div class="ct-liverow">' +
-    '<button id="lg-play" class="primary">▶ Play next match</button>' +
-    '<button id="lg-abort" hidden title="Stop recording this match">✕ Abandon</button>' +
-    '</div>' +
-    '<div id="lg-board"></div>' +
-    '<div id="lg-note" class="ct-note"></div>' +
-    '<details class="ch-sec" open><summary>Standings</summary><div id="lg-table"></div></details>' +
-    '<details class="ch-sec"><summary>Head to head</summary><div id="lg-h2h"></div></details>' +
-    '<details class="ch-sec"><summary>Matches</summary><div id="lg-hist"></div></details>' +
-    '<div class="ct-liverow"><button id="lg-newseason" class="ch-small" title="Unlocks rules and format; entrants carry over">📅 New season</button>' +
-    '<span id="lg-seasons"></span></div>' +
-    '<div id="lg-past"></div>' +
-    '</div>';
-
-  const $ = (id) => w.querySelector('#' + id);
-  $('lg-pick').onchange = (e) => lgSelect(lg.list.find((L) => L.id === e.target.value) || null);
-  $('lg-new').onclick = () => lgCreate($('lg-base').value);
-  $('lg-del').onclick = () => lg.cur && lgArm('del', () => lgDelete(lg.cur));
-  $('lg-name').onchange = async (e) => {
-    const v = e.target.value.trim();
-    if (!lg.cur || !v) return;
-    lg.cur.name = v;
-    await lgSave(lg.cur);
-    lgRender();
-  };
-  $('lg-fmt').onchange = async (e) => {
-    const k = e.target.dataset.f;
-    if (!k || !lg.cur) return;
-    const f = lgSeason(lg.cur).fmt;
-    if (k === 'format' || k === 'capMode') f[k] = e.target.value;
-    else {
-      const n = parseInt(e.target.value, 10);
-      const lo = +e.target.min || 0, hi = +e.target.max || 1e7;
-      f[k] = Math.min(hi, Math.max(lo, Number.isNaN(n) ? LG_FMT_DEFAULT[k] : n));
-    }
-    await lgSave(lg.cur);
-    lgRender();
-  };
-  $('lg-rload').onclick = () => {
-    if (!lg.cur) return;
-    lgApplyRules(lgSeason(lg.cur).rules);
-    lgNote('Rules loaded into the panel: size changes apply when you press Reset.');
-    lgRender();
-  };
-  $('lg-rsave').onclick = async () => {
-    if (!lg.cur) return;
-    lgSeason(lg.cur).rules = lgCaptureRules();
-    await lgSave(lg.cur);
-    lgNote('Rules saved from the panel.');
-    lgRender();
-  };
-  $('lg-rbase').onclick = async () => {
-    if (!lg.cur) return;
-    lgSeason(lg.cur).rules = lgF1Rules();
-    await lgSave(lg.cur);
-    lgNote('F1 league rules set.');
-    lgRender();
-  };
-  $('lg-pool').onchange = async (e) => {
-    const f = e.target.value;
-    e.target.value = '';
-    if (!f || !lg.cur) return;
-    const items = lgPool(f);
-    if (!items.length) { lgNote('That pool is empty.', true); return; }
-    lgNote(`Reading ${items.length} bots…`);
-    await lgAddItems(items);
-  };
-  $('lg-hyb').onchange = async (e) => {
-    const name = e.target.value;
-    e.target.value = '';
-    if (!name || !lg.cur) return;
-    const dna = await labDnaByName(name + '.txt');
-    if (!dna) { lgNote(`Hybrid "${name}" not found.`, true); return; }
-    const S = lgSeason(lg.cur);
-    if (!lgAddEntrant(S, { name, dna, src: 'hybrid', file: name })) lgNote('Already in the league.');
-    await lgSave(lg.cur);
-    lgRender();
-  };
-  $('lg-rand').onclick = async () => {
-    if (!lg.cur) return;
-    const n = Math.min(200, Math.max(1, parseInt($('lg-rn').value, 10) || 8));
-    lgNote(`Drawing ${n} bots…`);
-    const { added, failed } = await lgDrawRandom(lg.cur, lgPool('all'), n);
-    lgNote(`${added} entrants drawn at random` + (failed ? ` · ${failed} unreadable` : '') + '.');
-    lgRender();
-  };
-  $('lg-addform').onclick = async () => {
-    if (!lg.cur) return;
-    const dna = document.getElementById('dna').value;
-    if (!dna.trim()) { lgNote('The form has no DNA.', true); return; }
-    const name = (document.getElementById('sp-name').value || 'bot.txt').replace(/\.txt$/i, '');
-    if (!lgAddEntrant(lgSeason(lg.cur), { name, dna, src: 'form' })) lgNote('Already in the league.');
-    await lgSave(lg.cur);
-    lgRender();
-  };
-  $('lg-entrants').onclick = async (e) => {
-    if (!e.target.classList.contains('ct-del') || !lg.cur) return;
-    lgSeason(lg.cur).entrants.splice(+e.target.closest('[data-i]').dataset.i, 1);
-    await lgSave(lg.cur);
-    lgRender();
-  };
-  $('lg-export').onclick = () => lg.cur && lgExport(lg.cur);
-  $('lg-import').onclick = () => $('lg-file').click();
-  $('lg-file').onchange = async (e) => {
-    const f = e.target.files[0];
-    e.target.value = '';
-    if (f) await lgImport(f);
-  };
-  // Repetir un partido: del historial de la temporada o de una pasada.
-  w.body.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-replay]');
-    if (b && !b.disabled) lgReplay(+b.dataset.replay);
-  });
-  $('lg-play').onclick = () => lgPlayNext();
-  $('lg-abort').onclick = () => leagueAbort();
-  $('lg-newseason').onclick = () => lg.cur && lgArm('season', () => lgNewSeason(lg.cur));
-  $('lg-seasons').onclick = (e) => {
-    const b = e.target.closest('[data-season]');
-    if (b) lgShowSeason(+b.dataset.season);
-  };
-
-  $('lg-pool').innerHTML = lgPoolOptions();
-  let hs = [];
-  try { hs = (await InvDB.all('hybrids')).filter((h) => !h.veg); } catch (e) { /* sin IndexedDB */ }
-  $('lg-hyb').innerHTML = '<option value="">— hybrid —</option>' +
-    hs.map((h) => `<option>${escHtml(h.name)}</option>`).join('');
-  $('lg-hyb').disabled = !hs.length;
-  await lgLoadAll();
-}
+// E11: la ventana es la de Torneos (tournament.js). Estos dos avisan allá
+// (y no hacen nada sin ella: el smoke corre league.js solo).
+function lgRender() { if (typeof tnRender === 'function') tnRender(); }
+function lgNote(text, warn) { if (typeof tnNote === 'function') tnNote(text, warn); }

@@ -200,7 +200,7 @@ Emscripten; presentación web separada.
   `StartSimul` (`main.frm:1357-1365`); el compactor sobrevive y la ronda
   hereda las opciones. Smoke: `node tools/pp/smoke_formas.mjs`.
 
-Estado verificado (2026-09-26): 270 casos / 4092 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés (ver `spec/PROGRESO.md`).
+Estado verificado (2026-09-26): 270 casos / 4092 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`).
 
 ## Build
 
@@ -444,7 +444,7 @@ directa + `worker.js` real):
 cd port && node tools/e8/smoke_e8.mjs
 ```
 
-### Ajustes F1, Contest y Canal de TV (después del plan)
+### Ajustes F1 (después del plan)
 
 Capa host, añadida el 2026-09-26 (`spec/PLAN-EXTENSIONES.md` §"Añadidos
 fuera del plan"):
@@ -454,51 +454,59 @@ fuera del plan"):
   costes de liga, física, luz, vegetales y campo 9237×6928 toroidal. El
   grupo **"Costs"** del panel los deja editables; antes llegaban siempre
   en 0 y los bots no gastaban energía. `MaxPopulation` también es
-  editable, y la ronda nueva lo conserva (`db_sim_get_base(6)`).
-- **Contest** (botón "🏆 Contest", `web/contest.js`): torneo F1 de 2 a 20
-  contrincantes, tomados del Bestiary, los híbridos, una selección del
-  Inventario o el formulario. Un clic aplica los ajustes F1, activa el
-  modo, reinicia, siembra, hace el censo y arranca. El marcador muestra
-  población, victorias, ronda, ganador y revancha. Explica la regla de
-  empate del original (más de √N + N/2 victorias, `F1Mode.bas:361-426`).
-  "Wins to take it (0 = no cap)" fija `Maxrounds` (opción 98, `F1Mode.bas:352-359`); por
-  defecto 3, y con 0 solo vale la regla estadística.
-- **Canal de TV** (botón "📺 Channel", `web/channel.js`): peleas
-  encadenadas sin intervención. Sortea los luchadores del Inventario
-  (todo, favoritos, un tag o una selección) en formato rey de la colina:
-  el ganador se queda y, con R victorias seguidas, se retira invicto. Hay
-  una cortinilla entre peleas, un rótulo LIVE sobre el campo, una lista
-  de las últimas peleas y un "Hall of Fame" (en `localStorage`). Los
-  colores salen de una paleta fija de 20 tonos claros, y el campeón
-  conserva el suyo. "Wins to take the fight" funciona como en el Contest.
-  Cada ronda tiene un tope de ciclos: `db_sim_f1_cap` generaliza a N
-  especies el "kill losing species" de `F1Mode.bas:333-347` (en el
-  original, solo para duelos). El worker lo llama después de cada tick.
+  editable, y la ronda nueva lo conserva (`db_sim_get_base(6)`). El grupo
+  "Game modes" queda para el F1 manual del original: los torneos fijan
+  sus valores en cada partido.
 
-### Ligas (E10, 2026-09-27)
+### Torneos (E10 y E11, 2026-09-27)
 
-- **Leagues** (botón "🏟 Leagues", `web/league.js`, `spec/PLAN-EXTENSIONES.md`
-  §E10): ligas guardadas en IndexedDB (`darwinbots-ligas`). Cada una tiene
-  reglas (una foto del panel de opciones: base F1, el panel actual o sin
-  costes), formato (**rey de la colina** o **todos contra todos**, a 1 o 2
-  vueltas), participantes con el ADN congelado al inscribirse, temporadas
-  (el primer partido bloquea reglas y formato), historial con la semilla
-  de cada partido, tabla de posiciones y Elo. "At the cap, the round goes
-  to" elige entre más bots y más energía (`db_sim_f1_cap(h, mode)`, nrg +
-  body×10). Smoke: `node tools/e10/smoke_liga.mjs`.
-- **Canal con liga** (L2): el selector "League" del Canal le hace jugar el
-  calendario de una liga sin intervención, con sus reglas en cada pelea;
-  cada resultado queda en la liga. En todos contra todos, al terminar la
-  temporada anuncia al campeón y se apaga. La ventana de ligas muestra
-  además los enfrentamientos directos y los ciclos promedio.
-- **Compartir y repetir** (L3): ⬇ exporta la liga a un JSON (temporadas,
-  reglas, participantes con su ADN y partidos) y ⬆ la importa como liga
-  nueva. ↻ en cada partido del historial lo repite con las reglas de su
-  temporada, los mismos participantes en el mismo orden y la misma
-  semilla, y avisa si el resultado no coincide (no se registra). Tercer
-  formato: la **escalera** del original (`populateladder`). Una liga sin
-  participantes los sortea: "🎲 N at random" en la ventana, o el Canal al
-  encenderse (N bots del pool del Canal).
+Capa host (`spec/PLAN-EXTENSIONES.md` §E10 y §E11). Una sola ventana,
+**"🏆 Tournaments"** (`web/tournament.js`), reemplaza al Contest, al Canal
+de TV y a las Ligas de antes; el modelo, la base y los partidos están en
+`web/league.js` y el lanzamiento de cada partido en `web/contest.js`.
+
+- **Todo es un torneo**, guardado en IndexedDB (`darwinbots-ligas`): reglas
+  del mundo (una foto del panel de opciones: preset F1, sin costes o el
+  panel actual), formato, valores del partido, participantes con el ADN
+  congelado al inscribirse, temporadas (el primer partido bloquea reglas,
+  formato y valores) e historial con la semilla de cada partido. Al abrir
+  la ventana está el **⚡ Scratch**, un torneo en memoria para el partido
+  rápido; "💾 Save as tournament" lo guarda con sus partidos.
+- **Formatos**: *Single match* (todos contra todos en un solo partido, hasta
+  20, el Contest de antes), *King of the hill* (el ganador se queda; gana
+  la temporada el primero que se retira invicto, con un tope de 3 × N
+  peleas y el primero por Elo), *Round robin* (1 o 2 vueltas, por el
+  método del círculo) y *Step ladder* (la escalera del original,
+  `populateladder`). Toda temporada termina con un campeón.
+- **Valores del partido**, con un nombre cada uno: bots por especie
+  (cada participante puede tener los suyos), energía inicial, rondas
+  mínimas, victorias para ganar (`Maxrounds`, opción 98) y el tope de
+  ciclos por ronda con su criterio ("most bots" o "most energy", nrg +
+  body×10). El tope es del host (`db_sim_f1_cap(h, mode)`, después de
+  cada tick) y sirve para N especies; generaliza el "kill losing species"
+  de `F1Mode.bas:333-347`. Los topes del core para duelos (99 y 100)
+  quedan en 0.
+- **Participantes** (Setup): búsqueda en el Bestiary, grupos del
+  Inventario (favoritos, tags, selecciones), híbridos, el ADN del
+  formulario y Animal Minimalis, o **🎲 Draw** N al azar de un pool; con
+  "Draw new entrants at every new season", cada temporada nueva sortea.
+- **Play**: la próxima pelea, el marcador del partido (población,
+  victorias, ronda y la regla de empate del original, más de √N + N/2
+  victorias, `F1Mode.bas:361-426`) y el **📺 TV mode** (también el botón
+  📺 de la barra): juega la temporada entera sin intervención, con una
+  cortinilla entre peleas y un rótulo sobre el campo, anuncia al campeón
+  y lanza la edición siguiente con un sorteo nuevo, en bucle.
+- **Results**: tabla de cada temporada (Elo con K = 32 / (N − 1), % de
+  rondas por tope, ciclos promedio), enfrentamientos directos, partidos
+  con **↻** (repite con las reglas, los participantes, el orden de siembra
+  y la semilla de su temporada y avisa si el resultado no coincide) y el
+  **Hall of Fame** de todas las temporadas.
+- **Compartir**: ⬇ exporta el torneo a un JSON (versión 2) y ⬆ lo importa
+  como torneo nuevo; también acepta los archivos de ligas de E10
+  (versión 1).
+- Smokes: `node tools/e10/smoke_liga.mjs` (tope por energía, calendarios,
+  Elo, exportar e importar) y `node tools/e11/smoke_torneos.mjs` (fin de
+  temporada, sorteo, Hall of Fame, Scratch, migraciones).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas
