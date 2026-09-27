@@ -486,6 +486,11 @@ fuera del plan"):
   de cada partido, tabla de posiciones y Elo. "At the cap, the round goes
   to" elige entre más bots y más energía (`db_sim_f1_cap(h, mode)`, nrg +
   body×10). Smoke: `node tools/e10/smoke_liga.mjs`.
+- **Canal con liga** (L2): el selector "League" del Canal le hace jugar el
+  calendario de una liga sin intervención, con sus reglas en cada pelea;
+  cada resultado queda en la liga. En todos contra todos, al terminar la
+  temporada anuncia al campeón y se apaga. La ventana de ligas muestra
+  además los enfrentamientos directos y los ciclos promedio.
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas

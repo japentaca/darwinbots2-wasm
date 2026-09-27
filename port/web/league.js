@@ -309,6 +309,8 @@ async function lgLoadAll() {
 }
 
 async function lgSelect(L) {
+  // El Canal con liga lee el calendario de lg.cur: cambiar de liga lo apaga.
+  if (typeof ch !== 'undefined' && ch.on && ch.league && ch.league !== L) channelStop();
   lg.cur = L;
   lg.matches = [];
   if (L) {
@@ -423,6 +425,15 @@ async function lgPlayNext() {
     return;
   }
   if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
+  try { await lgPlay(L, fx); } catch (e) { lgNote(e.message, true); }
+}
+
+// Juega una pelea de la liga (la lanza la ventana o el Canal, L2): aplica
+// las reglas de la temporada, abre lg.live y arranca con contestLaunch.
+// Lanza excepción si algún ADN no se puede sembrar (sin partido abierto).
+async function lgPlay(L, fx) {
+  if (lg.live) throw new Error('A league match is already running.');
+  const S = lgSeason(L);
   contest.running = false;
   if (typeof contestRender === 'function') contestRender();
   lgApplyRules(S.rules);
@@ -437,9 +448,8 @@ async function lgPlayNext() {
         capMode: f.capMode, newSeed: true });
   } catch (e) {
     lg.live = null;
-    lgNote(e.message, true);
     lgRender();
-    return;
+    throw e;
   }
   lg.live.seed = parseFloat(document.getElementById('seed').value) || 0;
   log(`🏟 ${L.name}: ${fx.fighters.map((e) => e.name).join(' vs ')}`);
@@ -475,6 +485,7 @@ async function lgRecord(winner, note) {
   log(winner ? `🏟 ${winner} wins (${rec.rounds} rounds, ${rec.cycles} cycles)` : `🏟 match void: ${note}`);
   lgNote(winner ? `🏆 ${winner} wins the match.` : note, !winner);
   lgRender();
+  if (typeof channelOnLeagueResult === 'function') channelOnLeagueResult(rec);
 }
 
 // Hasta la respuesta al censo del partido (f1-started) llegan mensajes y
@@ -546,13 +557,46 @@ function lgStandingsHtml(S, ms) {
   return '<table class="ch-table"><tr><th></th><th>Entrant</th><th title="Played">P</th>' +
     '<th title="Won">W</th><th title="Lost">L</th><th title="Win rate">%</th><th>Elo</th>' +
     (koth ? '<th title="Undefeated retirements">👑</th>' : '') +
-    '<th title="Share of the rounds it won that were decided by the cycle cap">cap</th></tr>' +
+    '<th title="Share of the rounds it won that were decided by the cycle cap">cap</th>' +
+    '<th title="Average cycles per match played">⏱</th></tr>' +
     rows.map((r, i) => `<tr><td>${i + 1}</td><td class="ch-n" title="${escHtml(r.name)}">` +
       `<span class="ct-dot lg-dot" style="background:${r.color}"></span>${escHtml(r.name)}</td>` +
       `<td>${r.p}</td><td>${r.w}</td><td>${r.p - r.w}</td>` +
       `<td>${r.p ? Math.round((r.w / r.p) * 100) : '–'}</td><td>${Math.round(r.elo)}</td>` +
       (koth ? `<td>${koth.titles.get(r.name) || ''}</td>` : '') +
-      `<td>${r.rounds ? Math.round((r.capR / r.rounds) * 100) + '%' : ''}</td></tr>`).join('') +
+      `<td>${r.rounds ? Math.round((r.capR / r.rounds) * 100) + '%' : ''}</td>` +
+      `<td>${r.p ? Math.round(r.cyc / r.p) : ''}</td></tr>`).join('') +
+    '</table>';
+}
+
+// Enfrentamientos directos: h[a][b] = veces que a le ganó a b (en una pelea
+// de N, el ganador le gana a cada uno de los demás, como en el Elo).
+function lgH2H(ms) {
+  const h = new Map();
+  for (const m of lgPlayed(ms)) {
+    const r = h.get(m.winner) || h.set(m.winner, new Map()).get(m.winner);
+    for (const n of m.fighters) if (n !== m.winner) r.set(n, (r.get(n) || 0) + 1);
+  }
+  return (a, b) => (h.get(a) && h.get(a).get(b)) || 0;
+}
+
+const LG_H2H_MAX = 14;
+function lgH2HHtml(S, ms) {
+  const rows = lgStandings(S, ms);
+  if (rows.length < 2) return '<div class="ct-empty">No entrants yet.</div>';
+  if (rows.length > LG_H2H_MAX)
+    return `<div class="ct-empty">Only for leagues of up to ${LG_H2H_MAX} entrants.</div>`;
+  const w = lgH2H(ms);
+  return '<table class="ch-table lg-h2h"><tr><th></th><th>Row beat column</th>' +
+    rows.map((_, j) => `<th>${j + 1}</th>`).join('') + '</tr>' +
+    rows.map((a, i) => `<tr><td>${i + 1}</td><td class="ch-n" title="${escHtml(a.name)}">` +
+      `<span class="ct-dot lg-dot" style="background:${a.color}"></span>${escHtml(a.name)}</td>` +
+      rows.map((b) => {
+        if (a === b) return '<td class="lg-x">·</td>';
+        const x = w(a.name, b.name), y = w(b.name, a.name);
+        if (!x && !y) return '<td class="lg-x"></td>';
+        return `<td class="${x > y ? 'lg-up' : x < y ? 'lg-dn' : ''}" title="${escHtml(a.name)} ${x}–${y} ${escHtml(b.name)}">${x}–${y}</td>`;
+      }).join('') + '</tr>').join('') +
     '</table>';
 }
 
@@ -575,10 +619,21 @@ function lgPoolOptions() {
     '<option value="all">the whole Bestiary</option>';
 }
 
+// El Canal abierto muestra las ligas y la tabla: se refresca con la liga.
+function lgSyncChannel() {
+  if (typeof ch === 'undefined' || !ch.win) return;
+  chRenderLeagueOpts();
+  // Con el Canal apagado y una liga elegida, sigue a la liga abierta aquí.
+  const sel = ch.win.querySelector('#ch-league');
+  if (!ch.on && sel.value && lg.cur && sel.value !== lg.cur.id) sel.value = lg.cur.id;
+  chRender();
+}
+
 function lgRender() {
-  if (!lg.win) return;
+  if (!lg.win) { lgSyncChannel(); return; }
   const w = lg.win;
   const $ = (id) => w.querySelector('#' + id);
+  lgSyncChannel();
   $('lg-pick').innerHTML = lg.list.length
     ? lg.list.map((L) => `<option value="${L.id}"${L === lg.cur ? ' selected' : ''}>${escHtml(L.name)}</option>`).join('')
     : '<option value="">— no leagues —</option>';
@@ -625,6 +680,7 @@ function lgRender() {
   if (!live) $('lg-board').innerHTML = '';
   $('lg-table').innerHTML = lgStandingsHtml(S, ms);
   $('lg-hist').innerHTML = lgHistoryHtml(ms);
+  $('lg-h2h').innerHTML = lgH2HHtml(S, ms);
   $('lg-newseason').textContent = lg.confirm === 'season'
     ? `Start season ${S.no + 1}? (click again)` : '📅 New season';
   $('lg-newseason').disabled = !locked;
@@ -704,6 +760,7 @@ async function openLeagues() {
     '<div id="lg-board"></div>' +
     '<div id="lg-note" class="ct-note"></div>' +
     '<details class="ch-sec" open><summary>Standings</summary><div id="lg-table"></div></details>' +
+    '<details class="ch-sec"><summary>Head to head</summary><div id="lg-h2h"></div></details>' +
     '<details class="ch-sec"><summary>Matches</summary><div id="lg-hist"></div></details>' +
     '<div class="ct-liverow"><button id="lg-newseason" class="ch-small" title="Unlocks rules and format; entrants carry over">📅 New season</button>' +
     '<span id="lg-seasons"></span></div>' +

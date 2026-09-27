@@ -9,6 +9,11 @@
 // Reusa contest.js (contestLaunch, contestBoardHtml, contestRoundWinner) y
 // del Inventario el pool filtrable (favoritos, tag, selección guardada).
 // El Salón de la fama vive en localStorage (conveniencia por navegador).
+//
+// E10 L2: con una liga elegida, el Canal juega su calendario (league.js:
+// lgNextFixture, lgPlay) con sus reglas y su formato en cada pelea. La liga
+// registra el resultado (lgRecord) y avisa aquí (channelOnLeagueResult); el
+// Salón de la fama se reemplaza por la tabla de la liga.
 
 const ch = {
   win: null,
@@ -26,6 +31,8 @@ const ch = {
   recent: [],          // últimas peleas: {no, names[], winner, note}
   hof: {},             // nombre → {name, file, fights, wins, titles, best}
   fails: 0,            // lanzamientos fallidos seguidos
+  league: null,        // E10: liga que juega el Canal (null = Canal libre)
+  fx: null,            // E10: pelea de la liga en curso ({fighters, label})
 };
 // Colores fijos de los luchadores, claros para el campo oscuro y ordenados
 // para que los primeros sean los más distintos entre sí (las peleas chicas
@@ -87,6 +94,7 @@ function chNote(text, warn) {
 function chNext() {
   clearTimeout(ch.timer);
   if (!ch.on) return;
+  if (ch.league) { chNextLeague(); return; }
   const c = ch.cfg;
   const pool = chPool(c.pool).filter((it) => !ch.champ || it.b.name !== ch.champ.name);
   const need = ch.champ ? c.k - 1 : c.k;
@@ -108,6 +116,77 @@ function chNext() {
   chTick();
 }
 
+// ---- Liga (E10 L2) ------------------------------------------------------------
+// Campeón y racha salen del historial de la liga (rey de la colina).
+function chSyncChamp() {
+  const S = lgSeason(ch.league);
+  ch.champ = null;
+  ch.streak = 0;
+  if (S.fmt.format === 'rr') return;
+  const k = lgKothState(S, lgSeasonMatches(S.no));
+  const e = k.champ && S.entrants.find((x) => x.name === k.champ);
+  if (e) { ch.champ = { name: e.name, color: e.color }; ch.streak = k.streak; }
+}
+
+function chNextLeague() {
+  const L = ch.league, S = lgSeason(L);
+  const fx = lgNextFixture(L);
+  if (!fx) { chSeasonOver(L); return; }
+  ch.fx = fx;
+  ch.fighters = fx.fighters.map((e) => ({ name: e.name, color: e.color }));
+  chSyncChamp();
+  ch.fightNo++;
+  ch.phase = 'break';
+  ch.breakEnd = performance.now() + ch.cfg.pause * 1000;
+  chRender();
+  chTick();
+}
+
+// Calendario completo (todos contra todos): anuncia al campeón de la
+// temporada, apaga el Canal y deja el rótulo unos segundos.
+function chSeasonOver(L) {
+  const S = lgSeason(L);
+  const few = S.entrants.length < 2;
+  const top = few ? null : lgStandings(S, lgSeasonMatches(S.no))[0];
+  const msg = few ? `${L.name} needs at least 2 entrants.`
+                  : `${L.name}, season ${S.no} complete` + (top ? `: 🏆 ${top.name}` : '');
+  log('📺 ' + msg);
+  channelStop();
+  chNote(msg, few);
+  const el = document.getElementById('ch-overlay');
+  if (!el || few) return;
+  el.hidden = false;
+  el.innerHTML = `<div class="ch-live">📺 🏟 ${escHtml(L.name)} · SEASON ${S.no} COMPLETE</div>` +
+    (top ? `<div class="ch-win">🏆 ${escHtml(top.name)}</div>` : '');
+  clearTimeout(ch.bannerT);
+  ch.bannerT = setTimeout(() => { ch.bannerT = 0; if (!ch.on) el.hidden = true; }, 20000);
+}
+
+// La liga registró la pelea (lgRecord): marcador, racha y la siguiente.
+function channelOnLeagueResult(rec) {
+  if (!ch.on || !ch.league || ch.phase !== 'fight' || rec.league !== ch.league.id) return;
+  ch.phase = 'idle';
+  ch.winner = rec.winner;
+  const S = lgSeason(ch.league);
+  const r = { no: ch.fightNo, names: rec.fighters.slice(), winner: rec.winner, note: rec.note || '' };
+  chSyncChamp();
+  if (rec.winner) {
+    ch.fails = 0;
+    // En rey de la colina el ganador queda de campeón salvo que se retire.
+    if (S.fmt.format !== 'rr' && !ch.champ) {
+      r.note = `👑 retires undefeated after ${S.fmt.retire} wins`;
+      log(`📺 ${rec.winner} retires undefeated (${S.fmt.retire} wins in a row)`);
+    }
+  } else if (++ch.fails > 5) {
+    chNote('Too many void fights in a row: channel off.', true);
+    channelStop();
+  }
+  ch.recent.unshift(r);
+  ch.recent.length = Math.min(ch.recent.length, 12);
+  chRender();
+  if (ch.on) ch.timer = setTimeout(chNext, 1500);
+}
+
 // Cuenta atrás de la cortinilla (y refresco del rótulo).
 function chTick() {
   if (!ch.on || ch.phase !== 'break') return;
@@ -125,6 +204,21 @@ async function chLaunch() {
   ch.winner = '';
   contest.running = false;                 // un torneo a la vez
   if (typeof contestRender === 'function') contestRender();
+  if (ch.league) {
+    try {
+      await lgPlay(ch.league, ch.fx);         // reglas de la liga en cada pelea
+    } catch (e) {
+      ch.phase = 'idle';
+      ch.recent.unshift({ no: ch.fightNo, names: ch.fighters.map((f) => f.name),
+                          winner: '', note: 'void: ' + e.message });
+      if (++ch.fails > 5) { chNote('Too many failed launches in a row: channel off.', true); channelStop(); return; }
+      chNext();
+      return;
+    }
+    log(`📺 fight #${ch.fightNo}: ${ch.fighters.map((f) => f.name).join(' vs ')}`);
+    chRender();
+    return;
+  }
   try {
     // Ajustes F1 solo en la primera pelea: después ya están en el panel.
     await contestLaunch(ch.fighters, { nrg: c.nrg, f1: c.f1 && !ch.f1Applied,
@@ -179,6 +273,13 @@ function channelOnMessage(msg) {
   // Hasta el censo de esta pelea llegan mensajes de la sim anterior.
   if (msg.t === 'f1-started') ch.ready = true;
   else if (!ch.ready) return;
+  // Con liga, el resultado lo registra league.js y llega por channelOnLeagueResult.
+  if (ch.league) {
+    if (msg.t === 'f1-note' && msg.kind === 'cap')
+      chNote('Cycle cap reached: the round goes to the ' +
+             (ch.cfg.capMode === 'nrg' ? 'species with the most energy.' : 'most numerous species.'));
+    return;
+  }
   if (msg.t === 'f1-started' && !msg.n) chResult('', 'void: the census found no fighters');
   else if (msg.t === 'f1-note' && msg.kind === 'single') chResult('', 'void: only one species in the census');
   else if (msg.t === 'f1-note' && msg.kind === 'cap') chNote('Cycle cap reached: the round goes to the most numerous species.');
@@ -216,8 +317,21 @@ function chReadCfg() {
 async function channelStart() {
   if (!inv.items.length) await invLoad();
   if (typeof leagueAbort === 'function') leagueAbort();   // un torneo a la vez
-  ch.cfg = chReadCfg();
-  try { localStorage.setItem(CH_CFG_KEY, JSON.stringify(ch.cfg)); } catch (e) { /* nada */ }
+  const base = chReadCfg();
+  const lid = ch.win.querySelector('#ch-league').value;
+  ch.league = lid ? lg.list.find((L) => L.id === lid) || null : null;
+  if (lid && !ch.league) { chNote('That league no longer exists.', true); return; }
+  try { localStorage.setItem(CH_CFG_KEY, JSON.stringify({ ...base, league: lid })); } catch (e) { /* nada */ }
+  ch.cfg = base;
+  if (ch.league) {
+    // Formato de la liga; del Canal solo la pausa entre peleas.
+    const f = lgSeason(ch.league).fmt;
+    ch.cfg = { ...base, k: f.k, rounds: f.rounds, wins: f.wins, retire: f.retire,
+               cap: f.cap, qty: f.qty, nrg: f.nrg, capMode: f.capMode };
+    if (lg.cur !== ch.league) await lgSelect(ch.league);   // el calendario lee lg.matches
+  }
+  clearTimeout(ch.bannerT);
+  ch.bannerT = 0;
   ch.on = true;
   ch.champ = null;
   ch.streak = 0;
@@ -240,18 +354,21 @@ function channelStop() {
 function chOverlay(st) {
   const el = document.getElementById('ch-overlay');
   if (!el) return;
-  if (!ch.on) { el.hidden = true; return; }
+  if (!ch.on) { if (!ch.bannerT) el.hidden = true; return; }   // E10: rótulo de fin de temporada
   el.hidden = false;
   const vs = ch.fighters.map((f) =>
     `<span style="color:${f.color}">${escHtml(f.name)}</span>`).join(' <i>vs</i> ');
   const champ = ch.champ
     ? ` · 👑 ${escHtml(ch.champ.name)} <b>${ch.streak}/${ch.cfg.retire}</b>` : '';
+  // E10: con liga, su nombre y (todos contra todos) la jornada.
+  const lgTag = ch.league ? ` · 🏟 ${escHtml(ch.league.name)}` +
+    (!ch.champ && ch.fx && lgSeason(ch.league).fmt.format === 'rr' ? ` · ${escHtml(ch.fx.label)}` : '') : '';
   if (ch.phase === 'break') {
-    el.innerHTML = `<div class="ch-live">📺 NEXT FIGHT · #${ch.fightNo}</div><div class="ch-vs">${vs}</div>`;
+    el.innerHTML = `<div class="ch-live">📺 NEXT FIGHT · #${ch.fightNo}${lgTag}</div><div class="ch-vs">${vs}</div>`;
   } else {
     const f1 = st && st.f1;
     const round = f1 ? ` · round ${Math.min(f1.contests + 1, f1.minrounds)}/${f1.minrounds}` : '';
-    el.innerHTML = `<div class="ch-live"><span class="ch-dot"></span>LIVE · fight #${ch.fightNo}${round}${champ}</div>` +
+    el.innerHTML = `<div class="ch-live"><span class="ch-dot"></span>LIVE · fight #${ch.fightNo}${round}${champ}${lgTag}</div>` +
       `<div class="ch-vs">${vs}</div>` +
       (ch.winner ? `<div class="ch-win">🏆 ${escHtml(ch.winner)}</div>` : '');
   }
@@ -267,7 +384,22 @@ function chRenderBreak(left) {
   chOverlay();
 }
 
+// Liga elegida: la del Canal encendido o la del selector.
+function chSelLeague() {
+  if (ch.on) return ch.league;
+  const sel = ch.win && ch.win.querySelector('#ch-league');
+  return (sel && sel.value && lg.list.find((L) => L.id === sel.value)) || null;
+}
+
 function chRenderHof() {
+  const L = chSelLeague();
+  ch.win.querySelector('#ch-hofsum').textContent = L ? `Standings · ${L.name}` : 'Hall of Fame';
+  ch.win.querySelector('#ch-hofclear').hidden = !!L;
+  if (L && lg.cur === L) {
+    const S = lgSeason(L);
+    ch.win.querySelector('#ch-hof').innerHTML = lgStandingsHtml(S, lgSeasonMatches(S.no));
+    return;
+  }
   const rows = Object.values(ch.hof)
     .sort((a, b) => b.titles - a.titles || b.wins - a.wins || a.fights - b.fights).slice(0, 15);
   ch.win.querySelector('#ch-hof').innerHTML = rows.length
@@ -287,14 +419,46 @@ function chRender() {
   $('ch-live').hidden = !ch.on;
   $('ch-toggle').textContent = ch.on ? '⏹ Turn the channel off' : '📺 Turn the channel on';
   $('ch-toggle').classList.toggle('primary', !ch.on);
+  const rr = ch.league && lgSeason(ch.league).fmt.format === 'rr';
   $('ch-champ').innerHTML = ch.champ
     ? `👑 Champion: <b style="color:${ch.champ.color}">${escHtml(ch.champ.name)}</b> · streak ${ch.streak}/${ch.cfg.retire}`
+    : rr ? `🏟 ${escHtml(ch.league.name)} · ${escHtml(ch.fx ? ch.fx.label : '')}`
     : (ch.on ? 'No champion: open fight' : '');
+  chRenderLeagueSum();
   $('ch-recent').innerHTML = ch.recent.map((r) =>
     `<div class="ch-res"><span>#${r.no}</span> ${r.names.map(escHtml).join(' vs ')} → ` +
     (r.winner ? `<b>${escHtml(r.winner)}</b>` : '—') +
     (r.note ? ` <i>${escHtml(r.note)}</i>` : '') + '</div>').join('');
   chRenderHof();
+}
+
+// E10: selector de liga y resumen; con liga, el lineup y el pool del Canal
+// no se usan (el formato, las reglas y los participantes son de la liga).
+function chRenderLeagueOpts() {
+  const sel = ch.win.querySelector('#ch-league');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— no league: free channel —</option>' +
+    lg.list.map((L) => `<option value="${L.id}">🏟 ${escHtml(L.name)}</option>`).join('');
+  if (lg.list.some((L) => L.id === cur)) sel.value = cur;
+}
+
+function chRenderLeagueSum() {
+  const L = chSelLeague();
+  const $ = (id) => ch.win.querySelector('#' + id);
+  $('ch-free').hidden = !!L;
+  if (!L) { $('ch-lgsum').innerHTML = ''; return; }
+  const S = lgSeason(L), f = S.fmt, ms = lgSeasonMatches(S.no);
+  const fmt = f.format === 'rr'
+    ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
+    : `king of the hill, ${f.k} per fight, retires after ${f.retire}`;
+  let next = '';
+  if (lg.cur === L && f.format === 'rr' && S.entrants.length >= 2) {
+    const st = lgRrState(S, ms);
+    next = st.next ? ` · ${st.played} of ${st.total} fixtures played` : ' · 🏁 season complete';
+  }
+  $('ch-lgsum').innerHTML = `Season <b>${S.no}</b> · ${escHtml(fmt)} · ${S.entrants.length} entrants${next}` +
+    '<div class="ct-rule">Rules, format and entrants come from the league (🏟 Leagues); ' +
+    'every fight is recorded there.</div>';
 }
 
 async function chRenderPools() {
@@ -329,6 +493,10 @@ async function openChannel() {
   w.style.top = '70px';
   w.body.innerHTML =
     '<div id="ch-setup">' +
+    '<div class="ct-h">League</div>' +
+    '<select id="ch-league"></select>' +
+    '<div id="ch-lgsum" class="ch-lgsum"></div>' +
+    '<div id="ch-free">' +
     '<div class="ct-h">Lineup</div>' +
     '<div class="ct-rules">' +
     `<label>Fighters per fight</label><input type="number" id="ch-k" min="2" max="20" value="${v('k', 2)}">` +
@@ -338,12 +506,15 @@ async function openChannel() {
     `<label title="Past it, the round goes to the most numerous species">Cycle cap per round</label><input type="number" id="ch-cap" min="100" step="500" value="${v('cap', 5000)}">` +
     `<label>Bots per species</label><input type="number" id="ch-qty" min="1" value="${v('qty', 5)}">` +
     `<label>Starting energy</label><input type="number" id="ch-nrg" min="1" value="${v('nrg', 3000)}">` +
-    `<label>Pause between fights (s)</label><input type="number" id="ch-pause" min="0" max="60" value="${v('pause', 5)}">` +
     `<label class="ct-wide"><input type="checkbox" id="ch-f1" ${v('f1', true) ? 'checked' : ''}> Use F1 league settings</label>` +
     '</div>' +
     '<div class="ct-h">Draw pool <span id="ch-pooln"></span></div>' +
     '<select id="ch-pool"></select>' +
     '<div class="ct-rule">Favorites, tags and selections are set up in the 📚 Inventory.</div>' +
+    '</div>' +
+    '<div class="ct-rules">' +
+    `<label>Pause between fights (s)</label><input type="number" id="ch-pause" min="0" max="60" value="${v('pause', 5)}">` +
+    '</div>' +
     '</div>' +
     '<button id="ch-toggle" class="primary ct-go">📺 Turn the channel on</button>' +
     '<div id="ch-live" hidden>' +
@@ -352,7 +523,7 @@ async function openChannel() {
     '</div>' +
     '<div id="ch-note" class="ct-note"></div>' +
     '<details class="ch-sec"><summary>Recent fights</summary><div id="ch-recent"></div></details>' +
-    '<details class="ch-sec" open><summary>Hall of Fame</summary><div id="ch-hof"></div>' +
+    '<details class="ch-sec" open><summary id="ch-hofsum">Hall of Fame</summary><div id="ch-hof"></div>' +
     '<button id="ch-hofclear" class="ch-small">Clear the Hall</button></details>';
   const $ = (id) => w.querySelector('#' + id);
   $('ch-toggle').onclick = () => (ch.on ? channelStop() : channelStart());
@@ -364,5 +535,14 @@ async function openChannel() {
   };
   await chRenderPools();
   if (saved.pool) { $('ch-pool').value = saved.pool; $('ch-pool').onchange(); }
+  if (!lg.list.length) await lgLoadAll();
+  chRenderLeagueOpts();
+  if (saved.league && lg.list.some((L) => L.id === saved.league)) $('ch-league').value = saved.league;
+  $('ch-league').onchange = async (e) => {
+    const L = lg.list.find((x) => x.id === e.target.value);
+    if (L && lg.cur !== L) await lgSelect(L);
+    chRender();
+  };
+  if ($('ch-league').value) await $('ch-league').onchange({ target: $('ch-league') });
   chRender();
 }

@@ -808,6 +808,33 @@ como el diseño, con estos ajustes:
   con retiro a las 2 victorias; el Canal sin liga sigue igual. Consola
   limpia.
 
+### Resultado L2 (2026-09-27)
+
+- **Canal con liga**: selector "League" arriba de la ventana del Canal
+  ("no league: free channel" deja el Canal de siempre). Con liga se ocultan
+  el lineup y el pool; del Canal queda solo la pausa entre peleas. Cada
+  pelea sale de `lgNextFixture` y se lanza con `lgPlay` (nueva, separada
+  de `lgPlayNext`), que aplica las reglas de la temporada **en cada pelea**.
+  La liga registra (`lgRecord`) y avisa al Canal con
+  `channelOnLeagueResult`: no hay doble registro y el Salón de la fama no
+  se toca. El campeón y la racha del Canal salen del historial de la liga
+  (`lgKothState`).
+- **Todos contra todos**: el Canal sigue el calendario por donde quedó; al
+  completarlo anuncia al campeón de la temporada (primero de la tabla),
+  deja un rótulo 20 s sobre el campo y se apaga.
+- **Tabla**: con liga, el "Hall of Fame" del Canal muestra la tabla de la
+  liga. En la ventana de ligas, "Head to head" (fila le ganó a columna,
+  hasta 14 participantes) y la columna ⏱ de ciclos promedio por partido.
+- **Una sola liga activa**: el calendario lee `lg.matches` de la liga
+  abierta. Cambiar de liga en la ventana apaga el Canal que juega otra; con
+  el Canal apagado, su selector sigue a la liga abierta. Apagar el Canal no
+  abandona el partido en curso: se registra al terminar (o "Abandon").
+- Smoke: `smoke_liga` suma rey de la colina (retiro y campeón nuevo),
+  enfrentamientos directos y Elo de suma cero (18/18). Verificado en
+  Chrome: temporada de todos contra todos completa desde el Canal con el
+  rótulo final, rey de la colina con retiro, cambio de liga con el Canal
+  encendido y el Canal libre sin cambios. Consola limpia.
+
 ---
 
 ## Orden recomendado

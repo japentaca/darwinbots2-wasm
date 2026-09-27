@@ -92,7 +92,7 @@ console.log('\n== league.js: todos contra todos ==');
 const src = fs.readFileSync(path.join(PORT_DIR, 'web', 'league.js'), 'utf8');
 const ctx = { indexedDB: null };
 vm.createContext(ctx);
-vm.runInContext(src + '\nthis.lgRrFixtures = lgRrFixtures;', ctx);
+vm.runInContext(src + '\nObject.assign(this, { lgRrFixtures, lgH2H, lgKothState, lgStandings });', ctx);
 for (const n of [2, 3, 4, 5, 6, 7]) {
   for (const legs of [1, 2]) {
     const fx = ctx.lgRrFixtures(n, legs);
@@ -124,6 +124,27 @@ for (const n of [2, 3, 4, 5, 6, 7]) {
     check(`n=${n} vueltas=${legs}`, fx.length === want && seen.size === n * (n - 1) / 2 && even && swapped && rounds,
           `${fx.length} partidos`);
   }
+}
+
+console.log('\n== league.js: rey de la colina, enfrentamientos, Elo ==');
+{
+  const E = ['A', 'B', 'C'].map((name) => ({ name, color: '#fff' }));
+  const S = { entrants: E, fmt: { format: 'koth', retire: 2 } };
+  const M = (winner, ...fighters) => ({ winner, fighters });
+  // A gana dos seguidas (se retira), B abre, un nulo no cuenta, C le gana a todos.
+  const ms = [M('A', 'A', 'B'), M('A', 'A', 'C'), M('B', 'B', 'C'), M('', 'C', 'B'), M('C', 'B', 'C', 'A')];
+  const k = ctx.lgKothState(S, ms);
+  check('retiro invicto a las 2 y campeón nuevo', k.titles.get('A') === 1 && k.champ === 'C' && k.streak === 1,
+        `títulos A ${k.titles.get('A')} · campeón ${k.champ} · racha ${k.streak}`);
+  const h = ctx.lgH2H(ms);
+  check('enfrentamientos: el ganador le gana a cada uno de los demás',
+        h('A', 'B') === 1 && h('A', 'C') === 1 && h('B', 'C') === 1 && h('C', 'B') === 1 &&
+        h('C', 'A') === 1 && h('B', 'A') === 0, 'A>B 1, A>C 1, B>C 1, C>B 1, C>A 1');
+  const st = ctx.lgStandings(S, ms);
+  const sum = st.reduce((a, r) => a + r.elo, 0);
+  const a = st.find((r) => r.name === 'A');
+  check('Elo de suma cero y el nulo no cuenta', Math.abs(sum - 4500) < 1e-9 && a.p === 3 && a.w === 2,
+        `suma ${sum.toFixed(6)} · A ${a.p} PJ ${a.w} G`);
 }
 
 console.log(`\n${pass} ok, ${fail} fallas`);
