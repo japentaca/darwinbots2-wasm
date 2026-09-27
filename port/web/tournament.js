@@ -1,6 +1,6 @@
 'use strict';
 // Torneos (E11, capa host, fuera de la fidelidad): una sola ventana,
-// "🏆 Tournaments", con pestañas Setup / Play / Results, en lugar de las
+// "🏆 Tournaments", con pestañas Setup / Play (con los resultados), en lugar de las
 // ventanas Contest, Channel y Leagues. El modelo, la base y los partidos son
 // de league.js; aquí están la ventana, el selector de participantes y el TV
 // mode: el Canal de antes convertido en lanzador de ediciones. Juega la
@@ -15,7 +15,7 @@
 const tn = {
   win: null,
   tab: 'setup',
-  resNo: 0,          // Results: temporada a mostrar (0 = la abierta)
+  resNo: 0,          // resultados: temporada a mostrar (0 = la abierta)
   confirm: '',       // botón de dos clics armado ('del' | 'season')
   confirmT: 0,
   loaded: false,     // lgLoadAll y las migraciones, una vez por página
@@ -117,7 +117,7 @@ function tnCupSetupHtml(L, S) {
       : 'Pots by the Hall of Fame Elo (1500 without history): one entrant of each pot per group.'}</div>`;
 }
 
-// Results: tablas de grupo (los 2 primeros, resaltados) y el cuadro.
+// Resultados: tablas de grupo (los 2 primeros, resaltados) y el cuadro.
 function tnCupResultsHtml(S, ms) {
   if (!lgCupSizeOk(S)) return `<div class="ct-empty">${tnCupSizeMsg(S)}</div>`;
   if (!lgCupGroupsOk(S)) return '<div class="ct-empty">The groups are not drawn yet.</div>';
@@ -411,7 +411,8 @@ function tnRender() {
   $('tn-del').title = scratch ? 'Clear the Scratch: entrants and matches' : 'Delete this tournament and its matches';
   $('tn-export').disabled = !L || scratch;
   for (const b of w.querySelectorAll('.tn-tabs button')) b.classList.toggle('on', b.dataset.tab === tn.tab);
-  for (const t of ['setup', 'play', 'results']) $('tn-' + t).hidden = tn.tab !== t;
+  if (tn.tab !== 'setup') tn.tab = 'play';
+  for (const t of ['setup', 'play']) $('tn-' + t).hidden = tn.tab !== t;
   if (!L) return;
   const S = lgSeason(L), ms = lgSeasonMatches(S.no);
   const locked = ms.length > 0;
@@ -509,7 +510,6 @@ function tnRenderPlay(L, S, ms, locked) {
     : `Plays the season to the end, shows the champion over the field and starts a new season ` +
       (lgLiveOn(L) ? `drawing from ${tnPoolName(dr.pool)} at every fight` : `with ${dr.n} entrants drawn from ${tnPoolName(dr.pool)}`) +
       ` (Setup → Entrants), over and over.`;
-  $('tn-recent').innerHTML = lgHistoryHtml(ms.slice(-6));
   if (tv.on && tv.phase === 'break') tnRenderTv(Math.ceil((tv.until - performance.now()) / 1000));
 }
 
@@ -647,7 +647,7 @@ async function openTournaments(tab) {
     'join a tournament\'s Hall of Fame. <button id="tn-hofdl">⬇ Download it</button> ' +
     '<button id="tn-hofdrop">Discard it</button></div>' +
     '<div class="tn-tabs"><button data-tab="setup">⚙ Setup</button><button data-tab="play">▶ Play</button>' +
-    '<button data-tab="results">📊 Results</button></div>' +
+    '</div>' +
     // Setup
     '<div id="tn-setup">' +
     '<input id="tn-name" class="lg-name">' +
@@ -700,17 +700,14 @@ async function openTournaments(tab) {
     `<label>Pause between fights <input type="number" id="tn-pause" min="0" max="60" value="${pause}"> s</label>` +
     '<div id="tn-tvhint" class="ct-rule"></div>' +
     '</div>' +
-    '<details class="ch-sec" open><summary>Latest matches</summary><div id="tn-recent"></div></details>' +
-    '</div>' +
-    // Results
-    '<div id="tn-results" hidden>' +
-    '<div class="ct-liverow tn-seasons">Season <span id="tn-seasons"></span></div>' +
+    // Resultados (debajo, en la misma pestaña)
+    '<div class="ct-liverow tn-seasons">📊 Results · season <span id="tn-seasons"></span></div>' +
     '<div id="tn-rhead" class="ct-rule"></div>' +
     '<details id="tn-cupres" class="ch-sec" open hidden><summary>🌍 Groups and bracket</summary><div id="tn-cup"></div></details>' +
-    '<details class="ch-sec" open><summary>Standings</summary><div id="tn-table"></div></details>' +
-    '<details class="ch-sec"><summary>Head to head</summary><div id="tn-h2h"></div></details>' +
-    '<details class="ch-sec"><summary>Matches</summary><div id="tn-hist"></div></details>' +
-    '<details class="ch-sec" open><summary>🏛 Hall of Fame · all seasons</summary><div id="tn-hof"></div></details>' +
+    '<details class="ch-sec" open><summary>Standings</summary><div id="tn-table" class="tn-scroll"></div></details>' +
+    '<details class="ch-sec"><summary>Head to head</summary><div id="tn-h2h" class="tn-scroll"></div></details>' +
+    '<details class="ch-sec" open><summary>Matches</summary><div id="tn-hist" class="tn-scroll"></div></details>' +
+    '<details class="ch-sec" open><summary>🏛 Hall of Fame · all seasons</summary><div id="tn-hof" class="tn-scroll"></div></details>' +
     '</div>' +
     '<div id="tn-note" class="ct-note"></div>';
   // #tn-play es la pestaña; el botón "Play next" lleva otro id.
@@ -879,14 +876,14 @@ async function openTournaments(tab) {
   $('tn-tv').onclick = () => (tv.on ? tvStop() : tvStart());
   $('tn-pause').onchange = () => { tv.pause = tvReadPause(); };
 
-  // ---- Results ----
+  // ---- Resultados ----
   $('tn-seasons').onclick = (e) => {
     const b = e.target.closest('[data-season]');
     if (!b) return;
     tn.resNo = +b.dataset.season;
     tnRender();
   };
-  // Repetir un partido (de Play o de Results).
+  // Repetir un partido (del cuadro, los grupos o la lista).
   w.body.addEventListener('click', (e) => {
     const b = e.target.closest('[data-replay]');
     if (b && !b.disabled) lgReplay(+b.dataset.replay);

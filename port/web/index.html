@@ -337,6 +337,10 @@
   #ch-overlay .ch-phase { font-size: 13px; font-weight: 700; color: #ffd166; letter-spacing: 0.12em; margin-top: 2px; }
   .tn-tvbox input { width: 52px; padding: 2px 4px; }
   .tn-seasons { align-items: center; color: #93a4c2; flex-wrap: wrap; }
+  /* Listas de resultados con scroll propio (cabecera fija en las tablas) */
+  .tn-scroll { max-height: 240px; overflow: auto; }
+  .tn-scroll .ch-table th { position: sticky; top: 0; background: #121826; z-index: 1; }
+  #tn-cup .tn-groups { max-height: 320px; overflow: auto; }
   .ch-small.on { background: #3a3014; border-color: #ffd166; color: #ffd166; font-weight: 600; }
   /* Inventario de bots (inventory.js) */
   .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
