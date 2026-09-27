@@ -34,6 +34,7 @@
 //   {t:'tp-del', n} · {t:'tp-clear'}       E3: borrar teleporter(s)
 //   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
 //   {t:'f1-cap', cycles, mode?}            Canal: tope de ciclos por ronda ('pop' | 'nrg')
+//   {t:'f1-popcap', n}                     Canal: tope de bots por especie (0 = sin tope)
 //   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
 //   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
 //   {t:'select', n, seq?}                  bot con foco (0 = ninguno); su
@@ -211,6 +212,7 @@ function bindApi() {
     f1TotSpecies:  C('db_sim_f1_totspecies', 'number', ['number']),
     f1Over:        C('db_sim_f1_over', 'number', ['number']),
     f1Cap:         C('db_sim_f1_cap', 'number', ['number', 'number']),
+    f1PopCap:      C('db_sim_f1_popcap', 'number', ['number', 'number']),
     f1Pop:         C('db_sim_f1_pop', 'number', ['number', 'number']),
     f1Wins:        C('db_sim_f1_wins', 'number', ['number', 'number']),
     f1Name:        C('db_sim_f1_name', 'number', ['number', 'number']),
@@ -1116,6 +1118,12 @@ function f1CapCheck() {
     self.postMessage({ t: 'f1-note', kind: 'cap' });
   }
 }
+// Tope de bots por especie ({t:'f1-popcap', n}; 0 = sin tope): poda a los
+// más pobres (nrg + body×10) de la especie que se pase, tras cada tick.
+let f1PopCap = 0;
+function f1PopCapCheck() {
+  if (f1PopCap) api.f1PopCap(sim, f1PopCap);
+}
 
 // ---- Loop de ticks --------------------------------------------------------
 function runTicks(n) {
@@ -1126,7 +1134,7 @@ function runTicks(n) {
     tickOnce();
     if (imCfg) imDrainOutbox();              // E7
     const restarted = checkGameState();
-    if (!restarted) f1CapCheck();
+    if (!restarted) { f1PopCapCheck(); f1CapCheck(); }
     if (imCfg && !restarted) imAfterTick();  // E7
     // main.frm:2099-2107 — el loop alimenta cada chartingInterval ciclos y
     // solo los charts visibles. RV-41: no en el tick que abrió la ronda (el
@@ -1387,6 +1395,9 @@ self.onmessage = (e) => {
       postFrame();  // con la sim pausada el foco tiene que verse igual
       break;
     // ---- E5: modos de juego ----
+    case 'f1-popcap':
+      f1PopCap = Math.max(0, msg.n | 0);
+      break;
     case 'f1-cap':
       f1CapCycles = Math.max(0, msg.cycles | 0);
       f1CapMode = msg.mode === 'nrg' ? 1 : 0;

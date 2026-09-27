@@ -69,7 +69,7 @@ function contestSetOpt(id, v) {
 
 // Lanza un contest con estos luchadores ({name, color, qty, src, file|dna}).
 // Lanza excepción si algún ADN no se puede leer (antes de tocar la sim).
-//   o = { nrg, rounds, wins, cap, capMode, newSeed }
+//   o = { nrg, rounds, wins, cap, capMode, popCap, newSeed }
 // E11: el tope de ciclos es siempre el del host (cap + capMode, sirve para N
 // especies); los topes del core para duelos (99 y 100) quedan en 0 y siguen
 // en Sim options para el F1 manual del original.
@@ -84,6 +84,7 @@ async function contestLaunch(fighters, o) {
   contestSetOpt(100, 0);
   if (o.newSeed) document.getElementById('seed').value = Math.floor(Math.random() * 100000);
   worker.postMessage({ t: 'f1-cap', cycles: o.cap || 0, mode: o.capMode || 'pop' });
+  worker.postMessage({ t: 'f1-popcap', n: o.popCap || 0 });  // tope de bots por especie
   quietF1Census = true;                                   // el censo va abajo
   document.getElementById('btn-reset').click();           // Reiniciar
   fighters.forEach((r, i) => worker.postMessage({

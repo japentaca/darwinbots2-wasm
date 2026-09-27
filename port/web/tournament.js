@@ -318,7 +318,10 @@ function tvStop() {
   tv.on = false;
   tv.phase = 'idle';
   clearTimeout(tv.timer);
-  if (!lg.live) worker.postMessage({ t: 'f1-cap', cycles: 0 });
+  if (!lg.live) {
+    worker.postMessage({ t: 'f1-cap', cycles: 0 });
+    worker.postMessage({ t: 'f1-popcap', n: 0 });
+  }
   log('📺 TV mode off');
   tvOverlay();
   tnRender();

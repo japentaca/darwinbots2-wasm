@@ -497,6 +497,15 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   cada tick) y sirve para N especies; generaliza el "kill losing species"
   de `F1Mode.bas:333-347`. Los topes del core para duelos (99 y 100)
   quedan en 0.
+- **Tope de bots por especie** ("Max bots per species", 500 por defecto;
+  0 = sin tope): la especie que lo pasa pierde a sus bots con menos
+  nrg + body×10 hasta quedar en el tope, así un bot que se reproduce sin
+  parar no hunde la velocidad del partido. Es del host
+  (`db_sim_f1_popcap(h, cap)`, después de cada tick, mensaje
+  `f1-popcap`) y generaliza la poda por `MaxPop` de `F1Mode.bas:266-312`
+  (que el original solo aplica a duelos), sin su patrón B-02. Las
+  temporadas guardadas antes de este tope quedan en 0 para que las
+  repeticiones de sus partidos den lo mismo.
 - **Participantes** (Setup): búsqueda en el Bestiary, grupos del
   Inventario (favoritos, tags, selecciones), híbridos, el ADN del
   formulario y Animal Minimalis, o **🎲 Draw** N al azar de un pool; con

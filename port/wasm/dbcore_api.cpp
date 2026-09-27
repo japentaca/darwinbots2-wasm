@@ -2253,6 +2253,51 @@ DB_EXPORT int db_sim_f1_cap(void* h, int mode) {
   return alive - 1;
 }
 
+// Adaptacion de host (Canal F1 de la web): tope de bots por especie para N
+// especies. Generaliza la poda por MaxPop de F1Mode.bas:266-312 (que el
+// original solo aplica a duelos): cada especie de combate que pase de cap
+// pierde a sus bots con menos nrg + body*10 hasta quedar en cap. Empate en
+// esa medida: cae el slot mas bajo (determinista). Sin los patrones B-02 del
+// original (no mata el slot 0 ni repite victima). Devuelve cuantos mato.
+DB_EXPORT int db_sim_f1_popcap(void* h, int cap) {
+  db::Sim& sim = S(h);
+  auto& F = sim.f1;
+  if (cap <= 0 || !F.ContestMode || F.TotSpecies < 1) return 0;
+  // Atajo barato: si no hay mas de cap bots de combate en total, nadie pasa.
+  int total = 0;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (b.exist && !b.Veg && !b.Corpse) ++total;
+  }
+  if (total <= cap) return 0;
+  const int n = std::min<int>(F.TotSpecies, 20);
+  std::array<std::vector<std::pair<double, int>>, 21> bots;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!b.exist || b.Veg || b.Corpse) continue;
+    const std::string rn = db::RealName(b.FName);
+    for (int i = 1; i <= n; ++i)
+      if (rn == F.PopArray[i].SpName) {
+        bots[i].emplace_back(
+            static_cast<double>(b.nrg) + static_cast<double>(b.body) * 10.0, t);
+        break;
+      }
+  }
+  int killed = 0;
+  for (int i = 1; i <= n; ++i) {
+    auto& v = bots[i];
+    if (static_cast<int>(v.size()) <= cap) continue;
+    const auto cut = v.begin() + (v.size() - static_cast<std::size_t>(cap));
+    std::nth_element(v.begin(), cut, v.end());
+    for (auto it = v.begin(); it != cut; ++it) {
+      if (!sim.rob[it->second].exist) continue;
+      db::KillRobot(sim, it->second);
+      ++killed;
+    }
+  }
+  return killed;
+}
+
 DB_EXPORT int db_sim_f1_contests(void* h) { return S(h).f1.Contests; }
 DB_EXPORT int db_sim_f1_totspecies(void* h) { return S(h).f1.TotSpecies; }
 DB_EXPORT int db_sim_f1_over(void* h) { return S(h).f1.Over ? 1 : 0; }

@@ -546,3 +546,41 @@ TEST_CASE("RV-44 - db_sim_round_carry conserva Sim::evo") {
   db_sim_destroy(a);
   db_sim_destroy(b);
 }
+
+// Canal F1 (adaptacion de host): db_sim_f1_popcap poda a cada especie que
+// pase del tope, empezando por los bots con menos nrg + body*10; la especie
+// que no pasa queda intacta. Sin contest activo no hace nada.
+TEST_CASE("F1 popcap - poda por especie a los mas pobres") {
+  void* h = db_sim_create();
+  db_sim_set_field(h, 16000, 16000);
+  db_sim_start(h, 1234);
+  const int a = db_sim_add_species(h, kAlga, "Alpha.txt", 0, 1, 3000, 0, 5);
+  const int b = db_sim_add_species(h, kAlga, "Beta.txt", 0, 1, 3000, 0, 2);
+  REQUIRE(db_sim_seed_species(h, a, 5) == 5);
+  REQUIRE(db_sim_seed_species(h, b, 2) == 2);
+  CHECK(db_sim_f1_popcap(h, 3) == 0);  // sin contest: no toca nada
+  db_sim_set_opt(h, 91, 1);
+  REQUIRE(db_sim_f1_start(h) == 2);
+  db::Sim& sim = S(h);
+  std::vector<int> alpha;
+  for (int t = 1; t <= sim.MaxRobs; ++t)
+    if (sim.rob[t].exist && sim.rob[t].FName == "Alpha.txt") alpha.push_back(t);
+  REQUIRE(alpha.size() == 5);
+  for (std::size_t i = 0; i < alpha.size(); ++i) {
+    sim.rob[alpha[i]].nrg = 100.0f * static_cast<float>(5 - i);  // el ultimo, el mas pobre
+    sim.rob[alpha[i]].body = 0.0f;
+  }
+  CHECK(db_sim_f1_popcap(h, 0) == 0);  // 0 = sin tope
+  CHECK(db_sim_f1_popcap(h, 3) == 2);
+  CHECK(sim.rob[alpha[0]].exist);
+  CHECK(sim.rob[alpha[1]].exist);
+  CHECK(sim.rob[alpha[2]].exist);
+  CHECK_FALSE(sim.rob[alpha[3]].exist);
+  CHECK_FALSE(sim.rob[alpha[4]].exist);
+  int beta = 0;
+  for (int t = 1; t <= sim.MaxRobs; ++t)
+    if (sim.rob[t].exist && sim.rob[t].FName == "Beta.txt") ++beta;
+  CHECK(beta == 2);
+  CHECK(db_sim_f1_popcap(h, 3) == 0);  // ya en el tope
+  db_sim_destroy(h);
+}

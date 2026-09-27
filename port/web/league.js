@@ -92,6 +92,7 @@ const LG_FMT_DEFAULT = {
   nrg: 3000, rounds: 5, wins: 3,
   cap: 5000,        // tope de ciclos por ronda (0 = sin tope)
   capMode: 'pop',   // al llegar al tope: 'pop' (más bots) | 'nrg' (más nrg + body×10)
+  popCap: 500,      // tope de bots por especie: poda a los más pobres (0 = sin tope)
   groupLegs: 1,     // cup (E12): vueltas de la fase de grupos
   pots: 'elo',      // cup: bombos por el Elo del Hall of Fame ('elo') o sorteo puro ('random')
   third: false,     // cup: partido por el 3.er puesto
@@ -656,7 +657,9 @@ function lgMigrate(L) {
   const d = lgDrawOf(L);
   if (JSON.stringify(d) !== JSON.stringify(L.draw)) { L.draw = d; changed = true; }
   for (const S of L.seasons) {
-    const f = { ...LG_FMT_DEFAULT, ...(S.fmt || {}) };
+    // Las temporadas de antes del tope de bots juegan sin él (las repeticiones
+    // de sus partidos deben dar lo mismo).
+    const f = { ...LG_FMT_DEFAULT, popCap: 0, ...(S.fmt || {}) };
     if (!LG_FORMATS.includes(f.format)) f.format = LG_FMT_DEFAULT.format;
     if (JSON.stringify(f) !== JSON.stringify(S.fmt)) { S.fmt = f; changed = true; }
   }
@@ -855,7 +858,7 @@ function lgImportObj(o, names, newId) {
       return x;
     });
     const x = { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
-                fmt: { ...LG_FMT_DEFAULT, ...(s.fmt || {}) }, entrants };
+                fmt: { ...LG_FMT_DEFAULT, popCap: 0, ...(s.fmt || {}) }, entrants };
     // E12: el reparto de los grupos de la copa, si reparte a estos participantes.
     if (Array.isArray(s.groups)) {
       x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));
@@ -1064,7 +1067,7 @@ async function lgPlay(L, fx, o = {}) {
   try {
     await contestLaunch(lgLaunchList(f, fx.fighters),
       { nrg: f.nrg, f1: false, rounds: f.rounds, wins: f.wins, cap: f.cap,
-        capMode: f.capMode, newSeed: !o.replay });
+        capMode: f.capMode, popCap: f.popCap || 0, newSeed: !o.replay });
   } catch (e) {
     lg.live = null;
     lgRender();
@@ -1215,6 +1218,8 @@ function lgFmtHtml(f, locked) {
     `<select data-f="capMode"${d}>` +
     `<option value="pop"${f.capMode === 'pop' ? ' selected' : ''}>most bots</option>` +
     `<option value="nrg"${f.capMode === 'nrg' ? ' selected' : ''}>most energy</option></select>` +
+    num('popCap', 'Max bots per species (0 = off)', f.popCap || 0, 0, 0,
+        'A species above this loses its poorest bots (lowest nrg + body×10). Keeps prolific bots from slowing the match down') +
     `<div class="ct-wide ct-rule">${escHtml(contestRuleHint(f.rounds, f.wins))}</div>` +
     '</div>';
 }
