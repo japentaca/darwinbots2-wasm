@@ -419,14 +419,15 @@ function lgCupRound(n, k) {
 }
 
 // Estado de la copa (pura): {phase: 'draw' | 'groups' | 'ko' | 'done',
-// groups: [{name, rows}], played y total (partidos de grupo), bracket:
+// groups: [{name, rows}], played y total (partidos de grupo), fixtures: el
+// calendario de grupos [{gi, day, leg, a, b, winner, no, id}], bracket:
 // [[{a, b, winner, no, id}]] por ronda, third, next, label, champion, reach}.
 // reach: nombre → hasta dónde llegó (0 = grupos, 1 = primera ronda del
 // cuadro…; el ganador del 3.er puesto suma 0.5 y el campeón uno más que la
 // final). Los partidos de grupo son los duelos del calendario hasta
 // completarlo; después solo cuenta el duelo del cruce pendiente.
 function lgCupState(S, ms) {
-  const st = { phase: 'draw', groups: [], played: 0, total: 0, bracket: [], third: null,
+  const st = { phase: 'draw', groups: [], played: 0, total: 0, fixtures: [], bracket: [], third: null,
                next: null, label: '', champion: null, reach: new Map() };
   if (!lgCupGroupsOk(S)) return st;
   const legs = S.fmt.groupLegs === 2 ? 2 : 1;
@@ -459,6 +460,8 @@ function lgCupState(S, ms) {
     if (c >= legs) continue;
     cnt.set(k, c + 1);
     gms.push(m);
+    const f0 = fx.find((x) => x.leg === c + 1 && lgPairKey(x.a, x.b) === k);
+    if (f0) Object.assign(f0, { winner: m.winner, no: m.no, id: m.id });
     const f = [rows.get(a), rows.get(b)], w = rows.get(m.winner);
     for (const r of f) { r.p++; r.cyc += m.cycles || 0; }
     if (!w) continue;
@@ -468,6 +471,7 @@ function lgCupState(S, ms) {
     lgElo(f, w);
   }
   st.played = gms.length;
+  st.fixtures = fx;
   const h2h = lgH2H(gms);
   st.groups = S.groups.map((g, gi) => ({ name: lgCupLetter(gi),
                                          rows: lgCupSort(g.map((n) => rows.get(n)), h2h) }));

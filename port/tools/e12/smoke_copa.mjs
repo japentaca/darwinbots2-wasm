@@ -176,6 +176,14 @@ for (const n of [8, 16, 32]) {
   const { ms } = playAll(S);
   const st = ctx.lgCupState(S, ms), grp = (name) => S.groups.findIndex((g) => g.includes(name));
   const R1 = st.bracket[0], G = S.groups.length;
+  const fxOk = st.fixtures.length === st.total && st.fixtures.every((f) => {
+    const m = ms.find((x) => x.id === f.id);
+    return m && m.winner === f.winner && m.fighters.includes(f.a) && m.fighters.includes(f.b);
+  }) && new Set(st.fixtures.map((f) => f.id)).size === st.total;
+  check(`${n}: cada partido de grupo, con su resultado, en el calendario`, fxOk);
+  const half = ctx.lgCupState(S, ms.slice(0, 3)).fixtures;
+  check(`${n}: a mitad de grupos, solo 3 del calendario con resultado`,
+        half.filter((f) => f.winner).length === 3 && half.filter((f) => f.id !== undefined).length === 3);
   const first = (gi) => st.groups[gi].rows[0].name, second = (gi) => st.groups[gi].rows[1].name;
   let ok = R1.length === G;
   for (let gi = 0; gi < G; gi += 2) {

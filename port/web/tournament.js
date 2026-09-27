@@ -119,15 +119,33 @@ function tnCupResultsHtml(S, ms) {
   if (!lgCupSizeOk(S)) return `<div class="ct-empty">${tnCupSizeMsg(S)}</div>`;
   if (!lgCupGroupsOk(S)) return '<div class="ct-empty">The groups are not drawn yet.</div>';
   const st = lgCupState(S, ms);
-  return '<div class="tn-groups">' + st.groups.map((g) =>
+  return '<div class="tn-groups">' + st.groups.map((g, gi) =>
     `<div class="tn-group"><div class="tn-gname">Group ${g.name}</div>` +
     '<table class="ch-table tn-gt"><tr><th></th><th>Entrant</th><th title="Played">P</th><th title="Won">W</th><th>Elo</th></tr>' +
     g.rows.map((r, i) => `<tr${i < 2 ? ' class="tn-q"' : ''}><td>${i + 1}</td>` +
       `<td class="ch-n" title="${escHtml(r.name)}"><span class="ct-dot lg-dot" style="background:${r.color}"></span>${escHtml(r.name)}</td>` +
       `<td>${r.p}</td><td>${r.w}</td><td>${Math.round(r.elo)}</td></tr>`).join('') +
-    '</table></div>').join('') + '</div>' +
+    '</table>' + tnCupGroupFixturesHtml(S, st, gi) + '</div>').join('') + '</div>' +
     '<div class="ct-rule">The top 2 of each group go through. Ties: head to head, group Elo, fewer rounds won at the cycle cap, fewer cycles, draw order.</div>' +
     tnCupBracketHtml(S, st);
+}
+
+// Los partidos del grupo gi por jornada: el ganador resaltado, el que sigue
+// con borde.
+function tnCupGroupFixturesHtml(S, st, gi) {
+  const col = tnColorOf(S), busy = lg.live ? ' disabled' : '';
+  const nx = st.phase === 'groups' && st.next ? lgPairKey(st.next[0].name, st.next[1].name) : '';
+  let nextShown = false;
+  const side = (f, n) => `<span class="tn-side${f.winner === n ? ' tn-won' : f.winner ? ' tn-lost' : ''}" title="${escHtml(n)}">` +
+    `<span class="ct-dot lg-dot" style="background:${col.get(n)}"></span>${escHtml(n)}</span>`;
+  return '<div class="tn-gfx">' + st.fixtures.filter((f) => f.gi === gi).map((f) => {
+    const isNext = !f.winner && !nextShown && lgPairKey(f.a, f.b) === nx;
+    if (isNext) nextShown = true;
+    return `<div class="tn-fx${isNext ? ' next' : ''}"><span class="tn-day" title="Matchday ${f.day}">${f.day}</span>` +
+      side(f, f.a) + side(f, f.b) +
+      (f.id !== undefined ? `<button class="ch-small lg-replay" data-replay="${f.id}"${busy}` +
+        ` title="Replay match #${f.no} with the same seed">↻</button>` : '<span class="tn-fxr"></span>') + '</div>';
+  }).join('') + '</div>';
 }
 
 // El cuadro: una columna por ronda. Mientras se juegan los grupos, la
