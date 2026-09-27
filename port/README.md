@@ -458,9 +458,9 @@ fuera del plan"):
   "Game modes" queda para el F1 manual del original: los torneos fijan
   sus valores en cada partido.
 
-### Torneos (E10 y E11, 2026-09-27)
+### Torneos (E10, E11 y E12, 2026-09-27)
 
-Capa host (`spec/PLAN-EXTENSIONES.md` §E10 y §E11). Una sola ventana,
+Capa host (`spec/PLAN-EXTENSIONES.md` §E10, §E11 y §E12). Una sola ventana,
 **"🏆 Tournaments"** (`web/tournament.js`), reemplaza al Contest, al Canal
 de TV y a las Ligas de antes; el modelo, la base y los partidos están en
 `web/league.js` y el lanzamiento de cada partido en `web/contest.js`.
@@ -478,6 +478,17 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   peleas y el primero por Elo), *Round robin* (1 o 2 vueltas, por el
   método del círculo) y *Step ladder* (la escalera del original,
   `populateladder`). Toda temporada termina con un campeón.
+- **World cup** (E12): 8, 16 o 32 participantes en grupos de 4 (todos
+  contra todos, 1 o 2 vueltas, jornadas intercaladas entre grupos), con
+  bombos por el Elo del Hall of Fame o al azar ("🎲 Draw groups" en Setup,
+  o al lanzar el primer partido). Pasan los 2 primeros de cada grupo
+  (desempates: duelo directo, Elo del grupo, rondas ganadas por tope,
+  ciclos, orden del sorteo) a un cuadro con el cruce del Mundial (1A-2B y
+  1B-2A en mitades opuestas); eliminación directa a partido único (un nulo
+  se repite) y 3.er puesto opcional. Solo se guarda el reparto de los
+  grupos: tablas, cuadro y campeón salen del historial. Results dibuja las
+  tablas de grupo y el cuadro (con ↻ en cada cruce) y el TV mode rotula
+  la fase ("GROUP C · MATCHDAY 2", "SEMI-FINAL", "FINAL").
 - **Valores del partido**, con un nombre cada uno: bots por especie
   (cada participante puede tener los suyos), energía inicial, rondas
   mínimas, victorias para ganar (`Maxrounds`, opción 98) y el tope de
@@ -505,8 +516,10 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   como torneo nuevo; también acepta los archivos de ligas de E10
   (versión 1).
 - Smokes: `node tools/e10/smoke_liga.mjs` (tope por energía, calendarios,
-  Elo, exportar e importar) y `node tools/e11/smoke_torneos.mjs` (fin de
-  temporada, sorteo, Hall of Fame, Scratch, migraciones).
+  Elo, exportar e importar), `node tools/e11/smoke_torneos.mjs` (fin de
+  temporada, sorteo, Hall of Fame, Scratch, migraciones) y
+  `node tools/e12/smoke_copa.mjs` (grupos, bombos, desempates, cuadro,
+  3.er puesto, exportar e importar con los grupos).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas

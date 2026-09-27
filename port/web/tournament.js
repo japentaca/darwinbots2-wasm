@@ -45,6 +45,8 @@ function tnFmtText(f) {
   return f.format === 'rr' ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
     : f.format === 'ladder' ? 'step ladder'
     : f.format === 'single' ? 'single match'
+    : f.format === 'cup' ? `World cup, groups of 4${f.groupLegs === 2 ? ' (two legs)' : ''}, ` +
+      `${f.pots === 'random' ? 'random pots' : 'pots by Elo'}${f.third ? ', third-place match' : ''}`
     : `king of the hill, ${f.k} per fight, retires after ${f.retire} wins`;
 }
 
@@ -55,6 +57,13 @@ function tnProgress(S, ms) {
   const f = S.fmt.format;
   if (f === 'rr') { const st = lgRrState(S, ms); return `${st.played} of ${st.total} fixtures played`; }
   if (f === 'ladder') { const st = lgLadderState(S, ms); return `${st.placed} of ${st.total} on the ladder`; }
+  if (f === 'cup') {
+    if (!lgCupSizeOk(S)) return 'needs 8, 16 or 32 entrants';
+    const st = lgCupState(S, ms);
+    if (st.phase === 'draw') return 'groups not drawn yet';
+    if (st.phase === 'groups') return `group stage: ${st.played} of ${st.total} matches`;
+    return `knockout: ${st.label.split(' · ')[0]}`;
+  }
   if (f === 'koth') {
     const k = lgKothState(S, ms);
     return `${k.played} of at most ${lgKothCap(S)} fights` +
@@ -80,6 +89,94 @@ function tnArm(kind, fn) {
   tn.confirm = kind;
   clearTimeout(tn.confirmT);
   tn.confirmT = setTimeout(() => { tn.confirm = ''; tnRender(); }, 3000);
+  tnRender();
+}
+
+// ---- Copa (E12) -------------------------------------------------------------------
+const tnCupSizeMsg = (S) => `A World cup needs 8, 16 or 32 entrants (now ${S.entrants.length}).`;
+const tnColorOf = (S) => new Map(S.entrants.map((e) => [e.name, e.color]));
+
+// Setup: los grupos sorteados, con el bombo y el Elo del Hall of Fame de cada uno.
+function tnCupSetupHtml(L, S) {
+  if (!lgCupSizeOk(S)) return `<div class="ct-empty">${tnCupSizeMsg(S)}</div>`;
+  if (!lgCupGroupsOk(S))
+    return '<div class="ct-empty">Not drawn yet: 🎲 draws them now; otherwise they are drawn when the first match starts.</div>';
+  const elo = new Map(lgAllTime(L, lg.matches).map((r) => [r.name, r.elo]));
+  const col = tnColorOf(S);
+  return '<div class="tn-groups">' + S.groups.map((g, gi) =>
+    `<div class="tn-group"><div class="tn-gname">Group ${lgCupLetter(gi)}</div>` +
+    g.map((n, p) => `<div class="tn-grow"><span class="tn-pot" title="Pot ${p + 1}">${p + 1}</span>` +
+      `<span class="ct-dot lg-dot" style="background:${col.get(n)}"></span>` +
+      `<span class="tn-gn" title="${escHtml(n)}">${escHtml(n)}</span>` +
+      `<span class="tn-elo" title="Hall of Fame Elo">${Math.round(elo.has(n) ? elo.get(n) : LG_ELO0)}</span></div>`).join('') +
+    '</div>').join('') + '</div>' +
+    `<div class="ct-rule">${S.fmt.pots === 'random' ? 'Pure random draw.'
+      : 'Pots by the Hall of Fame Elo (1500 without history): one entrant of each pot per group.'}</div>`;
+}
+
+// Results: tablas de grupo (los 2 primeros, resaltados) y el cuadro.
+function tnCupResultsHtml(S, ms) {
+  if (!lgCupSizeOk(S)) return `<div class="ct-empty">${tnCupSizeMsg(S)}</div>`;
+  if (!lgCupGroupsOk(S)) return '<div class="ct-empty">The groups are not drawn yet.</div>';
+  const st = lgCupState(S, ms);
+  return '<div class="tn-groups">' + st.groups.map((g) =>
+    `<div class="tn-group"><div class="tn-gname">Group ${g.name}</div>` +
+    '<table class="ch-table tn-gt"><tr><th></th><th>Entrant</th><th title="Played">P</th><th title="Won">W</th><th>Elo</th></tr>' +
+    g.rows.map((r, i) => `<tr${i < 2 ? ' class="tn-q"' : ''}><td>${i + 1}</td>` +
+      `<td class="ch-n" title="${escHtml(r.name)}"><span class="ct-dot lg-dot" style="background:${r.color}"></span>${escHtml(r.name)}</td>` +
+      `<td>${r.p}</td><td>${r.w}</td><td>${Math.round(r.elo)}</td></tr>`).join('') +
+    '</table></div>').join('') + '</div>' +
+    '<div class="ct-rule">The top 2 of each group go through. Ties: head to head, group Elo, fewer rounds won at the cycle cap, fewer cycles, draw order.</div>' +
+    tnCupBracketHtml(S, st);
+}
+
+// El cuadro: una columna por ronda. Mientras se juegan los grupos, la
+// primera ronda muestra los puestos (1A, 2B…); las rondas por jugar, los
+// ganadores que ya se conocen.
+function tnCupBracketHtml(S, st) {
+  const G = S.groups.length, col = tnColorOf(S), first = st.bracket[0] || [];
+  let round = [];
+  for (let k = 0; k < G; k++) {
+    const top = k < G / 2, gi = 2 * (top ? k : k - G / 2);
+    const [a, b] = top ? [gi, gi + 1] : [gi + 1, gi];
+    round.push(first[k] || { pa: `1${lgCupLetter(a)}`, pb: `2${lgCupLetter(b)}` });
+  }
+  const rounds = [round];
+  while (round.length > 1) {
+    const r = rounds.length, nx = [];
+    for (let k = 0; k < round.length; k += 2)
+      nx.push((st.bracket[r] && st.bracket[r][k / 2]) || { a: round[k].winner, b: round[k + 1].winner });
+    rounds.push(nx);
+    round = nx;
+  }
+  const busy = lg.live ? ' disabled' : '';
+  const key = (a, b) => [a, b].sort().join('\u0001');
+  const next = st.next ? key(st.next[0].name, st.next[1].name) : '';
+  const side = (t, n, ph) => (n
+    ? `<div class="tn-side${t.winner === n ? ' tn-won' : t.winner ? ' tn-lost' : ''}" title="${escHtml(n)}">` +
+      `<span class="ct-dot lg-dot" style="background:${col.get(n)}"></span>${escHtml(n)}</div>`
+    : `<div class="tn-side tbd">${ph || '—'}</div>`);
+  const tie = (t) => `<div class="tn-tie${t.a && t.b && !t.winner && key(t.a, t.b) === next ? ' next' : ''}">` +
+    side(t, t.a, t.pa) + side(t, t.b, t.pb) +
+    (t.id !== undefined ? `<button class="ch-small lg-replay" data-replay="${t.id}"${busy}` +
+      ` title="Replay match #${t.no} with the same seed">↻</button>` : '') + '</div>';
+  return '<div class="tn-bracket">' + rounds.map((r) =>
+    `<div class="tn-round"><div class="tn-rname">${r.length === 1 ? 'Final' : lgCupRound(r.length)}</div><div class="tn-ties">` +
+    r.map(tie).join('') +
+    (r.length === 1 && S.fmt.third ? '<div class="tn-rname">Third place</div>' + tie(st.third || {}) : '') +
+    '</div></div>').join('') + '</div>';
+}
+
+async function tnCupDrawGroups() {
+  const L = lg.cur;
+  if (!L) return;
+  const S = lgSeason(L);
+  if (lgSeasonMatches(S.no).length) { tnNote('This season has matches: the groups are locked.', true); return; }
+  if (!lgCupSizeOk(S)) { tnNote(tnCupSizeMsg(S), true); return; }
+  delete S.groups;
+  lgCupDraw(L, lg.matches);
+  await lgSave(L);
+  tnNote('Groups drawn.');
   tnRender();
 }
 
@@ -118,6 +215,14 @@ async function tvEdition() {
     tvStop();
     return;
   }
+  const cur = lgSeason(L);
+  if (cur.fmt.format === 'cup' && !lgCupSizeOk(cur)) {
+    tnNote(`A World cup needs 8, 16 or 32 entrants; this edition drew ${cur.entrants.length}: TV mode off.`, true);
+    tvStop();
+    return;
+  }
+  await lgCupEnsure(L);                     // copa: los grupos de la edición
+  if (!tv.on || tv.L !== L) return;
   if (r) log(`📺 ${L.name}: edition ${lgSeason(L).no}, ${r.added} entrants drawn`);
   tnNote(`Edition ${lgSeason(L).no}: ${lgSeason(L).entrants.length} entrants.`);
   tn.resNo = 0;
@@ -219,7 +324,9 @@ function tvOverlay(left) {
   const fx = tv.fx;
   const vs = fx ? fx.fighters.map((e) =>
     `<span style="color:${e.color}">${escHtml(e.name)}</span>`).join(' <i>vs</i> ') : '';
-  const label = fx ? `<div class="ch-live">${escHtml(fx.label)}</div>` : '';
+  // Copa: la fase en grande ("GROUP C · MATCHDAY 2", "SEMI-FINAL · MATCH 1 OF 2", "FINAL").
+  const cup = S.fmt.format === 'cup';
+  const label = fx ? `<div class="${cup ? 'ch-phase' : 'ch-live'}">${escHtml(cup ? fx.label.toUpperCase() : fx.label)}</div>` : '';
   if (tv.phase === 'break') {
     el.innerHTML = `<div class="ch-live">📺 NEXT FIGHT #${tv.fightNo}${left ? ` in <b>${left}</b>` : ''} · ${tag}</div>` +
       `<div class="ch-vs">${vs}</div>` + label;
@@ -284,8 +391,17 @@ function tnRenderSetup(L, S, ms, locked) {
   $('tn-rules').innerHTML = lgRulesSummary(S.rules);
   for (const id of ['tn-rsave', 'tn-rf1', 'tn-rfree']) $(id).disabled = locked;
   const single = S.fmt.format === 'single' && S.entrants.length > LG_MAX_FIGHTERS;
+  const cup = S.fmt.format === 'cup';
   $('tn-ecount').textContent = `${S.entrants.length}` +
-    (single ? ` · only the first ${LG_MAX_FIGHTERS} play a single match` : '');
+    (single ? ` · only the first ${LG_MAX_FIGHTERS} play a single match` : '') +
+    (cup && !lgCupSizeOk(S) ? ' · a World cup needs 8, 16 or 32' : '');
+  $('tn-cupsetup').hidden = !cup;
+  if (cup) {
+    $('tn-groups').innerHTML = tnCupSetupHtml(L, S);
+    $('tn-drawgroups').disabled = locked || !lgCupSizeOk(S);
+    $('tn-drawgroups').title = locked ? 'This season has matches: the groups are locked'
+      : lgCupGroupsOk(S) ? 'Draw the groups again' : 'Draw the groups now';
+  }
   const playedBy = new Set(ms.flatMap((m) => m.fighters));
   const d = locked ? ' disabled' : '';
   $('tn-entrants').innerHTML = S.entrants.length
@@ -314,14 +430,19 @@ function tnRenderPlay(L, S, ms, locked) {
   $('tn-sum').innerHTML = `<b>${escHtml(L.name)}</b> · season ${S.no} · ${escHtml(tnFmtText(S.fmt))} · ` +
     `${S.entrants.length} entrants` + (tnProgress(S, ms) ? ` · ${escHtml(tnProgress(S, ms))}` : '');
   const fx = live || tv.on ? null : lgNextFixture(L);
+  // Copa sin grupos (se sortean con el primer partido) o de un tamaño que no sirve.
+  const cupWait = S.fmt.format === 'cup' && !fx && !lgSeasonDone(S, ms) && S.entrants.length >= 2
+    ? (lgCupSizeOk(S) ? 'draw' : 'size') : '';
   const names = (list) => list.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ');
   $('tn-next').innerHTML = live
     ? `${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${names(lg.live.fighters)}`
     : tv.on && tv.fx && tv.phase !== 'banner' ? `Next: ${names(tv.fx.fighters)} <span class="ct-rule">${escHtml(tv.fx.label)}</span>`
     : fx ? `Next: ${names(fx.fighters)} <span class="ct-rule">${escHtml(fx.label)}</span>`
     : S.entrants.length < 2 ? '<span class="ct-empty">Add at least 2 entrants in Setup, or draw them.</span>'
+    : cupWait === 'size' ? `<span class="ct-empty">${tnCupSizeMsg(S)}</span>`
+    : cupWait === 'draw' ? '<span class="ct-empty">The groups are drawn when the first match starts (or in Setup).</span>'
     : lgChampionHtml(S, ms);
-  $('tn-play-next').hidden = tv.on || (!live && !fx);
+  $('tn-play-next').hidden = tv.on || (!live && !fx && cupWait !== 'draw');
   $('tn-play-next').disabled = busy;
   $('tn-abort').hidden = !live;
   $('tn-newseason').hidden = tv.on || !locked;
@@ -365,6 +486,9 @@ function tnRenderResults(L) {
     `${S.entrants.length} entrants · ${lgPlayed(ms).length} matches` +
     (lgSeasonDone(S, ms) ? `<div>${lgChampionHtml(S, ms)}</div>` : '') +
     (S === cur ? '' : `<details class="ch-sec"><summary>Rules of season ${S.no}</summary>${lgRulesSummary(S.rules)}</details>`);
+  const cup = S.fmt.format === 'cup';
+  $('tn-cupres').hidden = !cup;
+  if (cup) $('tn-cup').innerHTML = tnCupResultsHtml(S, ms);
   $('tn-table').innerHTML = lgStandingsHtml(S, ms);
   $('tn-h2h').innerHTML = lgH2HHtml(S, ms);
   $('tn-hist').innerHTML = lgHistoryHtml(ms);
@@ -491,6 +615,9 @@ async function openTournaments(tab) {
     '<label class="tn-chk"><input type="checkbox" id="tn-drawmode"> Draw new entrants at every new season</label>' +
     '<div class="ct-rule">Each entrant keeps the DNA it had when it joined. The TV mode draws at every edition.</div>' +
     '</details>' +
+    '<details id="tn-cupsetup" class="ch-sec" open hidden><summary>🌍 World cup groups</summary>' +
+    '<div id="tn-groups"></div>' +
+    '<div class="ct-srcrow"><button id="tn-drawgroups">🎲 Draw groups</button></div></details>' +
     '</div>' +
     // Play
     '<div id="tn-play" hidden>' +
@@ -513,6 +640,7 @@ async function openTournaments(tab) {
     '<div id="tn-results" hidden>' +
     '<div class="ct-liverow tn-seasons">Season <span id="tn-seasons"></span></div>' +
     '<div id="tn-rhead" class="ct-rule"></div>' +
+    '<details id="tn-cupres" class="ch-sec" open hidden><summary>🌍 Groups and bracket</summary><div id="tn-cup"></div></details>' +
     '<details class="ch-sec" open><summary>Standings</summary><div id="tn-table"></div></details>' +
     '<details class="ch-sec"><summary>Head to head</summary><div id="tn-h2h"></div></details>' +
     '<details class="ch-sec"><summary>Matches</summary><div id="tn-hist"></div></details>' +
@@ -577,13 +705,15 @@ async function openTournaments(tab) {
   $('tn-fmt').onchange = async (e) => {
     const k = e.target.dataset.f;
     if (!k || !lg.cur) return;
-    const f = lgSeason(lg.cur).fmt;
-    if (k === 'format' || k === 'capMode') f[k] = e.target.value;
+    const S = lgSeason(lg.cur), f = S.fmt;
+    if (e.target.type === 'checkbox') f[k] = e.target.checked;
+    else if (e.target.tagName === 'SELECT') f[k] = e.target.value;
     else {
       const n = parseInt(e.target.value, 10);
       const lo = +e.target.min || 0, hi = +e.target.max || 1e7;
       f[k] = Math.min(hi, Math.max(lo, Number.isNaN(n) ? LG_FMT_DEFAULT[k] : n));
     }
+    if (k === 'format' || k === 'pots') delete S.groups;   // copa: otro sorteo
     await lgSave(lg.cur);
     tnRender();
   };
@@ -659,6 +789,7 @@ async function openTournaments(tab) {
   $('tn-drawn').onchange = (e) => tnSaveDraw({ n: e.target.value });
   $('tn-drawpool').onchange = (e) => tnSaveDraw({ pool: e.target.value });
   $('tn-drawmode').onchange = (e) => tnSaveDraw({ mode: e.target.checked ? 'random' : 'fixed' });
+  $('tn-drawgroups').onclick = () => tnCupDrawGroups();
   $('tn-draw').onclick = async () => {
     const L = lg.cur;
     if (!L) return;

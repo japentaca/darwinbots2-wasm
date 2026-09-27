@@ -83,7 +83,7 @@ const lg = {
 const LG_CUR_KEY = 'db-league-cur';
 const LG_FMT_DEFAULT = {
   // 'single' (un partido con todos) | 'koth' (rey de la colina) |
-  // 'rr' (todos contra todos) | 'ladder' (escalera)
+  // 'rr' (todos contra todos) | 'ladder' (escalera) | 'cup' (copa, E12)
   format: 'koth',
   k: 2,             // koth: luchadores por pelea
   retire: 5,        // koth: victorias seguidas para retirarse invicto
@@ -92,8 +92,11 @@ const LG_FMT_DEFAULT = {
   nrg: 3000, rounds: 5, wins: 3,
   cap: 5000,        // tope de ciclos por ronda (0 = sin tope)
   capMode: 'pop',   // al llegar al tope: 'pop' (más bots) | 'nrg' (más nrg + body×10)
+  groupLegs: 1,     // cup (E12): vueltas de la fase de grupos
+  pots: 'elo',      // cup: bombos por el Elo del Hall of Fame ('elo') o sorteo puro ('random')
+  third: false,     // cup: partido por el 3.er puesto
 };
-const LG_FORMATS = ['single', 'koth', 'rr', 'ladder'];
+const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup'];
 // Participantes de cada temporada: lista fija (a mano, se copia a la
 // temporada nueva) o sorteo de n del pool en cada temporada nueva. El pool
 // es un filtro de lgPool ('all', 'fav', 'sel', 'tag:…', 'set:…').
@@ -285,13 +288,15 @@ const lgKothCap = (S) => LG_KOTH_CAP * S.entrants.length;
 
 // ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
 // single: con su partido; rr y escalera: con el calendario completo; rey de
-// la colina: con el primer retiro invicto o al tope de 3 × N peleas.
+// la colina: con el primer retiro invicto o al tope de 3 × N peleas; copa:
+// con la final jugada.
 function lgSeasonDone(S, ms) {
   if (S.entrants.length < 2) return false;
   const f = S.fmt.format;
   if (f === 'single') return lgPlayed(ms).length > 0;
   if (f === 'rr') return !lgRrState(S, ms).next;
   if (f === 'ladder') return !lgLadderState(S, ms).next;
+  if (f === 'cup') return lgCupState(S, ms).phase === 'done';
   const k = lgKothState(S, ms);
   return !!k.first || k.played >= lgKothCap(S);
 }
@@ -299,11 +304,12 @@ function lgSeasonDone(S, ms) {
 // Campeón de una temporada terminada: {name, how} o null si sigue en juego.
 // how: 'match' (single), 'retired' (rey de la colina), 'elo' (rey de la
 // colina al tope: el primero por Elo), 'table' (rr: el primero de la tabla),
-// 'ladder' (escalera: el peldaño 1).
+// 'ladder' (escalera: el peldaño 1), 'cup' (copa: el ganador de la final).
 function lgSeasonChampion(S, ms) {
   if (!lgSeasonDone(S, ms)) return null;
   const f = S.fmt.format;
   if (f === 'single') return { name: lgPlayed(ms)[0].winner, how: 'match' };
+  if (f === 'cup') return { name: lgCupState(S, ms).champion, how: 'cup' };
   if (f === 'koth') {
     const k = lgKothState(S, ms);
     if (k.first) return { name: k.first, how: 'retired' };
@@ -313,7 +319,7 @@ function lgSeasonChampion(S, ms) {
 }
 const LG_HOW = { match: 'wins the match', retired: 'retires undefeated',
                  elo: 'tops the Elo at the fight cap', table: 'tops the table',
-                 ladder: 'holds the top rung' };
+                 ladder: 'holds the top rung', cup: 'wins the final' };
 
 // Escalera (populateladder, F1Mode.bas:443-500): los participantes entran de
 // a uno en el orden de inscripción; el primero ocupa el peldaño 1 sin pelear.
@@ -336,10 +342,192 @@ function lgLadderState(S, ms) {
   return { ladder, next, rung: pos + 1, placed: ci, total: E.length };
 }
 
-function lgShuffle(list) {
+// ---- Copa (E12): grupos + eliminatorias --------------------------------------
+// Grupos de 4 (todos contra todos, 1 o 2 vueltas); pasan los 2 primeros de
+// cada grupo a un cuadro con el cruce del Mundial (1A-2B y 1B-2A en mitades
+// opuestas, y así con cada par de grupos). Cada cruce es un partido (un nulo
+// se repite) y, con fmt.third, el partido por el 3.er puesto va antes de la
+// final. Solo con 8, 16 o 32 participantes. Todo sale del historial salvo el
+// reparto de los grupos: S.groups = [[nombres del grupo A], [B], …], cada
+// grupo con su bombo 1 primero.
+const LG_CUP_SIZES = [8, 16, 32];
+const LG_CUP_GROUP = 4;
+const lgCupSizeOk = (S) => LG_CUP_SIZES.includes(S.entrants.length);
+const lgCupLetter = (g) => String.fromCharCode(65 + g);
+
+// ¿S.groups reparte exactamente a los participantes de la temporada?
+function lgCupGroupsOk(S) {
+  const G = S.groups;
+  if (!lgCupSizeOk(S) || !Array.isArray(G) || G.length !== S.entrants.length / LG_CUP_GROUP) return false;
+  const names = new Set(S.entrants.map((e) => e.name)), seen = new Set();
+  for (const g of G) {
+    if (!Array.isArray(g) || g.length !== LG_CUP_GROUP) return false;
+    for (const n of g) {
+      if (!names.has(n) || seen.has(n)) return false;
+      seen.add(n);
+    }
+  }
+  return true;
+}
+
+// Sorteo de los grupos (pura; rnd: generador en [0, 1)). elo: nombre → Elo
+// del Hall of Fame (1500 si no está). Con pots 'elo', los bombos son tramos
+// de G participantes ordenados por Elo (los empates quedan al azar) y cada
+// grupo recibe uno de cada bombo; con 'random', sorteo puro.
+function lgCupGroups(entrants, fmt, elo, rnd = Math.random) {
+  const G = Math.max(1, Math.floor(entrants.length / LG_CUP_GROUP));
+  const list = lgShuffle(entrants.map((e) => e.name), rnd);
+  if (fmt.pots !== 'random') {
+    const v = (n) => (elo && elo.has(n) ? elo.get(n) : LG_ELO0);
+    list.sort((a, b) => v(b) - v(a));        // sort estable: los empates siguen al azar
+  }
+  const groups = Array.from({ length: G }, () => []);
+  for (let p = 0; p < list.length; p += G)
+    lgShuffle(list.slice(p, p + G), rnd).forEach((n, i) => groups[i].push(n));
+  return groups;
+}
+
+// Sortea los grupos de la temporada abierta si faltan (o ya no sirven) y el
+// tamaño es de copa. Bombos con el Elo de la tabla histórica. true si sorteó.
+function lgCupDraw(L, matches, rnd = Math.random) {
+  const S = lgSeason(L);
+  if (S.fmt.format !== 'cup' || !lgCupSizeOk(S) || lgCupGroupsOk(S)) return false;
+  const elo = new Map(lgAllTime(L, matches).map((r) => [r.name, r.elo]));
+  S.groups = lgCupGroups(S.entrants, S.fmt, elo, rnd);
+  return true;
+}
+async function lgCupEnsure(L) {
+  if (lgCupDraw(L, lg.matches)) await lgSave(L);
+}
+
+// Tabla de un grupo: victorias; entre los empatados, sus duelos directos; el
+// Elo de la fase de grupos; menos rondas ganadas por el tope de ciclos; menos
+// ciclos por partido; y por último el orden del sorteo.
+function lgCupSort(rows, h2h) {
+  const avg = (r) => (r.p ? r.cyc / r.p : 0);
+  const mini = new Map(rows.map((r) => [r, rows.filter((x) => x.w === r.w)
+    .reduce((s, x) => s + h2h(r.name, x.name), 0)]));
+  return rows.slice().sort((a, b) => b.w - a.w || mini.get(b) - mini.get(a) || b.elo - a.elo ||
+    a.capR - b.capR || avg(a) - avg(b) || a.seed - b.seed);
+}
+
+// Nombre de la ronda de n cruces (y del k-ésimo cruce, si k).
+function lgCupRound(n, k) {
+  if (n === 1) return 'FINAL';
+  const r = n === 2 ? 'Semi-final' : n === 4 ? 'Quarter-final' : `Round of ${2 * n}`;
+  return k ? `${r} · match ${k} of ${n}` : r;
+}
+
+// Estado de la copa (pura): {phase: 'draw' | 'groups' | 'ko' | 'done',
+// groups: [{name, rows}], played y total (partidos de grupo), bracket:
+// [[{a, b, winner, no, id}]] por ronda, third, next, label, champion, reach}.
+// reach: nombre → hasta dónde llegó (0 = grupos, 1 = primera ronda del
+// cuadro…; el ganador del 3.er puesto suma 0.5 y el campeón uno más que la
+// final). Los partidos de grupo son los duelos del calendario hasta
+// completarlo; después solo cuenta el duelo del cruce pendiente.
+function lgCupState(S, ms) {
+  const st = { phase: 'draw', groups: [], played: 0, total: 0, bracket: [], third: null,
+               next: null, label: '', champion: null, reach: new Map() };
+  if (!lgCupGroupsOk(S)) return st;
+  const legs = S.fmt.groupLegs === 2 ? 2 : 1;
+  const E = new Map(S.entrants.map((e) => [e.name, e]));
+  const gOf = new Map();
+  S.groups.forEach((g, gi) => g.forEach((n) => gOf.set(n, gi)));
+  // Calendario intercalado: la jornada 1 de A, B, C…, luego la 2…
+  const rr = lgRrFixtures(LG_CUP_GROUP, legs), perDay = LG_CUP_GROUP / 2, days = rr.length / perDay;
+  const fx = [];
+  for (let d = 0; d < days; d++) {
+    S.groups.forEach((g, gi) => {
+      for (let k = 0; k < perDay; k++) {
+        const f = rr[d * perDay + k];
+        fx.push({ gi, day: d + 1, leg: f.leg, a: g[f.pair[0]], b: g[f.pair[1]] });
+      }
+    });
+  }
+  st.total = fx.length;
+  const rows = new Map();
+  S.groups.forEach((g, gi) => g.forEach((n, i) => rows.set(n, {
+    name: n, color: (E.get(n) || {}).color || '#8899bb', group: gi, seed: i,
+    p: 0, w: 0, elo: LG_ELO0, cyc: 0, capR: 0, rounds: 0 })));
+  for (const n of rows.keys()) st.reach.set(n, 0);
+  const cnt = new Map(), gms = [], ko = [];
+  for (const m of lgPlayed(ms)) {
+    if (gms.length >= fx.length) { ko.push(m); continue; }
+    const [a, b] = m.fighters;
+    if (m.fighters.length !== 2 || a === b || !gOf.has(a) || gOf.get(a) !== gOf.get(b)) continue;
+    const k = lgPairKey(a, b), c = cnt.get(k) || 0;
+    if (c >= legs) continue;
+    cnt.set(k, c + 1);
+    gms.push(m);
+    const f = [rows.get(a), rows.get(b)], w = rows.get(m.winner);
+    for (const r of f) { r.p++; r.cyc += m.cycles || 0; }
+    if (!w) continue;
+    w.w++;
+    w.capR += m.capRounds || 0;
+    w.rounds += m.rounds || 0;
+    lgElo(f, w);
+  }
+  st.played = gms.length;
+  const h2h = lgH2H(gms);
+  st.groups = S.groups.map((g, gi) => ({ name: lgCupLetter(gi),
+                                         rows: lgCupSort(g.map((n) => rows.get(n)), h2h) }));
+  if (gms.length < fx.length) {
+    const f = fx.find((x) => (cnt.get(lgPairKey(x.a, x.b)) || 0) < x.leg);
+    st.phase = 'groups';
+    st.next = [E.get(f.a), E.get(f.b)];
+    st.label = `Group ${lgCupLetter(f.gi)} · matchday ${f.day} of ${days}`;
+    return st;
+  }
+  // Cuadro: 1A-2B, 1C-2D… en la mitad de arriba; 1B-2A, 1D-2C… en la de abajo.
+  st.phase = 'ko';
+  const top = [], bottom = [], at = (gi, pos) => st.groups[gi].rows[pos].name;
+  for (let gi = 0; gi < st.groups.length; gi += 2) {
+    top.push({ a: at(gi, 0), b: at(gi + 1, 1) });
+    bottom.push({ a: at(gi + 1, 0), b: at(gi, 1) });
+  }
+  let i = 0;
+  const play = (t, label) => {
+    while (i < ko.length) {
+      const m = ko[i++];
+      if (m.fighters.length === 2 && m.fighters.includes(t.a) && m.fighters.includes(t.b)) {
+        Object.assign(t, { winner: m.winner, no: m.no, id: m.id });
+        return;
+      }
+    }
+    if (!st.next) { st.next = [E.get(t.a), E.get(t.b)]; st.label = label; }
+  };
+  const loser = (t) => (t.winner === t.a ? t.b : t.a);
+  let ties = [...top, ...bottom], lvl = 1;
+  for (;;) {
+    st.bracket.push(ties);
+    ties.forEach((t, k) => {
+      st.reach.set(t.a, lvl);
+      st.reach.set(t.b, lvl);
+      play(t, lgCupRound(ties.length, ties.length > 1 ? k + 1 : 0));
+    });
+    if (ties.some((t) => !t.winner)) return st;
+    if (ties.length === 1) break;
+    if (ties.length === 2 && S.fmt.third) {
+      st.third = { a: loser(ties[0]), b: loser(ties[1]) };
+      play(st.third, 'Third place');
+      if (!st.third.winner) return st;
+      st.reach.set(st.third.winner, lvl + 0.5);
+    }
+    const nx = [];
+    for (let k = 0; k < ties.length; k += 2) nx.push({ a: ties[k].winner, b: ties[k + 1].winner });
+    ties = nx;
+    lvl++;
+  }
+  st.phase = 'done';
+  st.champion = ties[0].winner;
+  st.reach.set(st.champion, lvl + 1);
+  return st;
+}
+
+function lgShuffle(list, rnd = Math.random) {
   const a = list.slice();
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rnd() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -366,6 +554,11 @@ function lgFixture(S, ms) {
     const st = lgLadderState(S, ms);
     return st.next && { fighters: st.next,
       label: `Ladder: ${st.next[1].name} challenges rung ${st.rung} (entrant ${st.placed + 1} of ${st.total})` };
+  }
+  if (S.fmt.format === 'cup') {
+    // Sin grupos sorteados (lgCupEnsure) o sin 8, 16 o 32 participantes: nada.
+    const st = lgCupState(S, ms);
+    return st.next && { fighters: st.next, label: st.label };
   }
   const { champ, played } = lgKothState(S, ms);
   const k = Math.min(Math.max(2, S.fmt.k), E.length, LG_MAX_FIGHTERS);
@@ -411,6 +604,11 @@ function lgStandings(S, ms) {
     const at = new Map(lgLadderState(S, ms).ladder.map((n, i) => [n, i]));
     const rank = (r) => (at.has(r.name) ? at.get(r.name) : 1e9);
     list.sort((a, b) => rank(a) - rank(b) || b.elo - a.elo);
+  } else if (S.fmt.format === 'cup') {
+    // Hasta dónde llegó cada uno (lgCupState), luego victorias y Elo.
+    const reach = lgCupState(S, ms).reach;
+    const lv = (r) => reach.get(r.name) || 0;
+    list.sort((a, b) => lv(b) - lv(a) || b.w - a.w || b.elo - a.elo);
   } else if (S.fmt.format === 'rr') list.sort((a, b) => b.w - a.w || b.elo - a.elo || a.p - b.p);
   else list.sort((a, b) => b.elo - a.elo || b.w - a.w);
   return list;
@@ -652,8 +850,14 @@ function lgImportObj(o, names, newId) {
       if (q > 0) x.qty = Math.min(200, q);
       return x;
     });
-    return { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
-             fmt: { ...LG_FMT_DEFAULT, ...(s.fmt || {}) }, entrants };
+    const x = { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
+                fmt: { ...LG_FMT_DEFAULT, ...(s.fmt || {}) }, entrants };
+    // E12: el reparto de los grupos de la copa, si reparte a estos participantes.
+    if (Array.isArray(s.groups)) {
+      x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));
+      if (!lgCupGroupsOk(x)) delete x.groups;
+    }
+    return x;
   });
   let name = String(src.name || 'League').trim() || 'League';
   if (names.has(name)) name = lgUniqueName(name + ' (imported)', names);
@@ -825,6 +1029,11 @@ async function lgPlayNext() {
   const L = lg.cur;
   if (!L || lg.live) return;
   const S = lgSeason(L);
+  if (S.fmt.format === 'cup' && !lgCupSizeOk(S)) {
+    lgNote(`A World cup needs 8, 16 or 32 entrants (this one has ${S.entrants.length}).`, true);
+    return;
+  }
+  await lgCupEnsure(L);
   const fx = lgNextFixture(L);
   if (!fx) {
     lgNote(S.entrants.length < 2 ? 'A tournament needs at least 2 entrants.' : 'The season is complete.', true);
@@ -979,8 +1188,16 @@ function lgFmtHtml(f, locked) {
     `<option value="single"${f.format === 'single' ? ' selected' : ''} title="One match with every entrant (up to ${LG_MAX_FIGHTERS})">Single match</option>` +
     `<option value="koth"${f.format === 'koth' ? ' selected' : ''} title="The winner stays; the first to retire undefeated wins the season">King of the hill</option>` +
     `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option>` +
-    `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option></select>` +
+    `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option>` +
+    `<option value="cup"${f.format === 'cup' ? ' selected' : ''} title="8, 16 or 32 entrants in groups of 4 (round robin); the top 2 of each group go to a knockout bracket">World cup (groups + knockout)</option></select>` +
     (f.format === 'ladder' || f.format === 'single' ? ''
+    : f.format === 'cup'
+      ? num('groupLegs', 'Group stage legs', f.groupLegs, 1, 2, '1 = each pair of a group meets once; 2 = twice, with the seeding order swapped') +
+        `<label title="How the groups are seeded: pots by the Hall of Fame Elo (1500 without history), or a pure random draw">Pots</label><select data-f="pots"${d}>` +
+        `<option value="elo"${f.pots !== 'random' ? ' selected' : ''}>by Elo</option>` +
+        `<option value="random"${f.pots === 'random' ? ' selected' : ''}>random</option></select>` +
+        `<label title="The semi-final losers play for third place before the final">Third-place match</label>` +
+        `<input type="checkbox" data-f="third"${f.third ? ' checked' : ''}${d}>`
     : f.format === 'rr'
       ? num('legs', 'Legs (each pair meets)', f.legs, 1, 2, '1 = once; 2 = home and away, with the seeding order swapped')
       : num('k', 'Fighters per fight', f.k, 2, 20) +

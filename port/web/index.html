@@ -303,6 +303,31 @@
   .tn-tvbox { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #1c2333;
               padding-top: 6px; margin-top: 4px; }
   .tn-tvbox label { color: #93a4c2; }
+  /* Copa (tournament.js, E12) */
+  .tn-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+  .tn-group { background: #0b0f19; border: 1px solid #1c2333; border-radius: 4px; padding: 3px 6px; min-width: 0; }
+  .tn-gname { color: #ffd166; font-weight: 600; margin-bottom: 2px; }
+  .tn-grow { display: flex; align-items: center; gap: 4px; color: #dfe6f2; }
+  .tn-gn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tn-pot { color: #5c6b88; font-size: 10px; width: 10px; }
+  .tn-elo { color: #93a4c2; font-variant-numeric: tabular-nums; }
+  .tn-gt td.ch-n { max-width: 110px; }
+  .tn-gt tr.tn-q td { color: #dfe6f2; }
+  .tn-gt tr.tn-q td:first-child { color: #7fe08a; }
+  .tn-bracket { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; }
+  .tn-round { display: flex; flex-direction: column; flex: 1; min-width: 112px; }
+  .tn-rname { color: #93a4c2; font-size: 11px; text-align: center; margin: 2px 0; }
+  .tn-ties { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 6px; }
+  .tn-tie { position: relative; background: #0b0f19; border: 1px solid #1c2333; border-radius: 4px;
+            padding: 2px 4px; }
+  .tn-tie.next { border-color: #ffd166; }
+  .tn-side { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b9c8e0; padding-right: 20px; }
+  .tn-side.tn-won { color: #ffd166; font-weight: 600; }
+  .tn-side.tn-lost { color: #5c6b88; }
+  .tn-side.tbd { color: #3a465e; }
+  .tn-tie .lg-replay { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); margin: 0; }
+  #tn-fmt input[type=checkbox] { justify-self: start; }
+  #ch-overlay .ch-phase { font-size: 13px; font-weight: 700; color: #ffd166; letter-spacing: 0.12em; margin-top: 2px; }
   .tn-tvbox input { width: 52px; padding: 2px 4px; }
   .tn-seasons { align-items: center; color: #93a4c2; flex-wrap: wrap; }
   .ch-small.on { background: #3a3014; border-color: #ffd166; color: #ffd166; font-weight: 600; }

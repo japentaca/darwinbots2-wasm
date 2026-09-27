@@ -1142,6 +1142,217 @@ Todo en `web/league.js`, con funciones puras donde se pudo:
 
 ---
 
+## E12 · Copa (grupos + eliminatorias) — capa host
+
+Añadida el 2026-09-27 a petición del usuario: "un modo donde funcione a
+modo de fixture como el mundial de fútbol". **No es superficie del
+original.** Es un quinto formato de los torneos de E11 (`fmt.format =
+'cup'`): una **fase de grupos** (todos contra todos dentro de cada grupo)
+y una **eliminación directa** con cuadro (octavos, cuartos, semis y
+final). Rama sugerida: `e12-copa`, desde `main`.
+
+**Reglas**: cero cambios en `port/core/` y en el wasm; suite intacta (270
+/ 4092 en los tres modos). Se conserva todo lo de E10 y E11: ADN
+congelado, reglas y formato bloqueados con el primer partido, Elo con K =
+32 / (N − 1), repetición con semilla, exportar e importar, TV mode, sin
+`alert`/`confirm`/`prompt` nativos.
+
+### Por qué
+
+Los formatos actuales hacen bien una sola cosa: el round robin es justo
+pero largo y plano (28 duelos con 8 bots); el rey de la colina tiene
+drama pero mucho azar; la escalera depende del orden de inscripción. La
+copa junta lo justo (los grupos filtran) con la tensión de "se juega
+todo en un partido", y en el TV mode da narrativa: "Group C · matchday
+2", "Quarter-final", "FINAL".
+
+### Decisiones tomadas (del usuario, 2026-09-27)
+
+- Es un **formato más** de "🏆 Tournaments", no una ventana ni un modo
+  aparte: comparte reglas, valores del partido, participantes, sorteo,
+  temporadas, Hall of Fame, repetición, exportar e importar y TV mode.
+- **Todo se deriva del historial**, como los demás formatos: tablas de
+  grupo, clasificados, cuadro y avance salen de recorrer los partidos.
+  Lo único que se guarda aparte es el **reparto de los grupos** (tiene
+  que quedar fijo).
+
+### Decisiones confirmadas (del usuario, al empezar C1, 2026-09-27)
+
+1. **Solo 8, 16 o 32 participantes** (el usuario prefirió esto a grupos
+   de 3 a 5 con byes): grupos fijos de 4, pasan los 2 primeros, el cuadro
+   siempre es una potencia de 2 y no hay byes. Con otro tamaño la copa no
+   arranca (aviso en "Play" y el TV mode se apaga).
+2. **Bombos por Elo**: los cabezas de serie salen del Elo del Hall of
+   Fame del torneo (`lgAllTime`); sin historia, 1500 y sorteo dentro del
+   bombo. Opción "random" para un sorteo puro.
+3. **Eliminatorias a partido único** (el partido F1 ya es "al mejor de"
+   varias rondas). Un nulo se repite.
+4. **Partido por el 3.er puesto**: opcional, apagado por defecto.
+
+### Modelo
+
+- **`fmt`** suma: `groupLegs` (1 o 2, por defecto 1), `pots` (`'elo'` |
+  `'random'`, por defecto `'elo'`) y `third` (bool, por defecto false).
+  `lgMigrate` completa los que falten. El tamaño de grupo (4) y los
+  clasificados por grupo (2) son fijos.
+- **`S.groups`**: `[[nombres del grupo A], [B], …]`, cada grupo con su
+  bombo 1 primero, guardado en la temporada. Se sortea con "🎲 Draw
+  groups" en Setup o, si falta, al lanzar el primer partido
+  (`lgCupEnsure` en `lgPlayNext` y en cada edición del TV mode). Solo vale
+  si reparte exactamente a los participantes actuales (`lgCupGroupsOk`):
+  si se editan antes del primer partido, deja de valer y se vuelve a
+  sortear. Viaja en el archivo exportado (`lgImportObj` lo copia y lo
+  descarta si no cuadra).
+- **Sorteo de grupos** `lgCupGroups(entrants, fmt, elo, rnd)` (pura, con
+  el generador inyectado): G = N / 4; bombos = los participantes ordenados
+  por Elo (los empates al azar), en tramos de G; cada grupo recibe uno de
+  cada bombo.
+- **Estado** `lgCupState(S, ms)` (pura) → `{phase: 'draw' | 'groups' |
+  'ko' | 'done', groups: [{name, rows}], played, total, bracket: [[{a, b,
+  winner, no, id}]], third, next, label, champion, reach}`:
+  - **Grupos**: el round robin de `lgRrFixtures` dentro de cada grupo;
+    las jornadas se intercalan entre grupos (A1, B1, C1… A2, B2…). Los
+    partidos de grupo son los duelos del calendario hasta completarlo.
+    Tabla: victorias; desempates: duelos directos entre los empatados,
+    Elo de la fase de grupos, menos rondas ganadas por tope, menos ciclos
+    promedio y por último el orden del sorteo.
+  - **Cruces**: el del Mundial: 1A-2B, 1C-2D… en la mitad de arriba y
+    1B-2A, 1D-2C… en la de abajo, así dos del mismo grupo solo pueden
+    volver a verse en la final.
+  - **Eliminatorias**: cada cruce es un duelo; solo cuenta el duelo del
+    cruce pendiente (como la escalera) y su ganador avanza. Con `third`,
+    el partido por el 3.er puesto va antes de la final.
+  - **reach**: hasta dónde llegó cada uno (0 = grupos, 1 = primera ronda
+    del cuadro…; +0.5 el ganador del 3.er puesto; el campeón, uno más que
+    la final).
+- **Integración**: `lgFixture` (labels "Group B · matchday 2 of 3",
+  "Round of 16 · match 3 of 8", "Quarter-final · match 1 of 4",
+  "Semi-final · match 1 of 2", "Third place", "FINAL"), `lgSeasonDone`
+  (final jugada), `lgSeasonChampion` (`how: 'cup'` → "wins the final"),
+  `lgStandings` (orden: `reach`, luego victorias y Elo), `tnProgress` y
+  el rótulo del TV. El Elo, el head to head, el Hall of Fame y la
+  repetición no cambian.
+
+### Duración
+
+| Participantes | Grupos | Partidos |
+|---|---|---|
+| 8 | 2 de 4 | 12 + 3 = 15 |
+| 16 | 4 de 4 | 24 + 7 = 31 |
+| 32 | 8 de 4 | 48 + 15 = 63 (el Mundial clásico) |
+
+### Piezas y trabajo
+
+**C1 · Modelo** (funciones puras, sin UI)
+1. `fmt` de la copa, `lgMigrate`, `S.groups` en exportar e importar.
+2. `lgCupGroups` (bombos por Elo o al azar) y `lgCupState` (grupos,
+   desempates, cruces, avance, 3.er puesto, campeón).
+3. Integración en `lgFixture`, `lgSeasonDone`, `lgSeasonChampion`,
+   `lgStandings` y `LG_HOW`.
+4. Smoke `tools/e12/smoke_copa.mjs` (vm, como `smoke_torneos`).
+
+**C2 · Interfaz** (`tournament.js`)
+1. Setup: "World cup (groups + knockout)" en el selector de formato con
+   sus valores, vista previa de los grupos (con su bombo) y "🎲 Draw
+   groups".
+2. Play: la fase y el partido en el resumen y en "Next"; el rótulo del
+   TV mode con la fase ("GROUP C · MATCHDAY 2", "SEMI-FINAL", "FINAL").
+3. Results: las tablas de grupo (clasificados resaltados) y el **cuadro
+   dibujado** (columnas por ronda, con ganadores y ↻ en cada
+   cruce), además de la tabla, el head to head, los partidos y el Hall
+   of Fame de siempre.
+
+**C3 · Cierre**
+1. README §Torneos, PROGRESO (fila E12 y entrada), "Resultado C1/C2/C3"
+   aquí.
+2. Chrome: copa de 8 a mano hasta la final; una de 12 que no arranca;
+   copa de 16 en TV mode con 2 ediciones (bombos por Elo en la segunda); repetir
+   un cruce de eliminatoria; exportar e importar con los grupos. Consola
+   limpia.
+
+**Cierre de cada parte**: suite en verde en los tres modos, `port/core/`
+sin diff, smokes de host en verde (`rv/smoke_host`, `e8/smoke_e8`,
+`pp/smoke_formas`, `pp/smoke_campo`, `imrelay/smoke_im`,
+`e10/smoke_liga`, `e11/smoke_torneos` y el nuevo) y fila en
+`PROGRESO.md`.
+
+### Resultado C1 (2026-09-27)
+
+- `league.js`: `fmt` suma `groupLegs`, `pots` y `third`; `LG_FORMATS`
+  suma `'cup'`. Bloque "Copa (E12)": `LG_CUP_SIZES`, `lgCupGroupsOk`,
+  `lgCupGroups`, `lgCupDraw` (pura, con el Elo de `lgAllTime`) y
+  `lgCupEnsure` (sortea y guarda), `lgCupSort`, `lgCupRound` y
+  `lgCupState`. `lgShuffle` acepta el generador. Integrada en
+  `lgFixture`, `lgSeasonDone`, `lgSeasonChampion` (`how: 'cup'`),
+  `LG_HOW`, `lgStandings` (por `reach`) y `lgImportObj` (copia y valida
+  `S.groups`; exportar lo lleva solo). `lgPlayNext` avisa si el tamaño no
+  es de copa y sortea los grupos que falten.
+- `tournament.js`: `tvEdition` apaga el TV mode si la edición sorteó un
+  tamaño que no es de copa y sortea los grupos de cada edición. El resto
+  de la interfaz queda para C2.
+- Smoke nuevo `tools/e12/smoke_copa.mjs`: **49/49** (tamaños 8, 16 y 32
+  con 15, 31 y 63 partidos, y 27 con ida y vuelta; tamaños que no sirven;
+  bombos por Elo y al azar; calendario intercalado; desempates; cruce del
+  Mundial; nulos que se repiten; 3.er puesto y tabla; sorteo con el Hall
+  of Fame; migración; exportar e importar con los grupos).
+- Verificación: suite 270 / 4092 en los tres modos, `port/core/` sin
+  diff, los 8 smokes de host en verde y Chrome carga con la consola
+  limpia.
+
+### Resultado C2 (2026-09-27)
+
+- `league.js` (`lgFmtHtml`): "World cup (groups + knockout)" en el
+  selector, con "Group stage legs", "Pots" (by Elo / random) y
+  "Third-place match".
+- `tournament.js`:
+  - Setup: sección "🌍 World cup groups" con la vista previa (grupo,
+    bombo y Elo del Hall of Fame de cada uno) y "🎲 Draw groups"
+    (bloqueado con el primer partido o si el tamaño no sirve); cambiar el
+    formato o los bombos borra el sorteo. El contador de participantes
+    avisa si no son 8, 16 o 32. El formulario acepta selects y checkboxes.
+  - Play: `tnFmtText` y `tnProgress` de la copa ("group stage: 5 of 12
+    matches", "knockout: Semi-final"); sin grupos, "Play next" sigue
+    visible y los sortea; con un tamaño que no sirve, el aviso.
+  - TV mode: el rótulo lleva la fase en mayúsculas y en grande (`.ch-phase`:
+    "GROUP A · MATCHDAY 1 OF 3", "SEMI-FINAL · MATCH 1 OF 2", "THIRD
+    PLACE", "FINAL").
+  - Results: "🌍 Groups and bracket" con las tablas de grupo (los 2
+    primeros resaltados) y el cuadro dibujado: una columna por ronda,
+    los puestos (1A, 2B…) mientras se juegan los grupos, ganador
+    resaltado, el cruce pendiente con borde y ↻ en cada cruce jugado; el
+    3.er puesto bajo la final.
+- `index.html`: estilos `.tn-groups`, `.tn-bracket` y compañía (el ganador
+  usa `.tn-won`: `.win` es la clase de las ventanas).
+- Chrome: copa de 8 Spinner a mano hasta la final (16 partidos con 3.er
+  puesto; tabla campeón → finalista → 3.º → 4.º); ↻ de la final coincide;
+  exportar e importar conserva grupos y campeón; una copa de 11 no
+  arranca (avisos en Setup, Play y la nota); TV mode con sorteo de 8 de
+  11 en dos ediciones (bombos por el Elo del Hall of Fame, rótulos de
+  fase, campeón en el rótulo final, grupos nuevos en la siguiente).
+  Consola limpia; torneos de prueba borrados y datos del usuario
+  restaurados.
+- Verificación: suite 270 / 4092 en los tres modos, `port/core/` sin
+  diff, los 8 smokes de host en verde.
+
+### Resultado C3 (2026-09-27) — E12 completa
+
+- `port/README.md` §"Torneos (E10, E11 y E12)": el formato World cup y su
+  smoke.
+- `PROGRESO.md`: fila de E12 ✅ y entrada.
+- La verificación en Chrome se hizo en C2 (ver arriba). Diferencia con lo
+  planeado: la copa en TV mode fue de 8 (sorteo de 8 entre los 11
+  Spinner, bots livianos) y no de 16, y la de 12 que no arranca fue de
+  11 (el tamaño ya no admite byes). Los tamaños 16 y 32, el cuadro con
+  octavos y la cantidad de partidos los cubre el smoke.
+- Cierre: suite 270 / 4092 en los tres modos, `port/core/` sin diff, los
+  8 smokes de host en verde, Chrome con la consola limpia.
+
+**Alternativa para después**: el **sistema suizo** (cada jornada cruza a
+los de igual puntaje; con 64 bots bastan 6 jornadas), bueno para pools
+grandes como el Bestiary entero, con menos épica que la copa.
+
+---
+
 ## Orden recomendado
 
 **E1 → E2 → E3** (todo capa host, valor alto, riesgo nulo para el core) →
@@ -1153,4 +1364,6 @@ añadió el 2026-09-26 a petición del usuario y está pendiente. **E10**
 (ligas, capa host) se añadió el 2026-09-27, también pedida por el usuario:
 L1 → L2 → L3, **completa** el mismo día. **E11** (torneos unificados:
 una sola ventana para Contest, Canal y Ligas) se añadió el mismo día a
-pedido del usuario: R1 → R2 → R3, **completa** el mismo día.
+pedido del usuario: R1 → R2 → R3, **completa** el mismo día. **E12** (copa: grupos + eliminatorias,
+un formato más de los torneos) se añadió el mismo día a pedido del
+usuario: C1 → C2 → C3, **completa** el mismo día.
