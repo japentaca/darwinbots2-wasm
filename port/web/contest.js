@@ -105,7 +105,8 @@ function contestSetOpt(id, v) {
 // Lanza un contest con estos luchadores ({name, color, qty, src, file|dna}).
 // Lo usan la ventana de contest y el Canal (channel.js). Lanza excepción si
 // algún ADN no se puede leer (antes de tocar la sim).
-//   o = { nrg, f1, rounds, wins, maxcyc, maxpop, cap, newSeed }
+//   o = { nrg, f1, rounds, wins, maxcyc, maxpop, cap, capMode, newSeed }
+// (capMode: criterio del tope de ciclos, 'pop' | 'nrg'; E10)
 async function contestLaunch(fighters, o) {
   // Todo el ADN antes de reiniciar: la sim nueva no espera a la red.
   const dnas = [];
@@ -118,7 +119,7 @@ async function contestLaunch(fighters, o) {
   contestSetOpt(99, duel ? o.maxcyc || 0 : 0);
   contestSetOpt(100, duel ? o.maxpop || 0 : 0);
   if (o.newSeed) document.getElementById('seed').value = Math.floor(Math.random() * 100000);
-  worker.postMessage({ t: 'f1-cap', cycles: o.cap || 0 });
+  worker.postMessage({ t: 'f1-cap', cycles: o.cap || 0, mode: o.capMode || 'pop' });
   quietF1Census = true;                                   // el censo va abajo
   document.getElementById('btn-reset').click();           // Reiniciar
   fighters.forEach((r, i) => worker.postMessage({
@@ -143,6 +144,7 @@ async function contestStart(opts = {}) {
   note.textContent = 'Preparing…';
   note.className = 'ct-note';
   if (typeof channelStop === 'function') channelStop();   // un torneo a la vez
+  if (typeof leagueAbort === 'function') leagueAbort();
   contest.rounds = Math.max(1, parseInt($('ct-rounds').value, 10) || 5);
   contest.wins = Math.max(0, parseInt($('ct-wins').value, 10) || 0);
   try {
@@ -167,6 +169,7 @@ async function contestStart(opts = {}) {
 // ---- Mensajes del worker (los reenvía index.html) ----------------------------
 function contestOnMessage(msg) {
   if (typeof channelOnMessage === 'function') channelOnMessage(msg);
+  if (typeof leagueOnMessage === 'function') leagueOnMessage(msg);
   if (!contest.win || !contest.running) return;
   const note = contest.win.querySelector('#ct-note');
   if (msg.t === 'f1-started') {
@@ -231,6 +234,7 @@ function contestBoardHtml(st, color, rounds, winner, wins) {
 // Marcador: se llama en cada frame con las stats del worker.
 function contestOnStats(st) {
   if (typeof channelOnStats === 'function') channelOnStats(st);
+  if (typeof leagueOnStats === 'function') leagueOnStats(st);
   if (!contest.win || !contest.running || !st.f1) return;
   const rw = contestRoundWinner(contest.lastWins, st.f1);
   if (rw) contest.win.querySelector('#ct-note').textContent =

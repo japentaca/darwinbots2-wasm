@@ -33,7 +33,7 @@
 //                                          polar|trash (Obstacles.bas:45-181)
 //   {t:'tp-del', n} · {t:'tp-clear'}       E3: borrar teleporter(s)
 //   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
-//   {t:'f1-cap', cycles}                   Canal: tope de ciclos por ronda
+//   {t:'f1-cap', cycles, mode?}            Canal: tope de ciclos por ronda ('pop' | 'nrg')
 //   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
 //   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
 //   {t:'select', n, seq?}                  bot con foco (0 = ninguno); su
@@ -85,7 +85,7 @@
 //                                          (Form1.Active = False del original)
 //   {t:'f1-note', kind}                    contest: 'single' | 'many' | 'cap'
 //   {t:'f1-started', n}                    respuesta a f1start (nº especies)
-//   {t:'f1-over', winner}                  E5: contest terminado ·
+//   {t:'f1-over', winner, f1, cycles}      E5: contest terminado (E10: marcador y ciclos) ·
 //   {t:'bot-text', n, text} ·
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
@@ -210,7 +210,7 @@ function bindApi() {
     f1Contests:    C('db_sim_f1_contests', 'number', ['number']),
     f1TotSpecies:  C('db_sim_f1_totspecies', 'number', ['number']),
     f1Over:        C('db_sim_f1_over', 'number', ['number']),
-    f1Cap:         C('db_sim_f1_cap', 'number', ['number']),
+    f1Cap:         C('db_sim_f1_cap', 'number', ['number', 'number']),
     f1Pop:         C('db_sim_f1_pop', 'number', ['number', 'number']),
     f1Wins:        C('db_sim_f1_wins', 'number', ['number', 'number']),
     f1Name:        C('db_sim_f1_name', 'number', ['number', 'number']),
@@ -659,7 +659,11 @@ function checkGameState() {
     const winner = (ev & (1 << 10)) ? takeStr(api.eventsWinner(sim)) : '';
     stopped = !!(ev & 1);
     api.eventsClear(sim);
-    if (ev & (1 << 10)) self.postMessage({ t: 'f1-over', winner });
+    // E10: el marcador final y los ciclos jugados viajan con el aviso (las
+    // ligas no dependen de que llegue un frame; en segundo plano casi no hay).
+    if (ev & (1 << 10))
+      self.postMessage({ t: 'f1-over', winner, f1: f1Stats(),
+                         cycles: f1CycAcc + api.cycle(sim) });
     if (stopped) {
       // Form1.Active = False del original: la sim queda pausada.
       running = false;
@@ -672,7 +676,7 @@ function checkGameState() {
     // Con parada del core en este mismo chequeo (ganador declarado con
     // StartAnotherRound colgado del mismo Countpop, F1Mode.bas:364+380) el
     // original queda detenido en el mundo final: no se abre otra ronda.
-    if (!stopped) { newRound(); return true; }
+    if (!stopped) { f1CycAcc += api.cycle(sim); newRound(); return true; }
   }
   return false;
 }
@@ -1099,12 +1103,16 @@ function imRebind() {
 // Canal F1 (capa host): tope de ciclos por ronda para N especies. Vive en el
 // worker, no en la sim: sobrevive a rondas y reinicios hasta que la página
 // lo cambie ({t:'f1-cap', cycles}; 0 = sin tope).
-let f1CapCycles = 0;
+// E10: mode 'nrg' decide por nrg + body×10 en vez de por número de bots.
+let f1CapCycles = 0, f1CapMode = 0;
+// E10: ciclos de las rondas ya terminadas del contest (desde el f1start).
+let f1CycAcc = 0;
 function f1CapCheck() {
   if (!f1CapCycles || api.cycle(sim) <= f1CapCycles) return;
-  const k = api.f1Cap(sim);
+  const k = api.f1Cap(sim, f1CapMode);
   if (k) {
-    log(`F1: ${f1CapCycles}-cycle cap — the most numerous species wins the round`);
+    log(`F1: ${f1CapCycles}-cycle cap — the ` +
+        (f1CapMode ? 'species with the most energy' : 'most numerous species') + ' wins the round');
     self.postMessage({ t: 'f1-note', kind: 'cap' });
   }
 }
@@ -1381,8 +1389,10 @@ self.onmessage = (e) => {
     // ---- E5: modos de juego ----
     case 'f1-cap':
       f1CapCycles = Math.max(0, msg.cycles | 0);
+      f1CapMode = msg.mode === 'nrg' ? 1 : 0;
       break;
     case 'f1start': {
+      f1CycAcc = 0;
       const ts = api.f1Start(sim);
       log(ts ? `F1 contest: ${ts} species competing`
              : 'F1 contest not active (is the F1 option off?)');

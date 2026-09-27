@@ -276,6 +276,15 @@
   .ch-table td.ch-n, .ch-table th:nth-child(2) { text-align: left; max-width: 190px; overflow: hidden;
                                                   text-overflow: ellipsis; white-space: nowrap; }
   .ch-small { font-size: 11px; padding: 1px 6px; margin-top: 4px; }
+  .lg-top { display: flex; gap: 4px; flex-wrap: wrap; }
+  .lg-top #lg-pick { flex: 1; min-width: 120px; }
+  .lg-name { font-size: 14px; font-weight: 600; padding: 2px 4px; width: 100%; box-sizing: border-box; }
+  .lg-costs { color: #b9c8e0; font-size: 11px; margin: 2px 0; }
+  .lg-costs b, #lg-rules b { color: #dfe6f2; font-weight: 600; }
+  #lg-next { color: #b7c6e0; }
+  #lg-fmt .ct-rules { grid-template-columns: 1fr 140px; }
+  .lg-dot { display: inline-block; margin-right: 4px; vertical-align: -1px; }
+  #lg-rules { margin: 2px 0 4px; color: #b9c8e0; }
   /* Inventario de bots (inventory.js) */
   .inv-win { resize: both; overflow: hidden; min-width: 640px; min-height: 360px; }
   .inv-win .win-body { flex: 1; min-height: 0; font-size: 12px; }
@@ -427,6 +436,7 @@
     <button id="btn-reset">Reset</button>
     <button id="btn-contest" title="F1 Contest: pick the contenders, start the tournament in one click and watch the scoreboard">🏆 Contest</button>
     <button id="btn-channel" title="F1 Channel: back-to-back random fights, king of the hill and Hall of Fame">📺 Channel</button>
+    <button id="btn-leagues" title="Leagues: saved rules, entrants, format (king of the hill or round robin), match history and standings">🏟 Leagues</button>
   </div>
   <div class="sep"></div>
   <div class="group">
@@ -697,6 +707,7 @@
 <script src="lab.js"></script>
 <script src="contest.js"></script>
 <script src="channel.js"></script>
+<script src="league.js"></script>
 <script>
 'use strict';
 
@@ -3729,6 +3740,7 @@ document.getElementById('btn-inventory').onclick = () => openInventory();
 document.getElementById('btn-lab').onclick = () => openLab();
 document.getElementById('btn-contest').onclick = () => openContest();
 document.getElementById('btn-channel').onclick = () => openChannel();
+document.getElementById('btn-leagues').onclick = () => openLeagues();
 // E5: censo F1 a demanda (tras sembrar las especies de combate). El botón
 // vive en el panel dinámico (se construye en onReady): delegación.
 document.addEventListener('click', (e) => {

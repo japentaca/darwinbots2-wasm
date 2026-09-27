@@ -120,6 +120,7 @@ function chTick() {
 async function chLaunch() {
   const c = ch.cfg;
   ch.phase = 'fight';
+  ch.ready = false;
   ch.lastWins = null;
   ch.winner = '';
   contest.running = false;                 // un torneo a la vez
@@ -175,6 +176,9 @@ function chResult(winner, note) {
 // ---- Mensajes y frames (los reenvía contest.js) --------------------------------
 function channelOnMessage(msg) {
   if (!ch.on || ch.phase !== 'fight') return;
+  // Hasta el censo de esta pelea llegan mensajes de la sim anterior.
+  if (msg.t === 'f1-started') ch.ready = true;
+  else if (!ch.ready) return;
   if (msg.t === 'f1-started' && !msg.n) chResult('', 'void: the census found no fighters');
   else if (msg.t === 'f1-note' && msg.kind === 'single') chResult('', 'void: only one species in the census');
   else if (msg.t === 'f1-note' && msg.kind === 'cap') chNote('Cycle cap reached: the round goes to the most numerous species.');
@@ -182,7 +186,7 @@ function channelOnMessage(msg) {
 }
 
 function channelOnStats(st) {
-  if (!ch.on || ch.phase !== 'fight' || !st.f1) return;
+  if (!ch.on || ch.phase !== 'fight' || !ch.ready || !st.f1) return;
   const rw = contestRoundWinner(ch.lastWins, st.f1);
   if (rw) chNote(`Round ${st.f1.contests} goes to ${rw}.`);
   ch.lastWins = st.f1.sp.map((s) => s.wins);
@@ -211,6 +215,7 @@ function chReadCfg() {
 
 async function channelStart() {
   if (!inv.items.length) await invLoad();
+  if (typeof leagueAbort === 'function') leagueAbort();   // un torneo a la vez
   ch.cfg = chReadCfg();
   try { localStorage.setItem(CH_CFG_KEY, JSON.stringify(ch.cfg)); } catch (e) { /* nada */ }
   ch.on = true;

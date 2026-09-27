@@ -475,6 +475,18 @@ fuera del plan"):
   especies el "kill losing species" de `F1Mode.bas:333-347` (en el
   original, solo para duelos). El worker lo llama después de cada tick.
 
+### Ligas (E10, 2026-09-27)
+
+- **Leagues** (botón "🏟 Leagues", `web/league.js`, `spec/PLAN-EXTENSIONES.md`
+  §E10): ligas guardadas en IndexedDB (`darwinbots-ligas`). Cada una tiene
+  reglas (una foto del panel de opciones: base F1, el panel actual o sin
+  costes), formato (**rey de la colina** o **todos contra todos**, a 1 o 2
+  vueltas), participantes con el ADN congelado al inscribirse, temporadas
+  (el primer partido bloquea reglas y formato), historial con la semilla
+  de cada partido, tabla de posiciones y Elo. "At the cap, the round goes
+  to" elige entre más bots y más energía (`db_sim_f1_cap(h, mode)`, nrg +
+  body×10). Smoke: `node tools/e10/smoke_liga.mjs`.
+
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas
 siguen en español.

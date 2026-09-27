@@ -687,6 +687,127 @@ diff. Smoke E9 en verde, más `smoke_e8`, `smoke_im`, `smoke_formas` y
 `smoke_campo`. Verificación en Chrome con la consola limpia. Fila en
 `PROGRESO.md`.
 
+## E10 · Ligas — capa host
+
+Añadida el 2026-09-27 a petición del usuario. **No es superficie del
+original**. El original tiene un modo liga por carpetas (`F1Mode.bas:380-500`:
+`league\stepladder`, `seeded`, `roundN`, `populateladder`) que no guarda
+reglas ni estadísticas; la escalera queda como formato opcional de L3. Hoy
+la web tiene las piezas sueltas: "F1 settings" pisa el panel, el Contest
+guarda su lista en `localStorage`, el Canal guarda su config y el Hall of
+Fame por separado, y ningún resultado recuerda con qué reglas se jugó. Esta
+etapa reúne todo en un objeto **Liga** con reglas, participantes, formato,
+historial y estadísticas. Rama: `e10-ligas`.
+
+**Reglas**: cero cambios en `port/core/` y suite intacta. El único cambio
+fuera de `web/` es un parámetro nuevo de `db_sim_f1_cap` (wasm, capa host,
+ya fuera de la fidelidad). Nada nuevo escribe en el `Sim` ni consume RNG
+fuera de lo que ya hace un contest.
+
+### Decisiones (del usuario, 2026-09-27)
+
+- **Formato elegible en el panel de la liga**: *rey de la colina* (el
+  Canal actual: el ganador se queda y se retira invicto con R victorias
+  seguidas) o *todos contra todos* (duelos de cada pareja, a una o dos
+  vueltas).
+- **Varias ligas con los mismos bots**: los participantes no son de una
+  liga; cada liga los toma del Inventario. Así "F1 clásica" y "F1 con coste
+  de edad" pueden tener la misma plantilla y compararse.
+
+### Modelo (IndexedDB `darwinbots-ligas`, base propia)
+
+- **`leagues`** `{id, name, notes, created, season, format, rules, fmt}`:
+  - `rules`: la foto del panel de opciones. Cada control de `aside` con
+    `data-id`, `data-cost` o `data-key`, más `o-fsize`, `o-fw`, `o-fh` y
+    `o-shape`, como `{id del elemento: valor}`. Aplicar = poner a 0 los
+    costes 1..70 que el panel no muestra (lo que hace `applyF1Settings`),
+    escribir cada control y disparar su `change`. Se crea desde una base
+    (**F1**, **sin costes**) o con **"capturar el panel actual"**, y se
+    retoca en el editor.
+  - `fmt`: lo del contest: bots por especie, energía inicial, rondas
+    mínimas, victorias para ganar (`Maxrounds`), tope de ciclos, **criterio
+    del tope** (`pop` = más bots, como hoy; `nrg` = más nrg + body×10), y
+    para rey de la colina: luchadores por pelea y racha de retiro; para
+    todos contra todos: vueltas (1 o 2).
+- **`entrants`** `{league, season, name, color, dna, dnaHash, src}`: el ADN
+  queda **congelado** al inscribirlo. Editar un híbrido después no cambia
+  la liga (es otro participante) y exportar no depende del Bestiary.
+- **`matches`** `{id, league, season, no, date, fighters[], seed, winner,
+  wins[], rounds, cycles, capRounds, note}`: `seed` más reglas más ADN
+  reproducen el partido (el core es determinista). `note` distingue
+  extinción, tope, victorias y nulo.
+- **Temporadas**: las reglas se bloquean en cuanto hay un partido. "Nueva
+  temporada" las desbloquea, copia los participantes y deja el historial
+  anterior consultable. Las estadísticas son siempre de una temporada.
+
+### Estadísticas (derivadas del historial, nada guardado aparte)
+
+Tabla de posiciones (PJ, G, P, % de victorias), **Elo** (K = 32; en una
+pelea de N, el ganador le gana a cada uno de los demás con K / (N − 1), así
+una pelea de muchos no vale más que un duelo), matriz de
+enfrentamientos directos, ciclos promedio por partido y **% de rondas
+decididas por el tope**, que delata a los que ganan quedándose quietos. En
+una liga, el Hall of Fame del Canal pasa a ser esta tabla.
+
+### Piezas y trabajo
+
+**L1 · Liga y partidos a mano**
+1. `web/league.js`: la base, el modelo y la ventana **"🏟 Leagues"**: lista de
+   ligas; crear, renombrar y borrar; el editor de reglas y de `fmt` (con
+   el selector de formato); los participantes desde el Inventario (todo,
+   favoritos, tag, selección o uno a uno).
+2. **"Play next match"**: el calendario lo decide el formato (todos contra
+   todos: la primera pareja pendiente; rey de la colina: campeón contra
+   retador sorteado). Aplica las reglas y lanza con `contestLaunch`
+   (fuente `form` con el ADN congelado), y al `f1-over` registra el partido.
+3. `db_sim_f1_cap(h, mode)`: `mode = 1` elige por nrg + body×10. El
+   mensaje `f1-cap` del worker lleva el criterio.
+4. Tabla de posiciones, Elo e historial en la ventana.
+
+**L2 · La liga en la TV**
+1. Canal: selector **"League"** (ninguna = el Canal libre de hoy, que queda
+   igual). Con una liga, el Canal juega su calendario sin intervención,
+   aplica sus reglas en cada pelea (y no solo en la primera) y registra
+   cada resultado.
+2. Todos contra todos en el Canal: sigue por donde quedó y, al terminar la
+   vuelta, anuncia al campeón de la temporada y se apaga.
+3. Enfrentamientos directos, ciclos promedio y % por tope. Temporadas.
+
+**L3 · Compartir y repetir**
+1. Exportar e importar una liga (JSON con reglas, participantes con su
+   ADN e historial).
+2. **Repetir** un partido del historial con su semilla, con un aviso si
+   el resultado no coincide.
+3. Opcional: la escalera del original como tercer formato.
+
+**Cierre de cada parte**: suite en verde en los tres modos, `port/core/`
+sin diff, los smokes de host en verde, verificación en Chrome con la
+consola limpia y fila en `PROGRESO.md`.
+
+### Resultado L1 (2026-09-27)
+
+Hecha en `web/league.js` (ventana "🏟 Leagues", botón en la barra). Tal
+como el diseño, con estos ajustes:
+
+- **Editor de reglas**: no duplica el panel. "Load into the panel" escribe
+  las reglas en Sim options, se retocan ahí y "Save the panel as rules" las
+  guarda; la ventana muestra un resumen (campo, costes distintos de 0) y
+  cuántos controles del panel difieren. Los ids de modo de juego que fija
+  cada partido (91, 97-100) quedan fuera de la foto.
+- **"Most energy"** mide nrg + body×10: el body se reparte al reproducirse,
+  así que tener muchos hijos no suma. Smoke: 3 bots flacos contra 2 gordos
+  (`tools/e10/smoke_liga.mjs`, más el calendario de todos contra todos).
+- **Hallazgo**: después de lanzar un partido, el Contest y el Canal
+  recibían mensajes y frames de la sim anterior (un `f1-over` viejo cerraba
+  el partido nuevo). La liga y el Canal ignoran todo hasta el
+  `f1-started` del censo nuevo (el worker atiende en orden). Además,
+  `f1-over` trae el marcador final y los ciclos jugados (`f1CycAcc` del
+  worker): con la pestaña en segundo plano casi no llegan frames.
+- Verificado en Chrome: temporada de todos contra todos de 3 (3 partidos,
+  temporada completa, nueva temporada) y rey de la colina de 3 por pelea
+  con retiro a las 2 victorias; el Canal sin liga sigue igual. Consola
+  limpia.
+
 ---
 
 ## Orden recomendado
@@ -696,4 +817,6 @@ diff. Smoke E9 en verde, más `smoke_e8`, `smoke_im`, `smoke_formas` y
 → E8** según apetito (E6.5, vista enriquecida, añadida el 2026-09-24). Cada etapa cierra con su fila en `PROGRESO.md`.
 **Plan completo el 2026-09-24** (balance de lo que quedó fuera en
 `PROGRESO.md` §"Siguiente"). **E9** (sexualidad visible, capa host) se
-añadió el 2026-09-26 a petición del usuario y está pendiente.
+añadió el 2026-09-26 a petición del usuario y está pendiente. **E10**
+(ligas, capa host) se añadió el 2026-09-27, también pedida por el usuario:
+L1 → L2 → L3.

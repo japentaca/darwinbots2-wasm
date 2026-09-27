@@ -2209,8 +2209,10 @@ DB_EXPORT int db_sim_f1_start(void* h) {
 // apaga con mas de 2): queda viva la especie con mas bots y se matan las
 // demas, asi el Countpop siguiente da la ronda por ganada. Empate en
 // poblacion: desempata nrg + body*10 (la medida de la poda por MaxPop,
-// F1Mode.bas:268-300). Devuelve cuantas especies elimino.
-DB_EXPORT int db_sim_f1_cap(void* h) {
+// F1Mode.bas:268-300). mode = 1 (E10, criterio de una liga): decide esa
+// medida y la poblacion desempata; asi muchos hijos flacos no ganan por
+// numero. Devuelve cuantas especies elimino.
+DB_EXPORT int db_sim_f1_cap(void* h, int mode) {
   db::Sim& sim = S(h);
   auto& F = sim.f1;
   if (!F.ContestMode || F.Over || F.TotSpecies < 2) return 0;
@@ -2232,9 +2234,12 @@ DB_EXPORT int db_sim_f1_cap(void* h) {
   for (int i = 1; i <= n; ++i) {
     if (!pop[i]) continue;
     ++alive;
-    if (!best || pop[i] > pop[best] ||
-        (pop[i] == pop[best] && score[i] > score[best]))
-      best = i;
+    const bool better =
+        mode == 1 ? (score[i] > score[best] ||
+                     (score[i] == score[best] && pop[i] > pop[best]))
+                  : (pop[i] > pop[best] ||
+                     (pop[i] == pop[best] && score[i] > score[best]));
+    if (!best || better) best = i;
   }
   if (alive < 2) return 0;
   for (int t = 1; t <= sim.MaxRobs; ++t) {
