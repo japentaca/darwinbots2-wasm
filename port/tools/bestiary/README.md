@@ -46,6 +46,12 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
   - *Ringo Bonavena v1*: luchador F1 para los torneos. Parámetros
     ajustados peleando contra la élite del Bestiary (los bots que le ganan
     4 de 4 a Animal Minimalis) con las reglas por defecto de las ligas.
+  - *Ringo Bonavena v2*: v1 + defensa contra los enjambres que se
+    alimentan por lazos (Fruit Flies): `.tienum` a un puerto inexistente
+    (ningún lazo le mueve energía), tiro -1 barato contra rivales de body
+    < 20, y el ADN rellenado con un gen muerto hasta 298 tokens, el
+    `.dnalen` de Fruit Flies v0.21, que no se engancha a quien mide lo
+    mismo que ella. Firma distinta de v1 (1972) para que se peleen entre sí.
 
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.

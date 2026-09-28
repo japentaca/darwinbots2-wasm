@@ -3981,5 +3981,12 @@
   "board": "House bots",
   "veg": false,
   "url": ""
+ },
+ {
+  "file": "Ringo_Bonavena_v2.txt",
+  "name": "Ringo Bonavena v2",
+  "board": "House bots",
+  "veg": false,
+  "url": ""
  }
 ]

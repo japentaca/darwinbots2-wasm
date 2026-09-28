@@ -1,0 +1,144 @@
+'Ringo Bonavena v2
+'Liga: F1 (torneos del port, reglas por defecto de las ligas)
+'Pesado de F1: ojos en abanico, foco que salta al rival, golpe al cuerpo
+'cargado con shootval, coraza de shell y poison, y division cuando le sobra.
+'v2: anti enjambres de lazos (Fruit Flies): ningun lazo le mueve energia
+'(.tienum a un puerto inexistente), tiro barato a la energia contra rivales
+'chicos, y el ADN rellenado a 298 tokens, el largo de Fruit Flies v0.21,
+'que no se engancha a quien mide lo mismo que ella.
+'Se reconoce por la firma 1972 en .out1.
+
+'Anti-lazos: ningun lazo le mueve energia
+cond
+*.numties 0 >
+start
+999 .tienum store
+
+stop
+
+'Nacimiento: ojos en abanico, firma y media vuelta
+cond
+*.robage 0 =
+start
+800 .eye1dir store
+300 .eye1width store
+600 .eye2dir store
+300 .eye2width store
+400 .eye3dir store
+300 .eye3width store
+200 .eye4dir store
+300 .eye4width store
+-200 .eye6dir store
+300 .eye6width store
+-400 .eye7dir store
+300 .eye7width store
+-600 .eye8dir store
+300 .eye8width store
+-800 .eye9dir store
+300 .eye9width store
+1972 .out1 store
+628 .aimdx store
+stop
+
+'Buscar: el foco recorre los ojos
+cond
+*.eyef 0 =
+*.in1 1972 = or
+start
+*.focuseye 5 add 1 add 9 mod 4 sub .focuseye store
+stop
+
+'Nada a la vista: rondar
+cond
+*.eye1 *.eye2 add *.eye3 add *.eye4 add *.eye5 add *.eye6 add *.eye7 add *.eye8 add *.eye9 add 0 =
+start
+70 .aimdx store
+*.maxvel *.vel sub 0 floor 3 div .up store
+stop
+
+'Rival en el foco: encararlo y seguirle el paso
+cond
+*.eyef 0 >
+*.in1 1972 !=
+start
+*.refxpos *.refypos angle .setaim store
+0 .focuseye store
+*.refveldx .dx store
+*.refvelup .up store
+stop
+
+'Rival lejos: acortar
+cond
+*.eyef 0 >
+*.eyef 30 <
+*.in1 1972 !=
+start
+*.refvelup 20 add .up store
+stop
+
+'Rival a tiro: golpe al cuerpo; si es chico, tiro barato a la energia
+cond
+*.eyef 5 >
+*.in1 1972 !=
+start
+-6 .shoot store
+24 .shootval store
+*.refbody 20 <
+-1 .shoot store
+0 .shootval store
+stop
+
+'Energia de sobra a musculo
+cond
+*.nrg *.body 2 mult >
+start
+*.nrg *.body 2 mult sub 10 div 100 ceil .strbody store
+stop
+
+'Poca energia: comer musculo
+cond
+*.nrg *.body 2 mult 2 div <
+start
+100 .fdbody store
+stop
+
+'Guardia: shell
+cond
+*.shell 3 mult *.body <
+*.nrg 500 >
+start
+100 .mkshell store
+stop
+
+'Guardia: poison
+cond
+*.poison 16 mult *.body <
+*.nrg 500 >
+start
+100 .strpoison store
+stop
+
+'Dividirse
+cond
+*.nrg 3000 >
+*.body 1800 >
+start
+20 .repro store
+628 .aimdx store
+stop
+
+'Purgar waste por detras
+cond
+*.waste 100 >
+start
+-4 .shoot store
+*.waste .shootval store
+.backshot inc
+stop
+'Disfraz: largo de ADN de mosca (nunca corre)
+cond
+*.robage -1 =
+start
+1 2 3 4 5 6 7 8 9 10 11 12 13 14
+stop
+end
