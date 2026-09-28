@@ -10,6 +10,7 @@
 // de web/league.js, cargada en un vm como en los smokes.
 //
 //   node tools/fight/torneo.mjs koth [opciones]        (desde port/)
+//   node tools/fight/torneo.mjs swiss [opciones]       (perfilar muchos bots)
 //   node tools/fight/torneo.mjs duel <bot A> <bot B> [opciones]
 //
 // Bots: por nombre o archivo del Bestiary (web/bots/bots.json) o por ruta a
@@ -21,6 +22,8 @@
 //   --retire n           victorias seguidas para retirarse invicto (5)
 //   --endless            la temporada no termina con el retiro
 //   --no-repeat          quien ya peleó no vuelve a retar
+//   --swiss-rounds n     suizo: rondas (⌈log2 N⌉ + 1)
+//   --jobs n             suizo: peleas en paralelo (núcleos − 2)
 //   --qty n              bots por especie (5)
 //   --nrg n              energía inicial (3000)
 //   --rounds n           rondas mínimas por partido (5)
@@ -189,6 +192,8 @@ function fightCfg(rules, page, fmt, fighters, seed, a) {
 function runFight(exe, cfg) {
   return new Promise((resolve, reject) => {
     const p = spawn(exe, ['-'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    // Prioridad baja: con varias peleas en paralelo la máquina sigue usable.
+    try { os.setPriority(p.pid, os.constants.priority.PRIORITY_BELOW_NORMAL); } catch (e) { /* sin permiso: sigue */ }
     let out = '', err = '';
     p.stdout.setEncoding('utf8').on('data', (d) => { out += d; });
     p.stderr.setEncoding('utf8').on('data', (d) => { err += d; });
@@ -222,12 +227,124 @@ function botSummary(matches) {
   return [...rows.values()];
 }
 
+// ---- Sistema suizo -----------------------------------------------------------------
+// Para perfilar muchos bots: cada ronda empareja bots con el mismo puntaje
+// (sin repetir rival mientras se pueda), así en ~log2(N) rondas los fuertes
+// terminan peleando entre ellos y la tabla ordena a todos. Las peleas de una
+// ronda son independientes: corren en paralelo (--jobs).
+// Puntos: victoria 1, nula ½, bye 1 (sin pelea). Desempates: Buchholz (suma
+// de los puntos de los rivales), luego Elo (1500, K 32, en el orden de la
+// ronda) y rondas ganadas por extinción.
+const SW_ELO0 = 1500, SW_K = 32;
+
+function swissTable(players, matches) {
+  const T = new Map(players.map((e) => [e.name, { name: e.name, points: 0, buchholz: 0, elo: SW_ELO0,
+    fights: 0, won: 0, lost: 0, void: 0, byes: 0, roundsWon: 0, roundsWonExtinct: 0, roundsLost: 0,
+    opponents: [] }]));
+  for (const m of matches) {
+    if (m.bye) { const r = T.get(m.fighters[0]); r.points += 1; r.byes++; continue; }
+    const [A, B] = m.fighters.map((n) => T.get(n));
+    A.opponents.push(B.name); B.opponents.push(A.name);
+    for (const r of [A, B]) {
+      r.fights++;
+      if (!m.winner) { r.void++; r.points += 0.5; }
+      else if (m.winner === r.name) { r.won++; r.points += 1; }
+      else r.lost++;
+      for (const rd of m.result.rounds || []) {
+        if (rd.winner === r.name) { r.roundsWon++; if (rd.how === 'extinct') r.roundsWonExtinct++; }
+        else r.roundsLost++;
+      }
+    }
+    const sA = !m.winner ? 0.5 : m.winner === A.name ? 1 : 0;
+    const exp = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
+    const d = SW_K * (sA - exp);
+    A.elo += d; B.elo -= d;
+  }
+  for (const r of T.values()) r.buchholz = r.opponents.reduce((s, n) => s + T.get(n).points, 0);
+  return [...T.values()].sort((x, y) => y.points - x.points || y.buchholz - x.buchholz ||
+    y.elo - x.elo || y.roundsWonExtinct - x.roundsWonExtinct);
+}
+
+// Emparejamiento de una ronda: por puntos (y desempates) de arriba abajo, el
+// primero libre con el siguiente libre que no haya enfrentado todavía. Con
+// N impar, el bye va al de más abajo que aún no tuvo.
+function swissPair(order, table, matches) {
+  const played = new Set(matches.filter((m) => !m.bye).map((m) => m.fighters.slice().sort().join('\u0000')));
+  const met = (x, y) => played.has([x, y].sort().join('\u0000'));
+  const pos = new Map(table.map((r, i) => [r.name, i]));
+  const list = order.slice().sort((x, y) => pos.get(x.name) - pos.get(y.name));
+  let bye = null;
+  if (list.length % 2) {
+    const byes = new Set(matches.filter((m) => m.bye).map((m) => m.fighters[0]));
+    const i = list.map((e) => !byes.has(e.name)).lastIndexOf(true);
+    bye = list.splice(i < 0 ? list.length - 1 : i, 1)[0];
+  }
+  const pairs = [], free = list.slice();
+  while (free.length) {
+    const p = free.shift();
+    let j = free.findIndex((q) => !met(p.name, q.name));
+    if (j < 0) j = 0;                               // todos enfrentados: revancha
+    pairs.push([p, free.splice(j, 1)[0]]);
+  }
+  return { pairs, bye };
+}
+
+async function pool(tasks, jobs) {
+  const out = new Array(tasks.length);
+  let next = 0;
+  const worker = async () => { while (next < tasks.length) { const i = next++; out[i] = await tasks[i](); } };
+  await Promise.all(Array.from({ length: Math.min(jobs, tasks.length) }, worker));
+  return out;
+}
+
+async function runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 }) {
+  const N = S.entrants.length;
+  const rounds = num(a['swiss-rounds'], Math.ceil(Math.log2(Math.max(2, N))) + 1);
+  const jobs = Math.max(1, num(a.jobs, Math.max(1, os.cpus().length - 2)));
+  // Orden inicial al azar (con --seed, reproducible): la ronda 1 empareja así.
+  const order = S.entrants.slice();
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(draw() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  console.log(`Swiss: ${N} entrants · ${rounds} rounds · ${jobs} parallel fights · ` +
+    `${fmt.qty} bots, ${fmt.nrg} nrg, ${fmt.rounds} rounds, ${fmt.wins} wins, cap ${fmt.cap} (${fmt.capMode}), ` +
+    `popcap ${fmt.popCap} · preset ${a.preset || 'f1'}`);
+  const save = (done, round) => {
+    fs.writeFileSync(file, JSON.stringify({ mode: 'swiss', done, round, rounds, date: new Date().toISOString(),
+      fmt, rules, entrants: S.entrants.map((e) => e.name), matches,
+      standings: swissTable(S.entrants, matches) }, null, 1));
+  };
+  for (let r = 1; r <= rounds; r++) {
+    const table = r === 1 ? order.map((e) => ({ name: e.name })) : swissTable(S.entrants, matches);
+    const { pairs, bye } = swissPair(order, table, matches);
+    // Semillas y números en el orden del emparejamiento: el resultado no
+    // depende de qué pelea termina primero.
+    const base = matches.length;
+    const todo = pairs.map(([x, y], i) => {
+      const seed = nextSeed();
+      return () => fight([x, y], seed, base + i + 1);
+    });
+    console.log(`\n== Round ${r}/${rounds}: ${pairs.length} fights${bye ? ` · bye: ${bye.name}` : ''} ==`);
+    const tr = Date.now();
+    const got = await pool(todo, jobs);
+    for (const m of got) { m.round = r; matches.push(m); }
+    if (bye) matches.push({ no: matches.length + 1, round: r, bye: true, fighters: [bye.name], winner: bye.name });
+    const tab = swissTable(S.entrants, matches);
+    console.log(`-- round ${r} in ${((Date.now() - tr) / 1000).toFixed(0)}s · top 10:`);
+    tab.slice(0, 10).forEach((x, i) => console.log(`   ${i + 1}. ${x.name} · ${x.points} pts · ` +
+      `Bh ${x.buchholz} · Elo ${Math.round(x.elo)} · ${x.roundsWonExtinct}/${x.roundsWon} rounds by extinction`));
+    save(r === rounds, r);
+  }
+  console.log(`\n${matches.filter((m) => !m.bye).length} fights in ${((Date.now() - t0) / 60000).toFixed(1)} min → ${file}`);
+}
+
 // ---- Main ---------------------------------------------------------------------------
 async function main() {
   const a = parseArgs(process.argv.slice(2));
   const mode = a._.shift();
-  if (mode !== 'koth' && mode !== 'duel') {
-    console.error('usage: torneo.mjs koth [options] | duel <bot A> <bot B> [options]');
+  if (mode !== 'koth' && mode !== 'duel' && mode !== 'swiss') {
+    console.error('usage: torneo.mjs koth|swiss [options] | duel <bot A> <bot B> [options]');
     process.exit(2);
   }
   const exe = a.exe || path.join(PORT_DIR, 'build', process.platform === 'win32' ? 'dbfight.exe' : 'dbfight');
@@ -271,8 +388,43 @@ async function main() {
   for (const e of S.entrants) e.file = byName.get(e.name);
 
   const nextSeed = seeder(a.seed);
-  const matches = [];
+  const matches = [], dropped = [];
+  const file = a.out || path.join(here, 'out', `${mode}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  // Cada 10 peleas se guarda lo jugado (done: false): una corrida larga
+  // cortada no pierde todo.
+  const save = (done) => {
+    const out = { mode, done, date: new Date().toISOString(), fmt, rules,
+                  entrants: S.entrants.map((e) => e.name), dropped, matches, bots: botSummary(matches) };
+    if (mode === 'koth') {
+      out.champion = lgx.lgSeasonChampion(S, matches);
+      out.standings = lgx.lgStandings(S, matches);
+      if (done && out.champion) console.log(`\nChampion: ${out.champion.name} ${lgx.LG_HOW[out.champion.how]}.`);
+    }
+    fs.writeFileSync(file, JSON.stringify(out, null, 1));
+  };
   const t0 = Date.now();
+  // Una pelea: dbfight + registro. Un fallo de dbfight cuenta como nula.
+  const fight = async (fighters, seed, no) => {
+    let res;
+    try {
+      res = await runFight(exe, fightCfg(rules, page, fmt, fighters, seed, a));
+    } catch (e) {
+      res = { winner: '', void: 'dbfight failed: ' + e.message, cycles: 0, secs: 0, rounds: [] };
+    }
+    // El nombre de especie es el del participante (+ ".txt" que RealName quita).
+    const m = { no, fighters: fighters.map((e) => e.name), winner: res.winner, seed, result: res };
+    const rds = (res.rounds || []).map((r) => `${r.winner === fighters[0].name ? 'A' : 'B'}${r.how === 'cap' ? '*' : ''}`).join('');
+    console.log(`#${m.no} ${m.fighters.join(' vs ')} → ` +
+      (res.winner ? `🏆 ${res.winner}` : `void (${res.void})`) +
+      ` · rounds ${rds || '-'} · ${res.cycles} cycles · ${res.secs}s · seed ${seed}`);
+    return m;
+  };
+  if (mode === 'swiss') {
+    await runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 });
+    fs.rmSync(tmp, { recursive: true, force: true });
+    return;
+  }
   console.log(`${mode === 'duel' ? 'Duel' : 'King of the hill'}: ${S.entrants.length} entrants · ` +
     `retire ${fmt.retire}${fmt.kothEnd === 'never' ? ' (endless)' : ''}${fmt.noRepeat ? ' · no repeats' : ''} · ` +
     `${fmt.qty} bots, ${fmt.nrg} nrg, ${fmt.rounds} rounds, ${fmt.wins} wins, cap ${fmt.cap} (${fmt.capMode}), ` +
@@ -282,29 +434,30 @@ async function main() {
       ? (matches.length ? null : { fighters: S.entrants })
       : lgx.lgFixture(S, matches);
     if (!fx) break;
-    const seed = nextSeed();
     const fighters = fx.fighters;
-    const res = await runFight(exe, fightCfg(rules, page, fmt, fighters, seed, a));
-    // El nombre de especie es el del participante (+ ".txt" que RealName quita).
-    const m = { no: matches.length + 1, fighters: fighters.map((e) => e.name), winner: res.winner,
-                seed, result: res };
+    const m = await fight(fighters, nextSeed(), matches.length + 1);
     matches.push(m);
-    const rds = (res.rounds || []).map((r) => `${r.winner === fighters[0].name ? 'A' : 'B'}${r.how === 'cap' ? '*' : ''}`).join('');
-    console.log(`#${m.no} ${m.fighters.join(' vs ')} → ` +
-      (res.winner ? `🏆 ${res.winner}` : `void (${res.void})`) +
-      ` · rounds ${rds || '-'} · ${res.cycles} cycles · ${res.secs}s · seed ${seed}`);
+    const res = m.result;
+    // Sin ganador, la misma pelea se volvería a sortear siempre: fuera los
+    // que el cargador rechazó (no llegan al censo) o, si no se sabe, los
+    // retadores (el campeón sigue).
+    if (!res.winner && mode === 'koth') {
+      const inCensus = new Set((res.species || []).map((x) => x.name));
+      let gone = fighters.filter((e) => res.species && !inCensus.has(e.name));
+      if (!gone.length) {
+        const { champ } = lgx.lgKothState(S, matches);
+        gone = fighters.filter((e) => e.name !== champ);
+      }
+      for (const e of gone) {
+        S.entrants.splice(S.entrants.indexOf(e), 1);
+        dropped.push({ name: e.name, fight: m.no, why: res.void });
+        console.log(`   dropped: ${e.name} (${res.void})`);
+      }
+    }
+    if (m.no % 10 === 0) save(false);
   }
 
-  const out = { mode, date: new Date().toISOString(), fmt, rules, entrants: S.entrants.map((e) => e.name),
-                matches, bots: botSummary(matches) };
-  if (mode === 'koth') {
-    out.champion = lgx.lgSeasonChampion(S, matches);
-    out.standings = lgx.lgStandings(S, matches);
-    if (out.champion) console.log(`\nChampion: ${out.champion.name} ${lgx.LG_HOW[out.champion.how]}.`);
-  }
-  const file = a.out || path.join(here, 'out', `${mode}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(out, null, 1));
+  save(true);
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log(`${matches.length} fights in ${((Date.now() - t0) / 1000).toFixed(1)}s → ${file}`);
 }

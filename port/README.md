@@ -540,7 +540,7 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   `node tools/e12/smoke_copa.mjs` (grupos, bombos, desempates, cuadro,
   3.er puesto, exportar e importar con los grupos).
 - **Sin navegador**: `build/dbfight.exe` corre un partido F1 con el core
-  nativo y `node tools/fight/torneo.mjs koth|duel` arma el rey de la colina
+  nativo y `node tools/fight/torneo.mjs koth|swiss|duel` arma el rey de la colina o un suizo para perfilar
   con las reglas de la página (ver `tools/fight/README.md`).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
