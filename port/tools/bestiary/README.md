@@ -52,6 +52,34 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
     < 20, y el ADN rellenado con un gen muerto hasta 298 tokens, el
     `.dnalen` de Fruit Flies v0.21, que no se engancha a quien mide lo
     mismo que ella. Firma distinta de v1 (1972) para que se peleen entre sí.
+  - *Ringo Bonavena v3*: el pesado de v1 sin las muertes súbitas de v2,
+    ajustado con la receta anti-pasivos de `tools/fight/README.md` (tope
+    5000 por energía, AGECOST 1, 100 bots por especie). Diagnóstico con
+    los partidos que v2 perdía en el suizo: moría con mucha energía, no
+    por desgaste. Cambios:
+    - pariente por los conteos del ADN del que mira (`.refeye`,
+      `.refshoot`, `.refup`, `.refaimdx`, `.refdx`) y no por `.out1`:
+      Rabidus copia `in1` en `out1` y Ringo no le tiraba;
+    - lazos ajenos cortados cada ciclo (`*.tiepres .deltie store`) y sin
+      tirar mientras está atado: lo que un lazo escribe (el torpedo de
+      Spinner pone `.shootval` 31999) llega después del ADN y antes del
+      tiro, y ese `-6` le costaba toda la energía;
+    - slime 500 contra virus (Rabidus: `.vshoot` enorme; DIN2: `.repro`
+      que sube solo) y un gen de limpieza al final del ADN;
+    - poison mínimo 300, ojo central ancho, acercamiento por distancia y
+      tiro barato (`-1` con shootval 0) contra rivales de poca energía y
+      poco poison; paralizado, shootval 1 (el `-2` forzado casi no regala);
+    - disfraces: `.out7` de This'n'That, `.out8`/`.out9` de la familia
+      BETA y un gen muerto con los conteos de `.aimdx` de Republican Wasp
+      y de ojos y `.shoot` de Multiply4: lo toman por uno de los suyos.
+
+    Banco de 17 rivales (los 5 que le ganaban a v2, v1, v2 y 10 del top
+    30), 6 semillas por cruce: v1 35-61, v2 30-66, v3 100-2. Suizo del
+    Bestiary con la receta anti-pasivos (2026-09-28, 539 bots, `--seed
+    1`): v3 campeón 11-0 (33-4 en rondas, 22 por extinción), v1 #28, v2
+    #86 (antes #148). No cruzó a This'n'That ni a BETA-AA (#2 y #3),
+    a los que en el banco solo les gana por disfraz: si cambian su
+    reconocimiento de parientes, el disfraz deja de servir.
 
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.

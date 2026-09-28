@@ -36,6 +36,8 @@
 //   --opt id=v --cost i=v  cualquier opción o coste (ids de dbcore_api.cpp)
 //   --preset f1|panel    reglas: preset F1 (f1) o el panel por defecto (panel)
 //   --seed n             semilla del torneo: fija las de cada partido (al azar)
+//   --match-seed n       duel: la semilla del partido tal cual (la del JSON de
+//                        un torneo), en vez de derivarla de --seed
 //   --maxcycles n        red de seguridad por partido (2000000)
 //   --exe ruta           dbfight (build/dbfight.exe)
 //   --out archivo.json   resultado completo (tools/fight/out/<fecha>.json)
@@ -435,7 +437,8 @@ async function main() {
       : lgx.lgFixture(S, matches);
     if (!fx) break;
     const fighters = fx.fighters;
-    const m = await fight(fighters, nextSeed(), matches.length + 1);
+    const seed = mode === 'duel' && a['match-seed'] !== undefined ? Number(a['match-seed']) : nextSeed();
+    const m = await fight(fighters, seed, matches.length + 1);
     matches.push(m);
     const res = m.result;
     // Sin ganador, la misma pelea se volvería a sortear siempre: fuera los

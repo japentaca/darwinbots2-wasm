@@ -108,6 +108,8 @@ partido (`--qty`, `--nrg`, `--rounds`, `--wins`, `--cap`, `--cap-mode`,
 `--popcap`), mundo (`--min-vegs`, `--repop-amount`, `--repop-cooldown`,
 `--max-energy`, `--max-pop`, `--opt id=v`, `--cost i=v`, `--preset f1|panel`),
 `--seed` (el torneo entero reproducible: cruces y semillas de cada partido),
+`--match-seed` (en `duel`, la semilla del partido tal cual: reproduce un
+partido de un JSON con el mismo orden de luchadores),
 suizo (`--swiss-rounds`, `--jobs`), `--exe` y `--out`.
 
 Cada `dbfight` arranca con prioridad baja (por debajo de lo normal): con
