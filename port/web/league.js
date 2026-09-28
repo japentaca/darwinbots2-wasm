@@ -104,6 +104,11 @@ const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup'];
 // cada temporada: ver lgLiveFill). El pool es un filtro de lgPool ('all',
 // 'fav', 'sel', 'tag:…', 'set:…').
 const LG_DRAW_DEFAULT = { mode: 'fixed', pool: 'all', n: 8 };
+// Sin tope real: el sorteo toma a lo sumo lo que tiene el pool. Este número
+// solo acota lo que llega de un archivo o de un campo mal escrito.
+const LG_DRAW_MAX = 10000;
+// Todos contra todos: a partir de aquí la ventana avisa del largo del calendario.
+const LG_RR_WARN = 1000;
 const LG_ELO0 = 1500, LG_K = 32;
 const LG_MAX_FIGHTERS = 20;   // PopArray(1 To 20), F1Mode.bas:59
 const LG_KOTH_CAP = 3;        // rey de la colina: tope de 3 × N peleas por temporada
@@ -129,7 +134,7 @@ function lgDrawClean(d) {
   const o = { ...LG_DRAW_DEFAULT, ...(d && typeof d === 'object' ? d : {}) };
   return { mode: o.mode === 'random' || o.mode === 'fight' ? o.mode : 'fixed',
            pool: typeof o.pool === 'string' && o.pool ? o.pool : LG_DRAW_DEFAULT.pool,
-           n: Math.min(200, Math.max(2, parseInt(o.n, 10) || LG_DRAW_DEFAULT.n)) };
+           n: Math.min(LG_DRAW_MAX, Math.max(2, parseInt(o.n, 10) || LG_DRAW_DEFAULT.n)) };
 }
 
 // FNV-1a de 32 bits: identifica el ADN congelado de cada participante.
@@ -837,7 +842,8 @@ function lgLiveSync(L) {
   const S = lgSeason(L);
   if (lgSeasonMatches(S.no).length) return false;
   const d = lgDrawOf(L);
-  const live = lgLiveOn(L) ? { pool: d.pool, n: d.n } : undefined;
+  // n no pasa del pool: el tope del rey de la colina (3 × n) sale de aquí.
+  const live = lgLiveOn(L) ? { pool: d.pool, n: Math.min(d.n, Math.max(2, lgPool(d.pool).length)) } : undefined;
   if (JSON.stringify(live) === JSON.stringify(S.live)) return false;
   if (live) S.live = live; else delete S.live;
   delete S.next;
@@ -941,7 +947,7 @@ function lgImportObj(o, names, newId) {
                 fmt: { ...LG_FMT_DEFAULT, popCap: 0, ...(s.fmt || {}) }, entrants };
     // Sorteo en cada pelea: la foto del sorteo de la temporada.
     if (s.live && typeof s.live === 'object' && typeof s.live.pool === 'string')
-      x.live = { pool: s.live.pool, n: Math.min(200, Math.max(0, parseInt(s.live.n, 10) || 0)) };
+      x.live = { pool: s.live.pool, n: Math.min(LG_DRAW_MAX, Math.max(0, parseInt(s.live.n, 10) || 0)) };
     // E12: el reparto de los grupos de la copa, si reparte a estos participantes.
     if (Array.isArray(s.groups)) {
       x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));

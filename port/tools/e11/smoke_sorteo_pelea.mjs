@@ -158,6 +158,14 @@ console.log('\n== copa, temporada nueva e importar ==');
   const L = open({ format: 'koth' }, { mode: 'random', n: 3 });
   check('con el sorteo por temporada no hay foto', !ctx.lgSeason(L).live);
 }
+{
+  // Sin el tope viejo de 200: n llega entero, pero la foto no pasa del pool (las 12 bestias que no son vegetales).
+  check('el sorteo acepta más de 200', ctx.lgDrawClean({ n: 568 }).n === 568);
+  const L = open({ format: 'koth' }, { mode: 'fight', n: 568 });
+  const S = ctx.lgSeason(L);
+  check('la foto se queda en el tamaño del pool', S.live.n === 12, `n = ${S.live.n}`);
+  check('y el tope del rey de la colina sale de ahí', ctx.lgKothCap(S) === 36);
+}
 
 console.log(`\n${pass} ok, ${fail} fallas`);
 process.exit(fail ? 1 : 0);

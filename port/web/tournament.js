@@ -437,7 +437,9 @@ function tnRenderSetup(L, S, ms, locked) {
   const cup = S.fmt.format === 'cup';
   $('tn-ecount').textContent = `${S.entrants.length}` +
     (single ? ` · only the first ${LG_MAX_FIGHTERS} play a single match` : '') +
-    (cup && !lgCupSizeOk(S) ? ' · a World cup needs 8, 16 or 32' : '');
+    (cup && !lgCupSizeOk(S) ? ' · a World cup needs 8, 16 or 32' : '') +
+    (S.fmt.format === 'rr' && S.entrants.length * (S.entrants.length - 1) / 2 > LG_RR_WARN
+      ? ` · ⚠ ${(S.entrants.length * (S.entrants.length - 1) / 2).toLocaleString('en')} fixtures` : '');
   $('tn-cupsetup').hidden = !cup;
   if (cup) {
     $('tn-groups').innerHTML = tnCupSetupHtml(L, S);
@@ -462,7 +464,10 @@ function tnRenderSetup(L, S, ms, locked) {
   if (document.activeElement !== $('tn-drawn')) $('tn-drawn').value = dr.n;
   if ($('tn-drawpool').value !== dr.pool) $('tn-drawpool').value = dr.pool;
   $('tn-drawmode').value = dr.mode;
-  $('tn-drawhint').textContent = tnDrawHint(dr, S, locked);
+  const poolN = lgPool(dr.pool).length;
+  $('tn-drawn').max = Math.max(2, poolN);
+  $('tn-drawn').title = `How many (the pool has ${poolN}; more than that draws the whole pool)`;
+  $('tn-drawhint').textContent = [tnDrawHint(dr, S, locked), tnRrWarn(S, Math.min(dr.n, poolN))].filter(Boolean).join(' ');
   $('tn-draw').disabled = locked;
   $('tn-draw').title = locked ? 'This season has matches: start a new season to draw again'
                               : 'Replace the entrants with this many drawn at random from the pool';
@@ -585,6 +590,13 @@ async function tnAddItems(items) {
   tnRender();
 }
 
+// Todos contra todos con muchos participantes: el calendario crece con n².
+function tnRrWarn(S, n) {
+  const fx = (n * (n - 1)) / 2;
+  return S.fmt.format === 'rr' && fx > LG_RR_WARN
+    ? `⚠ Round robin: drawing ${n} means ${fx.toLocaleString('en')} fixtures.` : '';
+}
+
 // Qué hace el sorteo en cada pelea con el formato de la temporada.
 function tnDrawHint(dr, S, locked) {
   if (dr.mode !== 'fight') return '';
@@ -671,7 +683,7 @@ async function openTournaments(tab) {
     '<button id="tn-addanimal">Animal Minimalis</button>' +
     '</div>' +
     '<div class="ct-srcrow tn-draw">' +
-    '<button id="tn-draw">🎲 Draw</button><input type="number" id="tn-drawn" min="2" max="200" title="How many"> from ' +
+    '<button id="tn-draw">🎲 Draw</button><input type="number" id="tn-drawn" min="2"> from ' +
     `<select id="tn-drawpool">${lgPoolOptions('')}</select>` +
     '</div>' +
     '<label class="tn-chk">Entrants: <select id="tn-drawmode">' +
