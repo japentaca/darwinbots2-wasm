@@ -292,7 +292,6 @@ function tvTick() {
   }
   tvOverlay(left);
   tnRenderTv(left);
-  tnFsRender(left);
   tv.timer = setTimeout(tvTick, 250);
 }
 
@@ -352,6 +351,7 @@ function tvStop() {
 
 // Rótulo sobre el campo (#ch-overlay): cortinilla, partido en vivo y campeón.
 function tvOverlay(left) {
+  tnFsRender(left);
   const el = document.getElementById('ch-overlay');
   if (!el) return;
   if (!tv.on) { el.hidden = true; return; }
@@ -401,7 +401,9 @@ function tnOnStats(st) {
 
 // ---- Zócalo de la pantalla completa (#fs-board) --------------------------------
 // Lo mismo que Play muestra de la pelea: la línea de quién juega y el marcador
-// (o la cortinilla del TV mode). Solo con el campo a pantalla completa.
+// (o la cortinilla del TV mode). Solo con el campo a pantalla completa, donde
+// reemplaza al rótulo del TV mode: por eso lleva también la fase de la pelea,
+// el ganador durante el respiro y el campeón al cerrar la edición.
 const tnNames = (list) => list.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ');
 
 function tnFsRender(left) {
@@ -409,15 +411,30 @@ function tnFsRender(left) {
   if (!el) return;
   const fs = document.fullscreenElement === document.getElementById('field-wrap');
   const brk = tv.on && tv.phase === 'break' && tv.fx;
-  if (!lg.live) tn.board = '';
-  if (!fs || (!lg.live && !brk)) { el.hidden = true; return; }
-  if (brk && left === undefined) left = Math.ceil((tv.until - performance.now()) / 1000);
+  const banner = tv.on && tv.phase === 'banner';
+  const won = tv.on && tv.phase === 'idle' && tv.winner && tv.fx;   // el respiro tras la pelea
+  if (!lg.live && !won) tn.board = '';
+  if (!fs || (!lg.live && !brk && !banner && !won)) { el.hidden = true; return; }
+  if ((brk || banner) && left === undefined) left = Math.ceil((tv.until - performance.now()) / 1000);
   el.hidden = false;
+  if (banner) { el.innerHTML = tvBannerHtml(left); return; }
+  const tvFight = tv.on && tv.fx && (!lg.live || lg.live.fighters === tv.fx.fighters);
+  const label = tvFight ? ` <span class="ct-rule">${escHtml(tv.fx.label)}</span>` : '';
   el.innerHTML = lg.live
-    ? `<div class="fs-next">${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${tnNames(lg.live.fighters)}</div>` +
+    ? `<div class="fs-next">${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${tnNames(lg.live.fighters)}${label}</div>` +
       tn.board
-    : `<div class="fs-next">Next: ${tnNames(tv.fx.fighters)} <span class="ct-rule">${escHtml(tv.fx.label)}</span></div>` +
-      tvBreakHtml(left);
+    : won
+    ? `<div class="fs-next">Played: ${tnNames(tv.fx.fighters)}${label}</div>` + tn.board +
+      `<div class="ct-winner">🏆 <b>${escHtml(tv.winner)}</b> wins</div>`
+    : `<div class="fs-next">Next: ${tnNames(tv.fx.fighters)}${label}</div>` + tvBreakHtml(left);
+}
+
+// Cierre de la edición en el zócalo: el campeón y la cuenta de la siguiente.
+function tvBannerHtml(left) {
+  const L = tv.L, S = lgSeason(L);
+  return `<div class="fs-next">🏆 ${escHtml(L.name)} · edition ${S.no} complete</div>` +
+    (tv.champ ? `<div class="ct-winner">🏆 <b>${escHtml(tv.champ.name)}</b> ${LG_HOW[tv.champ.how]}</div>` : '') +
+    (left > 0 ? `<div class="ct-rule">Next edition in <b>${left}</b>…</div>` : '');
 }
 
 // ---- Render -----------------------------------------------------------------------

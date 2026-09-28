@@ -257,8 +257,9 @@
                        text-overflow: ellipsis; white-space: nowrap; }
   #ch-overlay .ch-vs i { color: #5c6b88; font-weight: 400; margin: 0 4px; }
   #ch-overlay .ch-win { color: #ffd166; font-size: 15px; font-weight: 700; margin-top: 2px; }
-  /* Pantalla completa del campo: solo el canvas, el rótulo arriba y el
-     zócalo de la pelea (el marcador de Play) abajo. */
+  /* Pantalla completa del campo: solo el canvas y el zócalo de la pelea (el
+     marcador de Play) abajo; el rótulo del TV mode se oculta y el zócalo
+     lleva lo suyo (fase, ganador, campeón de la edición). */
   #btn-fs { position: absolute; right: 8px; top: 8px; z-index: 2; padding: 2px 8px;
             font-size: 16px; line-height: 1.2; opacity: 0.55; }
   #btn-fs:hover { opacity: 1; }
@@ -266,7 +267,7 @@
   #field-wrap:fullscreen canvas { width: min(100vw, 100vh); height: min(100vw, 100vh); border: 0; }
   #field-wrap:fullscreen #btn-fs { opacity: 0; }
   #field-wrap:fullscreen #btn-fs:hover { opacity: 0.8; }
-  #field-wrap:fullscreen #ch-overlay { top: 14px; bottom: auto; }
+  #field-wrap:fullscreen #ch-overlay { display: none; }
   #fs-board { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
               width: min(560px, calc(100% - 32px)); pointer-events: none;
               background: rgba(18, 24, 38, 0.88); border: 1px solid #2e3a55; border-radius: 6px;
