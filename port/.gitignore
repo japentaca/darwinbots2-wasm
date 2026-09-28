@@ -1,3 +1,4 @@
 build/
 build-clang/
 build-wasm/
+tools/fight/out/

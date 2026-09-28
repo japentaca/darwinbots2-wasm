@@ -103,6 +103,32 @@ console.log('\n== rey de la colina: retadores en cada pelea ==');
   check('sin retiro, termina a las 3 × n peleas', done(L) && n === 6, `${n} peleas`);
 }
 
+console.log('\n== rey de la colina sin repetir: el pool se agota ==');
+for (const [who, pick] of [['el campeón gana', (f) => f[0]], ['el retador gana', (f) => f[1]]]) {
+  const L = open({ format: 'koth', k: 2, retire: 99, noRepeat: true }, { mode: 'fight', n: 20 });
+  const S = ctx.lgSeason(L);
+  const seen = new Set();
+  let n = 0, champ = null, back = false;
+  while (!done(L) && n < 40) {
+    const f = await play(L, pick);
+    if (!f) break;
+    // Retadores: todos menos el campeón vigente; ninguno puede repetir.
+    for (const x of f) if (x !== champ) { if (seen.has(x)) back = true; seen.add(x); }
+    champ = pick(f);
+    n++;
+  }
+  // 10 legibles y distintos (B5 = B4, B7 ilegible, sin el vegetal): 9 peleas.
+  const c = ctx.lgSeasonChampion(S, ctx.lg.matches);
+  check(`${who}: nadie repite y termina al secarse el pool`,
+        !back && n === 9 && seen.size === 10 && done(L) && c && c.how === 'dry', `${n} peleas, ${seen.size} bots`);
+}
+{
+  const L = open({ format: 'koth', k: 2, retire: 99, noRepeat: true }, { mode: 'fight', n: 20 });
+  while (!done(L)) await play(L);
+  const r = ctx.lgImportObj(JSON.parse(JSON.stringify(ctx.lgExportObj(L, ctx.lg.matches))), new Set(), 'X');
+  check('exportar e importar conserva el fin por pool seco', r.L.seasons[0].dry === 9 && r.L.seasons[0].fmt.noRepeat);
+}
+
 console.log('\n== escalera: cada aspirante al entrar ==');
 {
   const L = open({ format: 'ladder' }, { mode: 'fight', n: 4 });

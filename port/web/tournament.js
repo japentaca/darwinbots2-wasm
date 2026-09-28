@@ -51,7 +51,7 @@ function tnFmtText(f) {
     : `king of the hill, ${f.k} per fight, ` +
       (f.kothEnd === 'never'
         ? `endless${f.retire > 0 ? `, 👑 after ${f.retire} wins` : ', the champion never retires'}`
-        : `retires after ${f.retire} wins`);
+        : `retires after ${f.retire} wins`) + (f.noRepeat ? ', no repeated challengers' : '');
 }
 
 // Avance de la temporada, en una línea.

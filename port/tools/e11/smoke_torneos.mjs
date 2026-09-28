@@ -126,6 +126,28 @@ console.log('\n== rey de la colina sin fin ==');
         f.retire === 1 && g.kothEnd === 'retire' && g.retire === 5);
 }
 
+console.log('\n== rey de la colina sin repetir retadores ==');
+{
+  const E = ['A', 'B', 'C', 'D'].map((n) => ent(n));
+  const S = { entrants: E, fmt: { format: 'koth', k: 2, retire: 5, noRepeat: true } };
+  // El nulo no cuenta: C sigue siendo un retador nuevo.
+  const ms = [M('A', 'A', 'B'), M('', 'A', 'C'), M('A', 'A', 'C')];
+  const fx = ctx.lgFixture(S, ms);
+  check('el campeón defiende contra el único que no peleó', fx && fx.fighters.map((e) => e.name).join() === 'A,D',
+        fx && fx.fighters.map((e) => e.name).join());
+  const ms2 = [...ms, M('D', 'A', 'D')];
+  const c = ctx.lgSeasonChampion(S, ms2);
+  check('destronado A no vuelve: sin retadores nuevos termina la temporada',
+        ctx.lgSeasonDone(S, ms2) && !ctx.lgFixture(S, ms2) && c && c.how === 'dry', c && `${c.name} (${c.how})`);
+  const S2 = { ...S, fmt: { ...S.fmt, noRepeat: false } };
+  check('con repeticiones sigue habiendo pelea', !ctx.lgSeasonDone(S2, ms2) && ctx.lgFixture(S2, ms2));
+  // Sin fin + sin repetir: también termina al quedarse sin retadores.
+  const S3 = { ...S, fmt: { ...S.fmt, kothEnd: 'never', retire: 0 } };
+  check('la colina sin fin termina sin retadores nuevos', ctx.lgSeasonDone(S3, ms2));
+  check('lgKothClean: noRepeat es booleano', ctx.lgKothClean({ format: 'koth', noRepeat: 'x' }).noRepeat === false &&
+        ctx.lgKothClean({ format: 'koth', noRepeat: true }).noRepeat === true);
+}
+
 console.log('\n== campeón de todos contra todos y escalera ==');
 {
   const E = ['A', 'B', 'C'].map((n) => ent(n));

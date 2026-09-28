@@ -56,9 +56,21 @@ target_include_directories(dbtests PRIVATE tests)
 
 add_test(NAME golden COMMAND dbtests)
 
+# dbfight: una pelea F1 por linea de comandos (tools/fight), el mismo camino
+# que la capa host de la web. Solo nativo: la web ya tiene el core en wasm.
+if(NOT EMSCRIPTEN)
+  add_executable(dbfight tools/fight/dbfight.cpp)
+  target_link_libraries(dbfight PRIVATE dbcore)
+  # Optimizado siempre (los presets no fijan CMAKE_BUILD_TYPE): -O2 respeta
+  # las salvaguardas de arriba (sin fast-math ni FMA); tools/fight/README.md
+  # tiene la comparacion contra -O0.
+  target_compile_options(dbfight PRIVATE $<$<CXX_COMPILER_ID:GNU,Clang>:-O2>)
+endif()
+
 # Runtime estatico en MinGW: el exe corre sin las DLL de MSYS2 en el PATH.
 if(MINGW)
   target_link_options(dbtests PRIVATE -static)
+  target_link_options(dbfight PRIVATE -static)
 endif()
 
 if(EMSCRIPTEN)

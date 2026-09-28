@@ -88,6 +88,7 @@ const LG_FMT_DEFAULT = {
   k: 2,             // koth: luchadores por pelea
   retire: 5,        // koth: victorias seguidas para retirarse invicto (0 = nunca, solo sin fin)
   kothEnd: 'retire', // koth: la temporada termina con el primer retiro ('retire') o nunca ('never')
+  noRepeat: false,  // koth: quien ya peleó no vuelve a retar (el campeón defiende mientras gane)
   legs: 1,          // rr: vueltas
   qty: 5,           // bots por especie (entrant.qty lo pisa)
   nrg: 3000, rounds: 5, wins: 3,
@@ -294,6 +295,18 @@ function lgKothState(S, ms) {
   if (champ && !S.entrants.some((e) => e.name === champ)) champ = null;
   return { champ, streak, titles, first, played };
 }
+// Sin repetir: los que ya pelearon en la temporada (los nulos no cuentan).
+const lgFought = (ms) => new Set(lgPlayed(ms).flatMap((m) => m.fighters));
+// Rey de la colina sin repetir: ¿quedan retadores que no pelearon? Con
+// sorteo en cada pelea lo decide lgLiveFill al sortear (S.dry = partidos de
+// la temporada cuando el pool se secó); con la lista fija, la lista.
+function lgKothDry(S, ms) {
+  if (!S.fmt.noRepeat) return false;
+  if (S.live) return S.dry === ms.length;
+  const { champ } = lgKothState(S, ms), fought = lgFought(ms);
+  const fresh = S.entrants.filter((e) => e.name !== champ && !fought.has(e.name)).length;
+  return fresh < (champ ? 1 : 2);
+}
 // Con sorteo en cada pelea, N es el n del sorteo (los inscriptos no paran de crecer).
 const lgKothCap = (S) => LG_KOTH_CAP * (S.live ? S.live.n : S.entrants.length);
 // Colina sin fin: la temporada no termina nunca (ni retiro ni tope).
@@ -302,13 +315,14 @@ const lgKothEndless = (f) => f.format === 'koth' && f.kothEnd === 'never';
 function lgKothClean(f) {
   if (f.kothEnd !== 'never') f.kothEnd = 'retire';
   if (f.kothEnd !== 'never' && !(f.retire >= 1)) f.retire = 1;
+  f.noRepeat = f.noRepeat === true;
   return f;
 }
 
 // ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
 // single: con su partido; rr y escalera: con el calendario completo; rey de
 // la colina: con el primer retiro invicto o al tope de 3 × N peleas (sin fin:
-// nunca); copa: con la final jugada.
+// nunca) y, sin repetir, también sin retadores nuevos; copa: con la final jugada.
 function lgSeasonDone(S, ms) {
   if (S.entrants.length < 2) return false;
   const f = S.fmt.format;
@@ -316,6 +330,7 @@ function lgSeasonDone(S, ms) {
   if (f === 'rr') return !lgRrState(S, ms).next;
   if (f === 'ladder') return !lgLadderState(S, ms).next && !(S.live && S.entrants.length < S.live.n);
   if (f === 'cup') return lgCupState(S, ms).phase === 'done';
+  if (lgKothDry(S, ms)) return true;
   if (lgKothEndless(S.fmt)) return false;
   const k = lgKothState(S, ms);
   return !!k.first || k.played >= lgKothCap(S);
@@ -333,12 +348,12 @@ function lgSeasonChampion(S, ms) {
   if (f === 'koth') {
     const k = lgKothState(S, ms);
     if (k.first) return { name: k.first, how: 'retired' };
-    return { name: lgStandings(S, ms)[0].name, how: 'elo' };
+    return { name: lgStandings(S, ms)[0].name, how: lgKothDry(S, ms) ? 'dry' : 'elo' };
   }
   return { name: lgStandings(S, ms)[0].name, how: f === 'ladder' ? 'ladder' : 'table' };
 }
 const LG_HOW = { match: 'wins the match', retired: 'retires undefeated',
-                 elo: 'tops the Elo at the fight cap', table: 'tops the table',
+                 elo: 'tops the Elo at the fight cap', dry: 'tops the table when no fresh challenger is left', table: 'tops the table',
                  ladder: 'holds the top rung', cup: 'wins the final' };
 
 // Escalera (populateladder, F1Mode.bas:443-500): los participantes entran de
@@ -594,7 +609,8 @@ function lgFixture(S, ms) {
     others = nx;
   } else {
     const k = Math.min(Math.max(2, S.fmt.k), E.length, LG_MAX_FIGHTERS);
-    others = lgShuffle(E.filter((e) => e !== ce)).slice(0, ce ? k - 1 : k);
+    const fought = S.fmt.noRepeat ? lgFought(ms) : new Set();
+    others = lgShuffle(E.filter((e) => e !== ce && !fought.has(e.name))).slice(0, ce ? k - 1 : k);
   }
   return { fighters: ce ? [ce, ...others] : others,
            label: (ce ? `👑 ${champ} defends the crown` : 'Open fight: no champion') +
@@ -863,6 +879,7 @@ function lgLiveSync(L) {
   if (JSON.stringify(live) === JSON.stringify(S.live)) return false;
   if (live) S.live = live; else delete S.live;
   delete S.next;
+  delete S.dry;
   return true;
 }
 
@@ -885,19 +902,23 @@ async function lgLiveFill(L) {
   const S = lgSeason(L), live = S.live;
   if (!live) return;
   const ms = lgSeasonMatches(S.no);
+  delete S.dry;                              // sin repetir: se vuelve a mirar el pool
   if (lgSeasonDone(S, ms)) return;
   const f = S.fmt.format;
   if (f === 'koth') {
     if (lgFixture(S, ms)) return;            // ya sorteada (p. ej. tras abandonarla)
     const { champ } = lgKothState(S, ms);
     const need = Math.min(Math.max(2, S.fmt.k), LG_MAX_FIGHTERS) - (champ ? 1 : 0);
+    const fought = S.fmt.noRepeat ? lgFought(ms) : new Set();
     const names = [];
     for (const it of lgShuffle(lgPool(live.pool))) {
       if (names.length >= need) break;
-      if (it.b.name === champ) continue;
+      if (it.b.name === champ || fought.has(it.b.name)) continue;
       const e = await lgEnrollOne(S, it);
-      if (e && e.name !== champ && !names.includes(e.name)) names.push(e.name);
+      if (e && e.name !== champ && !fought.has(e.name) && !names.includes(e.name)) names.push(e.name);
     }
+    // Sin repetir y sin retadores nuevos suficientes: la temporada termina.
+    if (S.fmt.noRepeat && names.length < (champ ? 1 : 2)) S.dry = ms.length;
     S.next = { at: ms.length, names };
     await lgSave(L);
   } else if (f === 'ladder') {
@@ -964,6 +985,7 @@ function lgImportObj(o, names, newId) {
     // Sorteo en cada pelea: la foto del sorteo de la temporada.
     if (s.live && typeof s.live === 'object' && typeof s.live.pool === 'string')
       x.live = { pool: s.live.pool, n: Math.min(LG_DRAW_MAX, Math.max(0, parseInt(s.live.n, 10) || 0)) };
+    if (x.live && Number.isInteger(s.dry)) x.dry = s.dry;   // rey de la colina sin repetir: el pool se secó
     // E12: el reparto de los grupos de la copa, si reparte a estos participantes.
     if (Array.isArray(s.groups)) {
       x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));
@@ -1298,12 +1320,15 @@ function leagueOnMessage(msg) {
 // ---- Render ---------------------------------------------------------------------
 // La regla del rey de la colina, en una línea (bajo sus campos en Setup).
 function lgKothHint(f) {
+  const once = f.noRepeat
+    ? ' No repeats: a bot that has fought never challenges again (the champion defends while it wins), ' +
+      'and the season also ends when no fresh challenger is left.' : '';
   if (f.kothEnd !== 'never')
     return `The first to win ${f.retire} in a row retires undefeated and takes the season; ` +
-           `if nobody does, it ends after ${LG_KOTH_CAP} × entrants fights and the Elo decides.`;
-  return f.retire > 0
+           `if nobody does, it ends after ${LG_KOTH_CAP} × entrants fights and the Elo decides.` + once;
+  return (f.retire > 0
     ? `The season never ends: ${f.retire} wins in a row earn a 👑 and a fresh hill; the most 👑 lead the table.`
-    : 'The season never ends: the champion stays until beaten. Start a new season to reset it.';
+    : 'The season never ends: the champion stays until beaten. Start a new season to reset it.') + once;
 }
 
 function lgFmtHtml(f, locked) {
@@ -1336,6 +1361,8 @@ function lgFmtHtml(f, locked) {
           ? num('retire', 'Champion retires after (0 = never)', f.retire, 0, 999,
                 'Consecutive wins that earn a 👑 and send the champion off the hill; 0 = it stays until beaten')
           : num('retire', 'Champion retires after', f.retire, 1, 999, 'Consecutive wins the champion needs to retire undefeated')) +
+        `<label title="A bot that has fought this season (and lost, or retired) never challenges again; the champion keeps defending while it wins">No repeated challengers</label>` +
+        `<input type="checkbox" data-f="noRepeat"${f.noRepeat ? ' checked' : ''}${d}>` +
         `<div class="ct-wide ct-rule">${escHtml(lgKothHint(f))}</div>`) +
     num('qty', 'Bots per species', f.qty, 1, 200, 'Each entrant can set its own in the list below') +
     num('nrg', 'Starting energy', f.nrg, 1, 0) +

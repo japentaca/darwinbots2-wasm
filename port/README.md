@@ -539,6 +539,9 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   `node tools/e11/smoke_sorteo_pelea.mjs` (sorteo en cada pelea) y
   `node tools/e12/smoke_copa.mjs` (grupos, bombos, desempates, cuadro,
   3.er puesto, exportar e importar con los grupos).
+- **Sin navegador**: `build/dbfight.exe` corre un partido F1 con el core
+  nativo y `node tools/fight/torneo.mjs koth|duel` arma el rey de la colina
+  con las reglas de la página (ver `tools/fight/README.md`).
 
 La interfaz de la página está en inglés desde el 2026-09-26, como el
 programa original. Los comentarios del código y las claves internas
