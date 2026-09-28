@@ -37,6 +37,15 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
   completa del bot frente a los recortes citados en las respuestas).
 - Los bots del sub-board Veggies se marcan `veg: true` en `bots.json`; la
   página los siembra como vegetales.
+- **Bots de la casa** (`house/`): bots escritos para este port, que no
+  vienen del foro. `house/house.json` tiene su registro con el formato de
+  `bots.json` (board `House bots`, `url` vacía) y `publish_bots.py` los
+  copia al final de cada publicación. Para agregar uno: su `.txt` en
+  `house/`, su registro en `house.json`, copiarlo a `web/bots/` + su
+  registro en `web/bots/bots.json`, y correr `analyze_bots.js`.
+  - *Ringo Bonavena v1*: luchador F1 para los torneos. Parámetros
+    ajustados peleando contra la élite del Bestiary (los bots que le ganan
+    4 de 4 a Animal Minimalis) con las reglas por defecto de las ligas.
 
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.

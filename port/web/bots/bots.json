@@ -3974,5 +3974,12 @@
   "board": "Untagged bots",
   "veg": false,
   "url": "http://forum.darwinbots.com/index.php/topic,3052.0.html"
+ },
+ {
+  "file": "Ringo_Bonavena_v1.txt",
+  "name": "Ringo Bonavena v1",
+  "board": "House bots",
+  "veg": false,
+  "url": ""
  }
 ]
