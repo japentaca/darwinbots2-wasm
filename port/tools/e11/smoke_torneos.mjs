@@ -98,6 +98,34 @@ console.log('\n== rey de la colina: fin de temporada ==');
         ctx.lgSeasonDone(S2, ms2) && c2 && c2.how === 'elo' && c2.name === top, `${c2 && c2.name} (Elo)`);
 }
 
+console.log('\n== rey de la colina sin fin ==');
+{
+  const E = ['A', 'B', 'C'].map((n) => ent(n));
+  // Retiro 2: A se corona dos veces, C una; la temporada no termina nunca.
+  const S = { entrants: E, fmt: { format: 'koth', k: 2, retire: 2, kothEnd: 'never' } };
+  const win = ['A', 'A', 'B', 'C', 'C', 'A', 'A', 'B', 'C', 'B', 'A', 'B', 'C', 'A'];
+  const ms = win.map((w) => M(w, ...E.map((e) => e.name)));
+  const k = ctx.lgKothState(S, ms);
+  check('los retiros suman coronas y la colina sigue',
+        k.titles.get('A') === 2 && k.titles.get('C') === 1 && !ctx.lgSeasonDone(S, ms) && !ctx.lgSeasonChampion(S, ms),
+        [...k.titles].join(' '));
+  const fx = ctx.lgFixture(S, ms);
+  check('pasado el tope de 3 × N sigue habiendo pelea, sin "of at most"',
+        fx && /fight 15$/.test(fx.label), fx && fx.label);
+  check('la tabla la encabeza quien tiene más coronas', ctx.lgStandings(S, ms)[0].name === 'A');
+  // Retiro 0: el rey no se retira nunca.
+  const S0 = { entrants: E, fmt: { format: 'koth', k: 2, retire: 0, kothEnd: 'never' } };
+  const ms0 = Array.from({ length: 12 }, () => M('B', 'A', 'B'));
+  const k0 = ctx.lgKothState(S0, ms0);
+  check('retiro 0: el rey sigue, racha 12, sin coronas',
+        k0.champ === 'B' && k0.streak === 12 && !k0.titles.size && !ctx.lgSeasonDone(S0, ms0));
+  // Retiro 0 fuera de la colina sin fin no vale: vuelve a 1.
+  const f = ctx.lgKothClean({ format: 'koth', retire: 0, kothEnd: 'retire' });
+  const g = ctx.lgKothClean({ format: 'koth', retire: 5, kothEnd: 'xx' });
+  check('lgKothClean: retiro ≥ 1 con fin, modo desconocido = retire',
+        f.retire === 1 && g.kothEnd === 'retire' && g.retire === 5);
+}
+
 console.log('\n== campeón de todos contra todos y escalera ==');
 {
   const E = ['A', 'B', 'C'].map((n) => ent(n));

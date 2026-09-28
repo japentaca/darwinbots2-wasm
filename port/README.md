@@ -475,9 +475,12 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
 - **Formatos**: *Single match* (todos contra todos en un solo partido, hasta
   20, el Contest de antes), *King of the hill* (el ganador se queda; gana
   la temporada el primero que se retira invicto, con un tope de 3 × N
-  peleas y el primero por Elo), *Round robin* (1 o 2 vueltas, por el
-  método del círculo) y *Step ladder* (la escalera del original,
-  `populateladder`). Toda temporada termina con un campeón.
+  peleas y el primero por Elo; con "Season ends: never" la colina no
+  termina nunca: cada retiro suma una 👑 y la tabla la encabeza quien
+  tiene más, y con retiro 0 el rey se queda hasta que le ganen),
+  *Round robin* (1 o 2 vueltas, por el método del círculo) y *Step
+  ladder* (la escalera del original, `populateladder`). Toda temporada
+  termina con un campeón, salvo la colina sin fin.
 - **World cup** (E12): 8, 16 o 32 participantes en grupos de 4 (todos
   contra todos, 1 o 2 vueltas, jornadas intercaladas entre grupos), con
   bombos por el Elo del Hall of Fame o al azar ("🎲 Draw groups" en Setup,

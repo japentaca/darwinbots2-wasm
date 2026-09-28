@@ -86,7 +86,8 @@ const LG_FMT_DEFAULT = {
   // 'rr' (todos contra todos) | 'ladder' (escalera) | 'cup' (copa, E12)
   format: 'koth',
   k: 2,             // koth: luchadores por pelea
-  retire: 5,        // koth: victorias seguidas para retirarse invicto
+  retire: 5,        // koth: victorias seguidas para retirarse invicto (0 = nunca, solo sin fin)
+  kothEnd: 'retire', // koth: la temporada termina con el primer retiro ('retire') o nunca ('never')
   legs: 1,          // rr: vueltas
   qty: 5,           // bots por especie (entrant.qty lo pisa)
   nrg: 3000, rounds: 5, wins: 3,
@@ -274,7 +275,8 @@ function lgRrState(S, ms) {
 
 // Rey de la colina: el campeón y su racha salen de recorrer el historial.
 // E11: first = el primero que se retiró invicto (gana la temporada);
-// played = peleas jugadas (los nulos no cuentan).
+// played = peleas jugadas (los nulos no cuentan). Con retire 0 (solo en la
+// colina sin fin) el rey no se retira nunca.
 function lgKothState(S, ms) {
   let champ = null, streak = 0, first = null, played = 0;
   const titles = new Map();
@@ -282,7 +284,7 @@ function lgKothState(S, ms) {
     played++;
     if (champ === m.winner) streak++;
     else { champ = m.winner; streak = 1; }
-    if (streak >= S.fmt.retire) {
+    if (S.fmt.retire > 0 && streak >= S.fmt.retire) {
       titles.set(champ, (titles.get(champ) || 0) + 1);
       if (!first) first = champ;
       champ = null;
@@ -294,11 +296,19 @@ function lgKothState(S, ms) {
 }
 // Con sorteo en cada pelea, N es el n del sorteo (los inscriptos no paran de crecer).
 const lgKothCap = (S) => LG_KOTH_CAP * (S.live ? S.live.n : S.entrants.length);
+// Colina sin fin: la temporada no termina nunca (ni retiro ni tope).
+const lgKothEndless = (f) => f.format === 'koth' && f.kothEnd === 'never';
+// Retiro 0 (nunca) solo tiene sentido en la colina sin fin.
+function lgKothClean(f) {
+  if (f.kothEnd !== 'never') f.kothEnd = 'retire';
+  if (f.kothEnd !== 'never' && !(f.retire >= 1)) f.retire = 1;
+  return f;
+}
 
 // ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
 // single: con su partido; rr y escalera: con el calendario completo; rey de
-// la colina: con el primer retiro invicto o al tope de 3 × N peleas; copa:
-// con la final jugada.
+// la colina: con el primer retiro invicto o al tope de 3 × N peleas (sin fin:
+// nunca); copa: con la final jugada.
 function lgSeasonDone(S, ms) {
   if (S.entrants.length < 2) return false;
   const f = S.fmt.format;
@@ -306,6 +316,7 @@ function lgSeasonDone(S, ms) {
   if (f === 'rr') return !lgRrState(S, ms).next;
   if (f === 'ladder') return !lgLadderState(S, ms).next && !(S.live && S.entrants.length < S.live.n);
   if (f === 'cup') return lgCupState(S, ms).phase === 'done';
+  if (lgKothEndless(S.fmt)) return false;
   const k = lgKothState(S, ms);
   return !!k.first || k.played >= lgKothCap(S);
 }
@@ -587,7 +598,7 @@ function lgFixture(S, ms) {
   }
   return { fighters: ce ? [ce, ...others] : others,
            label: (ce ? `👑 ${champ} defends the crown` : 'Open fight: no champion') +
-                  ` · fight ${played + 1} of at most ${lgKothCap(S)}` };
+                  ` · fight ${played + 1}` + (lgKothEndless(S.fmt) ? '' : ` of at most ${lgKothCap(S)}`) };
 }
 
 // ---- Tabla -------------------------------------------------------------------
@@ -630,6 +641,10 @@ function lgStandings(S, ms) {
     const reach = lgCupState(S, ms).reach;
     const lv = (r) => reach.get(r.name) || 0;
     list.sort((a, b) => lv(b) - lv(a) || b.w - a.w || b.elo - a.elo);
+  } else if (lgKothEndless(S.fmt)) {
+    // Colina sin fin: manda quien junta más retiros invictos, luego el Elo.
+    const t = lgKothState(S, ms).titles, n = (r) => t.get(r.name) || 0;
+    list.sort((a, b) => n(b) - n(a) || b.elo - a.elo || b.w - a.w);
   } else if (S.fmt.format === 'rr') list.sort((a, b) => b.w - a.w || b.elo - a.elo || a.p - b.p);
   else list.sort((a, b) => b.elo - a.elo || b.w - a.w);
   return list;
@@ -677,6 +692,7 @@ function lgMigrate(L) {
     // de sus partidos deben dar lo mismo).
     const f = { ...LG_FMT_DEFAULT, popCap: 0, ...(S.fmt || {}) };
     if (!LG_FORMATS.includes(f.format)) f.format = LG_FMT_DEFAULT.format;
+    lgKothClean(f);
     if (JSON.stringify(f) !== JSON.stringify(S.fmt)) { S.fmt = f; changed = true; }
   }
   return changed;
@@ -944,7 +960,7 @@ function lgImportObj(o, names, newId) {
       return x;
     });
     const x = { no: +s.no || i + 1, started: s.started || '', rules: { ...s.rules },
-                fmt: { ...LG_FMT_DEFAULT, popCap: 0, ...(s.fmt || {}) }, entrants };
+                fmt: lgKothClean({ ...LG_FMT_DEFAULT, popCap: 0, ...(s.fmt || {}) }), entrants };
     // Sorteo en cada pelea: la foto del sorteo de la temporada.
     if (s.live && typeof s.live === 'object' && typeof s.live.pool === 'string')
       x.live = { pool: s.live.pool, n: Math.min(LG_DRAW_MAX, Math.max(0, parseInt(s.live.n, 10) || 0)) };
@@ -1280,6 +1296,16 @@ function leagueOnMessage(msg) {
 }
 
 // ---- Render ---------------------------------------------------------------------
+// La regla del rey de la colina, en una línea (bajo sus campos en Setup).
+function lgKothHint(f) {
+  if (f.kothEnd !== 'never')
+    return `The first to win ${f.retire} in a row retires undefeated and takes the season; ` +
+           `if nobody does, it ends after ${LG_KOTH_CAP} × entrants fights and the Elo decides.`;
+  return f.retire > 0
+    ? `The season never ends: ${f.retire} wins in a row earn a 👑 and a fresh hill; the most 👑 lead the table.`
+    : 'The season never ends: the champion stays until beaten. Start a new season to reset it.';
+}
+
 function lgFmtHtml(f, locked) {
   const d = locked ? ' disabled' : '';
   const num = (id, label, v, min, max, title) =>
@@ -1303,7 +1329,14 @@ function lgFmtHtml(f, locked) {
     : f.format === 'rr'
       ? num('legs', 'Legs (each pair meets)', f.legs, 1, 2, '1 = once; 2 = home and away, with the seeding order swapped')
       : num('k', 'Fighters per fight', f.k, 2, 20) +
-        num('retire', 'Champion retires after', f.retire, 1, 999, 'Consecutive wins the champion needs to retire undefeated')) +
+        `<label title="When the season is over">Season ends</label><select data-f="kothEnd"${d}>` +
+        `<option value="retire"${f.kothEnd !== 'never' ? ' selected' : ''}>at the first undefeated retirement</option>` +
+        `<option value="never"${f.kothEnd === 'never' ? ' selected' : ''}>never (endless hill)</option></select>` +
+        (f.kothEnd === 'never'
+          ? num('retire', 'Champion retires after (0 = never)', f.retire, 0, 999,
+                'Consecutive wins that earn a 👑 and send the champion off the hill; 0 = it stays until beaten')
+          : num('retire', 'Champion retires after', f.retire, 1, 999, 'Consecutive wins the champion needs to retire undefeated')) +
+        `<div class="ct-wide ct-rule">${escHtml(lgKothHint(f))}</div>`) +
     num('qty', 'Bots per species', f.qty, 1, 200, 'Each entrant can set its own in the list below') +
     num('nrg', 'Starting energy', f.nrg, 1, 0) +
     num('rounds', 'Minimum rounds per match', f.rounds, 1, 99) +

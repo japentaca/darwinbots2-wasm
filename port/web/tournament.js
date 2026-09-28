@@ -48,7 +48,10 @@ function tnFmtText(f) {
     : f.format === 'single' ? 'single match'
     : f.format === 'cup' ? `World cup, groups of 4${f.groupLegs === 2 ? ' (two legs)' : ''}, ` +
       `${f.pots === 'random' ? 'random pots' : 'pots by Elo'}${f.third ? ', third-place match' : ''}`
-    : `king of the hill, ${f.k} per fight, retires after ${f.retire} wins`;
+    : `king of the hill, ${f.k} per fight, ` +
+      (f.kothEnd === 'never'
+        ? `endless${f.retire > 0 ? `, 👑 after ${f.retire} wins` : ', the champion never retires'}`
+        : `retires after ${f.retire} wins`);
 }
 
 // Avance de la temporada, en una línea.
@@ -70,6 +73,11 @@ function tnProgress(S, ms) {
   }
   if (f === 'koth') {
     const k = lgKothState(S, ms);
+    if (lgKothEndless(S.fmt)) {
+      const crowns = [...k.titles.values()].reduce((a, b) => a + b, 0);
+      return `fight ${k.played}` + (S.fmt.retire > 0 ? ` · 👑 ${crowns} retirements` : '') +
+        (k.champ ? ` · on the hill: ${k.champ} ${k.streak}` + (S.fmt.retire > 0 ? `/${S.fmt.retire}` : ' in a row') : '');
+    }
     return `${k.played} of at most ${lgKothCap(S)} fights` +
       (k.champ ? ` · 👑 ${k.champ} ${k.streak}/${S.fmt.retire}` : '');
   }
@@ -651,7 +659,9 @@ function tnDrawHint(dr, S, locked) {
   if (locked && !S.live) return 'From the next season on (this one started with its list).';
   const n = S.live ? S.live.n : dr.n;
   return (locked ? 'This season: ' : '') + (
-    f === 'koth' ? `the challengers of every fight come from the pool; the season ends with a retirement or after ${LG_KOTH_CAP * n} fights (3 × ${n}).`
+    f === 'koth' ? 'the challengers of every fight come from the pool; ' + (lgKothEndless(S.fmt)
+      ? 'the season never ends.'
+      : `the season ends with a retirement or after ${LG_KOTH_CAP * n} fights (3 × ${n}).`)
     : f === 'ladder' ? `each newcomer is drawn when its turn comes, up to ${n} on the ladder.`
     : `${n} are drawn when the first match starts.`);
 }
@@ -834,6 +844,7 @@ async function openTournaments(tab) {
       const lo = +e.target.min || 0, hi = +e.target.max || 1e7;
       f[k] = Math.min(hi, Math.max(lo, Number.isNaN(n) ? LG_FMT_DEFAULT[k] : n));
     }
+    lgKothClean(f);                                         // retiro 0 solo sin fin
     if (k === 'format' || k === 'pots') delete S.groups;   // copa: otro sorteo
     lgLiveSync(lg.cur);                                     // la copa no sortea en cada pelea
     await lgSave(lg.cur);
