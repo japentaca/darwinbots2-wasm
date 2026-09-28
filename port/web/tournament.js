@@ -19,6 +19,7 @@ const tn = {
   confirm: '',       // botón de dos clics armado ('del' | 'season')
   confirmT: 0,
   loaded: false,     // lgLoadAll y las migraciones, una vez por página
+  board: '',         // marcador del partido en vivo (el mismo en Play y en el zócalo)
 };
 const tv = {
   on: false,
@@ -291,6 +292,7 @@ function tvTick() {
   }
   tvOverlay(left);
   tnRenderTv(left);
+  tnFsRender(left);
   tv.timer = setTimeout(tvTick, 250);
 }
 
@@ -388,16 +390,39 @@ function tnOnStats(st) {
   if (rw) tnNote(`Round ${st.f1.contests} goes to ${rw}.`);
   m.lastWins = st.f1.sp.map((s) => s.wins);
   if (tv.on && tv.phase === 'fight') { tv.st = st; tvOverlay(); }
-  if (!tn.win) return;
   const L = lgFind(m.league);
   const S = L && (m.replay ? L.seasons.find((s) => s.no === m.season) : lgSeason(L));
   const f = S ? S.fmt : LG_FMT_DEFAULT;
-  tn.win.querySelector('#tn-board').innerHTML = contestBoardHtml(
+  tn.board = contestBoardHtml(
     st, new Map(m.fighters.map((e) => [e.name, e.color])), f.rounds, '', f.wins);
+  if (tn.win) tn.win.querySelector('#tn-board').innerHTML = tn.board;
+  tnFsRender();
+}
+
+// ---- Zócalo de la pantalla completa (#fs-board) --------------------------------
+// Lo mismo que Play muestra de la pelea: la línea de quién juega y el marcador
+// (o la cortinilla del TV mode). Solo con el campo a pantalla completa.
+const tnNames = (list) => list.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ');
+
+function tnFsRender(left) {
+  const el = document.getElementById('fs-board');
+  if (!el) return;
+  const fs = document.fullscreenElement === document.getElementById('field-wrap');
+  const brk = tv.on && tv.phase === 'break' && tv.fx;
+  if (!lg.live) tn.board = '';
+  if (!fs || (!lg.live && !brk)) { el.hidden = true; return; }
+  if (brk && left === undefined) left = Math.ceil((tv.until - performance.now()) / 1000);
+  el.hidden = false;
+  el.innerHTML = lg.live
+    ? `<div class="fs-next">${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${tnNames(lg.live.fighters)}</div>` +
+      tn.board
+    : `<div class="fs-next">Next: ${tnNames(tv.fx.fighters)} <span class="ct-rule">${escHtml(tv.fx.label)}</span></div>` +
+      tvBreakHtml(left);
 }
 
 // ---- Render -----------------------------------------------------------------------
 function tnRender() {
+  tnFsRender();
   if (!tn.win) { tvOverlay(); return; }
   const w = tn.win;
   const $ = (id) => w.querySelector('#' + id);
@@ -485,7 +510,7 @@ function tnRenderPlay(L, S, ms, locked) {
     ? (lgCupSizeOk(S) ? 'draw' : 'size') : '';
   // Sorteo en cada pelea: los de la próxima salen del pool al lanzarla.
   const liveWait = !!S.live && !fx && !lgSeasonDone(S, ms);
-  const names = (list) => list.map((e) => `<b style="color:${e.color}">${escHtml(e.name)}</b>`).join(' vs ');
+  const names = tnNames;
   $('tn-next').innerHTML = live
     ? `${lg.live.replay ? `Replaying #${lg.live.replay.no}` : 'Playing'}: ${names(lg.live.fighters)}`
     : tv.on && tv.fx && tv.phase !== 'banner' ? `Next: ${names(tv.fx.fighters)} <span class="ct-rule">${escHtml(tv.fx.label)}</span>`
@@ -523,7 +548,11 @@ function tnRenderTv(left) {
   if (!tn.win || tv.phase !== 'break' || !tv.fx) return;
   const b = tn.win.querySelector('#tn-board');
   b.hidden = false;
-  b.innerHTML = `<div class="ch-next">Next fight #${tv.fightNo} in <b>${Math.max(0, left)}</b>…</div>` +
+  b.innerHTML = tvBreakHtml(left);
+}
+
+function tvBreakHtml(left) {
+  return `<div class="ch-next">Next fight #${tv.fightNo} in <b>${Math.max(0, left)}</b>…</div>` +
     tv.fx.fighters.map((e) => `<div class="ct-row"><span class="ct-dot" style="background:${e.color}"></span>` +
       `<span class="ct-name">${escHtml(e.name)}</span><span></span><span></span><span></span></div>`).join('');
 }
