@@ -552,7 +552,7 @@ function f1Stats() {
   const n = Math.min(api.f1TotSpecies(sim), 20);
   for (let i = 1; i <= n; i++)
     sp.push({ name: takeStr(api.f1Name(sim, i)),
-              pop: api.f1Pop(sim, i), wins: api.f1Wins(sim, i) });
+              pop: api.f1Pop(sim, i), wins: api.f1Wins(sim, i), capWins: f1CapWins[i] || 0 });
   return { contests: api.f1Contests(sim), minrounds: api.getOpt(sim, 97),
            over: api.f1Over(sim), restarts: api.restartsCount(sim), sp };
 }
@@ -634,6 +634,7 @@ function newRound() {
 // Tras cada tanda de ticks: eventos E5 del core + gate de rondas.
 function checkGameState() {
   if (!sim) return false;
+  f1CapSettle();
   let stopped = false;
   const ev = api.events(sim);
   if (ev) {
@@ -1109,10 +1110,29 @@ function imRebind() {
 let f1CapCycles = 0, f1CapMode = 0;
 // E10: ciclos de las rondas ya terminadas del contest (desde el f1start).
 let f1CycAcc = 0;
+// Suizo: rondas ganadas por el tope, por slot de PopArray (el suizo desempata
+// por las ganadas por extinción). Al disparar el tope se anotan las
+// victorias (f1CapSnap); la especie que suma una en un tick siguiente ganó
+// esa ronda por el tope.
+let f1CapWins = [], f1CapSnap = null;
+function f1WinsNow() {
+  const n = Math.min(api.f1TotSpecies(sim), 20), w = [];
+  for (let i = 1; i <= n; i++) w[i] = api.f1Wins(sim, i);
+  return w;
+}
+function f1CapSettle() {
+  if (!f1CapSnap) return;
+  const w = f1WinsNow();
+  const i = w.findIndex((x, k) => k > 0 && x > (f1CapSnap[k] || 0));
+  if (i < 0) return;
+  f1CapWins[i] = (f1CapWins[i] || 0) + 1;
+  f1CapSnap = null;
+}
 function f1CapCheck() {
   if (!f1CapCycles || api.cycle(sim) <= f1CapCycles) return;
   const k = api.f1Cap(sim, f1CapMode);
   if (k) {
+    f1CapSnap = f1WinsNow();
     log(`F1: ${f1CapCycles}-cycle cap — the ` +
         (f1CapMode ? 'species with the most energy' : 'most numerous species') + ' wins the round');
     self.postMessage({ t: 'f1-note', kind: 'cap' });
@@ -1404,6 +1424,8 @@ self.onmessage = (e) => {
       break;
     case 'f1start': {
       f1CycAcc = 0;
+      f1CapWins = [];
+      f1CapSnap = null;
       const ts = api.f1Start(sim);
       log(ts ? `F1 contest: ${ts} species competing`
              : 'F1 contest not active (is the F1 option off?)');

@@ -46,6 +46,7 @@ function tnFmtText(f) {
   return f.format === 'rr' ? `round robin, ${f.legs === 2 ? 'two legs' : 'one leg'}`
     : f.format === 'ladder' ? 'step ladder'
     : f.format === 'single' ? 'single match'
+    : f.format === 'swiss' ? `Swiss system, ${f.swissRounds > 0 ? `${f.swissRounds} rounds` : 'auto rounds'}`
     : f.format === 'cup' ? `World cup, groups of 4${f.groupLegs === 2 ? ' (two legs)' : ''}, ` +
       `${f.pots === 'random' ? 'random pots' : 'pots by Elo'}${f.third ? ', third-place match' : ''}`
     : `king of the hill, ${f.k} per fight, ` +
@@ -70,6 +71,13 @@ function tnProgress(S, ms) {
     if (st.phase === 'draw') return 'groups not drawn yet';
     if (st.phase === 'groups') return `group stage: ${st.played} of ${st.total} matches`;
     return `knockout: ${st.label.split(' · ')[0]}`;
+  }
+  if (f === 'swiss') {
+    const st = lgSwissState(S, ms);
+    if (st.phase === 'draw') return 'round 1 order not drawn yet';
+    const rd = st.history[st.round - 1], done = rd.pairs.filter((t) => t.winner).length;
+    return `round ${st.round} of ${st.rounds}: ${done} of ${rd.pairs.length} matches` +
+      (st.field.length < S.entrants.length ? ` · ${S.entrants.length - st.field.length} wait for the next season` : '');
   }
   if (f === 'koth') {
     const k = lgKothState(S, ms);
@@ -210,6 +218,25 @@ async function tnCupDrawGroups() {
   tnRender();
 }
 
+// ---- Suizo ------------------------------------------------------------------------
+// Las rondas emparejadas hasta ahora: el ganador resaltado, el que sigue con
+// borde, y el bye de cada ronda.
+function tnSwissRoundsHtml(S, ms) {
+  const st = lgSwissState(S, ms);
+  if (st.phase === 'draw') return '<div class="ct-empty">The round 1 order is drawn when the first match starts.</div>';
+  const col = tnColorOf(S), busy = lg.live ? ' disabled' : '';
+  const nx = st.next ? lgPairKey(st.next[0].name, st.next[1].name) : '';
+  const side = (t, n) => `<span class="tn-side${t.winner === n ? ' tn-won' : t.winner ? ' tn-lost' : ''}" title="${escHtml(n)}">` +
+    `<span class="ct-dot lg-dot" style="background:${col.get(n)}"></span>${escHtml(n)}</span>`;
+  return st.history.slice().reverse().map((rd) =>
+    `<div class="tn-gname">Round ${rd.no} of ${st.rounds}</div><div class="tn-gfx">` +
+    rd.pairs.map((t, k) => `<div class="tn-fx${!t.winner && lgPairKey(t.a, t.b) === nx ? ' next' : ''}">` +
+      `<span class="tn-day">${k + 1}</span>` + side(t, t.a) + side(t, t.b) +
+      (t.id !== undefined ? `<button class="ch-small lg-replay" data-replay="${t.id}"${busy}` +
+        ` title="Replay match #${t.no} with the same seed">↻</button>` : '<span class="tn-fxr"></span>') + '</div>').join('') +
+    (rd.bye ? `<div class="ct-rule">Bye: ${escHtml(rd.bye)} (1 point)</div>` : '') + '</div>').join('');
+}
+
 // ---- TV mode -------------------------------------------------------------------
 function tvReadPause() {
   const el = tn.win && tn.win.querySelector('#tn-pause');
@@ -274,6 +301,7 @@ async function tvNext() {
   if (!tv.on) return;
   const L = tv.L;
   await lgLiveFill(L);                      // sorteo en cada pelea: los de esta
+  await lgSwissEnsure(L);                   // suizo: el orden de la ronda 1
   if (!tv.on || tv.L !== L) return;
   const fx = lgNextFixture(L);
   if (!fx && !lgSeasonDone(lgSeason(L), lgSeasonMatches(lgSeason(L).no))) {
@@ -596,6 +624,9 @@ function tnRenderResults(L) {
   const cup = S.fmt.format === 'cup';
   $('tn-cupres').hidden = !cup;
   if (cup) $('tn-cup').innerHTML = tnCupResultsHtml(S, ms);
+  const swiss = S.fmt.format === 'swiss';
+  $('tn-swissres').hidden = !swiss;
+  if (swiss) $('tn-swiss').innerHTML = tnSwissRoundsHtml(S, ms);
   $('tn-table').innerHTML = lgStandingsHtml(S, ms);
   $('tn-h2h').innerHTML = lgH2HHtml(S, ms);
   $('tn-hist').innerHTML = lgHistoryHtml(ms);
@@ -772,6 +803,7 @@ async function openTournaments(tab) {
     '<div class="ct-liverow tn-seasons">📊 Results · season <span id="tn-seasons"></span></div>' +
     '<div id="tn-rhead" class="ct-rule"></div>' +
     '<details id="tn-cupres" class="ch-sec" open hidden><summary>🌍 Groups and bracket</summary><div id="tn-cup"></div></details>' +
+    '<details id="tn-swissres" class="ch-sec" open hidden><summary>🔀 Swiss rounds</summary><div id="tn-swiss"></div></details>' +
     '<details class="ch-sec" open><summary>Standings</summary><div id="tn-table" class="tn-scroll"></div></details>' +
     '<details class="ch-sec"><summary>Head to head</summary><div id="tn-h2h" class="tn-scroll"></div></details>' +
     '<details class="ch-sec" open><summary>Matches</summary><div id="tn-hist" class="tn-scroll"></div></details>' +

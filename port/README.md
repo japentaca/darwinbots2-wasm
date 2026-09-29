@@ -458,7 +458,7 @@ fuera del plan"):
   "Game modes" queda para el F1 manual del original: los torneos fijan
   sus valores en cada partido.
 
-### Torneos (E10, E11 y E12, 2026-09-27)
+### Torneos (E10, E11 y E12, 2026-09-27; suizo, 2026-09-28)
 
 Capa host (`spec/PLAN-EXTENSIONES.md` §E10, §E11 y §E12). Una sola ventana,
 **"🏆 Tournaments"** (`web/tournament.js`), reemplaza al Contest, al Canal
@@ -492,6 +492,17 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   grupos: tablas, cuadro y campeón salen del historial. Results dibuja las
   tablas de grupo y el cuadro (con ↻ en cada cruce) y el TV mode rotula
   la fase ("GROUP C · MATCHDAY 2", "SEMI-FINAL", "FINAL").
+- **Swiss system** (2026-09-28): duelos por rondas, para ligas de 16 a 32.
+  Cada ronda empareja a los de igual puntaje sin repetir rival mientras se
+  pueda (con vuelta atrás); ⌈log2 N⌉ + 1 rondas o las que fije "Rounds".
+  Victoria 1 y bye 1 (con N impar, al de más abajo que no lo tuvo); un nulo
+  se repite. Tabla por puntos, Buchholz, Elo y rondas ganadas por
+  extinción: para eso cada partido guarda `capWins`, las rondas que cada uno
+  ganó por el tope de ciclos (las cuenta `worker.js` y viajan en `f1Stats`).
+  Solo se guarda el orden sorteado de la ronda 1 (`S.order`, al lanzar el
+  primer partido); los que se inscriben después juegan desde la temporada
+  siguiente. Results muestra las rondas con sus byes y ↻ en cada cruce.
+  Es el mismo suizo de `torneo.mjs swiss`, que usa estas funciones.
 - **Valores del partido**, con un nombre cada uno: bots por especie
   (cada participante puede tener los suyos), energía inicial, rondas
   mínimas, victorias para ganar (`Maxrounds`, opción 98) y el tope de
@@ -514,7 +525,7 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   formulario y Animal Minimalis, o **🎲 Draw** N al azar de un pool. El
   selector "Entrants" elige entre la lista fija, un sorteo nuevo en cada
   temporada o el **sorteo en cada pelea** (salvo la copa, que sortea por
-  temporada): el rey de la colina saca del pool los retadores de cada
+  temporada, y el suizo, que sortea N al lanzar el primer partido): el rey de la colina saca del pool los retadores de cada
   pelea (tope de 3 × N peleas), la escalera sortea cada aspirante cuando
   le toca entrar (hasta N) y todos contra todos y el partido único
   sortean N al lanzar el primer partido. Los sorteados quedan inscriptos
@@ -538,7 +549,9 @@ de TV y a las Ligas de antes; el modelo, la base y los partidos están en
   temporada, sorteo, Hall of Fame, Scratch, migraciones),
   `node tools/e11/smoke_sorteo_pelea.mjs` (sorteo en cada pelea) y
   `node tools/e12/smoke_copa.mjs` (grupos, bombos, desempates, cuadro,
-  3.er puesto, exportar e importar con los grupos).
+  3.er puesto, exportar e importar con los grupos) y
+  `node tools/swiss/smoke_suizo.mjs` (rondas, byes, revanchas solo
+  inevitables, nulos, desempate por extinción, sorteo del orden, archivo).
 - **Sin navegador**: `build/dbfight.exe` corre un partido F1 con el core
   nativo y `node tools/fight/torneo.mjs koth|swiss|duel` arma el rey de la colina o un suizo para perfilar
   con las reglas de la página (ver `tools/fight/README.md`).

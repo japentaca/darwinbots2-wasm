@@ -51,7 +51,10 @@ todo el Bestiary conviene el suizo:
 node tools/fight/torneo.mjs swiss --popcap 100 --seed 1
 ```
 
-Cada ronda empareja bots con el mismo puntaje sin repetir rival; con
+Cada ronda empareja bots con el mismo puntaje sin repetir rival (de arriba
+abajo, cada uno con el primer candidato que no enfrentó; si lo que queda no
+se puede emparejar, prueba el siguiente, y solo si no hay forma acepta una
+revancha); con
 ⌈log2 N⌉ + 1 rondas (11 para ~540 bots) los fuertes terminan peleando entre
 ellos. Las peleas de una ronda son independientes y corren en paralelo
 (`--jobs`, por defecto núcleos − 2). Puntos: victoria 1, nula ½, bye 1.
@@ -59,6 +62,13 @@ La tabla (`standings` del JSON, que se guarda tras cada ronda) ordena por
 puntos, Buchholz (suma de los puntos de los rivales), Elo y rondas ganadas
 por extinción. Las semillas se fijan en el orden del emparejamiento: con
 `--seed` el torneo es reproducible aunque corra en paralelo.
+
+La tabla y el emparejamiento son los del formato *Swiss system* de los
+torneos de la web (`lgSwissTable` y `lgSwissPair` de `web/league.js`):
+para el mismo orden inicial y los mismos resultados, los dos arman los
+mismos cruces. `node tools/swiss/cruces_suizo.mjs <JSON>` lo comprueba
+con una corrida (las corridas anteriores a la vuelta atrás, que aceptaban
+revanchas evitables, se comparan hasta la primera revancha).
 
 ### Receta recomendada: castigar a los pasivos
 

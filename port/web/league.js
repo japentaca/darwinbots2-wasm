@@ -83,7 +83,8 @@ const lg = {
 const LG_CUR_KEY = 'db-league-cur';
 const LG_FMT_DEFAULT = {
   // 'single' (un partido con todos) | 'koth' (rey de la colina) |
-  // 'rr' (todos contra todos) | 'ladder' (escalera) | 'cup' (copa, E12)
+  // 'rr' (todos contra todos) | 'ladder' (escalera) | 'cup' (copa, E12) |
+  // 'swiss' (suizo)
   format: 'koth',
   k: 2,             // koth: luchadores por pelea
   retire: 5,        // koth: victorias seguidas para retirarse invicto (0 = nunca, solo sin fin)
@@ -98,8 +99,9 @@ const LG_FMT_DEFAULT = {
   groupLegs: 1,     // cup (E12): vueltas de la fase de grupos
   pots: 'elo',      // cup: bombos por el Elo del Hall of Fame ('elo') o sorteo puro ('random')
   third: false,     // cup: partido por el 3.er puesto
+  swissRounds: 0,   // swiss: rondas (0 = ⌈log2 N⌉ + 1)
 };
-const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup'];
+const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup', 'swiss'];
 // Participantes de cada temporada: lista fija (a mano, se copia a la
 // temporada nueva), sorteo de n del pool en cada temporada nueva ('random')
 // o sorteo en cada pelea ('fight', salvo la copa, que entonces sortea en
@@ -322,7 +324,8 @@ function lgKothClean(f) {
 // ¿Terminó la temporada? Con menos de 2 participantes no se juega ni termina.
 // single: con su partido; rr y escalera: con el calendario completo; rey de
 // la colina: con el primer retiro invicto o al tope de 3 × N peleas (sin fin:
-// nunca) y, sin repetir, también sin retadores nuevos; copa: con la final jugada.
+// nunca) y, sin repetir, también sin retadores nuevos; copa: con la final
+// jugada; suizo: con la última ronda.
 function lgSeasonDone(S, ms) {
   if (S.entrants.length < 2) return false;
   const f = S.fmt.format;
@@ -330,6 +333,7 @@ function lgSeasonDone(S, ms) {
   if (f === 'rr') return !lgRrState(S, ms).next;
   if (f === 'ladder') return !lgLadderState(S, ms).next && !(S.live && S.entrants.length < S.live.n);
   if (f === 'cup') return lgCupState(S, ms).phase === 'done';
+  if (f === 'swiss') return lgSwissState(S, ms).phase === 'done';
   if (lgKothDry(S, ms)) return true;
   if (lgKothEndless(S.fmt)) return false;
   const k = lgKothState(S, ms);
@@ -339,12 +343,14 @@ function lgSeasonDone(S, ms) {
 // Campeón de una temporada terminada: {name, how} o null si sigue en juego.
 // how: 'match' (single), 'retired' (rey de la colina), 'elo' (rey de la
 // colina al tope: el primero por Elo), 'table' (rr: el primero de la tabla),
-// 'ladder' (escalera: el peldaño 1), 'cup' (copa: el ganador de la final).
+// 'ladder' (escalera: el peldaño 1), 'cup' (copa: el ganador de la final),
+// 'swiss' (suizo: el primero de la tabla).
 function lgSeasonChampion(S, ms) {
   if (!lgSeasonDone(S, ms)) return null;
   const f = S.fmt.format;
   if (f === 'single') return { name: lgPlayed(ms)[0].winner, how: 'match' };
   if (f === 'cup') return { name: lgCupState(S, ms).champion, how: 'cup' };
+  if (f === 'swiss') return { name: lgSwissState(S, ms).table[0].name, how: 'swiss' };
   if (f === 'koth') {
     const k = lgKothState(S, ms);
     if (k.first) return { name: k.first, how: 'retired' };
@@ -354,7 +360,7 @@ function lgSeasonChampion(S, ms) {
 }
 const LG_HOW = { match: 'wins the match', retired: 'retires undefeated',
                  elo: 'tops the Elo at the fight cap', dry: 'tops the table when no fresh challenger is left', table: 'tops the table',
-                 ladder: 'holds the top rung', cup: 'wins the final' };
+                 ladder: 'holds the top rung', cup: 'wins the final', swiss: 'tops the Swiss table' };
 
 // Escalera (populateladder, F1Mode.bas:443-500): los participantes entran de
 // a uno en el orden de inscripción; el primero ocupa el peldaño 1 sin pelear.
@@ -572,6 +578,179 @@ function lgShuffle(list, rnd = Math.random) {
   return a;
 }
 
+// ---- Suizo ------------------------------------------------------------------------
+// Cada ronda empareja a los de igual puntaje (sin repetir rival mientras se
+// pueda); en ~log2(N) rondas los fuertes terminan peleando entre ellos. Puntos:
+// victoria 1, nula ½, bye 1 (sin pelea). Desempates: Buchholz (suma de los
+// puntos de los rivales), Elo (1500, K 32, en el orden de los partidos) y
+// rondas ganadas por extinción. La tabla y el emparejamiento son los de
+// tools/fight/torneo.mjs swiss (que los toma de aquí). Todo sale del historial
+// salvo el orden sorteado de la ronda 1: S.order = [nombres]. En la web un
+// nulo se repite (como en la copa); en torneo.mjs vale ½.
+//
+// Registro de la tabla: {fighters: [a, b], winner ('' = nula), bye, won, ext,
+// lost} con won/ext/lost = rondas ganadas, ganadas por extinción y perdidas
+// de cada luchador; el bye es {bye: true, fighters: [n], winner: n}.
+const lgSwissRounds = (f, n) => (parseInt(f.swissRounds, 10) > 0 ? parseInt(f.swissRounds, 10)
+  : Math.ceil(Math.log2(Math.max(2, n))) + 1);
+
+// Un partido de la liga como registro de la tabla: extinción = victorias
+// menos las del tope de ciclos (m.capWins; los partidos de antes, 0).
+function lgSwissRec(m) {
+  const wins = m.wins || m.fighters.map((n) => (n === m.winner ? 1 : 0));
+  const cap = m.capWins || [];
+  const total = wins.reduce((a, b) => a + b, 0);
+  return { fighters: m.fighters, winner: m.winner, bye: false, won: wins,
+           ext: wins.map((w, i) => Math.max(0, w - (cap[i] || 0))), lost: wins.map((w) => total - w) };
+}
+
+// Tabla (pura): names en el orden de desempate final (el de inscripción).
+function lgSwissTable(names, recs) {
+  const T = new Map(names.map((n) => [n, { name: n, points: 0, buchholz: 0, elo: LG_ELO0,
+    fights: 0, won: 0, lost: 0, void: 0, byes: 0, roundsWon: 0, roundsWonExtinct: 0, roundsLost: 0,
+    opponents: [] }]));
+  for (const m of recs) {
+    if (m.bye) { const r = T.get(m.fighters[0]); if (r) { r.points += 1; r.byes++; } continue; }
+    const [A, B] = m.fighters.map((n) => T.get(n));
+    if (!A || !B) continue;
+    A.opponents.push(B.name); B.opponents.push(A.name);
+    [A, B].forEach((r, i) => {
+      r.fights++;
+      if (!m.winner) { r.void++; r.points += 0.5; }
+      else if (m.winner === r.name) { r.won++; r.points += 1; }
+      else r.lost++;
+      r.roundsWon += (m.won && m.won[i]) || 0;
+      r.roundsWonExtinct += (m.ext && m.ext[i]) || 0;
+      r.roundsLost += (m.lost && m.lost[i]) || 0;
+    });
+    const sA = !m.winner ? 0.5 : m.winner === A.name ? 1 : 0;
+    const exp = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
+    const d = LG_K * (sA - exp);
+    A.elo += d; B.elo -= d;
+  }
+  for (const r of T.values()) r.buchholz = r.opponents.reduce((s, n) => s + T.get(n).points, 0);
+  return [...T.values()].sort((x, y) => y.points - x.points || y.buchholz - x.buchholz ||
+    y.elo - x.elo || y.roundsWonExtinct - x.roundsWonExtinct);
+}
+
+// Emparejamiento de una ronda (puro): por la tabla (nombres, de arriba
+// abajo), el primero libre con el siguiente libre que no haya enfrentado
+// todavía. Con N impar, el bye va al de más abajo que aún no tuvo.
+// order: los nombres del campo; devuelve {pairs: [[a, b]], bye}.
+function lgSwissPair(order, table, recs) {
+  const played = new Set(recs.filter((m) => !m.bye).map((m) => m.fighters.slice().sort().join('\u0000')));
+  const met = (x, y) => played.has([x, y].sort().join('\u0000'));
+  const pos = new Map(table.map((n, i) => [n, i]));
+  const list = order.slice().sort((x, y) => pos.get(x) - pos.get(y));
+  let bye = null;
+  if (list.length % 2) {
+    const byes = new Set(recs.filter((m) => m.bye).map((m) => m.fighters[0]));
+    const i = list.map((n) => !byes.has(n)).lastIndexOf(true);
+    bye = list.splice(i < 0 ? list.length - 1 : i, 1)[0];
+  }
+  // Sin revanchas si se puede: el primero libre con el primer candidato que
+  // no enfrentó y, si lo que queda no se puede emparejar, el siguiente
+  // candidato (vuelta atrás). Cuando el goloso no deja revanchas, da lo
+  // mismo que él. Si no hay forma (o se pasa del presupuesto), el goloso con
+  // revanchas.
+  let steps = 0;
+  const clean = (free) => {
+    if (!free.length) return [];
+    const p = free[0];
+    for (let j = 1; j < free.length; j++) {
+      if (met(p, free[j])) continue;
+      if (++steps > LG_SWISS_STEPS) return null;
+      const rest = clean(free.slice(1, j).concat(free.slice(j + 1)));
+      if (rest) return [[p, free[j]], ...rest];
+    }
+    return null;
+  };
+  let pairs = clean(list);
+  if (!pairs) {
+    pairs = [];
+    const free = list.slice();
+    while (free.length) {
+      const p = free.shift();
+      let j = free.findIndex((q) => !met(p, q));
+      if (j < 0) j = 0;                             // todos enfrentados: revancha
+      pairs.push([p, free.splice(j, 1)[0]]);
+    }
+  }
+  return { pairs, bye };
+}
+const LG_SWISS_STEPS = 100000;
+
+// El campo del suizo: S.order sin repetidos ni los que ya no están.
+function lgSwissField(S) {
+  if (!Array.isArray(S.order)) return [];
+  const have = new Set(S.entrants.map((e) => e.name)), seen = new Set();
+  return S.order.filter((n) => have.has(n) && !seen.has(n) && seen.add(n));
+}
+
+// Sortea el orden de la ronda 1 de la temporada abierta si falta o, sin
+// partidos todavía, si no es el de los participantes. Con partidos, el campo
+// queda fijo (los que se sumen juegan desde la temporada siguiente). true si sorteó.
+function lgSwissDraw(L, matches, rnd = Math.random) {
+  const S = lgSeason(L);
+  if (S.fmt.format !== 'swiss') return false;
+  const names = S.entrants.map((e) => e.name);
+  if (Array.isArray(S.order)) {
+    if (matches.some((m) => m.league === L.id && m.season === S.no)) return false;
+    const field = lgSwissField(S);
+    if (field.length === names.length && field.length === S.order.length) return false;
+  }
+  S.order = lgShuffle(names, rnd);
+  return true;
+}
+async function lgSwissEnsure(L) {
+  if (lgSwissDraw(L, lg.matches)) await lgSave(L);
+}
+
+// Estado del suizo (puro): {phase: 'draw' | 'play' | 'done', field, round,
+// rounds, history: [{no, pairs: [{a, b, winner, no, id}], bye}], next, label,
+// table (lgSwissTable)}. Los partidos cuentan en orden: cada cruce toma el
+// siguiente partido jugado entre esos dos (los demás se saltean).
+function lgSwissState(S, ms) {
+  const field = lgSwissField(S);
+  const st = { phase: 'draw', field, round: 0, rounds: 0, history: [], next: null, label: '', table: [] };
+  if (field.length < 2) return st;
+  const inField = new Set(field);
+  const names = S.entrants.map((e) => e.name).filter((n) => inField.has(n));
+  const E = new Map(S.entrants.map((e) => [e.name, e]));
+  st.rounds = lgSwissRounds(S.fmt, field.length);
+  const recs = [], played = lgPlayed(ms);
+  let i = 0;
+  for (let r = 1; r <= st.rounds; r++) {
+    const table = r === 1 ? field : lgSwissTable(names, recs).map((x) => x.name);
+    const { pairs, bye } = lgSwissPair(field, table, recs);
+    const rd = { no: r, pairs: pairs.map(([a, b]) => ({ a, b })), bye };
+    st.history.push(rd);
+    st.round = r;
+    for (const [k, t] of rd.pairs.entries()) {
+      while (i < played.length) {
+        const m = played[i++];
+        if (m.fighters.length === 2 && m.fighters.includes(t.a) && m.fighters.includes(t.b) && t.a !== t.b) {
+          Object.assign(t, { winner: m.winner, no: m.no, id: m.id });
+          recs.push(lgSwissRec(m));
+          break;
+        }
+      }
+      if (!t.winner) {
+        st.phase = 'play';
+        st.next = [E.get(t.a), E.get(t.b)];
+        st.label = `Swiss round ${r} of ${st.rounds} · match ${k + 1} of ${rd.pairs.length}` +
+                   (bye ? ` · bye: ${bye}` : '');
+        st.table = lgSwissTable(names, recs);
+        return st;
+      }
+    }
+    if (bye) recs.push({ bye: true, fighters: [bye], winner: bye });
+  }
+  st.phase = 'done';
+  st.table = lgSwissTable(names, recs);
+  return st;
+}
+
 // Próxima pelea de la temporada abierta de L (lee lg.matches).
 const lgNextFixture = (L) => lgFixture(lgSeason(L), lgSeasonMatches(lgSeason(L).no));
 
@@ -597,6 +776,11 @@ function lgFixture(S, ms) {
   if (S.fmt.format === 'cup') {
     // Sin grupos sorteados (lgCupEnsure) o sin 8, 16 o 32 participantes: nada.
     const st = lgCupState(S, ms);
+    return st.next && { fighters: st.next, label: st.label };
+  }
+  if (S.fmt.format === 'swiss') {
+    // Sin orden sorteado (lgSwissEnsure): nada.
+    const st = lgSwissState(S, ms);
     return st.next && { fighters: st.next, label: st.label };
   }
   const { champ, played } = lgKothState(S, ms);
@@ -657,6 +841,16 @@ function lgStandings(S, ms) {
     const reach = lgCupState(S, ms).reach;
     const lv = (r) => reach.get(r.name) || 0;
     list.sort((a, b) => lv(b) - lv(a) || b.w - a.w || b.elo - a.elo);
+  } else if (S.fmt.format === 'swiss') {
+    // El orden de la tabla del suizo (con sus puntos y su Buchholz); los que
+    // no están en el campo, al final.
+    const tab = lgSwissState(S, ms).table, at = new Map(tab.map((r, i) => [r.name, r]));
+    for (const r of list) {
+      const t = at.get(r.name);
+      if (t) Object.assign(r, { pts: t.points, bh: t.buchholz, byes: t.byes, rank: tab.indexOf(t) });
+    }
+    const rank = (r) => (r.rank === undefined ? 1e9 : r.rank);
+    list.sort((a, b) => rank(a) - rank(b) || b.elo - a.elo);
   } else if (lgKothEndless(S.fmt)) {
     // Colina sin fin: manda quien junta más retiros invictos, luego el Elo.
     const t = lgKothState(S, ms).titles, n = (r) => t.get(r.name) || 0;
@@ -991,6 +1185,8 @@ function lgImportObj(o, names, newId) {
       x.groups = s.groups.map((g) => (Array.isArray(g) ? g.map(String) : []));
       if (!lgCupGroupsOk(x)) delete x.groups;
     }
+    // Suizo: el orden sorteado de la ronda 1 del suizo.
+    if (Array.isArray(s.order)) x.order = s.order.map(String);
     return x;
   });
   let name = String(src.name || 'League').trim() || 'League';
@@ -1171,6 +1367,7 @@ async function lgPlayNext() {
   if (lgLiveSync(L)) await lgSave(L);
   if (S.live) lgNote('Drawing from the pool…');
   await lgLiveFill(L);
+  await lgSwissEnsure(L);                  // suizo: el orden de la ronda 1
   const fx = lgNextFixture(L);
   if (!fx) {
     lgNote(lgSeasonDone(S, lgSeasonMatches(S.no)) ? 'The season is complete.'
@@ -1267,6 +1464,8 @@ async function lgRecord(winner, note) {
   const L = lgFind(m.league);
   const sp = (m.f1 && m.f1.sp) || [];
   const wins = m.fighters.map((e) => (sp.find((s) => s.name === e.name) || {}).wins || 0);
+  // Suizo: de esas, las rondas ganadas por el tope de ciclos (worker.js).
+  const capWins = m.fighters.map((e) => (sp.find((s) => s.name === e.name) || {}).capWins || 0);
   if (m.replay) { lgReplayCheck(m.replay, { winner: winner || '', wins, cycles: m.cycles || 0 }); return; }
   // Los partidos del Scratch quedan en memoria (con id negativo); los demás,
   // en la base y, si es la liga abierta, en lg.matches.
@@ -1278,7 +1477,7 @@ async function lgRecord(winner, note) {
   const rec = {
     league: m.league, season: m.season, no, date: new Date().toISOString(),
     format: L ? lgSeason(L).fmt.format : '', fighters: m.fighters.map((e) => e.name),
-    seed: m.seed, winner: winner || '', wins, rounds: wins.reduce((a, b) => a + b, 0),
+    seed: m.seed, winner: winner || '', wins, capWins, rounds: wins.reduce((a, b) => a + b, 0),
     cycles: m.cycles || 0, capRounds: m.capRounds, note: note || '',
   };
   if (scratch) rec.id = -(++lg.scratch.seq);
@@ -1342,8 +1541,14 @@ function lgFmtHtml(f, locked) {
     `<option value="koth"${f.format === 'koth' ? ' selected' : ''} title="The winner stays; the first to retire undefeated wins the season">King of the hill</option>` +
     `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option>` +
     `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option>` +
-    `<option value="cup"${f.format === 'cup' ? ' selected' : ''} title="8, 16 or 32 entrants in groups of 4 (round robin); the top 2 of each group go to a knockout bracket">World cup (groups + knockout)</option></select>` +
+    `<option value="cup"${f.format === 'cup' ? ' selected' : ''} title="8, 16 or 32 entrants in groups of 4 (round robin); the top 2 of each group go to a knockout bracket">World cup (groups + knockout)</option>` +
+    `<option value="swiss"${f.format === 'swiss' ? ' selected' : ''} title="Duels in rounds: each round pairs entrants with the same score, never the same pair twice while it can; for 16 to 32 entrants">Swiss system</option></select>` +
     (f.format === 'ladder' || f.format === 'single' ? ''
+    : f.format === 'swiss'
+      ? num('swissRounds', 'Rounds (0 = auto)', f.swissRounds || 0, 0, 99, 'Auto = ⌈log2 N⌉ + 1: 6 rounds for 17 to 32 entrants') +
+        '<div class="ct-wide ct-rule">Win 1 point, bye 1 (odd fields: the lowest entrant without one). ' +
+        'Ties: Buchholz (sum of the opponents points), Elo, rounds won by extinction. A void match is played again. ' +
+        'The round 1 order is drawn when the first match starts; later entrants play from the next season.</div>'
     : f.format === 'cup'
       ? num('groupLegs', 'Group stage legs', f.groupLegs, 1, 2, '1 = each pair of a group meets once; 2 = twice, with the seeding order swapped') +
         `<label title="How the groups are seeded: pots by the Hall of Fame Elo (1500 without history), or a pure random draw">Pots</label><select data-f="pots"${d}>` +
@@ -1387,17 +1592,23 @@ function lgChampionHtml(S, ms) {
 function lgStandingsHtml(S, ms) {
   const rows = lgStandings(S, ms);
   const koth = S.fmt.format === 'koth' ? lgKothState(S, ms) : null;
+  const swiss = S.fmt.format === 'swiss';
   if (!rows.length) return '<div class="ct-empty">No entrants yet.</div>';
   const champ = lgSeasonChampion(S, ms);
   return '<table class="ch-table"><tr><th></th><th>Entrant</th><th title="Played">P</th>' +
-    '<th title="Won">W</th><th title="Lost">L</th><th title="Win rate">%</th><th>Elo</th>' +
+    '<th title="Won">W</th><th title="Lost">L</th><th title="Win rate">%</th>' +
+    (swiss ? '<th title="Points (win 1, bye 1)">Pts</th><th title="Buchholz: sum of the opponents points">Bh</th>' : '') +
+    '<th>Elo</th>' +
     (koth ? '<th title="Undefeated retirements">👑</th>' : '') +
     '<th title="Share of the rounds it won that were decided by the cycle cap">cap</th>' +
     '<th title="Average cycles per match played">⏱</th></tr>' +
     rows.map((r, i) => `<tr><td>${i + 1}</td><td class="ch-n" title="${escHtml(r.name)}">` +
       `<span class="ct-dot lg-dot" style="background:${r.color}"></span>${champ && champ.name === r.name ? '🏆 ' : ''}${escHtml(r.name)}</td>` +
       `<td>${r.p}</td><td>${r.w}</td><td>${r.p - r.w}</td>` +
-      `<td>${r.p ? Math.round((r.w / r.p) * 100) : '–'}</td><td>${Math.round(r.elo)}</td>` +
+      `<td>${r.p ? Math.round((r.w / r.p) * 100) : '–'}</td>` +
+      (swiss ? `<td${r.byes ? ` title="${r.byes} bye${r.byes > 1 ? 's' : ''}"` : ''}>${r.pts === undefined ? '' : r.pts}</td>` +
+               `<td>${r.bh === undefined ? '' : r.bh}</td>` : '') +
+      `<td>${Math.round(r.elo)}</td>` +
       (koth ? `<td>${koth.titles.get(r.name) || ''}</td>` : '') +
       `<td>${r.rounds ? Math.round((r.capR / r.rounds) * 100) + '%' : ''}</td>` +
       `<td>${r.p ? Math.round(r.cyc / r.p) : ''}</td></tr>`).join('') +

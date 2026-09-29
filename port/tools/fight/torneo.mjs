@@ -133,7 +133,8 @@ function loadLeague(rnd) {
   vm.createContext(ctx);
   const src = fs.readFileSync(path.join(WEB, 'league.js'), 'utf8');
   vm.runInContext(src + '\nObject.assign(this, { lgFixture, lgSeasonDone, lgSeasonChampion, ' +
-    'lgStandings, lgKothState, lgKothClean, lgAddEntrant, LG_FMT_DEFAULT, LG_HOW });', ctx);
+    'lgStandings, lgKothState, lgKothClean, lgAddEntrant, lgSwissTable, lgSwissPair, lgSwissRounds, ' +
+    'LG_FMT_DEFAULT, LG_HOW });', ctx);
   if (rnd) { ctx.__rnd = rnd; vm.runInContext('Math.random = __rnd;', ctx); }
   return ctx;
 }
@@ -236,59 +237,30 @@ function botSummary(matches) {
 // ronda son independientes: corren en paralelo (--jobs).
 // Puntos: victoria 1, nula ½, bye 1 (sin pelea). Desempates: Buchholz (suma
 // de los puntos de los rivales), luego Elo (1500, K 32, en el orden de la
-// ronda) y rondas ganadas por extinción.
-const SW_ELO0 = 1500, SW_K = 32;
+// ronda) y rondas ganadas por extinción. La tabla y el emparejamiento son
+// los del formato 'swiss' de la liga web (lgSwissTable y lgSwissPair de
+// web/league.js): los dos arman los mismos cruces.
 
-function swissTable(players, matches) {
-  const T = new Map(players.map((e) => [e.name, { name: e.name, points: 0, buchholz: 0, elo: SW_ELO0,
-    fights: 0, won: 0, lost: 0, void: 0, byes: 0, roundsWon: 0, roundsWonExtinct: 0, roundsLost: 0,
-    opponents: [] }]));
-  for (const m of matches) {
-    if (m.bye) { const r = T.get(m.fighters[0]); r.points += 1; r.byes++; continue; }
-    const [A, B] = m.fighters.map((n) => T.get(n));
-    A.opponents.push(B.name); B.opponents.push(A.name);
-    for (const r of [A, B]) {
-      r.fights++;
-      if (!m.winner) { r.void++; r.points += 0.5; }
-      else if (m.winner === r.name) { r.won++; r.points += 1; }
-      else r.lost++;
-      for (const rd of m.result.rounds || []) {
-        if (rd.winner === r.name) { r.roundsWon++; if (rd.how === 'extinct') r.roundsWonExtinct++; }
-        else r.roundsLost++;
-      }
-    }
-    const sA = !m.winner ? 0.5 : m.winner === A.name ? 1 : 0;
-    const exp = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
-    const d = SW_K * (sA - exp);
-    A.elo += d; B.elo -= d;
-  }
-  for (const r of T.values()) r.buchholz = r.opponents.reduce((s, n) => s + T.get(n).points, 0);
-  return [...T.values()].sort((x, y) => y.points - x.points || y.buchholz - x.buchholz ||
-    y.elo - x.elo || y.roundsWonExtinct - x.roundsWonExtinct);
+// Un partido como registro de lgSwissTable: rondas ganadas, ganadas por
+// extinción y perdidas de cada luchador (de result.rounds de dbfight).
+function swissRec(m) {
+  if (m.bye) return { bye: true, fighters: m.fighters, winner: m.winner };
+  const rds = (m.result && m.result.rounds) || [];
+  const count = (f) => m.fighters.map((n) => rds.filter((rd) => f(rd, n)).length);
+  return { fighters: m.fighters, winner: m.winner, bye: false,
+           won: count((rd, n) => rd.winner === n),
+           ext: count((rd, n) => rd.winner === n && rd.how === 'extinct'),
+           lost: count((rd, n) => rd.winner !== n) };
 }
+const swissTable = (lgx, players, matches) =>
+  lgx.lgSwissTable(players.map((e) => e.name), matches.map(swissRec));
 
-// Emparejamiento de una ronda: por puntos (y desempates) de arriba abajo, el
-// primero libre con el siguiente libre que no haya enfrentado todavía. Con
-// N impar, el bye va al de más abajo que aún no tuvo.
-function swissPair(order, table, matches) {
-  const played = new Set(matches.filter((m) => !m.bye).map((m) => m.fighters.slice().sort().join('\u0000')));
-  const met = (x, y) => played.has([x, y].sort().join('\u0000'));
-  const pos = new Map(table.map((r, i) => [r.name, i]));
-  const list = order.slice().sort((x, y) => pos.get(x.name) - pos.get(y.name));
-  let bye = null;
-  if (list.length % 2) {
-    const byes = new Set(matches.filter((m) => m.bye).map((m) => m.fighters[0]));
-    const i = list.map((e) => !byes.has(e.name)).lastIndexOf(true);
-    bye = list.splice(i < 0 ? list.length - 1 : i, 1)[0];
-  }
-  const pairs = [], free = list.slice();
-  while (free.length) {
-    const p = free.shift();
-    let j = free.findIndex((q) => !met(p.name, q.name));
-    if (j < 0) j = 0;                               // todos enfrentados: revancha
-    pairs.push([p, free.splice(j, 1)[0]]);
-  }
-  return { pairs, bye };
+// Emparejamiento de una ronda (lgSwissPair) con los participantes.
+function swissPair(lgx, order, table, matches) {
+  const E = new Map(order.map((e) => [e.name, e]));
+  const { pairs, bye } = lgx.lgSwissPair(order.map((e) => e.name), table.map((r) => r.name),
+                                         matches.map(swissRec));
+  return { pairs: pairs.map(([x, y]) => [E.get(x), E.get(y)]), bye: bye === null ? null : E.get(bye) };
 }
 
 async function pool(tasks, jobs) {
@@ -299,9 +271,9 @@ async function pool(tasks, jobs) {
   return out;
 }
 
-async function runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 }) {
+async function runSwiss({ lgx, S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 }) {
   const N = S.entrants.length;
-  const rounds = num(a['swiss-rounds'], Math.ceil(Math.log2(Math.max(2, N))) + 1);
+  const rounds = num(a['swiss-rounds'], lgx.lgSwissRounds({}, N));
   const jobs = Math.max(1, num(a.jobs, Math.max(1, os.cpus().length - 2)));
   // Orden inicial al azar (con --seed, reproducible): la ronda 1 empareja así.
   const order = S.entrants.slice();
@@ -315,11 +287,11 @@ async function runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules
   const save = (done, round) => {
     fs.writeFileSync(file, JSON.stringify({ mode: 'swiss', done, round, rounds, date: new Date().toISOString(),
       fmt, rules, entrants: S.entrants.map((e) => e.name), matches,
-      standings: swissTable(S.entrants, matches) }, null, 1));
+      standings: swissTable(lgx, S.entrants, matches) }, null, 1));
   };
   for (let r = 1; r <= rounds; r++) {
-    const table = r === 1 ? order.map((e) => ({ name: e.name })) : swissTable(S.entrants, matches);
-    const { pairs, bye } = swissPair(order, table, matches);
+    const table = r === 1 ? order.map((e) => ({ name: e.name })) : swissTable(lgx, S.entrants, matches);
+    const { pairs, bye } = swissPair(lgx, order, table, matches);
     // Semillas y números en el orden del emparejamiento: el resultado no
     // depende de qué pelea termina primero.
     const base = matches.length;
@@ -332,7 +304,7 @@ async function runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules
     const got = await pool(todo, jobs);
     for (const m of got) { m.round = r; matches.push(m); }
     if (bye) matches.push({ no: matches.length + 1, round: r, bye: true, fighters: [bye.name], winner: bye.name });
-    const tab = swissTable(S.entrants, matches);
+    const tab = swissTable(lgx, S.entrants, matches);
     console.log(`-- round ${r} in ${((Date.now() - tr) / 1000).toFixed(0)}s · top 10:`);
     tab.slice(0, 10).forEach((x, i) => console.log(`   ${i + 1}. ${x.name} · ${x.points} pts · ` +
       `Bh ${x.buchholz} · Elo ${Math.round(x.elo)} · ${x.roundsWonExtinct}/${x.roundsWon} rounds by extinction`));
@@ -423,7 +395,7 @@ async function main() {
     return m;
   };
   if (mode === 'swiss') {
-    await runSwiss({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 });
+    await runSwiss({ lgx, S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 });
     fs.rmSync(tmp, { recursive: true, force: true });
     return;
   }
