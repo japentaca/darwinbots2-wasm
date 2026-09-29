@@ -428,17 +428,26 @@ TEST_CASE("F-13 la librería de vectores muta sus argumentos [PROBABLE BUG] B1-3
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("F-14 oclusión por formas rota: transposición + Or [PROBABLE BUG] B2-1") {
+TEST_CASE("F-14 oclusión por formas con los lados reales (corregido B2-1)") {
   PhysWorld w;
   w.sim.Obstacles.push_back({true, {1000.0f, 1000.0f}, 400.0f, 100.0f});
   w.sim.numObstacles = 1;
   const int n1 = w.addbot(955, 1035, 10.0f);
   const int n2 = w.addbot(1035, 955, 10.0f);
 
-  // La línea de visión NO cruza el rectángulo real; la versión transpuesta
-  // con `useT Or useS` la declara bloqueada igualmente.
-  CHECK(ShapeBlocksBot(w.sim, n1, n2, 1));
-  CHECK(AnyShapeBlocksBot(w.sim, n1, n2));
+  // La línea de visión NO cruza el rectángulo real: no bloquea (el original,
+  // transpuesto y con `useT Or useS`, la declaraba bloqueada).
+  CHECK(!ShapeBlocksBot(w.sim, n1, n2, 1));
+  CHECK(!AnyShapeBlocksBot(w.sim, n1, n2));
+
+  // Una línea que atraviesa la forma de lado a lado sí bloquea.
+  const int n5 = w.addbot(900, 1050, 10.0f);
+  const int n6 = w.addbot(1500, 1050, 10.0f);
+  CHECK(ShapeBlocksBot(w.sim, n5, n6, 1));
+  // Y una que cruza de arriba abajo, también.
+  const int n7 = w.addbot(1200, 900, 10.0f);
+  const int n8 = w.addbot(1200, 1200, 10.0f);
+  CHECK(ShapeBlocksBot(w.sim, n7, n8, 1));
 
   // Control: ambos bots a la izquierda del AABB => el weed-out (correcto)
   // deja pasar la visión.

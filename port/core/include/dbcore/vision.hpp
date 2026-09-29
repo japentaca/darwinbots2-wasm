@@ -87,10 +87,23 @@ inline int FocusEyeIndex(vb_integer focuseye) {
   return std::abs(static_cast<int>(focuseye) + 4) % 9;
 }
 
-// Quads.bas:290-344 — ShapeBlocksBot. [PROBABLE BUG] B2-1 replicado
-// literalmente: los vectores de borde están TRANSPUESTOS ("top" = (0, Width),
-// "left" = (Height, 0)) y el criterio de corte es `useT Or useS` — basta que
-// UNA paramétrica caiga en [0,1] para declarar bloqueada la línea de visión.
+// Quads.bas:534-537 — semiancho de un ojo, con su margen de PI/36. Anchuras
+// negativas (Mod 1256 conserva el signo) suben por +PI hasta (-PI/36,
+// PI - PI/36] => ojo casi panorámico ([PROBABLE BUG] B2-2, F-11: se conserva
+// porque se alcanza desde el ADN). Corregido B2-5: las formas usan ahora esta
+// misma fórmula; el original les aplicaba (w + 35)/400 normalizado a [0, PI].
+inline vb_single HalfEyeWidth(vb_integer width) {
+  vb_single h = static_cast<vb_single>(static_cast<double>(width % 1256) / 400.0);
+  while (h > PI - PI / 36) h = h - PI;
+  while (h < -PI / 36) h = h + PI;
+  return h + PI / 36;
+}
+
+// Quads.bas:290-344 — ShapeBlocksBot. Corregido B2-1: el original tenía los
+// vectores de borde TRANSPUESTOS ("top" = (0, Width), "left" = (Height, 0)) y
+// cortaba con `useT Or useS` (bastaba UNA paramétrica en [0,1]). Aquí los
+// cuatro lados son los reales y la línea de visión se corta solo si cruza de
+// verdad un lado (las dos paramétricas en [0,1]).
 inline bool ShapeBlocksBot(Sim& sim, int n1, int n2, int o) {
   const Obstacle& ob = sim.Obstacles[o];
 
@@ -103,15 +116,15 @@ inline bool ShapeBlocksBot(Sim& sim, int n1, int n2, int o) {
 
   Vector D1[5];
   Vector p[5];
-  D1[1] = VectorSet(0, ob.Width);   // "top" — transpuesto
-  D1[2] = VectorSet(ob.Height, 0);  // "left side" — transpuesto
+  D1[1] = VectorSet(ob.Width, 0);   // top
+  D1[2] = VectorSet(0, ob.Height);  // left side
   D1[3] = D1[1];                    // bottom
   D1[4] = D1[2];                    // right side
 
   p[1] = ob.pos;
   p[2] = p[1];
-  p[3] = VectorAdd(p[1], D1[2]);
-  p[4] = VectorAdd(p[1], D1[1]);
+  p[3] = VectorAdd(p[1], D1[2]);    // esquina inferior izquierda
+  p[4] = VectorAdd(p[1], D1[1]);    // esquina superior derecha
 
   const Vector P0 = sim.rob[n1].pos;
   const Vector D0 = VectorSub(sim.rob[n2].pos, sim.rob[n1].pos);
@@ -127,7 +140,7 @@ inline bool ShapeBlocksBot(Sim& sim, int n1, int n2, int o) {
       if (t >= 0.0f && t <= 1.0f) useT = true;
       if (s >= 0.0f && s <= 1.0f) useS = true;
 
-      if (useT || useS) return true;  // el `Or` del fuente (Quads.bas:335)
+      if (useT && useS) return true;  // el fuente decía `Or` (Quads.bas:335)
     }
   }
   return false;
@@ -212,16 +225,10 @@ inline void CompareRobots3(Sim& sim, int n1, int n2) {
       while (eyeaim > 2 * PI) eyeaim = eyeaim - 2 * PI;
       while (eyeaim < 0.0f) eyeaim = eyeaim + 2 * PI;
 
-      // Semiancho: anchuras negativas (Mod 1256 conserva el signo) suben por
-      // +PI hasta (-PI/36, PI - PI/36] => ojo casi panorámico ([PROBABLE BUG]
-      // B2-2, F-11).
-      vb_single halfeyewidth = static_cast<vb_single>(
-          static_cast<double>(b1.mem[addr::EYE1WIDTH + a] % 1256) / 400.0);
-      while (halfeyewidth > PI - PI / 36)
-        halfeyewidth = halfeyewidth - PI;
-      while (halfeyewidth < -PI / 36) halfeyewidth = halfeyewidth + PI;
-      vb_single eyeaimleft = eyeaim + halfeyewidth + PI / 36;
-      vb_single eyeaimright = eyeaim - halfeyewidth - PI / 36;
+      const vb_single halfeyewidth =
+          HalfEyeWidth(b1.mem[addr::EYE1WIDTH + a]);
+      vb_single eyeaimleft = eyeaim + halfeyewidth;
+      vb_single eyeaimright = eyeaim - halfeyewidth;
 
       if (eyeaimright < 0.0f) eyeaimright = 2 * PI + eyeaimright;
       if (eyeaimleft > 2 * PI) eyeaimleft = eyeaimleft - 2 * PI;
@@ -272,13 +279,12 @@ inline vb_single SegmentSegmentIntersect(const Vector& P0, const Vector& D0,
 }
 
 // Quads.bas:597-943 — CompareShapes: visión DE formas (solo con
-// shapesAreVisable). Transcripción literal, con sus [PROBABLE BUG]:
-//  - B2-3 (B-12): "bot dentro de la forma" sale con GoTo getout sin tocar
-//    EYEF (los 9 ojos a 32000, lastopp/lastopptype sí).
-//  - B2-4 (B-13): lastopppos solo se captura cuando a = 4 (ojo frontal); con
-//    focuseye != 0 los refvars de posición salen de (0,0) u obsoletos.
-//  - B2-5 (B-14): halfeyewidth = (eyeXwidth + 35)/400 normalizado a [0, PI]
-//    con PI enteros — fórmula DISTINTA a la de bots (Mod 1256 + PI/36).
+// shapesAreVisable). Transcripción del fuente con tres correcciones:
+//  - B2-3 (B-12): "bot dentro de la forma" pone también EYEF a 32000 (el
+//    original salía con GoTo getout y lo dejaba rancio).
+//  - B2-4 (B-13): lastopppos se captura para el ojo con foco (el original
+//    solo para a = 4, el frontal, aunque focuseye apuntara a otro).
+//  - B2-5 (B-14): el semiancho es el mismo que para bots (HalfEyeWidth).
 //  - distleft/distright/dist NO se resetean entre los hasta 2 lados que un
 //    bot en esquina evalúa (solo por ojo) — fiel al fuente.
 // robfocus/eyeDistance (UI de depuración) quedan fuera del core.
@@ -286,8 +292,9 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
   Bot& b = sim.rob[n];
 
   // Local del fuente, UNO por llamada: arranca en (0,0) y persiste entre
-  // formas y ojos; solo el bucle con a = 4 lo escribe (B-13).
+  // formas y ojos; lo escribe el ojo con foco (corregido B-13).
   Vector lastopppos{};
+  const int focus = FocusEyeIndex(b.mem[addr::FOCUSEYE]);
 
   const vb_single sightdist =
       EyeSightDistance(sim, NarrowestEye(sim, n), n) + b.radius;
@@ -304,8 +311,9 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
       // demasiado lejos; siguiente forma
     } else if (ob.pos.x < b.pos.x && ob.pos.x + ob.Width > b.pos.x &&
                ob.pos.y < b.pos.y && ob.pos.y + ob.Height > b.pos.y) {
-      // ¡Bot dentro de la forma! GoTo getout: EYEF queda rancio (B-12).
+      // ¡Bot dentro de la forma! GoTo getout (EYEF también, corregido B-12).
       for (int i = 0; i <= 8; ++i) b.mem[addr::EyeStart + 1 + i] = 32000;
+      b.mem[addr::EYEF] = 32000;
       b.lastopp = o;
       b.lastopptype = 1;
       return;  // getout
@@ -367,11 +375,9 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
         while (eyeaim > 2 * PI) eyeaim = eyeaim - 2 * PI;
         while (eyeaim < 0.0f) eyeaim = eyeaim + 2 * PI;
 
-        // B-14: fórmula de semiancho DISTINTA a la de bots.
-        vb_single halfeyewidth = static_cast<vb_single>(
-            (static_cast<double>(b.mem[addr::EYE1WIDTH + a]) + 35.0) / 400.0);
-        while (halfeyewidth > PI) halfeyewidth = halfeyewidth - PI;
-        while (halfeyewidth < 0.0f) halfeyewidth = halfeyewidth + PI;
+        // B-14: la misma fórmula de semiancho que para bots (corregido).
+        const vb_single halfeyewidth =
+            HalfEyeWidth(b.mem[addr::EYE1WIDTH + a]);
         vb_single eyeaimleft = eyeaim + halfeyewidth;
         vb_single eyeaimright = eyeaim - halfeyewidth;
 
@@ -425,7 +431,7 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
             (eyeaimleft >= theta && eyespanszero) ||
             (eyeaimright <= theta && eyespanszero)) {
           lowestDist = VectorMagnitude(ab);
-          if (a == 4) lastopppos = closestPoint;  // B-13: solo a = 4
+          if (a == focus) lastopppos = closestPoint;  // B-13
         }
 
         if (lowestDist == 32000.0f) {
@@ -446,7 +452,7 @@ inline void CompareShapes(Sim& sim, int n, int /*field*/) {
               dist = distright;
             if (dist > 0.0f && dist < lowestDist) {
               lowestDist = dist;
-              if (a == 4) {
+              if (a == focus) {  // B-13
                 if (distleft < distright && distleft > 0.0f) {
                   Vector u = VectorUnit(eyeaimleftvector);
                   Vector sc = VectorScalar(u, dist);
