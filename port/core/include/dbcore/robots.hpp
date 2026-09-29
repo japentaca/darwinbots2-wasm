@@ -379,13 +379,14 @@ inline void Shooting(Sim& sim, int n) {
   sim.rob[n].mem[addr::shoot] = 0;
 }
 
-// Robots.bas:1236-1260 — ChangeChlr: no filtra signos una vez dentro
-// ([PROBABLE BUG] A3-10).
+// Robots.bas:1236-1260 — ChangeChlr. Corregido A3-10: el original no filtraba
+// signos una vez dentro (mkchlr=1, rmchlr=-100 añadía 101 cloroplastos); aquí
+// un valor negativo en cualquiera de las dos celdas no hace nada.
 inline void ChangeChlr(Sim& sim, int t) {
   Bot& b = sim.rob[t];
   const vb_single tmpchlr = b.chloroplasts;
-  b.chloroplasts += b.mem[addr::mkchlr];
-  b.chloroplasts -= b.mem[addr::rmchlr];
+  if (b.mem[addr::mkchlr] > 0) b.chloroplasts += b.mem[addr::mkchlr];
+  if (b.mem[addr::rmchlr] > 0) b.chloroplasts -= b.mem[addr::rmchlr];
   if (tmpchlr < b.chloroplasts) {
     const vb_single newnrg =
         b.nrg - (b.chloroplasts - tmpchlr) * sim.vm.costs.v[cost::CHLRCOST] *
@@ -443,26 +444,29 @@ inline void feedbody(Sim& sim, int t) {
   b.mem[addr::fdbody] = 0;
 }
 
-// Robots.bas:1262-1274 — ManageBody (P5): strbody/fdbody NEGATIVOS no se
-// consumen jamás ([PROBABLE BUG] A3-7, M-04).
+// Robots.bas:1262-1274 — ManageBody (P5). Corregido A3-7: en el original los
+// strbody/fdbody NEGATIVOS no se consumían jamás y quedaban como basura
+// legible; aquí se borran sin efecto.
 inline void ManageBody(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.mem[addr::strbody] > 0) storebody(sim, n);
   if (b.mem[addr::fdbody] > 0) feedbody(sim, n);
+  if (b.mem[addr::strbody] < 0) b.mem[addr::strbody] = 0;
+  if (b.mem[addr::fdbody] < 0) b.mem[addr::fdbody] = 0;
   if (b.body > 32000.0f) b.body = 32000.0f;
   if (b.body < 0.0f) b.body = 0.0f;
   b.mem[addr::body] = vb_cint(b.body);
 }
 
-// Robots.bas:1281-1297 — Shock: nrg = 0 ANTES de leer nrg/10 — la conversión
-// a body es código muerto ([PROBABLE BUG] A1-1).
+// Robots.bas:1281-1297 — Shock. Corregido A1-1: el original ponía nrg = 0
+// ANTES de leer nrg/10 y la energía se destruía; aquí se convierte a body.
 inline void Shock(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (!b.Veg && b.nrg > 3000.0f) {
     const double temp = static_cast<double>(b.onrg) - b.nrg;
     if (temp > b.onrg / 2.0f) {
+      b.body = b.body + (b.nrg / 10.0f);
       b.nrg = 0.0f;
-      b.body = b.body + (b.nrg / 10.0f);  // suma 0: bug replicado tal cual
       if (b.body > 32000.0f) b.body = 32000.0f;
       b.radius = FindRadius(sim, n);
     }
@@ -518,8 +522,9 @@ inline void ManageBouyancy(Sim& sim, int n) {
   }
 }
 
-// Robots.bas:1363-1401 — ManageReproduction (P5): puede encolar dos veces el
-// mismo bot ([PROBABLE BUG] A1-5).
+// Robots.bas:1363-1401 — ManageReproduction (P5). Corregido A1-5: el original
+// podía encolar el mismo bot dos veces (asexual y sexual en el mismo ciclo, lo
+// reconoce el autor); aquí, si procede la sexual, la asexual espera.
 inline void ManageReproduction(Sim& sim, int n) {
   Bot& b = sim.rob[n];
   if (b.fertilized >= 0) {
@@ -540,12 +545,12 @@ inline void ManageReproduction(Sim& sim, int n) {
     }
   }
 
-  if ((b.mem[addr::Repro] > 0 || b.mem[addr::mrepro] > 0) && !b.CantReproduce) {
-    sim.rep[sim.rp] = n;
-    sim.rp += 1;
-  }
   if (b.mem[addr::SEXREPRO] > 0 && b.fertilized >= 0 && !b.CantReproduce) {
     sim.rep[sim.rp] = -n;
+    sim.rp += 1;
+  } else if ((b.mem[addr::Repro] > 0 || b.mem[addr::mrepro] > 0) &&
+             !b.CantReproduce) {
+    sim.rep[sim.rp] = n;
     sim.rp += 1;
   }
 }

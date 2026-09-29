@@ -308,6 +308,7 @@ void PlaceHit(RvWorld& w, vb_long t, int h, int shooter, vb_integer type) {
   s.exist = true;
   s.shottype = type;
   s.parent = static_cast<vb_integer>(shooter);
+  s.parentAbs = shooter > 0 ? w.sim.rob[shooter].AbsNum : 0;
   s.pos = w.sim.rob[h].pos;
   s.opos = s.pos;
   s.velocity = {1.0f, 0.0f};
@@ -463,7 +464,7 @@ TEST_CASE("RV-14c newshot: el jitter Random/200 se suma en Double") {
   RvWorld w;
   const int n = w.addbot(1000, 1000);
   w.sim.rob[n].aim = 0.0244212653f;
-  InjectedRnd inj({0.5f, 0.18f});  // Random(-2,2) muerto; Random(-20,20) = -13
+  InjectedRnd inj({0.18f});  // Random(-20,20) = -13
   w.sim.rndy = &inj;
   const vb_long a = newshot(w.sim, n, 1, 1.0f, 1.0f);
   const float sa = static_cast<float>(0.0244212653f + -13.0 / 200.0);

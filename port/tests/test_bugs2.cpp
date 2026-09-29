@@ -65,8 +65,8 @@ struct BugWorld2 {
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// B-01 · Shock destruye la energía (Robots.bas:1281-1297) [ciclo]
-TEST_CASE("B-01 Shock: nrg = 0 y el body extra nunca aparece [PROBABLE BUG] A1-1") {
+// B-01 · Shock convierte la energía en body (Robots.bas:1281-1297) [ciclo]
+TEST_CASE("B-01 Shock: la energia pasa a body (corregido A1-1)") {
   BugWorld2 w;
   const int n = w.addbot(10000, 10000);
   Bot& b = w.sim.rob[n];
@@ -78,7 +78,7 @@ TEST_CASE("B-01 Shock: nrg = 0 y el body extra nunca aparece [PROBABLE BUG] A1-1
   b.nrg = 3500.0f;
   Shock(w.sim, n);
   CHECK(b.nrg == 0.0f);
-  CHECK(b.body == 100.0f);  // body += nrg/10 corre DESPUÉS de nrg = 0: suma 0
+  CHECK(b.body == 450.0f);  // 100 + 3500/10: el original sumaba 0
 
   // Contra-caso: pérdida bajo la mitad no dispara.
   b.onrg = 6000.0f;
@@ -280,8 +280,8 @@ TEST_CASE("B-07 hitang es memoria libre con nombre [PROBABLE BUG] A3-6") {
 }
 
 // ---------------------------------------------------------------------------
-// B-08 · ChangeChlr suma signos (Robots.bas:1236-1260) [ciclo]
-TEST_CASE("B-08 ChangeChlr: mkchlr 1 y rmchlr -100 COMPRAN 101 [PROBABLE BUG] A3-10") {
+// B-08 · ChangeChlr ignora signos negativos (Robots.bas:1236-1260) [ciclo]
+TEST_CASE("B-08 ChangeChlr: rmchlr -100 no compra (corregido A3-10)") {
   BugWorld2 w;
   w.sim.vm.costs.v[cost::CHLRCOST] = 0.2f;
   w.sim.vm.costs.v[cost::COSTMULTIPLIER] = 1.0f;
@@ -295,15 +295,15 @@ TEST_CASE("B-08 ChangeChlr: mkchlr 1 y rmchlr -100 COMPRAN 101 [PROBABLE BUG] A3
   b.mem[addr::rmchlr] = -100;
 
   ChangeChlr(w.sim, n);
-  CHECK(b.chloroplasts == 201.0f);  // 100 + 1 - (-100)
-  CHECK(b.nrg == doctest::Approx(4979.8).epsilon(1e-5));  // cobra 101*0.2
+  CHECK(b.chloroplasts == 101.0f);  // 100 + 1; el original daba 201
+  CHECK(b.nrg == doctest::Approx(4999.8).epsilon(1e-5));  // cobra 1*0.2
   CHECK(b.mem[addr::mkchlr] == 0);
   CHECK(b.mem[addr::rmchlr] == 0);
 
   SUBCASE("contra-caso: la compra que arruina se anula sin cobrar") {
     b.chloroplasts = 100.0f;
     b.nrg = 110.0f;
-    b.mem[addr::mkchlr] = 1;
+    b.mem[addr::mkchlr] = 101;
     b.mem[addr::rmchlr] = -100;
     ChangeChlr(w.sim, n);
     CHECK(b.chloroplasts == 100.0f);  // newnrg 89.8 < 100 => anulada

@@ -65,8 +65,10 @@ inline constexpr int ALLOWNEGATIVECOSTX = 62;
 struct Shot {
   bool exist = false;
   Vector pos{}, opos{}, velocity{};
-  vb_integer parent = 0;  // ¡SLOT del tirador, no AbsNum! (inmunidad filial
-                          // rota, 33-SHOTS.md / B-caso del catálogo §9)
+  vb_integer parent = 0;  // SLOT del tirador (el original solo guardaba esto)
+  // AbsNum del tirador (corregidos B3-1/B3-2): identifica al tirador aunque su
+  // slot lo ocupe después otro bot. 0 = huérfano de un load sin dueño.
+  vb_long parentAbs = 0;
   vb_integer age = 0;
   vb_single nrg = 0;
   vb_single Range = 0;

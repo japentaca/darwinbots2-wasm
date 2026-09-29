@@ -129,13 +129,14 @@ TEST_CASE("M-03 mem(0) es el sumidero del remapeo de 340") {
 
 // ---------------------------------------------------------------------------
 TEST_CASE("M-04 regimen C: comandos que NO se consumen") {
-  SUBCASE("strbody negativo persiste para siempre") {
+  SUBCASE("strbody/fdbody negativos se borran sin efecto (corregido A3-7)") {
     World w;
     const int a = w.spawn("stop", "A.txt", 1000, 1000);
     w.sim.rob[a].mem[addr::strbody] = -50;
+    w.sim.rob[a].mem[addr::fdbody] = -50;
     w.tick();
-    w.tick();
-    CHECK(w.sim.rob[a].mem[addr::strbody] == -50);
+    CHECK(w.sim.rob[a].mem[addr::strbody] == 0);
+    CHECK(w.sim.rob[a].mem[addr::fdbody] == 0);
   }
   SUBCASE("repro fallido reintenta: la guarda body <= 2 sale antes del reset") {
     World w;
@@ -229,7 +230,7 @@ TEST_CASE("M-05 memoria genetica: instantanea y diferida") {
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("M-06 refvelsx vale 0 siempre [PROBABLE BUG] A3-1") {
+TEST_CASE("M-06 refvelsx = -refveldx (corregido A3-1)") {
   World w;
   // B delante de A (aim 0, ojo frontal con foco), sin solape (radios ~114,
   // separacion 300): el barrido real de M4 puebla lastopp.
@@ -241,7 +242,7 @@ TEST_CASE("M-06 refvelsx vale 0 siempre [PROBABLE BUG] A3-1") {
   REQUIRE(w.sim.rob[a].lastopp == b);  // visto por el ojo con foco (eye5)
 
   CHECK(w.sim.rob[a].mem[addr::refveldx] == 20);  // funcional
-  CHECK(w.sim.rob[a].mem[addr::refvelsx] == 0);   // muerta: se niega a si misma
+  CHECK(w.sim.rob[a].mem[addr::refvelsx] == -20);  // el original: siempre 0
   CHECK(w.sim.rob[a].mem[addr::refvelscalar] == 20);
 }
 

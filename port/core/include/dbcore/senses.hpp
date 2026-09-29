@@ -128,7 +128,8 @@ inline void EraseSenses(Sim& sim, int n) {
 // Senses.bas:222-349 — lookoccurr: copia la firma del visto (o) en los
 // refvars del vidente (n). Sin fudge (FudgeEyes/FudgeAll = modos evo ⚙, con
 // RNG; quedan para el milestone de mutaciones/evo).
-// [PROBABLE BUG] A3-1 (M-06): refvelsx se niega a sí misma => siempre 0.
+// Corregido A3-1 (M-06): en el original refvelsx se negaba a sí misma y valía
+// siempre 0; aquí es -refveldx, como refveldn es -refvelup.
 inline void lookoccurr(Sim& sim, int n, int o) {
   if (sim.rob[n].Corpse) return;
   Bot& vn = sim.rob[n];
@@ -178,10 +179,7 @@ inline void lookoccurr(Sim& sim, int n, int o) {
   vn.mem[addr::refvelup] = vb_cint(X);
   vn.mem[addr::refveldn] = static_cast<vb_integer>(-vn.mem[addr::refvelup]);
   vn.mem[addr::refveldx] = vb_cint(Y);
-  vn.mem[addr::refvelsx] =
-      static_cast<vb_integer>(-vn.mem[addr::refvelsx]);  // [PROBABLE BUG] A3-1:
-                                                         // se niega a sí misma
-                                                         // (Senses.bas:319)
+  vn.mem[addr::refvelsx] = static_cast<vb_integer>(-vn.mem[addr::refveldx]);
   vb_single temp = static_cast<vb_single>(std::sqrt(
       std::pow(static_cast<double>(vn.mem[addr::refvelup]), 2.0) +
       std::pow(static_cast<double>(vn.mem[addr::refveldx]), 2.0)));
@@ -190,10 +188,9 @@ inline void lookoccurr(Sim& sim, int n, int o) {
 
   vn.mem[713] = vo.mem[827];  // refpoison
   vn.mem[714] = vo.mem[825];  // refvenom
-  vn.mem[715] = static_cast<vb_integer>(vo.Kills);  // refkills — SIN clamp
-                                                    // ([PROBABLE BUG] A3-5;
-                                                    // sitio de error 6 con
-                                                    // >32767 kills, Q15)
+  // refkills con tope 32000 (corregido A3-5: el original no lo tenía y con
+  // más de 32767 kills lanzaba error 6).
+  vn.mem[715] = static_cast<vb_integer>(vo.Kills > 32000 ? 32000 : vo.Kills);
   vn.mem[addr::refmulti] = vo.Multibot ? 1 : 0;
   if (vn.mem[474] > 0 && vn.mem[474] <= 1000) {  // memloc/readmem
     vn.mem[473] = vo.mem[vn.mem[474]];
@@ -207,7 +204,7 @@ inline void lookoccurr(Sim& sim, int n, int o) {
 // una forma (lastopptype = 1). Casi todo se pone a 0 (las formas no tienen
 // firma); la posición sale de lastopppos — capturado SOLO por el ojo frontal
 // (B-13) — y las velocidades relativas de Obstacles(o).vel.
-// [PROBABLE BUG] A3-1 otra vez: refvelsx se niega a sí misma.
+// Corregido A3-1 también aquí: refvelsx = -refveldx.
 inline void lookoccurrShape(Sim& sim, int n, int o) {
   if (sim.rob[n].Corpse) return;
   Bot& vn = sim.rob[n];
@@ -251,7 +248,7 @@ inline void lookoccurrShape(Sim& sim, int n, int o) {
       (static_cast<double>(ob.vel.y) * ca + static_cast<double>(ob.vel.x) * sa) -
       static_cast<double>(vn.mem[addr::veldx]));
   vn.mem[addr::refvelsx] =
-      static_cast<vb_integer>(-vn.mem[addr::refvelsx]);  // [PROBABLE BUG] A3-1
+      static_cast<vb_integer>(-vn.mem[addr::refveldx]);  // corregido A3-1
 
   vb_single temp = static_cast<vb_single>(std::sqrt(
       static_cast<double>(

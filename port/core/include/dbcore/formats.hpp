@@ -2027,13 +2027,17 @@ inline void RemapAllShots(Sim& sim, vb_long numOfShots) {
         if (sim.rob[j].exist) {
           if (sim.Shots[i].parent == sim.rob[j].oldBotNum) {
             sim.Shots[i].parent = static_cast<vb_integer>(j);
+            sim.Shots[i].parentAbs = sim.rob[j].AbsNum;  // B3-1/B3-2
             if (sim.Shots[i].stored) sim.rob[j].virusshot = i;
             found = true;
             break;  // GoTo nextshot
           }
         }
       }
-      if (!found) sim.Shots[i].stored = false;  // libera el huérfano
+      if (!found) {
+        sim.Shots[i].stored = false;  // libera el huérfano
+        sim.Shots[i].parentAbs = 0;   // sin dueño: no reconoce a nadie
+      }
     }
   }
 }

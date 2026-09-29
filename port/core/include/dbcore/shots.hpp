@@ -31,11 +31,18 @@ inline vb_long FirstSlot(Sim& sim) {
   return sim.shotpointer;
 }
 
+// Corregidos B3-1/B3-2: ¿sigue el bot del slot `robnum` siendo el que disparó
+// el shot? El original solo comparaba el slot.
+inline bool ShotFromBot(const Sim& sim, const Shot& s, int robnum) {
+  return s.parent == robnum && sim.rob[robnum].exist &&
+         sim.rob[robnum].AbsNum == s.parentAbs;
+}
+
 inline bool copygene(Sim& sim, vb_long n, vb_integer p);  // adelantada
 inline void addgene(Sim& sim, int n, vb_long p);          // adelantada
 
-// Shots.bas:90-202 — newshot. Consume 2 RNG (Random(-2,2) y Random(-20,20),
-// uno de ellos muerto: `ran` no se usa — 33-SHOTS.md). Normaliza aimshoot
+// Shots.bas:90-202 — newshot. Consume 1 RNG (Random(-20,20)); corregido B3-4:
+// el original sacaba además un Random(-2,2) que no usaba. Normaliza aimshoot
 // (Mod 1256) y backshot EN LA CELDA antes de consumirlos (M-11).
 inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
                        vb_single rngmultiplier, bool offset = false) {
@@ -51,7 +58,8 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   if (val > 32000.0f) val = 32000.0f;
   s.exist = true;
   s.age = 0;
-  s.parent = static_cast<vb_integer>(n);  // slot, no AbsNum
+  s.parent = static_cast<vb_integer>(n);  // slot
+  s.parentAbs = b.AbsNum;
   s.FromSpecie = b.FName;
   s.fromveg = b.Veg;
   s.color = 0;
@@ -65,9 +73,6 @@ inline vb_long newshot(Sim& sim, int n, vb_integer shottype, vb_single val,
   }
   s.memloc = b.mem[835];  // vloc del tirador (se normaliza al golpear)
   s.Memval = b.mem[836];
-
-  [[maybe_unused]] const vb_single ran =
-      static_cast<vb_single>(RandomI(-2, 2, *sim.rndy)) / 20.0f;  // RNG muerto
 
   vb_single ShAngle;
   if (b.mem[addr::backshot] == 0) {
@@ -170,6 +175,7 @@ inline void createshot(Sim& sim, vb_single X, vb_single Y, vb_single vx,
   }
   Shot& s = sim.Shots[a];
   s.parent = static_cast<vb_integer>(par);
+  s.parentAbs = sim.rob[par].AbsNum;
   s.FromSpecie = sim.rob[par].FName;
   s.fromveg = sim.rob[par].Veg;
   s.pos = VectorSet(static_cast<vb_single>(Xl), static_cast<vb_single>(Yl));
@@ -271,15 +277,14 @@ inline void defacate(Sim& sim, int n) {
 
 // Shots.bas:505-597 — releasenrg: el bot n golpeado por un shot -1 devuelve
 // un shot -2 de energía (o -5 si su poison supera la potencia). La llamada a
-// FirstSlot del arranque es del fuente (avanza shotpointer sin usar el
-// resultado — R-05). La cola mata y acredita Kills al SLOT tirador SIN
-// clamp: mem(220) puede superar 32000 ([PROBABLE BUG] A3-5, B-24; con
-// Kills = 32767 el original lanzaba error 6, §8).
+// FirstSlot del arranque (avanzaba shotpointer sin usar el resultado — R-05)
+// se quitó (corregido B3-4). La cola mata y acredita Kills al SLOT tirador, con tope
+// 32000 (corregido A3-5, B-24: el original no lo tenía y con Kills = 32767
+// lanzaba error 6, §8).
 inline void releasenrg(Sim& sim, int n, vb_long t) {
   Bot& b = sim.rob[n];
   Shot& s = sim.Shots[t];
 
-  (void)FirstSlot(sim);  // a = FirstSlot (resultado sin uso, fiel al fuente)
   // createshot puede reubicar Shots: el tirador se lee antes (RV-12).
   const vb_integer shooter = s.parent;
 
@@ -334,11 +339,15 @@ inline void releasenrg(Sim& sim, int n, vb_long t) {
     b.radius = FindRadius(sim, n);
   }
 
-  if (b.body <= 0.5f || b.nrg <= 0.5f) {
+  // La muerte se acredita solo si el slot sigue siendo del tirador (B3-2).
+  if ((b.body <= 0.5f || b.nrg <= 0.5f)) {
     b.Dead = true;
-    sim.rob[shooter].Kills += 1;  // sin clamp (la vía de ties sí clampa)
-    sim.rob[shooter].mem[220] =
-        static_cast<vb_integer>(sim.rob[shooter].Kills);
+    if (ShotFromBot(sim, sim.Shots[t], shooter)) {
+      sim.rob[shooter].Kills += 1;  // tope 32000 como la vía de ties (A3-5)
+      if (sim.rob[shooter].Kills > 32000) sim.rob[shooter].Kills = 32000;
+      sim.rob[shooter].mem[220] =
+          static_cast<vb_integer>(sim.rob[shooter].Kills);
+    }
   }
 }
 
@@ -434,9 +443,12 @@ inline void releasebod(Sim& sim, int n, vb_long t) {
 
   if (b.body <= 0.5f || b.nrg <= 0.5f) {
     b.Dead = true;
-    sim.rob[s.parent].Kills += 1;  // sin clamp (B-24)
-    sim.rob[s.parent].mem[220] =
-        static_cast<vb_integer>(sim.rob[s.parent].Kills);
+    if (ShotFromBot(sim, s, s.parent)) {  // B3-2
+      sim.rob[s.parent].Kills += 1;  // tope 32000 (corregido A3-5, B-24)
+      if (sim.rob[s.parent].Kills > 32000) sim.rob[s.parent].Kills = 32000;
+      sim.rob[s.parent].mem[220] =
+          static_cast<vb_integer>(sim.rob[s.parent].Kills);
+    }
   }
 
   createshot(sim, s.pos.x, s.pos.y, vel.x, vel.y, -2, n, power,
@@ -479,7 +491,8 @@ inline void takenrg(Sim& sim, int n, vb_long t) {
   b.radius = FindRadius(sim, n);
 }
 
-// Shots.bas:816-826 — takewaste.
+// Shots.bas:816-826 — takewaste. Corregido B3-6: tope 32000 inmediato (el
+// original lo dejaba pasar hasta el HandleWaste del golpeado).
 inline void takewaste(Sim& sim, int n, vb_long t) {
   Shot& s = sim.Shots[t];
   // RobSize / 3 es Integer / Integer = Double y aqui no hay CSng: toda la
@@ -489,6 +502,7 @@ inline void takewaste(Sim& sim, int n, vb_long t) {
       (static_cast<double>(s.Range) * (RobSize / 3.0)) * s.value);
   if (power < 0.0f) return;
   sim.rob[n].Waste += power;
+  if (sim.rob[n].Waste > 32000.0f) sim.rob[n].Waste = 32000.0f;
 }
 
 // Shots.bas:828-859 — takepoison.
@@ -531,17 +545,16 @@ inline void takesperm(Sim& sim, int n, vb_long t) {
   b.spermDNAlen = s.DnaLen;
 }
 
-// Shots.bas:48-51 — MinBotRadius: si el golpe ocurre en esta fracción
-// inicial del ciclo, se deja de buscar (sesgo por índice adicional, §4.4).
-inline constexpr vb_single MinBotRadius = 0.2f;
+// Shots.bas:48-51 — MinBotRadius: el original dejaba de buscar si el golpe
+// ocurría en esta fracción inicial del ciclo (sesgo por índice, §4.4).
+// Corregido B3-5: ya no se usa; se recorren todos los bots.
 
 // Shots.bas:921-1081 — NewShotCollision: bordes primero (toroidal envuelve;
 // rígido clampa y refleja con ±Abs), búsqueda lineal sobre TODOS los bots con
 // prefiltro por caja (MaxBotShotSeperation), swept-sphere con la posición del
 // bot corregida a pos - vel + actvel, y recolocación del shot en el punto de
-// impacto. Nota del fuente: el valor devuelto es el ÚLTIMO bot con raíces
-// válidas, no el del t menor (earliestCollision solo gobierna el early-exit
-// y la recolocación). El slot tirador es intocable aunque cambie de dueño.
+// impacto. Devuelve el bot del golpe más temprano (corregido B3-5) y excluye
+// al tirador solo mientras su slot siga siendo suyo (corregido B3-2).
 inline int NewShotCollision(Sim& sim, vb_long shotnum) {
   Shot& sh = sim.Shots[shotnum];
 
@@ -583,7 +596,7 @@ inline int NewShotCollision(Sim& sim, vb_long shotnum) {
   const Vector vs = sh.velocity;
 
   for (int robnum = 1; robnum <= sim.MaxRobs; ++robnum) {
-    if (sim.rob[robnum].exist && sh.parent != robnum &&
+    if (sim.rob[robnum].exist && !ShotFromBot(sim, sh, robnum) &&  // B3-2
         !BaseHidden(sim, sim.rob[robnum]) &&  // E5 (Shots.bas:998)
         std::fabs(sh.opos.x - sim.rob[robnum].pos.x) <
             sim.MaxBotShotSeperation &&
@@ -631,18 +644,19 @@ inline int NewShotCollision(Sim& sim, vb_long shotnum) {
         continue;
       } else if (usetime0 && usetime1) {
         hitTime = Min(time0, time1);
-        result = robnum;
       } else if (usetime0) {
         hitTime = time0;
-        result = robnum;
       } else {
         hitTime = time1;
-        result = robnum;
       }
 
-      if (hitTime < earliestCollision) earliestCollision = hitTime;
-
-      if (earliestCollision <= MinBotRadius) break;  // early-exit sesgado
+      // Corregido B3-5: gana el bot del golpe más temprano. El original
+      // devolvía el ÚLTIMO bot con raíces válidas y cortaba la búsqueda en
+      // cuanto un golpe caía antes de MinBotRadius.
+      if (hitTime < earliestCollision) {
+        earliestCollision = hitTime;
+        result = robnum;
+      }
     }
   }
 
@@ -705,9 +719,10 @@ inline void updateshots(Sim& sim) {
     else
       h = NewShotCollision(sim, t);
 
-    // Inmunidad filial ROTA: compara el SLOT tirador con el AbsNum del padre
-    // del golpeado (Shots.bas:330; [PROBABLE BUG], catálogo §9).
-    if (h > 0 && !(s->parent == sim.rob[h].parent && sim.rob[h].age <= 1)) {
+    // Inmunidad filial (Shots.bas:330). Corregido B3-1: el original comparaba
+    // el SLOT tirador con el AbsNum del padre del golpeado.
+    if (h > 0 && !(s->parentAbs != 0 && s->parentAbs == sim.rob[h].parent &&
+                   sim.rob[h].age <= 1)) {
       vb_single tempnum;
       if (s->Range == 0.0f)
         tempnum = static_cast<vb_single>(s->age) + 1.0f;

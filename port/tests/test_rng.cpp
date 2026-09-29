@@ -94,35 +94,34 @@ int rng_addbot(Sim& sim, float x, float y, float radius) {
 
 }  // namespace
 
-TEST_CASE("R-05 newshot: dos extracciones, una muerta [PROBABLE BUG] B3-4") {
-  SUBCASE("rndy [0.9, 0.5]: jitter 0, el shot sale en la direccion del aim") {
+TEST_CASE("R-05 newshot: una sola extraccion (corregido B3-4)") {
+  SUBCASE("rndy [0.5]: jitter 0, el shot sale en la direccion del aim") {
     Sim sim;
-    InjectedRnd rng({0.9f, 0.5f});
+    InjectedRnd rng({0.5f});
     sim.rndy = &rng;
     sim.vm.rndy = &rng;
     const int n = rng_addbot(sim, 1000, 1000, 100.0f);
 
     const vb_long a = newshot(sim, n, -4, 10.0f, 1.0f);
 
-    // ran = Random(-2,2) = 2 se calcula y DESCARTA; el jitter real es
-    // Random(-20,20)/200 = 0.
-    CHECK(rng.consumed() == 2);
+    // El original sacaba antes un Random(-2,2) que descartaba.
+    CHECK(rng.consumed() == 1);
     CHECK(rng.exhausted());
     CHECK(sim.Shots[a].velocity.x == doctest::Approx(40.0));
     CHECK(sim.Shots[a].velocity.y == doctest::Approx(0.0));
     CHECK(sim.Shots[a].pos.x == doctest::Approx(1100.0));  // perimetro
     CHECK(sim.Shots[a].pos.y == doctest::Approx(1000.0));
   }
-  SUBCASE("rndy [0.9, 0.9]: jitter = 16/200 = 0.08 rad") {
+  SUBCASE("rndy [0.9]: jitter = 16/200 = 0.08 rad") {
     Sim sim;
-    InjectedRnd rng({0.9f, 0.9f});
+    InjectedRnd rng({0.9f});
     sim.rndy = &rng;
     sim.vm.rndy = &rng;
     const int n = rng_addbot(sim, 1000, 1000, 100.0f);
 
     const vb_long a = newshot(sim, n, -4, 10.0f, 1.0f);
 
-    CHECK(rng.consumed() == 2);
+    CHECK(rng.consumed() == 1);
     CHECK(sim.Shots[a].velocity.x ==
           doctest::Approx(40.0 * std::cos(0.08)).epsilon(1e-5));
     CHECK(sim.Shots[a].velocity.y ==

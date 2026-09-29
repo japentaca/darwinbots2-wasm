@@ -46,6 +46,7 @@ struct ShotWorld {
     s.exist = true;
     s.shottype = shottype;
     s.parent = static_cast<vb_integer>(parentslot);
+    s.parentAbs = parentslot > 0 ? sim.rob[parentslot].AbsNum : 0;
     s.pos = {x, y};
     s.opos = {x, y};
     s.velocity = {vx, vy};
@@ -61,9 +62,9 @@ struct ShotWorld {
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// B-15 · La inmunidad filial está rota (Shots.bas:330) [ciclo]
-TEST_CASE("B-15 inmunidad filial: slot del tirador vs AbsNum del padre [PROBABLE BUG] B3-1") {
-  SUBCASE("sim divergida: el shot del padre GOLPEA a su hijo") {
+// B-15 · Inmunidad filial por AbsNum (Shots.bas:330) [ciclo]
+TEST_CASE("B-15 inmunidad filial por AbsNum del tirador (corregido B3-1)") {
+  SUBCASE("sim divergida: el hijo sigue siendo inmune al shot del padre") {
     ShotWorld w;
     const int shooter = w.addbot(5000, 5000);
     const int child = w.addbot(10000, 10000);
@@ -74,12 +75,12 @@ TEST_CASE("B-15 inmunidad filial: slot del tirador vs AbsNum del padre [PROBABLE
     w.addshot(-4, shooter, 9800, 10000, 400, 0, 2000, 10, 100);
     updateshots(w.sim);
 
-    // s.parent (slot 1) != rob(h).parent (AbsNum 250): la comparación es
-    // slot-vs-AbsNum y falla => el hijo recibe el waste (power = 500).
-    CHECK(w.sim.rob[child].Waste == 500.0f);
+    // El original comparaba slot 1 con AbsNum 250 y el hijo recibía el waste.
+    CHECK(w.sim.rob[child].Waste == 0.0f);
+    CHECK(w.sim.Shots[1].flash == false);
   }
 
-  SUBCASE("contra-caso, sim recién sembrada (slot = AbsNum): inmune") {
+  SUBCASE("sim recién sembrada (slot = AbsNum): inmune") {
     ShotWorld w;
     const int shooter = w.addbot(5000, 5000);
     const int child = w.addbot(10000, 10000);
@@ -93,56 +94,68 @@ TEST_CASE("B-15 inmunidad filial: slot del tirador vs AbsNum del padre [PROBABLE
     CHECK(w.sim.rob[child].Waste == 0.0f);       // no lo tocó
     CHECK(w.sim.Shots[1].flash == false);        // el shot sigue volando
   }
+
+  SUBCASE("contra-caso: un bot que no es su hijo recibe el golpe") {
+    ShotWorld w;
+    const int shooter = w.addbot(5000, 5000);
+    const int other = w.addbot(10000, 10000);
+    w.sim.rob[shooter].AbsNum = 250;
+    w.sim.rob[other].parent = 1;  // coincide con el SLOT, no con el AbsNum
+    w.sim.rob[other].age = 0;
+
+    w.addshot(-4, shooter, 9800, 10000, 400, 0, 2000, 10, 100);
+    updateshots(w.sim);
+
+    CHECK(w.sim.rob[other].Waste == 500.0f);
+  }
 }
 
 // ---------------------------------------------------------------------------
-// B-16 · El slot tirador es intocable aunque cambie de dueño (Shots.bas:998)
-// [ciclo]
-TEST_CASE("B-16 el nuevo ocupante del slot tirador nunca es golpeado [PROBABLE BUG] B3-2") {
+// B-16 · El tirador no se golpea a sí mismo, pero el nuevo ocupante de su slot
+// sí es golpeable (Shots.bas:998) [ciclo]
+TEST_CASE("B-16 el nuevo ocupante del slot tirador es golpeable (corregido B3-2)") {
   ShotWorld w;
-  const int occupant = w.addbot(10000, 10000);  // recién nacido en el slot 1
+  const int occupant = w.addbot(10000, 10000);  // slot 1
   w.addshot(-2, occupant, 9800, 10000, 400, 0, 2000, 10, 100);
 
-  // El shot lo disparó el ANTERIOR dueño del slot 1 (ya muerto): la
-  // comparación por slot lo protege igualmente.
+  // Mientras el slot sea del tirador, su propio shot no lo toca.
   CHECK(NewShotCollision(w.sim, 1) == 0);
 
-  // Contra-caso: con otro parent el mismo shot sí lo golpea.
-  w.sim.Shots[1].parent = 99;
+  // El slot pasa a otro bot (AbsNum distinto): el shot huérfano lo golpea.
+  w.sim.rob[occupant].AbsNum = 77;
   w.sim.Shots[1].pos = {9800.0f, 10000.0f};  // reposicionado por la llamada
   CHECK(NewShotCollision(w.sim, 1) == occupant);
 }
 
 // ---------------------------------------------------------------------------
-// B-17 · Early-exit de la colisión de shots: sesgo por índice
-// (Shots.bas:1061) [ciclo]
-TEST_CASE("B-17 con t <= 0.2 la búsqueda se detiene: gana el slot bajo [PROBABLE BUG] B3-5") {
-  SUBCASE("t_A = 0.15 <= MinBotRadius: golpea A aunque B estaba antes") {
+// B-17 · Colisión de shots: gana el golpe más temprano (Shots.bas:1061) [ciclo]
+TEST_CASE("B-17 gana el bot del golpe mas temprano, sin sesgo por slot (corregido B3-5)") {
+  SUBCASE("t_A = 0.15, t_B = 0.10: golpea B") {
     ShotWorld w;
     const int A = w.addbot(1200, 1000, 50);  // slot 1, impacto en t = 0.15
-    const int B = w.addbot(1150, 1000, 50);  // slot 2, impacto en t = 0.10
-    (void)B;
-    w.sim.MaxBotShotSeperation = 10000.0f;
-    w.addshot(-2, 0, 1000, 1000, 1000, 0, 100, 10, 100);
-
-    CHECK(NewShotCollision(w.sim, 1) == A);  // sesgo por orden de slots
-  }
-
-  SUBCASE("t_A = 0.3 > 0.2: la búsqueda continúa y gana B (t menor)") {
-    ShotWorld w;
-    const int A = w.addbot(1350, 1000, 50);  // slot 1, impacto en t = 0.30
     const int B = w.addbot(1150, 1000, 50);  // slot 2, impacto en t = 0.10
     (void)A;
     w.sim.MaxBotShotSeperation = 10000.0f;
     w.addshot(-2, 0, 1000, 1000, 1000, 0, 100, 10, 100);
 
-    CHECK(NewShotCollision(w.sim, 1) == B);
+    CHECK(NewShotCollision(w.sim, 1) == B);  // el original devolvía A
+  }
+
+  SUBCASE("t_A = 0.10, t_B = 0.30: golpea A aunque B tenga slot mayor") {
+    ShotWorld w;
+    const int A = w.addbot(1150, 1000, 50);  // slot 1, impacto en t = 0.10
+    const int B = w.addbot(1350, 1000, 50);  // slot 2, impacto en t = 0.30
+    (void)B;
+    w.sim.MaxBotShotSeperation = 10000.0f;
+    w.addshot(-2, 0, 1000, 1000, 1000, 0, 100, 10, 100);
+
+    CHECK(NewShotCollision(w.sim, 1) == A);  // el original devolvía B
   }
 }
 
 // ---------------------------------------------------------------------------
 // B-18 · takewaste sin techo inmediato (Shots.bas:816-827) [ciclo]
-TEST_CASE("B-18 waste 32400 visible hasta que defacate lo baja en P5 [PROBABLE BUG] B3-6") {
+TEST_CASE("B-18 takewaste topa el waste en 32000 (corregido B3-6)") {
   ShotWorld w;
   const int shooter = w.addbot(5000, 5000);
   const int victim = w.addbot(10000, 10000);
@@ -151,21 +164,13 @@ TEST_CASE("B-18 waste 32400 visible hasta que defacate lo baja en P5 [PROBABLE B
   w.addshot(-4, shooter, 9800, 10000, 400, 0, 2000, 10, 100);  // power = 500
   updateshots(w.sim);
 
-  // Sin clamp en takewaste: 32400 queda visible el resto del paso 14 y
-  // P1-P4 (gates de defacate/altzheimer del mismo tick lo ven).
-  CHECK(w.sim.rob[victim].Waste == 32400.0f);
-
-  // P5: HandleWaste -> defacate con Waste > 32000: reset a 31500 y descarga
-  // de 500 => 31000; Pwaste sube 0.5.
-  HandleWaste(w.sim, victim);
-  CHECK(w.sim.rob[victim].Waste == 31000.0f);
-  CHECK(w.sim.rob[victim].Pwaste == 0.5f);
-  CHECK(w.sim.rob[victim].mem[828] == 31000);
+  // El original dejaba 32400 visible hasta el HandleWaste de P5.
+  CHECK(w.sim.rob[victim].Waste == 32000.0f);
 }
 
 // ---------------------------------------------------------------------------
 // B-24 · Kills 32001 sobre mem(220) sin clamp (Shots.bas:594-595) [ciclo]
-TEST_CASE("B-24 matar por shot no clampa Kills: mem(220) = 32001 [PROBABLE BUG] A3-5") {
+TEST_CASE("B-24 matar por shot topa Kills en 32000 (corregido A3-5)") {
   ShotWorld w;
   const int shooter = w.addbot(5000, 5000);
   const int victim = w.addbot(10000, 10000);
@@ -176,11 +181,11 @@ TEST_CASE("B-24 matar por shot no clampa Kills: mem(220) = 32001 [PROBABLE BUG] 
   updateshots(w.sim);
 
   // releasenrg: EnergyLost 450 > nrg 100 => nrg = 0 => Dead; el tirador
-  // acredita el kill SIN clamp (la vía de ties sí clampa, Ties.bas:419-421).
+  // acredita el kill con tope, como la vía de ties (Ties.bas:419-421).
   CHECK(w.sim.rob[victim].Dead);
   CHECK(w.sim.rob[victim].nrg == 0.0f);
-  CHECK(w.sim.rob[shooter].Kills == 32001);
-  CHECK(w.sim.rob[shooter].mem[220] == 32001);  // 32000 < x < 32768 en mem
+  CHECK(w.sim.rob[shooter].Kills == 32000);
+  CHECK(w.sim.rob[shooter].mem[220] == 32000);
 }
 
 // ---------------------------------------------------------------------------
