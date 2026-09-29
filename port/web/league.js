@@ -1536,11 +1536,11 @@ function lgFmtHtml(f, locked) {
     `<label${title ? ` title="${title}"` : ''}>${label}</label>` +
     `<input type="number" data-f="${id}" min="${min}"${max ? ` max="${max}"` : ''} value="${v}"${d}>`;
   return '<div class="ct-rules">' +
-    `<label>Format</label><select data-f="format"${d}>` +
+    `<label title="How the season is organized: who fights whom, and how the champion is decided">Format</label><select data-f="format"${d}>` +
     `<option value="single"${f.format === 'single' ? ' selected' : ''} title="One match with every entrant (up to ${LG_MAX_FIGHTERS})">Single match</option>` +
     `<option value="koth"${f.format === 'koth' ? ' selected' : ''} title="The winner stays; the first to retire undefeated wins the season">King of the hill</option>` +
-    `<option value="rr"${f.format === 'rr' ? ' selected' : ''}>Round robin</option>` +
-    `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="The original's step ladder: each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option>` +
+    `<option value="rr"${f.format === 'rr' ? ' selected' : ''} title="Every entrant fights every other one; the most match wins lead the table (Elo breaks ties)">Round robin</option>` +
+    `<option value="ladder"${f.format === 'ladder' ? ' selected' : ''} title="Each newcomer challenges from the top rung down and takes the first rung it wins">Step ladder</option>` +
     `<option value="cup"${f.format === 'cup' ? ' selected' : ''} title="8, 16 or 32 entrants in groups of 4 (round robin); the top 2 of each group go to a knockout bracket">World cup (groups + knockout)</option>` +
     `<option value="swiss"${f.format === 'swiss' ? ' selected' : ''} title="Duels in rounds: each round pairs entrants with the same score, never the same pair twice while it can; for 16 to 32 entrants">Swiss system</option></select>` +
     (f.format === 'ladder' || f.format === 'single' ? ''
@@ -1558,7 +1558,8 @@ function lgFmtHtml(f, locked) {
         `<input type="checkbox" data-f="third"${f.third ? ' checked' : ''}${d}>`
     : f.format === 'rr'
       ? num('legs', 'Legs (each pair meets)', f.legs, 1, 2, '1 = once; 2 = home and away, with the seeding order swapped')
-      : num('k', 'Fighters per fight', f.k, 2, 20) +
+      : num('k', 'Fighters per fight', f.k, 2, 20,
+                'Species in each fight on the hill: the champion plus challengers drawn at random') +
         `<label title="When the season is over">Season ends</label><select data-f="kothEnd"${d}>` +
         `<option value="retire"${f.kothEnd !== 'never' ? ' selected' : ''}>at the first undefeated retirement</option>` +
         `<option value="never"${f.kothEnd === 'never' ? ' selected' : ''}>never (endless hill)</option></select>` +
@@ -1569,17 +1570,27 @@ function lgFmtHtml(f, locked) {
         `<label title="A bot that has fought this season (and lost, or retired) never challenges again; the champion keeps defending while it wins">No repeated challengers</label>` +
         `<input type="checkbox" data-f="noRepeat"${f.noRepeat ? ' checked' : ''}${d}>` +
         `<div class="ct-wide ct-rule">${escHtml(lgKothHint(f))}</div>`) +
-    num('qty', 'Bots per species', f.qty, 1, 200, 'Each entrant can set its own in the list below') +
-    num('nrg', 'Starting energy', f.nrg, 1, 0) +
-    num('rounds', 'Minimum rounds per match', f.rounds, 1, 99) +
-    num('wins', 'Wins to take the match', f.wins, 0, 99, "The original's Maxrounds; 0 = only the statistical rule") +
-    num('cap', 'Cycle cap per round (0 = off)', f.cap, 0, 0) +
-    `<label title="Who takes a round that reaches the cycle cap">At the cap, the round goes to</label>` +
+    num('qty', 'Bots per species', f.qty, 1, 200,
+        'How many bots of each species are seeded at the start of every round. Each entrant can set its own in the list below') +
+    num('nrg', 'Starting energy', f.nrg, 1, 0, 'Energy (nrg) every bot has when a round starts') +
+    num('rounds', 'Minimum rounds per match', f.rounds, 1, 99,
+        'A match is a series of rounds, and each round is won by the last species standing. ' +
+        'With N here, the match is decided after N rounds: the winner needs more than √N + N/2 of them. ' +
+        'If nobody has that many, one more round is played and the count is checked again') +
+    num('wins', 'Wins to take the match', f.wins, 0, 99,
+        'The first species to win this many rounds takes the match right away, however many rounds have been played. ' +
+        'Useful with 3 or more species, where the minimum-rounds rule may never be met. ' +
+        '0 = off: only the minimum-rounds rule decides') +
+    num('cap', 'Cycle cap per round (0 = off)', f.cap, 0, 0,
+        'Longest a round can last, in cycles. When it is reached the round ends and goes to the species chosen below. ' +
+        '0 = no limit: the round lasts until only one species is left') +
+    `<label title="Who wins a round that reaches the cycle cap: the species with the most bots alive, or the one with the most total energy">At the cap, the round goes to</label>` +
     `<select data-f="capMode"${d}>` +
     `<option value="pop"${f.capMode === 'pop' ? ' selected' : ''}>most bots</option>` +
     `<option value="nrg"${f.capMode === 'nrg' ? ' selected' : ''}>most energy</option></select>` +
     num('popCap', 'Max bots per species (0 = off)', f.popCap || 0, 0, 0,
-        'A species above this loses its poorest bots (lowest nrg + body×10). Keeps prolific bots from slowing the match down') +
+        'When a species has more bots than this, its weakest ones (lowest nrg + body×10) are removed. ' +
+        'Keeps fast breeders from slowing the match down. 0 = no limit') +
     `<div class="ct-wide ct-rule">${escHtml(contestRuleHint(f.rounds, f.wins))}</div>` +
     '</div>';
 }

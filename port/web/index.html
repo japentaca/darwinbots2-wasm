@@ -530,20 +530,20 @@
     <input type="number" id="seed" value="1234">
   </div>
   <div class="sep"></div>
-  <div class="group" id="view-toggles" title="The original's View menu (all on by default, as in MDIForm1)">
+  <div class="group" id="view-toggles" title="What to draw over the field (all on by default)">
     <label><input type="checkbox" id="tg-impacts" checked> impacts</label>
     <label><input type="checkbox" id="tg-vision" checked> vision</label>
     <label><input type="checkbox" id="tg-vectors" checked> vectors</label>
     <label><input type="checkbox" id="tg-gauges" checked> gauges</label>
-    <label title="E8: Form1.dispskin (DrawRobSkin, main.frm:838) — starts on (main.frm:394)"><input type="checkbox" id="tg-skins" checked> skins</label>
-    <label title="E8: RGB Memory Monitor (MonitorOn, MDIForm1.frm:1521) — asks you to configure it first"><input type="checkbox" id="tg-monitor"> RGB monitor</label>
-    <label title="E5: the focused bot (and the highlighted ones) aim at the pointer; arrows = motor, space = shoot"><input type="checkbox" id="pb-on"> Player Bot</label>
+    <label title="Draw each bot's skin (the shape its DNA gives it)"><input type="checkbox" id="tg-skins" checked> skins</label>
+    <label title="Color every bot by three of its memory locations (red, green, blue); asks you to configure it first"><input type="checkbox" id="tg-monitor"> RGB monitor</label>
+    <label title="The focused bot (and the highlighted ones) aim at the pointer; arrows = motor, space = shoot"><input type="checkbox" id="pb-on"> Player Bot</label>
   </div>
   <div class="sep"></div>
-  <div class="group" title="E6.5: the original view is main.frm's render; the enriched one is a separate reading (not from the original)">
+  <div class="group" title="Classic: the plain rendering. Enriched: extra visual reading, with bots colored by the chosen property">
     <label for="view-mode">View</label>
     <select id="view-mode">
-      <option value="orig" selected>Original</option>
+      <option value="orig" selected>Classic</option>
       <option value="rich">Enriched</option>
     </select>
     <label for="lens" class="rich-only">Color by</label>
@@ -571,8 +571,8 @@
       <div class="row" style="justify-content:space-between">
         <span id="insp-head" style="font-variant-numeric:tabular-nums"></span>
         <span>
-          <label title="E6.5: the camera centers on the bot (dragging releases it)" style="font-size:12px;color:#93a4c2"><input type="checkbox" id="insp-follow"> follow</label>
-          <button id="insp-refresh" title="Re-read the DNA (db_sim_bot_text)">↻ DNA</button>
+          <label title="The camera centers on the bot (dragging releases it)" style="font-size:12px;color:#93a4c2"><input type="checkbox" id="insp-follow"> follow</label>
+          <button id="insp-refresh" title="Re-read the DNA of the bot">↻ DNA</button>
           <button id="insp-close" title="Deselect">✕</button>
         </span>
       </div>
@@ -583,7 +583,7 @@
     <div id="rich-legend" class="rich-only"></div>
     <h2>Sim options</h2>
     <div id="opts-panel"></div>
-    <h2>Objects (Objects menu)</h2>
+    <h2>Objects</h2>
     <details class="optgrp"><summary>Shapes</summary>
       <div class="optrows">
         <label>Default size (fraction of the field)</label>
@@ -599,16 +599,16 @@
           <button id="btn-shapes-clear">Delete all</button>
         </span>
         <span class="full" style="color:#5c6b88;font-size:11px">
-          As in the original, shapes are stored when you press "New sim" or
+          Shapes are stored when you press "New sim" or
           change an option in the panel (= opening the options dialog) and
           are re-created, scaled to the field, in the new sim and every round.</span>
       </div>
     </details>
     <details class="optgrp"><summary>Mazes</summary>
       <div class="optrows">
-        <label for="obj-cw">Corridor (mazeCorridorWidth)</label>
+        <label for="obj-cw">Corridor width</label>
         <input type="number" id="obj-cw" value="500" step="50">
-        <label for="obj-wt">Wall (mazeWallThickness)</label>
+        <label for="obj-wt">Wall thickness</label>
         <input type="number" id="obj-wt" value="50" step="10">
         <span class="full row">
           <button data-maze="h">Horizontal</button>
@@ -621,7 +621,7 @@
           <button data-maze="trash">Trash Compactor</button>
         </span>
         <span class="full" style="color:#5c6b88;font-size:11px">
-          They add shapes to the current field (original defaults: 500 / 50;
+          They add shapes to the current field (defaults: 500 / 50;
           Polar Ice turns drift on at rate 20).</span>
       </div>
     </details>
@@ -629,7 +629,7 @@
       <div class="optrows">
         <span class="full row">
           <label><input type="checkbox" id="tg-tphl" checked>
-            highlight (Hilight Teleporters)</label>
+            highlight teleporters</label>
         </span>
         <span class="full row">
           <button id="btn-tp-del" disabled>Delete selected</button>
@@ -637,15 +637,13 @@
         </span>
       </div>
     </details>
-    <h2>Internet (Internet menu)</h2>
+    <h2>Internet</h2>
     <details class="optgrp" id="im-panel"><summary>Internet Mode</summary>
       <div class="optrows">
         <label class="full" style="color:#5c6b88">
           An Internet teleporter sends organisms out to another connected sim
-          and lets the arriving ones in (F1Internet_Click, MDIForm1.frm:1259).
-          The original launched DarwinbotsIM.exe; here the client lives in the
-          worker.</label>
-        <label for="im-name" title="IntOpts.IName: travels as the LastOwner of every organism that leaves">Nickname</label>
+          and lets the arriving ones in.</label>
+        <label for="im-name" title="Travels as the last owner of every organism that leaves your sim">Nickname</label>
         <input type="text" id="im-name" maxlength="40" placeholder="empty = Newbie N" style="width:150px">
         <label for="im-kind">Transport</label>
         <select id="im-kind">
@@ -668,7 +666,7 @@
       <div class="optrows">
         <label class="full" style="color:#5c6b88">
           The loop feeds only the open graphs, every <i>chartingInterval</i>
-          cycles (main.frm:2098-2107).</label>
+          cycles.</label>
         <label>Interval (cycles)</label>
         <input type="number" id="o-110" data-id="110" value="200" min="1" max="32000">
         <div class="full row">
@@ -692,7 +690,7 @@
         <label>Custom 3</label><input type="text" id="gq3" style="width:150px">
       </div>
     </details>
-    <details class="optgrp"><summary>Snapshots (Recording menu)</summary>
+    <details class="optgrp"><summary>Snapshots</summary>
       <div class="optrows">
         <div class="full row">
           <button id="btn-snap-living">Snapshot of the living</button>
@@ -701,7 +699,7 @@
         </div>
         <label>Snapshot of the dead</label>
         <input type="checkbox" id="o-111" data-id="111">
-        <label title="SnpExcludeVegs">Exclude repopulators (vegetables)</label>
+        <label title="Leave the repopulating vegetables out of the snapshots">Exclude repopulators (vegetables)</label>
         <input type="checkbox" id="o-112" data-id="112">
         <div class="full row">
           <button id="btn-dead-save">Download the dead</button>
@@ -714,18 +712,18 @@
     <details class="optgrp"><summary>View menu (extras)</summary>
       <div class="optrows">
         <div class="full row">
-          <button id="btn-bg-load" title="loadpiccy_Click (MDIForm1.frm:1433)">Import Background Picture</button>
-          <button id="btn-bg-remove" title="removepiccy_Click (MDIForm1.frm:1558)">Remove Background Picture</button>
+          <button id="btn-bg-load" title="Show an image of your own behind the field">Import Background Picture</button>
+          <button id="btn-bg-remove" title="Go back to the plain background">Remove Background Picture</button>
         </div>
         <div class="full row">
-          <button id="btn-monitor-set" title="frmMonitorSet.frm (MDIForm1.frm:1525)">Settings for RGB Memory Monitor...</button>
+          <button id="btn-monitor-set" title="Choose the memory locations and ranges the RGB monitor reads">Settings for RGB Memory Monitor...</button>
         </div>
       </div>
     </details>
-    <details class="optgrp"><summary>Robot menu</summary>
+    <details class="optgrp"><summary>Robots</summary>
       <div class="optrows">
         <div class="full row">
-          <button id="btn-findbest" title="Ctrl+B in the original">Find Best</button>
+          <button id="btn-findbest" title="Focus the fittest bot in the sim">Find Best</button>
           <button id="btn-console">Bot console</button>
           <button id="btn-activ">Gene activations</button>
         </div>
@@ -736,7 +734,7 @@
           <button id="btn-family-clear">Clear</button>
         </div>
         <div class="full row">
-          <button id="btn-eye" title="frmEYE.frm (MDIForm1.frm:1635); disabled in F1">Go to eye designer...</button>
+          <button id="btn-eye" title="Set the direction and width of each of the focused bot's eyes; disabled in F1">Go to eye designer...</button>
         </div>
         <div class="full" id="family-info"
              style="font-size:11px;color:#5c6b88">—</div>
@@ -755,7 +753,7 @@
     <textarea id="dna" spellcheck="false"></textarea>
     <div class="row">
       <label>Name</label><input type="text" id="sp-name" value="Animal_Minimalis.txt">
-      <input type="color" id="sp-color" value="#ff4040" title="Species color (Q01: the host decides)">
+      <input type="color" id="sp-color" value="#ff4040" title="Species color">
     </div>
     <div class="row">
       <label><input type="checkbox" id="sp-veg"> vegetable</label>
@@ -867,7 +865,7 @@ function vbColorToCss(c) {
 const OPT_GROUPS = [
   { name: 'Physics', preset: true, items: [
     { id: 11, label: 'Max speed', def: 40 },
-    { id: 12, label: 'Motor friction (PhysMoving)', def: 0.66 },
+    { id: 12, label: 'Motor friction', def: 0.66 },
     { id: 13, label: 'Brownian motion', def: 0 },
     { id: 14, label: 'Medium density', def: 0 },
     { id: 15, label: 'Viscosity', def: 0 },
@@ -876,13 +874,13 @@ const OPT_GROUPS = [
     { id: 18, label: 'Collision elasticity', def: 0 },
     { id: 19, label: 'Z gravity (against the floor)', def: 0 },
     { id: 20, label: 'Y gravity (downwards)', def: 0 },
-    { id: 10, label: 'No inertia (ZeroMomentum)', bool: true, def: false },
+    { id: 10, label: 'No inertia', bool: true, def: false },
     { id: 21, label: 'Fixed bot radii', bool: true, def: false },
   ]},
   { name: 'Light and day/night', items: [
     { id: 33, label: 'Day/night cycle', bool: true, def: false },
     { id: 34, label: 'Half period (cycles)', def: 500 },
-    { id: 40, label: 'Random sun (SunOnRnd)', bool: true, def: false },
+    { id: 40, label: 'Random sun', bool: true, def: false },
     { id: 35, label: 'Sun ON below nrg threshold', bool: true, def: false },
     { id: 36, label: 'On threshold', def: 500000 },
     { id: 37, label: 'Sun OFF above threshold', bool: true, def: false },
@@ -904,7 +902,7 @@ const OPT_GROUPS = [
   { name: 'Energy and vegetables', items: [
     { key: 'maxEnergy', label: 'Solar share per cycle', def: 10 },
     { key: 'minVegs', label: 'Repopulate below (chloroplasts)', def: 15 },
-    { key: 'maxPopulation', label: 'Vegetable cap (MaxPopulation)', def: 100 },
+    { key: 'maxPopulation', label: 'Vegetable cap', def: 100 },
     { key: 'repopAmount', label: 'Vegs per repopulation', def: 10 },
     { key: 'repopCooldown', label: 'Cycles between repopulations', def: 10 },
     { key: 'startChlr', label: 'Starting chloroplasts', def: 16000 },
@@ -922,35 +920,35 @@ const OPT_GROUPS = [
   // las stats de cada frame.
   { name: 'Game modes (F1 / rounds)', items: [
     // E11: los torneos fijan estos valores en cada partido (y 99/100 en 0).
-    { note: 'For the manual F1 of the original. 🏆 Tournaments set these for each match ' +
+    { note: 'For a manual F1 contest. 🏆 Tournaments set these for each match ' +
             '(their cycle cap is their own and works with any number of species).' },
     { id: 90, label: 'Restart round with no heterotrophs', bool: true, def: false },
     { id: 91, label: 'F1 mode (species contest)', bool: true, def: false },
-    { id: 97, label: 'Minimum rounds (MinRounds)', def: 5 },
+    { id: 97, label: 'Minimum rounds', def: 5 },
     { id: 98, label: 'Rounds-won cap (0 = off)', def: 0 },
     { id: 99, label: 'Cycle cap per round (0 = off)', def: 0 },
     { id: 100, label: 'Max population per species (0 = off)', def: 0 },
     { id: 93, label: 'Disqualification', sel: [[0, 'off'],
         [1, 'level 1 (ties/virus)'], [2, 'level 2 (everything)']], def: 0 },
     { btn: 'btn-f1start', label: 'Start contest (species census)' },
-    { btn: 'btn-setf1', label: 'F1 settings (the original\'s btnSetF1)' },
+    { btn: 'btn-setf1', label: 'F1 settings (league costs and field)' },
   ]},
   // Costes por acción y de mantenimiento (CostsForm.frm; índices de
   // SimOptions.bas:2-38). Default 0 como el core: sin ellos un bot no gasta
   // energía. "Ajustes F1" carga los valores de liga.
   { name: 'Costs', items: [
-    { cost: 30, label: 'Body upkeep (BODYUPKEEP)', def: 0 },
-    { cost: 31, label: 'Age cost (AGECOST)', def: 0 },
+    { cost: 30, label: 'Body upkeep', def: 0 },
+    { cost: 31, label: 'Age cost', def: 0 },
     { cost: 32, label: 'Age at which the cost starts', def: 0 },
-    { cost: 24, label: 'Per cycle and DNA length (DNACYCCOST)', def: 0 },
+    { cost: 24, label: 'Per cycle and DNA length', def: 0 },
     { cost: 25, label: 'DNA copy on reproduction', def: 0 },
-    { cost: 20, label: 'Move (MOVECOST)', def: 0 },
-    { cost: 21, label: 'Turn (TURNCOST)', def: 0 },
-    { cost: 23, label: 'Shoot (SHOTCOST)', def: 0 },
-    { cost: 22, label: 'Tie (TIECOST)', def: 0 },
-    { cost: 7, label: 'Store (COSTSTORE)', def: 0 },
-    { cost: 5, label: 'Condition (CONDCOST)', def: 0 },
-    { cost: 8, label: 'New chloroplast (CHLRCOST)', def: 0 },
+    { cost: 20, label: 'Move', def: 0 },
+    { cost: 21, label: 'Turn', def: 0 },
+    { cost: 23, label: 'Shoot', def: 0 },
+    { cost: 22, label: 'Tie', def: 0 },
+    { cost: 7, label: 'Store', def: 0 },
+    { cost: 5, label: 'Condition', def: 0 },
+    { cost: 8, label: 'New chloroplast', def: 0 },
     { cost: 26, label: 'Venom', def: 0 },
     { cost: 27, label: 'Poison', def: 0 },
     { cost: 28, label: 'Slime', def: 0 },
@@ -969,8 +967,8 @@ const OPT_GROUPS = [
     { cost: 57, label: 'Upper range (% of target)', def: 0 },
     { cost: 58, label: 'Lower range (% of target)', def: 0 },
     { cost: 61, label: 'Count vegetables too', bool: true, def: false },
-    { cost: 54, label: 'Cost multiplier (CostX)', def: 1 },
-    { cost: 62, label: 'Allow negative CostX', bool: true, def: false },
+    { cost: 54, label: 'Cost multiplier', def: 1 },
+    { cost: 62, label: 'Allow a negative cost multiplier', bool: true, def: false },
     { cost: 52, label: 'Zero costs below population', def: -1 },
     { cost: 59, label: 'Reinstate above population', def: 0 },
   ]},
@@ -988,7 +986,7 @@ const OPT_GROUPS = [
     { id: 82, label: 'Absorb shots', bool: true, def: false },
     { id: 84, label: 'Horizontal drift', bool: true, def: false },
     { id: 83, label: 'Vertical drift', bool: true, def: false },
-    { id: 85, label: 'Drift rate (shapeDriftRate)', def: 0 },
+    { id: 85, label: 'Shape drift rate', def: 0 },
   ]},
 ];
 
@@ -1017,7 +1015,7 @@ function buildOptsPanel() {
   let html = `
   <details class="optgrp" open><summary>Field and shape</summary>
     <div class="optrows">
-      <label for="o-fsize">Size (the original's slider)</label>
+      <label for="o-fsize">Size</label>
       <select id="o-fsize">${sizeOpts}</select>
       <label>Width × height</label>
       <span><input type="number" id="o-fw" value="32000" style="width:72px">
@@ -1258,7 +1256,7 @@ worker.onmessage = (e) => {
       a.download = `darwinbots-cycle${msg.cycle}.dbsim`;
       a.click();
       URL.revokeObjectURL(a.href);
-      log(`sim saved (${msg.bytes.byteLength} bytes, VB6 binary format)`);
+      log(`sim saved (${msg.bytes.byteLength} bytes)`);
       break;
     }
     // ---- E6: registro y análisis ----
@@ -1883,7 +1881,7 @@ function shotRingColor(st) {
 
 // Lentes "Color por": fuente = bot (registro de 20) o vis (registro de 24).
 const LENSES = {
-  species: { label: 'species (the original\'s color)' },
+  species: { label: 'species (its color)' },
   nrg:     { label: 'nrg', bot: 5 },
   body:    { label: 'body', bot: 8 },
   gen:     { label: 'generation', vis: 2 },
@@ -2068,7 +2066,7 @@ function renderLegend() {
   const lens = LENSES[lensSel.value];
   let lensHtml;
   if (lensSel.value === 'species') {
-    lensHtml = 'hue = species (the original\'s color); brightness = nrg';
+    lensHtml = 'hue = species (its color); brightness = nrg';
   } else {
     const f = (x) => Number.isFinite(x) ? fmtNum(x) : '—';
     lensHtml = `<div class="ramp"></div><div class="lensx"><span id="lens-min">` +
@@ -3301,7 +3299,7 @@ function openActivations() {
   activWin.body.innerHTML =
     '<div class="act-lab">static (green = ran this cycle)</div>' +
     '<canvas class="act-a" width="356" height="26"></canvas>' +
-    '<div class="act-lab">dynamic (moving average, ActivForm.DrawDyn)</div>' +
+    '<div class="act-lab">dynamic (moving average)</div>' +
     '<canvas class="act-b" width="356" height="42"></canvas>' +
     '<div class="act-x"></div>';
   activWin.style.left = '120px';
@@ -3787,7 +3785,7 @@ function showSeedLint(name, issues) {
     '<button class="close" title="Close" aria-label="Close warning">✕</button>' +
     `<b>⚠ ${escHtml(name)}: ${issues.length} warning${issues.length > 1 ? 's' : ''}` +
     `${zeros ? ` (${zeros} token${zeros > 1 ? 's' : ''} evaluate${zeros > 1 ? '' : 's'} to 0)` : ''}</b>` +
-    '<div class="hint">The bot is seeded just as in the original, but it may not do what its author intended.</div>' +
+    '<div class="hint">The bot is seeded anyway, but it may not do what its author intended.</div>' +
     rows + more;
   box.querySelector('.close').onclick = () => { box.hidden = true; };
   box.hidden = false;

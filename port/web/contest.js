@@ -35,9 +35,9 @@ function contestRuleText(n, wins) {
 function contestRuleHint(n, wins) {
   const m = contestMinLength(n);
   return wins
-    ? `The first species to win ${wins} rounds takes the match (the original's Maxrounds). ` +
+    ? `The first species to win ${wins} rounds takes the match. ` +
       `Otherwise, from round ${n} on, whoever has ${contestWinsNeeded(n)}🏅 or more (√N + N/2).`
-    : `Whoever reaches ${contestWinsNeeded(n)} wins or more takes it (more than √N + N/2, the original's rule). ` +
+    : `Whoever reaches ${contestWinsNeeded(n)} wins or more takes it (more than √N + N/2). ` +
       (m > n ? `With ${n}, not even winning them all is enough: the match will run at least ${m} rounds.`
              : 'If nobody gets there, one more round is played.');
 }

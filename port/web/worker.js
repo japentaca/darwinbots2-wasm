@@ -1006,7 +1006,7 @@ function imEnable(cfg) {
   if (i <= -100) {
     const mode = -100 - i;
     log(`Internet: cannot be enabled with restart mode ${mode} ` +
-        '(MDIForm1.frm:1264-1296)');
+        '(Internet Mode needs a different restart mode)');
     return false;
   }
   if (i < 0) {
@@ -1383,7 +1383,7 @@ self.onmessage = (e) => {
       focusBot = 0;
       // E7: StartNew_Click hace `If InternetMode Then F1Internet_Click`
       // (OptionsForm.frm:4802) — el toggle, con el modo encendido, lo APAGA.
-      if (imCfg) imDisable('new sim (OptionsForm.frm:4802)');
+      if (imCfg) imDisable('new sim');
       // PP-03: para llegar a "Start New" el original activa el diálogo de
       // opciones, y con la sim visible eso corre ObsRepop
       // (OptionsForm.frm:4546): las formas de ahora son las de la sim
@@ -1481,7 +1481,7 @@ self.onmessage = (e) => {
       const got = (msg.entries || []).length;
       if (got) log(`DNA by name: ${got} species from the page library`);
       if (left.length)
-        log(`no DNA (like the missing .txt in the original): ${left.join(', ')}`);
+        log(`no DNA: ${left.join(', ')}`);
       break;
     }
     case 'setopt':

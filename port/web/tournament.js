@@ -756,7 +756,7 @@ async function openTournaments(tab) {
     '<div class="ct-srcrow">' +
     '<button id="tn-rload" title="Write these rules into the Sim options panel, to look at or retouch them there">Load into the panel</button>' +
     '<button id="tn-rsave" title="Replace the rules with the Sim options panel as it is now">Save the panel as rules</button>' +
-    '<button id="tn-rf1" title="The F1 league settings (btnSetF1): league costs, 9237×6928 toroidal field">F1 preset</button>' +
+    '<button id="tn-rf1" title="The F1 league settings: league costs, 9237×6928 toroidal field">F1 preset</button>' +
     '<button id="tn-rfree" title="The current Sim options with every cost at 0">No-cost preset</button>' +
     '</div><div class="ct-rule">Every match applies these rules; the Game modes of Sim options are set by the tournament.</div></details>' +
     '<details class="ch-sec" open><summary>Entrants <span id="tn-ecount"></span></summary>' +

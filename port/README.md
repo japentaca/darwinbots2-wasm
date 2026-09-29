@@ -317,7 +317,7 @@ más rápido de lo que el hilo de la página dibuja.
 
 **No es superficie del original**: es una segunda forma de mirar la misma
 sim, con ideas visuales de otro simulador derivado de DarwinBots (sin código
-portado). El selector "View" de la barra alterna entre **Original** (el
+portado). El selector "View" de la barra alterna entre **Classic** (el
 render de `main.frm` de siempre, idéntico píxel a píxel) y **Enriched**:
 
 - **forma**: hexágono = vegetal, círculo con nariz al rumbo = animal, ties
