@@ -361,11 +361,11 @@ TEST_CASE("F-11 anchura negativa => ojo panorámico [PROBABLE BUG] B2-2") {
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("F-12 TieTorque: clamp de nay con Sgn(nax) [PROBABLE BUG] B1-1") {
+TEST_CASE("F-12 TieTorque: clamp de nay con Sgn(nay) (corregido B1-1)") {
   PhysWorld w;
   const vb_single slack = 5.0f * 2.0f * PI / 360.0f;
 
-  SUBCASE("nax = -150, nay = 130 crudos => (-100, -100)") {
+  SUBCASE("nax = -150, nay = 130 crudos => (-100, 100)") {
     const int t = w.addbot(10000, 10000, 10.0f);
     const int n = w.addbot(3500, 2500, 10.0f);
     Bot& bt = w.sim.rob[t];
@@ -378,12 +378,12 @@ TEST_CASE("F-12 TieTorque: clamp de nay con Sgn(nax) [PROBABLE BUG] B1-1") {
 
     TieTorque(w.sim, t);
 
-    // Crudos: nax = -150, nay = +130; clamps: nax -> -100,
-    // nay -> 100*Sgn(nax) = -100 (el componente Y invierte su signo).
+    // Crudos: nax = -150, nay = +130; clamps: nax -> -100, nay -> +100
+    // (el original usaba Sgn(nax) y lo invertía a -100).
     CHECK(bt.ImpulseInd.x == doctest::Approx(-100.0));
-    CHECK(bt.ImpulseInd.y == doctest::Approx(-100.0));
+    CHECK(bt.ImpulseInd.y == doctest::Approx(100.0));
     CHECK(w.sim.rob[n].ImpulseInd.x == doctest::Approx(100.0));
-    CHECK(w.sim.rob[n].ImpulseInd.y == doctest::Approx(100.0));
+    CHECK(w.sim.rob[n].ImpulseInd.y == doctest::Approx(-100.0));
     // mt = 2.0 >= PI/4 => ma saturado a PI/4.
     CHECK(bt.ma == doctest::Approx(PI / 4).epsilon(1e-6));
     CHECK(bt.Ties[1].bend == 0.0f);  // .tieang consumido

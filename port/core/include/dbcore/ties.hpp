@@ -45,12 +45,14 @@ inline void DeleteTie(Sim& sim, int a, int b) {
     if (sim.rob[b].mem[addr::TIEPRES] == sim.rob[b].Ties[j].Port)
       sim.rob[b].mem[addr::TIEPRES] = (j > 1) ? sim.rob[b].Ties[j - 1].Port : 0;
   }
+  // Corregido B4-1: el último slot queda en blanco entero; el original solo
+  // ponía pnt = 0 y dejaba .ang/.angreg/... rancios para la próxima tie.
   for (int t = k; t <= MAXTIES - 1; ++t)
     sim.rob[a].Ties[t] = sim.rob[a].Ties[t + 1];
-  sim.rob[a].Ties[MAXTIES].pnt = 0;
+  sim.rob[a].Ties[MAXTIES] = Tie{};
   for (int t = j; t <= MAXTIES - 1; ++t)
     sim.rob[b].Ties[t] = sim.rob[b].Ties[t + 1];
-  sim.rob[b].Ties[MAXTIES].pnt = 0;
+  sim.rob[b].Ties[MAXTIES] = Tie{};
 }
 
 // Ties.bas:822-829 — delallties.
@@ -63,15 +65,17 @@ inline void delallties(Sim& sim, int a) {
 }
 
 // Ties.bas:721-806 — ReadTRefVars: trefvars de la tie k en la memoria de t.
-// [PROBABLE BUG] A3-3: trefnrg no se actualiza con nrg = ±32000 exactos.
-// [PROBABLE BUG] A3-4: el chequeo de espionaje mira mem(479) (trefaim) en vez
-// de mem(476) (tmemloc). Sin fudge (evo ⚙).
+// Corregido A3-3: con nrg = ±32000 exactos el original no actualizaba trefnrg;
+// aquí se topa como trefbody. Corregido A3-4: el chequeo de espionaje de ojos
+// mira mem(476) (tmemloc), no mem(479) (trefaim). Sin fudge (evo ⚙).
 inline void ReadTRefVars(Sim& sim, int t, int k) {
   Bot& b = sim.rob[t];
   Bot& o = sim.rob[b.Ties[k].pnt];
 
   if (o.nrg < 32000.0f && o.nrg > -32000.0f)
-    b.mem[464] = vb_cint(o.nrg);  // guarda estricta: ±32000 exactos congelan
+    b.mem[464] = vb_cint(o.nrg);
+  else
+    b.mem[464] = o.nrg > 0.0f ? 32000 : -32000;
   if (o.age < 32000)
     b.mem[465] = static_cast<vb_integer>(o.age + 1);
   else
@@ -85,8 +89,8 @@ inline void ReadTRefVars(Sim& sim, int t, int k) {
 
   if (b.mem[476] > 0 && b.mem[476] <= 1000) {  // tmemloc/tmemval
     b.mem[475] = o.mem[b.mem[476]];
-    if (b.mem[479] > addr::EyeStart && b.mem[479] < addr::EyeEnd)
-      o.View = true;  // [PROBABLE BUG] A3-4: celda equivocada (Ties.bas:756-758)
+    if (b.mem[476] > addr::EyeStart && b.mem[476] < addr::EyeEnd)
+      o.View = true;  // corregido A3-4 (Ties.bas:756-758 miraba mem(479))
   }
   b.mem[478] = o.Fixed ? 1 : 0;
   b.mem[479] = o.mem[addr::AimSys];
@@ -122,8 +126,8 @@ inline void ReadTRefVars(Sim& sim, int t, int k) {
   for (int l = 410; l <= 419; ++l) b.mem[l + 10] = o.mem[l];  // tout->tin
 }
 
-// Ties.bas:655-677 — EraseTRefVars. [PROBABLE BUG] A3-2 (M-07): la lista de
-// borrado SALTA la 449 (trefshell); tmemloc (476) persiste adrede.
+// Ties.bas:655-677 — EraseTRefVars. Corregido A3-2 (M-07): la lista del
+// original saltaba la 449 (trefshell); tmemloc (476) persiste adrede.
 inline void EraseTRefVars(Sim& sim, int t) {
   Bot& b = sim.rob[t];
   for (int counter = 456; counter <= 465; ++counter) b.mem[counter] = 0;
@@ -133,6 +137,7 @@ inline void EraseTRefVars(Sim& sim, int t) {
   b.mem[479] = 0;             // trefaim
   for (int counter = 0; counter <= 10; ++counter)
     b.mem[addr::trefxpos + counter] = 0;  // 438..448
+  b.mem[addr::trefshell] = 0;             // 449
   for (int counter = 420; counter <= 429; ++counter) b.mem[counter] = 0;  // tin
 }
 
@@ -160,6 +165,10 @@ inline bool maketie(Sim& sim, int a, int b, vb_long c, vb_integer last,
     while (j <= Max && sim.rob[b].Ties[j].pnt > 0 && OK) j += 1;
 
     if (k < Max && j < Max && OK) {
+      // Corregido B4-1: la tie nace en blanco (el original no inicializaba
+      // .ang/.bend/.angreg y heredaba los del ocupante anterior del slot).
+      sim.rob[a].Ties[k] = Tie{};
+      sim.rob[b].Ties[j] = Tie{};
       Tie& ta = sim.rob[a].Ties[k];
       ta.pnt = static_cast<vb_integer>(b);
       ta.ptt = static_cast<vb_integer>(j);
@@ -297,15 +306,17 @@ inline void TieHooke(Sim& sim, int n) {
 }
 
 // Physics.bas:651-729 — TieTorque (P1, gate: no corpse, no DisableDNA en el
-// llamador): par sobre las ties con ángulo fijado (angreg). [PROBABLE BUG]
-// B1-1: el clamp de nay usa Sgn(nax) (F-12). [PROBABLE BUG] B1-2: con
-// |mt| > 2*PI escribe Ties(j).ang en el slot SIGUIENTE al último (slot de
-// tie vacío; con 10 ties sería Ties(11) — error 9, registrado).
+// llamador): par sobre las ties con ángulo fijado (angreg). Corregido B1-1:
+// el clamp de nay usa Sgn(nay) (el original usaba Sgn(nax), F-12). Corregido
+// B1-2: con |mt| > 2*PI el original escribía Ties(j).ang en el slot SIGUIENTE
+// al último (un slot vacío); aquí se reajusta la última tie con ángulo fijado,
+// la del dlo calculado.
 inline void TieTorque(Sim& sim, int t) {
   const vb_single angleslack =
       5.0f * 2.0f * PI / 360.0f;  // 5 grados de holgura
 
   int j = 1;
+  int lastreg = 0;  // última tie con angreg (B1-2)
   vb_single mt = 0.0f;
   vb_single anl = 0.0f, dlo = 0.0f;
   int n = 0;
@@ -315,6 +326,7 @@ inline void TieTorque(Sim& sim, int t) {
     if (b.Ties[1].pnt > 0) {
       while (j <= MAXTIES && b.Ties[j].pnt > 0) {
         if (b.Ties[j].angreg) {
+          lastreg = j;
           n = b.Ties[j].pnt;
           anl = vb_angle(b.pos.x, b.pos.y, sim.rob[n].pos.x,
                          sim.rob[n].pos.y);
@@ -341,8 +353,7 @@ inline void TieTorque(Sim& sim, int t) {
             if (std::fabs(nax) > 100.0f)
               nax = 100.0f * static_cast<vb_single>(vb_sgn(nax));
             if (std::fabs(nay) > 100.0f)
-              nay = 100.0f * static_cast<vb_single>(
-                                 vb_sgn(nax));  // [PROBABLE BUG] B1-1 (F-12)
+              nay = 100.0f * static_cast<vb_single>(vb_sgn(nay));  // B1-1
 
             const Vector TorqueVector = VectorSet(nax, nay);
             sim.rob[n].ImpulseInd =
@@ -356,13 +367,7 @@ inline void TieTorque(Sim& sim, int t) {
 
       if (mt != 0.0f) {
         if (std::fabs(mt) > 2.0f * PI) {
-          // Escritura en el slot fantasma (j = una posición después de la
-          // última tie). Con j > MAXTIES el original indexa Ties(11):
-          // error 9 — decisión de port: registrar y no escribir.
-          if (j <= MAXTIES)
-            b.Ties[j].ang = dlo;
-          else
-            sim.diag.err9_ties_slot11 += 1;
+          if (lastreg > 0) b.Ties[lastreg].ang = dlo;  // B1-2
         } else {
           if (std::fabs(mt) < PI / 4.0f)
             b.ma = mt;
@@ -480,6 +485,22 @@ inline double pct_mine(vb_integer m) { return static_cast<double>(m) / 100.0; }
 inline double pct_theirs(vb_integer m) {
   return (100.0 - static_cast<double>(m)) / 100.0;
 }
+// Corregido B4-2: el original topaba cada lado en 32000 por separado y el
+// exceso se destruía en silencio; aquí lo que el tope le quita a un lado pasa
+// al otro (hasta su propio tope).
+inline void share_split(vb_single tot, vb_integer m, vb_single& mine,
+                        vb_single& theirs) {
+  const double vm = static_cast<double>(tot) * pct_mine(m);
+  const double vt = static_cast<double>(tot) * pct_theirs(m);
+  mine = share_part(tot, pct_mine(m));
+  theirs = share_part(tot, pct_theirs(m));
+  if (vm >= 32000.0 && vt < 32000.0)
+    theirs = static_cast<vb_single>(
+        std::min(32000.0, static_cast<double>(tot) - 32000.0));
+  else if (vt >= 32000.0 && vm < 32000.0)
+    mine = static_cast<vb_single>(
+        std::min(32000.0, static_cast<double>(tot) - 32000.0));
+}
 }  // namespace ties_detail
 
 // Robots.bas:1895-1911 — shareslime: clamp 0..99 en la celda.
@@ -489,8 +510,7 @@ inline void shareslime(Sim& sim, int t, int k) {
   if (b.mem[833] > 99) b.mem[833] = 99;
   if (b.mem[833] < 0) b.mem[833] = 0;
   const vb_single totslime = b.Slime + o.Slime;
-  b.Slime = ties_detail::share_part(totslime, ties_detail::pct_mine(b.mem[833]));
-  o.Slime = ties_detail::share_part(totslime, ties_detail::pct_theirs(b.mem[833]));
+  ties_detail::share_split(totslime, b.mem[833], b.Slime, o.Slime);
 }
 
 // Robots.bas:1913-1930 — sharewaste (0..99).
@@ -500,8 +520,7 @@ inline void sharewaste(Sim& sim, int t, int k) {
   if (b.mem[831] > 99) b.mem[831] = 99;
   if (b.mem[831] < 0) b.mem[831] = 0;
   const vb_single totwaste = b.Waste + o.Waste;
-  b.Waste = ties_detail::share_part(totwaste, ties_detail::pct_mine(b.mem[831]));
-  o.Waste = ties_detail::share_part(totwaste, ties_detail::pct_theirs(b.mem[831]));
+  ties_detail::share_split(totwaste, b.mem[831], b.Waste, o.Waste);
 }
 
 // Robots.bas:1931-1953 — shareshell: publica mem(823) en AMBOS extremos.
@@ -511,8 +530,7 @@ inline void shareshell(Sim& sim, int t, int k) {
   if (b.mem[832] > 99) b.mem[832] = 99;
   if (b.mem[832] < 0) b.mem[832] = 0;
   const vb_single totshell = b.shell + o.shell;
-  o.shell = ties_detail::share_part(totshell, ties_detail::pct_theirs(b.mem[832]));
-  b.shell = ties_detail::share_part(totshell, ties_detail::pct_mine(b.mem[832]));
+  ties_detail::share_split(totshell, b.mem[832], b.shell, o.shell);
   b.mem[823] = vb_cint(b.shell);
   o.mem[823] = vb_cint(o.shell);
 }
@@ -522,8 +540,8 @@ inline void shareshell(Sim& sim, int t, int k) {
 inline vb_single DoGeneticDistance(Sim& sim, int r1, int r2);
 
 // Robots.bas:1866-1892 — sharechloroplasts: distancia genética > 0.25 pone
-// un delay de 8 ciclos y no comparte; si no, reparto con caps 32000
-// (destruye el exceso en silencio, como los demás share*).
+// un delay de 8 ciclos y no comparte; si no, reparto con caps 32000 (el
+// exceso pasa al otro lado, corregido B4-2).
 inline void sharechloroplasts(Sim& sim, int t, int k) {
   Bot& b = sim.rob[t];
   if (DoGeneticDistance(sim, t, b.Ties[k].pnt) > 0.25f) {
@@ -534,10 +552,8 @@ inline void sharechloroplasts(Sim& sim, int t, int k) {
   if (b.mem[addr::sharechlr] > 99) b.mem[addr::sharechlr] = 99;
   if (b.mem[addr::sharechlr] < 0) b.mem[addr::sharechlr] = 0;
   const vb_single totchlr = b.chloroplasts + o.chloroplasts;
-  b.chloroplasts =
-      ties_detail::share_part(totchlr, ties_detail::pct_mine(b.mem[addr::sharechlr]));
-  o.chloroplasts =
-      ties_detail::share_part(totchlr, ties_detail::pct_theirs(b.mem[addr::sharechlr]));
+  ties_detail::share_split(totchlr, b.mem[addr::sharechlr], b.chloroplasts,
+                           o.chloroplasts);
 }
 
 namespace ties_detail {

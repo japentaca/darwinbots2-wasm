@@ -247,7 +247,7 @@ TEST_CASE("M-06 refvelsx = -refveldx (corregido A3-1)") {
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("M-07 trefshell sobrevive a EraseTRefVars [PROBABLE BUG] A3-2") {
+TEST_CASE("M-07 EraseTRefVars borra trefshell (corregido A3-2)") {
   World w;
   const int a = w.spawn("stop", "A.txt", 1000, 1000);
   const int b = w.spawn("stop", "B.txt", 1250, 1000);
@@ -265,7 +265,7 @@ TEST_CASE("M-07 trefshell sobrevive a EraseTRefVars [PROBABLE BUG] A3-2") {
   DeleteTie(w.sim, a, b);
   w.tick();  // readtie: numties = 0 -> EraseTRefVars
 
-  CHECK(w.sim.rob[a].mem[addr::trefshell] == 120);  // 449 sobrevive
+  CHECK(w.sim.rob[a].mem[addr::trefshell] == 0);    // 449 borrada
   CHECK(w.sim.rob[a].mem[addr::trefbody] == 0);     // 437 borrada
   CHECK(w.sim.rob[a].mem[addr::trefxpos] == 0);     // 438 borrada
   CHECK(w.sim.rob[a].mem[456] == 0);

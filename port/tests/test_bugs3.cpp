@@ -189,8 +189,8 @@ TEST_CASE("B-24 matar por shot topa Kills en 32000 (corregido A3-5)") {
 }
 
 // ---------------------------------------------------------------------------
-// B-22 · El sharing con caps destruye recursos (Robots.bas:1894-1910) [ciclo]
-TEST_CASE("B-22 shareslime 90%: 25600 de slime destruidos en silencio [PROBABLE BUG] B4-2") {
+// B-22 · El sharing con caps no destruye recursos (Robots.bas:1894-1910) [ciclo]
+TEST_CASE("B-22 shareslime 90%: el exceso del tope pasa al otro lado (corregido B4-2)") {
   ShotWorld w;
   const int a = w.addbot(10000, 10000);
   const int b = w.addbot(10100, 10000);
@@ -201,11 +201,25 @@ TEST_CASE("B-22 shareslime 90%: 25600 de slime destruidos en silencio [PROBABLE 
 
   shareslime(w.sim, a, 1);
 
-  // tot = 64000; lado A = 57600 -> cap 32000; lado B = 6400. El total cae
-  // de 64000 a 38400: 25600 destruidos.
+  // tot = 64000; lado A = 57600 -> cap 32000; el resto va a B. El original
+  // daba 6400 a B y destruía 25600.
   CHECK(w.sim.rob[a].Slime == 32000.0f);
-  CHECK(w.sim.rob[b].Slime == doctest::Approx(6400.0));
-  CHECK(w.sim.rob[a].Slime + w.sim.rob[b].Slime == doctest::Approx(38400.0));
+  CHECK(w.sim.rob[b].Slime == 32000.0f);
+
+  SUBCASE("sin tope, el reparto es el porcentual de siempre") {
+    w.sim.rob[a].Slime = 1000.0f;
+    w.sim.rob[b].Slime = 1000.0f;
+    shareslime(w.sim, a, 1);
+    CHECK(w.sim.rob[a].Slime == doctest::Approx(1800.0));
+    CHECK(w.sim.rob[b].Slime == doctest::Approx(200.0));
+  }
+  SUBCASE("tope parcial: nada se pierde") {
+    w.sim.rob[a].Slime = 30000.0f;
+    w.sim.rob[b].Slime = 10000.0f;
+    shareslime(w.sim, a, 1);
+    CHECK(w.sim.rob[a].Slime == 32000.0f);
+    CHECK(w.sim.rob[b].Slime == doctest::Approx(8000.0));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -245,9 +259,9 @@ TEST_CASE("B-23 la tie de nacimiento es unidireccional inversa [PROBABLE BUG] B4
 }
 
 // ---------------------------------------------------------------------------
-// B-27 · El slot fantasma Ties(numties+1) y su .ang heredable
+// B-27 · TieTorque reajusta la última tie fijada y maketie nace en blanco
 // (Physics.bas:705-712; Ties.bas:883-958) [ciclo]
-TEST_CASE("B-27 TieTorque escribe .ang en el slot vacío; maketie no lo inicializa [PROBABLE BUG] B1-2/B4-1") {
+TEST_CASE("B-27 TieTorque no escribe en el slot vacio; maketie inicializa .ang (corregidos B1-2/B4-1)") {
   ShotWorld w;
   const int T = w.addbot(10000, 10000);
   const int b1 = w.addbot(10300, 9700);
@@ -268,17 +282,21 @@ TEST_CASE("B-27 TieTorque escribe .ang en el slot vacío; maketie no lo iniciali
 
   TieTorque(w.sim, T);
 
-  // dlo = AngDiff(angle(T, b3), aim 0) = PI/4; escrito en el slot 4 VACÍO.
+  // dlo = AngDiff(angle(T, b3), aim 0) = PI/4: reajusta la tie 3 (la última
+  // fijada); el original lo escribía en el slot 4 VACÍO.
+  CHECK(t.Ties[3].ang == doctest::Approx(0.7853982).epsilon(1e-4));
   CHECK(t.Ties[4].pnt == 0);
-  CHECK(t.Ties[4].ang == doctest::Approx(0.7853982).epsilon(1e-4));
-  CHECK(w.sim.diag.err9_ties_slot11 == 0);  // j = 4 <= 10: sin sitio de error
+  CHECK(t.Ties[4].ang == 0.0f);
+  CHECK(w.sim.diag.err9_ties_slot11 == 0);
 
-  // Una tie posterior ocupa el slot 4 por creación: maketie NO inicializa
-  // .ang => hereda el valor rancio hasta que regang lo pise.
+  // Una tie posterior en un slot con basura nace en blanco.
+  t.Ties[4].ang = 1.5f;
+  t.Ties[4].angreg = true;
   const int b4 = w.addbot(10100, 10000);
   REQUIRE(maketie(w.sim, T, b4, 1000, 0, 0));
   CHECK(t.Ties[4].pnt == b4);
-  CHECK(t.Ties[4].ang == doctest::Approx(0.7853982).epsilon(1e-4));
+  CHECK(t.Ties[4].ang == 0.0f);
+  CHECK(!t.Ties[4].angreg);
 }
 
 // ---------------------------------------------------------------------------

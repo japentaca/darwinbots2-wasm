@@ -210,20 +210,21 @@ TEST_CASE("B-30 reparto de body con redondeo bancario [PROBABLE BUG] B6-4") {
 }
 
 // ---------------------------------------------------------------------------
-// B-05 · trefnrg congelado a 32000 (Ties.bas:721-723) [ciclo]
-TEST_CASE("B-05 socio a tope de energía es invisible en trefnrg [PROBABLE BUG] A3-3") {
+// B-05 · trefnrg con socio a tope (Ties.bas:721-723) [ciclo]
+TEST_CASE("B-05 socio a tope de energia: trefnrg = 32000 (corregido A3-3)") {
   BugWorld2 w;
   const int a = w.addbot(10000, 10000);
   const int b = w.addbot(10100, 10000);
   w.sim.rob[b].nrg = 32000.0f;
   REQUIRE(maketie(w.sim, a, b, 1000, 0, 0));
 
-  // La celda trae el valor de otro socio anterior: se conserva.
+  // La celda trae el valor de otro socio anterior: se reemplaza (el
+  // original lo conservaba).
   w.sim.rob[a].mem[464] = 1234;
   ReadTRefVars(w.sim, a, 1);
-  CHECK(w.sim.rob[a].mem[464] == 1234);
+  CHECK(w.sim.rob[a].mem[464] == 32000);
 
-  // Con 31999 sí se actualiza (guarda < 32000 estricta).
+  // Con 31999 también se actualiza.
   w.sim.rob[b].nrg = 31999.0f;
   ReadTRefVars(w.sim, a, 1);
   CHECK(w.sim.rob[a].mem[464] == 31999);
@@ -232,7 +233,7 @@ TEST_CASE("B-05 socio a tope de energía es invisible en trefnrg [PROBABLE BUG] 
 // ---------------------------------------------------------------------------
 // B-06 · El espionaje de ojos por tie mira mem(479) (Ties.bas:756-758)
 // [ciclo]
-TEST_CASE("B-06 View se decide con trefaim, no con tmemloc [PROBABLE BUG] A3-4") {
+TEST_CASE("B-06 View se decide con tmemloc (corregido A3-4)") {
   BugWorld2 w;
   const int a = w.addbot(10000, 10000);
   const int b = w.addbot(10100, 10000);
@@ -240,21 +241,23 @@ TEST_CASE("B-06 View se decide con trefaim, no con tmemloc [PROBABLE BUG] A3-4")
   REQUIRE(maketie(w.sim, a, b, 1000, 0, 0));  // ReadTRefVars deja mem(479)=400
   CHECK(w.sim.rob[a].mem[479] == 400);
 
-  // A espía el ojo 505 de B: el View de B NO se marca (chequea mem(479)).
+  // A espía el ojo 505 de B: el View de B se marca (el original miraba
+  // mem(479) y no lo marcaba).
   w.sim.rob[b].mem[505] = 4321;
   w.sim.rob[a].mem[476] = 505;
   ReadTRefVars(w.sim, a, 1);
-  CHECK(w.sim.rob[a].mem[475] == 4321);  // la lectura sí funciona
-  CHECK(!w.sim.rob[b].View);             // el flag no se marca: bug
+  CHECK(w.sim.rob[a].mem[475] == 4321);
+  CHECK(w.sim.rob[b].View);
 
-  // Contra-caso: el aim publicado de B cae en 501..509 => View espurio,
-  // aunque tmemloc apunte a una celda que no es un ojo.
-  w.sim.rob[b].mem[addr::AimSys] = 505;  // aim ~2.525 rad publicado
+  // Contra-caso: un aim publicado en 501..509 ya no marca View si tmemloc no
+  // apunta a un ojo (el original lo marcaba en falso).
+  w.sim.rob[b].View = false;
+  w.sim.rob[b].mem[addr::AimSys] = 505;
   ReadTRefVars(w.sim, a, 1);             // deja mem(479) = 505
-  CHECK(!w.sim.rob[b].View);             // el chequeo fue antes de la escritura
+  w.sim.rob[b].View = false;
   w.sim.rob[a].mem[476] = 100;           // celda espiada: NO es un ojo
   ReadTRefVars(w.sim, a, 1);
-  CHECK(w.sim.rob[b].View);              // marcado espurio via mem(479)
+  CHECK(!w.sim.rob[b].View);
 }
 
 // ---------------------------------------------------------------------------
