@@ -422,6 +422,10 @@ struct FlowState {
   bool condflag = true;  // NEXTBODY
   bool ingene = false;
   vb_long currgene = 0;
+  // Corrección del else canónico (A2-1): el resultado de condiciones que abrió
+  // el último `start`, para que un `else` posterior del mismo gen lo consulte.
+  bool elseok = false;
+  bool elsecond = true;
 };
 
 // E6 — `rob(n).ga(currgene) = True` (DNA.bas:152 y :1181). El array se
@@ -440,15 +444,19 @@ inline void MarkGeneActive(VmContext& vm, Bot& bot, vb_long currgene) {
 }
 
 // DNA.bas:1159-1203 — devuelve false si fue `cond` (el llamador cuenta
-// condnum). El bug del else canónico (V-01) vive en el paso "Not ingene"
-// que fuerza NEXTBODY antes de que el caso else consulte el flag. Se conserva
-// a propósito: 9 bots de web/bots (Lionfish, Zer0Bot, TRON_F1...) usan
-// `start … else` y fueron ajustados contra un else que nunca corre.
+// condnum). Corregido el else canónico (V-01, A2-1): en el original el paso
+// "Not ingene" forzaba NEXTBODY antes de que el caso else consultara el flag,
+// y el cuerpo de `cond C start A else B stop` no corría nunca. Aquí el else
+// que sigue a un start usa el resultado de las condiciones de ese start, como
+// dice la ayuda de los autores (frmAbout1.frm:716). La numeración de genes
+// (currgene) no cambia. Decisión consciente: 9 bots de web/bots (Lionfish,
+// Zer0Bot, TRON_F1...) usan `start … else` y ahora se comportan distinto.
 inline bool ExecuteFlowCommands(VmContext& vm, Bot& bot, FlowState& f, int n) {
   bot.nrg -= vm.costs.of(Costs::FLOWCOST);
   bool ret = false;
   switch (n) {
     case 1:  // cond
+      f.elseok = false;
       f.flow = FlowState::COND;
       f.currgene += 1;
       vm.bools.clear();
@@ -459,7 +467,8 @@ inline bool ExecuteFlowCommands(VmContext& vm, Bot& bot, FlowState& f, int n) {
     case 4:
       ret = true;
       if (f.flow == FlowState::COND) f.condflag = AddupCond(vm.bools);
-      if (!f.ingene) f.condflag = true;  // NEXTBODY — mata al else tras start
+      if (!f.ingene)
+        f.condflag = (n == 3 && f.elseok) ? f.elsecond : true;  // NEXTBODY
       // DNA.bas:1179-1183 (E6): el cuerpo sin stores tambien cuenta como
       // gen disparado; se lee el flow ANTES del CLEAR de la linea siguiente.
       if (f.condflag &&
@@ -471,14 +480,18 @@ inline bool ExecuteFlowCommands(VmContext& vm, Bot& bot, FlowState& f, int n) {
           if (!f.ingene) f.currgene += 1;
           f.ingene = false;
           if (f.condflag) f.flow = FlowState::BODY;
+          f.elseok = true;
+          f.elsecond = f.condflag;
           break;
         case 3:  // else
           if (!f.condflag) f.flow = FlowState::ELSEBODY;
           if (!f.ingene) f.currgene += 1;
           f.ingene = false;
+          f.elseok = false;
           break;
         case 4:  // stop
           f.ingene = false;
+          f.elseok = false;
           f.flow = FlowState::CLEAR;
           break;
       }

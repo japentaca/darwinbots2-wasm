@@ -200,7 +200,7 @@ Emscripten; presentación web separada.
   `StartSimul` (`main.frm:1357-1365`); el compactor sobrevive y la ronda
   hereda las opciones. Smoke: `node tools/pp/smoke_formas.mjs`.
 
-Estado verificado (2026-09-29): 272 casos / 4119 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 34 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
+Estado verificado (2026-09-29): 272 casos / 4126 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 35 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
 
 ## Build
 
@@ -566,16 +566,20 @@ Hasta aquí el port replicaba los `[PROBABLE BUG]` del catálogo
 (`spec/70-CASOS-DORADOS.md §9`). Desde el 2026-09-29 se corrigen los que se
 pueden corregir **sin cambiar el lenguaje del ADN**: el cargador, la VM, los
 operadores y el significado de cada sysvar quedan igual, así que un bot
-existente sigue cargando y ejecutando lo mismo. Las estadísticas de la sim sí
+existente sigue cargando y ejecutando lo mismo. La única excepción, decidida
+a conciencia, es el `else` tras `start` (A2-1): 9 bots de `web/bots` lo usan
+(Lionfish de 2007, Zer0Bot, TRON_F1, bots de Moonfisher…) y ahora ejecutan
+un cuerpo que antes nunca corría. Las estadísticas de la sim sí
 cambian (energía, disparos, repoblación, consumo de RNG). Cada corrección
 lleva un comentario `Corregido <id>` en el core, y su caso dorado se invirtió
 para afirmar el comportamiento nuevo. Los 571 bots de `web/bots` cargan y
 corren 300 ciclos sin fallos.
 
-**Corregidos (34)**
+**Corregidos (35)**
 
 | Área | Id | Qué cambia |
 |---|---|---|
+| VM | A2-1 | El `else` que sigue a un `start` corre si las condiciones del gen son falsas (antes nunca corría). La numeración de genes no cambia. |
 | Ciclo | A1-1 | `Shock` convierte la energía perdida en body (antes la destruía). |
 | Ciclo | A1-3 | La matanza por presión de memoria ya no llama a `KillRobot(0)` sin candidato. |
 | Ciclo | A1-5 | Un bot se encola una sola vez para reproducirse; si procede la sexual, la asexual espera. |
@@ -613,9 +617,7 @@ corren 300 ciclos sin fallos.
 
 **Conservados**, y por qué:
 
-- **Los ve el ADN** (cambiarlos cambiaría lo que significa un bot): el `else`
-  tras `start` que nunca corre (A2-1: 9 bots de `web/bots` usan `start …
-  else`, entre ellos Lionfish de 2007 y Zer0Bot), el corrimiento del cero
+- **Los ve el ADN** (cambiarlos cambiaría lo que significa un bot): el corrimiento del cero
   inicial con `def`s y su efecto en el hijo sexual (A2-2, B6-1), las
   asimetrías de pila y operadores (A2-3 a A2-7), `mkvirus` persistente
   (B3b-4), el ojo de ancho negativo (B2-2), `.shoot` múltiplo de 1000 =

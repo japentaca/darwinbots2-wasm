@@ -107,14 +107,14 @@ original y conservadas sin tocar.
 
 **El port está completo y usable.** Los 10 milestones cerrados y verificados:
 
-- **272 casos / 4 119 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
+- **272 casos / 4 126 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
   g++ nativo, clang nativo y WASM bajo node — sin una sola divergencia
   numérica (redondeo bancario de VB6, LCG exacto, `Single`/`Double` con
   semántica VB6, sin `-ffast-math`, sin FMA implícita).
-- 34 bugs del original **corregidos** (2026-09-29) sin cambiar el lenguaje
-  del ADN: los bots existentes cargan y corren igual. Los que el ADN puede
-  notar (el `else` tras `start`, `mkvirus` persistente, el ojo de ancho
-  negativo…) se conservan. Lista completa en
+- 35 bugs del original **corregidos** (2026-09-29). El lenguaje del ADN solo
+  cambia en uno: el `else` tras `start` ahora corre, como decía la ayuda de
+  los autores. Los demás que el ADN puede notar (`mkvirus` persistente, el
+  ojo de ancho negativo…) se conservan. Lista completa en
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - Página web con la sim completa: la física y el RNG viven en `dbcore.wasm`
   dentro de un Web Worker; la página solo presenta. Incluye guardar/cargar
@@ -176,8 +176,9 @@ tocan el core):
    implementación transcrita del fuente citado línea a línea → verde →
    commit citando la sección de spec.
 3. Los bugs del original se corrigen solo si el lenguaje del ADN no cambia:
-   un bot existente tiene que seguir significando lo mismo (desde el
-   2026-09-29; antes se replicaban todos).
+   un bot existente tiene que seguir significando lo mismo. Única excepción
+   decidida: el `else` tras `start` (desde el 2026-09-29; antes se
+   replicaban todos).
 4. La capa JS/render nunca recalcula física ni RNG: solo presenta lo que el
    core vuelca.
 

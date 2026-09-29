@@ -110,14 +110,14 @@ source drop and kept untouched.
 
 **The port is complete and usable.** All 10 milestones closed and verified:
 
-- **272 test cases / 4,119 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
+- **272 test cases / 4,126 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
   native g++, native clang and WASM under node — without a single numeric
   divergence (VB6 banker's rounding, exact LCG, `Single`/`Double` with VB6
   semantics, no `-ffast-math`, no implicit FMA).
-- 34 of the original's bugs **fixed** (2026-09-29) without changing the DNA
-  language: existing bots load and run the same. The ones DNA can notice
-  (the `else` after `start`, the persistent `mkvirus`, the negative-width
-  eye…) are kept. Full list in
+- 35 of the original's bugs **fixed** (2026-09-29). The DNA language changes
+  in only one: the `else` after `start` now runs, as the authors' help said.
+  The other ones DNA can notice (the persistent `mkvirus`, the
+  negative-width eye…) are kept. Full list in
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - A web page with the full sim: physics and RNG live in `dbcore.wasm`
   inside a Web Worker; the page only presents. It includes saving/loading
@@ -179,8 +179,9 @@ they don't touch the core):
    implementation transcribed from the source, cited line by line →
    passing → commit citing the spec section.
 3. The original's bugs are fixed only when the DNA language stays the same:
-   an existing bot must keep meaning the same thing (since 2026-09-29;
-   before that every bug was replicated).
+   an existing bot must keep meaning the same thing. The one deliberate
+   exception is the `else` after `start` (since 2026-09-29; before that
+   every bug was replicated).
 4. The JS/render layer never recomputes physics or RNG: it only presents
    what the core outputs.
 
