@@ -81,6 +81,34 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
     a los que en el banco solo les gana por disfraz: si cambian su
     reconocimiento de parientes, el disfraz deja de servir.
 
+    Revisión del 2026-09-29 (mismo archivo; el suizo de arriba es de la
+    versión anterior). En la página perdía con Astronomo (Commander
+    Keen) y a veces daba vueltas alrededor de un punto vacío:
+    - Astronomo 2 lo mataba en ~100 ciclos por ronda: su tiro de memoria
+      pone `.shootval` 30000 después del ADN, y el `-6` de Ringo costaba
+      toda la energía (lo mismo que el lazo de Spinner). Contraatacar
+      con tiros de memoria no alcanzó (el 2.1 le escribe `.shoot` -2 y
+      cualquier shootval grande propio lo vaciaba); quedó el disfraz:
+      `.out5` 1991 y los conteos de ADN de Astronomo (up 2, dn 3, sx 1,
+      dx 2, aimdx 5, shoot 3, 22 ojos), ajustados con el gen muerto y con
+      `0 add` antes de un `store`, que saca ese `.up`/`.shoot` del conteo
+      (solo cuenta un número pegado al `store`). Ringo lo distingue de los
+      suyos por `.reftie` (el pariente suma también `.refdn`/`.refsx`).
+    - Se pierde el disfraz de Multiply4 (20 ojos, 6 tiros), incompatible
+      con el de Astronomo. Con poison 300 Multiply4 le chupaba la energía
+      a `-1`; con un mínimo de 800 los tiros rebotan envenenados y le
+      gana 12-0 (un tiro de memoria con `.shootval` -3000 lo empeoraba).
+    - Sin nada a la vista giraba 70 por ciclo acelerando a fondo: un
+      círculo cerrado. Ahora va recto a velocidad 20 y cambia de rumbo al
+      azar cada 100 ciclos (los ojos en abanico ya ven en redondo).
+    - Con formas visibles, el ojo con foco que no es el frontal deja
+      `.refxpos` en (0,0) u obsoleto (B-13) y Ringo perseguía y tiraba a
+      ese punto: una forma (`.reftype` ≠ 0) ya no cuenta como rival.
+
+    Banco anterior + los tres Astronomo (20 rivales × 6 semillas): antes
+    108-12 (Astronomo 2 0-6, Astronomo 2-4), ahora 119-1 (18-0 contra
+    los Astronomo; la única derrota, 5-1 contra v1).
+
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.
 

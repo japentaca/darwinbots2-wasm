@@ -10,14 +10,21 @@
 '  ADN y antes del tiro, y ese -6 le costaba toda la energia.
 '- Slime 500 contra virus (Rabidus, DIN2) y limpieza al final del ADN:
 '  .vshoot/.mkvirus/.delgene a 0 y .repro solo 0 o 20.
-'- Poison nunca menos de 300 (rechaza los lazos que chupan 1000).
+'- Poison nunca menos de 800: rechaza los lazos que chupan 1000 y le
+'  devuelve envenenados los -1 de Multiply4 (con 300 le chupaba todo).
 '- Ojo central ancho y acercamiento por distancia: no pierde el blanco.
 '- Tiro barato (-1 con shootval 0) contra rivales de poca energia y
 '  poco poison: no se funde disparando caro a los enjambres.
 '- Paralizado (vloc = .shoot, venval -2): shootval 1, y no purga waste.
 '- Disfraces: .out7 de This'n'That, .out8/.out9 de la familia BETA, y
-'  un gen muerto con los conteos de .aimdx de Republican Wasp y de ojos
-'  y .shoot de Multiply4: lo toman por uno de los suyos y no le tiran.
+'  .out5 1991 y los conteos de ADN de Astronomo (el gen muerto y los
+'  "0 add" los ajustan; de paso, los 5 .aimdx de Republican Wasp): lo
+'  toman por uno de los suyos y no le tiran. Astronomo 2 mataba de un
+'  tiro de memoria (.shootval 30000 despues del ADN, y el -6 de Ringo
+'  costaba toda la energia). Ringo lo distingue de los suyos por los
+'  lazos (.reftie). Sin rival a la vista, ronda en linea recta: antes
+'  giraba sin parar y daba vueltas en el lugar gastando energia.
+'- Las formas no son rivales: el foco sigue buscando.
 
 def dif 61
 
@@ -34,18 +41,24 @@ start
 469 *.robage 469 mod sub .out7 store
 500 .out8 store
 510 .out9 store
+1991 .out5 store
 stop
 
-'Disfraz (nunca corre): tantos giros como Republican Wasp, y tantos
-'ojos y tiros como Multiply4
+'Disfraz (nunca corre): con el resto del ADN, los conteos de Astronomo
+'(up 2, dn 3, sx 1, dx 2, aimdx 5, shoot 3, 22 ojos), que tambien le
+'dan a Republican Wasp sus 5 giros. Los "0 add" de otros genes esconden
+'un .up y un .shoot del conteo (solo cuenta un numero junto al store)
 cond
 *.robage -1 =
 start
 0 .aimdx store
 0 .aimdx store
-0 .shoot store
-0 .shoot store
-*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9 *.eye1 *.eye2
+0 .dn store
+0 .dn store
+0 .dn store
+0 .sx store
+0 .dx store
+*.eye1 *.eye2 *.eye3 *.eye4 *.eye5 *.eye6 *.eye7 *.eye8 *.eye9 *.eye1 *.eye2 *.eye3 *.eye4
 stop
 
 'Nadie lo fija
@@ -79,11 +92,12 @@ start
 628 .aimdx store
 stop
 
-'Pariente: el ADN del que mira cuenta lo mismo que el suyo
+'Pariente: el ADN del que mira cuenta lo mismo que el suyo (con los
+'lazos: Astronomo cuenta igual en todo lo demas)
 cond
 *.eyef 0 >
 start
-*.refeye *.myeye sub abs *.refshoot *.myshoot sub abs add *.refup *.myup sub abs add *.refaimdx *.myaimdx sub abs add *.refdx *.mydx sub abs add .dif store
+*.refeye *.myeye sub abs *.refshoot *.myshoot sub abs add *.refup *.myup sub abs add *.refaimdx *.myaimdx sub abs add *.refdx *.mydx sub abs add *.refdn *.mydn sub abs add *.refsx *.mysx sub abs add *.reftie *.myties sub abs add .dif store
 stop
 
 cond
@@ -100,12 +114,21 @@ start
 *.focuseye 5 add 1 add 9 mod 4 sub .focuseye store
 stop
 
-'Nada a la vista: rondar
+'Una forma no es rival: el foco sigue buscando
+cond
+*.reftype 0 !=
+start
+0 .dif store
+stop
+
+'Nada a la vista: rondar en linea recta a paso de crucero (los ojos ya
+'ven en redondo; girar sin parar lo dejaba dando vueltas en el lugar)
 cond
 *.eye1 *.eye2 add *.eye3 add *.eye4 add *.eye5 add *.eye6 add *.eye7 add *.eye8 add *.eye9 add 0 =
 start
-70 .aimdx store
-*.maxvel *.vel sub 0 floor 3 div .up store
+20 *.vel sub 0 floor .up store
+*.robage 100 mod 0 =
+400 rnd 200 sub .aimdx store
 stop
 
 'Rival en el foco: encararlo y seguirle el paso
@@ -116,7 +139,7 @@ start
 *.refxpos *.refypos angle .setaim store
 0 .focuseye store
 *.refveldx .dx store
-*.refvelup .up store
+*.refvelup .up 0 add store
 stop
 
 'Acortar: cuanto mas lejos, mas rapido
@@ -136,7 +159,7 @@ start
 -6 .shoot store
 24 .shootval store
 *.refshell *.refpoison >
--1 .shoot store
+-1 .shoot 0 add store
 *.refnrg 800 <
 *.refpoison *.body 5 div 20 add <
 and
@@ -166,10 +189,10 @@ start
 100 .mkshell store
 stop
 
-'Guardia: poison (proporcional, y nunca menos de 300: rechaza los lazos que chupan 1000)
+'Guardia: poison (proporcional, y nunca menos de 800)
 cond
 *.poison 16 mult *.body <
-*.poison 300 < or
+*.poison 800 < or
 *.nrg 500 >
 start
 100 .strpoison store
