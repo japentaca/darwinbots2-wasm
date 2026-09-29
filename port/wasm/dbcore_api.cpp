@@ -2140,7 +2140,7 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   Sh.rng.rnd_negative(-1.0f);
   Sh.rng.randomize(static_cast<double>(Sh.sim.opts.UserSeedNumber) / 100.0);
   db::Sim& sim = Sh.sim;
-  sim.cooldown = -sim.opts.RepopCooldown;
+  sim.cooldown = 0;  // corregido B7-4: el original, -RepopCooldown
   sim.totnvegsDisplayed = -1;
   sim.totvegs = -1;
   sim.totnvegs =

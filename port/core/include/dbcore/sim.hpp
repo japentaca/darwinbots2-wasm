@@ -552,11 +552,10 @@ struct Sim {
   double LightAval = 0;  // Vegs.bas:15 (Double; lo calcula feedvegs)
   vb_long AllChlr = 0;
 
-  // Vegs.bas:9 — acumulador de la repoblación. Al CARGAR una sim arranca
-  // en -RepopCooldown (startloaded, main.frm:1507): la primera tanda tarda
-  // el doble (B-37). El default 0 es el de un proceso VB6 recién arrancado,
-  // que es lo que ve una sim nueva (StartSimul no lo toca); la capa host lo
-  // fija en db_sim_load y lo traspasa en la ronda nueva (RV-33).
+  // Vegs.bas:9 — acumulador de la repoblación. Arranca en 0 también al CARGAR
+  // una sim (corregido B7-4, B-37: el original lo ponía en -RepopCooldown,
+  // main.frm:1507, y la primera tanda tardaba el doble). La capa host lo
+  // traspasa en la ronda nueva (RV-33).
   vb_long cooldown = 0;
 
   // Vegs.bas:17-20 — sol variable (SunOnRnd). SunChange codifica posición

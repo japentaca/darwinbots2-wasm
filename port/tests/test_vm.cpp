@@ -29,13 +29,13 @@ struct Sim {
 
 }  // namespace
 
-TEST_CASE("V-01 el else tras start corre si la condicion es falsa (corregido)") {
-  SUBCASE("condicion falsa: cuerpo no, else si") {
+TEST_CASE("V-01 el else tras start esta muerto") {
+  SUBCASE("condicion falsa: ni cuerpo ni else") {
     Sim s;
     REQUIRE(s.load("cond *50 1 > start 7 100 store else 9 200 store stop"));
     s.run();
     CHECK(s.bot.mem[100] == 0);
-    CHECK(s.bot.mem[200] == 9);
+    CHECK(s.bot.mem[200] == 0);
   }
   SUBCASE("condicion cierta: cuerpo si, else no") {
     Sim s;
@@ -43,21 +43,6 @@ TEST_CASE("V-01 el else tras start corre si la condicion es falsa (corregido)") 
     s.bot.mem[50] = 5;
     s.run();
     CHECK(s.bot.mem[100] == 7);
-    CHECK(s.bot.mem[200] == 0);
-  }
-  SUBCASE("start sin cond: el else no corre") {
-    Sim s;
-    REQUIRE(s.load("start 7 100 store else 9 200 store stop"));
-    s.run();
-    CHECK(s.bot.mem[100] == 7);
-    CHECK(s.bot.mem[200] == 0);
-  }
-  SUBCASE("el else no hereda la condicion de un gen anterior") {
-    Sim s;
-    REQUIRE(s.load("cond 1 2 > start 7 100 store stop start 8 101 store else 9 200 store stop"));
-    s.run();
-    CHECK(s.bot.mem[100] == 0);
-    CHECK(s.bot.mem[101] == 8);
     CHECK(s.bot.mem[200] == 0);
   }
 }

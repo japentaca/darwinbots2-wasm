@@ -39,22 +39,23 @@ inline void ExecRobs(Sim& sim) {
 // 10-CICLO.md §2.
 // Master.bas:429-465 — "Kill some robots to prevent out of memory": con
 // totlen > 4e6 mata maxdel+1 veces al vivo más pobre en nrg + body*10 bajo
-// 320000. selectrobot es un local que ARRANCA EN 0 y no se resetea entre
-// iteraciones: sin candidato bajo el umbral, KillRobot(0) "mata" el slot 0
-// fantasma y ningún vivo muere ([PROBABLE BUG] A1-3, B-02). Con
-// totlen > 3e6 borra LastMutDetail de TODOS los slots (exist o no).
+// 320000. Corregido A1-3 (B-02): el original no reseteaba selectrobot entre
+// iteraciones y, sin candidato bajo el umbral, llamaba a KillRobot(0) sobre
+// el slot 0 fantasma (o repetía el slot ya muerto). Aquí sin candidato no se
+// mata a nadie. Con totlen > 3e6 borra LastMutDetail de TODOS los slots
+// (exist o no).
 inline void MemoryPressureKill(Sim& sim) {
   vb_long totlen = 0;
   for (int t = 1; t <= sim.MaxRobs; ++t)
     if (sim.rob[t].exist) totlen += sim.rob[t].DnaLen;
 
   if (totlen > 4000000) {
-    vb_integer selectrobot = 0;  // Dim local: 0 hasta la primera asignación
     const vb_long maxdel = static_cast<vb_long>(vb_round64(
         1500.0 * (static_cast<double>(sim.TotalRobotsDisplayed) * 425.0 /
                   static_cast<double>(totlen))));
 
     for (vb_long i = 0; i <= maxdel; ++i) {
+      vb_integer selectrobot = 0;
       vb_single calcminenergy = 320000.0f;
       for (int t = 1; t <= sim.MaxRobs; ++t) {
         if (sim.rob[t].exist) {
@@ -64,7 +65,7 @@ inline void MemoryPressureKill(Sim& sim) {
           }
         }
       }
-      KillRobot(sim, selectrobot);
+      if (selectrobot > 0) KillRobot(sim, selectrobot);
     }
   }
   if (totlen > 3000000) {
@@ -354,13 +355,13 @@ inline int RobScriptLoadSim(Sim& sim, const std::string& text,
 
 // Globals.bas:395-505 — aggiungirob: añade un robot cargando el script de
 // la especie r; con r = -1 (repoblación) re-sortea especie vegetal y
-// posición, DESCARTANDO las coordenadas del llamador ([PROBABLE BUG] B7-1:
-// los dos Random de VegsRepopulate son puro consumo de RNG). Después PISA
+// posición, DESCARTANDO las coordenadas del llamador (VegsRepopulate ya no las
+// sortea: corregido B7-1). Después PISA
 // lo que el cargador sembró: Erase mem, body = 1000, nrg = Stnrg, aim
 // aleatorio, generation 0… El timer epigenético queda en 0 (a diferencia de
 // los fundadores de loadrobs). Consumo con r = -1 y una sola tirada de
 // especie: 1 especie [+1 por re-tirada] + 2 posición (fRnd) + 6 preparerob
-// + 1 aim = 10 (12 con los 2 descartados del llamador; R-08).
+// + 1 aim = 10 (R-08; el original sumaba 2 más en el llamador).
 inline void aggiungirob(Sim& sim, vb_integer r, vb_single x, vb_single y) {
   if (r == -1) {
     // Primera pasada: ¿hay alguna especie vegetal elegible?
@@ -460,19 +461,15 @@ inline void aggiungirob(Sim& sim, vb_integer r, vb_single x, vb_single y) {
   makeoccurrlist(sim, a);
 }
 
-// Vegs.bas:23-38 — VegsRepopulate (paso 20): acumulador con deuda. Las dos
-// coordenadas del llamador se sortean y se descartan (B7-1); totvegs cuenta
-// el intento aunque aggiungirob falle en silencio.
+// Vegs.bas:23-38 — VegsRepopulate (paso 20): acumulador con deuda. Corregido
+// B7-1 (R-08): el original sorteaba dos coordenadas que aggiungirob descartaba
+// (2 RNG muertos por vegetal); aquí no se sortean. totvegs cuenta el intento
+// aunque aggiungirob falle en silencio.
 inline void VegsRepopulate(Sim& sim) {
   sim.cooldown += 1;
   if (sim.cooldown >= sim.opts.RepopCooldown) {
     for (vb_integer t = 1; t <= sim.opts.RepopAmount; ++t) {
-      // VB6 evalúa los argumentos de izquierda a derecha: x antes que y.
-      const vb_single Rx = static_cast<vb_single>(Random(
-          60, static_cast<double>(sim.opts.FieldWidth) - 60.0, *sim.rndy));
-      const vb_single Ry = static_cast<vb_single>(Random(
-          60, static_cast<double>(sim.opts.FieldHeight) - 60.0, *sim.rndy));
-      aggiungirob(sim, -1, Rx, Ry);
+      aggiungirob(sim, -1, 0.0f, 0.0f);  // r = -1 sortea su propia posición
       sim.totvegs += 1;
     }
     sim.cooldown -= sim.opts.RepopCooldown;

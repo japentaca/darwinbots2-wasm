@@ -1,6 +1,6 @@
 // M8 — Mundo (B7, 50-MUNDO.md): economía vegetal. Casos dorados R-08
-// (inventario de 12 extracciones de la repoblación) y B-37 (la primera
-// repoblación tarda el doble), más los [unit] de feedvegs (banda solar,
+// (inventario de 10 extracciones de la repoblación) y B-37 (la primera
+// repoblación llega a tiempo), más los [unit] de feedvegs (banda solar,
 // día/noche, sol variable), feedveg2 (digestión de waste) y altzheimer.
 #include <cmath>
 
@@ -54,9 +54,9 @@ struct World {
 }  // namespace
 
 // ---------------------------------------------------------------------------
-TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
-  SUBCASE("una especie valida, una tirada: 12 exactas y coordenadas pisadas") {
-    InjectedRnd rng(std::vector<vb_single>(12, 0.5f));
+TEST_CASE("R-08 repoblacion vegetal: inventario de 10 extracciones (corregido B7-1)") {
+  SUBCASE("una especie valida, una tirada: 10 exactas") {
+    InjectedRnd rng(std::vector<vb_single>(10, 0.5f));
     World w(rng);
     w.addVegSpecies("Veg.txt");
     w.sim.StartChlr = 16000;
@@ -66,7 +66,7 @@ TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
 
     VegsRepopulate(w.sim);
 
-    CHECK(rng.consumed() == 12);
+    CHECK(rng.consumed() == 10);  // el original: 12 (2 coordenadas muertas)
     CHECK(rng.exhausted());
     CHECK(w.sim.totvegs == 1);
     CHECK(w.sim.cooldown == 0);  // 25 - RepopCooldown
@@ -79,9 +79,8 @@ TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
     CHECK(b.body == 1000.0f);
     CHECK(b.generation == 0);
     CHECK(b.parent == 0);
-    // Coordenadas: las del llamador (16000, extracciones 1-2) se DESCARTAN;
-    // la posición real sale de fRnd(0, 31940) = CLng(15970.5) = 15970
-    // (bancario: empate al par).
+    // La posición sale de fRnd(0, 31940) = CLng(15970.5) = 15970 (bancario:
+    // empate al par); el llamador ya no sortea coordenadas.
     CHECK(b.pos.x == 15970.0f);
     CHECK(b.pos.y == 15970.0f);
     // aim = rndy*2*PI = PI pisa el de preparerob; SetAim = CInt(PI*200).
@@ -93,10 +92,10 @@ TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
 
   SUBCASE("re-tirada de especie: +1 extraccion") {
     // Especie 0 NO vegetal, especie 1 vegetal: Random(0,1) = 0 falla la
-    // primera vez y re-sortea (13 extracciones en total).
-    std::vector<vb_single> seq(13, 0.5f);
-    seq[2] = 0.3f;  // primera tirada de especie -> 0 (no veg)
-    seq[3] = 0.6f;  // re-tirada -> 1 (veg)
+    // primera vez y re-sortea (11 extracciones en total).
+    std::vector<vb_single> seq(11, 0.5f);
+    seq[0] = 0.3f;  // primera tirada de especie -> 0 (no veg)
+    seq[1] = 0.6f;  // re-tirada -> 1 (veg)
     InjectedRnd rng(seq);
     World w(rng);
     {
@@ -112,16 +111,16 @@ TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
 
     VegsRepopulate(w.sim);
 
-    CHECK(rng.consumed() == 13);
+    CHECK(rng.consumed() == 11);
     CHECK(rng.exhausted());
     REQUIRE(w.sim.rob[1].exist);
     CHECK(w.sim.rob[1].FName == "Veg.txt");
   }
 
-  SUBCASE("sin especie vegetal elegible: 3 extracciones y ningun bot") {
-    // Los dos Random del llamador + nada: aggiungirob sale en el chequeo
-    // anyvegy ANTES de sortear especie/posición.
-    InjectedRnd rng(std::vector<vb_single>(2, 0.5f));
+  SUBCASE("sin especie vegetal elegible: ninguna extraccion y ningun bot") {
+    // aggiungirob sale en el chequeo anyvegy ANTES de sortear
+    // especie/posición.
+    InjectedRnd rng(std::vector<vb_single>{});
     World w(rng);
     {
       Specie carn;
@@ -134,14 +133,14 @@ TEST_CASE("R-08 repoblacion vegetal: inventario de 12 extracciones") {
 
     VegsRepopulate(w.sim);
 
-    CHECK(rng.consumed() == 2);  // solo las coordenadas descartadas
+    CHECK(rng.consumed() == 0);  // el original: 2 coordenadas descartadas
     CHECK(w.sim.MaxRobs == 0);
     CHECK(w.sim.totvegs == 1);  // el contador cuenta el intento igualmente
   }
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("B-37 la primera repoblacion tarda el doble (cooldown = -25)") {
+TEST_CASE("B-37 la primera repoblacion llega en RepopCooldown ciclos (corregido B7-4)") {
   VbRng rng;
   World w(rng);
   w.addVegSpecies("Veg.txt");
@@ -149,7 +148,9 @@ TEST_CASE("B-37 la primera repoblacion tarda el doble (cooldown = -25)") {
   w.sim.opts.RepopCooldown = 25;
   w.sim.opts.RepopAmount = 1;
   w.sim.opts.MinVegs = 100;  // el gate de cloroplastos queda abierto
-  w.sim.cooldown = -w.sim.opts.RepopCooldown;  // main.frm:1507
+  // El original arrancaba una sim cargada con cooldown = -RepopCooldown
+  // (main.frm:1507) y la primera tanda llegaba en el ciclo 50.
+  w.sim.cooldown = 0;
 
   auto vegcount = [&] {
     int c = 0;
@@ -158,11 +159,11 @@ TEST_CASE("B-37 la primera repoblacion tarda el doble (cooldown = -25)") {
     return c;
   };
 
-  // 49 ciclos elegibles: nada (el acumulador va de -25 a 24).
-  for (int i = 1; i <= 49; ++i) UpdateSim(w.sim);
+  // 24 ciclos elegibles: nada (el acumulador va de 0 a 24).
+  for (int i = 1; i <= 24; ++i) UpdateSim(w.sim);
   CHECK(vegcount() == 0);
 
-  // Ciclo 50: primera tanda.
+  // Ciclo 25: primera tanda.
   UpdateSim(w.sim);
   CHECK(vegcount() == 1);
   CHECK(w.sim.cooldown == 0);
@@ -407,8 +408,8 @@ TEST_CASE("altzheimer: waste alto escribe basura en memoria (via HandleWaste)") 
 }
 
 // ---------------------------------------------------------------------------
-TEST_CASE("B-36 teleporter con un solo eje de drift no se mueve") {
-  SUBCASE("solo drift X: acumula velocidad que nunca aplica") {
+TEST_CASE("B-36 teleporter con un solo eje de drift se mueve (corregido B7-3)") {
+  SUBCASE("solo drift X: aplica la velocidad acumulada") {
     InjectedRnd rng(std::vector<vb_single>(5, 0.9f));  // 1 RNG/ciclo (solo X)
     World w(rng);
     w.sim.numTeleporters = 1;
@@ -426,11 +427,12 @@ TEST_CASE("B-36 teleporter con un solo eje de drift no se mueve") {
     }
 
     CHECK(rng.consumed() == 5);
-    CHECK(tp.pos.x == 1000.0f);  // nunca traslada
+    // 0.4 + 0.8 + ... + 2.0 = 6 (el original no trasladaba nunca).
+    CHECK(tp.pos.x == doctest::Approx(1006.0f));
     CHECK(tp.pos.y == 1000.0f);
     CHECK(tp.vel.x == doctest::Approx(5.0f * 0.4f));  // la deriva acumulada
-    // center se recalcula igualmente: (x + W/2, y + H*0.3).
-    CHECK(tp.center.x == doctest::Approx(1250.0f));
+    // center: (x + W/2, y + H*0.3).
+    CHECK(tp.center.x == doctest::Approx(1256.0f));
     CHECK(tp.center.y == doctest::Approx(1150.0f));
   }
 
@@ -1032,7 +1034,7 @@ TEST_CASE("Sidecar .mrate: solo los operadores 0..10 viajan") {
 // de mundo vivos a la vez; la secuencia inyectada obliga a que cada
 // extracción caiga en el consumidor correcto y en el orden del tick:
 //   paso 10 (intérprete rnd) -> P5 (feedveg2) -> paso 18 (drift de formas,
-//   drift de teleporter) -> paso 20 (repoblación, 12) -> paso 21 (sol, 2).
+//   drift de teleporter) -> paso 20 (repoblación, 10) -> paso 21 (sol, 2).
 // Cualquier extracción extra o faltante rompe la secuencia (InjectedRnd
 // lanza si se agota; exhausted() falla si sobran).
 TEST_CASE("R-12 orden global de consumo de RNG en un tick completo") {
@@ -1047,16 +1049,15 @@ TEST_CASE("R-12 orden global de consumo de RNG en un tick completo") {
     seq.push_back(0.5f);       // 4. DriftObstacles: factor Rndy
     seq.push_back(1.0f);       // 5. DriftTeleporter eje X (+0.5)
     seq.push_back(1.0f);       // 6. DriftTeleporter eje Y (+0.5)
-    seq.push_back(0.1f);       // 7. repop: coord X descartada
-    seq.push_back(0.1f);       // 8. repop: coord Y descartada
-    seq.push_back(0.0f);       // 9. repop: especie 0 — nótese que P2 ya
+    // (el original sorteaba aquí 2 coordenadas que descartaba; B7-1)
+    seq.push_back(0.0f);       // 7. repop: especie 0 — nótese que P2 ya
                                //    auto-registró "R.txt" (SpeciesNum = 2)
-    seq.push_back(0.5f);       // 10. repop: fRnd x -> 15970
-    seq.push_back(0.5f);       // 11. repop: fRnd y -> 15970
-    for (int i = 0; i < 6; ++i) seq.push_back(0.5f);  // 12-17. preparerob
-    seq.push_back(veg_aim);    // 18. repop: aim definitivo
-    seq.push_back(0.9f);       // 19. sol: moneda de rango (falla)
-    seq.push_back(0.9f);       // 20. sol: moneda de posición (falla)
+    seq.push_back(0.5f);       // 8. repop: fRnd x -> 15970
+    seq.push_back(0.5f);       // 9. repop: fRnd y -> 15970
+    for (int i = 0; i < 6; ++i) seq.push_back(0.5f);  // 10-15. preparerob
+    seq.push_back(veg_aim);    // 16. repop: aim definitivo
+    seq.push_back(0.9f);       // 17. sol: moneda de rango (falla)
+    seq.push_back(0.9f);       // 18. sol: moneda de posición (falla)
   };
   push_tick(0.5f, 0.4f, 0.25f);    // tick 1
   push_tick(0.999f, 0.6f, 0.75f);  // tick 2
@@ -1108,7 +1109,7 @@ TEST_CASE("R-12 orden global de consumo de RNG en un tick completo") {
   CHECK(s.Teleporters[1].vel.x == doctest::Approx(0.5f));
   CHECK(s.Teleporters[1].vel.y == doctest::Approx(0.5f));
   CHECK(s.SunChange == 12);
-  CHECK(rng.consumed() == 26);  // 6 setup + 20 del tick
+  CHECK(rng.consumed() == 24);  // 6 setup + 18 del tick
 
   UpdateSim(s);  // tick 2
 
@@ -1121,7 +1122,7 @@ TEST_CASE("R-12 orden global de consumo de RNG en un tick completo") {
 
   // Ninguna extracción fuera del inventario: la secuencia se consumió
   // exacta y completa.
-  CHECK(rng.consumed() == 46);
+  CHECK(rng.consumed() == 42);
   CHECK(rng.exhausted());
 
   // Los stubs de B7 quedaron cerrados: ningún camino los incrementa.

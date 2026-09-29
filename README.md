@@ -96,8 +96,8 @@ Este repositorio contiene **tres capas, en orden de derivación**:
 | Capa | Qué es |
 |---|---|
 | [`Darwinbots2/`](Darwinbots2/) | El fuente original de DarwinBots **2.48.32** (VB6, 53 327 LOC). **Read-only**: es la autoridad última. Línea base en el commit `02b20d7`; `git diff 02b20d7 -- Darwinbots2/` debe salir vacío siempre. |
-| [`spec/`](spec/) | La **especificación completa** extraída del fuente: ciclo de simulación, VM de ADN (77 opcodes), mapa de memoria (247 sysvars), física, visión, shots, ties, virus, reproducción, mutaciones, mundo y formatos — incluido el catálogo de bugs del original, que se replican tal cual. [`spec/70-CASOS-DORADOS.md`](spec/70-CASOS-DORADOS.md) es la suite de verdad; [`spec/PROGRESO.md`](spec/PROGRESO.md) el estado autoritativo. |
-| [`port/`](port/) | La **reimplementación**: core C++20 *header-only* fiel al original bit a bit, compilado nativo (g++/clang) y a WebAssembly (Emscripten), con la sim corriendo en el navegador sobre un Web Worker y render Canvas 2D. |
+| [`spec/`](spec/) | La **especificación completa** extraída del fuente: ciclo de simulación, VM de ADN (77 opcodes), mapa de memoria (247 sysvars), física, visión, shots, ties, virus, reproducción, mutaciones, mundo y formatos — incluido el catálogo de bugs del original (la mayoría ya corregidos en el port, ver [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29)). [`spec/70-CASOS-DORADOS.md`](spec/70-CASOS-DORADOS.md) es la suite de verdad; [`spec/PROGRESO.md`](spec/PROGRESO.md) el estado autoritativo. |
+| [`port/`](port/) | La **reimplementación**: core C++20 *header-only* fiel al original (salvo los bugs corregidos), compilado nativo (g++/clang) y a WebAssembly (Emscripten), con la sim corriendo en el navegador sobre un Web Worker y render Canvas 2D. |
 
 El resto de los directorios de la raíz (`DBLaunch/`, `Installer/`,
 `LocalDBIM/`, …) son herramientas companion de la época, parte del drop
@@ -107,12 +107,15 @@ original y conservadas sin tocar.
 
 **El port está completo y usable.** Los 10 milestones cerrados y verificados:
 
-- **270 casos / 4 092 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
+- **272 casos / 4 119 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
   g++ nativo, clang nativo y WASM bajo node — sin una sola divergencia
   numérica (redondeo bancario de VB6, LCG exacto, `Single`/`Double` con
   semántica VB6, sin `-ffast-math`, sin FMA implícita).
-- Los `[PROBABLE BUG]` del original (35 catalogados) replicados y afirmados
-  por tests: la fidelidad incluye los bugs.
+- 34 bugs del original **corregidos** (2026-09-29) sin cambiar el lenguaje
+  del ADN: los bots existentes cargan y corren igual. Los que el ADN puede
+  notar (el `else` tras `start`, `mkvirus` persistente, el ojo de ancho
+  negativo…) se conservan. Lista completa en
+  [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - Página web con la sim completa: la física y el RNG viven en `dbcore.wasm`
   dentro de un Web Worker; la página solo presenta. Incluye guardar/cargar
   la sim en el formato binario de VB6 y el **Bestiary de 568 bots de la
@@ -172,7 +175,9 @@ tocan el core):
 2. Todo lo que toca `port/core/` sigue el ciclo: caso dorado en rojo →
    implementación transcrita del fuente citado línea a línea → verde →
    commit citando la sección de spec.
-3. Los bugs del original se replican, no se corrigen.
+3. Los bugs del original se corrigen solo si el lenguaje del ADN no cambia:
+   un bot existente tiene que seguir significando lo mismo (desde el
+   2026-09-29; antes se replicaban todos).
 4. La capa JS/render nunca recalcula física ni RNG: solo presenta lo que el
    core vuelca.
 

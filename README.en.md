@@ -99,8 +99,8 @@ derivation**:
 | Layer | What it is |
 |---|---|
 | [`Darwinbots2/`](Darwinbots2/) | The original DarwinBots **2.48.32** source (VB6, 53,327 LOC). **Read-only**: it is the ultimate authority. Baseline at commit `02b20d7`; `git diff 02b20d7 -- Darwinbots2/` must always be empty. |
-| [`spec/`](spec/) | The **complete specification** extracted from the source (in Spanish): simulation cycle, DNA VM (77 opcodes), memory map (247 sysvars), physics, vision, shots, ties, viruses, reproduction, mutations, world and file formats — including the catalog of the original's bugs, which are replicated as-is. [`spec/70-CASOS-DORADOS.md`](spec/70-CASOS-DORADOS.md) is the golden test suite; [`spec/PROGRESO.md`](spec/PROGRESO.md) is the authoritative status. |
-| [`port/`](port/) | The **reimplementation**: a header-only C++20 core, bit-for-bit faithful to the original, compiled natively (g++/clang) and to WebAssembly (Emscripten), with the sim running in the browser on a Web Worker and Canvas 2D rendering. |
+| [`spec/`](spec/) | The **complete specification** extracted from the source (in Spanish): simulation cycle, DNA VM (77 opcodes), memory map (247 sysvars), physics, vision, shots, ties, viruses, reproduction, mutations, world and file formats — including the catalog of the original's bugs (most of them now fixed in the port, see [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29), in Spanish). [`spec/70-CASOS-DORADOS.md`](spec/70-CASOS-DORADOS.md) is the golden test suite; [`spec/PROGRESO.md`](spec/PROGRESO.md) is the authoritative status. |
+| [`port/`](port/) | The **reimplementation**: a header-only C++20 core, faithful to the original (except for the fixed bugs), compiled natively (g++/clang) and to WebAssembly (Emscripten), with the sim running in the browser on a Web Worker and Canvas 2D rendering. |
 
 The remaining top-level directories (`DBLaunch/`, `Installer/`,
 `LocalDBIM/`, …) are companion tools from that era, part of the original
@@ -110,12 +110,15 @@ source drop and kept untouched.
 
 **The port is complete and usable.** All 10 milestones closed and verified:
 
-- **270 test cases / 4,092 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
+- **272 test cases / 4,119 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
   native g++, native clang and WASM under node — without a single numeric
   divergence (VB6 banker's rounding, exact LCG, `Single`/`Double` with VB6
   semantics, no `-ffast-math`, no implicit FMA).
-- The original's `[PROBABLE BUG]`s (35 catalogued) are replicated and
-  asserted by tests: fidelity includes the bugs.
+- 34 of the original's bugs **fixed** (2026-09-29) without changing the DNA
+  language: existing bots load and run the same. The ones DNA can notice
+  (the `else` after `start`, the persistent `mkvirus`, the negative-width
+  eye…) are kept. Full list in
+  [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - A web page with the full sim: physics and RNG live in `dbcore.wasm`
   inside a Web Worker; the page only presents. It includes saving/loading
   the sim in the VB6 binary format and the **Bestiary of 568 community
@@ -175,7 +178,9 @@ they don't touch the core):
 2. Everything touching `port/core/` follows the cycle: golden case failing →
    implementation transcribed from the source, cited line by line →
    passing → commit citing the spec section.
-3. The original's bugs are replicated, not fixed.
+3. The original's bugs are fixed only when the DNA language stays the same:
+   an existing bot must keep meaning the same thing (since 2026-09-29;
+   before that every bug was replicated).
 4. The JS/render layer never recomputes physics or RNG: it only presents
    what the core outputs.
 

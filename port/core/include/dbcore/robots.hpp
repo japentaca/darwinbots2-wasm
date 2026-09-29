@@ -1810,15 +1810,15 @@ inline void DriftTeleporter(Sim& sim, int i) {
     tp.vel = VectorScalar(tp.vel, vel / VectorMagnitude(tp.vel));
 }
 
-// Teleport.bas:315-368 — MoveTeleporter. [PROBABLE BUG] B7-3 / B-36: SOLO
-// traslada si AMBOS flags de drift están activos, aunque DriftTeleporter
-// haya acumulado velocidad con uno solo. El center usado para la colisión
+// Teleport.bas:315-368 — MoveTeleporter. Corregido B7-3 (B-36): traslada con
+// cualquiera de los dos flags de drift; el original exigía AMBOS aunque
+// DriftTeleporter acumulara velocidad con uno solo. El center usado para la colisión
 // vive en (x + W/2, y + H·0.3) — el 0.3 responde al dibujo del sprite.
 // Bordes: envoltura si el eje está conectado, si no rebote ±10% MaxVelocity.
 inline void MoveTeleporter(Sim& sim, int i) {
   Teleporter& tp = sim.Teleporters[i];
 
-  if (tp.driftHorizontal && tp.driftVertical)
+  if (tp.driftHorizontal || tp.driftVertical)
     tp.pos = VectorAdd(tp.pos, tp.vel);
   // Single * 0.5/0.3 (literales Double): un redondeo al pasar a VectorSet
   // (RV-26).

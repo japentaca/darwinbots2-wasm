@@ -95,9 +95,8 @@ TEST_CASE("B-01 Shock: la energia pasa a body (corregido A1-1)") {
 }
 
 // ---------------------------------------------------------------------------
-// B-02 · KillRobot(0) desde la matanza por presión (Master.bas:429-465)
-// [integración]
-TEST_CASE("B-02 matanza por presión sin candidato: KillRobot(0) [PROBABLE BUG] A1-3") {
+// B-02 · Matanza por presión sin candidato (Master.bas:429-465) [integración]
+TEST_CASE("B-02 matanza por presion sin candidato: no mata a nadie (corregido A1-3)") {
   BugWorld2 w;
   // 126 bots ricos: totlen = 126*32000 = 4.032e6 > 4e6; nrg + body*10 =
   // 321000, ninguno bajo el umbral 320000 (estricto).
@@ -113,8 +112,8 @@ TEST_CASE("B-02 matanza por presión sin candidato: KillRobot(0) [PROBABLE BUG] 
 
   MemoryPressureKill(w.sim);
 
-  // Ningún vivo murió: selectrobot quedó en 0 y el slot 0 fantasma recibió
-  // las 21 "muertes" (maxdel = CLng(1500*126*425/4.032e6) = 20; For 0..20).
+  // Ningún vivo muere y ya no se llama a KillRobot(0): el original mandaba
+  // al slot 0 fantasma las 21 "muertes" (maxdel = 20; For 0..20).
   for (int t = 1; t <= 126; ++t) CHECK(w.sim.rob[t].exist);
   CHECK(!w.sim.rob[0].exist);
   // totlen > 3e6 también borra LastMutDetail de todos los slots.
@@ -154,6 +153,32 @@ TEST_CASE("B-03 UpdateTieAngles sobre slot vacío no tiene efecto observable [PR
   const int reused = posto(w.sim);
   CHECK(reused == n);
   CHECK(w.sim.rob[n].mem[addr::TIEANG] == 0);
+}
+
+// ---------------------------------------------------------------------------
+// A1-5 · Un bot se encola una sola vez para reproducirse (Robots.bas:1391-1400)
+// [unit]
+TEST_CASE("A1-5 repro asexual y sexual a la vez: un solo encolado, gana la sexual (corregido)") {
+  BugWorld2 w;
+  const int n = w.addbot(10000, 10000);
+  Bot& b = w.sim.rob[n];
+  b.mem[addr::Repro] = 50;
+  b.mem[addr::SEXREPRO] = 50;
+
+  SUBCASE("fecundado: solo la sexual") {
+    b.fertilized = 5;
+    const vb_long rp0 = w.sim.rp;
+    ManageReproduction(w.sim, n);
+    CHECK(w.sim.rp == rp0 + 1);  // el original encolaba dos veces
+    CHECK(w.sim.rep[rp0] == -n);
+  }
+  SUBCASE("sin fecundar: la asexual") {
+    b.fertilized = -2;
+    const vb_long rp0 = w.sim.rp;
+    ManageReproduction(w.sim, n);
+    CHECK(w.sim.rp == rp0 + 1);
+    CHECK(w.sim.rep[rp0] == n);
+  }
 }
 
 // ---------------------------------------------------------------------------

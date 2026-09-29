@@ -97,10 +97,11 @@ TEST_CASE("RV-33 - sim nueva: la repoblacion no arrastra la deuda B-37") {
   db_sim_destroy(h);
 }
 
-// RV-33 — sim cargada: startloaded fija cooldown = -RepopCooldown,
-// totnvegsDisplayed = -1, totvegs = -1 y totnvegs = Costs(DYNAMICCOSTTARGET);
-// el primer tick salta la repoblacion (Master.bas:393) y la primera tanda
-// llega en el tick 51.
+// RV-33 — sim cargada: startloaded fija totnvegsDisplayed = -1, totvegs = -1
+// y totnvegs = Costs(DYNAMICCOSTTARGET); cooldown arranca en 0 (corregido
+// B7-4: el original lo ponia en -RepopCooldown y la primera tanda llegaba en
+// el tick 51). El primer tick salta la repoblacion (Master.bas:393) y la
+// primera tanda llega en el tick 26.
 TEST_CASE("RV-33 - sim cargada: startloaded fija la deuda y los contadores") {
   void* h = db_sim_create();
   db_sim_set_field(h, 16000, 16000);
@@ -114,11 +115,11 @@ TEST_CASE("RV-33 - sim cargada: startloaded fija la deuda y los contadores") {
   void* g = db_sim_create();
   db_sim_load(g, buf, len);
   db_free(buf);
-  CHECK(S(g).cooldown == -25);
+  CHECK(S(g).cooldown == 0);
   CHECK(S(g).totvegs == -1);
   CHECK(S(g).totnvegsDisplayed == -1);
   CHECK(S(g).totnvegs == 77);
-  CHECK(FirstRepopTick(g, 80) == 51);
+  CHECK(FirstRepopTick(g, 80) == 26);
   db_sim_destroy(g);
   db_sim_destroy(h);
 }
