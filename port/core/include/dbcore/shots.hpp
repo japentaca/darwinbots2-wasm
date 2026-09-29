@@ -865,10 +865,10 @@ inline bool MakeVirus(Sim& sim, int robn, vb_integer gene) {
 }
 
 // Shots.bas:1174-1230 — addgene: infeccion del bot n por el shot -7 p.
-// [PROBABLE BUG] B3b-2 (B-19): si el virus penetra, la slime queda NEGATIVA
-// antes de descontarse de power — el power resultante es MAYOR que el
-// original (hoy sin reuso: la infeccion procede igual). [PROBABLE BUG]
-// B3b-3 (B-20): power es proporcional a Shots().value = numero de gen.
+// Corregido B3b-2 (B-19): si el virus penetra, la slime se agota y power
+// pierde lo que la slime paraba (el original la dejaba NEGATIVA antes de
+// descontarla y el power salía MAYOR). Corregido B3b-3 (B-20): power ya no se
+// multiplica por Shots().value, que es el numero de gen copiado.
 // Consume 1 RNG (Random(0, genenum)).
 inline void addgene(Sim& sim, int n, vb_long p) {
   Bot& b = sim.rob[n];
@@ -876,15 +876,14 @@ inline void addgene(Sim& sim, int n, vb_long p) {
 
   if (b.Corpse || b.VirusImmune) return;
 
-  vb_single power = s.nrg / (s.Range * RobSize / 3.0f) * s.value;
+  vb_single power = s.nrg / (s.Range * RobSize / 3.0f);
 
   if (power < b.Slime * SlimeEffectiveness) {
     b.Slime = b.Slime - power / SlimeEffectiveness;  // absorbido
     return;
   } else {
-    b.Slime = b.Slime - power / SlimeEffectiveness;  // puede quedar < 0
-    power = power - b.Slime * SlimeEffectiveness;    // slime negativa AMPLIFICA
-    if (b.Slime < 0.5f) b.Slime = 0.0f;
+    power = power - b.Slime * SlimeEffectiveness;  // lo que la slime paraba
+    b.Slime = 0.0f;                                // penetrada: agotada
   }
 
   const vb_integer Position =
@@ -941,13 +940,13 @@ inline void Vshoot(Sim& sim, int n, vb_long thisshot) {
   const double shotcost =
       static_cast<double>(sim.vm.costs.v[cost::SHOTCOST]) *
       static_cast<double>(sim.vm.costs.v[cost::COSTMULTIPLIER]);
+  // Corregido B3b-1: un solo cobro de vshoot + SHOTCOST. El original cobraba
+  // dos veces (como tempa/20 y otra vez como mem(VshootSys)).
   b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) -
                                  static_cast<double>(tempa) / 20.0 - shotcost);
 
   s.Range = 11.0f + static_cast<vb_single>(
                         vb_cint(static_cast<double>(b.mem[addr::VshootSys]) / 2.0));
-  b.nrg = static_cast<vb_single>(static_cast<double>(b.nrg) -
-                                 static_cast<double>(b.mem[addr::VshootSys]) - shotcost);
 
   const vb_single ShAngle =
       static_cast<vb_single>(RandomI(1, 1256, *sim.rndy)) / 200.0f;

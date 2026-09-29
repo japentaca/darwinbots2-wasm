@@ -129,7 +129,7 @@ TEST_CASE("R-05 newshot: una sola extraccion (corregido B3-4)") {
   }
 }
 
-TEST_CASE("R-06 Vshoot: doble cobro y direccion aleatoria [PROBABLE BUG] B3b-1") {
+TEST_CASE("R-06 Vshoot: un solo cobro (corregido B3b-1) y direccion aleatoria") {
   Sim sim;
   InjectedRnd rng({0.5f});
   sim.rndy = &rng;
@@ -156,9 +156,9 @@ TEST_CASE("R-06 Vshoot: doble cobro y direccion aleatoria [PROBABLE BUG] B3b-1")
   // Con el array inicial de 50 (main.frm:390-392; RV-11) no hay compactacion
   // (exige maxshotarray > 100): el virus sale del mismo slot 5.
   Shot& sh = sim.Shots[5];
-  // Cargo 1: tempa/20 = 50 + SHOTCOST; cargo 2: mem(vshoot) = 50 + SHOTCOST
-  // (el precio es doble): 10000 - 104 = 9896.
-  CHECK(b.nrg == doctest::Approx(9896.0));
+  // Un solo cargo: tempa/20 = 50 + SHOTCOST => 10000 - 52 = 9948 (el
+  // original cobraba dos veces: 9896).
+  CHECK(b.nrg == doctest::Approx(9948.0));
   CHECK(sh.nrg == 1000.0f);          // 50*20
   CHECK(sh.Range == 36.0f);          // 11 + CInt(50/2)
   CHECK(!sh.stored);

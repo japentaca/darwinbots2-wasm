@@ -490,10 +490,9 @@ TEST_CASE("RV-14d updateshots: el decaimiento Atn va en Double") {
         static_cast<float>(1342.11816f * at / std::atan(-40.0)));
 }
 
-// RV-15 — Shots.bas:1100 y :1103 (Vshoot): el original resta de izquierda a
-// derecha, `nrg - (tempa / 20#) - coste` (Double) y `nrg - CSng(mem) -
-// coste`; el port reasocia a `nrg - (a + coste)` en float. Difiere con las
-// dos lecturas de RV-03.
+// RV-15 — Shots.bas:1100 (Vshoot): el original resta de izquierda a derecha,
+// `nrg - (tempa / 20#) - coste` (Double). El segundo cobro (`:1103`) se quitó
+// con la corrección B3b-1.
 TEST_CASE("RV-15 Vshoot: el coste se resta en el orden del fuente") {
   RvWorld w;
   const int n = w.addbot(1000, 1000);
@@ -507,8 +506,7 @@ TEST_CASE("RV-15 Vshoot: el coste se resta en el orden del fuente") {
   Vshoot(w.sim, n, 1);
   const double c = 1.0458796f;
   const float n1 = static_cast<float>(102.160255f - 1540.0 / 20.0 - c);
-  const float n2 = static_cast<float>(n1 - 77.0 - c);  // lectura N-06
-  CHECK(b.nrg == n2);
+  CHECK(b.nrg == n1);
 }
 
 // RV-16 — Shots.bas:319 (y Robots.bas:1640): TotalSimEnergy es Long y

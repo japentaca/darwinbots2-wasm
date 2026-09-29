@@ -415,8 +415,8 @@ int vspawn(Sim& sim, const std::string& dnatext, const std::string& fname,
 }  // namespace
 
 // ---------------------------------------------------------------------------
-// B-19 · La slime penetrada amplifica power (Shots.bas:1183-1191) [ciclo]
-TEST_CASE("B-19 slime penetrada: queda negativa y AMPLIFICA antes del reset [PROBABLE BUG] B3b-2") {
+// B-19 · La slime penetrada se agota (Shots.bas:1183-1191) [ciclo]
+TEST_CASE("B-19 slime penetrada: se agota y resta de power (corregido B3b-2)") {
   ShotWorld w;
   w.sim.opts.TotRunCycle = 5;
   w.sim.TotalRobotsDisplayed = 1;
@@ -439,8 +439,8 @@ TEST_CASE("B-19 slime penetrada: queda negativa y AMPLIFICA antes del reset [PRO
 
     addgene(w.sim, v, 1);
 
-    // slime = 100 - 10*20 = -100 -> power = 10 - (-100)*0.05 = 15 (mayor
-    // que el original; hoy sin reuso) -> slime normalizada a 0.
+    // power = 10 - 100*0.05 = 5 y slime 0 (el original la dejaba en -100 y
+    // el power subía a 15; hoy sin reuso).
     CHECK(b.Slime == 0.0f);
     CHECK(b.DnaLen == olddna + 3);  // la infección SÍ ocurre
     CHECK(b.Mutations == 1);
@@ -474,9 +474,9 @@ TEST_CASE("B-19 slime penetrada: queda negativa y AMPLIFICA antes del reset [PRO
 }
 
 // ---------------------------------------------------------------------------
-// B-20 · Potencia del virus proporcional al número de gen
+// B-20 · La potencia del virus no depende del número de gen
 // (Shots.bas:1124,1183) [ciclo]
-TEST_CASE("B-20 el virus del gen 7 lleva 7x la potencia contra la slime [PROBABLE BUG] B3b-3") {
+TEST_CASE("B-20 el virus del gen 7 tiene la misma potencia que el del gen 1 (corregido B3b-3)") {
   ShotWorld w;
   w.sim.opts.TotRunCycle = 5;
   w.sim.TotalRobotsDisplayed = 1;
@@ -497,10 +497,11 @@ TEST_CASE("B-20 el virus del gen 7 lleva 7x la potencia contra la slime [PROBABL
   const vb_long s2 = w.sim.rob[m2].virusshot;
   CHECK(w.sim.Shots[s1].value == 1);
   CHECK(w.sim.Shots[s2].value == 7);
-  // Con vbody = 0, nrg/Range = 40 => power = value exacto al golpear.
+  // Con vbody = 0, nrg/Range = 40 => power = 1 para los dos (el original lo
+  // multiplicaba por value: 1 y 7).
 
-  // Misma slime 100 (umbral de absorción 5): el gen-1 (power 1) es
-  // absorbido; el gen-7 (power 7) penetra e infecta.
+  // Misma slime 100 (umbral de absorción 5): los dos son absorbidos (en el
+  // original el gen-7 penetraba e infectaba).
   const int v1 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 10000, 10000);
   const int v2 = vspawn(w.sim, "start 1 900 store stop", "V.txt", 11000, 10000);
   w.sim.Specie.push_back([]{ Specie sp; sp.Name = "V.txt"; sp.population = 2; sp.Native = false; return sp; }());
@@ -514,8 +515,8 @@ TEST_CASE("B-20 el virus del gen 7 lleva 7x la potencia contra la slime [PROBABL
   CHECK(w.sim.rob[v1].DnaLen == dna1);
 
   addgene(w.sim, v2, s2);
-  CHECK(w.sim.rob[v2].Slime == 0.0f);  // penetrada (y amplificada, B-19)
-  CHECK(w.sim.rob[v2].DnaLen > dna2);  // infectado
+  CHECK(w.sim.rob[v2].Slime == doctest::Approx(80.0));  // absorbido
+  CHECK(w.sim.rob[v2].DnaLen == dna2);
 
   CHECK(w.sim.diag.makevirus_stub == 0);  // la capa B3b ya es real
   CHECK(w.sim.diag.shot_feed_stub == 0);
