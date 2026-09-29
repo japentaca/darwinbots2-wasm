@@ -1,7 +1,7 @@
 // dbcore/mutations.hpp — NeoMutations.bas completo (40-MUTACIONES.md, B6b):
 // el dispatcher `mutate`, los 11 operadores, las agendas geométricas de
-// Point/Point2, los suelos anti-freeze que REESCRIBEN las tasas heredables
-// ([PROBABLE BUG] B6-5 / B-31), ChangeDNA/ChangeDNA2 y mutatecolors. También
+// Point/Point2, los suelos anti-freeze (que ya no reescriben las tasas
+// heredables: corregido B6-5 / B-31), ChangeDNA/ChangeDNA2 y mutatecolors. También
 // DNAtoInt/calc_dnamatrix (DNATokenizing.bas:9-56, Q16), que el crossover de
 // robots.hpp consume.
 //
@@ -436,6 +436,22 @@ inline void Point2MutWhen(Sim& sim, vb_single randval, int robn) {
 // ---------------------------------------------------------------------------
 // Operadores en vida.
 
+namespace mut_detail {
+// Corregido B6-5 (B-31): el suelo anti-congelación sube la tasa solo mientras
+// corre el operador. El original la escribía en mutarray, que se hereda, y los
+// linajes largos derivaban hacia los suelos.
+struct RateFloor {
+  vb_single* p;
+  vb_single saved;
+  RateFloor(vb_single& rate, double floor_) : p(&rate), saved(rate) {
+    if (rate < floor_) rate = static_cast<vb_single>(floor_);
+  }
+  ~RateFloor() { *p = saved; }
+  RateFloor(const RateFloor&) = delete;
+  RateFloor& operator=(const RateFloor&) = delete;
+};
+}  // namespace mut_detail
+
 // NeoMutations.bas:454-479 — PointMutation (agenda geométrica).
 inline void PointMutation(Sim& sim, int robn) {
   using namespace mut;
@@ -446,8 +462,7 @@ inline void PointMutation(Sim& sim, int robn) {
                                       b.Mutables.StdDev[PointUP]) /
                   (400.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[PointUP] < floor_)
-    b.Mutables.mutarray[PointUP] = static_cast<vb_single>(floor_);  // B-31
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[PointUP], floor_);
 
   if (b.age == 0 || b.PointMutCycle < b.age)
     PointMutWhereAndWhen(sim, sim.rnd(), robn);
@@ -472,8 +487,7 @@ inline void PointMutation2(Sim& sim, int robn) {
                                       b.Mutables.StdDev[PointUP]) /
                   (400.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[P2UP] < floor_)
-    b.Mutables.mutarray[P2UP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[P2UP], floor_);
 
   if (b.age == 0 || b.Point2MutCycle < b.age)
     Point2MutWhen(sim, sim.rnd(), robn);
@@ -533,8 +547,7 @@ inline void CopyError(Sim& sim, int robn) {
                                       b.Mutables.StdDev[CopyErrorUP]) /
                   (25.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[CopyErrorUP] < floor_)
-    b.Mutables.mutarray[CopyErrorUP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[CopyErrorUP], floor_);
 
   const vb_long limit = b.DnaLen - 1;  // el For captura el límite una vez
   for (vb_long t = 1; t <= limit; ++t) {
@@ -560,8 +573,7 @@ inline void CopyError2(Sim& sim, int robn) {
                                       b.Mutables.StdDev[CopyErrorUP]) /
                   (5.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[CE2UP] < floor_)
-    b.Mutables.mutarray[CE2UP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[CE2UP], floor_);
 
   const vb_integer DNAsize = static_cast<vb_integer>(DnaLen(b.dna) - 1);
   std::vector<bool> datahit(static_cast<std::size_t>(DNAsize) + 1, false);
@@ -585,8 +597,9 @@ inline void CopyError2(Sim& sim, int robn) {
   }
 }
 
-// NeoMutations.bas:811-843 — Insertion: cada token insertado cuenta 2
-// mutaciones (tipos con PWTC 0 + valores con PWTC 100) — B-33.
+// NeoMutations.bas:811-843 — Insertion. Corregido B6-7 (B-33): cada token
+// insertado cuenta 1 mutación; el original contaba 2 (tipos con PWTC 0 +
+// valores con PWTC 100).
 inline void Insertion(Sim& sim, int robn) {
   using namespace mut;
   Bot& b = sim.rob[robn];
@@ -596,8 +609,7 @@ inline void Insertion(Sim& sim, int robn) {
                                       b.Mutables.StdDev[InsertionUP]) /
                   (5.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[InsertionUP] < floor_)
-    b.Mutables.mutarray[InsertionUP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[InsertionUP], floor_);
 
   vb_long accum = 0;
   const vb_long limit = b.DnaLen - 1;
@@ -618,7 +630,10 @@ inline void Insertion(Sim& sim, int robn) {
       MakeSpace(b.dna, t + accum, Length, b.DnaLen);
       b.DnaLen = static_cast<vb_integer>(b.DnaLen + Length);
       ChangeDNA(sim, robn, t + 1 + accum, Length, 0, InsertionUP);
+      const vb_long muts = b.Mutations, lastmut = b.LastMut;
       ChangeDNA(sim, robn, t + 1 + accum, Length, 100, InsertionUP);
+      b.Mutations = muts;  // el valor del mismo token no cuenta aparte
+      b.LastMut = lastmut;
       accum = Length + accum;
     }
   }
@@ -634,8 +649,7 @@ inline void Reversal(Sim& sim, int robn) {
                                       b.Mutables.StdDev[ReversalUP]) /
                   (105.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[ReversalUP] < floor_)
-    b.Mutables.mutarray[ReversalUP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[ReversalUP], floor_);
 
   const vb_long limit = b.DnaLen - 1;
   for (vb_long t = 1; t <= limit; ++t) {
@@ -683,8 +697,7 @@ inline void Translocation(Sim& sim, int robn) {
                                       b.Mutables.StdDev[TranslocationUP]) /
                   (360.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[TranslocationUP] < floor_)
-    b.Mutables.mutarray[TranslocationUP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[TranslocationUP], floor_);
 
   const vb_long limit = static_cast<vb_long>(b.dna.size()) - 1 - 1;  // UBound-1
   for (vb_long t = 1; t <= limit; ++t) {
@@ -749,8 +762,7 @@ inline void Amplification(Sim& sim, int robn) {
                                       b.Mutables.StdDev[AmplificationUP]) /
                   (1200.0 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[AmplificationUP] < floor_)
-    b.Mutables.mutarray[AmplificationUP] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[AmplificationUP], floor_);
 
   bool err = false;
   vb_long t = 1;
@@ -820,8 +832,7 @@ inline void DeletionOp(Sim& sim, int robn, int idx, const char* logname) {
 
   double floor_ = static_cast<double>(b.DnaLen) / (2.5 * overtime);
   floor_ *= sim.opts.MutCurrMult;
-  if (b.Mutables.mutarray[idx] < floor_)
-    b.Mutables.mutarray[idx] = static_cast<vb_single>(floor_);
+  const mut_detail::RateFloor floorguard(b.Mutables.mutarray[idx], floor_);
 
   if (b.Mutables.Mean[idx] < 1.0f) b.Mutables.Mean[idx] = 1;
   const vb_long limit = b.DnaLen - 1;
@@ -1031,8 +1042,10 @@ inline void mutate(Sim& sim, int robn, bool reproducing = false) {
     b.DnaLen = static_cast<vb_integer>(DnaLen(b.dna));
     b.mem[DnaLenSys] = b.DnaLen;
     b.mem[GenesSys] = static_cast<vb_integer>(b.genenum);
-    // SIN makeoccurrlist: la firma occurr/my* queda rancia hasta el próximo
-    // parto/virus/carga ([PROBABLE BUG] B6-9 / B-35).
+    // Corregido B6-9 (B-35): la firma occurr/my* se rehace ya; el original no
+    // llamaba a makeoccurrlist y quedaba rancia hasta el próximo
+    // parto/virus/carga.
+    makeoccurrlist(sim, robn);
   }
 }
 

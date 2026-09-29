@@ -95,9 +95,9 @@ TEST_CASE("M7 tablas sysvarIN/sysvarOUT extraidas de LoadSysVars") {
 }
 
 // ---------------------------------------------------------------------------
-// B-31 · Los suelos anti-freeze reescriben las tasas heredables [ciclo]
-TEST_CASE("B-31 el suelo anti-freeze reescribe mutarray en el bot [PROBABLE BUG] B6-5") {
-  SUBCASE("tasa heredada por debajo del suelo: queda reescrita") {
+// B-31 · Los suelos anti-freeze no reescriben las tasas heredables [ciclo]
+TEST_CASE("B-31 el suelo anti-freeze no toca mutarray (corregido B6-5)") {
+  SUBCASE("tasa heredada por debajo del suelo: se conserva") {
     Sim sim;
     InjectedRnd rnd({0.5f});  // 1 extracción: la agenda de PointMutation
     sim.rndy = &rnd;
@@ -112,9 +112,9 @@ TEST_CASE("B-31 el suelo anti-freeze reescribe mutarray en el bot [PROBABLE BUG]
 
     mutate(sim, n);  // en vida
 
-    // floor = 1200*(3+1)/(400*30)*1 = 0.4 > 0.2 => escrito en el bot,
-    // permanente y heredable.
-    CHECK(b.Mutables.mutarray[mut::PointUP] == 0.4f);
+    // floor = 1200*(3+1)/(400*30)*1 = 0.4 > 0.2: el operador corre con 0.4,
+    // pero la tasa heredable sigue en 0.2 (el original la dejaba en 0.4).
+    CHECK(b.Mutables.mutarray[mut::PointUP] == 0.2f);
     CHECK(rnd.exhausted());
   }
   SUBCASE("tasa default 5000: sin cambio") {
@@ -173,8 +173,8 @@ TEST_CASE("B-32 Minor = MajorDeletion con Mean/StdDev igualados [PROBABLE BUG] B
 }
 
 // ---------------------------------------------------------------------------
-// B-33 · Insertion cuenta 2 mutaciones por token [ciclo]
-TEST_CASE("B-33 una insercion de Length=3 sube Mutations en 6 [PROBABLE BUG] B6-7") {
+// B-33 · Insertion cuenta 1 mutación por token [ciclo]
+TEST_CASE("B-33 una insercion de Length=3 sube Mutations en 3 (corregido B6-7)") {
   Sim sim;
   VbRng rng;
   sim.rndy = &rng;
@@ -189,9 +189,9 @@ TEST_CASE("B-33 una insercion de Length=3 sube Mutations en 6 [PROBABLE BUG] B6-
 
   mutate(sim, n, true);  // nacimiento
 
-  // 3 tokens insertados x (tipo con PWTC=0 + valor con PWTC=100) = 6.
-  CHECK(b.Mutations == 6);
-  CHECK(b.LastMut == 6);
+  // 3 tokens insertados = 3 (el original contaba tipo + valor = 6).
+  CHECK(b.Mutations == 3);
+  CHECK(b.LastMut == 3);
   CHECK(b.DnaLen == 5);
   CHECK(is_end(b.dna[5]));
   for (int t = 2; t <= 4; ++t) {
@@ -205,10 +205,10 @@ TEST_CASE("B-33b insercion de 1 token guionada: siembra Gauss(500,0)") {
   // Secuencia integra de una insercion minima sobre "5 end" con Mean=1:
   // [chance t=1, gasdev x2 (Length=1), Random(0,99) pase de tipos,
   //  Random(0,20)->tipo 0, Random(0,99) pase de valores, moneda salto fino,
-  //  gasdev x2 (Gauss(7)), 4 extracciones de mutatecolors].
+  //  gasdev x2 (Gauss(7)), 2 extracciones de mutatecolors (1 mutacion)].
   Sim sim;
   InjectedRnd rnd({0.9f, 0.25f, 0.75f, 0.5f, 0.01f, 0.5f, 0.9f, 0.25f, 0.75f,
-                   0.0f, 0.0f, 0.0f, 0.0f});
+                   0.0f, 0.0f});
   sim.rndy = &rnd;
   const int n = addbot(sim, 16000, 16000);
   Bot& b = sim.rob[n];
@@ -226,8 +226,8 @@ TEST_CASE("B-33b insercion de 1 token guionada: siembra Gauss(500,0)") {
   // Pase de valores: siembra Gauss(500,0) con el gasdev cacheado
   // (gset = -0.8325546) => CInt(-416.277) = -416; luego salto fino
   // Gauss(7,-416) con el par (0.25,0.75) => CInt(-410.172) = -410.
-  CHECK(b.Mutations == 2);  // 1 token = 2 mutaciones
-  CHECK(b.LastMut == 2);
+  CHECK(b.Mutations == 1);  // 1 token = 1 mutacion (corregido B6-7)
+  CHECK(b.LastMut == 1);
   CHECK(b.DnaLen == 3);
   CHECK(b.dna[2].tipo == 0);
   CHECK(b.dna[2].value == -410);
@@ -292,7 +292,7 @@ TEST_CASE("B-34 Amplification: t arranca en 2 [PROBABLE BUG] B6-8") {
 
 // ---------------------------------------------------------------------------
 // B-35 · Las mutaciones en vida no refrescan la firma [ciclo]
-TEST_CASE("B-35 mutacion en vida: occurr rancio, mem(336/339) re-publicados [PROBABLE BUG] B6-9") {
+TEST_CASE("B-35 mutacion en vida: occurr refrescado, mem(336/339) re-publicados (corregido B6-9)") {
   Sim sim;
   // [gasdev x2 (longitud de rafaga), Random(0,99), moneda salto fino,
   //  re-agenda, mutatecolors x2]
@@ -324,20 +324,16 @@ TEST_CASE("B-35 mutacion en vida: occurr rancio, mem(336/339) re-publicados [PRO
   // El token ya no apunta a .shoot (Gauss(7,7) con gset cacheado => 1)...
   CHECK(b.dna[2].value == 1);
   CHECK(b.Mutations == 1);
-  // ...pero la firma sigue anunciando el store a .shoot (sin makeoccurrlist):
-  CHECK(b.occurr[7] == 1);
-  CHECK(b.mem[727] == 1);
-  // mem(336)/mem(339) en cambio SI se re-publican:
-  CHECK(b.mem[336] == 4);
-  CHECK(b.mem[339] == 0);
-  CHECK(rnd.exhausted());
-
-  // El proximo evento con makeoccurrlist (parto/virus/carga) la refresca:
-  makeoccurrlist(sim, n);
+  // ...y la firma ya no anuncia el store a .shoot (el original no llamaba a
+  // makeoccurrlist y la dejaba rancia hasta el proximo parto/virus/carga):
   CHECK(b.occurr[7] == 0);
   CHECK(b.mem[727] == 0);
   CHECK(b.occurr[1] == 1);  // el nuevo (0,1) + store anuncia occurr 1
   CHECK(b.mem[721] == 1);
+  // mem(336)/mem(339) se re-publican:
+  CHECK(b.mem[336] == 4);
+  CHECK(b.mem[339] == 0);
+  CHECK(rnd.exhausted());
 }
 
 // ---------------------------------------------------------------------------
