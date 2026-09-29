@@ -813,8 +813,7 @@ TEST_CASE("RV-22 simplecoll: una forma entre padre e hijo bloquea el parto") {
 // RV-23 — Robots.bas:2139-2140, 2209-2230 (y :2466-2467, 2658-2688 en la
 // sexual): `(nrg / 100#) * CSng(per)` es Double (100# es literal Double), y
 // tambien `nnrg * 0.001` y `nnrg * 0.999`; se redondea una vez al asignar.
-// nbody (Integer) hace CInt del Double: 501/100#*50 = 250.5 exacto -> 250.
-// El caso dorado B-30 de la spec supuso Single estricto (-> 251).
+// nbody ya no es Integer (corregido B6-4): 501/100#*50 = 250.5 exacto.
 TEST_CASE("RV-23 Reproduce: el reparto /100# va en Double") {
   auto run = [](float body, float nrg, vb_integer per, float& child_body,
                 float& child_nrg, float& parent_nrg) {
@@ -830,7 +829,7 @@ TEST_CASE("RV-23 Reproduce: el reparto /100# va en Double") {
   };
   float cb, cn, pn;
   run(501.0f, 20000.0f, 50, cb, cn, pn);
-  CHECK(cb == 250.0f);  // antes del arreglo: 251
+  CHECK(cb == 250.5f);
   run(1000.0f, 25829.0879f, 80, cb, cn, pn);
   CHECK(cn == 20642.6055f);  // antes del arreglo: 20642.6094
   CHECK(pn == 5145.15527f);  // antes del arreglo: 5145.15332

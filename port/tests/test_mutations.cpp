@@ -453,8 +453,8 @@ TEST_CASE("R-09 repro y mrepro activos: 1 moneda decide el porcentaje") {
 }
 
 // ---------------------------------------------------------------------------
-// R-10 · Loterías vegetales asimétricas [ciclo] · [PROBABLE BUG] B6-2
-TEST_CASE("R-10 gate vegetal: 1/11 asexual vs 1/10 sexual [PROBABLE BUG] B6-2") {
+// R-10 · Loterías vegetales simétricas [ciclo] · corregido B6-2
+TEST_CASE("R-10 gate vegetal: 1/11 asexual y sexual (corregido B6-2)") {
   auto vegmother = [](Sim& sim, bool sexual) {
     sim.TotalChlr = 95;  // > 90% del techo (100) y <= techo: loteria activa
     sim.totvegsDisplayed = 1;
@@ -499,7 +499,7 @@ TEST_CASE("R-10 gate vegetal: 1/11 asexual vs 1/10 sexual [PROBABLE BUG] B6-2") 
     CHECK(sim.opts.TotBorn == 0);
     CHECK(rnd.exhausted());
   }
-  SUBCASE("sexual con 0.5: Int(10*0.5) = 5 => pasa") {
+  SUBCASE("sexual con 0.5: Int(11*0.5) = 5 => pasa") {
     Sim sim;
     // [loteria, whatside, 5 monedas de valor (IIf eager), deflect]
     InjectedRnd rnd({0.5f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.5f});
@@ -510,9 +510,18 @@ TEST_CASE("R-10 gate vegetal: 1/11 asexual vs 1/10 sexual [PROBABLE BUG] B6-2") 
     CHECK(sim.rob[n].fertilized == -1);
     CHECK(rnd.exhausted());
   }
-  SUBCASE("sexual con 0.46: Int(4.6) = 4 => NO pasa (asimetria 1/11 vs 1/10)") {
+  SUBCASE("sexual con 0.46: Int(5.06) = 5 => TAMBIEN pasa (el original: Int(4.6) = 4, no)") {
     Sim sim;
-    InjectedRnd rnd({0.46f});
+    InjectedRnd rnd({0.46f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.5f});
+    sim.rndy = &rnd;
+    const int n = vegmother(sim, true);
+    SexReproduce(sim, n);
+    CHECK(sim.opts.TotBorn == 1);
+    CHECK(rnd.exhausted());
+  }
+  SUBCASE("sexual con 0.7: Int(7.7) = 7 => no pasa") {
+    Sim sim;
+    InjectedRnd rnd({0.7f});
     sim.rndy = &rnd;
     const int n = vegmother(sim, true);
     SexReproduce(sim, n);

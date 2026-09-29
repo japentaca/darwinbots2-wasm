@@ -707,11 +707,11 @@ inline void Reproduce(Sim& sim, int n, vb_integer per) {
                           FindRadius(sim, n, (100 - per) / 100.0f))));
 
   // `(x / 100#) * CSng(per)`: 100# es Double, la expresión va en Double y se
-  // redondea una vez al asignar (RV-23). nbody As Integer hace CInt del
-  // Double: 501/100#*50 = 250.5 exacto -> 250 ([PROBABLE BUG] B6-4, B-30).
+  // redondea una vez al asignar (RV-23). Corregido B6-4 (B-30): el original
+  // declaraba nbody As Integer y redondeaba el body del hijo (bancario).
   vb_single nnrg = repro_part(sim.rob[n].nrg, per);
-  const vb_integer nbody = vb_cint(static_cast<double>(sim.rob[n].body) /
-                                   100.0 * static_cast<double>(per));
+  const vb_single nbody = static_cast<vb_single>(
+      static_cast<double>(sim.rob[n].body) / 100.0 * static_cast<double>(per));
 
   const vb_single tempnrg = sim.rob[n].nrg;
   if (tempnrg <= 0.0f) return;
@@ -1234,11 +1234,11 @@ inline void SexReproduce(Sim& sim, int female) {
   if (sim.rob[female].Veg &&
       (sim.TotalChlr > sim.opts.MaxPopulation || sim.totvegsDisplayed < 0))
     return;
-  // Lotería vegetal sexual: Random(0, 9) <> 5 — 1/10, no 1/11 como la
-  // asexual ([PROBABLE BUG] B6-2 / R-10).
+  // Lotería vegetal sexual: Random(0, 10) <> 5 — 1/11, como la asexual.
+  // Corregido B6-2 (R-10): el original tiraba Random(0, 9) (1/10).
   // And sin cortocircuito: el dado se tira siempre (RV-21).
   {
-    const bool lotto = RandomI(0, 9, *sim.rndy) != 5;
+    const bool lotto = RandomI(0, 10, *sim.rndy) != 5;
     if (sim.rob[female].Veg && lotto &&
         (static_cast<double>(sim.TotalChlr) > sim.opts.MaxPopulation * 0.9))
       return;
@@ -1256,8 +1256,9 @@ inline void SexReproduce(Sim& sim, int female) {
 
   // Reparto en Double, como en la asexual (RV-23).
   vb_single nnrg = repro_part(sim.rob[female].nrg, per);
-  const vb_integer nbody = vb_cint(static_cast<double>(sim.rob[female].body) /
-                                   100.0 * static_cast<double>(per));
+  const vb_single nbody = static_cast<vb_single>(  // corregido B6-4
+      static_cast<double>(sim.rob[female].body) / 100.0 *
+      static_cast<double>(per));
 
   const vb_single tempnrg = sim.rob[female].nrg;
   if (tempnrg <= 0.0f) return;

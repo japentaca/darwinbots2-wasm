@@ -184,14 +184,10 @@ TEST_CASE("B-04 encolado doble: primero nace el hijo, después muere el padre [P
 }
 
 // ---------------------------------------------------------------------------
-// B-30 · nbody As Integer: el body del hijo redondea bancario
-// (Robots.bas:2108,2140) [ciclo]
-TEST_CASE("B-30 reparto de body con redondeo bancario [PROBABLE BUG] B6-4") {
-  // `nbody = (body / 100#) * CSng(per)`: 100# es Double, asi que la cuenta
-  // va en Double y CInt redondea bancario (RV-23; la errata de 2026-08-25
-  // supuso Single estricto y daba 251 para 501). En Double 501/100#*50 =
-  // 250.5 exacto -> 250 (par, baja); 503 -> 251.5 -> 252 (par, sube);
-  // 525 -> 262.5 -> 262; 475 -> 237.5 -> 238.
+// B-30 · El body del hijo no se redondea (Robots.bas:2108,2140) [ciclo]
+TEST_CASE("B-30 reparto de body sin redondeo (corregido B6-4)") {
+  // `nbody = (body / 100#) * CSng(per)` en Double. El original declaraba
+  // nbody As Integer y CInt redondeaba bancario (501 -> 250, 503 -> 252).
   auto child_body = [](float body) {
     BugWorld2 w;
     const int p = w.spawn("stop", "A.txt", 10000, 10000);
@@ -203,10 +199,10 @@ TEST_CASE("B-30 reparto de body con redondeo bancario [PROBABLE BUG] B6-4") {
     return w.sim.rob[2].body;
   };
 
-  CHECK(child_body(501.0f) == 250.0f);  // 250.5 exacto: bancario al par
-  CHECK(child_body(503.0f) == 252.0f);  // 251.5 exacto: bancario al par
-  CHECK(child_body(525.0f) == 262.0f);  // 262.5 exacto: bancario al par
-  CHECK(child_body(475.0f) == 238.0f);  // 237.5 exacto: bancario al par
+  CHECK(child_body(501.0f) == 250.5f);
+  CHECK(child_body(503.0f) == 251.5f);
+  CHECK(child_body(525.0f) == 262.5f);
+  CHECK(child_body(475.0f) == 237.5f);
 }
 
 // ---------------------------------------------------------------------------
