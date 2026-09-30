@@ -1,0 +1,27 @@
+{
+  "formato": 1,
+  "id": "dia-y-noche",
+  "nombre": { "es": "Día y noche", "en": "Day and night" },
+  "descripcion": {
+    "es": "El sol se pone cada 1000 ciclos: de noche los vegetales no reciben energía y la población oscila.",
+    "en": "The sun sets every 1000 cycles: at night vegetables get no energy and the population oscillates."
+  },
+  "etiquetas": ["ambiente", "ciclos"],
+  "opciones": { "base": "clasica", "cambios": { "opt:33": 1, "opt:34": 1000 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 20,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal Minimalis (4G)(Numsgil)-10.03.05",
+      "hash": "b011392f",
+      "cantidad": 5,
+      "color": "#ff4040",
+      "vegetal": false
+    }
+  ]
+}

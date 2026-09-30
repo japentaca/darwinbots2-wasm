@@ -1,0 +1,27 @@
+{
+  "formato": 1,
+  "id": "depredador-y-presa",
+  "nombre": { "es": "Depredador y presa", "en": "Predator and prey" },
+  "descripcion": {
+    "es": "Zebedee V2.1 caza sobre un campo de algas: ¿se agota la comida o se equilibran las poblaciones?",
+    "en": "Zebedee V2.1 hunts over a field of algae: does the food run out or do the populations balance?"
+  },
+  "etiquetas": ["ecología", "depredación"],
+  "opciones": { "base": "clasica", "cambios": { "base:maxEnergy": 20 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 25,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Zebedee V2.1 (F2)(Jez)-26.07.06",
+      "hash": "2eee0bb9",
+      "cantidad": 5,
+      "color": "#ff8c1a",
+      "vegetal": false
+    }
+  ]
+}

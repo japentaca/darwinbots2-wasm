@@ -1,0 +1,38 @@
+{
+  "formato": 1,
+  "id": "oceano",
+  "nombre": { "es": "Océano", "en": "Ocean" },
+  "descripcion": {
+    "es": "Física de fluido (agua) en un mundo toroidal: Hunter V2.2 persigue algas que flotan a la deriva.",
+    "en": "Fluid (water) physics in a toroidal world: Hunter V2.2 chases drifting algae."
+  },
+  "etiquetas": ["física", "depredación"],
+  "opciones": {
+    "base": "clasica",
+    "cambios": {
+      "opt:14": 1e-7,
+      "opt:15": 0.0005,
+      "opt:16": 0,
+      "opt:17": 0,
+      "opt:19": 0,
+      "opt:2": 1,
+      "opt:3": 1
+    }
+  },
+  "especies": [
+    {
+      "bot": "Alga Cohesum (V)(Elite)-01.06.06",
+      "hash": "c5f457af",
+      "cantidad": 20,
+      "color": "#2fbf8f",
+      "vegetal": true
+    },
+    {
+      "bot": "Hunter V2.2 (F2)(PY)-21.07.04",
+      "hash": "85f059a3",
+      "cantidad": 6,
+      "color": "#e05252",
+      "vegetal": false
+    }
+  ]
+}

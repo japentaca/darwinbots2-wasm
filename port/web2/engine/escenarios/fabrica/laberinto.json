@@ -1,0 +1,31 @@
+{
+  "formato": 1,
+  "id": "laberinto",
+  "nombre": { "es": "Laberinto", "en": "Maze" },
+  "descripcion": {
+    "es": "Un laberinto en espiral que los bots pueden ver: ¿quién aprende a moverse entre las paredes?",
+    "en": "A spiral maze the bots can see: who learns to move between the walls?"
+  },
+  "etiquetas": ["obstáculos", "movimiento"],
+  "opciones": { "base": "clasica", "cambios": { "opt:80": 1 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 20,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal Minimalis (4G)(Numsgil)-10.03.05",
+      "hash": "b011392f",
+      "cantidad": 8,
+      "color": "#ff4040",
+      "vegetal": false
+    }
+  ],
+  "objetos": {
+    "obstaculos": [{ "tipo": "laberinto", "forma": "spiral", "pasillo": 2000, "muro": 200 }],
+    "teleporters": []
+  }
+}

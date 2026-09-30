@@ -2,6 +2,8 @@
 #  - fuentes-intactos: Darwinbots2/ debe ser idéntico a la línea base 02b20d7.
 #  - nativo (gcc y clang) + wasm: la suite entera (143 casos dorados / 2962
 #    aserciones) debe dar verde en los tres modos de build.
+#  - web2: la interfaz nueva (port/web2) instala con npm ci y pasa sus tests
+#    (node:test), Biome y el build de Vite (port/web2/PLAN.md C5).
 name: CI
 
 on:
@@ -67,3 +69,56 @@ jobs:
       - name: Correr la suite bajo node
         working-directory: port
         run: node build-wasm/dbtests.js
+      - name: Test de solo lectura de la API wasm (web2 E2)
+        working-directory: port
+        run: node tests/wasm/solo_lectura.mjs
+      # E1 de web2 contra el wasm recién compilado: la paridad del worker
+      # (engine/worker.js ↔ web/worker.js) y los smokes adaptados a engine/.
+      # Solo usan node:* y engine/ (sin node_modules): no hace falta npm ci.
+      # `set -e`: corta en el primer fallo.
+      - name: Paridad del worker y smokes de web2 (engine/)
+        working-directory: port/web2
+        run: |
+          set -e
+          node --test test/paridad_worker.test.js
+          for s in smoke_e8 smoke_im smoke_formas smoke_liga smoke_torneos \
+                   smoke_sorteo_pelea smoke_copa smoke_suizo; do
+            echo "== $s"
+            node "test/smokes/$s.mjs"
+          done
+      # La suite ENTERA de web2 con el wasm recién compilado: los tests que
+      # en el job web2 se saltean por falta de wasm (paridad_worker,
+      # reproducible, setbase, paridad_base, corrida_worker, worker_modulo,
+      # conexion contra el worker real…) corren acá. Algunos importan de
+      # src/ y del plugin de Vite: hace falta npm ci.
+      - name: Suite completa de web2 con el wasm (npm test)
+        working-directory: port/web2
+        run: |
+          npm ci
+          npm test
+
+  web2:
+    name: Interfaz nueva (port/web2)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: port/web2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: port/web2/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Tests (node:test)
+        run: npm test
+      - name: Biome
+        run: npx biome check .
+      - name: Build (Vite)
+        run: npx vite build
+      - name: Build con DB_BUILD_ID (C4, el id llega al bundle)
+        run: |
+          DB_BUILD_ID=ci-check npx vite build
+          grep -rq ci-check dist/

@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-f1",
+  "nombre": { "es": "Partido F1", "en": "F1 match" },
+  "descripcion": {
+    "es": "Dos bots de liga F1 frente a frente con los ajustes de liga F1 (costos, física, campo 9237×6928 toroidal y 5 de cada especie).",
+    "en": "Two F1 league bots face to face with the F1 league settings (costs, physics, a toroidal 9237×6928 field and 5 of each species)."
+  },
+  "etiquetas": ["competición", "F1"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": {} },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Devincio Dominator (F1)(PY)-03.03.04",
+      "hash": "66028743",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "Carnatus Orbis (F1)(PY)-20.09.04",
+      "hash": "afecc131",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

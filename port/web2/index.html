@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DarwinBots</title>
+    <link rel="icon" href="data:,">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+    // Aviso de carga fallida: si a los 8 s la app no se montó (p. ej. un
+    // index.html viejo en caché pide assets con hash que ya no existen), se
+    // ofrece recargar. Corre antes de la app, sin t(): va en los dos idiomas.
+    setTimeout(() => {
+      const app = document.getElementById('app');
+      if (!app || app.childElementCount > 0) return;
+      const p = document.createElement('p');
+      p.style.cssText = 'font:16px system-ui,sans-serif;margin:32px;';
+      p.append('No se pudo cargar la interfaz · The interface could not load — ');
+      const a = document.createElement('a');
+      a.href = window.location.href;
+      a.textContent = 'Recargar / Reload';
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.reload();
+      });
+      p.append(a);
+      app.append(p);
+    }, 8000);
+    </script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

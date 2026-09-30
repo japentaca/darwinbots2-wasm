@@ -1,0 +1,144 @@
+/* Tokens y clases base, tomados de los bocetos. Sin fuentes remotas: IBM Plex se usa si está instalada. */
+:root {
+  --fondo: #f4f3ef;
+  --texto: #151513;
+  --tarjeta: #fcfcfb;
+  --borde: #e1e0d9;
+  --borde-control: #cfcdc4;
+  --radio: 10px;
+  --acento: #0f5c55;
+  --acento-hover: #0a3f3a;
+  --chip: #ebe9e2;
+  --chip-texto: #3d3c38;
+  --gris: #52514e;
+  --gris-claro: #6b6962;
+  --hover-claro: #efeee9;
+  --mundo: #0e0f0f;
+  --barra: #151513;
+  --barra-texto: #c9c7bf;
+  --barra-hover: #2a2a27;
+  --barra-activa: #2e4f4b;
+  --aviso-fondo: #fbf3dc;
+  --aviso-borde: #eadcae;
+  --aviso-texto: #5a4a12;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--texto);
+  background: var(--fondo);
+}
+
+a {
+  color: var(--acento);
+}
+
+a:hover {
+  color: var(--acento-hover);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 16px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--borde-control);
+  background: var(--tarjeta);
+  color: var(--texto);
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn:hover {
+  background: var(--hover-claro);
+  color: var(--texto);
+}
+
+.btn.pri {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #ffffff;
+}
+
+.btn.pri:hover {
+  background: var(--acento-hover);
+  color: #ffffff;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-texto);
+}
+
+.card {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.lbl {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gris-claro);
+  font-weight: 600;
+}
+
+.seg {
+  display: flex;
+  border: 1px solid var(--borde-control);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.seg button {
+  font: inherit;
+  font-size: 13px;
+  border: 0;
+  background: var(--tarjeta);
+  color: var(--chip-texto);
+  padding: 0 12px;
+  height: 38px;
+  cursor: pointer;
+  border-left: 1px solid var(--borde);
+}
+
+.seg button:first-child {
+  border-left: 0;
+}
+
+.seg button.on {
+  background: var(--texto);
+  color: #ffffff;
+}
+
+.sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}

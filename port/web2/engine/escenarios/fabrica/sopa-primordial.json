@@ -1,0 +1,27 @@
+{
+  "formato": 1,
+  "id": "sopa-primordial",
+  "nombre": { "es": "Sopa primordial", "en": "Primordial soup" },
+  "descripcion": {
+    "es": "Algas y un animal mínimo en el mundo por defecto, con mutaciones: el punto de partida para ver evolucionar a una especie.",
+    "en": "Algae and a minimal animal in the default world, with mutations: the starting point to watch a species evolve."
+  },
+  "etiquetas": ["básico", "evolución"],
+  "opciones": { "base": "clasica", "cambios": {} },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 15,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal Minimalis (4G)(Numsgil)-10.03.05",
+      "hash": "b011392f",
+      "cantidad": 5,
+      "color": "#ff4040",
+      "vegetal": false
+    }
+  ]
+}

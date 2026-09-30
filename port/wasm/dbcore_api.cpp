@@ -50,6 +50,9 @@
 
 namespace {
 
+// web2 E2 — columnas del acumulador de comportamiento (ver BehCol).
+constexpr std::size_t kBehCols = 24;
+
 // El puñado sim + RNG real de VB6: Sim no posee su RndSource (los tests
 // inyectan secuencias), asi que el handle agrupa ambos y cablea los punteros
 // igual que el harness de tests (sim.rndy y sim.vm.rndy al mismo LCG).
@@ -86,7 +89,18 @@ struct SimHandle {
     int gdistRef = 0;                      // slot de referencia
     db::vb_long gdistRefAbs = 0;
     int gdistCursor = 1;
+    // web2 E2 — origen de cada especie de la tabla (paralelo a `species`):
+    // [ciclo en que se la vio por primera vez, AbsNum del primer bot visto,
+    //  AbsNum de su madre, índice de especie de la madre (−1 = sin dato)].
+    std::vector<std::array<int, 4>> speciesOrigin;
+    // web2 E2 — acumulador de comportamiento por especie (solo con
+    // SimHandle::behOn; lo alimenta db_sim_vis_observe). slotSp = índice de
+    // especie + 1 del bot de cada slot en la última observación (0 = nada).
+    std::vector<std::array<double, kBehCols>> beh;
+    std::vector<int> slotSp;
+    int behTicks = 0;
   } vis;
+  bool behOn = false;  // web2 E2: db_sim_behavior_enable
 
   // E8 — campos de render del Type robot que el core no modela (ver la
   // seccion E8 al final). Un slot cuyo AbsNum cambio es un bot nuevo: su
@@ -973,6 +987,7 @@ void VisResize(Vis& v, const db::Sim& sim) {
   Grow(v.body, n); Grow(v.nrg, n); Grow(v.aim, n); Grow(v.kills, n);
   Grow(v.tieMask, n); Grow(v.fert, n); Grow(v.px, n); Grow(v.py, n);
   Grow(v.pr, n); Grow(v.pcol, n); Grow(v.gdist, n); Grow(v.gdistAbs, n);
+  Grow(v.slotSp, n);
   const std::size_t ns = static_cast<std::size_t>(sim.maxshotarray) + 1;
   Grow(v.shotExist, ns); Grow(v.shotAge, ns); Grow(v.shotParent, ns);
 }
@@ -982,23 +997,84 @@ bool ShotAlive(const db::Shot& s) { return (s.exist && !s.stored) || s.flash; }
 
 constexpr std::size_t kMaxEvents = 2000;  // por volcado (6 floats cada uno)
 
-}  // namespace
+// Índice estable de la especie del bot `b` en la tabla de la vista (FName →
+// índice; nunca se renumera mientras viva el handle, y db_sim_load la
+// vacía). Un nombre nuevo sube speciesVersion y registra su origen (web2
+// E2): ciclo (≥ 0: las registradas antes del primer tick dan 0), AbsNum del
+// bot, AbsNum de su madre y, si la madre existe todavía y no es cadáver,
+// su especie (búsqueda lineal: solo al nacer un nombre). Los cadáveres
+// (FName = "Corpse") también reciben índice: la fila "Corpse" puede estar
+// en la tabla (db_sim_vis_species_*) y el host la filtra por nombre. Solo
+// lectura del Sim.
+int SpIdx(Vis& v, const db::Sim& sim, const db::Bot& b) {
+  const auto it = v.speciesIdx.find(b.FName);
+  if (it != v.speciesIdx.end()) return it->second;
+  const int idx = static_cast<int>(v.species.size());
+  v.speciesIdx.emplace(b.FName, idx);
+  v.species.push_back(b.FName);
+  ++v.speciesVersion;
+  v.speciesOrigin.resize(v.species.size(), {0, 0, 0, -1});
+  v.beh.resize(v.species.size(), std::array<double, kBehCols>{});
+  auto& o = v.speciesOrigin[static_cast<std::size_t>(idx)];
+  o = {sim.opts.TotRunCycle < 0 ? 0 : static_cast<int>(sim.opts.TotRunCycle),
+       static_cast<int>(b.AbsNum), static_cast<int>(b.parent), -1};
+  if (b.parent != 0) {
+    for (int m = 1; m <= sim.MaxRobs; ++m) {
+      const db::Bot& p = sim.rob[m];
+      if (!p.exist || p.AbsNum != b.parent) continue;
+      // Madre cadáver = sin dato: "Corpse" no es una especie madre.
+      if (!p.Corpse && p.FName != "Corpse" && p.FName != b.FName) {
+        const int ps = SpIdx(v, sim, p);  // puede crecer la tabla
+        v.speciesOrigin[static_cast<std::size_t>(idx)][3] = ps;
+      }
+      break;
+    }
+  }
+  return idx;
+}
 
-extern "C" {
+// Columnas del acumulador de comportamiento (db_sim_behavior_take las
+// vuelca desplazadas en 1: la columna 0 de la fila es el índice).
+enum BehCol {
+  kBShot = 0,       // 0..9: disparos por tipo (ver BehShotCat)
+  kBRepro = 10, kBBirth, kBSex, kBTie,
+  kBShellN, kBShellA, kBSlimeN, kBSlimeA,
+  kBVenomN, kBVenomA, kBPoisonN, kBPoisonA,
+  kBDeath, kBKills  // = 23 = kBehCols - 1
+};
+static_assert(kBKills + 1 == static_cast<int>(kBehCols), "BehCol");
 
-// Toma la foto de referencia sin generar acciones ni eventos: al encender
-// la vista, tras un reset o tras una siembra/carga que no son "nacimientos".
-DB_EXPORT void db_sim_vis_reset(void* h) {
-  Vis& v = H(h).vis;
-  const db::Sim& sim = S(h);
+// shottype → columna: -1..-8 → 0..7, > 0 (memoria/info) → 8, resto → 9.
+int BehShotCat(int t) {
+  if (t <= -1 && t >= -8) return -t - 1;
+  if (t > 0) return 8;
+  return 9;
+}
+
+bool IsCorpseSp(const Vis& v, int sp) {
+  return sp >= 0 && static_cast<std::size_t>(sp) < v.species.size() &&
+         v.species[static_cast<std::size_t>(sp)] == "Corpse";
+}
+
+// Foto de referencia de la vista (slots, shots y, con el acumulador
+// encendido, la especie de cada slot). clearPending = true además borra los
+// bits de acción/nacido y los eventos pendientes (db_sim_vis_reset); false
+// los conserva (web2 E2: db_sim_behavior_enable, que solo necesita que la
+// foto esté fresca). Solo lectura del Sim.
+void VisSnap(SimHandle& Sh, bool clearPending) {
+  Vis& v = Sh.vis;
+  const db::Sim& sim = Sh.sim;
   VisResize(v, sim);
   for (int n = 1; n <= sim.MaxRobs; ++n) {
     const db::Bot& b = sim.rob[n];
     const std::size_t i = static_cast<std::size_t>(n);
-    v.actions[i] = 0;
-    v.born[i] = 0;
+    if (clearPending) {
+      v.actions[i] = 0;
+      v.born[i] = 0;
+    }
     if (b.exist) VisTake(v, n, b);
-    else v.abs[i] = 0;
+    else { v.abs[i] = 0; v.actions[i] = 0; }
+    if (Sh.behOn) v.slotSp[i] = b.exist ? SpIdx(v, sim, b) + 1 : 0;
   }
   for (db::vb_long k = 1; k <= sim.maxshotarray; ++k) {
     const db::Shot& s = sim.Shots[static_cast<std::size_t>(k)];
@@ -1007,10 +1083,20 @@ DB_EXPORT void db_sim_vis_reset(void* h) {
     v.shotAge[i] = s.age;
     v.shotParent[i] = s.parent;
   }
-  v.births.clear();
-  v.deaths.clear();
+  if (clearPending) {
+    v.births.clear();
+    v.deaths.clear();
+  }
   v.primed = true;
 }
+
+}  // namespace
+
+extern "C" {
+
+// Toma la foto de referencia sin generar acciones ni eventos: al encender
+// la vista, tras un reset o tras una siembra/carga que no son "nacimientos".
+DB_EXPORT void db_sim_vis_reset(void* h) { VisSnap(H(h), true); }
 
 // Tras cada db_sim_tick (solo con la vista encendida): acumula acciones y
 // eventos del tick. O(MaxRobs + maxshotarray), solo lectura del Sim.
@@ -1019,6 +1105,13 @@ DB_EXPORT void db_sim_vis_observe(void* h) {
   const db::Sim& sim = S(h);
   if (!v.primed) { db_sim_vis_reset(h); return; }
   VisResize(v, sim);
+  // web2 E2: con el acumulador encendido, además de los bits se cuenta por
+  // especie (tabla de la vista) lo que cada bot hizo. Mismas condiciones.
+  const bool beh = H(h).behOn;
+  if (beh) ++v.behTicks;
+  auto acc = [&](int sp, int col, double d) {
+    if (sp >= 0) v.beh[static_cast<std::size_t>(sp)][static_cast<std::size_t>(col)] += d;
+  };
 
   // Muertes primero (el slot pudo reusarse en el mismo tick), luego bots.
   std::vector<int> newborn;  // slots con bot nuevo ESTE tick
@@ -1032,6 +1125,16 @@ DB_EXPORT void db_sim_vis_observe(void* h) {
                       {v.px[i], v.py[i], v.pr[i], v.pcol[i],
                        static_cast<float>(v.abs[i]), tp ? 1.0f : 0.0f});
     }
+    // Muerte por especie: el bot dejó el slot sin haber pasado por cadáver
+    // (un cadáver que se deshace no es otra muerte), o sigue pero ahora es
+    // cadáver (KillRobot le pone FName = "Corpse").
+    const int prevSp = v.slotSp[i] - 1;
+    const int curSp = (beh && b.exist) ? SpIdx(v, sim, b) : -1;
+    if (beh && prevSp >= 0 && !IsCorpseSp(v, prevSp)) {
+      if ((v.abs[i] != 0 && !same) || (same && IsCorpseSp(v, curSp)))
+        acc(prevSp, kBDeath, 1);
+    }
+    if (beh) v.slotSp[i] = curSp + 1;
     if (!b.exist) { v.abs[i] = 0; v.actions[i] = 0; continue; }
     if (!same) {
       // Otro bot en el slot: nacido (o sembrado/teletransportado) este tick.
@@ -1053,6 +1156,29 @@ DB_EXPORT void db_sim_vis_observe(void* h) {
     if (b.venom > v.venom[i] || b.poison > v.poison[i]) a |= 1u << 6;
     if (b.Kills > v.kills[i] || (!b.Veg && b.nrg > v.nrg[i])) a |= 1u << 7;
     if (!b.Veg && b.body != v.body[i]) a |= 1u << 8;
+    if (beh) {
+      if (a & (1u << 2)) acc(curSp, kBSex, 1);
+      for (int k = 1; k <= db::MAXTIES - 1; ++k)
+        if ((tm & ~v.tieMask[i]) & (1 << k)) acc(curSp, kBTie, 1);
+      if (b.shell > v.shell[i]) {
+        acc(curSp, kBShellN, 1);
+        acc(curSp, kBShellA, static_cast<double>(b.shell) - v.shell[i]);
+      }
+      if (b.Slime > v.slime[i]) {
+        acc(curSp, kBSlimeN, 1);
+        acc(curSp, kBSlimeA, static_cast<double>(b.Slime) - v.slime[i]);
+      }
+      if (b.venom > v.venom[i]) {
+        acc(curSp, kBVenomN, 1);
+        acc(curSp, kBVenomA, static_cast<double>(b.venom) - v.venom[i]);
+      }
+      if (b.poison > v.poison[i]) {
+        acc(curSp, kBPoisonN, 1);
+        acc(curSp, kBPoisonA, static_cast<double>(b.poison) - v.poison[i]);
+      }
+      if (b.Kills > v.kills[i])
+        acc(curSp, kBKills, static_cast<double>(b.Kills - v.kills[i]));
+    }
     v.actions[i] |= a;
     VisTake(v, n, b);
   }
@@ -1071,7 +1197,9 @@ DB_EXPORT void db_sim_vis_observe(void* h) {
         mx = o.pos.x;
         my = o.pos.y;
         v.actions[static_cast<std::size_t>(it->second)] |= 1u << 1;
+        if (beh) acc(SpIdx(v, sim, o), kBRepro, 1);
       }
+      if (beh) acc(SpIdx(v, sim, b), kBBirth, 1);
       if (v.births.size() < kMaxEvents * 6)
         v.births.insert(v.births.end(),
                         {b.pos.x, b.pos.y, mx, my, static_cast<float>(b.color),
@@ -1091,6 +1219,8 @@ DB_EXPORT void db_sim_vis_observe(void* h) {
       if (p >= 1 && p <= sim.MaxRobs && sim.rob[p].exist) {
         v.actions[static_cast<std::size_t>(p)] |= 1u;
         v.shotType[static_cast<std::size_t>(p)] = static_cast<float>(s.shottype);
+        if (beh)
+          acc(SpIdx(v, sim, sim.rob[p]), kBShot + BehShotCat(s.shottype), 1);
       }
     }
     v.shotExist[i] = alive ? 1 : 0;
@@ -1140,14 +1270,7 @@ DB_EXPORT int db_sim_dump_bots_vis(void* h, float* out, int max_bots) {
     for (int a = 0; a <= 8; ++a)
       if (b.mem[db::addr::EyeStart + 1 + a] > 0) seen |= 1 << a;
     r[9] = static_cast<float>(seen);
-    auto it = v.speciesIdx.find(b.FName);
-    if (it == v.speciesIdx.end()) {
-      it = v.speciesIdx.emplace(b.FName, static_cast<int>(v.species.size()))
-               .first;
-      v.species.push_back(b.FName);
-      ++v.speciesVersion;
-    }
-    const int sp = it->second;
+    const int sp = SpIdx(v, sim, b);  // web2 E2: helper común (+ origen)
     r[10] = static_cast<float>(sp);
     r[11] = b.numties;
     for (int a = 0; a <= 8; ++a)
@@ -1176,6 +1299,7 @@ DB_EXPORT int db_sim_vis_events(void* h, int kind, float* out, int max) {
 
 // Tabla de especies de la vista (FName por índice). La versión cambia cuando
 // aparece un nombre nuevo (mutación con auto-especiación, carga, siembra).
+// Desde web2 E2 la llenan también los volcados de solo lectura (SpIdx).
 DB_EXPORT int db_sim_vis_species_version(void* h) {
   return H(h).vis.speciesVersion;
 }
@@ -3768,6 +3892,531 @@ DB_EXPORT void db_sim_species_assign_skin(void* h, int idx, double timer) {
   const float r6 = std::floor(rng() * 61.0f) * 2.0f;
   sp.Skin[6] = db::vb_cint(
       static_cast<double>(static_cast<float>(sp.Skin[6]) + r6) / 3.0);
+}
+
+}  // extern "C"
+
+// ===========================================================================
+// web2 E2 — API de SOLO LECTURA para las métricas del frontend nuevo
+// (port/web2/PLAN.md, decisiones 6-9 y etapa E2; añadido fuera de etapa, no
+// va a spec/).
+//
+// Regla: ningún export de esta sección escribe en el Sim, consume RNG ni
+// toca nada que serialice el .dbsim (lo verifica
+// port/tests/wasm/solo_lectura.mjs byte a byte). El único estado que tocan
+// es del host: la tabla de especies de la vista (SimHandle::vis: FName →
+// índice estable, la MISMA que db_sim_dump_bots_vis[10]; los nombres se leen
+// con db_sim_vis_species_count/_name/_version) y el acumulador de
+// comportamiento.
+//
+// "Vivo" = exist && !Corpse. Los cadáveres (FName = "Corpse") solo cuentan
+// donde se dice. Los volcados por bot salen en el MISMO orden que
+// db_sim_dump_bots (slots 1..MaxRobs existentes) para emparejar por fila.
+// ===========================================================================
+
+namespace {
+
+// FNV-1a de 32 bits sobre (tipo, value) de cada bloque: mismo ADN ⇒ mismo
+// hash; mismo hash ⇒ casi seguro mismo ADN (32 bits: una colisión es
+// posible y solo movería la moda de db_sim_species_dominant).
+std::uint32_t DnaHash(const std::vector<db::Block>& dna) {
+  std::uint32_t x = 2166136261u;
+  auto mix = [&](std::uint32_t w) {
+    for (int k = 0; k < 4; ++k) {
+      x ^= (w >> (8 * k)) & 0xFFu;
+      x *= 16777619u;
+    }
+  };
+  mix(static_cast<std::uint32_t>(dna.size()));
+  for (const db::Block& b : dna) {
+    mix(static_cast<std::uint32_t>(static_cast<std::uint16_t>(b.tipo)));
+    mix(static_cast<std::uint32_t>(static_cast<std::uint16_t>(b.value)));
+  }
+  return x;
+}
+
+bool Alive(const db::Bot& b) { return b.exist && !b.Corpse; }
+
+// Campo de un bot para db_sim_histogram (kind).
+bool HistValue(const db::Bot& b, int kind, double& out) {
+  switch (kind) {
+    case 0: out = b.DnaLen; return true;
+    case 1: out = b.generation; return true;
+    case 2: out = static_cast<double>(b.Mutations); return true;
+    case 3: out = static_cast<double>(b.age); return true;
+    case 4: out = b.nrg; return true;
+    case 5: out = b.body; return true;
+    case 6: out = static_cast<double>(b.genenum); return true;
+    case 7: out = b.SonNumber; return true;
+    case 8: out = static_cast<double>(b.Kills); return true;
+    default: return false;
+  }
+}
+
+}  // namespace
+
+extern "C" {
+
+// Linaje: 12 int32 por bot existente (cadáveres incluidos, para emparejar
+// con db_sim_dump_bots), en un búfer que el JS lee con HEAP32:
+//   [0] AbsNum       [1] parent (AbsNum de la madre, 0 = fundador)
+//   [2] índice de especie (tabla de la vista)   [3] generation
+//   [4] Mutations    [5] BirthCycle   [6] DnaLen   [7] flags: bit0 Veg,
+//       bit1 Corpse, bit2 Fixed, bit3 Multibot
+//   [8] SonNumber    [9] age          [10] genenum [11] LastMut
+// Devuelve cuántas filas escribió (como máximo max_rows).
+DB_EXPORT int db_sim_dump_lineage(void* h, int* out, int max_rows) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  int written = 0;
+  for (int n = 1; n <= sim.MaxRobs && written < max_rows; ++n) {
+    const db::Bot& b = sim.rob[n];
+    if (!b.exist) continue;
+    int* r = out + written * 12;
+    r[0] = static_cast<int>(b.AbsNum);
+    r[1] = static_cast<int>(b.parent);
+    r[2] = SpIdx(v, sim, b);
+    r[3] = b.generation;
+    r[4] = static_cast<int>(b.Mutations);
+    r[5] = static_cast<int>(b.BirthCycle);
+    r[6] = b.DnaLen;
+    r[7] = (b.Veg ? 1 : 0) | (b.Corpse ? 2 : 0) | (b.Fixed ? 4 : 0) |
+           (b.Multibot ? 8 : 0);
+    r[8] = b.SonNumber;
+    r[9] = static_cast<int>(b.age);
+    r[10] = static_cast<int>(b.genenum);
+    r[11] = static_cast<int>(b.LastMut);
+    ++written;
+  }
+  return written;
+}
+
+// Estadística por especie: 27 floats por especie con al menos un bot VIVO
+// (sin cadáveres), en orden de índice:
+//   [0] índice   [1] vivos   [2] vegetales   [3] nrg total   [4] body total
+//   [5] generación media  [6] gen. mín  [7] gen. máx
+//   [8] mutaciones media  [9] mutaciones máx
+//   [10] DnaLen media  [11] DnaLen mín  [12] DnaLen máx
+//   [13] edad media  [14] edad máx  [15] SonNumber medio  [16] genes medio
+//   [17] Kills total  [18] waste total  [19] shell total  [20] slime total
+//   [21] venom total  [22] poison total  [23] chloroplasts total
+//   [24] color (Long BGR de sim.Specie si está registrada; si no, el del
+//        primer bot)  [25] índice en sim.Specie (−1 = no registrada; OJO:
+//        ese índice se corre cuando RemoveExtinctSpecies poda)
+//   [26] multibots (bots con Multibot)
+// Devuelve cuántas filas escribió.
+DB_EXPORT int db_sim_species_stats(void* h, float* out, int max_rows) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  struct Acc {
+    double n = 0, veg = 0, nrg = 0, body = 0, gen = 0, gmin = 0, gmax = 0;
+    double mut = 0, mmax = 0, dna = 0, dmin = 0, dmax = 0, age = 0, amax = 0;
+    double son = 0, genes = 0, kills = 0, waste = 0, shell = 0, slime = 0;
+    double venom = 0, poison = 0, chlr = 0, color = 0, mb = 0;
+  };
+  std::vector<Acc> a;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!Alive(b)) continue;
+    const std::size_t sp = static_cast<std::size_t>(SpIdx(v, sim, b));
+    if (a.size() <= sp) a.resize(sp + 1);
+    Acc& s = a[sp];
+    const double g = b.generation, m = static_cast<double>(b.Mutations);
+    const double d = b.DnaLen, ag = static_cast<double>(b.age);
+    if (s.n == 0) {
+      s.gmin = s.gmax = g;
+      s.mmax = m;
+      s.dmin = s.dmax = d;
+      s.amax = ag;
+      s.color = static_cast<double>(b.color);
+    }
+    s.n += 1;
+    s.veg += b.Veg ? 1 : 0;
+    s.nrg += b.nrg;
+    s.body += b.body;
+    s.gen += g;
+    s.gmin = std::min(s.gmin, g);
+    s.gmax = std::max(s.gmax, g);
+    s.mut += m;
+    s.mmax = std::max(s.mmax, m);
+    s.dna += d;
+    s.dmin = std::min(s.dmin, d);
+    s.dmax = std::max(s.dmax, d);
+    s.age += ag;
+    s.amax = std::max(s.amax, ag);
+    s.son += b.SonNumber;
+    s.genes += static_cast<double>(b.genenum);
+    s.kills += static_cast<double>(b.Kills);
+    s.waste += b.Waste;
+    s.shell += b.shell;
+    s.slime += b.Slime;
+    s.venom += b.venom;
+    s.poison += b.poison;
+    s.chlr += b.chloroplasts;
+    s.mb += b.Multibot ? 1 : 0;
+  }
+  int written = 0;
+  for (std::size_t sp = 0; sp < a.size() && written < max_rows; ++sp) {
+    const Acc& s = a[sp];
+    if (s.n == 0) continue;
+    int reg = -1;
+    for (std::size_t k = 0; k < sim.Specie.size(); ++k)
+      if (sim.Specie[k].Name == v.species[sp]) {
+        reg = static_cast<int>(k);
+        break;
+      }
+    float* r = out + written * 27;
+    const double n = s.n;
+    const double color =
+        reg >= 0
+            ? static_cast<double>(sim.Specie[static_cast<std::size_t>(reg)].color)
+            : s.color;
+    const double vals[27] = {
+        static_cast<double>(sp), n, s.veg, s.nrg, s.body,
+        s.gen / n, s.gmin, s.gmax, s.mut / n, s.mmax,
+        s.dna / n, s.dmin, s.dmax, s.age / n, s.amax,
+        s.son / n, s.genes / n, s.kills, s.waste, s.shell,
+        s.slime, s.venom, s.poison, s.chlr,
+        color, static_cast<double>(reg), s.mb};
+    for (int c = 0; c < 27; ++c) r[c] = static_cast<float>(vals[c]);
+    ++written;
+  }
+  return written;
+}
+
+// Origen de cada especie de la tabla de la vista (TODAS, extintas
+// incluidas, salvo la fila "Corpse" de los cadáveres, que se omite; la
+// genealogía de especies de la decisión 9): 5 int32 por especie, en orden
+// de índice (el índice va en [0]: con "Corpse" omitida hay un salto):
+//   [0] índice  [1] ciclo en que la tabla la registró (≥ 0: las
+//       registradas antes del primer tick dan 0)
+//   [2] AbsNum del primer bot visto  [3] AbsNum de su madre (0 = fundador)
+//   [4] especie de la madre (−1 = misma especie, fundador, madre ya muerta
+//       o cadáver al registrarla; el host lo completa con su historial de
+//       linaje; nunca es la fila "Corpse")
+// Con el acumulador encendido (observe en cada tick) el nombre nuevo se ve
+// en el tick en que nace y la madre suele seguir viva. Devuelve filas.
+DB_EXPORT int db_sim_species_origin(void* h, int* out, int max_rows) {
+  const Vis& v = H(h).vis;
+  int written = 0;
+  for (std::size_t i = 0; i < v.speciesOrigin.size() && written < max_rows;
+       ++i) {
+    if (v.species[i] == "Corpse") continue;
+    const auto& o = v.speciesOrigin[i];
+    int* r = out + written * 5;
+    r[0] = static_cast<int>(i);
+    r[1] = o[0];
+    r[2] = o[1];
+    r[3] = o[2];
+    r[4] = o[3];
+    ++written;
+  }
+  return written;
+}
+
+// ADN dominante de cada especie con bots vivos (decisión 9: la foto
+// periódica para comparar gen por gen con el fundador): 6 int32 por
+// especie, en orden de índice:
+//   [0] índice  [1] slot de un bot con ese ADN (el de slot más bajo; su
+//       texto sale con db_sim_bot_text)  [2] AbsNum de ese bot
+//   [3] cuántos vivos de la especie llevan ese ADN exacto  [4] DnaLen
+//   [5] hash FNV-1a de 32 bits del ADN (int32; mismo hash ⇒ casi seguro
+//       mismo ADN)
+// Empate de frecuencia: gana el ADN visto primero (slot más bajo).
+DB_EXPORT int db_sim_species_dominant(void* h, int* out, int max_rows) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  struct Cand {
+    int count = 0;
+    int slot = 0;
+  };
+  std::vector<std::unordered_map<std::uint32_t, Cand>> per;
+  std::vector<std::vector<std::uint32_t>> order;  // primera aparición
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!Alive(b)) continue;
+    const std::size_t sp = static_cast<std::size_t>(SpIdx(v, sim, b));
+    if (per.size() <= sp) {
+      per.resize(sp + 1);
+      order.resize(sp + 1);
+    }
+    const std::uint32_t hsh = DnaHash(b.dna);
+    Cand& c = per[sp][hsh];
+    if (c.count == 0) {
+      c.slot = t;
+      order[sp].push_back(hsh);
+    }
+    ++c.count;
+  }
+  int written = 0;
+  for (std::size_t sp = 0; sp < per.size() && written < max_rows; ++sp) {
+    if (order[sp].empty()) continue;
+    std::uint32_t best = order[sp][0];
+    for (const std::uint32_t k : order[sp])
+      if (per[sp][k].count > per[sp][best].count) best = k;
+    const Cand& c = per[sp][best];
+    const db::Bot& b = sim.rob[c.slot];
+    int* r = out + written * 6;
+    r[0] = static_cast<int>(sp);
+    r[1] = c.slot;
+    r[2] = static_cast<int>(b.AbsNum);
+    r[3] = c.count;
+    r[4] = b.DnaLen;
+    r[5] = static_cast<int>(best);
+    ++written;
+  }
+  return written;
+}
+
+// Vector fijo de métricas globales del estado actual (se llama tras un
+// tick). Escribe min(56, max) floats y devuelve 56 (el largo del vector;
+// índices nuevos, si los hay, van al final):
+//  Población   0 ciclo (TotRunCycle)  1 bots existentes (con cadáveres)
+//              2 vivos  3 vegetales vivos  4 no vegetales vivos
+//              5 cadáveres  6 especies con vivos (FName distintos)
+//              7 especies registradas (sim.Specie)  8 MaxAbsNum (AbsNum
+//              más alto repartido)  9 vivos con Multibot
+//  Evolución   (sobre vivos) 10 generación media  11 gen. máx
+//              12 mutaciones media  13 mutaciones máx  14 DnaLen media
+//              15 DnaLen mín  16 DnaLen máx  17 genes medio  18 edad media
+//              19 edad máx  20 SonNumber medio
+//  Energía     21 nrg total vivos  22 nrg media  23 nrg vegetales
+//              24 nrg no vegetales  25 body total  26 waste total
+//              27 chloroplasts total  28 shell total  29 slime total
+//              30 venom total  31 poison total  32 nrg cadáveres
+//              33 body cadáveres  34 TotalSimEnergyDisplayed (paso 5)
+//  Comportamiento (instantáneo; lo acumulado va en db_sim_behavior_take)
+//              35 shots en vuelo (exist y no stored)  36 ShotsThisCycle
+//              37 extremos de lazo (slots Ties 1..9 con pnt a un bot
+//              existente; cada lazo cuenta en sus dos bots)
+//              38 vivos con numties > 0  39 paralizados  40 envenenados
+//              41 con virus (Vtimer > 0)  42 fertilizados  43 Kills total
+//  Entorno     44 FieldWidth  45 FieldHeight  46 numObstacles
+//              47 numTeleporters  48 LightAval (área de bots / área del
+//              campo, tope 1; feedvegs)  49 SunPosition  50 SunRange
+//              51 Daytime (0/1)  52 TotalChlr  53 AllChlr
+//              54 CostX (Costs(54))  55 MaxRobs
+// Las medias valen 0 sin vivos; los mín/máx también.
+DB_EXPORT int db_sim_metrics(void* h, float* out, int max) {
+  constexpr int K = 56;
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  double m[K] = {};
+  std::vector<std::uint8_t> seenSp;
+  int nsp = 0;
+  bool first = true;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!b.exist) continue;
+    m[1] += 1;
+    for (int k = 1; k <= db::MAXTIES - 1; ++k) {
+      const int p = b.Ties[static_cast<std::size_t>(k)].pnt;
+      if (p > 0 && p <= sim.MaxRobs && sim.rob[p].exist) m[37] += 1;
+    }
+    if (b.Corpse) {
+      m[5] += 1;
+      m[32] += b.nrg;
+      m[33] += b.body;
+      continue;
+    }
+    const std::size_t sp = static_cast<std::size_t>(SpIdx(v, sim, b));
+    if (seenSp.size() <= sp) seenSp.resize(sp + 1, 0);
+    if (!seenSp[sp]) {
+      seenSp[sp] = 1;
+      ++nsp;
+    }
+    const double g = b.generation, mu = static_cast<double>(b.Mutations);
+    const double d = b.DnaLen, ag = static_cast<double>(b.age);
+    if (first) {
+      m[11] = g;
+      m[13] = mu;
+      m[15] = d;
+      m[16] = d;
+      m[19] = ag;
+      first = false;
+    }
+    m[2] += 1;
+    if (b.Veg) {
+      m[3] += 1;
+      m[23] += b.nrg;
+    } else {
+      m[4] += 1;
+      m[24] += b.nrg;
+    }
+    if (b.Multibot) m[9] += 1;
+    m[10] += g;
+    m[11] = std::max(m[11], g);
+    m[12] += mu;
+    m[13] = std::max(m[13], mu);
+    m[14] += d;
+    m[15] = std::min(m[15], d);
+    m[16] = std::max(m[16], d);
+    m[17] += static_cast<double>(b.genenum);
+    m[18] += ag;
+    m[19] = std::max(m[19], ag);
+    m[20] += b.SonNumber;
+    m[21] += b.nrg;
+    m[25] += b.body;
+    m[26] += b.Waste;
+    m[27] += b.chloroplasts;
+    m[28] += b.shell;
+    m[29] += b.Slime;
+    m[30] += b.venom;
+    m[31] += b.poison;
+    if (b.numties > 0) m[38] += 1;
+    if (b.Paralyzed) m[39] += 1;
+    if (b.Poisoned) m[40] += 1;
+    if (b.Vtimer > 0) m[41] += 1;
+    if (b.fertilized > 0) m[42] += 1;
+    m[43] += static_cast<double>(b.Kills);
+  }
+  const double n = m[2];
+  if (n > 0) {
+    for (const int k : {10, 12, 14, 17, 18, 20}) m[k] /= n;
+    m[22] = m[21] / n;
+  }
+  m[0] = static_cast<double>(sim.opts.TotRunCycle);
+  m[6] = nsp;
+  m[7] = static_cast<double>(sim.Specie.size());
+  m[8] = static_cast<double>(sim.MaxAbsNum);
+  m[34] = static_cast<double>(sim.TotalSimEnergyDisplayed);
+  for (db::vb_long k = 1; k <= sim.maxshotarray; ++k) {
+    const db::Shot& s = sim.Shots[static_cast<std::size_t>(k)];
+    if (s.exist && !s.stored) m[35] += 1;
+  }
+  m[36] = static_cast<double>(sim.ShotsThisCycle);
+  m[44] = sim.opts.FieldWidth;
+  m[45] = sim.opts.FieldHeight;
+  m[46] = sim.numObstacles;
+  m[47] = sim.numTeleporters;
+  m[48] = sim.LightAval;
+  m[49] = sim.SunPosition;
+  m[50] = sim.SunRange;
+  m[51] = sim.opts.Daytime ? 1 : 0;
+  m[52] = static_cast<double>(sim.TotalChlr);
+  m[53] = static_cast<double>(sim.AllChlr);
+  m[54] = sim.vm.costs.v[54];
+  m[55] = sim.MaxRobs;
+  const int w = std::min(K, max);
+  for (int k = 0; k < w; ++k) out[k] = static_cast<float>(m[k]);
+  return K;
+}
+
+// Histograma de un campo sobre los bots vivos (sin cadáveres). out recibe
+// bins + 2 floats: [mín, máx, cuenta del bin 0, …, bin bins−1]. El rango es
+// automático [mín, máx] de los valores; bin = floor((x − mín) / (máx − mín)
+// * bins), el máximo cae en el último; con mín = máx todo va al bin 0.
+//   kind:    0 DnaLen  1 generation  2 Mutations  3 age  4 nrg  5 body
+//            6 genenum  7 SonNumber  8 Kills
+//   species: −1 = todas; si no, índice de la tabla de la vista
+//   vegMode: 0 todos  1 solo no vegetales  2 solo vegetales
+//   bins:    1..4096 (más de 4096 se recorta a 4096; el búfer debe tener
+//            bins + 2 floats)
+// Devuelve cuántos bots entraron (−1 si kind no existe o bins < 1, sin
+// escribir nada; 0 = sin muestras, y entonces mín = máx = 0 y los bins
+// en 0).
+DB_EXPORT int db_sim_histogram(void* h, int kind, int species, int vegMode,
+                               int bins, float* out) {
+  Vis& v = H(h).vis;
+  const db::Sim& sim = S(h);
+  if (kind < 0 || kind > 8) return -1;  // los kinds de HistValue
+  if (bins < 1) return -1;
+  bins = std::min(bins, 4096);
+  std::vector<double> xs;
+  for (int t = 1; t <= sim.MaxRobs; ++t) {
+    const db::Bot& b = sim.rob[t];
+    if (!Alive(b)) continue;
+    if (vegMode == 1 && b.Veg) continue;
+    if (vegMode == 2 && !b.Veg) continue;
+    if (species >= 0 && SpIdx(v, sim, b) != species) continue;
+    double x = 0;
+    HistValue(b, kind, x);
+    xs.push_back(x);
+  }
+  for (int k = 0; k < bins + 2; ++k) out[k] = 0.0f;
+  if (xs.empty()) return 0;
+  const auto mm = std::minmax_element(xs.begin(), xs.end());
+  const double lo = *mm.first, hi = *mm.second;
+  out[0] = static_cast<float>(lo);
+  out[1] = static_cast<float>(hi);
+  for (const double x : xs) {
+    int k = 0;
+    if (hi > lo)
+      k = std::min(bins - 1,
+                   static_cast<int>(std::floor((x - lo) / (hi - lo) * bins)));
+    out[2 + k] += 1.0f;
+  }
+  return static_cast<int>(xs.size());
+}
+
+// Acumulador de comportamiento por especie (decisión 7, grupo
+// Comportamiento). Estado del host: lo alimenta db_sim_vis_observe, así que
+// con el acumulador encendido el worker TIENE que llamar a observe tras
+// CADA tick (igual que con la vista enriquecida; comparten la foto): si se
+// saltean ticks, el siguiente observe compara contra la foto vieja y
+// atribuye a UN tick todo lo que cambió entretanto (la col. 25 de
+// db_sim_behavior_take cuenta observes, no ticks del Sim). No toca el Sim.
+// on = 1 lo enciende desde cero: vacía lo acumulado y refresca la foto
+// (slots, shots y especie de cada slot, como db_sim_vis_reset pero sin
+// borrar los bits ni los eventos pendientes de la vista), así el primer
+// observe cuenta solo el tick siguiente aunque el host no haya observado
+// antes. on = 0 lo apaga (lo acumulado queda para un take). db_sim_load
+// vacía la tabla de especies y lo acumulado pero no lo apaga.
+DB_EXPORT void db_sim_behavior_enable(void* h, int on) {
+  auto& Sh = H(h);
+  Vis& v = Sh.vis;
+  Sh.behOn = on != 0;
+  if (!Sh.behOn) return;
+  for (auto& row : v.beh) row.fill(0.0);
+  v.behTicks = 0;
+  VisSnap(Sh, false);
+}
+
+// Vuelca y VACÍA lo acumulado desde la última lectura: 26 floats por
+// especie con algo distinto de 0, en orden de índice. Si hay más filas
+// con actividad que max_rows, escribe las primeras max_rows y vacía SOLO
+// esas: las demás quedan para la próxima llamada (se lee en tandas hasta
+// que devuelva 0; el contador de ticks solo vuelve a 0 cuando una llamada
+// entrega todas las filas pendientes):
+//   [0] índice
+//   [1..10] disparos nuevos por shottype: −1 nrg, −2 energía cedida,
+//           −3 venom, −4 waste, −5 poison, −6 body, −7 virus, −8 esperma,
+//           > 0 memoria/info, otros (−100…)
+//   [11] reproducciones (hijos nuevos cuya madre es de la especie)
+//   [12] nacimientos (hijos nuevos de la especie; con autoespeciación el
+//        hijo puede ser de otra especie que la madre)
+//   [13] fertilizaciones (fertilized pasa a > 0)
+//   [14] lazos nuevos (slots Ties que pasan de vacío a ocupado)
+//   [15] subidas de shell  [16] shell ganado   [17] subidas de slime
+//   [18] slime ganado      [19] subidas de venom [20] venom ganado
+//   [21] subidas de poison [22] poison ganado
+//   [23] muertes (pasa a cadáver, o deja el slot sin haberlo sido:
+//        muerte sin cadáver o salida por teleporter)
+//   [24] Kills sumados      [25] ticks observados (observes) desde la
+//        última lectura completa
+// Las condiciones son las de los bits de db_sim_vis_observe (efecto
+// observable del tick). Devuelve filas.
+DB_EXPORT int db_sim_behavior_take(void* h, float* out, int max_rows) {
+  Vis& v = H(h).vis;
+  int written = 0;
+  for (std::size_t sp = 0; sp < v.beh.size() && written < max_rows; ++sp) {
+    const auto& row = v.beh[sp];
+    bool any = false;
+    for (const double x : row) any = any || x != 0.0;
+    if (!any) continue;
+    float* r = out + written * 26;
+    r[0] = static_cast<float>(sp);
+    for (std::size_t c = 0; c < kBehCols; ++c)
+      r[1 + c] = static_cast<float>(row[c]);
+    r[25] = static_cast<float>(v.behTicks);
+    v.beh[sp].fill(0.0);  // solo las filas escritas
+    ++written;
+  }
+  bool rest = false;  // ¿quedaron filas sin escribir?
+  for (const auto& row : v.beh)
+    for (const double x : row) rest = rest || x != 0.0;
+  if (!rest) v.behTicks = 0;
+  return written;
 }
 
 }  // extern "C"

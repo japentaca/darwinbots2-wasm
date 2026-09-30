@@ -1,0 +1,31 @@
+{
+  "formato": 1,
+  "id": "archipielago",
+  "nombre": { "es": "Archipiélago", "en": "Archipelago" },
+  "descripcion": {
+    "es": "Diez islas de roca al azar y dos teleporters que mueven bots de un lugar a otro, en un mundo toroidal.",
+    "en": "Ten random rock islands and two teleporters that move bots around, in a toroidal world."
+  },
+  "etiquetas": ["obstáculos", "teleporters"],
+  "opciones": { "base": "clasica", "cambios": { "opt:2": 1, "opt:3": 1 } },
+  "especies": [
+    {
+      "bot": "Gardener veggie (V)(PY)-03.05.06",
+      "hash": "066cd6b9",
+      "cantidad": 20,
+      "color": "#7ccf3a",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal Minimalis (4G)(Numsgil)-10.03.05",
+      "hash": "b011392f",
+      "cantidad": 6,
+      "color": "#ff4040",
+      "vegetal": false
+    }
+  ],
+  "objetos": {
+    "obstaculos": [{ "tipo": "formas", "ancho": 0.08, "alto": 0.08 }],
+    "teleporters": [{ "tipo": "local" }, { "tipo": "local" }]
+  }
+}

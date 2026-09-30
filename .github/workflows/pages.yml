@@ -1,6 +1,10 @@
-# Demo viva en GitHub Pages: compila el preset wasm y publica port/web/ +
-# los artefactos dbcore.js/dbcore.wasm conservando el layout relativo que la
-# página espera (web/worker.js carga ../build-wasm/dbcore.js).
+# Sitio en GitHub Pages (port/web2/PLAN.md E0, decisiones 3 y 5, C1-C4):
+#  - raíz:         la interfaz nueva (port/web2, build de Vite con base './').
+#  - /classic/:    la clásica (port/web/, congelada, sin cambios en sus fuentes).
+#  - /build-wasm/: dbcore.js + dbcore.wasm, compilados una sola vez y
+#                  compartidos (classic/worker.js carga ../build-wasm/dbcore.js;
+#                  la nueva pide ./build-wasm/dbcore.js?v=<commit>).
+# El armado vive en port/web2/scripts/armar-sitio.sh para probarlo igual en local.
 # Requiere habilitar Pages en el repo con Source = "GitHub Actions".
 name: Pages
 
@@ -35,26 +39,20 @@ jobs:
         run: |
           cmake --preset wasm
           cmake --build --preset wasm --target dbcore_wasm
-      - name: Armar el sitio (web/ + build-wasm/, mismo layout que en el repo)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: port/web2/package-lock.json
+      - name: Compilar la interfaz nueva (Vite)
+        working-directory: port/web2
+        # DB_BUILD_ID (C4) versiona los pedidos a dbcore.js/dbcore.wasm.
         run: |
-          mkdir -p site/build-wasm
-          cp -r port/web site/web
-          cp port/build-wasm/dbcore.js port/build-wasm/dbcore.wasm site/build-wasm/
-      - name: Versionar los scripts (cache busting)
-        # Pages deja cachear cada archivo 10 min: sin esto el navegador puede
-        # mezclar el index.html nuevo con un contest.js/worker.js viejo. Cada
-        # script, el worker, dbcore.js y el .wasm se piden con ?v=<commit>.
-        run: |
-          V="${GITHUB_SHA::7}"
-          sed -i -E "s#<script src=\"([a-z]+)\.js\"></script>#<script src=\"\1.js?v=$V\"></script>#; s#new Worker\('worker\.js'\)#new Worker('worker.js?v=$V')#" site/web/index.html
-          sed -i -E "s#importScripts\('\.\./build-wasm/dbcore\.js', 'imnet\.js'\)#importScripts('../build-wasm/dbcore.js?v=$V', 'imnet.js?v=$V')#; s#locateFile: \(f\) => '\.\./build-wasm/' \+ f \}#locateFile: (f) => '../build-wasm/' + f + '?v=$V' }#" site/web/worker.js
-          test "$(grep -c "\.js?v=$V" site/web/index.html)" -ge 5
-          test "$(grep -c "?v=$V" site/web/worker.js)" -ge 2
-          cat > site/index.html <<'EOF'
-          <!DOCTYPE html><meta charset="utf-8">
-          <meta http-equiv="refresh" content="0; url=web/">
-          <a href="web/">DarwinBots — port WASM</a>
-          EOF
+          npm ci
+          DB_BUILD_ID="${GITHUB_SHA::7}" npx vite build
+      - name: Armar el sitio (nueva en la raíz, clásica en classic/, build-wasm/)
+        # Incluye el versionado de la clásica (cache busting con ?v=<commit>).
+        run: sh port/web2/scripts/armar-sitio.sh site "${GITHUB_SHA::7}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
