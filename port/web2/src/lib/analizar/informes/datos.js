@@ -6,10 +6,16 @@
 //   datosReplicas(trabajo, resultados) un trabajo de réplicas de la cola
 //                                     (el registro completo, con el
 //                                     escenario) y sus resultados
-//   trabajosReplicas(lista)           los trabajos de réplicas terminados
+//   trabajosReplicas(lista)           los trabajos de réplicas que se pueden
+//                                     informar (terminados, o cancelados o
+//                                     fallidos con alguna réplica hecha)
+//   claveError(e)                     texto traducible de un error con código
+//                                     (engine/report/ y png.js)
 
 import { ACTIVOS } from '../../../../engine/cola.js';
 import { TIPO_REPLICAS } from '../../../../engine/replicas.js';
+import { CODIGOS_ERROR } from '../../../../engine/report/textos.js';
+import { CODIGOS_ERROR_PNG } from './png.js';
 
 /**
  * @typedef {import('../fuente.js').FuenteAnalisis} FuenteAnalisis
@@ -77,17 +83,77 @@ export function datosReplicas(tr, resultados, fecha = Date.now()) {
   };
 }
 
+/** Estados cerrados sin terminar: se informan si tienen alguna réplica hecha. */
+const PARCIALES = Object.freeze(['cancelado', 'fallido']);
+
 /**
- * Trabajos de réplicas que se pueden informar: los terminados (y, aparte,
- * cuántos siguen en la cola), el más reciente primero.
+ * Trabajos de réplicas que se pueden informar (y, aparte, cuántos siguen en
+ * la cola), el más reciente primero: los terminados y los cancelados o
+ * fallidos con al menos una réplica hecha (informe parcial). Cada uno con
+ * `hechas` (réplicas terminadas), `n` (réplicas pedidas) y `parcial`.
  * @param {Trabajo[]} lista
  */
 export function trabajosReplicas(lista) {
   const propios = lista.filter((x) => x.tipo === TIPO_REPLICAS);
+  const listos = propios
+    .map((x) => {
+      const unidades = Array.isArray(x.unidades) ? x.unidades : [];
+      const hechas = unidades.filter((u) => u?.estado === 'hecha').length;
+      return { ...x, hechas, n: unidades.length, parcial: x.estado !== 'terminado' };
+    })
+    .filter((x) => x.estado === 'terminado' || (PARCIALES.includes(x.estado) && x.hechas > 0))
+    .sort((a, b) => String(b.actualizado).localeCompare(String(a.actualizado)));
+  return { listos, enCola: propios.filter((x) => ACTIVOS.includes(x.estado)).length };
+}
+
+/** Códigos de error con texto propio en informes.json (`informes.error.cod.<codigo>`). */
+export const CODIGOS_ERROR_UI = Object.freeze([...CODIGOS_ERROR, ...CODIGOS_ERROR_PNG]);
+
+/**
+ * Texto traducible de un error: si trae un `codigo` conocido, su clave
+ * (`informes.error.cod.<codigo>`); si no, null (se muestra su mensaje).
+ * @param {unknown} e
+ * @returns {string | null}
+ */
+export function claveError(e) {
+  const c = e && typeof e === 'object' && 'codigo' in e ? String(e.codigo) : '';
+  return c && CODIGOS_ERROR_UI.includes(c) ? `informes.error.cod.${c}` : null;
+}
+
+/**
+ * Corridas por defecto de Informes: origen (y A de la Comparación) = la que
+ * mira Analizar (`propia`: 'actual' o el id de la guardada) si está entre
+ * las opciones, si no la primera; B = la actual si A es una guardada, si no
+ * la guardada más reciente que no sea A ('' si no hay otra).
+ * @param {string[]} ids opciones (la actual primero, después las guardadas
+ *   de la más reciente a la más vieja) @param {string} propia
+ * @param {string} actual el id de la corrida actual en las opciones
+ */
+export function corridasPorDefecto(ids, propia, actual) {
+  const origen = ids.includes(propia) ? propia : (ids[0] ?? '');
+  const b =
+    origen !== actual && ids.includes(actual)
+      ? actual
+      : (ids.find((x) => x !== origen && x !== actual) ?? '');
+  return { origen, a: origen, b };
+}
+
+/**
+ * Informe «Torneo» (paso N3.5): una temporada de un torneo (League de
+ * engine/league.js) con sus partidos. `titulo`: el nombre visible del
+ * torneo (traducido si es uno por defecto); `temporada`: la del informe
+ * (por defecto la última).
+ * @param {import('../../../../engine/league.js').League} L
+ * @param {import('../../../../engine/league.js').Match[]} partidos
+ * @param {{temporada?: number, titulo?: string, fecha?: string | number | Date}} [o]
+ * @returns {import('../../../../engine/report/torneo.js').DatosTorneo}
+ */
+export function datosTorneo(L, partidos, o = {}) {
   return {
-    terminados: propios
-      .filter((x) => x.estado === 'terminado')
-      .sort((a, b) => String(b.actualizado).localeCompare(String(a.actualizado))),
-    enCola: propios.filter((x) => ACTIVOS.includes(x.estado)).length,
+    torneo: structuredClone(L),
+    partidos: structuredClone(partidos.filter((m) => !m.league || m.league === L.id)),
+    temporada: o.temporada,
+    titulo: o.titulo || undefined,
+    fecha: o.fecha ?? Date.now(),
   };
 }

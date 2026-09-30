@@ -17,7 +17,7 @@ import { HISTOGRAMAS, nombreEspecie } from '../metricas.js';
 import { BASES, parametro } from '../opciones.js';
 import { ANCHO_HOJA, ANCHO_MEDIO, documento, nombreArchivo } from './plantilla.js';
 import { areasApiladas, carriles, esc, histograma, lineas } from './svg.js';
-import { idiomaValido, traductor } from './textos.js';
+import { ErrorInforme, idiomaValido, traductor } from './textos.js';
 
 /** Paleta categórica (boceto del informe; validada para daltonismo en fondo claro). */
 export const PALETA = Object.freeze([
@@ -101,6 +101,7 @@ const maxFinito = (a) => {
  * @returns {{html: string, archivo: string, datos: DatosEmbebidos}}
  */
 export function informeCorrida(d, op = {}) {
+  if (!d?.historia?.t) throw new ErrorInforme('falta-historia');
   const idioma = idiomaValido(op.idioma);
   const { tx, num } = traductor(idioma);
   const h = d.historia;
@@ -281,7 +282,12 @@ export function informeCorrida(d, op = {}) {
       .filter((x) => x.figura === fig && !x.clave.startsWith('resto.'))
       .slice(0, 6)
       .map((x) => ({
-        x: x.desde,
+        // la sustitución se marca en el cruce de las dos especies
+        x:
+          x.tipo === 'sustitucion' && Number.isFinite(x.params.ciclo)
+            ? Number(x.params.ciclo)
+            : x.desde,
+        ...(x.tipo === 'sustitucion' ? { detalle: tx('marca.sustitucion.detalle', x.params) } : {}),
         etiqueta:
           x.tipo === 'dominio'
             ? tx('marca.dominio', { especie: x.params.especie })
@@ -291,7 +297,11 @@ export function informeCorrida(d, op = {}) {
                 ? tx('marca.extincion', { especie: x.params.especie })
                 : x.tipo === 'colapso'
                   ? tx('marca.colapso')
-                  : '',
+                  : x.tipo === 'sustitucion'
+                    ? tx('marca.sustitucion', x.params)
+                    : x.tipo === 'oscilacion'
+                      ? tx('marca.oscilacion')
+                      : '',
       }));
 
   // ================= secciones =================

@@ -8,6 +8,7 @@ import { untrack } from 'svelte';
 import { num, t } from '../i18n/index.svelte.js';
 import { inspectorVisible } from '../lib/inspector/estado.svelte.js';
 import Inspector from '../lib/inspector/Inspector.svelte';
+import { jugador } from '../lib/inspector/jugador.svelte.js';
 import Mundo from '../lib/mundo/Mundo.svelte';
 import { LENTES } from '../lib/mundo/render-enriquecido.js';
 import DialogoCorridas from '../lib/observar/DialogoCorridas.svelte';
@@ -15,15 +16,107 @@ import DialogoGuardar from '../lib/observar/DialogoGuardar.svelte';
 import DialogoSembrar from '../lib/observar/DialogoSembrar.svelte';
 import { descargar, nombreArchivo, pngMundo } from '../lib/observar/descargas.js';
 import { avisoDeError } from '../lib/observar/errores.js';
+import IndicadorJugador from '../lib/observar/IndicadorJugador.svelte';
+import MenuInstantanea from '../lib/observar/MenuInstantanea.svelte';
 import BarraMundo from '../lib/observar/objetos/BarraMundo.svelte';
 import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
+import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
+import {
+  conPaneles,
+  detenerTv,
+  hayPartidoDeTorneo,
+  iniciarTv,
+  pantallaCompleta,
+  pantallaSiFalta,
+  rutaSalida,
+  seguirTorneo,
+} from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { corridasGuardadas, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
 import { VELOCIDADES } from '../lib/sim/sesion.svelte.js';
+import { hashDe } from '../router.js';
 
 /** @type {{ partes?: string[] }} */
-let { partes: _partes = [] } = $props();
+let { partes = [] } = $props();
+
+// Avance automático del torneo (N3.6, decisión 23): #/observar/tv, el campo
+// solo (sin paneles ni barra), a pantalla completa si el navegador la da,
+// con el rótulo encima; #/observar/torneo, lo mismo con el panel lateral y
+// la barra (sin lo que cambia el mundo). Pasar de una a otra no lo corta.
+const modoTv = $derived(partes[0] === 'tv');
+const auto = $derived(modoTv || partes[0] === 'torneo');
+const bloqueado = $derived(auto ? t('observar.auto.bloqueado') : '');
+const puedeSeguir = $derived(!auto && hayPartidoDeTorneo());
+
+/** Sale del modo TV: lo apaga, deja la pantalla completa y vuelve a la vista del torneo. */
+function salirTv() {
+  detenerTv();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (partes[0] === 'tv') window.location.hash = rutaSalida();
+}
+
+/** Con paneles: apaga el avance y queda en Observar. */
+function detenerAuto() {
+  detenerTv();
+  window.location.hash = hashDe('observar');
+}
+
+/** @type {HTMLElement | undefined} */
+let raiz = $state();
+
+/**
+ * El resto de la app, inerte mientras dura el TV: los hermanos de `el` y
+ * de cada ancestro hasta el body. Devuelve cómo deshacerlo.
+ * @param {HTMLElement} el
+ */
+function inertizarResto(el) {
+  /** @type {HTMLElement[]} */
+  const puestos = [];
+  for (let n = el; n.parentElement && n !== document.body; n = n.parentElement)
+    for (const h of n.parentElement.children)
+      if (h !== n && h instanceof HTMLElement && !h.inert) {
+        h.inert = true;
+        puestos.push(h);
+      }
+  return () => {
+    for (const h of puestos) h.inert = false;
+  };
+}
+
+// El avance vive mientras se esté en una de sus dos rutas.
+$effect(() => {
+  if (!auto) return;
+  untrack(() => void iniciarTv());
+  return () => detenerTv();
+});
+
+// La presentación a pantalla completa: el resto de la app inerte y Esc (o
+// cerrar la pantalla completa desde el navegador) pasa a la vista con paneles.
+$effect(() => {
+  if (!modoTv) return;
+  // recarga en #/observar/tv: se intenta (entrarTv ya la pidió en el clic)
+  untrack(() => pantallaSiFalta());
+  const el = untrack(() => raiz);
+  const desinertizar = el ? inertizarResto(el) : () => {};
+  let completa = !!document.fullscreenElement;
+  const alCambiar = () => {
+    if (completa && !document.fullscreenElement) conPaneles();
+    completa = !!document.fullscreenElement;
+  };
+  /** @param {KeyboardEvent} e */
+  const alTecla = (e) => {
+    if (e.key === 'Escape') conPaneles();
+  };
+  document.addEventListener('fullscreenchange', alCambiar);
+  window.addEventListener('keydown', alTecla);
+  return () => {
+    document.removeEventListener('fullscreenchange', alCambiar);
+    window.removeEventListener('keydown', alTecla);
+    desinertizar();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+});
 
 const corrida = obtenerCorrida();
 const sesion = corrida.sesion;
@@ -31,10 +124,27 @@ const estado = corrida.estado;
 
 // Sin sim todavía: el escenario de fábrica «Sopa primordial» (o la de prueba).
 $effect(() => {
-  if (!sesion.hayMundo) untrack(() => corrida.arrancarPorDefecto());
+  if (!sesion.hayMundo && !auto) untrack(() => corrida.arrancarPorDefecto());
 });
 
 const lentes = Object.keys(LENTES);
+
+// Player Bot (N4.1): se apaga al cambiar la sim, con un contest F1, con el
+// avance automático del torneo y al salir de Observar.
+const hayF1 = $derived(!!sesion.stats.f1);
+$effect(() => {
+  sesion.mundo;
+  hayF1;
+  if (auto) untrack(() => jugador.desactivar());
+  else untrack(() => jugador.vigilar(sesion));
+});
+$effect(() => () => jugador.desactivar());
+
+/** «Buscar el mejor» (N4.1): el foco pasa al bot más apto. */
+async function buscarMejor() {
+  const n = await sesion.buscarMejor();
+  if (n === 0) corrida.avisar('observar.mejor.ninguno', {});
+}
 
 // Los avisos que no son errores se van solos.
 $effect(() => {
@@ -58,9 +168,14 @@ let nTps = $state(0);
 /** @type {{ tipo: 'forma' | 'teleporter', n: number } | null} */
 let resaltado = $state(null);
 
-/** @param {{ tipo: 'forma' | 'teleporter', n: number }} o */
+/**
+ * Borrado desde el mundo (modo borrar). Con la corrida ocupada (iniciando,
+ * guardando, cargando) no se borra, como los botones de la barra: false.
+ * @param {{ tipo: 'forma' | 'teleporter', n: number }} o
+ */
 function borrarObjeto(o) {
-  corrida.aplicarObjetos(ordenBorrar(o)).catch(() => {
+  if (estado.ocupado || !sesion.hayMundo) return false;
+  return corrida.aplicarObjetos(ordenBorrar(o)).catch(() => {
     corrida.avisar('mundoObj.aviso.error', {}, true);
   });
 }
@@ -69,6 +184,11 @@ function cerrarMundo() {
   verMundo = false;
   modoBorrar = false;
 }
+
+// con el avance automático la barra «Mundo» no se usa
+$effect(() => {
+  if (auto) untrack(cerrarMundo);
+});
 
 function alternarMundo() {
   if (verMundo) cerrarMundo();
@@ -137,7 +257,7 @@ function instantanea() {
 const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
 </script>
 
-<section class="observar">
+<section class="observar" class:tv={modoTv} bind:this={raiz}>
   <div class="cuerpo">
     <div class="lienzo">
       <Mundo
@@ -145,31 +265,42 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         modoBorrar={verMundo && modoBorrar}
         onBorrar={borrarObjeto}
         onSalirBorrar={() => (modoBorrar = false)}
+        onPunteroMundo={(x, y) => jugador.puntero(x, y)}
         onResaltar={(o, no, nt) => {
   resaltado = o;
   nObs = no;
   nTps = nt;
 }}
       />
-      {#if verMundo}
+      {#if !auto}
+        <IndicadorJugador {sesion} />
+      {/if}
+      {#if modoTv}
+        <RotuloTv completa onSalir={salirTv} onCambiar={conPaneles} />
+      {:else if auto}
+        <RotuloTv completa={false} onSalir={detenerAuto} onCambiar={pantallaCompleta} />
+      {:else if verMundo}
         <BarraMundo {corrida} bind:modoBorrar {nObs} {nTps} {resaltado} onCerrar={cerrarMundo} />
       {/if}
     </div>
-    <aside class="lateral" aria-label={t('observar.lateral.aria')}>
-      {#if inspectorVisible(sesion)}
-        <Inspector
-          {sesion}
-          onCerrar={() => sesion.seleccionar(0)}
-          siguiendo={sesion.siguiendo}
-          onSeguir={(on) => sesion.seguir(on)}
-        />
-      {:else}
-        <PanelVivo {corrida} />
-      {/if}
-    </aside>
+    {#if !modoTv}
+      <aside class="lateral" aria-label={t('observar.lateral.aria')}>
+        {#if inspectorVisible(sesion)}
+          <Inspector
+            {sesion}
+            {corrida}
+            onCerrar={() => sesion.seleccionar(0)}
+            siguiendo={sesion.siguiendo}
+            onSeguir={(on) => sesion.seguir(on)}
+          />
+        {:else}
+          <PanelVivo {corrida} />
+        {/if}
+      </aside>
+    {/if}
   </div>
 
-  {#if estado.aviso}
+  {#if estado.aviso && !modoTv}
     <div
       class="aviso"
       class:error={estado.aviso.error}
@@ -188,119 +319,138 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
     </div>
   {/if}
 
-  <div class="barra">
-    <button
-      class="btn pri"
-      type="button"
-      style="width: 112px"
-      disabled={!sesion.hayMundo || !!estado.ocupado}
-      onclick={() => sesion.correr(!sesion.corriendo)}
-    >
-      {#if sesion.corriendo}
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <rect x="2" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
-          <rect x="8.5" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
-        </svg>{t('mundo.pausar')}
-      {:else}
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <path d="M3 1.5v11l9-5.5z" fill="#ffffff"></path>
-        </svg>{t('mundo.iniciar')}
-      {/if}
-    </button>
-    <button class="btn" type="button" disabled={!sesion.hayMundo} onclick={() => sesion.unCiclo()}>
-      {t('mundo.unCiclo')}
-    </button>
-    <fieldset class="seg velocidad">
-      <legend class="oculto">{t('mundo.velocidad')}</legend>
-      {#each VELOCIDADES as v (v)}
-        <button
-          type="button"
-          class:on={sesion.velocidad === v}
-          aria-pressed={sesion.velocidad === v}
-          title={v === 0 ? t('mundo.velocidad.maxAyuda') : t('mundo.velocidad.ayuda', { n: v })}
-          onclick={() => sesion.ponerVelocidad(v)}
-        >
-          {v === 0 ? t('mundo.velocidad.max') : `× ${v}`}
-        </button>
-      {/each}
-    </fieldset>
-    <div class="sep"></div>
-    <button
-      class="btn"
-      type="button"
-      title={t('observar.sembrar.ayuda')}
-      disabled={!sesion.hayMundo}
-      onclick={() => (verSembrar = true)}
-    >
-      {t('observar.sembrar')}
-    </button>
-    <button
-      class="btn"
-      class:activo={verMundo}
-      type="button"
-      title={t('mundoObj.boton.ayuda')}
-      aria-pressed={verMundo}
-      disabled={!sesion.hayMundo && !verMundo}
-      onclick={alternarMundo}
-    >
-      {t('mundoObj.boton')}
-    </button>
-    <button
-      class="btn"
-      type="button"
-      title={t('observar.guardar.ayuda')}
-      disabled={!sesion.hayMundo || !!estado.ocupado}
-      onclick={() => (verGuardar = true)}
-    >
-      {t('observar.guardar')}
-    </button>
-    <button
-      class="btn"
-      type="button"
-      title={t('observar.instantanea.ayuda')}
-      disabled={!sesion.hayMundo}
-      onclick={instantanea}
-    >
-      {t('observar.instantanea')}
-    </button>
-    <button
-      class="btn"
-      type="button"
-      title={t('observar.corridas.ayuda')}
-      disabled={!!estado.ocupado}
-      onclick={() => (verCorridas = true)}
-    >
-      {t('observar.corridas')}
-    </button>
-    <div class="relleno"></div>
-    <span class="mono dato" title={t('observar.ritmo.ayuda')}
-      >{t('observar.ritmo', { tps: num(sesion.stats.tps), fps: num(sesion.fps) })}</span
-    >
-    <label class="campo"
-      >{t('mundo.vista')}
-      <select
-        class="sel"
-        value={sesion.rica ? 'rica' : 'clasica'}
-        onchange={(e) => sesion.ponerVista(e.currentTarget.value === 'rica')}
+  {#if !modoTv}
+    <div class="barra">
+      <button
+        class="btn pri"
+        type="button"
+        style="width: 112px"
+        disabled={!sesion.hayMundo || !!estado.ocupado}
+        onclick={() => sesion.correr(!sesion.corriendo)}
       >
-        <option value="rica">{t('mundo.vista.rica.corta')}</option>
-        <option value="clasica">{t('mundo.vista.clasica.corta')}</option>
-      </select></label
-    >
-    <label class="campo" title={sesion.rica ? '' : t('mundo.colorPor.soloRica')}
-      >{t('mundo.colorPor.etiqueta')}
-      <select
-        class="sel"
-        value={sesion.lente}
-        disabled={!sesion.rica}
-        onchange={(e) => sesion.ponerLente(e.currentTarget.value)}
+        {#if sesion.corriendo}
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <rect x="2" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
+            <rect x="8.5" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
+          </svg>{t('mundo.pausar')}
+        {:else}
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M3 1.5v11l9-5.5z" fill="#ffffff"></path>
+          </svg>{t('mundo.iniciar')}
+        {/if}
+      </button>
+      <button
+        class="btn"
+        type="button"
+        disabled={!sesion.hayMundo}
+        onclick={() => sesion.unCiclo()}
       >
-        {#each lentes as l (l)}
-          <option value={l}>{t(`mundo.lente.${l}`)}</option>
+        {t('mundo.unCiclo')}
+      </button>
+      <fieldset class="seg velocidad">
+        <legend class="oculto">{t('mundo.velocidad')}</legend>
+        {#each VELOCIDADES as v (v)}
+          <button
+            type="button"
+            class:on={sesion.velocidad === v}
+            aria-pressed={sesion.velocidad === v}
+            title={v === 0 ? t('mundo.velocidad.maxAyuda') : t('mundo.velocidad.ayuda', { n: v })}
+            onclick={() => sesion.ponerVelocidad(v)}
+          >
+            {v === 0 ? t('mundo.velocidad.max') : `× ${v}`}
+          </button>
         {/each}
-      </select></label
-    >
-  </div>
+      </fieldset>
+      <div class="sep"></div>
+      <button
+        class="btn"
+        type="button"
+        title={bloqueado || t('observar.sembrar.ayuda')}
+        disabled={!sesion.hayMundo || auto}
+        onclick={() => (verSembrar = true)}
+      >
+        {t('observar.sembrar')}
+      </button>
+      <button
+        class="btn"
+        class:activo={verMundo}
+        type="button"
+        title={bloqueado || t('mundoObj.boton.ayuda')}
+        aria-pressed={verMundo}
+        disabled={(!sesion.hayMundo && !verMundo) || auto}
+        onclick={alternarMundo}
+      >
+        {t('mundoObj.boton')}
+      </button>
+      <button
+        class="btn"
+        type="button"
+        title={t('observar.guardar.ayuda')}
+        disabled={!sesion.hayMundo || !!estado.ocupado}
+        onclick={() => (verGuardar = true)}
+      >
+        {t('observar.guardar')}
+      </button>
+      <button
+        class="btn"
+        type="button"
+        title={t('observar.mejor.ayuda')}
+        disabled={!sesion.hayMundo}
+        onclick={buscarMejor}
+      >
+        {t('observar.mejor')}
+      </button>
+      <MenuInstantanea {sesion} {corrida} nombre={estado.nombre} onPng={instantanea} />
+      {#if puedeSeguir}
+        <button
+          class="btn"
+          type="button"
+          title={t('observar.seguirTorneo.ayuda')}
+          onclick={seguirTorneo}
+        >
+          {t('observar.seguirTorneo')}
+        </button>
+      {/if}
+      <button
+        class="btn"
+        type="button"
+        title={bloqueado || t('observar.corridas.ayuda')}
+        disabled={!!estado.ocupado || auto}
+        onclick={() => (verCorridas = true)}
+      >
+        {t('observar.corridas')}
+      </button>
+      <div class="relleno"></div>
+      <span class="mono dato" title={t('observar.ritmo.ayuda')}
+        >{t('observar.ritmo', { tps: num(sesion.stats.tps), fps: num(sesion.fps) })}</span
+      >
+      <label class="campo"
+        >{t('mundo.vista')}
+        <select
+          class="sel"
+          value={sesion.rica ? 'rica' : sesion.contorno ? 'contorno' : 'clasica'}
+          onchange={(e) => sesion.ponerVista(e.currentTarget.value === 'rica', e.currentTarget.value === 'contorno')}
+        >
+          <option value="rica">{t('mundo.vista.rica.corta')}</option>
+          <option value="clasica">{t('mundo.vista.clasica.corta')}</option>
+          <option value="contorno">{t('mundo.vista.contorno.corta')}</option>
+        </select></label
+      >
+      <label class="campo" title={sesion.rica ? '' : t('mundo.colorPor.soloRica')}
+        >{t('mundo.colorPor.etiqueta')}
+        <select
+          class="sel"
+          value={sesion.lente}
+          disabled={!sesion.rica}
+          onchange={(e) => sesion.ponerLente(e.currentTarget.value)}
+        >
+          {#each lentes as l (l)}
+            <option value={l}>{t(`mundo.lente.${l}`)}</option>
+          {/each}
+        </select></label
+      >
+    </div>
+  {/if}
 </section>
 
 <DialogoSembrar bind:abierto={verSembrar} onSembrar={(sp) => corrida.sembrar(sp)} />
@@ -328,6 +478,13 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   height: 100%;
   min-height: 0;
   position: relative;
+}
+/* modo TV: el campo ocupa la ventana (con o sin pantalla completa) */
+.observar.tv {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--mundo);
 }
 .cuerpo {
   flex: 1;

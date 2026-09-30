@@ -24,6 +24,7 @@
 // (estadoTrabajos.avisos, hasta que se descartan: quedan marcados vistos).
 
 import { ACTIVOS, ColaCompartida, NOMBRE_CANAL } from '../../../engine/cola.js';
+import { TIPO_RONDA } from '../../../engine/rondas.js';
 import { BUILD_ID } from '../../build.js';
 import { t } from '../../i18n/index.svelte.js';
 import { almacen } from '../sim/almacen.svelte.js';
@@ -113,9 +114,31 @@ function alCambio() {
   estadoTrabajos.duena = cola.duena;
 }
 
+// Rondas de torneo (decisión 23; receta en la cabecera de engine/rondas.js,
+// punto 3): Competir se carga a demanda (import dinámico: sin ciclo con
+// src/lib/competir/torneos.svelte.js, que encola en esta cola). La pestaña
+// dueña reconcilia las rondas con la cola al serlo y cuando una termina; las
+// demás releen la liga.
+/** @param {ColaCompartida} c */
+function alDuenaRondas(c) {
+  import('../competir/torneos.svelte.js')
+    .then((m) => m.alSerDuena(/** @type {any} */ (c)))
+    .catch((e) => console.error(e));
+}
+
+/** @param {Trabajo} tr @param {boolean} propia */
+function alTerminarRonda(tr, propia) {
+  const c = cola;
+  if (!c) return;
+  import('../competir/torneos.svelte.js')
+    .then((m) => m.alTerminarRonda(tr, propia, /** @type {any} */ (c)))
+    .catch((e) => console.error(e));
+}
+
 /** @param {Trabajo} tr @param {boolean} propia */
 function alTerminar(tr, propia) {
   alCambio();
+  if (tr.tipo === TIPO_RONDA) alTerminarRonda(tr, propia);
   const titulo = tr.titulo || t('comparar.trabajos.sinTitulo');
   const clave = tr.estado === 'terminado' ? 'comparar.aviso.terminado' : 'comparar.aviso.fallido';
   const texto = t(clave, { titulo });
@@ -184,7 +207,10 @@ export function iniciarTrabajos() {
     refrescoMs: REFRESCO_MS,
     alCambio,
     alTerminar,
-    alDuena: alCambio,
+    alDuena: () => {
+      alCambio();
+      alDuenaRondas(c);
+    },
   });
   cola = c;
   c.iniciar().then(
@@ -233,5 +259,5 @@ export async function pedirPermiso() {
 /** Descarta el aviso de un trabajo y lo marca visto. @param {string} id */
 export function descartarAviso(id) {
   estadoTrabajos.avisos = estadoTrabajos.avisos.filter((a) => a.id !== id);
-  cola?.marcarVisto(id).catch(() => {});
+  cola?.marcarVisto(id).catch((e) => console.error(e));
 }

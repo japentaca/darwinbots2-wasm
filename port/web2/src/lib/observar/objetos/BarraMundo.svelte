@@ -8,11 +8,13 @@
 // escenario efectivo de la corrida, que es lo que muestra Experimentar.
 // El modo borrar (clic sobre una forma o un teleporter) lo maneja el mundo
 // (Mundo.svelte, props modoBorrar/onBorrar); acá está el interruptor.
+import { TOPE_TELEPORTERS } from '../../../../engine/escenarios/index.js';
 import { idioma, num, t } from '../../../i18n/index.svelte.js';
 import {
   enteroPositivo,
   fraccion,
   LABERINTOS,
+  laberintoValido,
   MURO_DEF,
   orden,
   PASILLO_DEF,
@@ -32,7 +34,6 @@ import {
  */
 let { corrida, modoBorrar = $bindable(false), nObs, nTps, resaltado, onCerrar } = $props();
 
-const TOPE_TPS = 10;
 const uid = $props.id();
 
 let ancho = $state(String(TAMANO_DEF));
@@ -49,7 +50,8 @@ const fAlto = $derived(fraccion(alto));
 const tamanoOk = $derived(fAncho !== null && fAlto !== null);
 const ePasillo = $derived(enteroPositivo(pasillo));
 const eMuro = $derived(enteroPositivo(muro));
-const laberintoOk = $derived(ePasillo !== null && eMuro !== null);
+/** Algún tipo que usa el pasillo o el muro no se puede crear con estos valores. */
+const laberintoAviso = $derived(LABERINTOS.some((l) => !laberintoValido(l, ePasillo, eMuro)));
 
 const sesion = $derived(corrida.sesion);
 const hayMundo = $derived(sesion.hayMundo && !corrida.estado.ocupado);
@@ -77,18 +79,18 @@ function crear(tipo) {
 }
 
 /**
- * Polar y escombros no usan pasillo ni muro: van con los valores por
- * defecto aunque los campos no valgan.
+ * Cada tipo pide solo lo que usa (laberintoValido): el damero no usa el
+ * muro, polar y escombros ninguno; lo que no usa va con el valor por
+ * defecto aunque el campo no valga.
  * @param {(typeof LABERINTOS)[number]} l
  */
 function laberinto(l) {
-  const usa = l.pasillo || l.muro;
-  if (usa && !laberintoOk) return;
+  if (!laberintoValido(l, ePasillo, eMuro)) return;
   void hacer(
     orden('laberinto', {
       forma: l.forma,
-      pasillo: usa ? ePasillo : PASILLO_DEF,
-      muro: usa ? eMuro : MURO_DEF,
+      pasillo: l.pasillo ? ePasillo : PASILLO_DEF,
+      muro: l.muro ? eMuro : MURO_DEF,
     }),
   );
 }
@@ -271,7 +273,7 @@ const textoResaltado = $derived.by(() => {
               ></label
             >
           </div>
-          {#if !laberintoOk}
+          {#if laberintoAviso}
             <p class="invalido">{t('mundoObj.laberinto.invalido')}</p>
           {/if}
           <div class="tipos">
@@ -280,7 +282,7 @@ const textoResaltado = $derived.by(() => {
                 type="button"
                 class="item"
                 title={t(`mundoObj.laberinto.${l.forma}.ayuda`)}
-                disabled={!laberintoOk && (l.pasillo || l.muro)}
+                disabled={!laberintoValido(l, ePasillo, eMuro)}
                 onclick={() => laberinto(l)}
               >
                 {t(`mundoObj.laberinto.${l.forma}`)}
@@ -294,8 +296,10 @@ const textoResaltado = $derived.by(() => {
     <button
       type="button"
       class="b"
-      title={nTps >= TOPE_TPS ? t('mundoObj.teleporter.tope') : t('mundoObj.teleporter.ayuda')}
-      disabled={!hayMundo || nTps >= TOPE_TPS}
+      title={nTps >= TOPE_TELEPORTERS
+  ? t('mundoObj.teleporter.tope', { n: num(TOPE_TELEPORTERS) })
+  : t('mundoObj.teleporter.ayuda')}
+      disabled={!hayMundo || nTps >= TOPE_TELEPORTERS}
       onclick={() => void hacer(orden('teleporter'))}
     >
       {t('mundoObj.teleporter')}

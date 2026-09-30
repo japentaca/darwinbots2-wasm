@@ -35,7 +35,13 @@ import {
   ordenar,
   todosLosTags,
 } from '../engine/biblioteca.js';
-import { crearBots, diffVersiones, ErrorBots, normalizarTag } from '../engine/bots.js';
+import {
+  crearBots,
+  diffVersiones,
+  ErrorBots,
+  esClavePropia,
+  normalizarTag,
+} from '../engine/bots.js';
 import { MULBERRY, plano, rng } from './util/clasica-vm.js';
 import { cargarDbCore, hayWasm, PORT_DIR, SIN_WASM, WEB } from './util/dbcore-node.js';
 
@@ -435,7 +441,7 @@ test('filtros, agrupación y orden = invMatches / invGroupsOf / invSorted', asyn
 
 test('siembra en lote: una especie por ADN, cantidades de vegetal y color por especie', () => {
   const propio = {
-    hash: 'aaaaaaaaaaaaaaaa',
+    hash: 'p:aaaaaaaaaaaaaaaa',
     clase: /** @type {const} */ ('propio'),
     nombre: 'Mío',
     vegetal: false,
@@ -491,9 +497,59 @@ test('siembra en lote: una especie por ADN, cantidades de vegetal y color por es
   );
   assert.match(d[0].color, /^#[0-9a-f]{6}$/);
   assert.deepEqual(
-    entradasDe(idx, ['50423e92d2d704d8', mio.hash]).map((e) => e.id),
+    entradasDe(idx, ['50423e92d2d704d8', mio.clave]).map((e) => e.id),
     [dup[0].id, mio.id],
   );
+  assert.equal(mio.clave, propio.hash);
+  assert.equal(mio.hash, hashAdn(propio.adn), 'hash = el del ADN');
+});
+
+test('siembra en lote: dos propios con el mismo ADN son dos especies; la paleta persiste', () => {
+  const base = {
+    clase: /** @type {const} */ ('propio'),
+    vegetal: false,
+    descripcion: '',
+    adn: 'cond start 1 .up store stop',
+    creado: '',
+    actualizado: '',
+    origen: /** @type {const} */ ({ tipo: 'nuevo' }),
+    versiones: [],
+    fav: false,
+    tags: [],
+    notas: '',
+  };
+  const idx = construirIndice({
+    bestiario,
+    perfiles,
+    registros: [
+      { ...base, hash: 'p:0000000000000001', nombre: 'A' },
+      { ...base, hash: 'p:0000000000000002', nombre: 'B' },
+    ],
+  });
+  const propios = idx.filter((e) => e.clase === 'propio');
+  assert.equal(propios[0].hash, propios[1].hash, 'mismo ADN');
+  const foro = idx[0];
+  const sel = new Set([propios[1].clave, foro.clave]);
+  assert.deepEqual(
+    filtrar(idx, { soloSeleccion: true }, sel).map((e) => e.id),
+    idx.filter((e) => e.hash === foro.hash || e.id === propios[1].id).map((e) => e.id),
+    'la selección distingue foro vs propio',
+  );
+  const esp = especiesLote([...propios, foro]);
+  assert.deepEqual(
+    esp.map((s) => [s.bot, s.origen]),
+    [
+      ['A', 'propio'],
+      ['B', 'propio'],
+      [foro.nombre, 'bestiario'],
+    ],
+  );
+  // una paleta que el llamador conserva sigue su secuencia entre lotes
+  const paleta = crearPaleta(rng(9));
+  const c = crearPaleta(rng(9));
+  const l1 = especiesLote([propios[0]], { paleta }).map((s) => s.color);
+  const l2 = especiesLote([propios[1]], { paleta }).map((s) => s.color);
+  assert.deepEqual([...l1, ...l2], [c(), c()]);
 });
 
 // ---- Bots propios con versiones ------------------------------------------------------
@@ -511,12 +567,13 @@ function relojFijo() {
   };
 }
 
-test('bots propios: crear, versiones con hash y lg, diff gen por gen y restaurar', async () => {
+test('bots propios: clave propia, versiones con hash y lg, diff gen por gen y restaurar', async () => {
   const almacen = almacenMemoria();
   const bots = crearBots({ almacen, reloj: relojFijo() });
   const b = await bots.crear({ nombre: ' Mi bot ', adn: ADN1, nota: 'primera' });
   assert.equal(b.nombre, 'Mi bot');
-  assert.equal(b.hash, hashAdn(ADN1));
+  assert.ok(esClavePropia(b.hash), b.hash);
+  assert.notEqual(b.hash, hashAdn(ADN1), 'la clave no depende del ADN');
   assert.equal(b.versiones.length, 1);
   assert.deepEqual(
     {
@@ -527,19 +584,22 @@ test('bots propios: crear, versiones con hash y lg, diff gen por gen y restaurar
     },
     { n: 1, hash: hashAdn(ADN1), lg: lgHash(ADN1), nota: 'primera' },
   );
-  await assert.rejects(bots.crear({ nombre: 'Otro', adn: ADN1 }), conCodigo('ya-existe'));
+  // dos propios con el mismo ADN coexisten
+  const gemelo = await bots.crear({ nombre: 'Gemelo', adn: ADN1 });
+  assert.notEqual(gemelo.hash, b.hash);
   await assert.rejects(bots.crear({ nombre: 'Mi bot', adn: ADN2 }), conCodigo('nombre-repetido'));
   await assert.rejects(bots.crear({ nombre: '', adn: ADN2 }), conCodigo('nombre-vacio'));
   await assert.rejects(bots.crear({ nombre: 'x', adn: '  ' }), conCodigo('adn-vacio'));
   const r2 = await bots.crear({ nombre: 'Mi bot', adn: ADN2 }, { renombrar: true });
   assert.equal(r2.nombre, 'Mi bot 2');
 
-  // mismo ADN canónico (solo cambia un comentario): no hay versión nueva
-  assert.equal(await bots.guardarVersion(b.hash, `${ADN1}' otro comentario\n`), null);
-  const origenes = [{ archivo: '1.txt', gen: 0 }, null, { hash: r2.hash, gen: 2 }];
+  // el mismo texto exacto: no hay versión nueva (un cambio de comentario sí
+  // la crea: test/editor_guardar.test.js)
+  assert.equal(await bots.guardarVersion(b.hash, ADN1), null);
+  const origenes = [{ archivo: '1.txt', gen: 0 }, null, { hash: hashAdn(ADN2), gen: 2 }];
   const v2 = await bots.guardarVersion(b.hash, ADN2, { nota: 'dispara', origenes });
   assert.ok(v2);
-  assert.equal(v2.hash, b.hash, 'la identidad no cambia al editar');
+  assert.equal(v2.hash, b.hash, 'la clave no cambia al editar');
   assert.equal(v2.adn, ADN2);
   assert.equal(v2.versiones.length, 2);
   assert.equal(v2.versiones[1].hash, hashAdn(ADN2));
@@ -556,10 +616,19 @@ test('bots propios: crear, versiones con hash y lg, diff gen por gen y restaurar
   assert.equal(v3.adn, ADN1);
   assert.equal(await bots.restaurarVersion(b.hash, 3), null);
 
+  // porLg: bot + versión exacta (ADN2 solo lo tiene la v2 de «Mi bot»; r2 también)
   const x = await bots.porLg(lgHash(ADN2));
   assert.equal(x?.bot.hash, b.hash);
   assert.equal(x?.version.n, 2);
   assert.equal(await bots.porLg('00000000'), null);
+  assert.equal((await bots.porNombre('Gemelo'))?.hash, gemelo.hash);
+  assert.equal(await bots.porNombre('Nadie'), null);
+
+  // ADN de una especie 'propio': versión exacta por lgHash; si no, por nombre
+  assert.equal(await bots.adnDeEspecie({ bot: 'Otro nombre', hash: lgHash(ADN2) }), ADN2);
+  assert.equal(await bots.adnDeEspecie({ bot: 'Mi bot', hash: lgHash('viejo') }), ADN1);
+  assert.equal(await bots.adnDeEspecie({ bot: 'Mi bot' }), ADN1);
+  assert.equal(await bots.adnDeEspecie({ bot: 'Nadie', hash: 'ffffffff' }), undefined);
 
   await assert.rejects(
     bots.cambiarDatos(b.hash, { nombre: 'Mi bot 2' }),
@@ -571,108 +640,155 @@ test('bots propios: crear, versiones con hash y lg, diff gen por gen y restaurar
     descripcion: 'd',
   });
   assert.deepEqual([c.nombre, c.vegetal, c.descripcion], ['Renombrado', true, 'd']);
+  assert.equal((await bots.cambiarDatos(b.hash, { nombre: 'Renombrado' })).nombre, 'Renombrado');
   assert.deepEqual(
     (await bots.propios()).map((p) => p.nombre),
-    ['Mi bot 2', 'Renombrado'],
+    ['Gemelo', 'Mi bot 2', 'Renombrado'],
   );
 });
 
-test('los del foro son de solo lectura: se duplican; marcas, tags y selecciones', async () => {
+test('nombres del foro: crear y cambiarDatos avisan con código; duplicar busca uno libre', async () => {
   const almacen = almacenMemoria();
-  const bots = crearBots({ almacen, reloj: relojFijo() });
+  const nombres = bestiario.map((/** @type {any} */ b) => b.name);
+  const bots = crearBots({ almacen, reloj: relojFijo(), nombresForo: () => nombres });
+  const foro = bestiario[0].name;
+  await assert.rejects(
+    bots.crear({ nombre: foro, adn: ADN1 }),
+    (/** @type {any} */ e) => e.codigo === 'nombre-del-foro' && e.params.nombre === foro,
+  );
+  const a = await bots.crear({ nombre: foro, adn: ADN1 }, { permitirNombreForo: true });
+  assert.equal(a.nombre, foro);
+  const b = await bots.crear({ nombre: 'Mío', adn: ADN1 });
+  await assert.rejects(bots.cambiarDatos(b.hash, { nombre: foro }), conCodigo('nombre-repetido'));
+  await assert.rejects(
+    bots.cambiarDatos(b.hash, { nombre: bestiario[1].name }),
+    conCodigo('nombre-del-foro'),
+  );
+  const c = await bots.cambiarDatos(
+    b.hash,
+    { nombre: bestiario[1].name },
+    { permitirNombreForo: true },
+  );
+  assert.equal(c.nombre, bestiario[1].name);
+  // renombrar: libre entre los propios y el Bestiary
+  const d = await bots.crear({ nombre: bestiario[2].name, adn: ADN2 }, { renombrar: true });
+  assert.equal(d.nombre, `${bestiario[2].name} 2`);
+});
+
+test('los del foro son de solo lectura: se duplican sin tocar sus marcas; marcas y selecciones', async () => {
+  const almacen = almacenMemoria();
+  const nombres = bestiario.map((/** @type {any} */ b) => b.name);
+  const bots = crearBots({ almacen, reloj: relojFijo(), nombresForo: () => nombres });
   const idx = construirIndice({ bestiario, perfiles });
   const foro = idx[0];
   const texto = fs.readFileSync(path.join(BOTS, /** @type {string} */ (foro.archivo)), 'utf8');
-  await assert.rejects(bots.guardarVersion(foro.hash, texto), conCodigo('no-existe'));
+  await assert.rejects(bots.guardarVersion(foro.clave, texto), conCodigo('no-existe'));
 
   // marcas de un bot del foro (registro 'foro', con nombre y archivo como la clásica)
   const info = () => ({ nombre: foro.nombre, archivo: foro.archivo });
-  await bots.agregarTag([foro.hash], '  #Muy Rápido ', info);
-  await bots.favorito([foro.hash], true, info);
-  await bots.notas(foro.hash, ' notas ');
-  assert.deepEqual(await bots.obtener(foro.hash), {
-    hash: foro.hash,
+  await bots.agregarTag([foro.clave], '  #Muy Rápido ', info);
+  await bots.favorito([foro.clave], true, info);
+  await bots.notas(foro.clave, ' notas ');
+  const marcasForo = {
+    hash: foro.clave,
     clase: 'foro',
     fav: true,
     tags: ['muy-rápido'],
     notas: 'notas',
     nombre: foro.nombre,
     archivo: foro.archivo,
-  });
-  await assert.rejects(bots.guardarVersion(foro.hash, texto), conCodigo('no-es-propio'));
+  };
+  assert.deepEqual(await bots.obtener(foro.clave), marcasForo);
+  await assert.rejects(bots.guardarVersion(foro.clave, texto), conCodigo('no-es-propio'));
   assert.equal(normalizarTag('#A b'), 'a-b');
+  // claves que no son de ninguna familia (o un propio inexistente) no crean nada
+  await bots.favorito(['p:0123456789abcdef', 'cualquiera'], true);
+  assert.equal(await bots.obtener('p:0123456789abcdef'), undefined);
+  assert.equal(await bots.obtener('cualquiera'), undefined);
 
-  const copia = await bots.duplicar(
-    {
-      clase: 'foro',
-      hash: foro.hash,
-      nombre: foro.nombre,
-      archivo: foro.archivo,
-      vegetal: foro.vegetal,
-    },
-    texto,
-  );
-  assert.equal(copia.nombre, foro.nombre);
+  // duplicar sin nombre: desde « 2» (el del original está en el Bestiary)
+  const copia = await bots.duplicar(foro, texto);
+  assert.equal(copia.nombre, `${foro.nombre} 2`);
   assert.deepEqual(copia.origen, {
     tipo: 'foro',
-    hash: foro.hash,
+    clave: foro.clave,
     nombre: foro.nombre,
     archivo: foro.archivo,
   });
-  assert.equal(copia.hash, hashAdn(texto));
-  assert.notEqual(copia.hash, foro.hash, 'el .txt crudo no es el texto del core');
-  const otra = await bots.duplicar(
-    { clase: 'foro', hash: foro.hash, nombre: foro.nombre, archivo: foro.archivo },
-    `${texto}\ncond start 1 .dn store stop`,
+  assert.ok(esClavePropia(copia.hash));
+  assert.equal(copia.versiones[0].hash, hashAdn(texto));
+  assert.deepEqual(copia.versiones[0].lg, lgHash(texto));
+  assert.deepEqual([copia.fav, copia.tags, copia.notas], [false, [], '']);
+  assert.deepEqual(await bots.obtener(foro.clave), marcasForo, 'las marcas del foro quedan');
+  // el mismo .txt otra vez (mismo ADN): otro propio
+  const otra = await bots.duplicar(foro, texto);
+  assert.equal(otra.nombre, `${foro.nombre} 3`);
+  assert.notEqual(otra.hash, copia.hash);
+  // duplicar un propio sin editar
+  const deCopia = await bots.duplicar(
+    { clase: 'propio', clave: copia.hash, nombre: copia.nombre },
+    copia.adn,
   );
-  assert.equal(otra.nombre, `${foro.nombre} 2`);
+  assert.equal(deCopia.nombre, `${copia.nombre} 2`, 'desde « 2» sobre el nombre del original');
+  assert.deepEqual(deCopia.origen, { tipo: 'propio', clave: copia.hash, nombre: copia.nombre });
+  // con nombre: los mismos controles que crear
+  await assert.rejects(
+    bots.duplicar(foro, texto, { nombre: copia.nombre }),
+    conCodigo('nombre-repetido'),
+  );
+  await assert.rejects(
+    bots.duplicar(foro, texto, { nombre: foro.nombre }),
+    conCodigo('nombre-del-foro'),
+  );
 
   // quitar todas las marcas de un bot del foro borra su registro
-  await bots.quitarTag([foro.hash], 'muy-rápido');
-  await bots.favorito([foro.hash], false);
-  await bots.notas(foro.hash, '');
-  assert.equal(await bots.obtener(foro.hash), undefined);
+  await bots.quitarTag([foro.clave], 'muy-rápido');
+  await bots.favorito([foro.clave], false);
+  await bots.notas(foro.clave, '');
+  assert.equal(await bots.obtener(foro.clave), undefined);
 
-  // un propio con marcas que se borra deja sus marcas (mismo ADN)
+  // selecciones con nombre (en 'ajustes'): claves del foro y de propios
+  await bots.guardarSeleccion('B', [foro.clave, copia.hash, foro.clave]);
+  await bots.guardarSeleccion('A', [copia.hash]);
+  await bots.guardarSeleccion('C', [otra.hash]);
+  assert.deepEqual(await bots.selecciones(), [
+    { nombre: 'A', claves: [copia.hash] },
+    { nombre: 'B', claves: [foro.clave, copia.hash] },
+    { nombre: 'C', claves: [otra.hash] },
+  ]);
+  await bots.borrarSeleccion('C');
+
+  // borrar un propio con marcas: no deja marcas huérfanas y sale de las selecciones
   await bots.favorito([copia.hash], true);
   await bots.borrar(copia.hash);
-  assert.deepEqual(await bots.obtener(copia.hash), {
-    hash: copia.hash,
-    clase: 'foro',
-    fav: true,
-    tags: [],
-    notas: '',
-  });
-  // y si vuelve a crearse, las absorbe
-  const again = await bots.crear({ nombre: 'Otra vez', adn: texto });
-  assert.equal(again.fav, true);
-
-  // selecciones con nombre (en 'ajustes')
-  await bots.guardarSeleccion('B', [foro.hash, again.hash, foro.hash]);
-  await bots.guardarSeleccion('A', [again.hash]);
+  assert.equal(await bots.obtener(copia.hash), undefined);
   assert.deepEqual(await bots.selecciones(), [
-    { nombre: 'A', claves: [again.hash] },
-    { nombre: 'B', claves: [foro.hash, again.hash] },
+    { nombre: 'A', claves: [] },
+    { nombre: 'B', claves: [foro.clave] },
   ]);
-  await bots.borrarSeleccion('A');
-  assert.deepEqual(
-    (await bots.selecciones()).map((s) => s.nombre),
-    ['B'],
-  );
+  await assert.rejects(bots.borrar(copia.hash), conCodigo('no-existe'));
+  const again = await bots.crear({ nombre: 'Otra vez', adn: texto });
+  assert.equal(again.fav, false, 'un propio nuevo no hereda marcas');
 
-  // el índice mezcla foro + propios, con marcas por hash
+  // el índice mezcla foro + propios, con marcas por clave
+  await bots.favorito([again.hash], true);
   const todo = construirIndice({ bestiario, perfiles, registros: await bots.todos() });
-  assert.equal(todo.length, 571 + 2);
+  assert.equal(todo.length, 571 + 3);
   const p = todo.filter((e) => e.clase === 'propio');
   assert.deepEqual(
     p.map((e) => e.nombre),
-    [`${foro.nombre} 2`, 'Otra vez'],
+    [`${foro.nombre} 2 2`, `${foro.nombre} 3`, 'Otra vez'],
   );
-  assert.equal(p[1].marcas.fav, true);
-  assert.equal(p[1].soloLectura, false);
-  assert.equal(p[1].perfil?.size, tamanoDe(p[1].perfil?.genes ?? 0));
-  assert.deepEqual(p[1].lgs, [lgHash(texto)]);
-  assert.equal(filtrar(todo, { origen: 'propio' }).length, 2);
+  assert.equal(p[2].marcas.fav, true);
+  assert.equal(p[0].marcas.fav, false);
+  assert.equal(p[2].soloLectura, false);
+  assert.equal(p[2].clave, again.hash);
+  assert.equal(p[2].id, `propio:${again.hash}`);
+  assert.equal(p[2].hash, hashAdn(texto));
+  assert.equal(p[2].perfil?.size, tamanoDe(p[2].perfil?.genes ?? 0));
+  assert.deepEqual(p[2].lgs, [lgHash(texto)]);
+  assert.equal(filtrar(todo, { origen: 'propio' }).length, 3);
+  assert.equal(filtrar(todo, { fav: true }).length, 1, 'el fav del propio no marca al del foro');
 });
 
 // ---- Historial ------------------------------------------------------------------------
@@ -716,7 +832,16 @@ test('historial: corridas, torneos y pruebas cruzados por hash, nombre o archivo
     escenario: esc([
       { bot: 'Mío', origen: 'bestiario', cantidad: 5 },
       { bot: 'Mío', origen: 'propio', adn: 'otra cosa' },
+      // un propio con hash que no es de ninguna versión: no cae al nombre
+      { bot: 'Mío', origen: 'propio', hash: 'deadbeef' },
     ]),
+    eventos: [],
+  });
+  await almacen.put('corridas', {
+    id: 'c4',
+    nombre: 'El del foro con un .txt de entonces',
+    fecha: '2026-05-01T00:00:00Z',
+    escenario: esc([{ bot: foro.nombre, origen: 'bestiario', hash: 'deadbeef', cantidad: 5 }]),
     eventos: [],
   });
   await almacen.put('torneos', {
@@ -824,7 +949,8 @@ test('historial: corridas, torneos y pruebas cruzados por hash, nombre o archivo
   const hf = await historialBot(almacen, foro);
   assert.deepEqual(
     hf.corridas.map((c) => c.id),
-    ['c1'],
+    ['c1', 'c4'],
+    'del foro: si el lg no coincide, cae al cruce por nombre',
   );
   assert.deepEqual(
     hf.torneos[0].partidos.map((p) => [p.no, p.gano]),
@@ -842,6 +968,10 @@ test('historial: corridas, torneos y pruebas cruzados por hash, nombre o archivo
     { lgs: [lgHash(txtForo)] },
   );
   assert.equal(hl.torneos.length, 1);
+  assert.deepEqual(
+    hl.corridas.map((c) => c.id),
+    ['c1', 'c4'],
+  );
   const vacio = await historialBot(almacenMemoria(), eMio);
   assert.deepEqual(vacio, { corridas: [], torneos: [], pruebas: [] });
 });

@@ -1,16 +1,19 @@
 <script>
 // @ts-check
-// Pestaña Comparar de Analizar (decisión 10, Nivel 2): dos sub-vistas.
+// Pestaña Comparar de Analizar (decisión 10, Niveles 2 y 4): tres sub-vistas.
 //   «Dos corridas»  gráficos superpuestos de una métrica con sus bandas y
 //                   la tabla de diferencias de configuración.
 //   «Réplicas»      N semillas del mismo escenario en la cola de trabajos
 //                   (src/lib/trabajos/), con media, banda p10–p90 y tabla.
+//   «Barrido»       un parámetro en k valores × N semillas en la misma cola:
+//                   valor final contra el valor del parámetro (Nivel 4).
 // `corrida` es la fuente que mira Analizar (src/lib/analizar/fuente.js): es
 // la corrida A por defecto y el origen por defecto de las réplicas. La cola
 // de trabajos ya arrancó con la app (src/main.js).
 import { onMount } from 'svelte';
 import { t } from '../../../i18n/index.svelte.js';
 import { actual, corridasGuardadas } from '../../sim/corrida.svelte.js';
+import Barrido from './Barrido.svelte';
 import DosCorridas from './DosCorridas.svelte';
 import { fuenteActual, fuenteGuardada, ID_ACTUAL } from './fuentes.js';
 import Replicas from './Replicas.svelte';
@@ -18,7 +21,7 @@ import Replicas from './Replicas.svelte';
 /** @type {{ corrida: import('../fuente.js').FuenteAnalisis | null }} */
 let { corrida } = $props();
 
-let vista = $state(/** @type {'dos' | 'replicas'} */ ('dos'));
+let vista = $state(/** @type {'dos' | 'replicas' | 'barrido'} */ ('dos'));
 /** @type {import('../../../../engine/corridas.js').Corrida[]} */
 let guardadas = $state.raw([]);
 
@@ -85,14 +88,25 @@ function cargar(id) {
     >
       {t('comparar.vista.replicas')}
     </button>
+    <button
+      type="button"
+      role="tab"
+      aria-selected={vista === 'barrido'}
+      class:on={vista === 'barrido'}
+      onclick={() => (vista = 'barrido')}
+    >
+      {t('comparar.vista.barrido')}
+    </button>
   </div>
 
   {#if !opciones.length}
     <p class="card vacia">{t('comparar.sinCorridas')}</p>
   {:else if vista === 'dos'}
     <DosCorridas {opciones} {inicial} {cargar} {versionActual} />
-  {:else}
+  {:else if vista === 'replicas'}
     <Replicas {opciones} {inicial} {cargar} />
+  {:else}
+    <Barrido {opciones} {inicial} {cargar} />
   {/if}
 </div>
 

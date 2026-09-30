@@ -7,6 +7,8 @@ import { untrack } from 'svelte';
 // caliente).
 import { textoEn } from '../../../../engine/escenarios/index.js';
 import { BASES, parametro } from '../../../../engine/opciones.js';
+import { textoOrdenObjeto } from '../../../../engine/report/corrida.js';
+import { traductor } from '../../../../engine/report/textos.js';
 import { idioma, num, t } from '../../../i18n/index.svelte.js';
 import { clavePlural } from '../../experimentar/borrador.js';
 import { actual } from '../../sim/corrida.svelte.js';
@@ -116,6 +118,8 @@ const dif = $derived(
 );
 
 const lang = $derived(idioma() === 'en' ? 'en' : 'es');
+/** Textos de los informes (órdenes de objetos). */
+const tr = $derived(traductor(lang));
 
 /** @param {string} clave @param {number | undefined} v */
 function valor(clave, v) {
@@ -177,6 +181,9 @@ function eventos(evs) {
     const ciclo = t('comparar.dif.ciclo', { n: num(r.ciclo) });
     if (r.tipo === 'siembra')
       return `${ciclo}: ${t('comparar.dif.siembra', { especie: r.especie ?? '', n: num(r.cantidad ?? 0) })}`;
+    // Orden de la barra «Mundo»: el mismo texto que los informes.
+    if (r.tipo === 'objetos')
+      return `${ciclo}: ${t('comparar.dif.objetosOrden', { orden: textoOrdenObjeto(r.orden, tr.tx, tr.num) })}`;
     const cambios = (r.cambios ?? [])
       .map(([k, v]) => `${parametro(k)?.[lang] ?? k} = ${valor(k, v)}`)
       .join('; ');

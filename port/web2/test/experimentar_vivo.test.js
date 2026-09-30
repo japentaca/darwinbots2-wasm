@@ -23,6 +23,7 @@ import {
   valoresResueltos,
 } from '../engine/opciones.js';
 import { crearSim } from '../engine/sim.js';
+import { escribirParametro } from '../src/lib/experimentar/avanzado.js';
 import {
   borradorDe,
   controlCambiado,
@@ -36,6 +37,27 @@ import { cargarDbCore, hayWasm, SIN_WASM } from './util/dbcore-node.js';
  * @typedef {import('../engine/escenarios/index.js').Escenario} Escenario
  * @typedef {import('../engine/opciones.js').ControlBasico} ControlBasico
  */
+
+// Valores que la clásica acepta y la nueva también (con aviso si salen de lo
+// habitual; opt:36 satura en el tope del Long): revisión de N3.7.
+const FUERA_DE_LO_USUAL = /** @type {[string, number][]} */ ([
+  ['opt:20', -1],
+  ['cost:23', -1],
+  ['cost:30', -0.5],
+  ['opt:11', 2000],
+  ['opt:15', 0.2],
+  ['opt:14', 0.01],
+  ['opt:62', 150],
+  ['opt:13', 150],
+  ['opt:12', 1.5],
+  ['opt:52', 0],
+  ['opt:34', 0],
+  ['cost:53', 50000],
+  ['opt:97', 0],
+  ['base:maxEnergy', 150000],
+  ['opt:64', -1],
+  ['opt:36', 3e9],
+]);
 
 const SKIP = { skip: !hayWasm() && SIN_WASM, timeout: 60_000 };
 
@@ -187,6 +209,22 @@ test('aplicar cada control básico en vivo = reset con el borrador', SKIP, async
       comparar(`${f.id}/todos#${extremo}`, actual, b);
       actual = normalizar(efectivoTras(actual, diff(b, actual)));
     }
+  }
+  // Fuera de lo habitual: uno por uno y todos juntos.
+  for (const f of ESCENARIOS_FABRICA) {
+    const actual = borradorDe(sinSiembra(f));
+    let todos = actual;
+    for (const [k, v] of FUERA_DE_LO_USUAL) {
+      const r = escribirParametro(actual, k, v);
+      if (!r.ok) {
+        fallos.push(`${f.id}/${k}=${v}: rechazado (${r.codigo})`);
+        continue;
+      }
+      comparar(`${f.id}/${k}=${v}`, actual, r.borrador);
+      const r2 = escribirParametro(todos, k, v);
+      if (r2.ok) todos = r2.borrador;
+    }
+    comparar(`${f.id}/fuera-de-lo-usual`, actual, todos);
   }
   assert.ok(casos > 100, `casos: ${casos}`);
   assert.deepEqual(fallos.slice(0, 20), []);

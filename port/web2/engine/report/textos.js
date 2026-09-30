@@ -28,6 +28,35 @@ import es from './textos.es.json' with { type: 'json' };
 export const TEXTOS = Object.freeze({ es, en });
 export const IDIOMAS = /** @type {readonly Idioma[]} */ (Object.freeze(['es', 'en']));
 
+/**
+ * Códigos estables de los errores de los informes (la interfaz los traduce:
+ * t('informes.error.cod.<codigo>')).
+ *   faltan-corridas  Comparación sin las dos historias
+ *   faltan-replicas  Réplicas sin semillas o sin resultados
+ *   falta-historia   Corrida sin historia
+ *   falta-torneo     Torneo sin temporadas o sin la lista de partidos
+ *   tipo             plantilla desconocida
+ *   texto            falta un texto del informe (error de programación)
+ */
+export const CODIGOS_ERROR = Object.freeze([
+  'faltan-corridas',
+  'faltan-replicas',
+  'falta-historia',
+  'falta-torneo',
+  'falta-barrido',
+  'tipo',
+  'texto',
+]);
+
+/** Error de un informe con `codigo` estable (CODIGOS_ERROR). */
+export class ErrorInforme extends Error {
+  /** @param {string} codigo @param {string} [detalle] */
+  constructor(codigo, detalle) {
+    super(detalle ? `informe: ${codigo}: ${detalle}` : `informe: ${codigo}`);
+    this.codigo = codigo;
+  }
+}
+
 /** @param {unknown} x @returns {Idioma} */
 export const idiomaValido = (x) => (x === 'en' ? 'en' : 'es');
 
@@ -64,7 +93,7 @@ export function traductor(idioma) {
   /** @param {string} clave @param {Record<string, unknown>} [p] */
   const tx = (clave, p = {}) => {
     const s = dic[clave];
-    if (typeof s !== 'string') throw new Error(`informe: falta el texto «${clave}» (${idioma})`);
+    if (typeof s !== 'string') throw new ErrorInforme('texto', `«${clave}» (${idioma})`);
     return s
       .replace(PLURAL, (_m, k, uno, otros) => (reglas.select(Number(p[k])) === 'one' ? uno : otros))
       .replace(/\{(\w+)\}/g, (_m, k) => {

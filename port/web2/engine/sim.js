@@ -72,6 +72,25 @@ export function crearSim(opciones) {
   // para que la página distinga "el bot con foco murió" (focus 0 en un frame
   // que ya conoce la selección) de un frame armado antes del clic.
   let selSeq = 0;
+  // N4.1 (nueva, opcional; la clásica no lo manda): {t:'pb', on:true,
+  // seguirFoco:true}. Con el Player Bot encendido, KillRobot pasa robfocus
+  // al último resaltado vivo (los hijos nacidos bajo control heredan el
+  // resaltado) o lo pone en 0; sin el indicador el worker suelta el foco
+  // cuando muere el bot (como la clásica), con él adopta el del core.
+  let pbSeguir = false;
+
+  /**
+   * N4.1: el foco de la página pasa al robfocus del core si el core lo movió
+   * (murió el bot controlado; también cubre que su slot ya lo ocupe otro).
+   * Avisa con {t:'pb-focus', n, prev} (n = 0: no quedó nadie controlado).
+   */
+  function seguirFocoPb() {
+    const f = api.getFocus(sim) | 0;
+    if (f === focusBot) return;
+    const prev = focusBot;
+    focusBot = f > 0 ? f : 0;
+    postMessage({ t: 'pb-focus', n: focusBot, prev });
+  }
 
   // ticks/segundo medidos (va en stats de cada frame)
   let tickCount = 0;
@@ -167,6 +186,7 @@ export function crearSim(opciones) {
       pbAddKey: C('db_sim_pb_add_key', n, [n, n, n, n]),
       pbKeyActive: C('db_sim_pb_key_active', null, [n, n, n]),
       setFocus: C('db_sim_set_focus', null, [n, n]),
+      getFocus: C('db_sim_get_focus', n, [n]), // N4.1: foco del Player Bot
       // E6 - registro y analisis
       graphFeed: C('db_sim_graph_feed', n, [n, n, n, n]),
       graphName: C('db_sim_graph_series_name', n, [n, n]),
@@ -375,6 +395,9 @@ export function crearSim(opciones) {
     const nT = tieCap > 0 ? api.dumpTies(sim, scratch.ties.p, tieCap) : 0;
     const nO = obsCap > 0 ? api.dumpObstacles(sim, scratch.obs.p, obsCap) : 0;
     const nP = tpCap > 0 ? api.dumpTeleporters(sim, scratch.tps.p, tpCap) : 0;
+    // N4.1 (nueva, opcional): con {t:'pb', on:true, seguirFoco:true} el foco
+    // sigue al robfocus del core antes de volcarlo.
+    if (pbSeguir && focusBot > 0) seguirFocoPb();
     // Foco (E2): si el bot murió, dumpFocus devuelve 0 y el foco se apaga.
     const nF = focusBot > 0 ? api.dumpFocus(sim, focusBot, scratch.focus.p) : 0;
     if (!nF) focusBot = 0;
@@ -1785,6 +1808,8 @@ export function crearSim(opciones) {
             ? lcgSembrado(msg.seed)
             : azar;
     const old = sim;
+    // N4.1: sin sim anterior o con `limpio` el Player Bot no pasa (RV-42).
+    if (limpio || !old) pbSeguir = false;
     sim = api.create();
     const o = msg.options;
     api.setField(sim, o.fieldW, o.fieldH);
@@ -2058,6 +2083,8 @@ export function crearSim(opciones) {
       }
       case 'pb':
         if (sim) api.pbOn(sim, msg.on ? 1 : 0);
+        // N4.1 (opcional): seguir el foco que mueve el core (ver pbSeguir).
+        pbSeguir = !!(sim && msg.on && msg.seguirFoco);
         break;
       case 'pb-mouse':
         if (sim) api.pbMouse(sim, +msg.x, +msg.y);
@@ -2107,7 +2134,11 @@ export function crearSim(opciones) {
       case 'lint-dna':
         // N3.3 (decisión 18), opcional de la nueva: el lint del editor de ADN.
         // Solo db_dna_lint (no toca ninguna sim ni consume RNG) y no siembra.
-        postMessage({ t: 'lint-dna', req: msg.req, issues: lintIssues(String(msg.dna ?? '')) });
+        postMessage({
+          t: 'lint-dna',
+          ...correlacion(msg),
+          issues: lintIssues(String(msg.dna ?? '')),
+        });
         break;
       case 'dna-lib': {
         // RV-40: lo que la página resolvió por nombre

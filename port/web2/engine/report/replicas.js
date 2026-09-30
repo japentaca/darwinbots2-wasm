@@ -40,7 +40,7 @@ import {
 import { seccion } from './corrida.js';
 import { ANCHO_MEDIO, documento, nombreArchivo } from './plantilla.js';
 import { esc, lineas } from './svg.js';
-import { idiomaValido, traductor } from './textos.js';
+import { ErrorInforme, idiomaValido, traductor } from './textos.js';
 
 const COLOR = '#0f5c55';
 /** Métricas que escribe el resumen (si tienen datos). */
@@ -101,7 +101,7 @@ export function semillasDescartadas(semillas) {
  */
 export function informeReplicas(d, op = {}) {
   if (!d || !Array.isArray(d.semillas) || !Array.isArray(d.resultados))
-    throw new Error('informe «replicas»: faltan las semillas o los resultados');
+    throw new ErrorInforme('faltan-replicas');
   const idioma = idiomaValido(op.idioma);
   const tr = traductor(idioma);
   const { tx, num } = tr;

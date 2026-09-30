@@ -12,6 +12,7 @@
   "app.idioma.aria": "Idioma",
   "app.idioma.es": "Español",
   "app.idioma.en": "English",
+  "app.idioma.error": "No se pudo cargar {idioma}. Probá de nuevo más tarde.",
   "app.clasica.enlace": "Interfaz clásica",
   "app.aviso.construccion": "Esta interfaz está en construcción: varias secciones todavía no tienen contenido.",
   "app.aviso.enlace": "Usar la interfaz clásica",
@@ -27,5 +28,10 @@
   "app.pantalla.bots.desc": "La biblioteca de bots, sus fichas y el editor de ADN.",
   "app.pantalla.competir.titulo": "Competir",
   "app.pantalla.competir.desc": "Partidos y torneos entre bots, con tabla, rondas y salón de la fama.",
-  "app.pantalla.pronto": "Esta sección está en construcción."
+  "app.pantalla.pronto": "Esta sección está en construcción.",
+  "app.cargando": "Cargando…",
+  "app.errorCarga": "No se pudo cargar esta sección. Probá recargar la página.",
+  "app.recargar": "Recargar",
+  "app.versionNueva": "Hay una versión nueva; guardá la corrida antes de recargar.",
+  "app.trabajos.ayudaCompetir": "Rondas de torneo en segundo plano: ver en Competir"
 }

@@ -637,7 +637,34 @@ function adnSintetico(genes, palabras, f) {
   return out.join('\n');
 }
 
-test('I4: comparación de ADN de 7.200 palabras en menos de 50 ms y memorizada por hashes', () => {
+/**
+ * Celdas de Int32Array que reserva `fn` (genetica.js y lineage.js las toman
+ * del global al llamarse: se cuentan con una subclase mientras corre).
+ * @param {() => unknown} fn
+ */
+function celdasReservadas(fn) {
+  const Original = globalThis.Int32Array;
+  let n = 0;
+  class Contada extends Original {
+    /** @param {any[]} args */
+    constructor(...args) {
+      // @ts-expect-error: los mismos argumentos que Int32Array
+      super(...args);
+      n += this.length;
+    }
+  }
+  globalThis.Int32Array = /** @type {any} */ (Contada);
+  try {
+    fn();
+  } finally {
+    globalThis.Int32Array = Original;
+  }
+  return n;
+}
+
+// Tope holgado: con la suite en paralelo la comparación tarda 60–90 ms (sola,
+// unos 20); la versión vieja, con la matriz n×m, tardaba 323 ms sola.
+test('I4: comparación de ADN de 7.200 palabras en menos de 250 ms y memorizada por hashes', () => {
   // 600 genes × 12 palabras; el dominante cambia una palabra cada 5 genes,
   // borra el gen 11 y agrega uno al final
   const palabra = (/** @type {number} */ g, /** @type {number} */ w) =>
@@ -655,7 +682,7 @@ test('I4: comparación de ADN de 7.200 palabras en menos de 50 ms y memorizada p
   const r = compararFotos({ adn: a }, { adn: b });
   const ms = performance.now() - t0;
   console.log(`# comparación de 7.200 palabras: ${ms.toFixed(1)} ms`);
-  assert.ok(ms < 50, `${ms.toFixed(1)} ms`);
+  assert.ok(ms < 250, `${ms.toFixed(1)} ms`);
   assert.ok(r.distancia > 0 && r.distancia < 0.2, `${r.distancia}`);
   assert.equal(r.d.quitados, 1);
   assert.ok(r.cambios.length <= 30 && r.resto > 0);
@@ -667,7 +694,7 @@ test('I4: comparación de ADN de 7.200 palabras en menos de 50 ms y memorizada p
   const l = lcsLongitud(g1, g2);
   const ms2 = performance.now() - t1;
   assert.equal(l, 7200 - 10, '10 palabras cambiadas');
-  assert.ok(ms2 < 50, `LCS de un gen de 7.200 palabras: ${ms2.toFixed(1)} ms`);
+  assert.ok(ms2 < 250, `LCS de un gen de 7.200 palabras: ${ms2.toFixed(1)} ms`);
   const t2 = performance.now();
   const r2 = compararFotos(
     { adn: `cond ${g1.join(' ')} start stop` },
@@ -675,8 +702,42 @@ test('I4: comparación de ADN de 7.200 palabras en menos de 50 ms y memorizada p
   );
   assert.equal(r2.d.cambiados, 1, 'un gen modificado');
   const ms3 = performance.now() - t2;
-  assert.ok(ms3 < 50, `un gen enorme modificado: ${ms3.toFixed(1)} ms`);
+  assert.ok(ms3 < 250, `un gen enorme modificado: ${ms3.toFixed(1)} ms`);
   assert.ok(r2.distancia > 0 && r2.distancia < 0.01, `${r2.distancia}`);
+
+  // Guardas deterministas (los tiempos de arriba son topes holgados: con la
+  // suite en paralelo no sirven como medida relativa).
+  // 1) Celdas de Int32Array reservadas por la comparación: la matriz de genes
+  //    (601 × 601, por diseño) y las chicas por gen; nunca palabras × palabras
+  //    (7.200² ≈ 52 millones).
+  const celdas = celdasReservadas(() => compararFotos({ adn: a }, { adn: b }));
+  assert.ok(celdas < 2 * 601 * 601, `${celdas} celdas reservadas (ADN de 600 genes)`);
+  const celdas2 = celdasReservadas(() =>
+    compararFotos(
+      { adn: `cond ${g1.join(' ')} start stop` },
+      { adn: `cond ${g2.join(' ')} start stop` },
+    ),
+  );
+  assert.ok(celdas2 < 7200 * 4, `${celdas2} celdas reservadas (un gen de 7.200 palabras)`);
+  // 2) Lecturas de palabras de lcsLongitud: con los mismos 10 cambios, el
+  //    doble de palabras lee el doble (Myers, O((n + m)·D)); una matriz leería ×4.
+  const lecturas = (/** @type {number} */ n) => {
+    const x = Array.from({ length: n }, (_, i) => `w${i % 97}`);
+    const y = x.map((w, i) => (i % (n / 10) === n / 20 ? 'X' : w));
+    let k = 0;
+    /** @param {string[]} arr */
+    const contar = (arr) =>
+      new Proxy(arr, {
+        get(o, p) {
+          if (typeof p === 'string' && /^\d+$/.test(p)) k++;
+          return Reflect.get(o, p);
+        },
+      });
+    assert.equal(lcsLongitud(contar(x), contar(y)), n - 10);
+    return k;
+  };
+  const razon = lecturas(7200) / lecturas(3600);
+  assert.ok(razon < 2.5, `razón de lecturas 7.200/3.600 palabras: ${razon.toFixed(2)}`);
 
   // memoria por par de hashes: la segunda vez es la misma respuesta
   const comparar = memoComparaciones(2);

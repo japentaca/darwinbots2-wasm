@@ -428,7 +428,8 @@ export class Linaje {
 
 /**
  * Palabras del ADN en texto (sin comentarios: desde ' hasta el fin de la
- * línea; acepta CRLF y descarta los NUL de relleno).
+ * línea, y la línea entera si recortada empieza con /, como el core;
+ * acepta CRLF y descarta los NUL de relleno).
  * @param {string} adn
  */
 export function palabrasAdn(adn) {
@@ -438,6 +439,8 @@ export function palabrasAdn(adn) {
     .split(/\r?\n/)) {
     const q = linea.indexOf("'");
     const codigo = q >= 0 ? linea.slice(0, q) : linea;
+    // una línea que, recortada, empieza con / es comentario (loader.hpp)
+    if (/^\s*\//.test(codigo)) continue;
     for (const w of codigo.split(/\s+/)) if (w) out.push(w);
   }
   return out;

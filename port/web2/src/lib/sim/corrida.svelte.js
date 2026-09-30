@@ -6,6 +6,7 @@
 // Pide al worker el muestreo de métricas (MUESTREO_CORRIDA): la historia, el
 // linaje y las especies del panel salen de ahí con cualquier vista.
 
+import { crearBots } from '../../../engine/bots.js';
 import { crearCorridas } from '../../../engine/corridas.js';
 import { idioma, t } from '../../i18n/index.svelte.js';
 import { adnBestiario } from '../observar/bestiario.js';
@@ -52,16 +53,18 @@ export function corridasGuardadas() {
   if (!almacenCorridas) {
     const almacen = almacenPagina();
     almacenCorridas = crearCorridas({ almacen });
-    adnPropio = async (hash) => {
-      const b = await almacen.get('bots', hash);
-      return b ? (b.adn ?? b.dna) : undefined;
-    };
+    // bots propios: la versión exacta por lgHash y, si no, por nombre (engine/bots.js)
+    const bots = crearBots({ almacen });
+    adnPropio = (s) => bots.adnDeEspecie(s);
+    adnPropioPorNombre = async (nombre) => (await bots.porNombre(nombre))?.adn;
   }
   return almacenCorridas;
 }
 
-/** @type {(hash: string) => Promise<string | undefined>} */
+/** @type {(s: {bot: string, hash?: string}) => Promise<string | undefined>} */
 let adnPropio = async () => undefined;
+/** @type {(nombre: string) => Promise<string | undefined>} */
+let adnPropioPorNombre = async () => undefined;
 
 /**
  * La corrida de la página (se crea la primera vez que se pide).
@@ -75,7 +78,8 @@ export function corrida() {
       corridas,
       estado: new EstadoCorrida(),
       idioma,
-      adnDe: (s) => (s.origen === 'propio' && s.hash ? adnPropio(s.hash) : adnBestiario(s.bot)),
+      adnDe: (s) => (s.origen === 'propio' ? adnPropio(s) : adnBestiario(s.bot)),
+      adnPropioPorNombre: (nombre) => adnPropioPorNombre(nombre),
       miniatura: () => miniaturaMundo(160),
       nombrePorDefecto: () => t('observar.sinNombre'),
       // N2.1: historia y linaje con las muestras del worker (decisiones 7-9)

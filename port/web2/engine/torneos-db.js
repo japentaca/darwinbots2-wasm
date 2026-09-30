@@ -4,7 +4,8 @@
 // única, con todos los almacenes y su versión). Los torneos usan dos:
 // 'torneos' (clave id) y 'partidos' (clave id autoincremental, con índice
 // `league`). La clásica guarda en `darwinbots-ligas` ('leagues' y
-// 'matches'): la copia de esa base a esta es del Nivel 3 y no está aquí.
+// 'matches'): la copia de esa base a esta (una sola vez, sin tocar la
+// clásica) es migrarLigas de engine/migracion.js (paso N3.4).
 //
 // La lógica (engine/torneos.js) solo ve la interfaz Almacen de
 // engine/almacen.js (get, put, delete, list, porIndice y tx). Este módulo

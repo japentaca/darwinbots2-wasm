@@ -7,14 +7,17 @@
 // Datos: el frame con foco (bloque de db_sim_dump_focus + registro de la vista
 // enriquecida) y los mensajes del worker bot-text, family, genes/activ,
 // console/console-cmd/console-out, sysvar y eye-read. Nada de esto escribe en
-// la sim salvo lo que el usuario escriba en la consola.
+// la sim salvo lo que el usuario escriba en la consola y la pestaña Control
+// (N4.1, decisión 15: Player Bot, diseñador de ojos y sus facilidades).
 import { onMount, untrack } from 'svelte';
 import { num, t } from '../../i18n/index.svelte.js';
 import { vbACss } from '../mundo/color.js';
 import { ESTADO, FLAG } from '../sim/frame.js';
 import Adn from './Adn.svelte';
 import Consola from './Consola.svelte';
+import ControlJugador from './ControlJugador.svelte';
 import { COMANDOS, HistorialComandos, SalidaConsola, verbo } from './consola.js';
+import DisenadorOjos from './DisenadorOjos.svelte';
 import {
   cabeceraAdn,
   datosBot,
@@ -34,14 +37,22 @@ import { SerieCiclos } from './serie.js';
 /**
  * @type {{
  *   sesion: import('../sim/sesion.svelte.js').Sesion,
+ *   corrida: import('../sim/corrida-nucleo.js').NucleoCorrida,
  *   onCerrar: () => void,
  *   siguiendo?: boolean,
  *   onSeguir?: (on: boolean) => void,
  * }}
  */
-let { sesion, onCerrar, siguiendo = false, onSeguir } = $props();
+let { sesion, corrida, onCerrar, siguiendo = false, onSeguir } = $props();
 
-const PESTANAS = /** @type {const} */ (['resumen', 'sentidos', 'memoria', 'adn', 'consola']);
+const PESTANAS = /** @type {const} */ ([
+  'resumen',
+  'sentidos',
+  'memoria',
+  'adn',
+  'consola',
+  'control',
+]);
 /** Refresco del panel (ms): los frames llegan a 60 por segundo. */
 const REFRESCO = 100;
 /** Ventana de la sparkline de energía (ciclos). */
@@ -521,8 +532,11 @@ const estados = $derived.by(() => {
       <Memoria {vivo} {valorDe} direccion={direccionDe} leer={leerMemoria} />
     {:else if pestana === 'adn'}
       <Adn texto={adn} {vivo} onReleer={pedirAdn} />
-    {:else}
+    {:else if pestana === 'consola'}
       <Consola texto={textoConsola} {vivo} {historial} onComando={comando} />
+    {:else}
+      <ControlJugador {sesion} {vivo} />
+      <DisenadorOjos {sesion} {corrida} {bot} {vivo} {datos} {nombre} />
     {/if}
   </div>
 </section>
@@ -615,7 +629,8 @@ h2 {
 }
 .pestanas button {
   flex: 1;
-  padding: 0 6px;
+  min-width: 0;
+  padding: 0 4px;
 }
 .cuerpo {
   display: flex;

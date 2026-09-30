@@ -1,15 +1,17 @@
 <script>
 // @ts-check
-// Agregar una especie al borrador: un bot del Bestiary por nombre
-// (classic/bots/bots.json, C1), un preset (Animal/Alga Minimalis) o ADN
-// pegado. La biblioteca de bots propios llega con el Nivel 3.
+// Agregar una especie al borrador: un bot de la biblioteca (los del foro
+// van por nombre, C1; los propios, con su ADN dentro), con
+// src/lib/bots/SelectorBot.svelte; un preset (Animal/Alga Minimalis) o ADN
+// pegado.
 import { untrack } from 'svelte';
-import { idioma, num, t } from '../../i18n/index.svelte.js';
-import { adnBestiario, indiceBestiario } from '../observar/bestiario.js';
+import { t } from '../../i18n/index.svelte.js';
+import { adnDeEntrada } from '../bots/datos.js';
+import SelectorBot from '../bots/SelectorBot.svelte';
 import Dialogo from '../observar/Dialogo.svelte';
 import { especiesPrueba } from '../sim/prueba.js';
 import { mensajeError } from './archivo.js';
-import { clavePlural, colorLibre, especieNueva, validarAdn, vbAHex } from './borrador.js';
+import { colorLibre, especieNueva, validarAdn, vbAHex } from './borrador.js';
 
 /**
  * @type {{
@@ -33,9 +35,8 @@ let vegetal = $state(false);
 let ocupado = $state(false);
 /** @type {{ clave: string, params?: Record<string, any> } | null} */
 let error = $state.raw(null);
-/** @type {{ file: string, name: string, veg?: boolean, board?: string }[]} */
-let bots = $state.raw([]);
-let sinIndice = $state(false);
+/** @type {import('../../../engine/biblioteca.js').Entrada | null} */
+let elegida = $state.raw(null);
 
 /** Textos de los avisos del ADN pegado (validarAdn). */
 const CLAVE_ADN = {
@@ -46,6 +47,7 @@ const CLAVE_ADN = {
 /** Cada vez que se abre: el formulario vacío y un color de la paleta que no esté usado. */
 function reiniciar() {
   fuente = 'bestiario';
+  elegida = null;
   nombre = '';
   adn = '';
   cantidad = 5;
@@ -59,19 +61,6 @@ $effect(() => {
   if (abierto) untrack(reiniciar);
 });
 
-$effect(() => {
-  if (!abierto || bots.length) return;
-  indiceBestiario().then(
-    (b) => {
-      bots = b;
-      sinIndice = false;
-    },
-    () => {
-      sinIndice = true;
-    },
-  );
-});
-
 /** @param {'bestiario' | 'animal' | 'alga' | 'pegar'} f */
 function elegir(f) {
   fuente = f;
@@ -83,19 +72,26 @@ function elegir(f) {
     vegetal = s.veg;
     cantidad = s.qty;
   } else {
-    nombre = '';
+    nombre = f === 'bestiario' && elegida ? elegida.nombre : '';
   }
 }
 
-/** Al elegir un bot del Bestiary, su marca de vegetal. */
-function alNombre() {
-  if (fuente !== 'bestiario') return;
-  const b = bots.find((x) => x.name === nombre);
-  if (b) vegetal = !!b.veg;
+/**
+ * Un bot de la biblioteca: su nombre y su marca de vegetal.
+ * @param {import('../../../engine/biblioteca.js').Entrada} e
+ */
+function elegirBot(e) {
+  elegida = e;
+  nombre = e.nombre;
+  vegetal = e.vegetal;
+  error = null;
 }
 
 const valido = $derived(
-  nombre.trim() !== '' && cantidad >= 1 && (fuente !== 'pegar' || adn.trim() !== ''),
+  nombre.trim() !== '' &&
+    cantidad >= 1 &&
+    (fuente !== 'pegar' || adn.trim() !== '') &&
+    (fuente !== 'bestiario' || !!elegida),
 );
 
 async function agregar() {
@@ -106,12 +102,18 @@ async function agregar() {
     /** @type {import('../../../engine/escenarios/index.js').Especie} */
     let s;
     if (fuente === 'bestiario') {
-      const texto = await adnBestiario(nombre.trim());
+      const e = elegida;
+      if (!e) return;
+      const texto = await adnDeEntrada(e);
       if (!texto) {
-        error = { clave: 'experimentar.especie.noEncontrado', params: { bot: nombre.trim() } };
+        error = { clave: 'bots.lote.sinAdn', params: { nombre: e.nombre } };
         return;
       }
-      s = especieNueva({ bot: nombre, cantidad, color, vegetal, adnBestiario: texto });
+      // los del foro, por nombre (con el hash de su .txt); los propios, con su ADN
+      s =
+        e.clase === 'propio'
+          ? especieNueva({ bot: e.nombre, cantidad, color, vegetal, adn: texto })
+          : especieNueva({ bot: e.nombre, cantidad, color, vegetal, adnBestiario: texto });
     } else {
       if (fuente === 'pegar') {
         const mal = validarAdn(adn);
@@ -148,31 +150,7 @@ async function agregar() {
     </select></label
   >
   {#if fuente === 'bestiario'}
-    <label class="campo"
-      >{t('experimentar.especie.bot')}
-      <input
-        class="txt"
-        type="text"
-        list="exp-bestiario"
-        bind:value={nombre}
-        onchange={alNombre}
-        placeholder={t('experimentar.especie.bot.placeholder')}
-      ></label
-    >
-    <datalist id="exp-bestiario">
-      {#each bots as b (b.file)}
-        <option value={b.name}>{b.board ?? ''}</option>
-      {/each}
-    </datalist>
-    {#if sinIndice}
-      <p class="nota error">{t('experimentar.especie.sinIndice')}</p>
-    {:else}
-      <p class="nota">
-        {t(clavePlural('experimentar.especie.bestiario.nota', bots.length, idioma()), {
-  n: num(bots.length),
-})}
-      </p>
-    {/if}
+    <SelectorBot {elegida} onElegir={elegirBot} />
   {:else}
     <label class="campo"
       >{t('experimentar.especie.nombre')}

@@ -200,7 +200,9 @@ test('validación con normalizarValor: el borrador no cambia con un valor invál
     assert.equal(r.ok, false, `${k} = ${v}`);
     return r.ok ? '' : r.codigo;
   };
-  assert.equal(codigo('opt:12', 2), 'valor-rango');
+  assert.equal(codigo('opt:34', 40000), 'valor-rango'); // i16 del core
+  assert.equal(codigo('base:repopAmount', -40000), 'valor-rango');
+  assert.equal(codigo('base:fieldW', 3e6), 'valor-rango'); // el campo conserva su tope
   assert.equal(codigo('opt:34', 1.5), 'valor-tipo');
   assert.equal(codigo('opt:34', 'abc'), 'valor-tipo');
   assert.equal(codigo('opt:53', 1), 'valor-enum');

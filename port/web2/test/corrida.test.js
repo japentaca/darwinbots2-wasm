@@ -855,3 +855,43 @@ test('registrarCambio con el ciclo exacto (aplicarEnCiclo); nunca antes del últ
   assert.equal(n.estado.eventos.at(-1)?.tipo, 'siembra');
   assert.equal(sesion.enviados.at(-1).t, 'seed-species');
 });
+
+test('dna-missing sin especie en el escenario: primero un propio con ese nombre, después el Bestiary', async () => {
+  const a = entorno();
+  await a.n.iniciar(SOPA, 1);
+  const r = await a.n.guardar('sin propios en el escenario');
+  const b = { sesion: sesionFalsa() };
+  /** @type {string[]} */
+  const bestiario = [];
+  /** @type {string[]} */
+  const propios = [];
+  const nb = new NucleoCorrida({
+    sesion: /** @type {any} */ (b.sesion),
+    corridas: a.corridas,
+    estado: estadoVacio(),
+    idioma: () => 'es',
+    adnDe: async (s) => {
+      bestiario.push(s.bot);
+      return `' bestiary ${s.bot}\nend\n`;
+    },
+    adnPropioPorNombre: async (nombre) => {
+      propios.push(nombre);
+      return nombre === 'Mi propio' ? "' propio\nend\n" : undefined;
+    },
+  });
+  b.sesion.cargar = () => {
+    b.sesion.emitir('dna-missing', { names: ['Mi propio.txt', 'Del foro.txt'] });
+    return Promise.resolve({ cycle: 5, bots: 2, missing: [] });
+  };
+  await nb.cargar(r.id);
+  const lib = b.sesion.enviados.find((m) => m.t === 'dna-lib');
+  assert.deepEqual(
+    lib.entries.map((/** @type {any} */ e) => [e.name, e.dna]),
+    [
+      ['Mi propio.txt', "' propio\nend\n"],
+      ['Del foro.txt', "' bestiary Del foro\nend\n"],
+    ],
+  );
+  assert.deepEqual(propios.sort(), ['Del foro', 'Mi propio']);
+  assert.deepEqual(bestiario, ['Del foro'], 'al Bestiary solo si no hay propio');
+});

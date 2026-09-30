@@ -71,6 +71,7 @@ export const CAPAS_DEFECTO = Object.freeze({
  * @property {number} z     zoom de la cámara
  * @property {number} LW    un píxel de pantalla en unidades de dibujo
  * @property {boolean} rica vista enriquecida
+ * @property {boolean} [contorno] bots solo con contorno, sin relleno
  * @property {Capas} capas
  */
 
@@ -207,7 +208,7 @@ const tope = (n) => Math.max(-1000, Math.min(1000, n));
  */
 export function dibujarBotsClasicos(ctx, f, p) {
   const v = f.v;
-  const { s, LW, capas } = p;
+  const { s, LW, capas, contorno } = p;
   const foco = f.foco;
   ctx.lineWidth = LW;
   for (let i = 0; i < f.nBots; i++) {
@@ -232,18 +233,23 @@ export function dibujarBotsClasicos(ctx, f, p) {
       ctx.stroke();
     }
 
+    const color = cadaver ? '#777' : vbACss(v[o + BOT.color]);
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = cadaver ? '#555' : vbACss(v[o + BOT.color]);
-    ctx.fill();
-    ctx.strokeStyle = cadaver ? '#777' : 'rgba(255,255,255,0.55)';
+    if (contorno) {
+      ctx.strokeStyle = color;
+    } else {
+      ctx.fillStyle = cadaver ? '#555' : color;
+      ctx.fill();
+      ctx.strokeStyle = cadaver ? '#777' : 'rgba(255,255,255,0.55)';
+    }
     ctx.stroke();
     // rumbo: y de mundo hacia abajo, aim antihorario
     const aim = v[o + BOT.aim];
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x + Math.cos(aim) * r, y - Math.sin(aim) * r);
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.strokeStyle = contorno ? color : 'rgba(255,255,255,0.8)';
     ctx.stroke();
 
     if (capas.indicadores) {

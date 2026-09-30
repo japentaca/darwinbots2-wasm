@@ -18,6 +18,8 @@
 import { diff, resolverOpciones } from '../../../engine/escenarios/index.js';
 import { lgHash } from '../../../engine/league.js';
 import {
+  ajustesF1,
+  BASES,
   CONTROLES_BASICOS,
   fusionarCambios,
   PARAMETROS,
@@ -79,13 +81,31 @@ function mismosEfectivos(a, b) {
 }
 
 /**
+ * Los cambios de un escenario son un conjunto: el reset los manda por id
+ * (97 antes que 101, sea cual sea el orden en el .json). Para fusionarlos
+ * como una secuencia sin perder un 101 que en el archivo va antes que 97,
+ * se pone 97 primero.
+ * @param {Record<string, number>} cambios
+ * @returns {Record<string, number>}
+ */
+function ordenReset(cambios) {
+  const k = Object.keys(cambios);
+  const i97 = k.indexOf('opt:97');
+  const i101 = k.indexOf('opt:101');
+  if (i97 < 0 || i101 < 0 || i97 < i101) return cambios;
+  const { 'opt:97': v97, ...resto } = cambios;
+  return { 'opt:97': v97, ...resto };
+}
+
+/**
  * Cambios sin opt:1 (derivado: se reparte en 2 y 3) y sin claves que no
- * cambian ningún valor efectivo respecto de la base.
+ * cambian ningún valor efectivo respecto de la base. `cambios` se lee como
+ * los de un escenario (97 antes que 101, como el reset).
  * @param {string} base @param {Record<string, number>} cambios
  * @returns {Record<string, number>}
  */
 export function limpiarCambios(base, cambios) {
-  let out = fusionarCambios({}, cambios);
+  let out = fusionarCambios({}, ordenReset(cambios));
   for (const k of Object.keys(out)) {
     const sin = { ...out };
     delete sin[k];
@@ -112,6 +132,21 @@ export function borradorDe(e) {
 export const leerControl = (c, e) => c.lee(efectivos(e));
 
 /**
+ * Borrador con esos valores escritos encima (en orden, como mensajes a la
+ * sim: fusionarCambios) y los cambios limpios. Las especies y los objetos
+ * no cambian.
+ * @param {Escenario} b @param {Record<string, number>} nuevos
+ * @returns {Escenario}
+ */
+export function escribirCambios(b, nuevos) {
+  const cambios = limpiarCambios(
+    b.opciones.base,
+    fusionarCambios(ordenReset(b.opciones.cambios), nuevos),
+  );
+  return { ...b, opciones: { ...b.opciones, cambios } };
+}
+
+/**
  * Borrador con el control puesto en `v` (el mismo objeto si el valor no
  * escribe nada, p. ej. «Personalizados» en Costos).
  * @param {Escenario} b @param {ControlBasico} c @param {any} v
@@ -120,8 +155,35 @@ export const leerControl = (c, e) => c.lee(efectivos(e));
 export function escribirControl(b, c, v) {
   const nuevos = c.escribe(v);
   if (!Object.keys(nuevos).length) return b;
-  const cambios = limpiarCambios(b.opciones.base, fusionarCambios(b.opciones.cambios, nuevos));
-  return { ...b, opciones: { ...b.opciones, cambios } };
+  return escribirCambios(b, nuevos);
+}
+
+/**
+ * «Ajustes F1» sobre el borrador, como el botón de la clásica
+ * (applyF1Settings): costos, opciones de liga, campo 9237×6928 toroidal,
+ * economía vegetal y mutaciones apagadas encima de lo que haya; lo demás,
+ * las especies y los objetos quedan.
+ * @param {Escenario} b
+ * @returns {Escenario}
+ */
+export const conAjustesF1 = (b) => escribirCambios(b, ajustesF1());
+
+/**
+ * Borrador sobre otra base: los parámetros que esa base fija toman sus
+ * valores y los cambios del borrador en parámetros que la base no fija
+ * siguen (como conjunto, igual que en un escenario: un 101 propio no se
+ * pierde porque la base fije 97). Especies y objetos quedan.
+ * @param {Escenario} b @param {string} base
+ * @returns {Escenario}
+ */
+export function cambiarBase(b, base) {
+  const nb = BASES[base];
+  if (!nb || base === b.opciones.base) return b;
+  /** @type {Record<string, number>} */
+  const resto = {};
+  for (const [k, v] of Object.entries(b.opciones.cambios))
+    if (!Object.hasOwn(nb.valores, k)) resto[k] = v;
+  return { ...b, opciones: { ...b.opciones, base, cambios: limpiarCambios(base, resto) } };
 }
 
 /**
@@ -144,7 +206,9 @@ export function controlCambiado(c, b, ref) {
 
 /**
  * Número de una entrada de texto para un control numérico: redondeado si es
- * entero y llevado al rango; null si no es un número.
+ * entero y llevado al rango que admite el core (`min`/`max`; fuera del
+ * rango habitual se acepta con aviso: fueraDeLoUsual); null si no es un
+ * número.
  * @param {ControlBasico | {valor: string, min?: number, max?: number}} c @param {unknown} texto
  * @returns {number | null}
  */
@@ -444,6 +508,7 @@ export const PLURALES = Object.freeze([
   'experimentar.aviso.aplicado',
   'experimentar.aviso.aplicadoParcial',
   'experimentar.especie.bestiario.nota',
+  'experimentar.avanzado.resultados',
 ]);
 
 /** @type {Map<string, Intl.PluralRules>} */

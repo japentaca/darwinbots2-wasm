@@ -14,9 +14,14 @@
 //     escenario (no se sabe qué orden la creó: un laberinto crea muchas):
 //     se conservan las órdenes de creación y el resultado se marca
 //     `aproximado` para avisarlo.
+// El laberinto polar además enciende la deriva de las formas (opciones
+// 83–85, DERIVA_POLAR): es un cambio de opciones en su posición entre los
+// eventos, que se pliega en los cambios del escenario (y no se va al borrar
+// las formas: la sim sigue con la deriva).
 
 import { copiaOrden, errorOrden } from '../../../../engine/corridas.js';
-import { TOPE_TELEPORTERS } from '../../../../engine/escenarios/index.js';
+import { DERIVA_POLAR, TOPE_TELEPORTERS, tienePolar } from '../../../../engine/escenarios/index.js';
+import { fusionarCambios } from '../../../../engine/opciones.js';
 
 /** Tamaño por defecto de una forma nueva (fracción del campo). */
 export const TAMANO_DEF = 0.2;
@@ -89,10 +94,15 @@ export function orden(tipo, d = {}) {
  * Los objetos que tendría el escenario si las órdenes de la corrida fueran
  * suyas: los de arranque más los eventos 'objetos' en orden (ver la
  * cabecera). `sueltas` = borrados de formas que no se pudieron llevar.
+ * `cambios`: los cambios de opciones del escenario (`cambiosIniciales`) con
+ * los eventos 'opciones' y la deriva de cada laberinto polar fusionados en
+ * orden (fusionarCambios): los del escenario efectivo.
  * @param {ObjetosEsc | undefined} iniciales @param {EventoCorrida[]} eventos
- * @returns {{objetos: ObjetosEsc, aproximado: boolean, sueltas: number}}
+ * @param {Record<string, number>} [cambiosIniciales]
+ * @returns {{objetos: ObjetosEsc, aproximado: boolean, sueltas: number,
+ *   cambios: Record<string, number>}}
  */
-export function plegarObjetos(iniciales, eventos) {
+export function plegarObjetos(iniciales, eventos, cambiosIniciales = {}) {
   /** @type {ObjetosEsc} */
   const out = {
     obstaculos: structuredClone(iniciales?.obstaculos ?? []),
@@ -101,7 +111,14 @@ export function plegarObjetos(iniciales, eventos) {
     })),
   };
   let sueltas = 0;
+  // Un polar de arranque deja su deriva en las claves que los cambios no
+  // fijan (resolverOpciones): queda explícita, así sobrevive a borrar las
+  // formas.
+  let cambios = tienePolar({ objetos: iniciales })
+    ? { ...DERIVA_POLAR, ...cambiosIniciales }
+    : { ...cambiosIniciales };
   for (const ev of eventos) {
+    if (ev.tipo === 'opciones') cambios = fusionarCambios(cambios, ev.cambios);
     if (ev.tipo !== 'objetos') continue;
     const o = /** @type {any} */ (ev.orden);
     switch (o.tipo) {
@@ -116,6 +133,7 @@ export function plegarObjetos(iniciales, eventos) {
           pasillo: o.pasillo,
           muro: o.muro,
         });
+        if (o.forma === 'polar') cambios = fusionarCambios(cambios, DERIVA_POLAR);
         break;
       case 'teleporter':
         // El motor no pasa de TOPE_TELEPORTERS: la orden de más no creó nada.
@@ -137,7 +155,7 @@ export function plegarObjetos(iniciales, eventos) {
         break;
     }
   }
-  return { objetos: out, aproximado: sueltas > 0, sueltas };
+  return { objetos: out, aproximado: sueltas > 0, sueltas, cambios };
 }
 
 /**
@@ -210,3 +228,95 @@ export function siguienteObjeto(sel, nObs, nTps, dir) {
  */
 export const ordenBorrar = (sel) =>
   orden(sel.tipo === 'teleporter' ? 'borrar-teleporter' : 'borrar-forma', { n: sel.n });
+
+/**
+ * Un tipo de laberinto se puede crear con esos valores de pasillo y muro
+ * (null = el campo no vale): solo cuentan los que ese tipo usa (el damero
+ * no usa el muro; polar y escombros, ninguno).
+ * @param {(typeof LABERINTOS)[number]} l
+ * @param {number | null} pasillo @param {number | null} muro
+ */
+export const laberintoValido = (l, pasillo, muro) =>
+  (!l.pasillo || pasillo !== null) && (!l.muro || muro !== null);
+
+/** Frames que se ignoran, como mucho, esperando que el worker confirme un borrado. */
+export const MAX_FRAMES_PENDIENTE = 120;
+
+/**
+ * Copia local de las formas y los teleporters del último frame (modo
+ * borrar de Mundo.svelte: clic, resaltado y recorrido por teclado). Tras
+ * un borrado los índices del motor se corren (db_sim_delete_obstacle y
+ * db_sim_delete_teleporter mueven los de atrás un lugar), pero el frame
+ * siguiente puede llegar tarde o ser uno anterior al borrado: la copia
+ * repite la compactación en el momento y no toma frames hasta que el
+ * worker confirma el borrado (confirmar); así un segundo clic no usa un
+ * índice viejo. Si la confirmación no llega, a los MAX_FRAMES_PENDIENTE
+ * frames vuelve a tomar los del worker.
+ */
+export class CopiaObjetos {
+  obs = new Float32Array(0);
+  tps = new Float32Array(0);
+  nObs = 0;
+  nTps = 0;
+  #regObs;
+  #regTp;
+  #pendientes = 0;
+  #ignorados = 0;
+
+  /** @param {number} regObs floats por forma @param {number} regTp floats por teleporter */
+  constructor(regObs, regTp) {
+    this.#regObs = regObs;
+    this.#regTp = regTp;
+  }
+
+  /** Borrados mandados que el worker todavía no confirmó. */
+  get pendientes() {
+    return this.#pendientes;
+  }
+
+  /**
+   * Toma los objetos de un frame (v: floats del frame; ofObs/ofTps: dónde
+   * empiezan; nO/nT: cuántos hay), salvo con borrados sin confirmar.
+   * Devuelve si cambió la cantidad de formas o de teleporters.
+   * @param {Float32Array} v @param {number} ofObs @param {number} nO
+   * @param {number} ofTps @param {number} nT
+   */
+  tomar(v, ofObs, nO, ofTps, nT) {
+    if (this.#pendientes > 0 && ++this.#ignorados <= MAX_FRAMES_PENDIENTE) return false;
+    this.#pendientes = 0;
+    this.#ignorados = 0;
+    const ro = this.#regObs;
+    const rt = this.#regTp;
+    if (this.obs.length < nO * ro) this.obs = new Float32Array(nO * ro + 256);
+    this.obs.set(v.subarray(ofObs, ofObs + nO * ro));
+    if (this.tps.length < nT * rt) this.tps = new Float32Array(nT * rt + 64);
+    this.tps.set(v.subarray(ofTps, ofTps + nT * rt));
+    const cambio = nO !== this.nObs || nT !== this.nTps;
+    this.nObs = nO;
+    this.nTps = nT;
+    return cambio;
+  }
+
+  /**
+   * Un borrado mandado al worker: quita el objeto de la copia y corre los
+   * de atrás un lugar, como el motor. false si no existe (no se mandó).
+   * @param {{tipo: 'forma' | 'teleporter', n: number}} sel
+   */
+  borrar(sel) {
+    const tp = sel.tipo === 'teleporter';
+    const total = tp ? this.nTps : this.nObs;
+    if (!(Number.isInteger(sel.n) && sel.n >= 1 && sel.n <= total)) return false;
+    const reg = tp ? this.#regTp : this.#regObs;
+    (tp ? this.tps : this.obs).copyWithin((sel.n - 1) * reg, sel.n * reg, total * reg);
+    if (tp) this.nTps--;
+    else this.nObs--;
+    this.#pendientes++;
+    this.#ignorados = 0;
+    return true;
+  }
+
+  /** El worker confirmó un borrado: los frames que lleguen después ya lo reflejan. */
+  confirmar() {
+    if (this.#pendientes > 0) this.#pendientes--;
+  }
+}

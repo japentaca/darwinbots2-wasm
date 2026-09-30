@@ -33,7 +33,9 @@ const ruido = (i) => {
 
 /** @param {import('../engine/detectors.js').Hallazgo} x */
 function formaValida(x) {
-  assert.ok(['dominio', 'colapso', 'extincion', 'adn'].includes(x.tipo));
+  assert.ok(
+    ['dominio', 'colapso', 'extincion', 'adn', 'sustitucion', 'oscilacion'].includes(x.tipo),
+  );
   assert.ok(CLAVES_HALLAZGO.includes(x.clave), x.clave);
   assert.ok(Object.values(FIGURAS).includes(x.figura));
   assert.ok(['info', 'aviso', 'alta'].includes(x.severidad));

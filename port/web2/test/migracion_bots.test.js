@@ -13,7 +13,7 @@ import { test } from 'node:test';
 import { componerHibrido, hashAdn } from '../engine/adn.js';
 import { almacenMemoria } from '../engine/almacen.js';
 import { construirIndice } from '../engine/biblioteca.js';
-import { crearBots, ErrorBots } from '../engine/bots.js';
+import { crearBots, ErrorBots, esClavePropia } from '../engine/bots.js';
 import {
   CLAVE_MIGRACION_INVENTARIO,
   exportarBiblioteca,
@@ -214,9 +214,11 @@ test('transformarInventario: marcas, claves file:, selecciones e híbridos', () 
   });
   assert.equal(h1.nombre, 'Híbrido 1');
   assert.equal(h1.adn, c1.adn);
-  assert.equal(h1.hash, hashAdn(c1.adn));
+  assert.ok(esClavePropia(h1.hash), 'clave propia nueva');
+  assert.notEqual(h1.hash, h2.hash);
+  assert.equal(h1.versiones[0].hash, hashAdn(c1.adn));
   assert.equal(h1.creado, '2026-02-03T10:00:00.000Z');
-  assert.deepEqual(h1.origen, { tipo: 'hibrido' });
+  assert.deepEqual(h1.origen, { tipo: 'hibrido', nombre: 'Híbrido 1' });
   assert.deepEqual(h1.versiones[0].origenes, [
     { archivo: '1.txt', gen: 0 },
     { archivo: '1.txt', gen: 3 },
@@ -336,6 +338,45 @@ test('migrarInventario: copia una vez, avisa qué importó y no toca la clásica
   assert.deepEqual(r2.resumen, r.resumen);
   assert.equal(f.log.aperturas, 1);
   assert.equal((await bots.obtener(H(0)))?.fav, false);
+
+  // «Importar desde la clásica» (forzada): vuelve a leer y a aplicar, sin duplicar
+  const r3 = await migrarInventario(almacen, { ...ctx, idb: f.factory, forzar: true });
+  assert.equal(r3.nueva, true);
+  assert.equal(f.log.aperturas, 2);
+  assert.equal(r3.resumen.propiosEscritos, 0);
+  assert.equal(r3.resumen.yaEstaban, 2, 'los híbridos ya migrados no se duplican');
+  assert.equal(r3.resumen.seleccionesOmitidas, 2);
+  assert.equal((await bots.propios()).length, 2);
+  assert.equal((await bots.obtener(H(0)))?.fav, true, 'las marcas se vuelven a fundir');
+  assert.deepEqual((await almacen.get('ajustes', CLAVE_MIGRACION_INVENTARIO)).resumen, r3.resumen);
+});
+
+test('migración: dos híbridos con las mismas partes y distinto nombre se importan los dos', async () => {
+  const partes = [
+    { file: '1.txt', gi: 0 },
+    { file: '1.txt', gi: 2 },
+  ];
+  const leer = async () => ({
+    version: 2,
+    stores: {
+      bots: [],
+      sets: [],
+      hybrids: [
+        { name: 'Gemelo A', parts: partes, updated: '2026-02-01T00:00:00.000Z' },
+        { name: 'Gemelo B', parts: partes, updated: '2026-02-01T00:00:00.000Z' },
+      ],
+    },
+  });
+  const almacen = almacenMemoria();
+  const r = await migrarInventario(almacen, { ...ctx, leer });
+  assert.equal(r.resumen.propiosEscritos, 2);
+  const [a, b] = await crearBots({ almacen }).propios();
+  assert.deepEqual([a.nombre, b.nombre], ['Gemelo A', 'Gemelo B']);
+  assert.equal(a.versiones[0].hash, b.versiones[0].hash, 'mismo ADN (hash de identidad)');
+  assert.notEqual(a.hash, b.hash);
+  const r2 = await migrarInventario(almacen, { ...ctx, leer, forzar: true });
+  assert.equal(r2.resumen.yaEstaban, 2);
+  assert.equal((await crearBots({ almacen }).propios()).length, 2);
 });
 
 test('migrarInventario: sin base vieja marca la migración como hecha', async () => {
@@ -408,11 +449,15 @@ test('export → import en otra base da la misma biblioteca', async () => {
     selecciones: 1,
     invalidos: 0,
     marcasEscritas: 1,
+    notasPisadas: 0,
     seleccionesEscritas: 1,
     seleccionesOmitidas: 0,
+    seleccionesPisadas: 0,
     propiosEscritos: 1,
+    actualizados: 0,
     yaEstaban: 0,
     renombrados: 0,
+    conflictos: [],
   });
   assert.deepEqual(
     await exportarBiblioteca(b, { reloj: () => new Date('2026-06-03T00:00:00Z') }),
@@ -422,15 +467,75 @@ test('export → import en otra base da la misma biblioteca', async () => {
   const r2 = await importarBiblioteca(b, exp, ctx);
   assert.equal(r2.yaEstaban, 1);
   assert.equal((await crearBots({ almacen: b }).propios()).length, 1);
-  // un bot con el mismo nombre y otro ADN entra con un nombre libre
+  // otro bot (otra clave) con el mismo nombre entra con un nombre libre
   const otro = structuredClone(exp);
-  otro.bots[0].versiones = [{ adn: 'cond start 3 .up store stop' }];
+  otro.bots[0].hash = 'p:00000000000000aa';
   const r3 = await importarBiblioteca(b, otro, ctx);
-  assert.equal(r3.renombrados, 1);
+  assert.deepEqual([r3.propiosEscritos, r3.renombrados, r3.conflictos], [1, 1, []]);
   assert.deepEqual(
-    (await crearBots({ almacen: b }).propios()).map((p) => p.nombre),
-    ['Uno', 'Uno 2'],
+    (await crearBots({ almacen: b }).propios()).map((p) => [p.nombre, p.hash]),
+    [
+      ['Uno', b1.hash],
+      ['Uno 2', 'p:00000000000000aa'],
+    ],
   );
+});
+
+test('import de un backup más nuevo: agrega las versiones que faltan; si divergen, conflicto', async () => {
+  const reloj = () => new Date('2026-06-02T00:00:00Z');
+  const a = almacenMemoria();
+  const bots = crearBots({ almacen: a, reloj });
+  const V = (/** @type {number} */ i) => `cond start ${i} .up store stop`;
+  const uno = await bots.crear({ nombre: 'Uno', adn: V(1) });
+  await bots.guardarSeleccion('S', [uno.hash, H(0)]);
+  const viejo = await exportarBiblioteca(a);
+  // el backup viejo va a otra base; en la original el bot sigue
+  const b = almacenMemoria();
+  await importarBiblioteca(b, viejo, ctx);
+  await bots.guardarVersion(uno.hash, V(2), { nota: 'v2' });
+  await bots.guardarVersion(uno.hash, V(3));
+  await bots.agregarTag([uno.hash], 'nuevo');
+  const nuevo = await exportarBiblioteca(a);
+
+  const r = await importarBiblioteca(b, nuevo, ctx);
+  assert.deepEqual([r.actualizados, r.propiosEscritos, r.yaEstaban], [1, 0, 0]);
+  const [x] = await crearBots({ almacen: b }).propios();
+  assert.equal(x.hash, uno.hash);
+  assert.deepEqual(
+    x.versiones.map((v) => [v.n, v.hash, v.nota]),
+    [
+      [1, hashAdn(V(1)), ''],
+      [2, hashAdn(V(2)), 'v2'],
+      [3, hashAdn(V(3)), ''],
+    ],
+  );
+  assert.equal(x.adn, V(3));
+  assert.deepEqual(x.tags, ['nuevo']);
+  // el viejo sobre el nuevo: ya estaba (el destino es más nuevo)
+  const r2 = await importarBiblioteca(b, viejo, ctx);
+  assert.deepEqual([r2.yaEstaban, r2.actualizados], [1, 0]);
+  assert.equal((await crearBots({ almacen: b }).obtener(uno.hash))?.versiones.length, 3);
+
+  // divergen: en b se edita distinto que en a
+  await crearBots({ almacen: b, reloj }).guardarVersion(uno.hash, V(40));
+  await bots.guardarVersion(uno.hash, V(4));
+  const div = await exportarBiblioteca(a);
+  const r3 = await importarBiblioteca(b, div, ctx);
+  assert.equal(r3.conflictos.length, 1);
+  const c = r3.conflictos[0];
+  assert.deepEqual([c.clave, c.nombre, c.nombreNuevo], [uno.hash, 'Uno', 'Uno 2']);
+  assert.ok(esClavePropia(c.nuevaClave) && c.nuevaClave !== uno.hash);
+  const props = await crearBots({ almacen: b }).propios();
+  assert.deepEqual(
+    props.map((p) => [p.nombre, p.adn]),
+    [
+      ['Uno', V(40)],
+      ['Uno 2', V(4)],
+    ],
+  );
+  // la selección del archivo sigue a la clave nueva (y pisa la de antes)
+  assert.equal(r3.seleccionesPisadas, 1);
+  assert.deepEqual((await crearBots({ almacen: b }).selecciones())[0].claves, [c.nuevaClave, H(0)]);
 });
 
 test('import del Export del inventario de la clásica (invExport) con su fusión', async () => {
@@ -480,6 +585,15 @@ test('import: errores de formato con código y registros inválidos salteados', 
     importarBiblioteca(almacen, { kind: 'darwinbots-league' }),
     conCodigo('formato-desconocido'),
   );
+  // sin version (o no numérica): formato desconocido, no «versión nueva»
+  await assert.rejects(
+    importarBiblioteca(almacen, { formato: 'darwinbots2-biblioteca', bots: [] }),
+    conCodigo('formato-desconocido'),
+  );
+  await assert.rejects(
+    importarBiblioteca(almacen, { format: 'darwinbots-inventario', version: '1' }),
+    conCodigo('formato-desconocido'),
+  );
   const r = await importarBiblioteca(almacen, {
     formato: 'darwinbots2-biblioteca',
     version: 1,
@@ -488,24 +602,53 @@ test('import: errores de formato con código y registros inválidos salteados', 
       { nombre: '', versiones: [{ adn: 'x' }] },
       { nombre: 'Sin versiones', versiones: [] },
       { nombre: 'ADN vacío', versiones: [{ adn: '  ' }] },
-      // hashes falsos en el archivo: se recalculan
+      // n repetidos
+      {
+        nombre: 'N repetido',
+        versiones: [
+          { n: 1, adn: 'cond start 1 .up store stop' },
+          { n: 1, adn: 'cond start 2 .up store stop' },
+        ],
+      },
+      // origenes que no son null ni {archivo|hash, gen}
+      {
+        nombre: 'Origen malo',
+        versiones: [{ adn: 'cond start 1 .up store stop', origenes: [{ archivo: '1.txt' }] }],
+      },
+      // hashes falsos en el archivo: se recalculan; la versión repetida sobra
       {
         nombre: 'Bueno',
         hash: 'mentira',
-        versiones: [{ adn: 'cond start 1 .up store stop', hash: 'x', lg: 'y' }],
+        versiones: [
+          { adn: 'cond start 1 .up store stop', hash: 'x', lg: 'y', origenes: [null] },
+          { adn: "' igual\ncond start 1 .up store stop" },
+          { adn: 'cond start 2 .up store stop', origenes: [{ hash: 'abc', gen: 0 }] },
+        ],
       },
     ],
-    marcas: [{ hash: '' }, { hash: H(0), tags: ['#A b', 3], fav: 1 }],
+    marcas: [
+      { hash: '' },
+      { hash: 'p:0123456789abcdef', fav: true },
+      { hash: 'no es clave', fav: true },
+      { hash: H(0), tags: ['#A b', 3], fav: 1 },
+      { hash: 'file:x.txt', fav: true },
+    ],
     selecciones: [
       { nombre: 'S', claves: 'no' },
       { nombre: ' T ', claves: [H(0)] },
     ],
   });
-  assert.equal(r.invalidos, 6);
+  assert.equal(r.invalidos, 10);
   assert.equal(r.bots, 1);
+  assert.equal(r.marcasEscritas, 2);
   const [b] = await crearBots({ almacen }).propios();
-  assert.equal(b.hash, hashAdn('cond start 1 .up store stop'));
-  assert.equal(b.versiones[0].hash, b.hash);
+  assert.ok(esClavePropia(b.hash), 'sin clave válida: una nueva');
+  assert.equal(b.versiones[0].hash, hashAdn('cond start 1 .up store stop'));
+  assert.deepEqual(
+    b.versiones.map((v) => v.n),
+    [1, 2],
+  );
+  assert.deepEqual(b.versiones[0].origenes, [null]);
   assert.equal(b.origen.tipo, 'importado');
   assert.deepEqual((await almacen.get('bots', H(0))).tags, ['3', 'a-b']);
   assert.deepEqual(await crearBots({ almacen }).selecciones(), [{ nombre: 'T', claves: [H(0)] }]);

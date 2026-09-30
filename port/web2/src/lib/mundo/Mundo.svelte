@@ -7,7 +7,7 @@
 import { onMount } from 'svelte';
 import { REG } from '../../../engine/protocolo.js';
 import { num, t } from '../../i18n/index.svelte.js';
-import { objetoEn, siguienteObjeto } from '../observar/objetos/ordenes.js';
+import { CopiaObjetos, objetoEn, siguienteObjeto } from '../observar/objetos/ordenes.js';
 import { BOT, FLAG, VIS } from '../sim/frame.js';
 import {
   barraEscala,
@@ -46,12 +46,19 @@ import {
  * bajo el puntero se resalta. Con el lienzo enfocado: N / Mayús+N recorren
  * los objetos, Supr o Intro borran el resaltado y Esc sale (onSalirBorrar).
  * onResaltar avisa el objeto resaltado (para anunciarlo) y la cantidad de
- * formas y teleporters del último frame.
+ * formas y teleporters del último frame. onBorrar devuelve false si no
+ * borró (p. ej. la corrida está ocupada) o la promesa de la orden: hasta
+ * que se cumple, la copia local de los objetos ya está compactada y no se
+ * toman los de los frames (CopiaObjetos de ordenes.js).
+ * onPunteroMundo (N4.1, Player Bot): el puntero en coordenadas de mundo en
+ * cada movimiento sobre el lienzo, y null al salir.
  * @type {{ sesion: import('../sim/sesion.svelte.js').Sesion, modoBorrar?: boolean,
- *   onBorrar?: (o: ObjetoSel) => void, onSalirBorrar?: () => void,
+ *   onPunteroMundo?: (x: number | null, y?: number) => void,
+ *   onBorrar?: (o: ObjetoSel) => (Promise<unknown> | false | void),
+ *   onSalirBorrar?: () => void,
  *   onResaltar?: (o: ObjetoSel | null, nObs: number, nTps: number) => void }}
  */
-let { sesion, modoBorrar = false, onBorrar, onSalirBorrar, onResaltar } = $props();
+let { sesion, modoBorrar = false, onBorrar, onSalirBorrar, onResaltar, onPunteroMundo } = $props();
 
 const FONDO_CAMPO = '#0e0f0f';
 const FONDO_AFUERA = '#080909';
@@ -87,10 +94,7 @@ let copiaVis = new Float32Array(0);
 let filas = 0;
 let copiaRica = false;
 // Formas y teleporters del último frame (modo borrar: clic y resaltado).
-let copiaObs = new Float32Array(0);
-let copiaTps = new Float32Array(0);
-let nObsC = 0;
-let nTpsC = 0;
+const objs = new CopiaObjetos(REG.obs, REG.tp);
 /** @type {ObjetoSel | null} objeto resaltado en modo borrar */
 let resaltado = null;
 let sobreObjeto = $state(false);
@@ -148,9 +152,10 @@ function dibujar(f) {
   ctx.fillStyle = FONDO_CAMPO;
   ctx.fillRect(0, 0, W * s, H * s);
 
-  const p = { s, z: cam.z, LW, rica, capas: CAPAS_DEFECTO };
+  const p = { s, z: cam.z, LW, rica, contorno: sesion.contorno, capas: CAPAS_DEFECTO };
   dibujarObjetos(ctx, f, p);
-  if (modoBorrar) dibujarResaltado(ctx, f, LW);
+  copiarObjetos(f);
+  if (modoBorrar) dibujarResaltado(ctx, LW);
   if (rica) {
     const r = dibujarBotsRicos(ctx, f, rico, {
       s,
@@ -195,32 +200,52 @@ function copiar(f, rica) {
     copiaVis.set(f.v.subarray(f.of.vis, f.of.vis + nB * REG.vis));
   }
   filas = nB;
-  const nO = f.nObs;
-  const nT = f.nTps;
-  if (copiaObs.length < nO * REG.obs) copiaObs = new Float32Array(nO * REG.obs + 256);
-  copiaObs.set(f.v.subarray(f.of.obs, f.of.obs + nO * REG.obs));
-  if (copiaTps.length < nT * REG.tp) copiaTps = new Float32Array(nT * REG.tp + 64);
-  copiaTps.set(f.v.subarray(f.of.tps, f.of.tps + nT * REG.tp));
-  const cambio = nO !== nObsC || nT !== nTpsC;
-  nObsC = nO;
-  nTpsC = nT;
-  // Tras un borrado los índices se corren: el resaltado ya no es el mismo.
-  if (resaltado && cambio) ponerResaltado(null);
-  else if (cambio) onResaltar?.(resaltado, nObsC, nTpsC);
 }
 
 /**
- * Modo borrar: el objeto resaltado, con un borde grueso y un velo.
- * @param {CanvasRenderingContext2D} c @param {import('../sim/frame.js').Frame} f
- * @param {number} LW
+ * Formas y teleporters del frame a la copia local (salvo con un borrado
+ * sin confirmar) y el resaltado al día: con el puntero sobre el mundo se
+ * recalcula en cada frame (las formas derivan, los índices se corren); sin
+ * puntero (recorrido por teclado), un cambio en la cantidad lo quita.
+ * @param {import('../sim/frame.js').Frame} f
  */
-function dibujarResaltado(c, f, LW) {
+function copiarObjetos(f) {
+  const cambio = objs.tomar(f.v, f.of.obs, f.nObs, f.of.tps, f.nTps);
+  if (modoBorrar && puntero && !arrastre) {
+    const [wx, wy] = mundoDe(puntero.x, puntero.y);
+    if (!ponerResaltado(objetoBajo(wx, wy), false) && cambio)
+      onResaltar?.(resaltado, objs.nObs, objs.nTps);
+  } else if (resaltado && cambio) ponerResaltado(null, false);
+  else if (cambio) onResaltar?.(resaltado, objs.nObs, objs.nTps);
+}
+
+/**
+ * Borra el objeto: avisa a quien maneja la corrida y, si lo aceptó,
+ * compacta la copia local hasta que el worker confirme.
+ * @param {ObjetoSel} o
+ */
+function borrar(o) {
+  ponerResaltado(null);
+  const r = onBorrar?.(o);
+  if (r === false || !objs.borrar(o)) return;
+  onResaltar?.(resaltado, objs.nObs, objs.nTps);
+  const listo = () => objs.confirmar();
+  if (r && typeof r.then === 'function') r.then(listo, listo);
+  else listo();
+}
+
+/**
+ * Modo borrar: el objeto resaltado (de la copia local), con un borde
+ * grueso y un velo.
+ * @param {CanvasRenderingContext2D} c @param {number} LW
+ */
+function dibujarResaltado(c, LW) {
   if (!resaltado) return;
   const tp = resaltado.tipo === 'teleporter';
   const i = resaltado.n - 1;
-  if (i < 0 || i >= (tp ? f.nTps : f.nObs)) return;
-  const o = tp ? f.of.tps + i * REG.tp : f.of.obs + i * REG.obs;
-  const v = f.v;
+  if (i < 0 || i >= (tp ? objs.nTps : objs.nObs)) return;
+  const o = tp ? i * REG.tp : i * REG.obs;
+  const v = tp ? objs.tps : objs.obs;
   const x = v[o] * s;
   const y = v[o + 1] * s;
   const w = v[o + 2] * s;
@@ -234,16 +259,21 @@ function dibujarResaltado(c, f, LW) {
   c.lineWidth = LW;
 }
 
-/** @param {ObjetoSel | null} o */
-function ponerResaltado(o) {
+/**
+ * @param {ObjetoSel | null} o @param {boolean} [pintar] pedir un frame (no
+ *   hace falta mientras se dibuja uno)
+ * @returns {boolean} cambió (y se avisó con onResaltar)
+ */
+function ponerResaltado(o, pintar = true) {
   const igual =
     (o === null && resaltado === null) ||
     (o !== null && resaltado !== null && o.tipo === resaltado.tipo && o.n === resaltado.n);
   resaltado = o;
   sobreObjeto = !!o;
-  if (igual) return;
-  onResaltar?.(o, nObsC, nTpsC);
-  repintar();
+  if (igual) return false;
+  onResaltar?.(o, objs.nObs, objs.nTps);
+  if (pintar) repintar();
+  return true;
 }
 
 /**
@@ -253,11 +283,11 @@ function ponerResaltado(o) {
  */
 function objetoBajo(x, y) {
   return objetoEn(
-    copiaObs,
-    nObsC,
+    objs.obs,
+    objs.nObs,
     REG.obs,
-    copiaTps,
-    nTpsC,
+    objs.tps,
+    objs.nTps,
     REG.tp,
     x,
     y,
@@ -406,6 +436,10 @@ function alBajar(e) {
 function alMover(e) {
   const p = local(e);
   puntero = p;
+  if (onPunteroMundo) {
+    const [wx, wy] = mundoDe(p.x, p.y);
+    onPunteroMundo(wx, wy);
+  }
   if (!arrastre) {
     if (modoBorrar) {
       tip = null;
@@ -440,10 +474,7 @@ function alSoltar(e) {
   const [wx, wy] = mundoDe(p.x, p.y);
   if (modoBorrar) {
     const o = objetoBajo(wx, wy);
-    if (o) {
-      ponerResaltado(null);
-      onBorrar?.(o);
-    }
+    if (o) borrar(o);
     return;
   }
   const n = botEn(wx, wy);
@@ -467,6 +498,7 @@ function alCancelar(e) {
 
 function alSalir() {
   puntero = null;
+  onPunteroMundo?.(null);
   tip = null;
   if (modoBorrar) ponerResaltado(null);
 }
@@ -481,17 +513,13 @@ function teclaBorrar(e) {
   switch (e.key) {
     case 'n':
     case 'N':
-      ponerResaltado(siguienteObjeto(resaltado, nObsC, nTpsC, e.shiftKey ? -1 : 1));
+      ponerResaltado(siguienteObjeto(resaltado, objs.nObs, objs.nTps, e.shiftKey ? -1 : 1));
       return true;
     case 'Delete':
     case 'Backspace':
     case 'Enter':
       if (!resaltado) return false;
-      {
-        const o = resaltado;
-        ponerResaltado(null);
-        onBorrar?.(o);
-      }
+      borrar(resaltado);
       return true;
     case 'Escape':
       ponerResaltado(null);
@@ -638,7 +666,7 @@ const textoErrorCarga = $derived.by(() => {
 const textoVista = $derived(
   sesion.rica
     ? `${t('mundo.vista.rica')} · ${t('mundo.colorPor', { lente: minuscula(t(`mundo.lente.${sesion.lente}`)) })}`
-    : t('mundo.vista.clasica'),
+    : t(sesion.contorno ? 'mundo.vista.contorno' : 'mundo.vista.clasica'),
 );
 </script>
 

@@ -40,7 +40,8 @@ const f1 = (x) => (Math.round(x * 10) / 10).toString();
 /**
  * @typedef {{ancho: number, alto: number, etiqueta: string,
  *   fmtX?: (x: number) => string, fmtY?: (y: number) => string}} Marco
- * @typedef {{x: number, etiqueta?: string}} Marca
+ * @typedef {{x: number, etiqueta?: string, detalle?: string}} Marca  `detalle`: texto
+ *   completo del rótulo (se ve al pasar el mouse)
  */
 
 /**
@@ -143,7 +144,7 @@ function dibujarMarcas(marcas, X, T, B, R) {
     if (mk.etiqueta) {
       const der = px > R - 120;
       out.push(
-        `<text x="${f1(der ? px - 4 : px + 4)}" y="${T + 10 + (i % 3) * 13}" font-size="10" text-anchor="${der ? 'end' : 'start'}" fill="${TINTA.marca}" class="rotulo">${esc(recortar(mk.etiqueta, 180))}</text>`,
+        `<text x="${f1(der ? px - 4 : px + 4)}" y="${T + 10 + (i % 3) * 13}" font-size="10" text-anchor="${der ? 'end' : 'start'}" fill="${TINTA.marca}" class="rotulo">${mk.detalle ? `<title>${esc(mk.detalle)}</title>` : ''}${esc(recortar(mk.etiqueta, 180))}</text>`,
       );
     }
   });

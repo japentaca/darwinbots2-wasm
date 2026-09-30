@@ -15,7 +15,7 @@
 // vuelta a la base de un grupo va en el orden del catálogo (97 antes que 101).
 
 import {
-  fusionarCambios,
+  fueraDeLoUsual,
   GRUPOS,
   normalizarValor,
   PARAMETROS,
@@ -23,7 +23,7 @@ import {
   valorEfectivo,
   valoresResueltos,
 } from '../../../engine/opciones.js';
-import { efectivos, limpiarCambios } from './borrador.js';
+import { efectivos, escribirCambios } from './borrador.js';
 
 /**
  * @typedef {import('../../../engine/escenarios/index.js').Escenario} Escenario
@@ -96,6 +96,7 @@ export const valorBase = (base, clave) => valorEfectivo(valoresResueltos(base, {
  *   cambiado: boolean,
  *   sinAplicar: boolean,
  *   editable: boolean,
+ *   inusual: boolean,
  * }} FilaAvanzada
  * @typedef {{id: string, es: string, en: string, filas: FilaAvanzada[], total: number,
  *   cambiados: number}} GrupoAvanzado
@@ -130,6 +131,7 @@ export function gruposAvanzado(b, ref, filtro = {}) {
         cambiado: !Object.is(valor, base),
         sinAplicar: er ? !Object.is(valor, er(p.clave)) : false,
         editable: !p.derivado,
+        inusual: fueraDeLoUsual(p, valor),
       };
     });
     const filas = todas.filter(
@@ -167,10 +169,12 @@ export function resumenGrupos(b) {
 }
 
 /**
- * Borrador con el parámetro en `v` (validado con normalizarValor). Un
- * derivado no se escribe. Devuelve el borrador o el código de error.
+ * Borrador con el parámetro en `v` (validado con normalizarValor: fuera
+ * del tipo del core es un error, salvo los que saturan, que se llevan al
+ * tope con `aviso: 'valor-saturado'`). Un derivado no se escribe.
+ * Devuelve el borrador (y el valor escrito) o el código de error.
  * @param {Escenario} b @param {string} clave @param {unknown} v
- * @returns {{ok: true, borrador: Escenario} | {ok: false, codigo: string}}
+ * @returns {{ok: true, borrador: Escenario, v: number, aviso?: string} | {ok: false, codigo: string}}
  */
 export function escribirParametro(b, clave, v) {
   const p = parametro(clave);
@@ -178,11 +182,12 @@ export function escribirParametro(b, clave, v) {
   if (p.derivado) return { ok: false, codigo: 'clave-derivada' };
   const n = normalizarValor(p, v);
   if (!n.ok) return n;
-  const cambios = limpiarCambios(
-    b.opciones.base,
-    fusionarCambios(b.opciones.cambios, { [clave]: n.v }),
-  );
-  return { ok: true, borrador: { ...b, opciones: { ...b.opciones, cambios } } };
+  return {
+    ok: true,
+    borrador: escribirCambios(b, { [clave]: n.v }),
+    v: n.v,
+    ...(n.aviso ? { aviso: n.aviso } : {}),
+  };
 }
 
 /**
@@ -222,3 +227,27 @@ export function numeroDeTexto(texto) {
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
+
+/**
+ * Controles compuestos del básico que se ofrecen como preset en la cabecera
+ * de un grupo del avanzado (el tamaño del campo en «Campo», el medio en
+ * «Física»): ids de CONTROLES_BASICOS.
+ */
+export const PRESETS_GRUPO = Object.freeze({
+  campo: Object.freeze(['tamano']),
+  fisica: Object.freeze(['medio']),
+});
+
+/**
+ * Presets de la cabecera de un grupo.
+ * @param {string} grupo
+ * @returns {readonly string[]}
+ */
+export const presetsDeGrupo = (grupo) =>
+  /** @type {Record<string, readonly string[]>} */ (PRESETS_GRUPO)[grupo] ?? [];
+
+/**
+ * Cuántas filas se muestran (para anunciar el resultado de una búsqueda).
+ * @param {GrupoAvanzado[]} grupos
+ */
+export const totalFilas = (grupos) => grupos.reduce((n, g) => n + g.filas.length, 0);

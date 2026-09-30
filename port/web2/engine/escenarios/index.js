@@ -43,7 +43,8 @@
 //                                 usar (los de fábrica para uno propio:
 //                                 validarPropio de ./fabrica.js)
 //   normalizar(x, {reservados}?) → copia con los defaults (lanza ErrorEscenario)
-//   resolverOpciones(e)         → {clave: valor} que se mandan al reset
+//   resolverOpciones(e)         → {clave: valor} que tiene la sim armada con aplicar()
+//                                 (base + cambios + la deriva de un laberinto polar)
 //   aplicar(e, semilla, adnDe)  → mensajes al worker (engine/worker.js)
 //   diff(borrador, actual)      → qué va en vivo y qué requiere sim nueva
 //   verificarAdn(e, adnDe)      → avisos de ADN que no coincide con su hash
@@ -64,6 +65,12 @@ import { cssToVbColor } from '../partido.js';
 
 export const FORMATO = 1;
 export const TOPE_TELEPORTERS = 10; // el core no pasa de 10
+/**
+ * Lo que el laberinto polar escribe en las opciones (db_sim_maze_polar_ice
+ * de port/wasm/dbcore_api.cpp, Obstacles.bas:123-125): deriva vertical (83)
+ * y horizontal (84) encendidas, velocidad (85) 20.
+ */
+export const DERIVA_POLAR = Object.freeze({ 'opt:83': 1, 'opt:84': 1, 'opt:85': 20 });
 export const ENERGIA_POR_DEFECTO = 3000;
 export const FORMAS_LABERINTO = Object.freeze(['h', 'v', 'spiral', 'checker', 'polar', 'trash']);
 export const DESTINOS = Object.freeze(['observar', 'competir']);
@@ -286,11 +293,47 @@ export function normalizar(x, o = {}) {
   };
 }
 
+/** @param {{tipo: string, forma?: string}} b */
+const esPolar = (b) => b.tipo === 'laberinto' && b.forma === 'polar';
+
 /**
- * Valores que se mandan al reset (base + cambios).
+ * El escenario tiene un laberinto polar (enciende la deriva al crearse).
+ * @param {{objetos?: {obstaculos?: {tipo: string, forma?: string}[]}}} e
+ */
+export const tienePolar = (e) => !!e.objetos?.obstaculos?.some(esPolar);
+
+/**
+ * Valores de las opciones que tiene la sim armada con aplicar(): base +
+ * cambios y, con un laberinto polar, su deriva (DERIVA_POLAR) en las claves
+ * 83–85 que los cambios no fijan (las que sí fija se reenvían después de
+ * los objetos: ver aplicar).
  * @param {Escenario} e
  */
-export const resolverOpciones = (e) => valoresResueltos(e.opciones.base, e.opciones.cambios);
+export const resolverOpciones = (e) =>
+  valoresResueltos(
+    e.opciones.base,
+    tienePolar(e) ? { ...DERIVA_POLAR, ...e.opciones.cambios } : e.opciones.cambios,
+  );
+
+/**
+ * Con un laberinto polar: las opciones 83–85 que los cambios fijan con otro
+ * valor que el que deja el laberinto, reenviadas sin pasar por el diálogo de
+ * opciones (nocap: el laberinto tampoco pasa), para que la sim quede con
+ * resolverOpciones(e).
+ * @param {Escenario} e
+ */
+function reenviosDeriva(e) {
+  if (!tienePolar(e)) return [];
+  const r = resolverOpciones(e);
+  return Object.entries(DERIVA_POLAR)
+    .filter(([clave, v]) => valorEfectivo(r, clave) !== v)
+    .map(([clave]) => ({
+      t: 'setopt',
+      id: /** @type {number} */ (parametro(clave)?.id),
+      v: valorEfectivo(r, clave),
+      nocap: true,
+    }));
+}
 
 /**
  * Mensajes de un obstáculo (protocolo de engine/worker.js).
@@ -308,7 +351,10 @@ function mensajeObstaculo(b) {
  * la sim anterior —ni las formas que PP-03 regenera— y con los colores de
  * las formas sembrados con la semilla) y los objetos. Así «escenario +
  * semilla» da la misma corrida en cualquier worker. El worker atiende en
- * orden, así que la secuencia llega tal cual.
+ * orden, así que la secuencia llega tal cual. Un laberinto polar enciende
+ * la deriva (DERIVA_POLAR): las opciones 83–85 que los cambios fijan con
+ * otro valor se reenvían al final (setopt nocap), así la sim queda con
+ * resolverOpciones(e).
  *
  * adnDe(especie) da el ADN de cada especie sin `adn` propio (Bestiary o
  * bots del usuario); si no lo hay, ErrorEscenario('sin-adn').
@@ -341,12 +387,14 @@ export function aplicar(e, semilla, adnDe = () => undefined) {
     {
       t: 'reset',
       seed: semilla,
-      options: opcionesReset(resolverOpciones(e)),
+      // Sin la deriva del polar: la pone el laberinto al crearse.
+      options: opcionesReset(valoresResueltos(e.opciones.base, e.opciones.cambios)),
       species,
       limpio: true,
     },
     ...e.objetos.obstaculos.map(mensajeObstaculo),
     ...e.objetos.teleporters.map(() => ({ t: 'teleporter' })),
+    ...reenviosDeriva(e),
   ];
 }
 

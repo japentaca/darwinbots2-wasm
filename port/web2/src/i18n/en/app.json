@@ -12,6 +12,7 @@
   "app.idioma.aria": "Language",
   "app.idioma.es": "Español",
   "app.idioma.en": "English",
+  "app.idioma.error": "Could not load {idioma}. Try again later.",
   "app.clasica.enlace": "Classic interface",
   "app.aviso.construccion": "This interface is under construction: several sections have no content yet.",
   "app.aviso.enlace": "Use the classic interface",
@@ -27,5 +28,10 @@
   "app.pantalla.bots.desc": "The bot library, their profiles and the DNA editor.",
   "app.pantalla.competir.titulo": "Compete",
   "app.pantalla.competir.desc": "Matches and tournaments between bots, with standings, rounds and hall of fame.",
-  "app.pantalla.pronto": "This section is under construction."
+  "app.pantalla.pronto": "This section is under construction.",
+  "app.cargando": "Loading…",
+  "app.errorCarga": "This section could not be loaded. Try reloading the page.",
+  "app.recargar": "Reload",
+  "app.versionNueva": "There is a new version; save the run before reloading.",
+  "app.trabajos.ayudaCompetir": "Tournament rounds in the background: see them in Compete"
 }

@@ -5,7 +5,32 @@
 // SVG suelto), se serializa, se dibuja en un canvas con fondo blanco, el
 // título arriba y la leyenda abajo, y sale como Blob PNG. Necesita el DOM
 // (solo en el navegador); lo puro (medidas del lienzo y partir la leyenda
-// en filas) se exporta aparte y se prueba en node.
+// en filas) se exporta aparte y se prueba en node. La imagen sale con la
+// densidad de la pantalla (devicePixelRatio, entre 1 y 4). Los errores
+// llevan `codigo` (CODIGOS_ERROR_PNG) y la interfaz los traduce.
+
+/**
+ * Códigos de error del PNG:
+ *   png-svg     el navegador no pudo dibujar el gráfico como imagen
+ *   png-imagen  el navegador no generó el PNG (lienzo demasiado grande o
+ *               sin memoria)
+ */
+export const CODIGOS_ERROR_PNG = Object.freeze(['png-svg', 'png-imagen']);
+
+/** Error del PNG con `codigo` estable. */
+export class ErrorPng extends Error {
+  /** @param {string} codigo @param {string} [detalle] */
+  constructor(codigo, detalle) {
+    super(detalle ? `${codigo}: ${detalle}` : codigo);
+    this.codigo = codigo;
+  }
+}
+
+/**
+ * Escala del lienzo: la densidad de la pantalla, entre 1 y 4.
+ * @param {number | undefined} dpr
+ */
+export const escalaPng = (dpr) => Math.min(4, Math.max(1, Number.isFinite(dpr) ? Number(dpr) : 1));
 
 /** Propiedades que se copian de los estilos calculados. */
 const PROPIEDADES = Object.freeze([
@@ -101,7 +126,7 @@ function estilosEnLinea(orig, clon) {
  * @returns {Promise<Blob>}
  */
 export async function svgAPng(svg, o) {
-  const escala = o.escala ?? 2;
+  const escala = o.escala ?? escalaPng(globalThis.devicePixelRatio);
   const caja = svg.getBoundingClientRect();
   const w = Math.max(1, Math.round(caja.width));
   const h = Math.max(1, Math.round(caja.height));
@@ -118,7 +143,11 @@ export async function svgAPng(svg, o) {
   const texto = new XMLSerializer().serializeToString(clon);
   const img = new Image();
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(texto)}`;
-  await img.decode();
+  try {
+    await img.decode();
+  } catch (e) {
+    throw new ErrorPng('png-svg', e instanceof Error ? e.message : String(e));
+  }
 
   const lienzo = document.createElement('canvas');
   const ctx = /** @type {CanvasRenderingContext2D} */ (lienzo.getContext('2d'));
@@ -146,9 +175,6 @@ export async function svgAPng(svg, o) {
     }
   });
   return new Promise((ok, mal) =>
-    lienzo.toBlob(
-      (b) => (b ? ok(b) : mal(new Error('png: el navegador no generó la imagen'))),
-      'image/png',
-    ),
+    lienzo.toBlob((b) => (b ? ok(b) : mal(new ErrorPng('png-imagen'))), 'image/png'),
   );
 }

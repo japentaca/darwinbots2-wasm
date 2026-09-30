@@ -2,18 +2,22 @@
 // @ts-check
 // Pestaña Informes de Analizar (decisión 11, Nivel 2): elegir la plantilla
 // (Corrida de la actual o de una guardada; Comparación de dos corridas;
-// Réplicas de un trabajo terminado de la cola), el idioma del informe,
-// generarlo (engine/report/), verlo (iframe con srcdoc y sandbox sin
-// scripts: el mismo .html que se descarga funciona abierto solo),
+// Réplicas de un trabajo terminado de la cola; Torneo de un torneo
+// guardado, paso N3.5), el idioma del informe,
+// generarlo (engine/report/), verlo (iframe con sandbox sin scripts que
+// carga el .html desde una URL blob: así los enlaces #fig-… del informe
+// navegan dentro de la vista previa; el .html descargado es el mismo),
 // descargarlo e imprimirlo (se abre en una ventana y se llama a print).
 // Los informes generados quedan en el almacén 'informes' (decisión 17) para
 // volver a verlos, descargarlos o borrarlos. Aparte, «Solo datos» de la
 // corrida que mira Analizar: CSV y JSON (engine/export.js) y el PNG de uno
-// de los gráficos del Panel.
+// de los gráficos del Panel. Funciona sin corrida (corrida = null): se
+// informa una guardada o un trabajo, y solo «Solo datos» queda desactivado.
 import { onMount } from 'svelte';
 import { csvLargo, jsonCorrida } from '../../../../engine/export.js';
 import { generarInforme, TIPOS } from '../../../../engine/report/index.js';
 import { idioma, idiomas, num, t } from '../../../i18n/index.svelte.js';
+import { nombreTorneo } from '../../competir/textos.js';
 import { clavePlural } from '../../experimentar/borrador.js';
 import { descargar, nombreArchivo } from '../../observar/descargas.js';
 import { almacen } from '../../sim/almacen.svelte.js';
@@ -34,7 +38,15 @@ import {
 import { cargarGuardada, fuenteActual } from '../fuente.js';
 import Grafico from '../grafico/Grafico.svelte';
 import { ID_ACTUAL, rutaAnalizar } from '../ruta.js';
-import { datosComparacion, datosCorrida, datosReplicas, trabajosReplicas } from './datos.js';
+import {
+  claveError,
+  corridasPorDefecto,
+  datosComparacion,
+  datosCorrida,
+  datosReplicas,
+  datosTorneo,
+  trabajosReplicas,
+} from './datos.js';
 import { borrarInforme, guardarInforme, leerInforme, listarInformes } from './guardados.js';
 import { svgAPng } from './png.js';
 
@@ -59,6 +71,10 @@ let origen = $state(ID_ACTUAL);
 let cmpA = $state('');
 let cmpB = $state('');
 let trabajoSel = $state('');
+/** @type {{id: string, name: string}[]} torneos guardados (plantilla Torneo) */
+let torneosGuardados = $state.raw([]);
+let torneoSel = $state('');
+const trTorneo = { t, num: (/** @type {number} */ n) => num(n) };
 let idiomaInforme = $state(idioma() === 'en' ? 'en' : 'es');
 let ocupado = $state(false);
 let error = $state('');
@@ -87,22 +103,46 @@ onMount(() => {
       guardadas = [];
     });
   void refrescarLista();
+  almacen()
+    .list('torneos')
+    .then((l) => {
+      torneosGuardados = l
+        .map((x) => ({
+          id: String(x.id),
+          name: nombreTorneo(x, trTorneo),
+          created: String(x.created ?? ''),
+        }))
+        .sort((a, b) => b.created.localeCompare(a.created));
+    })
+    .catch(() => {
+      torneosGuardados = [];
+    });
+});
+$effect(() => {
+  const ids = torneosGuardados.map((x) => x.id);
+  if (!ids.includes(torneoSel)) torneoSel = ids[0] ?? '';
 });
 
-// Valores por defecto: la corrida que mira Analizar; en Comparación, esa
-// como A y la siguiente como B; el trabajo terminado más reciente.
-let iniciado = false;
+// Valores por defecto (se recalculan al cargar las guardadas o al cambiar
+// la corrida que mira Analizar, mientras el usuario no tocó el selector):
+// origen y A = la corrida que mira Analizar (la actual o una guardada); B =
+// la actual si A es una guardada, si no la guardada más reciente. Si un
+// valor elegido deja de existir, vuelve al de por defecto. El trabajo: el
+// más reciente que se puede informar.
+let tocadoOrigen = $state(false);
+let tocadoCmp = $state(false);
+const propia = $derived(corrida?.tipo === 'actual' ? ID_ACTUAL : (corrida?.id ?? ''));
 $effect(() => {
-  if (iniciado || !opciones.length) return;
-  iniciado = true;
-  const propia = corrida?.tipo === 'actual' ? ID_ACTUAL : (corrida?.id ?? '');
   const ids = opciones.map((o) => o.id);
-  origen = ids.includes(propia) ? propia : ids[0];
-  cmpA = origen;
-  cmpB = ids.find((x) => x !== cmpA) ?? '';
+  const d = corridasPorDefecto(ids, propia, ID_ACTUAL);
+  if (!tocadoOrigen || !ids.includes(origen)) origen = d.origen;
+  if (!tocadoCmp || !ids.includes(cmpA) || !ids.includes(cmpB)) {
+    cmpA = d.a;
+    cmpB = d.b;
+  }
 });
 $effect(() => {
-  const ids = trabajos.terminados.map((x) => x.id);
+  const ids = trabajos.listos.map((x) => x.id);
   if (!ids.includes(trabajoSel)) trabajoSel = ids[0] ?? '';
 });
 
@@ -114,9 +154,12 @@ async function refrescarLista() {
   }
 }
 
-/** @param {unknown} e */
-const detalle = (e) =>
-  e && typeof e === 'object' && 'message' in e ? String(e.message) : String(e);
+/** Texto de un error: el traducido si trae código, si no su mensaje. @param {unknown} e */
+const detalle = (e) => {
+  const clave = claveError(e);
+  if (clave) return t(clave);
+  return e && typeof e === 'object' && 'message' in e ? String(e.message) : String(e);
+};
 
 // ---- fuentes -----------------------------------------------------------------
 
@@ -132,7 +175,6 @@ function cambiosDe(id) {
  * @param {string} id
  */
 async function fuenteCorrida(id) {
-  const propia = corrida?.tipo === 'actual' ? ID_ACTUAL : corrida?.id;
   if (corrida && id === propia) return corrida;
   if (id === ID_ACTUAL)
     return actual.corrida ? fuenteActual(/** @type {any} */ (actual.corrida)) : null;
@@ -151,7 +193,9 @@ const listo = $derived(
     ? !!origen
     : plantilla === 'comparacion'
       ? !!cmpA && !!cmpB
-      : !!trabajoSel,
+      : plantilla === 'torneo'
+        ? !!torneoSel
+        : !!trabajoSel,
 );
 
 async function generar() {
@@ -172,6 +216,11 @@ async function generar() {
       const [fa, fb] = await Promise.all([fuenteComparar(cmpA), fuenteComparar(cmpB)]);
       if (!fa || !fb) throw new Error(t('informes.error.sinCorrida'));
       datos = datosComparacion(fa, fb);
+    } else if (plantilla === 'torneo') {
+      const L = await almacen().get('torneos', torneoSel);
+      if (!L) throw new Error(t('competir.informe.sinTorneo'));
+      const partidos = await almacen().porIndice('partidos', 'league', torneoSel);
+      datos = datosTorneo(L, partidos, { titulo: nombreTorneo(L, trTorneo) });
     } else {
       const reg = await almacen().get('trabajos', trabajoSel);
       if (!reg) throw new Error(t('informes.error.sinTrabajo'));
@@ -197,6 +246,21 @@ async function generar() {
     ocupado = false;
   }
 }
+
+// Vista previa desde una URL blob (se revoca al cambiar de informe o al
+// desmontar): con srcdoc la URL base del documento sería la de la app y los
+// enlaces #fig-… navegarían el iframe fuera del informe.
+const urlVista = $derived(
+  generado
+    ? URL.createObjectURL(new Blob([generado.html], { type: 'text/html;charset=utf-8' }))
+    : '',
+);
+$effect(() => {
+  const u = urlVista;
+  return () => {
+    if (u) URL.revokeObjectURL(u);
+  };
+});
 
 /** @param {{html: string, archivo: string}} inf */
 function bajarHtml(inf) {
@@ -316,6 +380,8 @@ const seriesPng = $derived(
       })
     : [],
 );
+/** La leyenda del PNG se corta en MAX_LEYENDA series (se avisa). */
+const leyendaCortada = $derived(seriesPng.length > MAX_LEYENDA);
 /** @type {HTMLDivElement | undefined} */
 let cajaPng = $state();
 let haciendoPng = $state(false);
@@ -359,15 +425,19 @@ async function bajarPng() {
             aria-pressed={plantilla === p}
             onclick={() => (plantilla = p)}
           >
-            <strong>{t(`informes.tpl.${p}`)}</strong>
-            <span class="desc">{t(`informes.tpl.${p}.desc`)}</span>
+            <strong>{p === 'torneo' ? t('competir.informe.tpl') : t(`informes.tpl.${p}`)}</strong>
+            <span class="desc"
+              >{p === 'torneo' ? t('competir.informe.tpl.desc') : t(`informes.tpl.${p}.desc`)}</span
+            >
             <span class="mono src">
-              {#if p === 'corrida'}
-                {corrida?.nombre || t('informes.actual')}
+              {#if p === 'torneo'}
+                {t('competir.informe.tpl.src', { n: num(torneosGuardados.length) })}
+              {:else if p === 'corrida'}
+                {corrida ? corrida.nombre || t('informes.actual') : t('informes.tpl.corrida.src')}
               {:else if p === 'comparacion'}
                 {t('informes.tpl.comparacion.src')}
               {:else}
-                {tn('informes.tpl.replicas.src', trabajos.terminados.length)}
+                {tn('informes.tpl.replicas.src', trabajos.listos.length)}
               {/if}
             </span>
           </button>
@@ -377,10 +447,29 @@ async function bajarPng() {
 
     <section class="card bloque">
       <h2 class="h2">{t('informes.paso.opciones')}</h2>
-      {#if plantilla === 'corrida'}
+      {#if plantilla === 'torneo'}
+        {#if torneosGuardados.length}
+          <label class="campo">
+            {t('competir.informe.torneo')}
+            <select class="sel" bind:value={torneoSel}>
+              {#each torneosGuardados as x (x.id)}
+                <option value={x.id}>{x.name}</option>
+              {/each}
+            </select>
+          </label>
+          <p class="sub">{t('competir.informe.temporadaNota')}</p>
+        {:else}
+          <p class="sub">
+            {t('competir.informe.sinTorneos')}
+            <a href="#/competir">{t('competir.informe.irCompetir')}</a>
+          </p>
+        {/if}
+      {:else if plantilla !== 'replicas' && !opciones.length}
+        <p class="sub">{t('informes.sinCorridas')}</p>
+      {:else if plantilla === 'corrida'}
         <label class="campo">
           {t('informes.corrida')}
-          <select class="sel" bind:value={origen}>
+          <select class="sel" bind:value={origen} onchange={() => (tocadoOrigen = true)}>
             {#each opciones as o (o.id)}
               <option value={o.id}>{o.nombre}</option>
             {/each}
@@ -390,7 +479,7 @@ async function bajarPng() {
         <div class="dos">
           <label class="campo">
             {t('informes.corridaA')}
-            <select class="sel" bind:value={cmpA}>
+            <select class="sel" bind:value={cmpA} onchange={() => (tocadoCmp = true)}>
               {#each opciones as o (o.id)}
                 <option value={o.id}>{o.nombre}</option>
               {/each}
@@ -398,7 +487,7 @@ async function bajarPng() {
           </label>
           <label class="campo">
             {t('informes.corridaB')}
-            <select class="sel" bind:value={cmpB}>
+            <select class="sel" bind:value={cmpB} onchange={() => (tocadoCmp = true)}>
               {#each opciones as o (o.id)}
                 <option value={o.id}>{o.nombre}</option>
               {/each}
@@ -410,12 +499,20 @@ async function bajarPng() {
         {:else if cmpA === cmpB}
           <p class="sub">{t('informes.mismaCorrida')}</p>
         {/if}
-      {:else if trabajos.terminados.length}
+      {:else if trabajos.listos.length}
         <label class="campo">
           {t('informes.trabajo')}
           <select class="sel" bind:value={trabajoSel}>
-            {#each trabajos.terminados as x (x.id)}
-              <option value={x.id}>{x.titulo || t('comparar.trabajos.sinTitulo')}</option>
+            {#each trabajos.listos as x (x.id)}
+              <option value={x.id}>
+                {x.parcial
+  ? t('informes.trabajoParcial', {
+      titulo: x.titulo || t('comparar.trabajos.sinTitulo'),
+      hechas: num(x.hechas),
+      n: num(x.n),
+    })
+  : x.titulo || t('comparar.trabajos.sinTitulo')}
+              </option>
             {/each}
           </select>
         </label>
@@ -463,7 +560,9 @@ async function bajarPng() {
     <section class="card bloque">
       <h2 class="h2">{t('informes.datos')}</h2>
       <p class="sub">
-        {t('informes.datos.sub', { nombre: corrida?.nombre || t('informes.actual') })}
+        {corrida
+  ? t('informes.datos.sub', { nombre: corrida.nombre || t('informes.actual') })
+  : t('informes.datos.sinCorrida')}
       </p>
       <div class="acciones">
         <button class="btn sm" type="button" disabled={!corrida} onclick={bajarCsv}>
@@ -500,6 +599,11 @@ async function bajarPng() {
         >
           {t('informes.png.bajar')}
         </button>
+        {#if corrida && leyendaCortada}
+          <p class="sub">
+            {t('informes.png.leyendaCortada', { max: num(MAX_LEYENDA), n: num(seriesPng.length) })}
+          </p>
+        {/if}
       </div>
     </section>
   </div>
@@ -516,7 +620,7 @@ async function bajarPng() {
           class="vista"
           title={t('informes.vistaTitulo', { titulo: generado.titulo })}
           sandbox=""
-          srcdoc={generado.html}
+          src={urlVista}
         ></iframe>
       {:else}
         <p class="sub">{t('informes.vistaVacia')}</p>
@@ -531,7 +635,7 @@ async function bajarPng() {
           <span class="fila-txt">
             <span class="nombre-inf">{x.titulo}</span>
             <span class="sub">
-              {t(`informes.tpl.${x.tipo}`)}
+              {x.tipo === 'torneo' ? t('competir.informe.tpl') : t(`informes.tpl.${x.tipo}`)}
               · {x.idioma.toUpperCase()} · {fecha(x.fecha)} · {tamaño(x.bytes)}
             </span>
           </span>

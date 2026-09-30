@@ -3,14 +3,18 @@
 import { BUILD_ID } from '../build.js';
 import { idioma, idiomas, num, setIdioma, t } from '../i18n/index.svelte.js';
 import { hashDe, SECCIONES } from '../router.js';
-import { rutaAnalizar } from './analizar/ruta.js';
 import { clavePlural } from './experimentar/borrador.js';
 import { cicloVisible } from './sim/ciclo.js';
 import { actual } from './sim/corrida.svelte.js';
-import { enCola, estadoTrabajos } from './trabajos/trabajos.svelte.js';
+import { ACTIVOS, DESTINO_COMPARAR, destinoChip } from './trabajos/destino.js';
 
-/** @type {{ seccion: import('../router.js').Seccion }} */
-let { seccion } = $props();
+/**
+ * `onMismaSeccion`: al pulsar la pestaña de la sección en la que ya se está
+ * (sin hashchange); App reintenta la carga si falló.
+ * @type {{ seccion: import('../router.js').Seccion,
+ *   onMismaSeccion?: (s: import('../router.js').Seccion) => void }}
+ */
+let { seccion, onMismaSeccion } = $props();
 
 // Estado de la corrida (N1.3): solo si ya existe (no crea la sim).
 const estadoSim = $derived.by(() => {
@@ -30,16 +34,46 @@ const estadoSim = $derived.by(() => {
 });
 
 // Trabajos en segundo plano (réplicas, decisión 10): en curso y avisos de
-// los que terminaron. Lleva a Analizar (la pestaña Comparar tiene la lista).
+// los que terminaron. Lleva a Analizar › Comparar (réplicas) o a Competir
+// (rondas de torneo): trabajos/destino.js; el destino y el title siguen al
+// texto (en curso → el trabajo en cola; si no, el último aviso). La cola se carga aparte
+// (import dinámico, como en src/main.js: no va en el chunk principal).
+/** @type {typeof import('./trabajos/trabajos.svelte.js').estadoTrabajos | null} */
+let estadoTrabajos = $state.raw(null);
+import('./trabajos/trabajos.svelte.js')
+  .then((m) => {
+    estadoTrabajos = m.estadoTrabajos;
+  })
+  .catch((e) => console.error(e));
+
+// Selector de idioma (N4.5): si el idioma elegido no baja (sin red, deploy
+// nuevo) y no se recargó la página (hay una corrida en memoria o ya recargó
+// una vez), aviso visible y anunciado; la región viva está siempre, vacía
+// sin aviso, para que el lector la anuncie al llenarse.
+/** @type {string | null} */
+let idiomaFallido = $state(null);
+
+/** @param {string} cod */
+async function elegirIdioma(cod) {
+  idiomaFallido = null;
+  if (!(await setIdioma(cod, { hayCorrida: !!actual.corrida }))) idiomaFallido = cod;
+}
+
 const trabajos = $derived.by(() => {
-  const n = enCola(estadoTrabajos.lista);
-  const avisos = estadoTrabajos.avisos.length;
+  const et = estadoTrabajos;
+  if (!et) return null;
+  const n = et.lista.filter((x) => ACTIVOS.includes(x.estado)).length;
+  const avisos = et.avisos.length;
   if (!n && !avisos) return null;
+  const destino = destinoChip(et.lista, et.avisos);
   /** @param {string} k @param {number} x */
   const tn = (k, x) => t(clavePlural(k, x, idioma()), { n: num(x) });
   return {
     on: n > 0,
     texto: n ? tn('comparar.chip.enCurso', n) : tn('comparar.chip.avisos', avisos),
+    destino,
+    ayuda:
+      destino === DESTINO_COMPARAR ? t('comparar.chip.ayuda') : t('app.trabajos.ayudaCompetir'),
   };
 });
 </script>
@@ -71,6 +105,9 @@ const trabajos = $derived.by(() => {
       class:on={s === seccion}
       href={hashDe(s)}
       aria-current={s === seccion ? 'page' : undefined}
+      onclick={() => {
+  if (s === seccion) onMismaSeccion?.(s);
+}}
       >{t(`app.nav.${s}`)}</a
     >
   {/each}
@@ -80,8 +117,8 @@ const trabajos = $derived.by(() => {
       class="estado trabajos"
       class:on={trabajos.on}
       class:aviso={!trabajos.on}
-      href={rutaAnalizar('actual', 'comparar')}
-      title={t('comparar.chip.ayuda')}
+      href={trabajos.destino}
+      title={trabajos.ayuda}
       ><span class="punto"></span>{trabajos.texto}</a
     >
   {/if}
@@ -100,12 +137,15 @@ const trabajos = $derived.by(() => {
         lang={cod}
         title={t(`app.idioma.${cod}`)}
         aria-pressed={idioma() === cod}
-        onclick={() => setIdioma(cod)}
+        onclick={() => elegirIdioma(cod)}
       >
         {cod.toUpperCase()}
       </button>
     {/each}
   </fieldset>
+  <span class="aviso-idioma" role="status" aria-live="polite"
+    >{idiomaFallido ? t('app.idioma.error', { idioma: t(`app.idioma.${idiomaFallido}`) }) : ''}</span
+  >
   <a class="clasica" href="./classic/">{t('app.clasica.enlace')}</a>
 </nav>
 
@@ -225,6 +265,14 @@ const trabajos = $derived.by(() => {
 .lang.on {
   color: #ffffff;
   font-weight: 600;
+}
+.aviso-idioma {
+  color: #e0b050;
+  font-size: 12px;
+  margin-left: 6px;
+}
+.aviso-idioma:empty {
+  display: none;
 }
 .clasica {
   color: var(--barra-texto);

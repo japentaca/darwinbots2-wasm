@@ -4,13 +4,17 @@
 // volver a descargar o imprimir sin regenerarlo (aunque la corrida ya no
 // exista). Se conservan los MAX_INFORMES más recientes. Puro: el almacén
 // (engine/almacen.js) se inyecta.
+//
+// Los ids nuevos empiezan con la hora (base 36, con ceros a la izquierda):
+// el orden de las claves es el de alta, así podar lee solo las claves y no
+// cada informe con su html.
 
 export const ST_INFORMES = 'informes';
 export const MAX_INFORMES = 30;
 
 /**
  * @typedef {{
- *   id: string, tipo: 'corrida' | 'comparacion' | 'replicas', titulo: string,
+ *   id: string, tipo: 'corrida' | 'comparacion' | 'replicas' | 'torneo', titulo: string,
  *   archivo: string, idioma: string, fecha: string, corrida?: string,
  *   bytes: number, html: string,
  * }} InformeGuardado
@@ -21,10 +25,13 @@ export const MAX_INFORMES = 30;
 /** @param {InformeGuardado} a @param {InformeGuardado} b */
 const porFecha = (a, b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id);
 
-const idNuevo = () => `i-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const idNuevo = () =>
+  `i-${Date.now().toString(36).padStart(9, '0')}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
- * Guarda un informe generado y poda los más viejos. Devuelve el registro.
+ * Guarda un informe generado y poda los más viejos (por clave: los ids
+ * ordenan por fecha de alta; el que se acaba de guardar nunca se poda).
+ * Devuelve el registro. `op.id` es para los tests: tiene que ordenar igual.
  * @param {import('../../../../engine/almacen.js').Almacen} almacen
  * @param {{tipo: InformeGuardado['tipo'], titulo: string, archivo: string, idioma: string,
  *   html: string, corrida?: string | null}} o
@@ -46,8 +53,11 @@ export async function guardarInforme(almacen, o, op = {}) {
   if (o.corrida) r.corrida = o.corrida;
   await almacen.tx([ST_INFORMES], async (t) => {
     await t.put(ST_INFORMES, r);
-    const todos = /** @type {InformeGuardado[]} */ (await t.list(ST_INFORMES)).sort(porFecha);
-    for (const viejo of todos.slice(MAX_INFORMES)) await t.delete(ST_INFORMES, viejo.id);
+    const claves = (await t.claves(ST_INFORMES)).map(String).sort();
+    const sobran = claves.length - MAX_INFORMES;
+    if (sobran <= 0) return;
+    const podar = claves.filter((k) => k !== r.id).slice(0, sobran);
+    for (const k of podar) await t.delete(ST_INFORMES, k);
   });
   return r;
 }

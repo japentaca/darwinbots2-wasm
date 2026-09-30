@@ -55,12 +55,33 @@ export function textoHallazgo(x, idioma) {
 }
 
 /**
+ * Dónde y con qué rótulo se marca un hallazgo en los gráficos: la
+ * sustitución, en el cruce de las dos especies (`params.ciclo`) y con el
+ * rótulo corto del informe («Sustitución: B»); los demás, en su `desde` y sin
+ * rótulo propio (texto '': la tarjeta pone el nombre del tipo).
+ * @param {import('../../../engine/detectors.js').Hallazgo} x @param {string} idioma
+ * @returns {{ciclo: number, texto: string}}
+ */
+export function marcaHallazgo(x, idioma) {
+  if (x.tipo !== 'sustitucion') return { ciclo: x.desde, texto: '' };
+  const c = Number(x.params.ciclo);
+  let texto = '';
+  try {
+    texto = traductor(idiomaValido(idioma)).tx('marca.sustitucion', x.params);
+  } catch {
+    texto = '';
+  }
+  return { ciclo: Number.isFinite(c) ? c : x.desde, texto };
+}
+
+/**
  * Clave estable de un hallazgo (para el #each y para saber si su marca es
  * la elegida): no depende de su posición en la lista.
  * @param {import('../../../engine/detectors.js').Hallazgo} x
  */
 export function claveHallazgo(x) {
-  return `h:${x.clave}:${x.params.especie ?? ''}:${x.desde}`;
+  // `otra`: una especie puede ser desplazada por dos a la vez (sustitución)
+  return `h:${x.clave}:${x.params.especie ?? ''}:${x.params.otra ?? ''}:${x.desde}`;
 }
 
 /**

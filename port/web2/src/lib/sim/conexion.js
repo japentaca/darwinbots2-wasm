@@ -16,6 +16,8 @@
 //   - save, bot-text y load viajan con `id`; si la respuesta lo trae, se empareja
 //     por id y una respuesta tardía (de un pedido ya vencido o rechazado) se
 //     descarta sin tocar a los demás.
+//   - snapshot y dead-take (N4.1) no llevan id: se emparejan en orden; si
+//     el worker falla (onerror) se retiran de su cola sin dejar lápida.
 //   - si la respuesta no trae id (worker sin correlación) o el protocolo no
 //     deja ponerlo (getopt: su `id` es el de la opción), se empareja en orden
 //     (FIFO por tipo y bot/opción). Un pedido vencido queda como «lápida» en
@@ -37,6 +39,8 @@ export const TIEMPOS = Object.freeze({
   getopt: 10_000,
   load: 60_000,
   ciclo: 10_000,
+  snapshot: 60_000,
+  dead: 60_000,
 });
 
 /**
@@ -57,7 +61,7 @@ export class ErrorConexion extends Error {
 /**
  * @typedef {object} Pedido
  * @property {number} id
- * @property {'save' | 'bot-text' | 'opt' | 'valla' | 'load' | 'ciclo'} tipo
+ * @property {'save' | 'bot-text' | 'opt' | 'valla' | 'load' | 'ciclo' | 'snapshot' | 'dead'} tipo
  * @property {string} k           cola FIFO ('save', 'bot-text:9', 'opt:21')
  * @property {boolean} vivo       false = lápida (rechazado o vencido)
  * @property {(v: any) => void} resolver
@@ -433,6 +437,68 @@ export class ConexionSim {
   eyeRead(n) {
     this.enviar({ t: 'eye-read', n: n | 0 });
   }
+  // ---- Herramientas de veterano (N4.1) ---------------------------------------
+
+  /**
+   * Player Bot Mode encendido o apagado (sobre el bot con foco). Con
+   * `seguirFoco` (indicador opcional de la nueva, engine/worker.js), si
+   * muere el bot controlado el foco pasa al que el motor elige y llega
+   * {t:'pb-focus', n, prev}; sin él, el foco se suelta como en la clásica.
+   * @param {boolean} on @param {boolean} [seguirFoco]
+   */
+  pb(on, seguirFoco = false) {
+    /** @type {Record<string, any>} */
+    const m = { t: 'pb', on: !!on };
+    if (on && seguirFoco) m.seguirFoco = true;
+    this.enviar(m);
+  }
+  /** Puntero en coordenadas de mundo; (0, 0) = sin puntero. @param {number} x @param {number} y */
+  pbMouse(x, y) {
+    this.enviar({ t: 'pb-mouse', x: +x || 0, y: +y || 0 });
+  }
+  /** @param {{ memloc: number, value: number, invert: boolean }[]} keys */
+  pbKeys(keys) {
+    this.enviar({
+      t: 'pb-keys',
+      keys: keys.map((k) => ({ memloc: k.memloc | 0, value: k.value | 0, invert: !!k.invert })),
+    });
+  }
+  /** @param {number} idx @param {boolean} active */
+  pbKey(idx, active) {
+    this.enviar({ t: 'pb-key', idx: idx | 0, active: !!active });
+  }
+  /** Escribe rob(n).mem(addr) = v. @param {number} n @param {number} addr @param {number} v */
+  setmem(n, addr, v) {
+    this.enviar({ t: 'setmem', n: n | 0, addr: addr | 0, v: v | 0 });
+  }
+  /**
+   * Instantánea de los vivos: el texto .snp y, con `withMut`, el de
+   * mutaciones ('' sin ellas). Sin correlación: FIFO.
+   * @param {boolean} withMut
+   * @returns {Promise<{ records: number, snp: string, mut: string }>}
+   */
+  snapshot(withMut) {
+    return this.#pedir(
+      'snapshot',
+      'snapshot',
+      { t: 'snapshot', withMut: !!withMut },
+      TIEMPOS.snapshot,
+      false,
+    );
+  }
+  /**
+   * Registro de muertos acumulado (`drain`: lo entregado se va del registro).
+   * @param {boolean} [drain]
+   * @returns {Promise<{ records: number, snp: string, mut: string }>}
+   */
+  deadTake(drain = false) {
+    return this.#pedir('dead', 'dead', { t: 'dead-take', drain: !!drain }, TIEMPOS.dead, false);
+  }
+  /** Borra el registro de muertos. */
+  deadReset() {
+    this.enviar({ t: 'dead-reset' });
+  }
+
   /** @param {boolean} on */
   skins(on) {
     this.enviar({ t: 'skins', on: !!on });
@@ -556,7 +622,12 @@ export class ConexionSim {
       return;
     }
     const err = new ErrorConexion('worker', msg);
-    for (const p of this.#pedidos.values()) this.#descartar(p, err);
+    for (const p of [...this.#pedidos.values()]) {
+      // snapshot y dead-take van en orden y sin id: el que falló no va a
+      // contestar, y su lápida se comería la respuesta del pedido siguiente.
+      if (p.tipo === 'snapshot' || p.tipo === 'dead') this.#quitar(p);
+      this.#descartar(p, err);
+    }
     this.#emitir({ t: 'worker-error', msg });
   }
 
@@ -617,6 +688,17 @@ export class ConexionSim {
       case 'ciclo': {
         const p = this.#emparejar('ciclo', msg, true);
         if (p?.vivo) p.resolver(Number(msg.cycle));
+        break;
+      }
+      case 'snapshot-done':
+      case 'dead-data': {
+        const p = this.#emparejar(msg.t === 'dead-data' ? 'dead' : 'snapshot', msg, false);
+        if (p?.vivo)
+          p.resolver({
+            records: Number(msg.records) || 0,
+            snp: String(msg.snp ?? ''),
+            mut: String(msg.mut ?? ''),
+          });
         break;
       }
       case 'loaded': {

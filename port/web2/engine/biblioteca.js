@@ -7,18 +7,35 @@
 // cruzados por hash).
 //
 // Datos del foro (C1): la interfaz baja classic/bots/bots.json y
-// profiles.json y los pasa ya parseados. La identidad de un bot del foro es
-// el hash de profiles.json (el de la clásica); la de un propio, el de
-// engine/bots.js. Varios archivos del foro comparten ADN (571 archivos, 552
-// hashes): el índice tiene una entrada por archivo (id 'foro:<archivo>') y
-// las marcas y selecciones van por hash (como en la clásica: marcar uno
-// marca los que tienen el mismo ADN). Los propios: id 'propio:<hash>'.
+// profiles.json y los pasa ya parseados.
+//
+// Claves (engine/bots.js): cada entrada tiene una `clave`, la de sus marcas
+// y selecciones. En un bot del foro es el hash de identidad de profiles.json
+// (el de la clásica) o 'file:<archivo>' sin perfil; varios archivos del foro
+// comparten ADN (571 archivos, 552 hashes) y comparten marcas (como en la
+// clásica: marcar uno marca los que tienen el mismo ADN). En un propio es su
+// id 'p:<16 hex>', independiente del ADN: dos propios con el mismo ADN, o un
+// propio duplicado de uno del foro, son entradas distintas.
+// `hash` es siempre el hash de identidad del ADN (hashAdn): en los del foro
+// el de profiles.json (= clave), en los propios el de su última versión.
+// Ids del índice: 'foro:<archivo>' y 'propio:<clave>'.
 //
 // Entrada del índice:
-//   {id, clase: 'foro'|'propio', hash, nombre, archivo?, foro (el board del
-//    foro; null en los propios), vegetal, url?, soloLectura (los del foro,
-//    decisión 18), perfil: {genes, tokens?, caps[], arch, size, geneCaps[]}
-//    | null, marcas: {fav, tags[], notas}, adn? y lgs[] (solo propios)}
+//   {id, clase: 'foro'|'propio', clave, hash, nombre, archivo?, foro (el
+//    board del foro; null en los propios), vegetal, url?, soloLectura (los
+//    del foro, decisión 18), perfil: {genes, tokens?, caps[], arch, size,
+//    geneCaps[]} | null, marcas: {fav, tags[], notas}, adn? y lgs[] (solo
+//    propios)}
+//
+// API:
+//   construirIndice({bestiario, perfiles, registros}) → Entrada[]
+//   todosLosTags(indice), foros(indice), cuentaCaps(indice)
+//   coincide(e, filtro, seleccion?), filtrar(indice, filtro, seleccion?)
+//     (seleccion = Set de claves)
+//   ordenar(lista, 'nombre'|'genes'|'caps'), gruposDe(e, como), agrupar(lista, como)
+//   entradasDe(indice, claves) → una entrada por clave, en el orden del índice
+//   especiesLote(entradas, {cantidad?, cantidadVeg?, energia?, paleta?})
+//   historialBot(almacen, entrada, {lgs?}) → {corridas, torneos, pruebas}
 // Los propios no tienen perfil de capacidades (lo genera
 // tools/bestiary/analyze_bots.js con el core): caps [] y arch null; genes y
 // tamaño salen de su ADN (regla del core, engine/lineage.js).
@@ -34,7 +51,7 @@
 //   'ninguno'    valor = null
 // Salvo 'foro', los grupos van por cantidad (desc) y después por valor.
 
-import { crearPaleta, lgHash } from './adn.js';
+import { crearPaleta, hashAdn, lgHash } from './adn.js';
 import { resumenPropio } from './bots.js';
 import { lgIsScratch } from './league.js';
 
@@ -49,7 +66,8 @@ import { lgIsScratch } from './league.js';
  *   archetypes: Record<string, string>, bots: Record<string, PerfilForo>}} Perfiles
  * @typedef {{genes: number, tokens?: number, caps: string[], arch: string | null, size: string,
  *   geneCaps: string[][]}} Perfil
- * @typedef {{id: string, clase: 'foro' | 'propio', hash: string, nombre: string, archivo?: string,
+ * @typedef {{id: string, clase: 'foro' | 'propio', clave: string, hash: string, nombre: string,
+ *   archivo?: string,
  *   foro: string | null, vegetal: boolean, url?: string, soloLectura: boolean,
  *   perfil: Perfil | null, marcas: Marcas, adn?: string, lgs?: string[]}} Entrada
  * @typedef {{q?: string, foro?: string, arquetipo?: string, tamano?: string, tag?: string | null,
@@ -79,22 +97,21 @@ export const TAMANOS = Object.freeze(['S', 'M', 'L', 'XL']);
 /**
  * Índice unificado: primero los del foro en el orden de bots.json, después
  * los propios por nombre. `registros` = el almacén 'bots' (engine/bots.js):
- * los propios y las marcas por hash.
+ * los propios (con sus marcas) y las marcas de los del foro por clave.
  * @param {{bestiario?: BotForo[], perfiles?: Perfiles | null, registros?: RegistroBot[]}} o
  * @returns {Entrada[]}
  */
 export function construirIndice(o) {
   const perfiles = o.perfiles?.bots ?? {};
   /** @type {Map<string, RegistroBot>} */
-  const porHash = new Map((o.registros ?? []).map((r) => [r.hash, r]));
-  const marcas = (/** @type {string} */ h) => {
-    const r = porHash.get(h);
-    return {
-      fav: !!r?.fav,
-      tags: [...(r?.tags ?? [])],
-      notas: r?.notas ?? '',
-    };
-  };
+  const porClave = new Map(
+    (o.registros ?? []).filter((r) => r.clase === 'foro').map((r) => [r.hash, r]),
+  );
+  const marcas = (/** @type {RegistroBot | undefined} */ r) => ({
+    fav: !!r?.fav,
+    tags: [...(r?.tags ?? [])],
+    notas: r?.notas ?? '',
+  });
   /** @type {Entrada[]} */
   const out = [];
   for (const b of o.bestiario ?? []) {
@@ -105,6 +122,7 @@ export function construirIndice(o) {
     const e = {
       id: `foro:${b.file}`,
       clase: 'foro',
+      clave: hash,
       hash,
       nombre: b.name,
       archivo: b.file,
@@ -121,7 +139,7 @@ export function construirIndice(o) {
             geneCaps: p.geneCaps.map((g) => [...g]),
           }
         : null,
-      marcas: marcas(hash),
+      marcas: marcas(porClave.get(hash)),
     };
     if (/^https?:\/\//.test(b.url || '')) e.url = b.url;
     out.push(e);
@@ -134,13 +152,14 @@ export function construirIndice(o) {
     out.push({
       id: `propio:${b.hash}`,
       clase: 'propio',
-      hash: b.hash,
+      clave: b.hash,
+      hash: b.versiones[b.versiones.length - 1]?.hash ?? hashAdn(b.adn),
       nombre: b.nombre,
       foro: null,
       vegetal: !!b.vegetal,
       soloLectura: false,
       perfil: { genes: r.genes, caps: [], arch: null, size: r.tamano, geneCaps: [] },
-      marcas: marcas(b.hash),
+      marcas: marcas(b),
       adn: b.adn,
       lgs: r.lgs,
     });
@@ -154,8 +173,8 @@ export function todosLosTags(indice) {
   const t = new Map();
   const vistos = new Set();
   for (const e of indice) {
-    if (vistos.has(e.hash)) continue;
-    vistos.add(e.hash);
+    if (vistos.has(e.clave)) continue;
+    vistos.add(e.clave);
     for (const g of e.marcas.tags) t.set(g, (t.get(g) || 0) + 1);
   }
   return [...t.entries()].sort((a, b) => a[0].localeCompare(b[0]));
@@ -177,7 +196,7 @@ export function cuentaCaps(indice) {
 /**
  * ¿La entrada pasa el filtro? (invMatches). La búsqueda mira nombre,
  * archivo, tags y notas; todas las palabras tienen que estar.
- * @param {Entrada} e @param {Filtro} f @param {Set<string>} [seleccion] hashes
+ * @param {Entrada} e @param {Filtro} f @param {Set<string>} [seleccion] claves
  */
 export function coincide(e, f, seleccion) {
   const m = e.marcas;
@@ -186,7 +205,7 @@ export function coincide(e, f, seleccion) {
   if (f.arquetipo && (!e.perfil || e.perfil.arch !== f.arquetipo)) return false;
   if (f.tamano && (!e.perfil || e.perfil.size !== f.tamano)) return false;
   if (f.fav && !m.fav) return false;
-  if (f.soloSeleccion && !seleccion?.has(e.hash)) return false;
+  if (f.soloSeleccion && !seleccion?.has(e.clave)) return false;
   if (f.tag === null && m.tags.length) return false;
   if (f.tag && !m.tags.includes(f.tag)) return false;
   for (const [cap, modo] of Object.entries(f.caps ?? {})) {
@@ -291,41 +310,49 @@ export function agrupar(lista, como) {
 }
 
 /**
- * Las entradas de una selección (hashes), una por hash (la primera del
- * índice con ese ADN), en el orden del índice.
- * @param {Entrada[]} indice @param {Iterable<string>} hashes
+ * Las entradas de una selección (claves), una por clave (en los del foro,
+ * la primera del índice con ese ADN), en el orden del índice.
+ * @param {Entrada[]} indice @param {Iterable<string>} claves
  */
-export function entradasDe(indice, hashes) {
-  const quiero = new Set(hashes);
+export function entradasDe(indice, claves) {
+  const quiero = new Set(claves);
   const vistos = new Set();
   return indice.filter((e) => {
-    if (!quiero.has(e.hash) || vistos.has(e.hash)) return false;
-    vistos.add(e.hash);
+    if (!quiero.has(e.clave) || vistos.has(e.clave)) return false;
+    vistos.add(e.clave);
     return true;
   });
 }
 
+/** Paleta de la siembra que persiste entre lotes (como invHue de la clásica). */
+let paletaModulo = /** @type {(() => string) | null} */ (null);
+
 /**
- * Siembra en lote (invSeed): una especie por bot (sin repetir ADN), con
- * `cantidad` bots (los vegetales, `cantidadVeg`), `energia` y un color por
- * especie de la paleta de la clásica (engine/adn.js crearPaleta). Salen en
- * el formato de especie de los escenarios (engine/escenarios/index.js): los
- * del foro por nombre (la interfaz trae su .txt), los propios con su ADN y
- * su lgHash.
+ * Siembra en lote (invSeed): una especie por clave (los archivos del foro
+ * con el mismo ADN, una sola; dos propios, aunque tengan el mismo ADN, dos),
+ * con `cantidad` bots (los vegetales, `cantidadVeg`), `energia` y un color
+ * por especie de la paleta de la clásica (engine/adn.js crearPaleta). La
+ * paleta persiste entre lotes: `paleta` (o su alias `color`) es un
+ * generador que el llamador conserva (crearPaleta()); sin él, una del
+ * módulo que dura lo que la página, como invHue en la clásica. Salen en el
+ * formato de especie de los escenarios (engine/escenarios/index.js): los
+ * del foro con origen 'bestiario', por nombre (la interfaz trae su .txt);
+ * los propios con origen 'propio', su ADN y su lgHash.
  * @param {Entrada[]} entradas
  * @param {{cantidad?: number, cantidadVeg?: number, energia?: number,
- *   color?: () => string}} [o]
+ *   paleta?: () => string, color?: () => string}} [o]
  */
 export function especiesLote(entradas, o = {}) {
-  const color = o.color ?? crearPaleta();
+  if (!paletaModulo) paletaModulo = crearPaleta();
+  const color = o.paleta ?? o.color ?? paletaModulo;
   const cant = Math.max(1, Math.trunc(o.cantidad ?? 5) || 5);
   const cantVeg = Math.max(1, Math.trunc(o.cantidadVeg ?? 15) || 15);
   const energia = o.energia && o.energia > 0 ? o.energia : 3000;
   const vistos = new Set();
   const out = [];
   for (const e of entradas) {
-    if (vistos.has(e.hash)) continue;
-    vistos.add(e.hash);
+    if (vistos.has(e.clave)) continue;
+    vistos.add(e.clave);
     /** @type {Record<string, any>} */
     const s = {
       bot: e.nombre,
@@ -361,17 +388,19 @@ export function especiesLote(entradas, o = {}) {
  *     de todas las versiones de un propio (`entrada.lgs`) más `o.lgs` (para
  *     uno del foro, la interfaz pasa el lgHash de su .txt);
  *   - por nombre y origen, en las especies de escenario sin ADN ni hash
- *     (las del foro se guardan por nombre) y en las siembras en caliente;
+ *     (las del foro se guardan por nombre), en las de origen 'bestiario'
+ *     cuyo hash no coincide (el .txt cambió desde entonces) y en las
+ *     siembras en caliente;
  *   - por archivo, en los participantes de torneo del foro
  *     (src 'bestiary', file).
  * Corridas: almacén 'corridas' (engine/corridas.js: escenario.especies y
  * eventos 'siembra'). Torneos: 'torneos' (temporadas → participantes con el
  * ADN congelado) y 'partidos' (por índice 'league'; el participante va por
  * nombre en fighters). Pruebas: trabajos de tipo 'prueba' de la cola
- * (engine/cola.js) cuyo params trae hash (el de identidad), lg o adn del
- * bot.
+ * (engine/cola.js) cuyo params trae la clave del bot (`clave`, o `hash`
+ * como en N3.1), lg o adn.
  * @param {import('./almacen.js').OperacionesAlmacen} almacen
- * @param {{clase: 'foro' | 'propio', hash: string, nombre: string, archivo?: string,
+ * @param {{clase: 'foro' | 'propio', clave: string, nombre: string, archivo?: string,
  *   lgs?: string[]}} entrada
  * @param {{lgs?: string[]}} [o]
  * @returns {Promise<{corridas: CorridaDelBot[], torneos: TorneoDelBot[], pruebas: PruebaDelBot[]}>}
@@ -383,9 +412,14 @@ export async function historialBot(almacen, entrada, o = {}) {
   /** @param {any} s especie de escenario */
   const esEspecie = (s) => {
     if (!s) return false;
-    if (typeof s.adn === 'string' && s.adn) return lgs.has(lgHash(s.adn));
-    if (s.hash) return lgs.has(s.hash);
-    return (s.origen || 'bestiario') === origen && s.bot === entrada.nombre;
+    const de = s.origen || 'bestiario';
+    const lg = typeof s.adn === 'string' && s.adn ? lgHash(s.adn) : s.hash;
+    if (lg) {
+      if (lgs.has(lg)) return true;
+      // uno del foro cuyo .txt cambió (o sin lgs): cae al cruce por nombre
+      if (de !== 'bestiario') return false;
+    }
+    return de === origen && s.bot === entrada.nombre;
   };
   /** @param {any} s especie de una siembra en caliente */
   const esSiembra = (s) =>
@@ -445,7 +479,7 @@ export async function historialBot(almacen, entrada, o = {}) {
     if (t?.clase !== 'trabajo' || t.tipo !== 'prueba') continue;
     const p = t.params ?? {};
     const es =
-      p.hash === entrada.hash ||
+      (p.clave ?? p.hash) === entrada.clave ||
       (typeof p.lg === 'string' && lgs.has(p.lg)) ||
       (typeof p.adn === 'string' && lgs.has(lgHash(p.adn)));
     if (es) pruebas.push({ id: t.id, titulo: t.titulo, estado: t.estado, creado: t.creado });

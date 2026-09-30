@@ -14,8 +14,10 @@ import {
   costosF1,
   dimensionesCampo,
   efectosDe,
+  fueraDeLoUsual,
   fusionarCambios,
   GRUPOS,
+  LIMITES,
   mensajeVivo,
   normalizarValor,
   opcionesReset,
@@ -164,6 +166,98 @@ test('acopladas: Toroidal derivado de 2 y 3, 101 sigue a 97', () => {
   assert.equal('opt:1' in f, false, 'el derivado no queda en los cambios');
 });
 
+// Rangos (revisión de N3.7): min/max = el tipo con el que el core guarda
+// cada valor (port/wasm/dbcore_api.cpp y port/core/include/dbcore/sim.hpp);
+// `sugerido` = el rango habitual, que solo avisa.
+test('rangos: min/max del tipo del core y sugerido dentro', () => {
+  const TIPOS = {
+    'opt:11': 'f32',
+    'opt:12': 'f32',
+    'opt:13': 'f32',
+    'opt:14': 'f64',
+    'opt:15': 'f64',
+    'opt:16': 'f32',
+    'opt:17': 'f32',
+    'opt:18': 'f32',
+    'opt:19': 'f32',
+    'opt:20': 'f32',
+    'opt:31': 'i16',
+    'opt:32': 'f32',
+    'opt:34': 'i16',
+    'opt:36': 'i32',
+    'opt:38': 'i32',
+    'opt:51': 'f32',
+    'opt:52': 'i32',
+    'opt:56': 'i32',
+    'opt:61': 'i16',
+    'opt:62': 'f32',
+    'opt:63': 'f32',
+    'opt:64': 'i16',
+    'opt:85': 'i16',
+    'opt:92': 'u8',
+    'opt:94': 'i16',
+    'opt:95': 'f32',
+    'opt:96': 'i16',
+    'opt:97': 'i16',
+    'opt:98': 'i16',
+    'opt:99': 'i32',
+    'opt:100': 'i16',
+    'opt:101': 'i16',
+    'opt:110': 'i16',
+    'base:maxEnergy': 'i32',
+    'base:minVegs': 'i32',
+    'base:maxPopulation': 'f32',
+    'base:repopAmount': 'i16',
+    'base:repopCooldown': 'i16',
+    'base:startChlr': 'i16',
+    'base:fieldW': 'fijo',
+    'base:fieldH': 'fijo',
+  };
+  for (const p of PARAMETROS) {
+    if (p.valor !== 'int' && p.valor !== 'float') continue;
+    const tipo = p.tipo === 'cost' ? 'f32' : /** @type {Record<string, string>} */ (TIPOS)[p.clave];
+    assert.equal(p.core, tipo, `${p.clave}: tipo del core`);
+    const s = /** @type {{min: number, max: number}} */ (p.sugerido);
+    assert.ok(s, `${p.clave}: sugerido`);
+    const l = LIMITES[/** @type {keyof typeof LIMITES} */ (tipo)] ?? [s.min, s.max];
+    assert.deepEqual([p.min, p.max], [...l], p.clave);
+    assert.ok(s.min >= l[0] && s.max <= l[1] && s.min <= p.porDefecto && p.porDefecto <= s.max);
+    assert.equal(!!p.satura, p.tipo === 'opt' && tipo === 'i32', `${p.clave}: satura`);
+  }
+});
+
+// Los valores del revisor: la clásica los acepta (no pone topes); la nueva
+// también, con aviso si salen de lo habitual.
+test('valores fuera de lo habitual se aceptan con aviso', () => {
+  const casos = /** @type {[string, number, number, boolean][]} */ ([
+    // clave, valor, valor guardado, fuera de lo habitual
+    ['opt:20', -1, -1, true],
+    ['cost:23', -1, -1, true],
+    ['cost:30', -0.5, -0.5, true],
+    ['opt:11', 2000, 2000, true],
+    ['opt:15', 0.2, 0.2, true],
+    ['opt:14', 0.01, 0.01, true],
+    ['opt:62', 150, 150, true],
+    ['opt:13', 150, 150, true],
+    ['opt:12', 1.5, 1.5, true],
+    ['opt:52', 0, 0, true],
+    ['opt:34', 0, 0, true],
+    ['cost:53', 50000, 50000, true],
+    ['opt:97', 0, 0, true],
+    ['base:maxEnergy', 150000, 150000, true],
+    ['opt:64', -1, -1, true],
+    ['opt:36', 3e9, 2147483647, false],
+  ]);
+  for (const [k, v, g, raro] of casos) {
+    const p = /** @type {any} */ (parametro(k));
+    const r = normalizarValor(p, v);
+    assert.ok(r.ok, `${k}=${v}`);
+    assert.equal(r.v, g, k);
+    assert.equal(fueraDeLoUsual(p, r.v), raro, `${k}: aviso`);
+  }
+  assert.equal(fueraDeLoUsual(/** @type {any} */ (parametro('opt:11')), 40), false);
+});
+
 test('normalizarValor: tipos, rangos, enums y bool con valor on', () => {
   const p = /** @param {string} k */ (k) => /** @type {any} */ (parametro(k));
   assert.deepEqual(normalizarValor(p('opt:33'), true), { ok: true, v: 1 });
@@ -182,7 +276,24 @@ test('normalizarValor: tipos, rangos, enums y bool con valor on', () => {
   assert.deepEqual(normalizarValor(p('opt:33'), Number.NaN), { ok: false, codigo: 'valor-tipo' });
   assert.deepEqual(normalizarValor(p('opt:33'), '1'), { ok: false, codigo: 'valor-tipo' });
   assert.deepEqual(normalizarValor(p('opt:34'), 2.5), { ok: false, codigo: 'valor-tipo' });
-  assert.deepEqual(normalizarValor(p('opt:34'), 0), { ok: false, codigo: 'valor-rango' });
+  // Fuera del tipo del core (Integer): error. Fuera de lo habitual: vale.
+  assert.deepEqual(normalizarValor(p('opt:34'), 32768), { ok: false, codigo: 'valor-rango' });
+  assert.deepEqual(normalizarValor(p('opt:34'), 0), { ok: true, v: 0 });
+  // Long por db_sim_set_opt (double → int32 saturando): se lleva al tope
+  assert.deepEqual(normalizarValor(p('opt:36'), 3e9), {
+    ok: true,
+    v: 2147483647,
+    aviso: 'valor-saturado',
+  });
+  assert.deepEqual(normalizarValor(p('opt:99'), -3e9), {
+    ok: true,
+    v: -2147483648,
+    aviso: 'valor-saturado',
+  });
+  // Long por un parámetro int de la API (JS lo pasa módulo 2^32): error
+  assert.deepEqual(normalizarValor(p('base:maxEnergy'), 3e9), { ok: false, codigo: 'valor-rango' });
+  assert.deepEqual(normalizarValor(p('opt:14'), 1e300), { ok: true, v: 1e300 }); // Double
+  assert.deepEqual(normalizarValor(p('opt:11'), 1e39), { ok: false, codigo: 'valor-rango' }); // Single
   assert.deepEqual(normalizarValor(p('opt:53'), 1), { ok: false, codigo: 'valor-enum' });
   assert.deepEqual(normalizarValor(p('opt:53'), 3), { ok: true, v: 3 });
   assert.deepEqual(normalizarValor(p('opt:11'), '40'), { ok: false, codigo: 'valor-tipo' });

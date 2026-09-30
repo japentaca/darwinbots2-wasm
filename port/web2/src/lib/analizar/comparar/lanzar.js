@@ -1,11 +1,17 @@
 // @ts-check
 // Lanzar réplicas de una corrida (decisión 10): resuelve el ADN de cada
-// especie del escenario (el propio, los bots del usuario por hash o el
-// Bestiary, C1), verifica que coincida con el hash que guardó el escenario
-// (verificarAdn: si el bot cambió desde entonces, se avisa y se usa el
-// actual), arma los parámetros (engine/replicas.js: autocontenidos, para
+// especie del escenario (el que trae dentro; los bots propios por la versión
+// exacta, porLg de engine/bots.js, o si no por nombre; o el Bestiary, C1),
+// verifica que coincida con el hash que guardó el escenario (verificarAdn:
+// si el bot cambió desde entonces, se avisa y se usa el actual), arma los parámetros (engine/replicas.js: autocontenidos, para
 // reanudar tras una recarga sin volver a pedir nada) y los encola.
 
+import {
+  crearParametrosBarrido,
+  TIPO_BARRIDO,
+  unidadesBarrido,
+} from '../../../../engine/barrido.js';
+import { crearBots } from '../../../../engine/bots.js';
 import { verificarAdn } from '../../../../engine/escenarios/index.js';
 import { CADA_REPLICA, crearParametros, TIPO_REPLICAS } from '../../../../engine/replicas.js';
 import { adnBestiario } from '../../observar/bestiario.js';
@@ -18,10 +24,7 @@ import { almacen } from '../../sim/almacen.svelte.js';
  */
 async function adnDe(s) {
   if (s.adn) return s.adn;
-  if (s.origen === 'propio' && s.hash) {
-    const b = await almacen().get('bots', s.hash);
-    return b ? (b.adn ?? b.dna) : undefined;
-  }
+  if (s.origen === 'propio') return crearBots({ almacen: almacen() }).adnDeEspecie(s);
   return adnBestiario(s.bot);
 }
 
@@ -57,6 +60,45 @@ export async function lanzarReplicas(cola, f, o) {
     tipo: TIPO_REPLICAS,
     params,
     unidades: params.semillas.length,
+    titulo: o.titulo,
+  });
+  return { id, avisosAdn };
+}
+
+/**
+ * Encola un barrido de parámetros de la fuente (engine/barrido.js): su
+ * escenario con `clave` en cada valor de la grilla × N semillas, con los
+ * cambios en caliente de la corrida (los que escriben ese parámetro se
+ * reescriben por unidad con su valor: eventosCon). Devuelve el id y los
+ * avisos de ADN. Lanza ErrorBarrido si algo no vale.
+ * @param {{encolar: (o: {tipo: string, params: any, unidades: number, titulo?: string}) => Promise<string>}} cola
+ * @param {import('./fuentes.js').Fuente} f
+ * @param {{clave: string, grilla: import('../../../../engine/barrido.js').EspecGrilla,
+ *   n: number, ciclos: number, metricas: string[], titulo: string}} o
+ * @returns {Promise<{id: string, avisosAdn: string[]}>}
+ */
+export async function lanzarBarrido(cola, f, o) {
+  const esc = f.escenario;
+  const adn = esc ? await Promise.all(esc.especies.map(adnDe)) : [];
+  const avisosAdn = esc
+    ? verificarAdn(esc, (s) => adn[esc.especies.indexOf(s)]).map((a) => a.bot)
+    : [];
+  const params = crearParametrosBarrido({
+    escenario: esc,
+    adn,
+    semilla: f.semilla ?? 1,
+    n: o.n,
+    ciclos: o.ciclos,
+    clave: o.clave,
+    grilla: o.grilla,
+    metricas: o.metricas,
+    eventos: f.eventos,
+    origen: { nombre: f.nombre, id: f.id },
+  });
+  const id = await cola.encolar({
+    tipo: TIPO_BARRIDO,
+    params,
+    unidades: unidadesBarrido(params),
     titulo: o.titulo,
   });
   return { id, avisosAdn };

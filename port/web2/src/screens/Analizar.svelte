@@ -7,7 +7,12 @@
 // guardada con ese id y `#/analizar/<id>/<pestaña>` (o
 // `#/analizar/actual/<pestaña>` para la actual) la abre además en esa
 // pestaña; así otras pantallas llevan directo a Comparar o a Informes (el
-// chip de trabajos de la barra usa `#/analizar/actual/comparar`).
+// chip de trabajos de la barra usa `#/analizar/actual/comparar`;
+// `#/analizar/<pestaña>` es la actual en esa pestaña). Al cambiar de
+// pestaña o de corrida el hash se reescribe (sin sumar entradas al
+// historial), así recargar o copiar la dirección deja donde se estaba.
+// Comparar e Informes se abren también sin corrida (sin actual ni guardada
+// elegida): trabajan con las guardadas y los trabajos de la cola.
 import { onDestroy, untrack } from 'svelte';
 import { num, t } from '../i18n/index.svelte.js';
 import { especiesPorImportancia } from '../lib/analizar/catalogo.js';
@@ -19,7 +24,7 @@ import { cargarGuardada, fuenteActual } from '../lib/analizar/fuente.js';
 import Genetica from '../lib/analizar/Genetica.svelte';
 import Informes from '../lib/analizar/informes/Informes.svelte';
 import Panel from '../lib/analizar/Panel.svelte';
-import { leerRuta, PESTAÑAS } from '../lib/analizar/ruta.js';
+import { hashAnalizar, leerRuta, PESTAÑAS } from '../lib/analizar/ruta.js';
 import { actual, corridasGuardadas } from '../lib/sim/corrida.svelte.js';
 
 /** @type {{ partes?: string[] }} */
@@ -54,6 +59,14 @@ $effect(() => {
   const r = leerRuta(partes);
   sel = r.sel;
   if (r.pestaña) pestaña = r.pestaña;
+});
+
+// Y al revés: la pestaña y la corrida elegidas quedan en el hash.
+$effect(() => {
+  const h = hashAnalizar(sel, pestaña);
+  if (window.location.hash === h) return;
+  const { pathname, search } = window.location;
+  window.history.replaceState(window.history.state, '', `${pathname}${search}${h}`);
 });
 
 // Lista de corridas guardadas (para el selector).
@@ -260,15 +273,15 @@ function teclaPestañas(e) {
       <p class="card aviso" role="alert">{error}</p>
     {:else if cargando}
       <p class="card aviso">{t('analizar.cargando')}</p>
+    {:else if pestaña === 'comparar'}
+      <Comparar corrida={fuente} />
+    {:else if pestaña === 'informes'}
+      <Informes corrida={fuente} />
     {:else if !fuente}
       <div class="card aviso">
         <p>{t('analizar.sinCorrida')}</p>
         <a class="btn pri" href="#/observar">{t('analizar.irObservar')}</a>
       </div>
-    {:else if pestaña === 'comparar'}
-      <Comparar corrida={fuente} />
-    {:else if pestaña === 'informes'}
-      <Informes corrida={fuente} />
     {:else if fuente.historia.puntos < 1}
       <p class="card aviso">{t('analizar.sinHistoria', { n: num(fuente.historia.intervalo) })}</p>
     {:else if pestaña === 'panel'}

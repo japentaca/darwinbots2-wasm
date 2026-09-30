@@ -37,11 +37,15 @@ export class Sesion {
   avisoError = $state('');
   /** hubo al menos un reset o una carga */
   hayMundo = $state(false);
+  /** sube con cada reset o carga (N4.1: el Player Bot se apaga con la sim) */
+  mundo = $state(0);
   corriendo = $state(false);
   /** ticks por frame (0 = máxima) */
   velocidad = $state(10);
   /** vista enriquecida (false = clásica) */
   rica = $state(true);
+  /** en la vista clásica: bots solo con contorno, sin relleno */
+  contorno = $state(false);
   /** lente de «Color por» (claves de LENTES en render-enriquecido.js) */
   lente = $state('especie');
   /** la distancia genética perdió su referencia */
@@ -110,6 +114,9 @@ export class Sesion {
       this.corriendo = !!m.running;
     });
     conexion.on('focus', (m) => this.seleccionar(m.n | 0));
+    // N4.1: con el Player Bot (indicador seguirFoco) murió el bot controlado y
+    // el motor pasó el foco a un resaltado (un hijo nacido bajo control).
+    conexion.on('pb-focus', (m) => this.#heredarFoco(m.n | 0, m.prev | 0));
     conexion.on('gendist-off', () => {
       this.sinReferencia = true;
     });
@@ -163,6 +170,23 @@ export class Sesion {
   }
 
   /**
+   * El worker ya movió su foco (no se le manda select): la sesión lo sigue,
+   * salvo que la página haya elegido otro bot entretanto.
+   * @param {number} n  el heredero (0 = no quedó nadie controlado)
+   * @param {number} prev  el foco que el worker tenía
+   */
+  #heredarFoco(n, prev) {
+    if (prev !== this.foco) return;
+    if (n === 0) {
+      this.#soltarFoco();
+      return;
+    }
+    this.foco = n;
+    this.focoVivo = null;
+    if (this.rica && this.lente === 'gendist') this.c.gendist(n);
+  }
+
+  /**
    * Sim nueva. Pausa la actual. El mensaje va completo al worker (con los
    * indicadores opcionales `limpio` y `semillaColores`, C15).
    * @param {{ seed: number, options: Record<string, any>, species: import('./conexion.js').EspecieSiembra[],
@@ -179,6 +203,7 @@ export class Sesion {
     this.hayMundo = true;
     this.avisoError = '';
     this.#generacion++;
+    this.mundo++;
     this.c.reset(o);
     if (this.rica && this.lente === 'gendist') this.sinReferencia = true;
   }
@@ -223,10 +248,15 @@ export class Sesion {
     this.redibujar();
   }
 
-  /** @param {boolean} rica */
-  ponerVista(rica) {
+  /**
+   * @param {boolean} rica
+   * @param {boolean} [contorno] solo cuenta si no es rica
+   */
+  ponerVista(rica, contorno = false) {
+    this.contorno = !rica && contorno;
     this.rica = rica;
     this.c.view(rica);
+    this.redibujar();
     if (rica && this.lente === 'gendist') {
       this.sinReferencia = this.foco === 0;
       this.c.gendist(this.foco);
@@ -342,6 +372,7 @@ export class Sesion {
     this.avisoError = '';
     this.opciones = null;
     const gen = ++this.#generacion;
+    this.mundo++;
     const cargado = this.c.cargarConRespuesta(bytes);
     if (this.rica && this.lente === 'gendist') this.sinReferencia = true;
     const opciones = this.c.getopts(IDS_OPT).then(
@@ -352,6 +383,26 @@ export class Sesion {
       () => {},
     );
     return Promise.all([cargado, opciones]).then(([r]) => r);
+  }
+
+  /**
+   * «Buscar el mejor» (N4.1): el motor pone el foco en el bot más apto (los
+   * vegetales no cuentan) y contesta {t:'focus', n}, que ya selecciona (ver
+   * el constructor). Devuelve el bot elegido (0 = ninguno; −1 si el worker
+   * no contestó en 10 s).
+   * @returns {Promise<number>}
+   */
+  buscarMejor() {
+    return new Promise((resolver) => {
+      const fin = (/** @type {number} */ n) => {
+        baja();
+        clearTimeout(id);
+        resolver(n);
+      };
+      const baja = this.c.on('focus', (m) => fin(m.n | 0));
+      const id = setTimeout(() => fin(-1), 10_000);
+      this.c.findbest();
+    });
   }
 
   /** @param {number} n @returns {Promise<string>} */

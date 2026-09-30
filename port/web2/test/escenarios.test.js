@@ -90,7 +90,9 @@ test('validar: casos malos con su código y su ruta', () => {
   assert.deepEqual(codigos(variante((x) => (x.opciones.base = 'f2'))), ['base']);
   const e = validar(variante((x) => (x.opciones.cambios['opt:999'] = 1)));
   assert.deepEqual(e, [{ codigo: 'clave-desconocida', ruta: 'opciones.cambios.opt:999' }]);
-  assert.deepEqual(codigos(variante((x) => (x.opciones.cambios['opt:34'] = 0))), ['valor-rango']);
+  assert.deepEqual(codigos(variante((x) => (x.opciones.cambios['opt:34'] = 40000))), [
+    'valor-rango',
+  ]);
   assert.deepEqual(codigos(variante((x) => (x.opciones.cambios['opt:53'] = 1))), ['valor-enum']);
   assert.deepEqual(codigos(variante((x) => (x.opciones.cambios['opt:33'] = 'sí'))), ['valor-tipo']);
   assert.deepEqual(codigos(variante((x) => (x.especies = {}))), ['especies']);

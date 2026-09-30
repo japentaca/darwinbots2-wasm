@@ -12,7 +12,7 @@
 // a mandar tras cada iniciar/cargar/importar con una correlación nueva: las
 // muestras de la sim anterior se descartan) y con ellas alimenta la
 // historia (engine/history.js), el linaje (engine/lineage.js), el detector
-// del feed (src/lib/observar/eventos.js) y las especies del panel. Las
+// del feed (src/lib/observar/detector-eventos.js) y las especies del panel. Las
 // muestras dicen la especie por NOMBRE, así que todo eso anda igual con la
 // vista clásica. Al guardar, historia y linaje van a corridas-datos (C14)
 // recortados al ciclo del .dbsim; al cargar vuelven y la primera muestra de
@@ -71,9 +71,9 @@ import { escenarioFabrica } from '../../../engine/escenarios/fabrica.js';
 import { aplicar, resolverOpciones, textoEn } from '../../../engine/escenarios/index.js';
 import { Historia } from '../../../engine/history.js';
 import { Linaje } from '../../../engine/lineage.js';
-import { fusionarCambios, parametro, valorEfectivo } from '../../../engine/opciones.js';
+import { parametro, valorEfectivo } from '../../../engine/opciones.js';
 import { cssAVb, vbACss } from '../mundo/color.js';
-import { DetectorEventos, especiesNuevas } from '../observar/eventos.js';
+import { DetectorEventos, especiesNuevas } from '../observar/detector-eventos.js';
 import {
   muestraDeResumen,
   muestrasDeHistoria,
@@ -138,7 +138,7 @@ export class ErrorCorrida extends Error {
  * @typedef {import('../../../engine/escenarios/index.js').Escenario} Escenario
  * @typedef {import('../../../engine/escenarios/index.js').Especie} EspecieEsc
  * @typedef {import('../../../engine/corridas.js').EventoCorrida} EventoCorrida
- * @typedef {import('../observar/eventos.js').EventoFeed} EventoFeed
+ * @typedef {import('../observar/detector-eventos.js').EventoFeed} EventoFeed
  * @typedef {import('../observar/metricas.js').Resumen} Resumen
  * @typedef {import('../observar/metricas.js').Muestra} Muestra
  */
@@ -203,6 +203,8 @@ export class ErrorCorrida extends Error {
  * @property {ReturnType<typeof import('../../../engine/corridas.js').crearCorridas>} corridas
  * @property {EstadoCorrida} estado
  * @property {(s: EspecieEsc) => Promise<string | undefined>} adnDe
+ * @property {(nombre: string) => Promise<string | undefined>} [adnPropioPorNombre]  ADN
+ *   del bot propio con ese nombre (dna-missing sin especie en el escenario)
  * @property {() => string} idioma
  * @property {() => (string | undefined)} [miniatura]
  * @property {(bytes: Uint8Array, nombre: string) => void} [descargar]
@@ -304,7 +306,12 @@ export class NucleoCorrida {
   #adnLocal = new Map();
   /** @type {Promise<void> | null} respuesta en curso a un dna-missing */
   #adnPendiente = null;
-  /** ciclo y cantidad de eventos de lo último guardado o cargado (-1 = nada) */
+  /**
+   * ciclo y cantidad de eventos de lo último guardado o cargado (-1 = nada);
+   * `objetos`: después hubo un «Guardar en el escenario» (cada guardado,
+   * carga o sim nueva pone un objeto nuevo, sin la marca)
+   * @type {{ ciclo: number, eventos: number, objetos?: true }}
+   */
   #guardado = { ciclo: -1, eventos: 0 };
 
   /** @param {DepsCorrida} d */
@@ -609,8 +616,10 @@ export class NucleoCorrida {
   /**
    * ADN por nombre de especie (con .txt) para un dna-missing: lo sembrado
    * por esta página, los presets de la sim de prueba, las especies del
-   * escenario (bots propios por hash, o el Bestiary) y, si no, el Bestiary
-   * por nombre. Lo que no aparece queda sin ADN (como el .txt ausente).
+   * escenario (adnDe: bots propios por la versión exacta o por nombre, o el
+   * Bestiary) y, si no están en el escenario, un propio con ese nombre y
+   * después el Bestiary. Lo que no aparece queda sin ADN (como el .txt
+   * ausente).
    * @param {string[]} names
    */
   async #resolverAdn(names) {
@@ -625,7 +634,12 @@ export class NucleoCorrida {
           const bot = sinTxt(name);
           const s = especiesEsc.find((x) => x.bot === bot);
           try {
-            dna = s?.adn ?? (await this.#d.adnDe(s ?? /** @type {any} */ ({ bot })));
+            if (s) dna = s.adn ?? (await this.#d.adnDe(s));
+            else {
+              // sin especie en el escenario: primero un propio con ese nombre, después el Bestiary
+              dna = await this.#d.adnPropioPorNombre?.(bot);
+              dna ??= await this.#d.adnDe(/** @type {any} */ ({ bot }));
+            }
           } catch {
             dna = undefined;
           }
@@ -831,18 +845,23 @@ export class NucleoCorrida {
   /**
    * El escenario con los cambios en caliente aplicados (el «actual» contra
    * el que Experimentar calcula el diff), con fusionarCambios de
-   * engine/opciones.js (acopladas). Las siembras en caliente no cambian el
-   * escenario. null si la sim no salió de un escenario (un .dbsim
-   * importado, la sim de prueba).
+   * engine/opciones.js (acopladas) vía plegarObjetos. Las siembras en caliente no cambian el
+   * escenario. Un laberinto polar en caliente enciende la deriva (opciones
+   * 83–85): cuenta como un cambio en su posición entre los eventos
+   * (plegarObjetos), así los cambios posteriores sobre 83–85 mandan.
+   * null si la sim no salió de un escenario (un .dbsim importado, la sim de
+   * prueba).
    * @returns {Escenario | null}
    */
   escenarioEfectivo() {
     const e = this.#datos.escenario;
     if (!e) return null;
     const out = structuredClone(e);
-    for (const ev of this.#datos.eventos)
-      if (ev.tipo === 'opciones')
-        out.opciones.cambios = fusionarCambios(out.opciones.cambios, ev.cambios);
+    out.opciones.cambios = plegarObjetos(
+      e.objetos,
+      this.#datos.eventos,
+      out.opciones.cambios,
+    ).cambios;
     // Objetos guardados con «Guardar en el escenario» (barra «Mundo»).
     if (this.#datos.objetosEscenario) out.objetos = structuredClone(this.#datos.objetosEscenario);
     return out;
@@ -863,8 +882,10 @@ export class NucleoCorrida {
     /** @param {number} [ciclo] */
     const registrar = (ciclo) => {
       if (this.#datos !== datos) return; // otra sim mientras tanto
-      registrarObjetos(this.#datos, this.#cicloEvento(ciclo), orden);
+      const c = this.#cicloEvento(ciclo);
+      registrarObjetos(this.#datos, c, orden);
       this.estado.eventos = structuredClone(this.#datos.eventos);
+      this.#alFeed([{ ciclo: Math.max(c, 0), tipo: 'objetos', params: { orden: { ...orden } } }]);
     };
     if (this.sesion.aplicarEnCiclo)
       return this.sesion.aplicarEnCiclo([m]).then(
@@ -892,7 +913,8 @@ export class NucleoCorrida {
    * arrancaría una sim nueva desde él). El escenario con que arrancó la
    * corrida no cambia de contenido (las réplicas lo usan con los eventos:
    * sumarle los objetos los repetiría); se publica una copia para que las
-   * vistas que lo siguen se actualicen. Se guarda con la corrida. null sin
+   * vistas que lo siguen se actualicen. Se guarda con la corrida (hasta
+   * entonces, la corrida queda sin guardar: sinGuardar). null sin
    * escenario.
    */
   guardarObjetosEnEscenario() {
@@ -900,6 +922,7 @@ export class NucleoCorrida {
     if (!r) return null;
     this.#datos.objetosEscenario = structuredClone(r.objetos);
     this.#datos.escenario = structuredClone(this.#datos.escenario);
+    this.#guardado = { ...this.#guardado, objetos: true };
     this.#publicarDatos();
     return r;
   }
@@ -965,10 +988,12 @@ export class NucleoCorrida {
 
   /**
    * Hay algo que se perdería al reemplazar la sim: una corrida sin guardar
-   * que ya avanzó o tuvo eventos, o una guardada que siguió después.
+   * que ya avanzó o tuvo eventos, o una guardada que siguió después (o a
+   * la que se le guardaron objetos en el escenario).
    */
   sinGuardar() {
     if (!this.sesion.hayMundo) return false;
+    if (this.#guardado.objetos) return true;
     const ciclo = Math.trunc(this.sesion.stats.cycle) || 0;
     const nEventos = this.#datos.eventos.length;
     if (this.#guardado.ciclo < 0) return ciclo > 0 || nEventos > 0;

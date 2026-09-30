@@ -58,6 +58,7 @@
 /**
  * @typedef {'opt' | 'cost' | 'base'} TipoParametro
  * @typedef {'bool' | 'int' | 'float' | 'enum'} TipoValor
+ * @typedef {'i16' | 'i32' | 'f32' | 'f64' | 'u8' | 'fijo'} TipoCore
  * @typedef {{es: string, en: string}} Texto
  * @typedef {{v: number, es: string, en: string}} ValorEnum
  * @typedef {{
@@ -74,6 +75,9 @@
  *   on?: number,
  *   min?: number,
  *   max?: number,
+ *   sugerido?: {min: number, max: number},
+ *   core?: TipoCore,
+ *   satura?: boolean,
  *   paso?: number,
  *   porDefecto: number,
  *   vivo: boolean,
@@ -121,6 +125,9 @@ function def(tipo, id, grupo, variable, nombre, ayuda, x) {
     vivo: true,
     nivel: 'avanzado',
     ...(tipo === 'opt' && x.valor === 'bool' ? { noCero: true } : {}),
+    // db_sim_set_opt recibe un double y lo convierte a int32 saturando
+    // (fuera de rango queda en el tope): normalizarValor hace lo mismo.
+    ...(tipo === 'opt' && x.core === 'i32' ? { satura: true } : {}),
     ...x,
   });
 }
@@ -132,26 +139,60 @@ const cost = (id, g, v, n, a, x) => def('cost', id, g, v, n, a, x);
 /** @param {string} id @param {string} g @param {string} v @param {[string, string]} n @param {[string, string]} a @param {Partial<Parametro> & {valor: TipoValor, porDefecto: number}} x */
 const base = (id, g, v, n, a, x) => def('base', id, g, v, n, a, x);
 
+// Rangos. `min`/`max` son el límite del tipo con el que el core guarda el
+// valor (lo que la clásica acepta sin quejarse, porque no pone topes): fuera
+// de ahí el valor se corrompe al guardarlo (un Integer de VB6 da la vuelta)
+// y se rechaza. `sugerido` es el rango habitual: fuera de él el valor se
+// acepta con un aviso (gravedad negativa, costos negativos, fricción > 1…).
+// Los opt int32 saturan en el core (db_sim_set_opt convierte el double con
+// saturación): ahí un valor fuera del tipo se lleva al tope, con aviso.
+// El tamaño del campo es la excepción ('fijo'): el core aloja la rejilla de
+// buckets según el campo y uno enorme agota la memoria, así que conserva el
+// tope de los tamaños del slider.
+const F32 = 3.4028234663852886e38;
+/** @type {Readonly<Record<TipoCore, readonly [number, number] | null>>} */
+export const LIMITES = Object.freeze({
+  i16: /** @type {const} */ ([-32768, 32767]),
+  i32: /** @type {const} */ ([-2147483648, 2147483647]),
+  f32: /** @type {const} */ ([-F32, F32]),
+  f64: /** @type {const} */ ([-Number.MAX_VALUE, Number.MAX_VALUE]),
+  u8: /** @type {const} */ ([0, 255]),
+  fijo: null,
+});
+
+/**
+ * @param {TipoValor} valor @param {number} d @param {number} min @param {number} max
+ * @param {number | undefined} paso @param {TipoCore} core
+ */
+function rango(valor, d, min, max, paso, core) {
+  const l = LIMITES[core] ?? [min, max];
+  return {
+    valor,
+    porDefecto: d,
+    min: l[0],
+    max: l[1],
+    sugerido: { min, max },
+    core,
+    ...(paso ? { paso } : {}),
+  };
+}
+
 const BOOL = /** @type {const} */ ({ valor: 'bool' });
 /** @param {number} d */
 const bool = (d) => ({ ...BOOL, porDefecto: d });
-/** @param {number} d @param {number} min @param {number} max @param {number} [paso] */
-const ent = (d, min, max, paso = 1) => ({
-  valor: /** @type {TipoValor} */ ('int'),
-  porDefecto: d,
-  min,
-  max,
-  paso,
-});
-/** @param {number} d @param {number} min @param {number} max @param {number} [paso] */
-const real = (d, min, max, paso) => ({
-  valor: /** @type {TipoValor} */ ('float'),
-  porDefecto: d,
-  min,
-  max,
-  ...(paso ? { paso } : {}),
-});
-/** Costo por acción: float ≥ 0 (la clásica no pone tope). @param {number} [d] */
+/**
+ * Entero; `min`/`max` son el rango sugerido y `core` el tipo que lo guarda.
+ * @param {number} d @param {number} min @param {number} max @param {number} [paso]
+ * @param {TipoCore} [core]
+ */
+const ent = (d, min, max, paso = 1, core = 'i16') => rango('int', d, min, max, paso, core);
+/**
+ * Real; `min`/`max` son el rango sugerido y `core` el tipo que lo guarda.
+ * @param {number} d @param {number} min @param {number} max @param {number} [paso]
+ * @param {TipoCore} [core]
+ */
+const real = (d, min, max, paso, core = 'f32') => rango('float', d, min, max, paso, core);
+/** Costo por acción: float (Single); lo habitual es ≥ 0. @param {number} [d] */
 const costo = (d = 0) => real(d, 0, 1000, 0.001);
 
 // ---- Campo y bordes ---------------------------------------------------------
@@ -161,7 +202,7 @@ base(
   'FieldWidth',
   ['Ancho del campo', 'Field width'],
   ['En twips; 32000 es el mundo por defecto.', 'In twips; 32000 is the default world.'],
-  { ...ent(32000, 1000, 2304000, 1), vivo: false },
+  { ...ent(32000, 1000, 2304000, 1, 'fijo'), vivo: false },
 );
 base(
   'fieldH',
@@ -169,7 +210,7 @@ base(
   'FieldHeight',
   ['Alto del campo', 'Field height'],
   ['En twips; 32000 es el mundo por defecto.', 'In twips; 32000 is the default world.'],
-  { ...ent(32000, 1000, 1728000, 1), vivo: false },
+  { ...ent(32000, 1000, 1728000, 1, 'fijo'), vivo: false },
 );
 opt(
   1,
@@ -240,7 +281,7 @@ opt(
   'Density',
   ['Densidad del medio', 'Medium density'],
   ['Resistencia por el empuje del fluido (agua ≈ 1e-7).', 'Fluid drag (water ≈ 1e-7).'],
-  { ...real(0, 0, 0.001), nivel: 'basico' },
+  { ...real(0, 0, 0.001, undefined, 'f64'), nivel: 'basico' },
 );
 opt(
   15,
@@ -248,7 +289,7 @@ opt(
   'Viscosity',
   ['Viscosidad', 'Viscosity'],
   ['Resistencia viscosa del fluido (agua ≈ 0,0005).', 'Viscous drag (water ≈ 0.0005).'],
-  { ...real(0, 0, 0.1), nivel: 'basico' },
+  { ...real(0, 0, 0.1, undefined, 'f64'), nivel: 'basico' },
 );
 opt(
   16,
@@ -355,7 +396,7 @@ opt(
   'SunUpThreshold',
   ['Umbral de encendido', 'On threshold'],
   ['Energía total por debajo de la cual sale el sol.', 'Total energy below which the sun rises.'],
-  ent(500000, 0, 2147483647, 1000),
+  ent(500000, 0, 2147483647, 1000, 'i32'),
 );
 opt(
   37,
@@ -374,7 +415,7 @@ opt(
   'SunDownThreshold',
   ['Umbral de apagado', 'Off threshold'],
   ['Energía total por encima de la cual se pone el sol.', 'Total energy above which the sun sets.'],
-  ent(1000000, 0, 2147483647, 1000),
+  ent(1000000, 0, 2147483647, 1000, 'i32'),
 );
 opt(
   39,
@@ -451,7 +492,7 @@ opt(
   'Decaydelay',
   ['Pausa de descomposición (ciclos)', 'Decay delay (cycles)'],
   ['Ciclos entre dos pasos de descomposición.', 'Cycles between two decay steps.'],
-  ent(100, 1, 32000),
+  ent(100, 1, 32000, 1, 'i32'),
 );
 opt(
   53,
@@ -491,7 +532,7 @@ opt(
   'BadWastelevel',
   ['Los residuos son tóxicos desde', 'Waste is toxic from'],
   ['Residuos acumulados a partir de los que dañan.', 'Accumulated waste from which it hurts.'],
-  ent(400, 0, 2147483647),
+  ent(400, 0, 2147483647, 1, 'i32'),
 );
 
 // ---- Energía y vegetales ----------------------------------------------------
@@ -501,7 +542,7 @@ base(
   'MaxEnergy',
   ['Energía solar por ciclo', 'Solar share per cycle'],
   ['Energía que se reparten los vegetales cada ciclo.', 'Energy shared by vegetables each cycle.'],
-  { ...ent(10, 0, 100000), nivel: 'basico' },
+  { ...ent(10, 0, 100000, 1, 'i32'), nivel: 'basico' },
 );
 base(
   'minVegs',
@@ -512,7 +553,7 @@ base(
     'Si los vegetales caen por debajo, se siembran más.',
     'If vegetables drop below this, more are seeded.',
   ],
-  { ...ent(15, 0, 100000), nivel: 'basico' },
+  { ...ent(15, 0, 100000, 1, 'i32'), nivel: 'basico' },
 );
 base(
   'maxPopulation',
@@ -523,7 +564,7 @@ base(
     'Máximo de vegetales (en unidades de 16000 cloroplastos).',
     'Vegetable cap (in units of 16000 chloroplasts).',
   ],
-  { ...ent(100, 0, 32000), nivel: 'basico' },
+  { ...real(100, 0, 32000, 1), nivel: 'basico' },
 );
 base(
   'repopAmount',
@@ -801,7 +842,7 @@ cost(
   'AGECOSTSTART',
   ['Edad de inicio del costo', 'Age at which the cost starts'],
   ['Ciclos de vida antes de cobrar por edad.', 'Cycles of life before the age cost applies.'],
-  ent(0, 0, 2147483647),
+  real(0, 0, 2147483647, 1),
 );
 cost(
   33,
@@ -846,7 +887,7 @@ cost(
   'DYNAMICCOSTTARGET',
   ['Población objetivo', 'Target population'],
   ['Población a la que apunta el ajuste.', 'Population the adjustment aims at.'],
-  ent(0, 0, 32000),
+  real(0, 0, 32000, 1),
 );
 cost(
   55,
@@ -905,7 +946,7 @@ cost(
     'Con menos bots que esto, nada cuesta (-1 = no).',
     'Below this many bots nothing costs (-1 = off).',
   ],
-  ent(-1, -1, 32000),
+  real(-1, -1, 32000, 1),
 );
 cost(
   59,
@@ -913,7 +954,7 @@ cost(
   'COSTXREINSTATEMENTLEVEL',
   ['Reponer costos sobre la población', 'Reinstate above population'],
   ['Vuelven los costos al superar esta población.', 'Costs return above this population.'],
-  ent(0, 0, 32000),
+  real(0, 0, 32000, 1),
 );
 
 // ---- Formas -----------------------------------------------------------------
@@ -987,8 +1028,8 @@ opt(
   {
     ...bool(0),
     nota: {
-      es: 'En una sim corriendo hace falta además arrancar el concurso (censo de especies).',
-      en: 'On a running sim the contest must also be started (species census).',
+      es: 'El concurso empieza con una sim nueva o desde Competir: en una sim que ya corre, encenderlo no arranca el censo de especies.',
+      en: 'The contest starts with a new sim or from Compete: turning it on in a running sim does not start the species census.',
     },
   },
 );
@@ -1017,7 +1058,7 @@ opt(
   'MaxCycles',
   ['Tope de ciclos por ronda (0 = no)', 'Cycle cap per round (0 = off)'],
   ['Corta la ronda a los N ciclos.', 'Ends the round after N cycles.'],
-  ent(0, 0, 2147483647),
+  ent(0, 0, 2147483647, 1, 'i32'),
 );
 opt(
   100,
@@ -1052,7 +1093,13 @@ opt(
     'Valor al que vuelve MinRounds en cada concurso nuevo.',
     'Value MinRounds goes back to in each new contest.',
   ],
-  ent(0, 0, 32000),
+  {
+    ...ent(0, 0, 32000),
+    nota: {
+      es: 'Escribir «Rondas mínimas» también lo escribe: si no se fija aparte, vale lo mismo que ellas.',
+      en: 'Writing «Minimum rounds» also writes it: unless set on its own, it equals them.',
+    },
+  },
 );
 
 // ---- Modo evolución ---------------------------------------------------------
@@ -1065,7 +1112,7 @@ opt(
     'Modo del ciclo de evolución (0 = normal; 4/5 = depredador oculto).',
     'Evolution loop mode (0 = normal; 4/5 = hidden predator).',
   ],
-  ent(0, 0, 9),
+  ent(0, 0, 9, 1, 'u8'),
 );
 opt(
   94,
@@ -1102,7 +1149,13 @@ opt(
   'chartingInterval',
   ['Intervalo de los gráficos (ciclos)', 'Charting interval (cycles)'],
   ['Cada cuántos ciclos se toma un punto.', 'How often a data point is taken.'],
-  ent(200, 1, 32000),
+  {
+    ...ent(200, 1, 32000),
+    nota: {
+      es: 'Esta interfaz no lo usa todavía (sus gráficos muestrean por su cuenta): queda guardado en la simulación.',
+      en: 'This interface does not use it yet (its charts sample on their own): it is kept in the simulation.',
+    },
+  },
 );
 opt(
   111,
@@ -1110,7 +1163,14 @@ opt(
   'DeadRobotSnp',
   ['Registrar los muertos', 'Record dead bots'],
   ['Guarda una ficha de cada bot que muere.', 'Keeps a record of each bot that dies.'],
-  bool(0),
+  {
+    ...bool(0),
+    // N4.1: el menú «Instantánea» de Observar la usa (registro de muertos).
+    nota: {
+      es: 'También se enciende desde el menú «Instantánea» de Observar, que descarga y reinicia el registro.',
+      en: 'It can also be turned on from the Snapshot menu in Observe, which downloads and resets the record.',
+    },
+  },
 );
 opt(
   112,
@@ -1118,7 +1178,14 @@ opt(
   'SnpExcludeVegs',
   ['Sin vegetales en el registro', 'Exclude vegetables'],
   ['El registro de muertos ignora vegetales.', 'The death record ignores vegetables.'],
-  bool(0),
+  {
+    ...bool(0),
+    // N4.1: el menú «Instantánea» de Observar la usa (registro de muertos).
+    nota: {
+      es: 'Solo afecta al registro de muertos, no a la instantánea de los vivos. También se cambia desde el menú «Instantánea» de Observar.',
+      en: 'It only affects the record of the dead, not the snapshot of the living. It can also be changed from the Snapshot menu in Observe.',
+    },
+  },
 );
 
 /** Todos los parámetros, en el orden de sus grupos. */
@@ -1141,7 +1208,9 @@ export const claveDe = (tipo, id) => `${tipo}:${id}`;
  * Valor válido para el parámetro, o un código de error.
  * Acepta true/false en los bool (se guardan como 0/`on`).
  * @param {Parametro} p @param {unknown} v
- * @returns {{ok: true, v: number} | {ok: false, codigo: string}}
+ * Fuera del tipo del core es un error, salvo en los que saturan (`satura`):
+ * ahí se lleva al tope y se avisa (`aviso: 'valor-saturado'`).
+ * @returns {{ok: true, v: number, aviso?: string} | {ok: false, codigo: string}}
  */
 export function normalizarValor(p, v) {
   if (p.valor === 'bool') {
@@ -1160,9 +1229,22 @@ export function normalizarValor(p, v) {
     return { ok: true, v };
   }
   if (p.valor === 'int' && !Number.isInteger(v)) return { ok: false, codigo: 'valor-tipo' };
-  if ((p.min !== undefined && v < p.min) || (p.max !== undefined && v > p.max))
-    return { ok: false, codigo: 'valor-rango' };
+  if ((p.min !== undefined && v < p.min) || (p.max !== undefined && v > p.max)) {
+    if (!p.satura) return { ok: false, codigo: 'valor-rango' };
+    const tope = v < /** @type {number} */ (p.min) ? p.min : p.max;
+    return { ok: true, v: /** @type {number} */ (tope), aviso: 'valor-saturado' };
+  }
   return { ok: true, v };
+}
+
+/**
+ * ¿El valor (ya válido) está fuera del rango habitual del parámetro? Se
+ * acepta igual; la interfaz lo avisa.
+ * @param {Pick<Parametro, 'sugerido'>} p @param {number} v
+ */
+export function fueraDeLoUsual(p, v) {
+  const s = p.sugerido;
+  return !!s && Number.isFinite(v) && (v < s.min || v > s.max);
 }
 
 // ---- Bases ------------------------------------------------------------------
@@ -1304,12 +1386,24 @@ export function costosNinguno() {
   return v;
 }
 
-/** @returns {Record<string, number>} */
-function valoresF1() {
-  const v = { ...valoresClasica(), ...costosF1() };
+/**
+ * Lo que escriben los «Ajustes F1» sobre lo que haya (applyF1Settings de
+ * la clásica): los costos de liga (el resto en 0), las opciones de liga,
+ * el campo 9237×6928 con los dos ejes conectados, la economía vegetal y
+ * las mutaciones apagadas. Lo demás no se toca.
+ * @returns {Record<string, number>}
+ */
+export function ajustesF1() {
+  /** @type {Record<string, number>} */
+  const v = costosF1();
   for (const [id, x] of Object.entries(F1_OPTS)) v[`opt:${id}`] = x;
   for (const [k, x] of Object.entries(F1_NOMBRADAS)) v[`base:${k}`] = x;
   return v;
+}
+
+/** @returns {Record<string, number>} */
+function valoresF1() {
+  return { ...valoresClasica(), ...ajustesF1() };
 }
 
 /**
@@ -1464,6 +1558,7 @@ export function mensajeVivo(clave, v) {
  * @typedef {{
  *   id: string, es: string, en: string, ayuda: Texto,
  *   valor: TipoValor, opciones?: OpcionControl[], min?: number, max?: number, paso?: number,
+ *   sugerido?: {min: number, max: number},
  *   claves: string[],
  *   escribe: (v: any) => Record<string, number>,
  *   lee: (ef: (clave: string) => number) => any,
@@ -1499,6 +1594,7 @@ function simple(clave, id, nombre, ayuda) {
     valor: p.valor,
     ...(p.min !== undefined ? { min: p.min } : {}),
     ...(p.max !== undefined ? { max: p.max } : {}),
+    ...(p.sugerido ? { sugerido: p.sugerido } : {}),
     ...(p.paso !== undefined ? { paso: p.paso } : {}),
     claves: [clave],
     escribe: (/** @type {any} */ v) => ({
@@ -1623,7 +1719,8 @@ export const CONTROLES_BASICOS = Object.freeze([
     },
     valor: 'int',
     min: 0,
-    max: 32000,
+    max: 32767,
+    sugerido: { min: 0, max: 32000 },
     paso: 50,
     claves: ['opt:33', 'opt:34'],
     escribe: (v) => {

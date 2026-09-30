@@ -10,7 +10,7 @@ import { almacenMemoria, ErrorAlmacen } from '../engine/almacen.js';
 import { escenarioFabrica, IDS_FABRICA } from '../engine/escenarios/fabrica.js';
 import { diff, ErrorEscenario, textoEn, validar } from '../engine/escenarios/index.js';
 import { lgHash } from '../engine/league.js';
-import { BASES, CONTROLES_BASICOS, costosF1 } from '../engine/opciones.js';
+import { BASES, CONTROLES_BASICOS, costosF1, fueraDeLoUsual } from '../engine/opciones.js';
 import {
   CODIGOS_ALMACEN,
   CODIGOS_VALIDACION,
@@ -191,8 +191,17 @@ test('marca de «cambiado» contra la referencia', () => {
 test('normalizarEntrada: número, redondeo y rango', () => {
   const luz = ctl('luz');
   assert.equal(normalizarEntrada(luz, '12,6'), 13);
-  assert.equal(normalizarEntrada(luz, '-5'), 0);
-  assert.equal(normalizarEntrada(luz, '1e9'), luz.max);
+  // El rango es el del tipo del core (MaxEnergy es Long): fuera de lo
+  // habitual vale (con aviso: fueraDeLoUsual); fuera del tipo, al tope.
+  assert.equal(normalizarEntrada(luz, '-5'), -5);
+  assert.equal(normalizarEntrada(luz, '1e9'), 1e9);
+  assert.equal(normalizarEntrada(luz, '1e10'), luz.max);
+  assert.equal(luz.max, 2147483647);
+  assert.equal(fueraDeLoUsual(luz, 150000), true);
+  assert.equal(fueraDeLoUsual(luz, 40), false);
+  const dn = ctl('dia-noche');
+  assert.equal(normalizarEntrada(dn, '40000'), 32767);
+  assert.equal(fueraDeLoUsual(dn, 32500), true);
   assert.equal(normalizarEntrada(luz, 'x'), null);
   assert.equal(normalizarEntrada(luz, ''), null);
   assert.equal(normalizarEntrada({ valor: 'float', min: 0, max: 1 }, '0.25'), 0.25);

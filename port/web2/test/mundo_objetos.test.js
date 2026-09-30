@@ -20,12 +20,25 @@ import {
   registrarObjetos,
 } from '../engine/corridas.js';
 import { escenarioFabrica } from '../engine/escenarios/fabrica.js';
-import { diff, normalizar, validar } from '../engine/escenarios/index.js';
-import { crearParametros, mensajesReplica, planReplica } from '../engine/replicas.js';
 import {
+  aplicar,
+  DERIVA_POLAR,
+  diff,
+  normalizar,
+  resolverOpciones,
+  TOPE_TELEPORTERS,
+  validar,
+} from '../engine/escenarios/index.js';
+import { crearParametros, mensajesReplica, planReplica } from '../engine/replicas.js';
+import { textoEvento } from '../src/lib/observar/eventos.js';
+import {
+  CopiaObjetos,
   contarObjetos,
   enteroPositivo,
   fraccion,
+  LABERINTOS,
+  laberintoValido,
+  MAX_FRAMES_PENDIENTE,
   objetoEn,
   orden,
   ordenBorrar,
@@ -172,7 +185,12 @@ test('plegarObjetos: órdenes de creación, borrados que se pueden llevar y los 
   /** @param {number} ciclo @param {any} o */
   const ev = (ciclo, o) => /** @type {any} */ ({ ciclo, tipo: 'objetos', orden: o });
   // Sin eventos: los de arranque.
-  assert.deepEqual(plegarObjetos(ini, []), { objetos: ini, aproximado: false, sueltas: 0 });
+  assert.deepEqual(plegarObjetos(ini, []), {
+    objetos: ini,
+    aproximado: false,
+    sueltas: 0,
+    cambios: {},
+  });
   // Crear y borrar teleporters: exacto.
   let r = plegarObjetos(ini, [
     ev(1, { tipo: 'teleporter' }),
@@ -429,4 +447,167 @@ test('corrida: sin escenario no hay dónde guardar; los eventos igual se registr
   assert.deepEqual(n.estado.eventos, [
     { ciclo: 4, tipo: 'objetos', orden: { tipo: 'borrar-formas10' } },
   ]);
+});
+
+// ---- N3.8b: correcciones de la revisión --------------------------------------
+
+test('plegarObjetos: el polar pliega su deriva en los cambios, en su posición', () => {
+  /** @param {number} ciclo @param {any} o @returns {any} */
+  const ev = (ciclo, o) => ({ ciclo, tipo: 'objetos', orden: o });
+  /** @param {number} ciclo @param {Record<string, number>} c @returns {any} */
+  const op = (ciclo, c) => ({ ciclo, tipo: 'opciones', cambios: c });
+  const polar = { tipo: 'laberinto', forma: 'polar', pasillo: 500, muro: 50 };
+  const base = { 'opt:80': 1 };
+  // Un cambio posterior sobre 83–85 manda; uno anterior lo pisa el polar.
+  let r = plegarObjetos(undefined, [ev(1, polar), op(2, { 'opt:85': 5 })], base);
+  assert.deepEqual(r.cambios, { 'opt:80': 1, 'opt:83': 1, 'opt:84': 1, 'opt:85': 5 });
+  r = plegarObjetos(undefined, [op(1, { 'opt:85': 5, 'opt:84': 0 }), ev(2, polar)], base);
+  assert.deepEqual(r.cambios, { 'opt:80': 1, ...DERIVA_POLAR });
+  // Borrar todas las formas no apaga la deriva.
+  r = plegarObjetos(undefined, [ev(1, polar), ev(2, { tipo: 'borrar-formas' })], base);
+  assert.deepEqual(r.objetos.obstaculos, []);
+  assert.deepEqual(r.cambios, { 'opt:80': 1, ...DERIVA_POLAR });
+  // Un polar de arranque: su deriva, explícita, en lo que los cambios no fijan.
+  const ini = { obstaculos: [/** @type {any} */ (polar)], teleporters: [] };
+  r = plegarObjetos(ini, [ev(1, { tipo: 'borrar-formas' })], { 'opt:85': 3 });
+  assert.deepEqual(r.cambios, { 'opt:83': 1, 'opt:84': 1, 'opt:85': 3 });
+  // Sin polar: solo los eventos de opciones; no toca los cambios de entrada.
+  const entrada = { 'opt:85': 3 };
+  r = plegarObjetos(undefined, [op(1, { 'opt:1': 1 })], entrada);
+  assert.deepEqual(r.cambios, { 'opt:85': 3, 'opt:2': 1, 'opt:3': 1 });
+  assert.deepEqual(entrada, { 'opt:85': 3 });
+});
+
+test('escenarios: resolverOpciones y aplicar() con un laberinto polar', () => {
+  const polar = /** @type {const} */ ({
+    tipo: 'laberinto',
+    forma: 'polar',
+    pasillo: 500,
+    muro: 50,
+  });
+  const e = structuredClone(LAB);
+  e.objetos.obstaculos.push(polar);
+  const adn = () => "' x\nend\n";
+  // Sin 83–85 propias: la sim queda con la deriva del laberinto, sin reenvíos.
+  const r = resolverOpciones(e);
+  assert.equal(r['opt:83'], 1);
+  assert.equal(r['opt:85'], 20);
+  let msgs = aplicar(e, 7, adn);
+  assert.equal(
+    msgs.some((m) => m.t === 'setopt'),
+    false,
+  );
+  // El reset va sin la deriva (la pone el laberinto al crearse).
+  const reset = msgs.find((m) => m.t === 'reset');
+  assert.equal(reset.options.opts[85], resolverOpciones(LAB)['opt:85']);
+  // Con 83–85 propias: las que el laberinto pisa, reenviadas al final (nocap).
+  e.opciones.cambios = { ...e.opciones.cambios, 'opt:83': 0, 'opt:85': 20 };
+  msgs = aplicar(e, 7, adn);
+  assert.deepEqual(msgs.at(-1), { t: 'setopt', id: 83, v: 0, nocap: true });
+  assert.equal(msgs.filter((m) => m.t === 'setopt').length, 1);
+  assert.equal(resolverOpciones(e)['opt:83'], 0);
+  // Sin polar, nada cambia.
+  assert.equal(
+    aplicar(LAB, 7, adn).some((m) => m.t === 'setopt'),
+    false,
+  );
+  assert.equal(TOPE_TELEPORTERS, 10);
+});
+
+test('CopiaObjetos: compacta al borrar y no toma frames hasta la confirmación', () => {
+  // Formas de 5 floats [x, y, w, h, color]; teleporters de 7.
+  const c = new CopiaObjetos(5, 7);
+  /**
+   * @param {number[]} obs @param {number[]} tps
+   * @returns {[Float32Array, number, number, number, number]}
+   */
+  const frame = (obs, tps) => [
+    new Float32Array([9, 9, ...obs, ...tps]),
+    2,
+    obs.length / 5,
+    2 + obs.length,
+    tps.length / 7,
+  ];
+  const tres = [10, 0, 1, 1, 0, 20, 0, 1, 1, 0, 30, 0, 1, 1, 0];
+  const tp = [0, 50, 5, 5, 0, 4, 0, 0, 60, 5, 5, 0, 4, 0];
+  assert.equal(c.tomar(...frame(tres, tp)), true);
+  assert.equal(c.tomar(...frame(tres, tp)), false, 'misma cantidad');
+  assert.deepEqual([c.nObs, c.nTps], [3, 2]);
+  // Borrar la forma 1: la 2 pasa a ser la 1 (como el motor).
+  assert.equal(c.borrar({ tipo: 'forma', n: 1 }), true);
+  assert.deepEqual([c.nObs, c.pendientes], [2, 1]);
+  assert.deepEqual(objetoEn(c.obs, c.nObs, 5, c.tps, 0, 7, 20.5, 0.5), { tipo: 'forma', n: 1 });
+  assert.deepEqual(objetoEn(c.obs, c.nObs, 5, c.tps, 0, 7, 30.5, 0.5), { tipo: 'forma', n: 2 });
+  assert.equal(objetoEn(c.obs, c.nObs, 5, c.tps, 0, 7, 10.5, 0.5), null);
+  // Un frame viejo (todavía con 3 formas) no pisa la copia.
+  assert.equal(c.tomar(...frame(tres, tp)), false);
+  assert.equal(c.nObs, 2);
+  // Otro borrado antes del frame siguiente usa el índice nuevo.
+  assert.equal(c.borrar({ tipo: 'forma', n: 2 }), true);
+  assert.deepEqual(objetoEn(c.obs, c.nObs, 5, c.tps, 0, 7, 20.5, 0.5), { tipo: 'forma', n: 1 });
+  assert.equal(c.nObs, 1);
+  assert.equal(c.borrar({ tipo: 'forma', n: 2 }), false, 'ya no existe');
+  assert.equal(c.borrar({ tipo: 'teleporter', n: 1 }), true);
+  assert.deepEqual(objetoEn(c.obs, 0, 5, c.tps, c.nTps, 7, 2, 62), { tipo: 'teleporter', n: 1 });
+  // Confirmados los tres: el frame siguiente vuelve a mandar.
+  c.confirmar();
+  c.confirmar();
+  assert.equal(c.pendientes, 1);
+  assert.equal(c.tomar(...frame(tres, tp)), false);
+  c.confirmar();
+  assert.equal(
+    c.tomar(...frame([20, 0, 1, 1, 0], tp.slice(7))),
+    false,
+    'misma cantidad que la copia',
+  );
+  assert.deepEqual([c.nObs, c.nTps, c.pendientes], [1, 1, 0]);
+  // Sin confirmación: a los MAX_FRAMES_PENDIENTE frames vuelve a tomar.
+  c.borrar({ tipo: 'forma', n: 1 });
+  for (let i = 0; i < MAX_FRAMES_PENDIENTE; i++) c.tomar(...frame(tres, tp));
+  assert.equal(c.nObs, 0);
+  assert.equal(c.tomar(...frame(tres, tp)), true);
+  assert.deepEqual([c.nObs, c.pendientes], [3, 0]);
+});
+
+test('laberintoValido: cada tipo pide solo lo que usa', () => {
+  /** @param {string} f */
+  const tipo = (f) =>
+    /** @type {(typeof LABERINTOS)[number]} */ (LABERINTOS.find((l) => l.forma === f));
+  assert.equal(laberintoValido(tipo('h'), 500, 50), true);
+  assert.equal(laberintoValido(tipo('h'), 500, null), false);
+  assert.equal(laberintoValido(tipo('checker'), 500, null), true, 'el damero no usa el muro');
+  assert.equal(laberintoValido(tipo('checker'), null, 50), false);
+  assert.equal(laberintoValido(tipo('polar'), null, null), true);
+  assert.equal(laberintoValido(tipo('trash'), null, null), true);
+});
+
+test('corrida: las órdenes de objetos van al feed; «Guardar en el escenario» deja la corrida sin guardar', async () => {
+  const { sesion, n } = nucleo();
+  await n.iniciar(LAB, 99);
+  const p = n.aplicarObjetos({ tipo: 'laberinto', forma: 'polar', pasillo: 500, muro: 50 });
+  sesion.pendientes.shift()?.(12);
+  await p;
+  const ev = n.estado.feed[0];
+  assert.deepEqual(ev, {
+    ciclo: 12,
+    tipo: 'objetos',
+    params: { orden: { tipo: 'laberinto', forma: 'polar', pasillo: 500, muro: 50 } },
+  });
+  /** @param {string} k @param {Record<string, any>} [q] */
+  const t = (k, q) => `${k}|${JSON.stringify(q ?? {})}`;
+  assert.equal(
+    textoEvento(/** @type {any} */ (ev), t, 'es'),
+    'observar.evento.objetos|{"orden":"Laberinto polar (pasillo 500, muro 50)"}',
+  );
+  // El efectivo tiene la deriva del polar.
+  const c = /** @type {any} */ (n.escenarioEfectivo()).opciones.cambios;
+  assert.deepEqual([c['opt:83'], c['opt:84'], c['opt:85']], [1, 1, 20]);
+  // Guardada la corrida, «Guardar en el escenario» la deja sin guardar.
+  sesion.stats = { cycle: 20, bots: 0 };
+  await n.guardar('deriva');
+  assert.equal(n.sinGuardar(), false);
+  n.guardarObjetosEnEscenario();
+  assert.equal(n.sinGuardar(), true);
+  await n.guardar('deriva');
+  assert.equal(n.sinGuardar(), false);
 });

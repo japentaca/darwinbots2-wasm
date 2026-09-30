@@ -28,6 +28,8 @@
 //
 // Orden de los mensajes (el worker atiende en orden, así que llega tal cual):
 // f1-cap → f1-popcap → run(false) → reset → seed-species… → f1start → run(true).
+// Con {limpio: true} (la nueva, C15; ver mensajesPartido): run(false) →
+// reset limpio → f1-cap → f1-popcap → seed-species… → f1start → run(true).
 // Diferencia con la clásica, sin efecto en la sim: contestLaunch escribía las
 // opciones de modo de juego (91 F1, 97 rondas, 98 Maxrounds, 99 y 100 en 0)
 // en el panel, que las mandaba en vivo a la sim vieja y el reinicio las
@@ -309,27 +311,49 @@ export function planPartido(fighters, o, seed, rules = {}) {
   };
 }
 
+// Las opciones de modo de juego que el partido fija sobre las del reset
+// (contestLaunch): F1 encendido, rondas (97), tope de victorias (98,
+// Maxrounds) y 99/100 en 0. Modifica y devuelve `opts`.
+/** @param {Record<number, number>} opts @param {Plan} plan */
+export function fijarModoF1(opts, plan) {
+  opts[91] = 1; // Modo F1
+  opts[97] = parseFloat(String(plan.f1.rounds)) || 0;
+  opts[98] = parseFloat(String(plan.f1.wins || 0)) || 0; // Maxrounds
+  opts[99] = 0;
+  opts[100] = 0;
+  return opts;
+}
+
+// Los topes del Canal del partido (van al worker aparte de las opciones).
+/** @param {Plan} plan */
+export const mensajesTopes = (plan) => [
+  { t: 'f1-cap', cycles: plan.f1.cap || 0, mode: plan.f1.capMode || 'pop' },
+  { t: 'f1-popcap', n: plan.f1.popCap || 0 }, // tope de bots por especie
+];
+
 // Los mensajes al worker, en orden. opciones (obligatorias): las del reset,
 // reglasAOpciones(plan.rules, base del panel); se copian y se les fijan las
 // de modo de juego. base: la siembra del reset; por defecto la de la clásica
 // (siembraArranque(), el alga), que siembra el alga en todo reinicio.
 // Lanza ErrorLiga('no-options') sin opciones y ('bad-base') si base no es
 // una lista.
-/** @param {Plan} plan @param {any} opciones @param {any[]} [base] */
-export function mensajesPartido(plan, opciones, base = siembraArranque()) {
+// o.limpio (de la nueva, C15; sin él, los mensajes de la clásica tal cual):
+// el reset lleva `limpio: true` (el partido da lo mismo en cualquier worker,
+// nuevo o usado) y los topes (f1-cap, f1-popcap) van DESPUÉS del reset,
+// porque el reset limpio los vuelve a 0. Antes del primer tick da lo mismo:
+// los topes solo se miran al correr.
+/** @param {Plan} plan @param {any} opciones @param {any[]} [base] @param {{limpio?: boolean}} [o] */
+export function mensajesPartido(plan, opciones, base = siembraArranque(), o = {}) {
   if (!opciones || typeof opciones !== 'object') throw new ErrorLiga('no-options');
   if (!Array.isArray(base)) throw new ErrorLiga('bad-base');
-  const options = { ...opciones, opts: { ...(opciones.opts || {}) } };
-  options.opts[91] = 1; // Modo F1
-  options.opts[97] = parseFloat(String(plan.f1.rounds)) || 0;
-  options.opts[98] = parseFloat(String(plan.f1.wins || 0)) || 0; // Maxrounds
-  options.opts[99] = 0;
-  options.opts[100] = 0;
+  const options = { ...opciones, opts: fijarModoF1({ ...(opciones.opts || {}) }, plan) };
+  const reset = { t: 'reset', seed: plan.seed, quietF1: true, options, species: base };
+  const run0 = { t: 'run', running: false };
+  const arranque = o.limpio
+    ? [run0, { ...reset, limpio: true }, ...mensajesTopes(plan)]
+    : [...mensajesTopes(plan), run0, reset];
   return [
-    { t: 'f1-cap', cycles: plan.f1.cap || 0, mode: plan.f1.capMode || 'pop' },
-    { t: 'f1-popcap', n: plan.f1.popCap || 0 }, // tope de bots por especie
-    { t: 'run', running: false },
-    { t: 'reset', seed: plan.seed, quietF1: true, options, species: base },
+    ...arranque,
     ...plan.species.map((sp) => ({ t: 'seed-species', sp })),
     { t: 'f1start' }, // FindSpecies
     { t: 'run', running: true },

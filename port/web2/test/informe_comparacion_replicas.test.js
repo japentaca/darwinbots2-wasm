@@ -211,7 +211,7 @@ test('comparación: historias vacías y de una muestra generan un informe válid
     figurasEnTamaño(r.html);
     assert.doesNotMatch(r.html, /NaN/);
   }
-  assert.throws(() => informeComparacion(/** @type {any} */ ({})), /faltan las dos corridas/);
+  assert.throws(() => informeComparacion(/** @type {any} */ ({})), { codigo: 'faltan-corridas' });
 });
 
 /**
@@ -294,7 +294,7 @@ test('réplicas: resultados parciales y sin ninguno terminado', () => {
   assert.match(visible(nada.html), /No replicate has finished yet\./);
   assert.doesNotMatch(nada.html, /class="find"/);
   assert.doesNotMatch(nada.html, /NaN/);
-  assert.throws(() => informeReplicas(/** @type {any} */ ({})), /faltan/);
+  assert.throws(() => informeReplicas(/** @type {any} */ ({})), { codigo: 'faltan-replicas' });
 });
 
 test('réplicas: nota de C19 solo si se descartaron semillas', () => {
@@ -383,4 +383,122 @@ test('órdenes de objeto en caliente: texto en es y en, en la Corrida y contadas
   assert.match(visible(r.html), /12,000 Spiral maze \(corridor 300, wall 100\)/);
   const cmp = informeComparacion(d, { idioma: 'es' });
   assert.match(visible(cmp.html), /Cambios en caliente 2 cambios 0 cambios/);
+});
+
+test('comparación: las diferencias coinciden con las de la pestaña Comparar (bots repetidos, color, objetos)', async () => {
+  const { diferenciasConfig } = await import('../src/lib/analizar/comparar/diferencias.js');
+  const { diferenciasComparacion } = await import('../engine/report/comparacion.js');
+  /** Claves de diferenciasConfig, con los nombres de las del informe. @param {any} x */
+  const clavesPestaña = (x) =>
+    [
+      ...(x.escenario.igual ? [] : ['escenario']),
+      ...(x.semilla.igual ? [] : ['semilla']),
+      ...(x.base.igual ? [] : ['base']),
+      ...x.opciones.map((/** @type {any} */ o) => `opcion:${o.clave}`),
+      ...x.especies
+        .filter((/** @type {any} */ e) => !e.igual)
+        .map((/** @type {any} */ e) => `especie:${e.bot}`),
+      ...(x.objetos.igual ? [] : ['objetos']),
+      ...(x.eventos.igual ? [] : ['caliente']),
+    ].sort();
+  const base = structuredClone(ESCENARIO);
+  base.especies.push({ bot: 'Yojimbo', cantidad: 5, color: '#e87ba4', vegetal: false });
+  const casos = [];
+  // mismo bot repetido: solo difiere el segundo grupo
+  const b1 = structuredClone(base);
+  b1.especies[3].cantidad = 7;
+  casos.push(b1);
+  // color distinto (mayúsculas no cuentan)
+  const b2 = structuredClone(base);
+  b2.especies[0].color = '#FF0000';
+  const b2b = structuredClone(base);
+  b2b.especies[0].color = base.especies[0].color.toUpperCase();
+  casos.push(b2, b2b);
+  // objetos: mismo tipo con otras medidas; otro id de escenario con el mismo nombre
+  const b3 = structuredClone(base);
+  b3.objetos.obstaculos.push({ tipo: 'forma', ancho: 0.1, alto: 0.2 });
+  const b4 = structuredClone(b3);
+  b4.objetos.obstaculos[0].alto = 0.3;
+  b4.id = 'otra';
+  casos.push(b3, b4);
+  const tr = traductor('es');
+  for (const [i, e] of casos.entries()) {
+    const previo = i === 4 ? b3 : base;
+    const informe = diferenciasComparacion(
+      /** @type {any} */ ({ escenario: previo, semilla: 1, cambios: [] }),
+      /** @type {any} */ ({ escenario: e, semilla: 1, cambios: [] }),
+      tr,
+    )
+      .map((x) => x.clave)
+      .sort();
+    const pestaña = clavesPestaña(
+      diferenciasConfig(
+        /** @type {any} */ ({ escenario: previo, semilla: 1, eventos: [] }),
+        /** @type {any} */ ({ escenario: e, semilla: 1, eventos: [] }),
+      ),
+    );
+    assert.deepEqual(informe, pestaña, `caso ${i}`);
+  }
+  const rep = diferenciasComparacion(
+    /** @type {any} */ ({ escenario: base, semilla: 1, cambios: [] }),
+    /** @type {any} */ ({ escenario: b1, semilla: 1, cambios: [] }),
+    tr,
+  );
+  assert.deepEqual(
+    rep.map((x) => x.clave),
+    ['especie:Yojimbo (2)'],
+  );
+  assert.equal(rep[0].aspecto, 'Especie: Yojimbo (2)');
+  const color = diferenciasComparacion(
+    /** @type {any} */ ({ escenario: base, semilla: 1, cambios: [] }),
+    /** @type {any} */ ({ escenario: b2, semilla: 1, cambios: [] }),
+    tr,
+  );
+  assert.match(color[0].b, /color #ff0000/);
+});
+
+test('comparación: nota si las dos semillas dan el mismo mundo (C19)', async () => {
+  const { mismoMundo } = await import('../engine/report/comparacion.js');
+  assert.equal(mismoMundo(1234, 66184), true);
+  assert.equal(mismoMundo(1234, 1234), false, 'la misma semilla no es aviso');
+  assert.equal(mismoMundo(1234, 999), false);
+  assert.equal(mismoMundo(null, 1234), false);
+  const d = dosCorridas();
+  d.b.semilla = 66184;
+  const r = informeComparacion(d, { idioma: 'es' });
+  assert.match(visible(r.html), /Las semillas 1234 y 66184 dan el mismo mundo/);
+  assert.equal(validar(r.html).mismoMundo, true);
+  const otro = informeComparacion(dosCorridas(), { idioma: 'en' });
+  assert.doesNotMatch(visible(otro.html), /same world/);
+  assert.equal(validar(otro.html).mismoMundo, false);
+});
+
+test('comparación: dominio y extinción enlazan a la población por especie de su corrida', async () => {
+  const { idFiguraEspecies } = await import('../engine/report/comparacion.js');
+  const r = informeComparacion(dosCorridas(), { idioma: 'es' });
+  const resumen = r.html.match(/<section class="resumen">([\s\S]*?)<\/section>/)?.[1] ?? '';
+  const ext = [...resumen.matchAll(/<p class="find">([\s\S]*?)<\/p>/g)]
+    .map((m) => m[1])
+    .find((f) => /Yojimbo se extinguió/.test(f));
+  assert.ok(ext);
+  assert.match(ext, new RegExp(`href="#${idFiguraEspecies('A')}"`));
+  for (const l of ['A', 'B'])
+    assert.match(r.html, new RegExp(`<figure id="${idFiguraEspecies(l)}">`));
+  figurasEnTamaño(r.html);
+  // la misma especie tiene el mismo color en A y en B
+  /** @param {string} l */
+  const leyendaDe = (l) => {
+    const i = r.html.indexOf(`<figure id="${idFiguraEspecies(l)}">`);
+    const fin = r.html.indexOf('</figure>', i);
+    return r.html.slice(i, fin).match(/<div class="leyenda">([\s\S]*?)<\/div>/)?.[1] ?? '';
+  };
+  /** @param {string} l */
+  const colorDe = (l) => leyendaDe(l).match(/background:(#[0-9a-f]{6})"><\/span>Yojimbo/)?.[1];
+  assert.ok(colorDe('A'));
+  assert.equal(colorDe('A'), colorDe('B'));
+  // series por especie embebidas, con su corrida
+  const datos = validar(r.html);
+  assert.ok(
+    datos.series.some((/** @type {any} */ s) => s.corrida === 'B' && s.especie === 'Yojimbo'),
+  );
 });

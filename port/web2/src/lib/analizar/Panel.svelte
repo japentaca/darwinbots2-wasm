@@ -20,7 +20,13 @@ import {
 } from './catalogo.js';
 import { filasEspecies, ordenarFilas } from './especies.js';
 import Grafico from './grafico/Grafico.svelte';
-import { claveHallazgo, esperaHallazgos, hallazgosTarjeta, textoHallazgo } from './hallazgos.js';
+import {
+  claveHallazgo,
+  esperaHallazgos,
+  hallazgosTarjeta,
+  marcaHallazgo,
+  textoHallazgo,
+} from './hallazgos.js';
 
 /**
  * @type {{
@@ -113,9 +119,12 @@ onDestroy(() => {
 const filasHallazgos = $derived(
   hallazgos.map((x) => {
     const esp = typeof x.params.especie === 'string' ? x.params.especie : null;
+    // la sustitución se marca en el cruce, con «Sustitución: B»
+    const m = marcaHallazgo(x, idioma());
     return {
       clave: claveHallazgo(x),
-      ciclo: x.desde,
+      ciclo: m.ciclo,
+      marca: m.texto,
       tipo: x.tipo,
       color: esp ? colorEspecie(esp, fuente.colores) : COLOR_GLOBAL,
       texto: textoHallazgo(x, idioma()),
@@ -123,10 +132,15 @@ const filasHallazgos = $derived(
   }),
 );
 
-/** @param {{clave: string, ciclo: number, tipo: string}} h */
+/** @param {{clave: string, ciclo: number, marca: string, tipo: string}} h */
 function marcarHallazgo(h) {
   if (marcaClave === h.clave) onMarcar(null);
-  else onMarcar({ clave: h.clave, ciclo: h.ciclo, texto: t(`analizar.hallazgos.tipo.${h.tipo}`) });
+  else
+    onMarcar({
+      clave: h.clave,
+      ciclo: h.ciclo,
+      texto: h.marca || t(`analizar.hallazgos.tipo.${h.tipo}`),
+    });
 }
 
 /** @param {number} i @param {string} id */

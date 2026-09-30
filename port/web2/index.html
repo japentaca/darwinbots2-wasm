@@ -11,11 +11,14 @@
     <script>
     // Aviso de carga fallida: si a los 8 s la app no se montó (p. ej. un
     // index.html viejo en caché pide assets con hash que ya no existen), se
-    // ofrece recargar. Corre antes de la app, sin t(): va en los dos idiomas.
-    setTimeout(() => {
+    // ofrece recargar. src/i18n/index.svelte.js lo muestra enseguida con
+    // window.__avisoCarga() si los textos del idioma inicial no bajan y no
+    // puede recargar. Corre antes de la app, sin t(): va en los dos idiomas.
+    window.__avisoCarga = () => {
       const app = document.getElementById('app');
       if (!app || app.childElementCount > 0) return;
       const p = document.createElement('p');
+      p.setAttribute('role', 'alert');
       p.style.cssText = 'font:16px system-ui,sans-serif;margin:32px;';
       p.append('No se pudo cargar la interfaz · The interface could not load — ');
       const a = document.createElement('a');
@@ -27,7 +30,8 @@
       });
       p.append(a);
       app.append(p);
-    }, 8000);
+    };
+    setTimeout(() => window.__avisoCarga(), 8000);
     </script>
     <script type="module" src="./src/main.js"></script>
   </body>

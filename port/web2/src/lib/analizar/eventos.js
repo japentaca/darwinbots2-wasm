@@ -9,7 +9,7 @@ export const FILTROS = Object.freeze({
   especies: ['especieNueva', 'llegada'],
   extinciones: ['extincion'],
   records: ['pico', 'generacion'],
-  cambios: ['cambio'],
+  cambios: ['cambio', 'objetos'],
   siembras: ['sembrado', 'inicio'],
   corrida: ['guardada', 'cargada', 'importada'],
 });
@@ -22,6 +22,7 @@ const COLORES = Object.freeze({
   pico: '#2a78d6',
   generacion: '#2a78d6',
   cambio: '#b8481b',
+  objetos: '#b8481b',
   sembrado: '#c98500',
   inicio: '#c98500',
 });

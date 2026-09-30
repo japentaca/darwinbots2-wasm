@@ -9,6 +9,8 @@
   "mundo.vista.clasica": "Vista clásica",
   "mundo.vista.rica.corta": "Enriquecida",
   "mundo.vista.clasica.corta": "Clásica",
+  "mundo.vista.contorno": "Vista de contorno",
+  "mundo.vista.contorno.corta": "Contorno",
   "mundo.colorPor": "color por {lente}",
   "mundo.colorPor.etiqueta": "Color por",
   "mundo.colorPor.soloRica": "El color por dato solo está en la vista enriquecida",

@@ -101,7 +101,7 @@ figure svg{max-width:100%;height:auto;display:block}
 const SCRIPT = `(function(){
 var nodo=document.getElementById('datos-informe');if(!nodo)return;
 var base=document.body.getAttribute('data-archivo')||'informe';
-function bajar(n,t,tipo){var b=new Blob([t],{type:tipo});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},0);}
+function bajar(n,t,tipo){var b=new Blob([t],{type:tipo});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);}
 function campo(v){if(v===null||v===undefined)return '';var s=String(v);if(typeof v==='string'&&/^[=+\\-@\\t\\r]/.test(s))s="'"+s;return /[",\\n\\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
 function csv(o){var ss=o.series||[],co=o.tipo==='corrida';
 var conC=ss.some(function(s){return s.corrida!=null;}),conE=co||ss.some(function(s){return s.especie!=null;});

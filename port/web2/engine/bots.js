@@ -1,41 +1,104 @@
 // @ts-check
 // Bots del usuario en darwinbots2 (paso N3.1 de port/web2/PLAN.md;
 // decisiones 17, 18, 19 y 20), sin DOM: los bots propios con sus versiones,
-// las marcas (favorito, tags, notas) de cualquier bot y las selecciones con
-// nombre. El almacén (engine/almacen.js) se inyecta: IndexedDB en el
+// las marcas (favorito, tags, notas) de los bots del foro y las selecciones
+// con nombre. El almacén (engine/almacen.js) se inyecta: IndexedDB en el
 // navegador, almacenMemoria() en los tests.
 //
-// Almacén 'bots' (clave = `hash`, el hash de identidad de engine/adn.js).
-// Un registro por hash, de una de dos clases:
-//   clase 'propio'  un bot propio: {hash, clase, nombre, vegetal, descripcion,
-//                   adn (el de la última versión), creado, actualizado,
-//                   origen, versiones[], fav, tags[], notas}. Su `hash` es el
-//                   de la PRIMERA versión y no cambia al editarlo (las
-//                   selecciones, las marcas y el historial lo siguen); cada
-//                   versión trae el suyo.
-//   clase 'foro'    solo las marcas de un bot del foro (el registro del
-//                   store 'bots' de la clásica): {hash, clase, nombre?,
-//                   archivo?, fav, tags[], notas}. Se borra al quedar vacío
-//                   (inventory.js saveUser).
-// Las marcas son los mismos campos en las dos clases: van con el ADN (el
-// mismo hash), como en la clásica. Si un bot propio nace con el hash de un
-// registro 'foro', lo absorbe (conserva sus marcas); al borrar un propio con
-// marcas, quedan como registro 'foro'.
+// ---- Claves -------------------------------------------------------------------
 //
-// Versión: {n (1, 2, …), adn, hash, lg (lgHash, engine/adn.js), fecha, nota,
-// origenes?}. `origenes` (decisión 19): una entrada por gen, en orden, con
-// el bot de origen {archivo, gen} o {hash, gen} (gen en base 0) o null si el
-// gen se escribió a mano. Guardar un ADN con el mismo hash que la última
-// versión no crea otra.
+// Almacén 'bots'. Su keyPath es `hash` (esquema de engine/almacen.js), así
+// que la clave de cada registro vive en el campo `hash`, pero NO siempre es
+// un hash del contenido. En esta API se la llama «clave»:
+//   - bot propio: un id propio 'p:' + 16 hex al azar (esClavePropia),
+//     independiente del ADN. Dos propios con el mismo ADN coexisten; editar
+//     un propio no cambia su clave. El `hash` (hashAdn) y el `lg` (lgHash) de
+//     cada versión están en `versiones[]`.
+//   - marcas de un bot del foro: el hash de identidad de profiles.json (16
+//     hex, el de la clásica) o 'file:<archivo>' si no tiene perfil
+//     (esClaveForo). Varios archivos con el mismo ADN comparten marcas.
+// Las dos familias no se pisan nunca: duplicar un bot del foro no toca sus
+// marcas, y las selecciones (listas de claves) distinguen foro vs propio
+// por el prefijo.
+//
+// Registros:
+//   clase 'propio'  {hash: clave 'p:…', clase, nombre, vegetal, descripcion,
+//                   adn (el de la última versión), creado, actualizado,
+//                   origen, versiones[], fav, tags[], notas}. Las marcas de
+//                   un propio van en su propio registro y se borran con él.
+//   clase 'foro'    solo las marcas de un bot del foro (el registro del
+//                   store 'bots' de la clásica): {hash: clave del foro,
+//                   clase, nombre?, archivo?, fav, tags[], notas}. Se borra
+//                   al quedar vacío (inventory.js saveUser).
+//
+// Versión: {n (1, 2, …), adn, hash (hashAdn, engine/adn.js), lg (lgHash),
+// fecha, nota, origenes?}. `origenes` (decisión 19): una entrada por gen, en
+// orden, con el bot de origen {archivo, gen} (del foro) o {hash, gen} (el
+// hashAdn del ADN de donde salió; gen en base 0) o null si el gen se
+// escribió a mano. Guardar un ADN con el mismo hash que la última versión
+// no crea otra.
+//
+// Origen del bot (`origen`): {tipo: 'nuevo' | 'foro' | 'propio' | 'hibrido'
+// | 'importado', clave?, archivo?, nombre?}. En un duplicado, `clave` es la
+// del original (hash del foro o 'p:…'); en un híbrido migrado de la
+// clásica, `nombre` es el nombre del híbrido en el Laboratorio.
 //
 // Selecciones con nombre: en 'ajustes', {clave: 'seleccion:<nombre>',
-// nombre, claves[]} (claves = hashes, como las de la clásica). No se suma un
-// almacén para no subir la versión del esquema.
+// nombre, claves[]} (claves del foro o de propios). No se suma un almacén
+// para no subir la versión del esquema. Borrar un propio lo quita de las
+// selecciones.
+//
+// ---- API ------------------------------------------------------------------------
+//
+// Funciones puras:
+//   esClavePropia(k), esClaveForo(k), nuevaClavePropia()
+//   normalizarTag(tag), marcasDe(r), marcasVacias(m), nombreUnico(nombre, usados)
+//   nuevaVersion(n, adn, fecha, nota, origenes?) → Version
+//   nuevoBotPropio({nombre, adn, vegetal?, descripcion?, nota?, origen?,
+//     origenes?, fecha, clave?}) → BotPropio (sin guardar; clave nueva si no
+//     se da)
+//   resumenPropio(b) → {genes, tamano, hashes[], lgs[]}
+//   diffVersiones(b, na, nb) → diffGenes + {origenesA, origenesB}
+//
+// crearBots({almacen, reloj?, nuevaClave?, nombresForo?}) → operaciones.
+//   nombresForo: () => Iterable<string> con los nombres del Bestiary
+//   (bots.json); sin él no se avisa de nombres del foro.
+//   todos() → RegistroBot[]
+//   propios() → BotPropio[] (por nombre)
+//   obtener(clave) → RegistroBot | undefined
+//   porNombre(nombre) → BotPropio | null
+//   porLg(lg) → {bot, version} | null   (la versión exacta con ese lgHash)
+//   adnDeEspecie(especie) → string | undefined   ADN de una especie de
+//     escenario de origen 'propio' sin ADN dentro: porLg(s.hash) → la
+//     versión exacta; si no, el propio por nombre (su última versión: el
+//     llamador avisa con verificarAdn de engine/escenarios).
+//   crear(o, {renombrar?, permitirNombreForo?}) → BotPropio
+//   duplicar(de, adn, {nombre?, nota?, permitirNombreForo?}) → BotPropio.
+//     de = {clase, clave, nombre, archivo?, vegetal?} (una Entrada de
+//     engine/biblioteca.js sirve). Sin nombre: el del original con « 2»,
+//     « 3»… libre entre los propios Y el Bestiary.
+//   guardarVersion(clave, adn, {nota?, origenes?}) → BotPropio | null
+//     null solo si el texto es EXACTAMENTE el de la última versión (el `lg`
+//     cambia con comentarios, cabecera o sangría: eso también se guarda;
+//     `hash` sigue siendo la identidad del ADN)
+//   restaurarVersion(clave, n, nota?) → BotPropio | null
+//   cambiarDatos(clave, {nombre?, vegetal?, descripcion?}, {permitirNombreForo?}) → BotPropio
+//   borrar(clave)   borra el propio con sus marcas y lo quita de las selecciones
+//   marcar(claves, cambio, info?), favorito(claves, fav, info?),
+//   agregarTag(claves, tag, info?), quitarTag(claves, tag),
+//   notas(clave, texto, info?)   en un propio, su registro; en uno del foro,
+//     el registro de marcas (info completa nombre y archivo). Las claves que
+//     no son de ninguna de las dos familias (o un propio que no existe) se
+//     ignoran.
+//   selecciones() → Seleccion[], guardarSeleccion(nombre, claves),
+//   borrarSeleccion(nombre)
 //
 // Errores: ErrorBots {codigo, params}: 'adn-vacio', 'nombre-vacio',
-// 'nombre-repetido' {nombre}, 'ya-existe' {hash, nombre}, 'no-existe'
-// {hash}, 'no-es-propio' {hash} (los del foro son de solo lectura: se editan
-// duplicándolos, decisión 18), 'version-inexistente' {n}.
+// 'nombre-repetido' {nombre}, 'nombre-del-foro' {nombre} (crear, duplicar
+// con nombre y cambiarDatos: el nombre es el de un bot del Bestiary; la
+// interfaz avisa y reintenta con permitirNombreForo si el usuario confirma),
+// 'no-existe' {clave}, 'no-es-propio' {clave} (los del foro son de solo
+// lectura: se editan duplicándolos, decisión 18), 'version-inexistente' {n}.
 
 import { contarGenes, hashAdn, lgHash, tamanoDe } from './adn.js';
 import { diffGenes } from './lineage.js';
@@ -43,6 +106,7 @@ import { diffGenes } from './lineage.js';
 export const ST_BOTS = 'bots';
 export const ST_AJUSTES = 'ajustes';
 export const PREFIJO_SELECCION = 'seleccion:';
+export const PREFIJO_PROPIO = 'p:';
 
 /**
  * @typedef {import('./almacen.js').Almacen} Almacen
@@ -50,16 +114,18 @@ export const PREFIJO_SELECCION = 'seleccion:';
  * @typedef {{archivo: string, gen: number} | {hash: string, gen: number} | null} OrigenGen
  * @typedef {{n: number, adn: string, hash: string, lg: string, fecha: string, nota: string,
  *   origenes?: OrigenGen[]}} Version
- * @typedef {{tipo: 'nuevo' | 'foro' | 'propio' | 'hibrido' | 'importado', hash?: string,
+ * @typedef {{tipo: 'nuevo' | 'foro' | 'propio' | 'hibrido' | 'importado', clave?: string,
  *   archivo?: string, nombre?: string}} OrigenBot
  * @typedef {{fav: boolean, tags: string[], notas: string}} Marcas
  * @typedef {Marcas & {hash: string, clase: 'propio', nombre: string, vegetal: boolean,
  *   descripcion: string, adn: string, creado: string, actualizado: string, origen: OrigenBot,
- *   versiones: Version[]}} BotPropio
+ *   versiones: Version[]}} BotPropio  `hash` = la clave 'p:…'
  * @typedef {Marcas & {hash: string, clase: 'foro', nombre?: string, archivo?: string}} MarcaForo
  * @typedef {BotPropio | MarcaForo} RegistroBot
  * @typedef {{nombre: string, claves: string[]}} Seleccion
- * @typedef {(hash: string) => {nombre?: string, archivo?: string} | undefined} InfoBot
+ * @typedef {(clave: string) => {nombre?: string, archivo?: string} | undefined} InfoBot
+ * @typedef {{clase: 'foro' | 'propio', clave: string, nombre: string, archivo?: string,
+ *   vegetal?: boolean}} OrigenDuplicado
  */
 
 /** Error con código estable (el texto lo pone la interfaz). */
@@ -70,6 +136,23 @@ export class ErrorBots extends Error {
     this.codigo = codigo;
     this.params = params;
   }
+}
+
+const RE_PROPIA = /^p:[0-9a-f]{16}$/;
+const RE_HASH = /^[0-9a-f]{16}$/;
+
+/** ¿Es la clave de un bot propio ('p:' + 16 hex)? @param {unknown} k */
+export const esClavePropia = (k) => typeof k === 'string' && RE_PROPIA.test(k);
+
+/** ¿Es la clave de un bot del foro (16 hex o 'file:<archivo>')? @param {unknown} k */
+export const esClaveForo = (k) =>
+  typeof k === 'string' && (RE_HASH.test(k) || (k.startsWith('file:') && k.length > 5));
+
+/** Clave nueva de un propio: 'p:' + 16 hex al azar (crypto). */
+export function nuevaClavePropia() {
+  const b = new Uint8Array(8);
+  globalThis.crypto.getRandomValues(b);
+  return PREFIJO_PROPIO + [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -104,6 +187,16 @@ export function nombreUnico(nombre, usados) {
 }
 
 /**
+ * ¿La versión tiene exactamente este texto? Por `lg` (lgHash, del texto
+ * exacto) y, si la versión trae el ADN, comparándolo (sin colisiones).
+ * @param {{adn?: string, lg?: string}} v @param {string} adn
+ */
+export function mismoTexto(v, adn) {
+  if (typeof v.adn === 'string') return v.adn === adn;
+  return v.lg === lgHash(adn);
+}
+
+/**
  * Versión nueva.
  * @param {number} n @param {string} adn @param {string} fecha @param {string} nota
  * @param {OrigenGen[]} [origenes]
@@ -117,10 +210,10 @@ export function nuevaVersion(n, adn, fecha, nota, origenes) {
 }
 
 /**
- * Registro de un bot propio nuevo (sin guardar). Lanza ErrorBots
- * 'adn-vacio' o 'nombre-vacio'.
+ * Registro de un bot propio nuevo (sin guardar), con clave nueva si no se
+ * da. Lanza ErrorBots 'adn-vacio' o 'nombre-vacio'.
  * @param {{nombre: string, adn: string, vegetal?: boolean, descripcion?: string, nota?: string,
- *   origen?: OrigenBot, origenes?: OrigenGen[], fecha: string}} o
+ *   origen?: OrigenBot, origenes?: OrigenGen[], fecha: string, clave?: string}} o
  * @returns {BotPropio}
  */
 export function nuevoBotPropio(o) {
@@ -129,7 +222,7 @@ export function nuevoBotPropio(o) {
   if (!nombre) throw new ErrorBots('nombre-vacio');
   const v = nuevaVersion(1, o.adn, o.fecha, o.nota || '', o.origenes);
   return {
-    hash: v.hash,
+    hash: o.clave ?? nuevaClavePropia(),
     clase: 'propio',
     nombre,
     vegetal: !!o.vegetal,
@@ -177,15 +270,23 @@ export function diffVersiones(b, na, nb) {
   };
 }
 
+/** Orden de los propios: nombre y, de desempate, clave. */
+const porNombreYClave = (/** @type {BotPropio} */ a, /** @type {BotPropio} */ b) =>
+  a.nombre.localeCompare(b.nombre) || a.hash.localeCompare(b.hash);
+
 /**
- * Operaciones sobre los bots del usuario.
- * @param {{almacen: Almacen, reloj?: () => Date}} deps
+ * Operaciones sobre los bots del usuario (ver la cabecera).
+ * @param {{almacen: Almacen, reloj?: () => Date, nuevaClave?: () => string,
+ *   nombresForo?: () => Iterable<string>}} deps
  */
 export function crearBots(deps) {
   const { almacen } = deps;
   const ahora = () => (deps.reloj ?? (() => new Date()))().toISOString();
+  const nuevaClave = deps.nuevaClave ?? nuevaClavePropia;
+  /** Nombres del Bestiary (se leen fuera de las transacciones). */
+  const nombresForo = () => new Set(deps.nombresForo ? deps.nombresForo() : []);
 
-  /** @param {OperacionesAlmacen} t @param {string} [salvo] hash que no cuenta */
+  /** @param {OperacionesAlmacen} t @param {string} [salvo] clave que no cuenta */
   async function nombresPropios(t, salvo) {
     const filas = /** @type {RegistroBot[]} */ (await t.list(ST_BOTS));
     return new Set(
@@ -193,34 +294,48 @@ export function crearBots(deps) {
     );
   }
 
-  /** @param {OperacionesAlmacen} t @param {string} hash */
-  async function propio(t, hash) {
-    const r = /** @type {RegistroBot | undefined} */ (await t.get(ST_BOTS, hash));
-    if (!r) throw new ErrorBots('no-existe', { hash });
-    if (r.clase !== 'propio') throw new ErrorBots('no-es-propio', { hash });
+  /** @param {OperacionesAlmacen} t @param {string} clave */
+  async function propio(t, clave) {
+    const r = /** @type {RegistroBot | undefined} */ (await t.get(ST_BOTS, clave));
+    if (!r) throw new ErrorBots('no-existe', { clave });
+    if (r.clase !== 'propio') throw new ErrorBots('no-es-propio', { clave });
     return r;
   }
 
   /**
-   * Guarda un propio nuevo. Nombre repetido: 'nombre-repetido', salvo con
-   * `renombrar` (le busca uno libre). Mismo ADN que otro propio: 'ya-existe'.
-   * @param {OperacionesAlmacen} t @param {BotPropio} b @param {boolean} renombrar
+   * Nombre de un propio nuevo o renombrado. Con `libre`, busca uno que no
+   * usen los propios ni el Bestiary (« 2», « 3»…); si no, lanza
+   * 'nombre-repetido' o 'nombre-del-foro' (salvo permitirNombreForo).
+   * @param {string} nombre @param {Set<string>} propios @param {Set<string>} foro
+   * @param {{libre?: boolean, usado?: string, permitirNombreForo?: boolean}} o
+   *   usado: un nombre más que cuenta como usado (con libre)
    */
-  async function insertar(t, b, renombrar) {
-    const previo = /** @type {RegistroBot | undefined} */ (await t.get(ST_BOTS, b.hash));
-    if (previo?.clase === 'propio')
-      throw new ErrorBots('ya-existe', { hash: b.hash, nombre: previo.nombre });
-    const usados = await nombresPropios(t);
-    if (usados.has(b.nombre)) {
-      if (!renombrar) throw new ErrorBots('nombre-repetido', { nombre: b.nombre });
-      b.nombre = nombreUnico(b.nombre, usados);
+  function elegirNombre(nombre, propios, foro, o) {
+    if (o.libre) {
+      const usados = new Set([...propios, ...foro]);
+      if (o.usado) usados.add(o.usado);
+      return nombreUnico(nombre, usados);
     }
-    if (previo) Object.assign(b, marcasDe(previo)); // absorbe las marcas del foro
-    await t.put(ST_BOTS, b);
-    return b;
+    if (propios.has(nombre)) throw new ErrorBots('nombre-repetido', { nombre });
+    if (!o.permitirNombreForo && foro.has(nombre))
+      throw new ErrorBots('nombre-del-foro', { nombre });
+    return nombre;
   }
 
-  return {
+  /**
+   * Guarda un propio nuevo (ver elegirNombre).
+   * @param {BotPropio} b @param {{libre?: boolean, usado?: string, permitirNombreForo?: boolean}} o
+   */
+  function insertar(b, o) {
+    const foro = nombresForo();
+    return almacen.tx([ST_BOTS], async (t) => {
+      b.nombre = elegirNombre(b.nombre, await nombresPropios(t), foro, o);
+      await t.put(ST_BOTS, b);
+      return b;
+    });
+  }
+
+  const api = {
     /** Todos los registros (propios y marcas del foro). @returns {Promise<RegistroBot[]>} */
     todos: () => almacen.list(ST_BOTS),
 
@@ -228,63 +343,121 @@ export function crearBots(deps) {
     async propios() {
       const filas = /** @type {RegistroBot[]} */ (await almacen.list(ST_BOTS));
       return /** @type {BotPropio[]} */ (filas.filter((r) => r.clase === 'propio')).sort(
-        (a, b) => a.nombre.localeCompare(b.nombre) || a.hash.localeCompare(b.hash),
+        porNombreYClave,
       );
     },
 
-    /** @param {string} hash @returns {Promise<RegistroBot | undefined>} */
-    obtener: (hash) => almacen.get(ST_BOTS, hash),
+    /** @param {string} clave @returns {Promise<RegistroBot | undefined>} */
+    obtener: (clave) => almacen.get(ST_BOTS, clave),
 
     /**
-     * Crea un bot propio (versión 1). Ver insertar().
+     * El propio con ese nombre exacto (los nombres de los propios no se
+     * repiten), o null.
+     * @param {string} nombre @returns {Promise<BotPropio | null>}
+     */
+    async porNombre(nombre) {
+      return (await api.propios()).find((b) => b.nombre === nombre) ?? null;
+    },
+
+    /**
+     * El propio y la versión exacta que tienen ese lgHash (el hash de los
+     * escenarios y los torneos), o null. Si varios propios la tienen, el
+     * primero por nombre.
+     * @param {string} lg
+     * @returns {Promise<{bot: BotPropio, version: Version} | null>}
+     */
+    async porLg(lg) {
+      for (const b of await api.propios()) {
+        const v = b.versiones.find((x) => x.lg === lg);
+        if (v) return { bot: b, version: v };
+      }
+      return null;
+    },
+
+    /**
+     * ADN de una especie de escenario de origen 'propio' (sin ADN dentro):
+     * la versión exacta por `hash` (lgHash) y, si no está, la última del
+     * propio con ese nombre. undefined si no hay ninguno.
+     * @param {{bot: string, hash?: string}} s
+     * @returns {Promise<string | undefined>}
+     */
+    async adnDeEspecie(s) {
+      if (s.hash) {
+        const x = await api.porLg(s.hash);
+        if (x) return x.version.adn;
+      }
+      return (await api.porNombre(s.bot))?.adn;
+    },
+
+    /**
+     * Crea un bot propio (versión 1) con clave nueva. `renombrar`: con un
+     * nombre usado (por un propio o el Bestiary) le busca uno libre.
      * @param {{nombre: string, adn: string, vegetal?: boolean, descripcion?: string, nota?: string,
      *   origen?: OrigenBot, origenes?: OrigenGen[]}} o
-     * @param {{renombrar?: boolean}} [op]
+     * @param {{renombrar?: boolean, permitirNombreForo?: boolean}} [op]
      * @returns {Promise<BotPropio>}
      */
-    async crear(o, op = {}) {
-      const b = nuevoBotPropio({ ...o, fecha: ahora() });
-      return almacen.tx([ST_BOTS], (t) => insertar(t, b, !!op.renombrar));
+    crear(o, op = {}) {
+      try {
+        const b = nuevoBotPropio({ ...o, fecha: ahora(), clave: nuevaClave() });
+        return insertar(b, { libre: !!op.renombrar, permitirNombreForo: op.permitirNombreForo });
+      } catch (e) {
+        return Promise.reject(e);
+      }
     },
 
     /**
      * Duplica un bot (del foro o propio) como propio nuevo: los del foro
-     * son de solo lectura y se editan así (decisión 18). El nombre, si no
-     * se da, es el del original con un número libre.
-     * @param {{hash: string, nombre: string, archivo?: string, vegetal?: boolean, clase: 'foro' | 'propio'}} de
+     * son de solo lectura y se editan así (decisión 18). Las marcas del
+     * original no se tocan. Sin nombre: el del original con « 2», « 3»…
+     * libre entre los propios y el Bestiary.
+     * @param {OrigenDuplicado} de
      * @param {string} adn el texto del original (el .txt del foro o la versión elegida)
-     * @param {{nombre?: string, nota?: string}} [o]
+     * @param {{nombre?: string, nota?: string, permitirNombreForo?: boolean}} [o]
      * @returns {Promise<BotPropio>}
      */
-    async duplicar(de, adn, o = {}) {
-      /** @type {OrigenBot} */
-      const origen = { tipo: de.clase, hash: de.hash, nombre: de.nombre };
-      if (de.archivo) origen.archivo = de.archivo;
-      const b = nuevoBotPropio({
-        nombre: o.nombre || de.nombre,
-        adn,
-        vegetal: de.vegetal,
-        nota: o.nota,
-        origen,
-        fecha: ahora(),
-      });
-      return almacen.tx([ST_BOTS], (t) => insertar(t, b, !o.nombre));
+    duplicar(de, adn, o = {}) {
+      try {
+        /** @type {OrigenBot} */
+        const origen = { tipo: de.clase, clave: de.clave, nombre: de.nombre };
+        if (de.archivo) origen.archivo = de.archivo;
+        const b = nuevoBotPropio({
+          nombre: o.nombre || de.nombre,
+          adn,
+          vegetal: de.vegetal,
+          nota: o.nota,
+          origen,
+          fecha: ahora(),
+          clave: nuevaClave(),
+        });
+        // sin nombre, desde « 2»: el del original cuenta como usado
+        return insertar(
+          b,
+          o.nombre
+            ? { permitirNombreForo: o.permitirNombreForo }
+            : { libre: true, usado: b.nombre },
+        );
+      } catch (e) {
+        return Promise.reject(e);
+      }
     },
 
     /**
      * Guarda una versión nueva del ADN. Devuelve el bot (con la versión
-     * nueva al final) o null si el ADN no cambió (mismo hash que la última).
-     * @param {string} hash
+     * nueva al final) o null si el texto es exactamente el de la última
+     * (mismo `lg`, texto exacto; un cambio de comentarios o sangría, que no
+     * cambia el `hash`, sí se guarda).
+     * @param {string} clave
      * @param {string} adn
      * @param {{nota?: string, origenes?: OrigenGen[]}} [o]
      * @returns {Promise<BotPropio | null>}
      */
-    guardarVersion(hash, adn, o = {}) {
+    guardarVersion(clave, adn, o = {}) {
       if (typeof adn !== 'string' || !adn.trim()) return Promise.reject(new ErrorBots('adn-vacio'));
       return almacen.tx([ST_BOTS], async (t) => {
-        const b = await propio(t, hash);
+        const b = await propio(t, clave);
         const ult = b.versiones[b.versiones.length - 1];
-        if (ult && ult.hash === hashAdn(adn)) return null;
+        if (ult && mismoTexto(ult, adn)) return null;
         const fecha = ahora();
         b.versiones.push(nuevaVersion((ult?.n ?? 0) + 1, adn, fecha, o.nota || '', o.origenes));
         b.adn = adn;
@@ -297,29 +470,30 @@ export function crearBots(deps) {
     /**
      * Vuelve a una versión anterior: la guarda como versión nueva (no se
      * pierde la historia). null si ya es la actual.
-     * @param {string} hash @param {number} n @param {string} [nota]
+     * @param {string} clave @param {number} n @param {string} [nota]
      */
-    async restaurarVersion(hash, n, nota) {
-      const b = await propio(almacen, hash);
+    async restaurarVersion(clave, n, nota) {
+      const b = await propio(almacen, clave);
       const v = b.versiones.find((x) => x.n === n);
       if (!v) throw new ErrorBots('version-inexistente', { n });
-      return this.guardarVersion(hash, v.adn, { nota: nota ?? '', origenes: v.origenes });
+      return api.guardarVersion(clave, v.adn, { nota: nota ?? '', origenes: v.origenes });
     },
 
     /**
      * Cambia nombre, vegetal o descripción de un propio.
-     * @param {string} hash @param {{nombre?: string, vegetal?: boolean, descripcion?: string}} c
+     * @param {string} clave @param {{nombre?: string, vegetal?: boolean, descripcion?: string}} c
+     * @param {{permitirNombreForo?: boolean}} [op]
      * @returns {Promise<BotPropio>}
      */
-    cambiarDatos(hash, c) {
+    cambiarDatos(clave, c, op = {}) {
+      const foro = nombresForo();
       return almacen.tx([ST_BOTS], async (t) => {
-        const b = await propio(t, hash);
+        const b = await propio(t, clave);
         if (c.nombre !== undefined) {
           const nombre = String(c.nombre).trim();
           if (!nombre) throw new ErrorBots('nombre-vacio');
-          if ((await nombresPropios(t, hash)).has(nombre))
-            throw new ErrorBots('nombre-repetido', { nombre });
-          b.nombre = nombre;
+          if (nombre !== b.nombre)
+            b.nombre = elegirNombre(nombre, await nombresPropios(t, clave), foro, op);
         }
         if (c.vegetal !== undefined) b.vegetal = !!c.vegetal;
         if (c.descripcion !== undefined) b.descripcion = String(c.descripcion);
@@ -330,31 +504,23 @@ export function crearBots(deps) {
     },
 
     /**
-     * Borra un propio. Si tenía marcas, quedan (como las de un bot del foro
-     * con ese ADN).
-     * @param {string} hash
+     * Borra un propio: con sus marcas (no quedan huérfanas) y fuera de las
+     * selecciones con nombre.
+     * @param {string} clave
      */
-    borrar(hash) {
-      return almacen.tx([ST_BOTS], async (t) => {
-        const b = await propio(t, hash);
-        const m = marcasDe(b);
-        if (marcasVacias(m)) await t.delete(ST_BOTS, hash);
-        else await t.put(ST_BOTS, { hash, clase: 'foro', ...m });
+    borrar(clave) {
+      return almacen.tx([ST_BOTS, ST_AJUSTES], async (t) => {
+        await propio(t, clave);
+        await t.delete(ST_BOTS, clave);
+        for (const f of await t.list(ST_AJUSTES)) {
+          if (typeof f.clave !== 'string' || !f.clave.startsWith(PREFIJO_SELECCION)) continue;
+          if (!Array.isArray(f.claves) || !f.claves.includes(clave)) continue;
+          await t.put(ST_AJUSTES, {
+            ...f,
+            claves: f.claves.filter((/** @type {string} */ k) => k !== clave),
+          });
+        }
       });
-    },
-
-    /**
-     * El propio y la versión que tienen ese lgHash (el hash de los
-     * escenarios y los torneos), o null.
-     * @param {string} lg
-     * @returns {Promise<{bot: BotPropio, version: Version} | null>}
-     */
-    async porLg(lg) {
-      for (const b of await this.propios()) {
-        const v = b.versiones.find((x) => x.lg === lg);
-        if (v) return { bot: b, version: v };
-      }
-      return null;
     },
 
     // ---- Marcas ----------------------------------------------------------------
@@ -362,23 +528,24 @@ export function crearBots(deps) {
     /**
      * Cambia las marcas de uno o varios bots. `info` completa el registro
      * de un bot del foro (nombre y archivo, como la clásica).
-     * @param {string[]} hashes
+     * @param {string[]} claves
      * @param {(m: Marcas) => Marcas} cambio
      * @param {InfoBot} [info]
      */
-    marcar(hashes, cambio, info) {
+    marcar(claves, cambio, info) {
       return almacen.tx([ST_BOTS], async (t) => {
-        for (const hash of hashes) {
-          const r = /** @type {RegistroBot | undefined} */ (await t.get(ST_BOTS, hash));
+        for (const clave of claves) {
+          const r = /** @type {RegistroBot | undefined} */ (await t.get(ST_BOTS, clave));
+          if (r?.clase !== 'propio' && !esClaveForo(clave)) continue;
           const m = cambio(marcasDe(r));
           m.tags = [...new Set(m.tags.map(normalizarTag).filter(Boolean))].sort();
           if (r?.clase === 'propio') await t.put(ST_BOTS, { ...r, ...m });
           else if (marcasVacias(m)) {
-            if (r) await t.delete(ST_BOTS, hash);
+            if (r) await t.delete(ST_BOTS, clave);
           } else {
             /** @type {MarcaForo} */
-            const f = { hash, clase: 'foro', ...m };
-            const i = info?.(hash) ?? r;
+            const f = { hash: clave, clase: 'foro', ...m };
+            const i = info?.(clave) ?? r;
             if (i?.nombre) f.nombre = i.nombre;
             if (i?.archivo) f.archivo = i.archivo;
             await t.put(ST_BOTS, f);
@@ -387,24 +554,24 @@ export function crearBots(deps) {
       });
     },
 
-    /** @param {string[]} hashes @param {boolean} fav @param {InfoBot} [info] */
-    favorito(hashes, fav, info) {
-      return this.marcar(hashes, (m) => ({ ...m, fav }), info);
+    /** @param {string[]} claves @param {boolean} fav @param {InfoBot} [info] */
+    favorito(claves, fav, info) {
+      return api.marcar(claves, (m) => ({ ...m, fav }), info);
     },
-    /** @param {string[]} hashes @param {string} tag @param {InfoBot} [info] */
-    agregarTag(hashes, tag, info) {
+    /** @param {string[]} claves @param {string} tag @param {InfoBot} [info] */
+    agregarTag(claves, tag, info) {
       const g = normalizarTag(tag);
       if (!g) return Promise.resolve();
-      return this.marcar(hashes, (m) => ({ ...m, tags: [...m.tags, g] }), info);
+      return api.marcar(claves, (m) => ({ ...m, tags: [...m.tags, g] }), info);
     },
-    /** @param {string[]} hashes @param {string} tag */
-    quitarTag(hashes, tag) {
+    /** @param {string[]} claves @param {string} tag */
+    quitarTag(claves, tag) {
       const g = normalizarTag(tag);
-      return this.marcar(hashes, (m) => ({ ...m, tags: m.tags.filter((x) => x !== g) }));
+      return api.marcar(claves, (m) => ({ ...m, tags: m.tags.filter((x) => x !== g) }));
     },
-    /** @param {string} hash @param {string} notas @param {InfoBot} [info] */
-    notas(hash, notas, info) {
-      return this.marcar([hash], (m) => ({ ...m, notas: String(notas ?? '').trim() }), info);
+    /** @param {string} clave @param {string} notas @param {InfoBot} [info] */
+    notas(clave, notas, info) {
+      return api.marcar([clave], (m) => ({ ...m, notas: String(notas ?? '').trim() }), info);
     },
 
     // ---- Selecciones con nombre -----------------------------------------------
@@ -430,4 +597,5 @@ export function crearBots(deps) {
     /** @param {string} nombre */
     borrarSeleccion: (nombre) => almacen.delete(ST_AJUSTES, PREFIJO_SELECCION + nombre),
   };
+  return api;
 }

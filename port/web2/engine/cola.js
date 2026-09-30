@@ -7,7 +7,8 @@
 //
 //   { unidad(trabajo, i, ctx) → Promise<datos>,   // corre la unidad i
 //     final?(trabajo, datos[]) → resumen,          // al terminar todas
-//     vista?(params) → params livianos }           // para lista()
+//     vista?(params) → params livianos,            // para lista()
+//     reintentable?: false }                       // reintentar() lo rechaza
 //   ctx = { progreso(fr ∈ [0,1]), senal: AbortSignal }
 //
 // El ejecutor tiene que poder correr una unidad desde cero en cualquier
@@ -38,7 +39,9 @@
 //     estaban corriendo vuelven a pendiente con progreso 0 (se reinician).
 //   - cancelar(id): aborta sus unidades en curso (vuelven a pendiente) y el
 //     trabajo queda cancelado; reintentar(id) lo devuelve a la cola sin
-//     repetir las hechas.
+//     repetir las hechas (salvo que su ejecutor sea `reintentable: false`:
+//     ErrorCola 'no-reintentable'; así las rondas de torneo, cuyo resultado
+//     solo vale si el torneo no cambió desde que se armaron).
 //   - una unidad que falla (o cuyo resultado no se pudo escribir: código
 //     'escritura') deja el trabajo fallido y se abortan sus otras unidades
 //     en curso; reintentar(id) repite las que no terminaron. El error se
@@ -87,6 +90,7 @@ export const MAX_GUARDADOS = 20;
  *   unidad: (t: Trabajo, i: number, ctx: ContextoUnidad) => Promise<any>,
  *   final?: (t: Trabajo, datos: any[]) => any,
  *   vista?: (params: any) => any,
+ *   reintentable?: boolean,
  * }} Ejecutor
  */
 
@@ -342,10 +346,16 @@ export class Cola {
     return true;
   }
 
-  /** Vuelve a la cola un trabajo fallido o cancelado (sin repetir sus unidades hechas). @param {string} id */
+  /**
+   * Vuelve a la cola un trabajo fallido o cancelado (sin repetir sus
+   * unidades hechas). Lanza ErrorCola 'no-reintentable' si su ejecutor es
+   * `reintentable: false`. @param {string} id
+   */
   async reintentar(id) {
     const t = this.#trabajos.get(id);
     if (!t || !['fallido', 'cancelado'].includes(t.estado)) return false;
+    if (this.#ejecutores[t.tipo]?.reintentable === false)
+      throw new ErrorCola('no-reintentable', t.tipo);
     for (const u of t.unidades)
       if (u.estado !== 'hecha') {
         u.estado = 'pendiente';

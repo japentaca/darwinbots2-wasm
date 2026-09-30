@@ -2,9 +2,11 @@
 // @ts-check
 // Lista de la cola de trabajos (decisión 10): estado, progreso, cancelar,
 // reintentar, borrar; los avisos de los que terminaron y el botón para
-// pedir el permiso de notificación. Genérica: `tipo` filtra (réplicas hoy;
-// rondas de torneo, decisión 23, mañana). Las acciones valen en cualquier
-// pestaña (C20: si otra corre la cola, se le piden a ella).
+// pedir el permiso de notificación. Genérica: `tipo` filtra (réplicas en
+// Comparar; rondas de torneo en Competir, decisión 23, con `ver = false`:
+// sin «Ver» y sin Reintentar). Las acciones valen en cualquier pestaña
+// (C20: si otra corre la cola, se le piden a ella).
+import { TIPO_RONDA } from '../../../engine/rondas.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { textoError } from './textos.js';
 import {
@@ -14,8 +16,11 @@ import {
   pedirPermiso,
 } from './trabajos.svelte.js';
 
-/** @type {{ tipo?: string, seleccion?: string, titulo: string }} */
-let { tipo, seleccion = $bindable(''), titulo } = $props();
+/**
+ * @type {{ tipo?: string, seleccion?: string, titulo: string, ver?: boolean }}
+ *   ver: los trabajos se eligen para verlos (réplicas)
+ */
+let { tipo, seleccion = $bindable(''), titulo, ver = true } = $props();
 
 const lista = $derived(
   estadoTrabajos.lista
@@ -64,9 +69,11 @@ async function borrar(id) {
   titulo: a.titulo,
 })}
       </span>
-      <button type="button" class="btn chico" onclick={() => (seleccion = a.id)}>
-        {t('comparar.trabajos.ver')}
-      </button>
+      {#if ver}
+        <button type="button" class="btn chico" onclick={() => (seleccion = a.id)}>
+          {t('comparar.trabajos.ver')}
+        </button>
+      {/if}
       <button type="button" class="btn chico" onclick={() => descartarAviso(a.id)}>
         {t('comparar.aviso.descartar')}
       </button>
@@ -79,9 +86,13 @@ async function borrar(id) {
     <ul>
       {#each lista as x (x.id)}
         <li class:sel={x.id === seleccion}>
-          <button type="button" class="titulo" onclick={() => (seleccion = x.id)}>
-            {x.titulo || t('comparar.trabajos.sinTitulo')}
-          </button>
+          {#if ver}
+            <button type="button" class="titulo" onclick={() => (seleccion = x.id)}>
+              {x.titulo || t('comparar.trabajos.sinTitulo')}
+            </button>
+          {:else}
+            <span class="titulo fijo">{x.titulo || t('comparar.trabajos.sinTitulo')}</span>
+          {/if}
           <span class="chip">{t(`comparar.trabajos.estado.${x.estado}`)}</span>
           <span class="mono cuenta">
             {t('comparar.trabajos.progreso', {
@@ -96,7 +107,8 @@ async function borrar(id) {
                 {t('comparar.trabajos.cancelar')}
               </button>
             {/if}
-            {#if x.estado === 'fallido' || x.estado === 'cancelado'}
+            <!-- una ronda de torneo no se reintenta (ejecutor no reintentable): se pide otra -->
+            {#if (x.estado === 'fallido' || x.estado === 'cancelado') && x.tipo !== TIPO_RONDA}
               <button type="button" class="btn chico" onclick={() => hacer('reintentar', x.id)}>
                 {t('comparar.trabajos.reintentar')}
               </button>
@@ -176,6 +188,10 @@ li.sel {
   cursor: pointer;
   color: var(--acento);
   text-align: left;
+}
+.titulo.fijo {
+  cursor: default;
+  color: var(--texto);
 }
 .cuenta {
   font-size: 12px;

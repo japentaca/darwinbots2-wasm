@@ -23,7 +23,7 @@ import { resolverOpciones } from '../escenarios/index.js';
 import { lgHash } from '../league.js';
 import { nombreEspecie } from '../metricas.js';
 import { BASES, PARAMETROS, parametro, valorEfectivo } from '../opciones.js';
-import { METRICAS_CLAVE } from '../replicas.js';
+import { estadoSemilla, METRICAS_CLAVE } from '../replicas.js';
 import {
   fechaInforme,
   figuras,
@@ -35,10 +35,10 @@ import {
   tabla,
   ultimoFinito,
 } from './comun.js';
-import { seccion, valorParametro } from './corrida.js';
+import { asignarColores, seccion, valorParametro } from './corrida.js';
 import { ANCHO_MEDIO, documento, nombreArchivo } from './plantilla.js';
-import { esc, lineas } from './svg.js';
-import { idiomaValido, traductor } from './textos.js';
+import { areasApiladas, esc, lineas } from './svg.js';
+import { ErrorInforme, idiomaValido, traductor } from './textos.js';
 
 /** Colores de A y B (los mismos de Comparar en la interfaz). */
 export const COLOR_A = '#0f5c55';
@@ -60,12 +60,26 @@ export const GRUPOS_CMP = Object.freeze([
 /** Id de la figura superpuesta de una métrica. @param {string} m */
 export const idFigura = (m) => `fig-c-${m}`;
 
-/** Figura que respalda cada tipo de hallazgo en la comparación. */
-const FIGURA_HALLAZGO = Object.freeze({
-  [FIGURAS.especies]: idFigura('especiesVivas'),
-  [FIGURAS.total]: idFigura('noVegetales'),
-  [FIGURAS.adn]: idFigura('adnMedia'),
-});
+/** Id de la figura de población por especie de un lado. @param {string} lado 'A' o 'B' */
+export const idFiguraEspecies = (lado) => idFigura(`especies${lado}`);
+
+/** Especies con capa propia en la población por especie de cada lado. */
+const MAX_CAPAS_CMP = 6;
+const GRIS_OTRAS = '#c3c2b7';
+
+/**
+ * Figura que respalda un hallazgo de un lado: dominio y extinción, su
+ * población por especie; colapso, los no vegetales; ADN, su longitud media.
+ * @param {string} figura @param {string} lado
+ */
+const figuraHallazgo = (figura, lado) =>
+  figura === FIGURAS.especies
+    ? idFiguraEspecies(lado)
+    : figura === FIGURAS.total
+      ? idFigura('noVegetales')
+      : figura === FIGURAS.adn
+        ? idFigura('adnMedia')
+        : '';
 
 /**
  * Una de las dos corridas (lo mismo que la plantilla Corrida; el linaje no
@@ -94,25 +108,81 @@ const FIGURA_HALLAZGO = Object.freeze({
  * @typedef {{clave: string, aspecto: string, a: string, b: string}} Diferencia
  */
 
+// Las diferencias siguen las mismas reglas que la pestaña Comparar
+// (src/lib/analizar/comparar/diferencias.js, diferenciasConfig): el
+// escenario por su id, las especies por bot (un bot repetido con sufijo
+// « (2)», « (3)»…; cantidad, color, vegetal, energía y ADN) y los objetos
+// por su descripción (tipo y medidas). engine/ no importa de src/, así que
+// las reglas se repiten acá; test/informe_comparacion_replicas.test.js
+// verifica que las dos den las mismas claves.
+
 /**
- * Datos de una especie sembrada para comparar.
- * @param {any} s
+ * Especies sembradas por bot (con sufijo si el bot se repite), con los datos
+ * que se comparan.
+ * @param {any} e escenario
+ * @returns {Map<string, {nombre: string, datos: Record<string, unknown>}>}
  */
-function datosEspecie(s) {
-  const hash = typeof s?.adn === 'string' && s.adn ? lgHash(s.adn) : (s?.hash ?? '');
-  return {
-    cantidad: Number(s?.cantidad ?? 0),
-    vegetal: !!s?.vegetal,
-    energia: Number(s?.energia ?? Number.NaN),
-    hash: String(hash ?? ''),
-  };
+function especiesPorBot(e) {
+  /** @type {Map<string, {nombre: string, datos: Record<string, unknown>}>} */
+  const m = new Map();
+  for (const s of e?.especies ?? []) {
+    const bot = String(s?.bot ?? '');
+    let k = bot;
+    let sufijo = '';
+    for (let n = 2; m.has(k); n++) {
+      sufijo = ` (${n})`;
+      k = `${bot}${sufijo}`;
+    }
+    /** @type {Record<string, unknown>} */
+    const datos = {
+      cantidad: s?.cantidad,
+      color: String(s?.color ?? '').toLowerCase(),
+      vegetal: !!s?.vegetal,
+      energia: s?.energia,
+    };
+    const hash = typeof s?.adn === 'string' && s.adn ? lgHash(s.adn) : s?.hash;
+    if (hash) datos.hash = hash;
+    if (s?.adn) datos.propio = true;
+    m.set(k, { nombre: `${nombreEspecie(bot)}${sufijo}`, datos });
+  }
+  return m;
 }
+
+/**
+ * Descripción estable de un objeto del escenario (tipo y medidas; la misma
+ * que objetoTexto de la pestaña Comparar).
+ * @param {any} o
+ */
+function objetoTexto(o) {
+  if (o?.tipo === 'laberinto') return `laberinto:${o.forma}:${o.pasillo}:${o.muro}`;
+  if (o?.tipo === 'local') return 'teleporter';
+  return `${o?.tipo}:${o?.ancho}:${o?.alto}`;
+}
+
+/** @param {any} e */
+const objetosTexto = (e) =>
+  e
+    ? [
+        ...(e.objetos?.obstaculos ?? []).map(objetoTexto),
+        ...(e.objetos?.teleporters ?? []).map(objetoTexto),
+      ]
+    : [];
 
 /** @param {any} e */
 const conteoObjetos = (e) => ({
   obstaculos: e?.objetos?.obstaculos?.length ?? 0,
   teleporters: e?.objetos?.teleporters?.length ?? 0,
 });
+
+/**
+ * ¿Dos semillas distintas dan el mismo mundo del motor? (C19: el motor usa
+ * 16 bits del estado derivado de la semilla.)
+ * @param {unknown} a @param {unknown} b
+ */
+export function mismoMundo(a, b) {
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a === b) return false;
+  return estadoSemilla(Number(a)).mezcla === estadoSemilla(Number(b)).mezcla;
+}
 
 /** @param {any[] | undefined} c */
 const enCaliente = (c) => (c ?? []).filter((e) => e && Number.isFinite(e.ciclo));
@@ -134,7 +204,7 @@ export function diferenciasComparacion(a, b, tr) {
   const nada = '—';
   const na = nombreEscenario(ea, idioma) || nada;
   const nb = nombreEscenario(eb, idioma) || nada;
-  if ((ea?.id ?? null) !== (eb?.id ?? null) || na !== nb)
+  if ((ea?.id ?? null) !== (eb?.id ?? null))
     out.push({ clave: 'escenario', aspecto: tx('cmp.escenario'), a: na, b: nb });
   const sa = Number.isFinite(a.semilla) ? String(a.semilla) : nada;
   const sb = Number.isFinite(b.semilla) ? String(b.semilla) : nada;
@@ -171,42 +241,35 @@ export function diferenciasComparacion(a, b, tr) {
         b: txt(vb),
       });
     }
-  /** @param {any} e */
-  const especies = (e) =>
-    new Map(
-      (e?.especies ?? []).map((/** @type {any} */ s) => [
-        nombreEspecie(s?.bot ?? ''),
-        datosEspecie(s),
-      ]),
-    );
-  const pa = especies(ea);
-  const pb = especies(eb);
-  /** @param {ReturnType<typeof datosEspecie> | undefined} d @param {ReturnType<typeof datosEspecie> | undefined} otra */
+  const pa = especiesPorBot(ea);
+  const pb = especiesPorBot(eb);
+  /** @param {Record<string, any> | undefined} d @param {Record<string, any> | undefined} otra */
   const txtEspecie = (d, otra) => {
     if (!d) return tx('cmp.ausente');
-    const partes = [tx('cmp.especieBots', { n: d.cantidad })];
+    const partes = [tx('cmp.especieBots', { n: Number(d.cantidad ?? 0) })];
     if (d.vegetal) partes.push(tx('vegetalMarca'));
     if (Number.isFinite(d.energia)) partes.push(tx('cmp.energia', { n: d.energia }));
+    if (otra && d.color && otra.color && d.color !== otra.color)
+      partes.push(tx('cmp.color', { color: d.color }));
     if (otra && d.hash && otra.hash && d.hash !== otra.hash)
-      partes.push(tx('cmp.adn', { hash: d.hash.slice(0, 8) }));
+      partes.push(tx('cmp.adn', { hash: String(d.hash).slice(0, 8) }));
+    else if (otra && !!d.propio !== !!otra.propio) partes.push(tx('cmp.adnPropio'));
     return partes.join(' · ');
   };
   for (const bot of new Set([...pa.keys(), ...pb.keys()])) {
     const da = pa.get(bot);
     const db = pb.get(bot);
-    if (JSON.stringify(da) === JSON.stringify(db)) continue;
+    if (JSON.stringify(da?.datos ?? null) === JSON.stringify(db?.datos ?? null)) continue;
     out.push({
       clave: `especie:${bot}`,
-      aspecto: tx('cmp.especie', { bot }),
-      a: txtEspecie(da, db),
-      b: txtEspecie(db, da),
+      aspecto: tx('cmp.especie', { bot: /** @type {any} */ (da ?? db).nombre }),
+      a: txtEspecie(da?.datos, db?.datos),
+      b: txtEspecie(db?.datos, da?.datos),
     });
   }
   const oa = conteoObjetos(ea);
   const ob = conteoObjetos(eb);
-  const objA = JSON.stringify(ea?.objetos ?? null);
-  const objB = JSON.stringify(eb?.objetos ?? null);
-  if (objA !== objB)
+  if (JSON.stringify(objetosTexto(ea)) !== JSON.stringify(objetosTexto(eb)))
     out.push({
       clave: 'objetos',
       aspecto: tx('cmp.objetos'),
@@ -231,8 +294,7 @@ export function diferenciasComparacion(a, b, tr) {
  * @returns {{html: string, archivo: string, datos: any}}
  */
 export function informeComparacion(d, op = {}) {
-  if (!d?.a?.historia || !d?.b?.historia)
-    throw new Error('informe «comparacion»: faltan las dos corridas');
+  if (!d?.a?.historia || !d?.b?.historia) throw new ErrorInforme('faltan-corridas');
   const idioma = idiomaValido(op.idioma);
   const tr = traductor(idioma);
   const { tx, num } = tr;
@@ -264,8 +326,82 @@ export function informeComparacion(d, op = {}) {
   /** @type {any[]} */
   const embebidas = [];
 
+  // ---- población por especie de cada lado (la figura de dominio y extinción) ----
+  // Colores comunes a las dos: la misma especie tiene el mismo color en A y B.
+  const porLado = lados.map(({ c }) => {
+    const h = c.historia;
+    const nombres = typeof h.nombresEspecies === 'function' ? h.nombresEspecies() : [];
+    const vivosDe = new Map(nombres.map((n) => [n, [...h.alineada('vivos', n)]]));
+    /** @param {string} n */
+    const peso = (n) =>
+      /** @type {number[]} */ (vivosDe.get(n)).reduce(
+        (s, v) => s + (Number.isFinite(v) ? v : 0),
+        0,
+      );
+    const porPeso = [...nombres].sort((x, y) => peso(y) - peso(x));
+    return { vivosDe, porPeso, peso };
+  });
+  const principales = [...new Set(porLado.flatMap((p) => p.porPeso.slice(0, MAX_CAPAS_CMP)))].sort(
+    (x, y) =>
+      porLado.reduce((s, p) => s + (p.vivosDe.has(y) ? p.peso(y) : 0), 0) -
+      porLado.reduce((s, p) => s + (p.vivosDe.has(x) ? p.peso(x) : 0), 0),
+  );
+  const coloresEsp = asignarColores(
+    principales,
+    [...(d.a.escenario?.especies ?? []), ...(d.b.escenario?.especies ?? [])],
+    principales.length,
+  );
+  /** @param {(typeof lados)[number]} l @param {number} i */
+  const figEspecies = (l, i) => {
+    const { vivosDe, porPeso } = porLado[i];
+    const t = [...l.c.historia.t];
+    if (!porPeso.length || !t.length) return '';
+    const propias = porPeso.slice(0, MAX_CAPAS_CMP);
+    const resto = porPeso.slice(MAX_CAPAS_CMP);
+    const capas = propias.map((n) => ({
+      valores: /** @type {number[]} */ (vivosDe.get(n)),
+      color: coloresEsp.get(n) ?? GRIS_OTRAS,
+      nombre: n,
+    }));
+    if (resto.length)
+      capas.push({
+        valores: t.map((_, k) =>
+          resto.reduce((s, n) => {
+            const v = /** @type {number[]} */ (vivosDe.get(n))[k];
+            return s + (Number.isFinite(v) ? v : 0);
+          }, 0),
+        ),
+        color: GRIS_OTRAS,
+        nombre: tx('otras'),
+      });
+    for (const n of propias)
+      embebidas.push({
+        corrida: l.lado,
+        metrica: 'vivos',
+        especie: n,
+        t,
+        media: /** @type {number[]} */ (vivosDe.get(n)).map(redondo),
+      });
+    const cap = tx(resto.length ? 'fig.cmpEspeciesOtras' : 'fig.cmpEspecies', {
+      lado: l.lado,
+      n: propias.length,
+    });
+    const svg = areasApiladas({
+      ancho: ANCHO_MEDIO,
+      alto: 170,
+      etiqueta: cap,
+      fmtX,
+      fmtY,
+      x: t,
+      capas,
+    });
+    return figura(idFiguraEspecies(l.lado), svg, cap, leyenda(capas));
+  };
+
   // ---- 2. Métricas: figuras superpuestas (se arman antes para numerarlas en orden) ----
   const grupos = GRUPOS_CMP.map(([grupo, metricas]) => {
+    const propias =
+      grupo === 'poblacion' ? lados.map((l, i) => figEspecies(l, i)).filter(Boolean) : [];
     const figs = metricas
       .map((m) => {
         const series = lados.map((l) => ({ l, s: l.c.historia.serie(m) }));
@@ -324,6 +460,7 @@ export function informeComparacion(d, op = {}) {
         );
       })
       .filter(Boolean);
+    figs.unshift(...propias);
     const cuerpo = figs.length
       ? `<div class="dos">${figs.join('')}</div>`
       : `<p class="cap">${esc(tx('grupo.sinDatos'))}</p>`;
@@ -351,7 +488,7 @@ export function informeComparacion(d, op = {}) {
   const bloques = lados
     .map((l, i) => {
       const frases = agruparHallazgos(hallazgos[i])
-        .map((x) => ({ x, fig: /** @type {Record<string, string>} */ (FIGURA_HALLAZGO)[x.figura] }))
+        .map((x) => ({ x, fig: figuraHallazgo(x.figura, l.lado) }))
         .filter((p) => p.fig && numeros.has(p.fig))
         .map(
           ({ x, fig }) =>
@@ -367,6 +504,7 @@ export function informeComparacion(d, op = {}) {
 
   // ---- 1. Configuraciones lado a lado y diferencias ----
   const difs = diferenciasComparacion(d.a, d.b, tr);
+  const mundoRepetido = mismoMundo(d.a.semilla, d.b.semilla);
   {
     const nada = '—';
     /** @param {CorridaComparada} c @param {number} i */
@@ -413,6 +551,10 @@ export function informeComparacion(d, op = {}) {
       `<h3>${esc(tx('cmp.diferencias'))}</h3>`,
       `<p class="p">${esc(difs.length ? tx('cmp.nDiferencias', { n: difs.length }) : tx('cmp.sinDiferencias'))}</p>`,
     ];
+    if (mundoRepetido)
+      partes.push(
+        `<p class="p"><strong>${esc(tx('cmp.mismoMundo', { a: String(d.a.semilla), b: String(d.b.semilla) }))}</strong></p>`,
+      );
     if (difs.length)
       partes.push(
         tabla(
@@ -488,6 +630,7 @@ export function informeComparacion(d, op = {}) {
       hallazgos: hallazgos[i],
     })),
     diferencias: difs,
+    mismoMundo: mundoRepetido,
     series: embebidas,
   };
   const html = documento({

@@ -7,7 +7,7 @@
 //
 // INFORME_EJEMPLO=<ruta> guarda el informe de 50.000 ciclos en esa ruta.
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
   agruparHallazgos,
@@ -20,7 +20,7 @@ import { Linaje } from '../engine/lineage.js';
 import { asignarColores, PALETA } from '../engine/report/corrida.js';
 import { generarInforme, informeCorrida } from '../engine/report/index.js';
 import { esc, pasoLindo, reducir } from '../engine/report/svg.js';
-import { parametrosDe, TEXTOS, traductor } from '../engine/report/textos.js';
+import { CODIGOS_ERROR, parametrosDe, TEXTOS, traductor } from '../engine/report/textos.js';
 import { ciclos, historiaDe } from './util/historia-sintetica.js';
 import { figurasEnTamaño, validar } from './util/validar-informe.js';
 
@@ -224,14 +224,15 @@ test('textos: mismas claves y parámetros en es y en, sin «original», con text
   );
   assert.equal(t('evento.pico', { n: 1000000 }), 'Pico de población: 1.000.000 bots');
   assert.deepEqual(parametrosDe('{n} {n#bot|bots} {x#a|b {y}}'), ['n', 'x', 'y']);
-  assert.throws(() => traductor('es').tx('no.existe'), /falta el texto/);
+  assert.throws(() => traductor('es').tx('no.existe'), { codigo: 'texto' });
   const { tx } = traductor('en');
   assert.equal(tx('kpi.pico', { ciclo: 48210 }), 'peak · cycle 48,210');
   assert.equal(traductor('es').tx('kpi.pico', { ciclo: 48210 }), 'pico · ciclo 48.210');
 });
 
 test('generarInforme: tipo desconocido y la Corrida por su tipo', () => {
-  assert.throws(() => generarInforme(/** @type {any} */ ('otro'), {}), /desconocido/);
+  assert.throws(() => generarInforme(/** @type {any} */ ('otro'), {}), { codigo: 'tipo' });
+  assert.throws(() => generarInforme('corrida', {}), { codigo: 'falta-historia' });
   const r = generarInforme('corrida', corridaChica(), { idioma: 'en' });
   validar(r.html);
 });
@@ -483,4 +484,23 @@ test('resumen: extinciones simultáneas en una frase enlazada a la figura', () =
   assert.match(r.html, /12 extinciones/, 'la marca en el gráfico');
   const texto = r.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
   assert.match(texto, / 12 extinciones /, 'la cifra cuenta las 12');
+});
+
+test('errores: el código del informe de barrido está registrado, con texto en es y en', async () => {
+  const { informeBarrido } = await import('../engine/report/barrido.js');
+  /** @type {any} */
+  let err = null;
+  try {
+    informeBarrido(/** @type {any} */ ({ valores: [], semillas: [], resultados: [] }));
+  } catch (e) {
+    err = e;
+  }
+  assert.equal(err?.codigo, 'falta-barrido');
+  assert.ok(CODIGOS_ERROR.includes(err.codigo));
+  for (const l of ['es', 'en']) {
+    const dic = JSON.parse(
+      readFileSync(new URL(`../src/i18n/${l}/informes.json`, import.meta.url), 'utf8'),
+    );
+    assert.ok(dic['informes.error.cod.falta-barrido']?.length > 0, l);
+  }
 });

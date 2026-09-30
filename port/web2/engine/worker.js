@@ -110,8 +110,8 @@
 //   {t:'seed-species', sp}                 sembrar especie del formulario
 //                                          → {t:'lint', name, issues[]}
 //                                          (tokens del ADN que valen 0)
-//   {t:'lint-dna', dna, req?}              N3.3 (nueva): lint del editor de ADN
-//                                          → {t:'lint-dna', req, issues[]}
+//   {t:'lint-dna', dna, req?, id?}         N3.3 (nueva): lint del editor de ADN
+//                                          → {t:'lint-dna', req?, id?, issues[]}
 //                                          (db_dna_lint, sin sembrar ni tocar
 //                                          la sim; anda también sin sim)
 //   {t:'dna-lib', entries:[{name,dna}]}    RV-40: ADN por nombre de especie
@@ -146,7 +146,15 @@
 //   {t:'f1start'}                          E5: arrancar contest (FindSpecies)
 //   {t:'f1-cap', cycles, mode?}            Canal: tope de ciclos por ronda ('pop' | 'nrg')
 //   {t:'f1-popcap', n}                     Canal: tope de bots por especie (0 = sin tope)
-//   {t:'pb', on} · {t:'pb-mouse', x, y}    E5: Player Bot Mode (paso 13)
+//   {t:'pb', on, seguirFoco?}              seguirFoco (N4.1, opcional de la
+//                                          nueva): con el modo encendido, si
+//                                          el core mueve robfocus (muere el
+//                                          bot controlado y KillRobot pasa el
+//                                          foco al último resaltado vivo), el
+//                                          foco del frame lo sigue y avisa
+//                                          con {t:'pb-focus'}. Sin él, el
+//                                          foco se suelta como en la clásica
+//   {t:'pb-mouse', x, y}                   E5: Player Bot Mode (paso 13)
 //   {t:'pb-keys', keys:[{memloc,value,invert}]} · {t:'pb-key', idx, active}
 //   {t:'select', n, seq?}                  bot con foco (0 = ninguno); su
 //                                          volcado de ojos/inspector viaja
@@ -203,8 +211,10 @@
 //   {t:'f1-started', n}                    respuesta a f1start (nº especies)
 //   {t:'f1-over', winner, f1, cycles}      E5: contest terminado (E10: marcador y ciclos) ·
 //   {t:'bot-text', n, text} · {t:'lint', name, issues[]} · {t:'opt', id, v} ·
-//   {t:'lint-dna', req, issues[]}          N3.3: issues = [{kind, token, count,
+//   {t:'lint-dna', req?, id?, issues[]}    N3.3: issues = [{kind, token, count,
 //                                          line, hint}] como las de 'lint'
+//                                          (line: primera línea, base 1; 0 =
+//                                          del archivo entero)
 //   {t:'dna-missing', names[]}             RV-40: especies cargadas sin ADN
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
@@ -214,6 +224,9 @@
 //   {t:'graphs-restore', list[]} ·
 //   {t:'snapshot-done', records, snp, mut} · {t:'dead-data', records, snp, mut} ·
 //   {t:'focus', n} · {t:'family', n, total, highlighted, lines} ·
+//   {t:'pb-focus', n, prev}                N4.1 (solo con seguirFoco): el foco
+//                                          pasó de prev a n (0 = nadie quedó
+//                                          controlado), antes del frame
 //   {t:'console-open', n, absnum, name, genenum} · {t:'console-out', n, text} ·
 //   {t:'genes', n, ga[]} · {t:'running', running}   (etapa E6)
 //   {t:'eye-vals', n, dir[9], wth[9]} · {t:'sysvar', id, v}   (etapa E8)

@@ -44,16 +44,22 @@ export function ejeY(min, max, top, alto) {
 }
 
 /**
- * Eje X de [c0, c1] sobre [izq, izq + ancho], con 3 marcas (inicio, mitad, fin).
+ * Eje X de [c0, c1] sobre [izq, izq + ancho], con 3 marcas (inicio, mitad,
+ * fin), redondeadas a enteros (ciclos) salvo con `real` (valores de un
+ * parámetro en el barrido). Sin marcas repetidas (de 0 a 1 ciclo, la mitad
+ * redondeada caería sobre el fin).
  * @param {number} c0 @param {number} c1 @param {number} izq @param {number} ancho
+ * @param {boolean} [real]
  */
-export function escalaX(c0, c1, izq, ancho) {
+export function escalaX(c0, c1, izq, ancho, real = false) {
   const span = c1 > c0 ? c1 - c0 : 1;
   /** @param {number} c */
   const a = (c) => izq + (ancho * (c - c0)) / span;
-  const marcas = [0, 0.5, 1].map((k) => {
-    const v = Math.round(c0 + span * k);
-    return { v, x: a(v) };
-  });
-  return { a, marcas: c1 > c0 ? marcas : [marcas[0]] };
+  /** @type {{v: number, x: number}[]} */
+  const marcas = [];
+  for (const k of c1 > c0 ? [0, 0.5, 1] : [0]) {
+    const v = real ? Number((c0 + span * k).toPrecision(6)) : Math.round(c0 + span * k);
+    if (!marcas.some((m) => m.v === v)) marcas.push({ v, x: a(v) });
+  }
+  return { a, marcas };
 }

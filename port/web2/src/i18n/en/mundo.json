@@ -9,6 +9,8 @@
   "mundo.vista.clasica": "Classic view",
   "mundo.vista.rica.corta": "Enriched",
   "mundo.vista.clasica.corta": "Classic",
+  "mundo.vista.contorno": "Outline view",
+  "mundo.vista.contorno.corta": "Outline",
   "mundo.colorPor": "color by {lente}",
   "mundo.colorPor.etiqueta": "Color by",
   "mundo.colorPor.soloRica": "Coloring by a value is only available in the enriched view",

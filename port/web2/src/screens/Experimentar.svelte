@@ -16,7 +16,7 @@ import {
   esDeFabrica,
 } from '../../engine/escenarios/fabrica.js';
 import { diff, normalizar, textoEn, validar } from '../../engine/escenarios/index.js';
-import { BASES } from '../../engine/opciones.js';
+import { BASES, fueraDeLoUsual } from '../../engine/opciones.js';
 import { idioma, num, t } from '../i18n/index.svelte.js';
 import Avanzado from '../lib/experimentar/Avanzado.svelte';
 import {
@@ -31,9 +31,11 @@ import { guardarModo, leerModo } from '../lib/experimentar/avanzado.js';
 import {
   agregarEspecie,
   borradorDe,
+  cambiarBase,
   cambiarEspecie,
   cambiosVivos,
   clavePlural,
+  conAjustesF1,
   controlBasico,
   controlCambiado,
   controlVivo,
@@ -262,6 +264,29 @@ const semillaOk = $derived(parsearSemilla(estadoExp.semilla) !== null);
 /** @param {ControlBasico} c @param {any} v */
 function poner(c, v) {
   estadoExp.borrador = escribirControl(b, c, v);
+}
+
+/**
+ * Aviso de un valor fuera del rango habitual (se acepta igual).
+ * @param {ControlBasico} c
+ */
+const textoInusual = (c) =>
+  t('experimentar.avanzado.aviso.inusual', {
+    min: fmt(c.sugerido?.min ?? 0),
+    max: fmt(c.sugerido?.max ?? 0),
+  });
+
+/** «Ajustes F1» sobre el borrador (como el botón de la clásica): especies y el resto quedan. */
+function ponerAjustesF1() {
+  estadoExp.borrador = conAjustesF1(b);
+  avisar('experimentar.aviso.ajustesF1');
+}
+
+/** @param {string} base */
+function ponerBase(base) {
+  if (!BASES[base] || base === b.opciones.base) return;
+  estadoExp.borrador = cambiarBase(b, base);
+  avisar('experimentar.aviso.base', { base: BASES[base][idi] });
 }
 
 /** @param {ControlBasico} c @param {string} valor */
@@ -587,7 +612,20 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
         <p class="help">
           {t(`experimentar.origen.${tipoBase}`)}
           ·
-          {t('experimentar.base', { base: BASES[b.opciones.base]?.[idi] ?? b.opciones.base })}
+          <label class="base-sel"
+            >{t('experimentar.base.etiqueta')}
+            <select
+              class="inp sm"
+              value={b.opciones.base}
+              aria-describedby="exp-base-ayuda"
+              onchange={(e) => ponerBase(e.currentTarget.value)}
+            >
+              {#each Object.entries(BASES) as [id, x] (id)}
+                <option value={id}>{x[idi]}</option>
+              {/each}
+            </select></label
+          >
+          <span class="sr-only" id="exp-base-ayuda">{t('experimentar.base.ayuda')}</span>
           ·
           <span class="mono"
             >{tn('experimentar.cambiosBase', Object.keys(b.opciones.cambios).length)}</span
@@ -623,6 +661,12 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
       <span class="ley-chg"
         ><span class="sw chg-sw"></span>{t('experimentar.leyenda.cambiado')}</span
       >
+      {#if modo === 'avanzado'}
+        <span class="ley-base"
+          ><span class="pill">{t('experimentar.avanzado.cambiado')}</span>
+          {t('experimentar.leyenda.distintoBase')}</span
+        >
+      {/if}
     </div>
 
     {#if estadoAlmacen.versionVieja}
@@ -654,7 +698,13 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
     {/if}
 
     {#if modo === 'avanzado'}
-      <Avanzado borrador={b} referencia={ref} onCambiar={(nb) => (estadoExp.borrador = nb)} />
+      <Avanzado
+        borrador={b}
+        referencia={ref}
+        onCambiar={(nb) => (estadoExp.borrador = nb)}
+        onAjustesF1={ponerAjustesF1}
+      />
+      <div class="tarjetas">{@render tarjetaObjetos()}</div>
     {:else}
       <div class="tarjetas">
         {#each tarjetas as g (g.id)}
@@ -713,58 +763,21 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
                     class="inp"
                     type="number"
                     value={v}
-                    min={c.min}
-                    max={c.max}
                     step={c.paso ?? 1}
+                    aria-describedby={`exp-${c.id}-ayuda${fueraDeLoUsual(c, v) ? ` exp-${c.id}-aviso` : ''}`}
                     onchange={(e) => ponerNumero(c, e.currentTarget, v)}
                   >
                 {/if}
-                <p class="help">{c.ayuda[idi]}</p>
+                <p class="help" id={`exp-${c.id}-ayuda`}>{c.ayuda[idi]}</p>
+                {#if typeof v === 'number' && fueraDeLoUsual(c, v)}
+                  <p class="help aviso-valor" id={`exp-${c.id}-aviso`}>{textoInusual(c)}</p>
+                {/if}
               </div>
             {/each}
           </section>
         {/each}
 
-        <section class="card grupo">
-          <div class="lh">
-            <h2>{t('experimentar.objetos')}</h2>
-            <span class="new">{t('experimentar.nueva')}</span>
-          </div>
-          {#if objetos.vacio}
-            <p class="help">{t('experimentar.objetos.ninguno')}</p>
-          {:else}
-            <div class="chips">
-              {#if objetos.forma}
-                <span class="chip">{tn('experimentar.objetos.forma', objetos.forma)}</span>
-              {/if}
-              {#if objetos.formas}
-                <span class="chip">{tn('experimentar.objetos.formas', objetos.formas * 10)}</span>
-              {/if}
-              {#each objetos.laberintos as f, i (i)}
-                <span class="chip"
-                  >{t('experimentar.objetos.laberinto', { forma: nombreLaberinto(f) })}</span
-                >
-              {/each}
-              {#if objetos.teleporters}
-                <span class="chip"
-                  >{tn('experimentar.objetos.teleporters', objetos.teleporters)}</span
-                >
-              {/if}
-            </div>
-          {/if}
-          <div class="par">
-            <!-- «Editar en el mundo» (decisión 15) llega con el Nivel 3. -->
-            <button
-              class="btn sm"
-              type="button"
-              disabled={objetos.vacio}
-              onclick={() => (estadoExp.borrador = quitarObjetos(b))}
-            >
-              {t('experimentar.objetos.quitar')}
-            </button>
-          </div>
-          <p class="help">{t('experimentar.objetos.ayuda')}</p>
-        </section>
+        {@render tarjetaObjetos()}
       </div>
     {/if}
 
@@ -928,6 +941,47 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   </aside>
 </div>
 
+{#snippet tarjetaObjetos()}
+  <section class="card grupo">
+    <div class="lh">
+      <h2>{t('experimentar.objetos')}</h2>
+      <span class="new">{t('experimentar.nueva')}</span>
+    </div>
+    {#if objetos.vacio}
+      <p class="help">{t('experimentar.objetos.ninguno')}</p>
+    {:else}
+      <div class="chips">
+        {#if objetos.forma}
+          <span class="chip">{tn('experimentar.objetos.forma', objetos.forma)}</span>
+        {/if}
+        {#if objetos.formas}
+          <span class="chip">{tn('experimentar.objetos.formas', objetos.formas * 10)}</span>
+        {/if}
+        {#each objetos.laberintos as f, i (i)}
+          <span class="chip"
+            >{t('experimentar.objetos.laberinto', { forma: nombreLaberinto(f) })}</span
+          >
+        {/each}
+        {#if objetos.teleporters}
+          <span class="chip">{tn('experimentar.objetos.teleporters', objetos.teleporters)}</span>
+        {/if}
+      </div>
+    {/if}
+    <div class="par">
+      <!-- «Editar en el mundo» (decisión 15) llega con el Nivel 3. -->
+      <button
+        class="btn sm"
+        type="button"
+        disabled={objetos.vacio}
+        onclick={() => (estadoExp.borrador = quitarObjetos(b))}
+      >
+        {t('experimentar.objetos.quitar')}
+      </button>
+    </div>
+    <p class="help">{t('experimentar.objetos.ayuda')}</p>
+  </section>
+{/snippet}
+
 <DialogoEspecie
   bind:abierto={verEspecie}
   usados={b.especies.map((s) => s.color)}
@@ -1081,6 +1135,32 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
 .chg-sw {
   background: #fff7e6;
   border: 1px solid #e8c77a;
+}
+.ley-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pill {
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f3e3bd;
+  color: #5a4a12;
+}
+.base-sel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.inp.sm {
+  height: 26px;
+  width: auto;
+  font-size: 12px;
+  padding: 0 4px;
+}
+.aviso-valor {
+  color: #7a4d00;
 }
 .live,
 .new {

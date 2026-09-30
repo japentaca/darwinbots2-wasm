@@ -7,13 +7,17 @@
 //   #/bots/<clave>/<pestaña>          esa pestaña (resumen, adn, historial)
 //
 // <clave> puede ser (se prueba en este orden):
-//   - el id del índice: 'foro:<archivo>' o 'propio:<hash>';
+//   - el id del índice (engine/biblioteca.js): 'foro:<archivo>' o
+//     'propio:p:<16 hex>';
+//   - la clave de un propio, 'p:<16 hex>' (engine/bots.js esClavePropia);
 //   - el nombre exacto del bot (lo que enlaza Inicio: #/bots/<nombre>). Si un
 //     propio y uno del foro se llaman igual, gana el primero del índice (los
 //     del foro van primero); rutaFicha() evita la ambigüedad usando el id;
-//   - el hash de identidad (16 hex, o 'file:<archivo>' en los del foro sin
-//     perfil): si lo comparten un propio y uno del foro, gana el propio.
+//   - el hash de identidad del ADN (16 hex, o 'file:<archivo>' en los del
+//     foro sin perfil): si lo comparten un propio y uno del foro, gana el
+//     propio.
 
+import { esClavePropia } from '../../../engine/bots.js';
 import { hashDe } from '../../router.js';
 
 export const PESTAÑAS = /** @type {const} */ (['resumen', 'adn', 'historial']);
@@ -47,6 +51,10 @@ export function resolverClave(indice, clave) {
   if (!clave) return null;
   if (clave.startsWith('foro:') || clave.startsWith('propio:')) {
     const e = indice.find((x) => x.id === clave);
+    if (e) return e;
+  }
+  if (esClavePropia(clave)) {
+    const e = indice.find((x) => x.clase === 'propio' && x.clave === clave);
     if (e) return e;
   }
   const porNombre = indice.find((x) => x.nombre === clave);
