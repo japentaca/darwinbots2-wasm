@@ -174,13 +174,24 @@ async function jugar(caso, fmt, seed) {
   return { clasica: out[0], engine: out[1], reglas, base };
 }
 
+// La nueva cambia el color de un luchador que se confunde con su rival o es
+// verde (lgColoresCruces) y la clásica no: el color de los luchadores no se
+// compara.
+/** @param {any[]} ms */
+const sinColorLuchador = (ms) =>
+  ms.map((m) => {
+    if (m.t !== 'seed-species') return m;
+    const { color: _c, ...sp } = m.sp;
+    return { ...m, sp };
+  });
+
 test('reglasAOpciones + mensajesPartido = lo que la clásica le manda al worker', async () => {
   for (const caso of CASOS)
     for (const fmt of FORMATOS)
       for (const seed of [1, 7]) {
         const r = await jugar(caso, fmt, seed);
         const msg = `${caso.nombre} · ${fmt.capMode} · semilla ${seed}`;
-        assert.deepStrictEqual(r.engine, r.clasica, msg);
+        assert.deepStrictEqual(sinColorLuchador(r.engine), sinColorLuchador(r.clasica), msg);
         // El reinicio lleva la semilla, el modo F1 y el alga de arranque.
         const reset = r.clasica.find((m) => m.t === 'reset');
         assert.equal(reset.seed, caso.replay ?? Math.floor(rng(seed)() * 100000), msg);

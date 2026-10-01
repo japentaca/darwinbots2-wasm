@@ -972,3 +972,33 @@ test('participantes: nunca verde ni colores parecidos entre competidores', async
     for (let j = i + 1; j < cs.length; j++)
       assert.equal(E.lgColorValido(cs[i], [cs[j]]), true, `${cs[i]} ~ ${cs[j]}`);
 });
+
+test('participantes: dos naranjas cercanos se confunden', () => {
+  assert.equal(E.lgColorValido('#ffa040', ['#ff8000']), false);
+  assert.equal(E.lgColorValido('#c79a62', ['#ff9020']), false);
+  assert.equal(E.lgColorValido('#ff9020', ['#ff4040']), true);
+  assert.equal(E.lgColorValido('#ffd83a', ['#ff9020']), true);
+});
+
+test('participantes: los rivales de cada pelea no se confunden de color', () => {
+  const col = ['#ff8000', '#ffa040', '#ff9020', '#c79a62', '#8ce83c', '#ff7020'];
+  const S = {
+    entrants: col.map((color, i) => ({ name: `P${i}`, dna: `p${i}`, color })),
+  };
+  const cruces = [
+    ['P0', 'P1'],
+    ['P1', 'P2'],
+    ['P2', 'P3'],
+    ['P3', 'P4'],
+    ['P0', 'P5'],
+  ];
+  assert.ok(E.lgColoresCruces(/** @type {any} */ (S), cruces) > 0);
+  const c = new Map(S.entrants.map((e) => [e.name, e.color]));
+  for (const [a, b] of cruces) {
+    const ca = /** @type {string} */ (c.get(a));
+    const cb = /** @type {string} */ (c.get(b));
+    assert.equal(E.lgColorValido(ca, [cb]), true, `${a} ${ca} ~ ${b} ${cb}`);
+  }
+  // Ya distinguibles: no cambia nada.
+  assert.equal(E.lgColoresCruces(/** @type {any} */ (S), cruces), 0);
+});

@@ -130,6 +130,7 @@ import {
   LG_OLD_ROSTER_KEY,
   LG_SCRATCH_ID,
   lgAddEntrant as lgAddEntrantPuro,
+  lgColoresCruces,
   lgColorValido,
   lgCupDraw,
   lgCupSizeOk,
@@ -771,6 +772,12 @@ export function crearTorneos(deps) {
     // no registra nada).
     if (!o.replay && S.ronda) throw new ErrorLiga('round-running');
     const f = S.fmt;
+    // Que no se confundan los colores de los que pelean (temporadas copiadas,
+    // importadas o de antes de la regla): el cambio queda en la temporada.
+    const recoloreados = lgColoresCruces(S, [fx.fighters.map((e) => e.name)]) > 0;
+    if (recoloreados)
+      for (const e of fx.fighters)
+        e.color = S.entrants.find((x) => x.name === e.name)?.color ?? e.color;
     const live = nuevoVivo({
       league: L.id,
       season: S.no,
@@ -783,6 +790,7 @@ export function crearTorneos(deps) {
     const seed = parseFloat(String(o.replay ? o.replay.seed : Math.floor(azar() * 100000))) || 0;
     live.seed = seed;
     try {
+      if (recoloreados) await lgSave(L);
       const plan = planPartido(
         lgLaunchList(f, fx.fighters),
         {
@@ -1179,6 +1187,17 @@ export function crearTorneos(deps) {
       ...p,
       seed: parseFloat(String(Math.floor(azar() * 100000))) || 0,
     }));
+    // Colores distinguibles entre los rivales de cada partido (se guardan
+    // con la ronda, más abajo).
+    if (
+      lgColoresCruces(
+        S,
+        partidos.map((p) => p.fighters.map((e) => e.name)),
+      )
+    )
+      for (const p of partidos)
+        for (const e of p.fighters)
+          e.color = S.entrants.find((x) => x.name === e.name)?.color ?? e.color;
     const ronda = `R${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
     const params = crearParamsRonda({ league: L, season: S, ronda, orden: r.orden, partidos });
     try {

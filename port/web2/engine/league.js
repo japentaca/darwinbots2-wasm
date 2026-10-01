@@ -1428,23 +1428,101 @@ export function lgEsVerde(c) {
   return h >= 65 && h <= 170; // del verde amarillento al verde azulado
 }
 
-/** Distancia de color (RGB ponderado, "redmean"); bajo ~110 se confunden a simple vista. */
+// Diferencia de color percibida (CIEDE2000, en Lab D65). La distancia RGB
+// juzgaba distintos a naranjas que a simple vista son el mismo (#ff8000 y
+// #ffa040); en ΔE2000 esos quedan bajo 15, y un rojo y un naranja, sobre 25.
+/** @param {string} c @returns {[number, number, number] | null} */
+function lgLab(c) {
+  const v = lgRgb(c);
+  if (!v) return null;
+  const [r, g, b] = v.map((x) => {
+    const t = x / 255;
+    return t <= 0.04045 ? t / 12.92 : ((t + 0.055) / 1.055) ** 2.4;
+  });
+  const f = (/** @type {number} */ t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const fx = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047);
+  const fy = f(0.2126 * r + 0.7152 * g + 0.0722 * b);
+  const fz = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
 /** @param {string} a @param {string} b */
 function lgDistColor(a, b) {
-  const p = lgRgb(a);
-  const q = lgRgb(b);
+  const p = lgLab(a);
+  const q = lgLab(b);
   if (!p || !q) return Infinity;
-  const rm = (p[0] + q[0]) / 2;
-  const dr = p[0] - q[0];
-  const dg = p[1] - q[1];
-  const db = p[2] - q[2];
-  return Math.sqrt((2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db);
+  const rad = Math.PI / 180;
+  const [L1, a1, b1] = p;
+  const [L2, a2, b2] = q;
+  const c7 = (/** @type {number} */ c) => Math.sqrt(c ** 7 / (c ** 7 + 25 ** 7));
+  const G = 0.5 * (1 - c7((Math.hypot(a1, b1) + Math.hypot(a2, b2)) / 2));
+  const ap1 = a1 * (1 + G);
+  const ap2 = a2 * (1 + G);
+  const C1 = Math.hypot(ap1, b1);
+  const C2 = Math.hypot(ap2, b2);
+  const tono = (/** @type {number} */ y, /** @type {number} */ x) => {
+    const h = Math.atan2(y, x) / rad;
+    return h < 0 ? h + 360 : h;
+  };
+  const h1 = tono(b1, ap1);
+  const h2 = tono(b2, ap2);
+  let dh = 0;
+  let hm = h1 + h2;
+  if (C1 * C2) {
+    dh = h2 - h1;
+    if (dh > 180) dh -= 360;
+    else if (dh < -180) dh += 360;
+    if (Math.abs(h1 - h2) > 180) hm += hm < 360 ? 360 : -360;
+    hm /= 2;
+  }
+  const dL = L2 - L1;
+  const dC = C2 - C1;
+  const dH = 2 * Math.sqrt(C1 * C2) * Math.sin((dh / 2) * rad);
+  const Lm = (L1 + L2) / 2;
+  const Cm = (C1 + C2) / 2;
+  const T =
+    1 -
+    0.17 * Math.cos((hm - 30) * rad) +
+    0.24 * Math.cos(2 * hm * rad) +
+    0.32 * Math.cos((3 * hm + 6) * rad) -
+    0.2 * Math.cos((4 * hm - 63) * rad);
+  const SL = 1 + (0.015 * (Lm - 50) ** 2) / Math.sqrt(20 + (Lm - 50) ** 2);
+  const SC = 1 + 0.045 * Cm;
+  const SH = 1 + 0.015 * Cm * T;
+  const RT = -Math.sin(2 * 30 * Math.exp(-(((hm - 275) / 25) ** 2)) * rad) * 2 * c7(Cm);
+  return Math.sqrt((dL / SL) ** 2 + (dC / SC) ** 2 + (dH / SH) ** 2 + RT * (dC / SC) * (dH / SH));
 }
-export const LG_COLOR_MIN_DIST = 110;
+export const LG_COLOR_MIN_DIST = 20;
 
 /** @param {string} c @param {string[]} usados */
 export const lgColorValido = (c, usados) =>
   !lgEsVerde(c) && usados.every((u) => u !== c && lgDistColor(c, u) >= LG_COLOR_MIN_DIST);
+
+// Tonos fijos sin verdes, de claros a oscuros y de vivos a apagados (los
+// oscuros no bajan de l 0.38: el fondo de la sim es negro).
+/** @type {string[]} */
+const LG_BARRIDO = [];
+for (const l of [0.6, 0.75, 0.45, 0.88, 0.38])
+  for (const sat of [0.9, 0.55])
+    for (let h = 0; h < 360; h += 5) {
+      const x = lgHsl(h, sat, l);
+      if (!lgEsVerde(x)) LG_BARRIDO.push(x);
+    }
+
+// El color del barrido que queda más lejos de `usados`.
+/** @param {string[]} usados */
+function lgMasLejano(usados) {
+  let mejor = LG_NO_COLOR;
+  let dMejor = -1;
+  for (const x of LG_BARRIDO) {
+    const d = Math.min(Infinity, ...usados.map((u) => lgDistColor(x, u)));
+    if (d > dMejor) {
+      dMejor = d;
+      mejor = x;
+    }
+  }
+  return mejor;
+}
 
 /** @param {Season} S @param {() => string} [otro] color si la paleta está llena (invColor en la clásica) */
 export function lgFreeColor(S, otro = () => LG_NO_COLOR, ignorar = -1) {
@@ -1455,21 +1533,45 @@ export function lgFreeColor(S, otro = () => LG_NO_COLOR, ignorar = -1) {
     const x = otro();
     if (lgColorValido(x, used)) return x;
   }
-  // Barrido de tonos fijos (sin verdes): el que queda más lejos de los usados.
-  let mejor = LG_NO_COLOR;
-  let dMejor = -1;
-  for (let h = 0; h < 360; h += 5) {
-    for (const l of [0.6, 0.75, 0.45]) {
-      const x = lgHsl(h, 0.8, l);
-      if (lgEsVerde(x)) continue;
-      const d = Math.min(Infinity, ...used.map((u) => lgDistColor(x, u)));
-      if (d > dMejor) {
-        dMejor = d;
-        mejor = x;
-      }
+  return lgMasLejano(used);
+}
+
+// Con muchos participantes no alcanzan los colores para que ninguno se
+// parezca a otro de la temporada; lo que no puede pasar es que se parezcan
+// dos que pelean juntos. cruces = los nombres de cada partido por jugar: a
+// quien se confunde con un rival suyo (o es verde) se le da otro color, que
+// no se parezca a ninguno de sus rivales y, si se puede, a nadie de la
+// temporada. Cambia S.entrants; devuelve cuántos colores cambió.
+/** @param {Season} S @param {string[][]} cruces */
+export function lgColoresCruces(S, cruces) {
+  const E = new Map(S.entrants.map((e) => [e.name, e]));
+  /** @type {Map<string, Set<string>>} */
+  const rivales = new Map();
+  for (const c of cruces)
+    for (const n of c) {
+      if (!E.has(n)) continue;
+      const r = rivales.get(n) ?? new Set();
+      for (const m of c) if (m !== n && E.has(m)) r.add(m);
+      rivales.set(n, r);
     }
+  const hechos = new Set();
+  let cambios = 0;
+  for (const [n, r] of rivales) {
+    const e = /** @type {Entrant} */ (E.get(n));
+    const deRivales = [...r].filter((m) => hechos.has(m)).map((m) => E.get(m)?.color ?? '');
+    hechos.add(n);
+    if (lgColorValido(e.color, deRivales)) continue;
+    const resto = S.entrants.filter((x) => x !== e && !r.has(x.name)).map((x) => x.color);
+    const todos = [...r].map((m) => E.get(m)?.color ?? '');
+    const cand = [...LG_COLORS, ...LG_BARRIDO];
+    e.color =
+      cand.find((x) => lgColorValido(x, [...todos, ...resto])) ??
+      cand.find((x) => lgColorValido(x, todos)) ??
+      cand.find((x) => lgColorValido(x, deRivales)) ??
+      lgMasLejano(deRivales);
+    cambios++;
   }
-  return mejor;
+  return cambios;
 }
 
 /** @param {number} h @param {number} s @param {number} l */
