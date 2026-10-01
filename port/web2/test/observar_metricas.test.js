@@ -7,12 +7,12 @@ import {
   capasApiladas,
   Historia,
   muestraDe,
+  muestraSinAlga,
+  resumenSinAlga,
   resumirFrame,
   topeEje,
   variacion,
   vbAHex,
-  muestraSinAlga,
-  resumenSinAlga,
 } from '../src/lib/observar/metricas.js';
 import { BOT, FLAG, VIS } from '../src/lib/sim/frame.js';
 
@@ -208,10 +208,17 @@ test('torneo: el alga de arranque no cuenta como especie ni en los totales', () 
       { nombre: 'Luchador.txt', stats: st(2) },
     ],
   });
-  assert.deepEqual(m.especies.map((e) => e.nombre), ['Luchador.txt']);
+  assert.deepEqual(
+    m.especies.map((e) => e.nombre),
+    ['Luchador.txt'],
+  );
   assert.equal(m.metrics[2], 2);
   assert.equal(m.metrics[3], 0);
-  const r = resumenSinAlga({ vivos: 12, vegetales: 10, especies: { Alga_Minimalis: { n: 10 }, Luchador: { n: 2 } } });
+  const r = resumenSinAlga({
+    vivos: 12,
+    vegetales: 10,
+    especies: { Alga_Minimalis: { n: 10 }, Luchador: { n: 2 } },
+  });
   assert.deepEqual(Object.keys(r.especies), ['Luchador']);
   assert.equal(r.vivos, 2);
 });
