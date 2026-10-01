@@ -1,7 +1,7 @@
 // @ts-check
 // Editor de ADN (decisión 18), la parte de texto, sin DOM:
 //   - genesTexto cuenta los genes igual que el core (engine/lineage.js
-//     genesAdn) en los 571 bots del Bestiary;
+//     genesAdn) en los 569 bots del Bestiary;
 //   - resaltado: clases por palabra y el HTML conserva el texto exacto;
 //   - plegado/apagado: el texto que resulta de apagar y encender genes;
 //   - orígenes por gen tras editar, insertar y apagar;
@@ -56,7 +56,7 @@ const ADN = [
   '',
 ].join('\n');
 
-test('genesTexto = genesAdn del core en los 571 bots del Bestiary', () => {
+test('genesTexto = genesAdn del core en los 569 bots del Bestiary', () => {
   let n = 0;
   for (const b of bestiario) {
     const t = fs.readFileSync(path.join(BOTS, b.file), 'utf8');
@@ -65,7 +65,7 @@ test('genesTexto = genesAdn del core en los 571 bots del Bestiary', () => {
     assert.deepEqual(c, a, b.file);
     n++;
   }
-  assert.equal(n, 571);
+  assert.equal(n, 569);
   const gs = genesTexto(ADN);
   assert.equal(gs.length, 3);
   assert.deepEqual(

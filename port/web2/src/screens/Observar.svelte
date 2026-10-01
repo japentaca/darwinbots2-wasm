@@ -21,6 +21,7 @@ import MenuInstantanea from '../lib/observar/MenuInstantanea.svelte';
 import BarraMundo from '../lib/observar/objetos/BarraMundo.svelte';
 import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
+import PeleaTv from '../lib/observar/tv/PeleaTv.svelte';
 import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
 import {
   conPaneles,
@@ -285,6 +286,9 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
     </div>
     {#if !modoTv}
       <aside class="lateral" aria-label={t('observar.lateral.aria')}>
+        {#if auto}
+          <PeleaTv />
+        {/if}
         {#if inspectorVisible(sesion)}
           <Inspector
             {sesion}

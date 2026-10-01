@@ -7,7 +7,8 @@
 // en el centro, la cortinilla (quién contra quién, la fase de la pelea y la
 // cuenta atrás), el campeón o el error que apagó el TV; abajo, durante la
 // pelea, el rótulo con el marcador (Marcador.svelte integrado) y, en el
-// respiro, el marcador final que guardó el TV. Una región viva fija
+// respiro, el marcador final que guardó el TV (solo a pantalla completa: con
+// paneles, eso va arriba del panel derecho, PeleaTv.svelte). Una región viva fija
 // (siempre montada, fuera de la vista) anuncia solo los cambios de fase;
 // la cuenta atrás y el marcador quedan fuera de ella.
 import { idioma, t } from '../../../i18n/index.svelte.js';
@@ -122,7 +123,7 @@ $effect(() => {
         <div class="aviso">{r.aviso}</div>
       {/if}
     </div>
-  {:else if r.fase !== 'apagado'}
+  {:else if completa && r.fase !== 'apagado'}
     <div class="tercio">
       <div class="info">
         <div class="linea">

@@ -28,8 +28,8 @@ import TablaMarcador from './TablaMarcador.svelte';
 import { nombreTorneo, textoRotulo } from './textos.js';
 import { abandonar, est, torneos, tr } from './torneos.svelte.js';
 
-/** @type {{ integrado?: boolean }} */
-let { integrado = false } = $props();
+/** @type {{ integrado?: boolean, compacto?: boolean }} compacto: ver TablaMarcador */
+let { integrado = false, compacto = false } = $props();
 
 let hash = $state(typeof window !== 'undefined' ? window.location.hash : '');
 $effect(() => {
@@ -145,6 +145,7 @@ const resumen = $derived.by(() => {
         colores={vivo.colores}
         rounds={vivo.rounds}
         wins={vivo.wins}
+        {compacto}
       />
     </div>
   {/if}
