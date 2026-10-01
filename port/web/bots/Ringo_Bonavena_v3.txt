@@ -121,6 +121,15 @@ start
 0 .dif store
 stop
 
+'Cria: en sus primeros 60 ciclos no usa los ojos (sin rival en el foco, no
+'tira ni persigue) y se aleja de la madre en linea recta y rapido; nace
+'mirandola y la media vuelta del nacimiento la deja de espaldas
+cond
+*.robage 60 <
+start
+0 .dif store
+stop
+
 'Sin rival en el foco (nada a la vista, o solo parientes y formas):
 'rondar en linea recta a paso de crucero. Antes solo rondaba con los 9
 'ojos a cero y, rodeado de parientes, se quedaba quieto
@@ -131,6 +140,12 @@ start
 20 *.vel sub 0 floor .up store
 *.robage 100 mod 0 =
 400 rnd 200 sub .aimdx store
+stop
+
+cond
+*.robage 60 <
+start
+40 *.vel sub 0 floor .up store
 stop
 
 'Rival en el foco: encararlo y seguirle el paso

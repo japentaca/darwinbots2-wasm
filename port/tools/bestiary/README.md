@@ -43,17 +43,8 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
   copia al final de cada publicación. Para agregar uno: su `.txt` en
   `house/`, su registro en `house.json`, copiarlo a `web/bots/` + su
   registro en `web/bots/bots.json`, y correr `analyze_bots.js`.
-  - *Ringo Bonavena v1*: luchador F1 para los torneos. Parámetros
-    ajustados peleando contra la élite del Bestiary (los bots que le ganan
-    4 de 4 a Animal Minimalis) con las reglas por defecto de las ligas.
-  - *Ringo Bonavena v2*: v1 + defensa contra los enjambres que se
-    alimentan por lazos (Fruit Flies): `.tienum` a un puerto inexistente
-    (ningún lazo le mueve energía), tiro -1 barato contra rivales de body
-    < 20, y el ADN rellenado con un gen muerto hasta 298 tokens, el
-    `.dnalen` de Fruit Flies v0.21, que no se engancha a quien mide lo
-    mismo que ella. Firma distinta de v1 (1972) para que se peleen entre sí.
-  - *Ringo Bonavena v3*: el pesado de v1 sin las muertes súbitas de v2,
-    ajustado con la receta anti-pasivos de `tools/fight/README.md` (tope
+  - *Ringo Bonavena v3*: luchador F1 para los torneos (ojos en abanico,
+    golpe al cuerpo, shell y poison, división con sobra), ajustado con la receta anti-pasivos de `tools/fight/README.md` (tope
     5000 por energía, AGECOST 1, 100 bots por especie). Diagnóstico con
     los partidos que v2 perdía en el suizo: moría con mucha energía, no
     por desgaste. Cambios:
