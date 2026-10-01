@@ -11,6 +11,8 @@ import {
   topeEje,
   variacion,
   vbAHex,
+  muestraSinAlga,
+  resumenSinAlga,
 } from '../src/lib/observar/metricas.js';
 import { BOT, FLAG, VIS } from '../src/lib/sim/frame.js';
 
@@ -192,4 +194,24 @@ test('muestrasDeHistoria: al reducir puntos para el gráfico, promedio ponderado
       else assert.equal(m.especies.A, undefined);
     });
   }
+});
+
+test('torneo: el alga de arranque no cuenta como especie ni en los totales', () => {
+  const st = (n) => Object.assign(new Float32Array(27), { 1: n });
+  const metrics = new Float32Array(56);
+  metrics[2] = 12;
+  metrics[3] = 10;
+  const m = muestraSinAlga({
+    metrics,
+    especies: [
+      { nombre: 'Alga_Minimalis.txt', stats: st(10) },
+      { nombre: 'Luchador.txt', stats: st(2) },
+    ],
+  });
+  assert.deepEqual(m.especies.map((e) => e.nombre), ['Luchador.txt']);
+  assert.equal(m.metrics[2], 2);
+  assert.equal(m.metrics[3], 0);
+  const r = resumenSinAlga({ vivos: 12, vegetales: 10, especies: { Alga_Minimalis: { n: 10 }, Luchador: { n: 2 } } });
+  assert.deepEqual(Object.keys(r.especies), ['Luchador']);
+  assert.equal(r.vivos, 2);
 });

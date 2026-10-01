@@ -283,6 +283,37 @@ export function muestrasDeHistoria(h, max = MAX_GRAFICO) {
   return out;
 }
 
+/** Alga que el sistema siembra en los partidos de torneo (no es un luchador). */
+export const ALGA_SISTEMA = 'Alga_Minimalis';
+
+/**
+ * Una muestra del worker sin el alga de arranque: en un partido de torneo
+ * no pelea, solo alimenta, así que no cuenta como especie ni en los totales.
+ * @template {{metrics: ArrayLike<number>, especies?: {nombre: string, stats: ArrayLike<number>}[]}} M
+ * @param {M} m @returns {M}
+ */
+export function muestraSinAlga(m) {
+  const alga = (m.especies ?? []).filter((e) => sinTxt(e.nombre) === ALGA_SISTEMA);
+  if (!alga.length) return m;
+  const metrics = Float32Array.from(m.metrics);
+  const n = alga.reduce((a, e) => a + (e.stats[1] || 0), 0);
+  metrics[2] -= n;
+  metrics[3] -= n;
+  return { ...m, metrics, especies: m.especies?.filter((e) => !alga.includes(e)) };
+}
+
+/**
+ * Un resumen de frame sin el alga de arranque (ver muestraSinAlga).
+ * @template {Resumen} R
+ * @param {R} r @returns {R}
+ */
+export function resumenSinAlga(r) {
+  const e = r.especies?.[ALGA_SISTEMA];
+  if (!e) return r;
+  const { [ALGA_SISTEMA]: _, ...resto } = r.especies;
+  return { ...r, vivos: r.vivos - e.n, vegetales: r.vegetales - e.n, especies: resto };
+}
+
 /**
  * Una muestra con la forma de {t:'muestra'} del worker armada con el resumen
  * de un frame (la corrida sin muestreo del worker). Con la vista clÃ¡sica

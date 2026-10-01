@@ -72,12 +72,15 @@ import { aplicar, resolverOpciones, textoEn } from '../../../engine/escenarios/i
 import { Historia } from '../../../engine/history.js';
 import { Linaje } from '../../../engine/lineage.js';
 import { parametro, valorEfectivo } from '../../../engine/opciones.js';
+import { ID_ESCENARIO_PARTIDO } from '../../../engine/rondas.js';
 import { cssAVb, vbACss } from '../mundo/color.js';
 import { DetectorEventos, especiesNuevas } from '../observar/detector-eventos.js';
 import {
   muestraDeResumen,
+  muestraSinAlga,
   muestrasDeHistoria,
   resumenMuestra,
+  resumenSinAlga,
   resumirFrame,
   sinTxt,
   variacion,
@@ -346,6 +349,11 @@ export class NucleoCorrida {
     return !!this.#d.muestreo;
   }
 
+  /** ¿Es un partido de torneo? Su alga de arranque no es un luchador. */
+  get #esPartido() {
+    return this.#datos.escenario?.id === ID_ESCENARIO_PARTIDO;
+  }
+
   /** La historia de la corrida (engine/history.js). */
   get historia() {
     return this.#hist;
@@ -477,6 +485,7 @@ export class NucleoCorrida {
    */
   alMuestra(m) {
     if (!this.#porMuestras || !m || m.req !== this.#reqMuestreo) return;
+    if (this.#esPartido) m = { ...muestraSinAlga(m), req: m.req };
     if (!(m.ciclo >= 0)) return;
     const ult = this.#hist.ultimoCiclo;
     if (this.#trasCarga) {
@@ -559,6 +568,7 @@ export class NucleoCorrida {
    * @param {Resumen} r
    */
   ingerir(r) {
+    if (this.#esPartido) r = resumenSinAlga(r);
     if (!this.#porMuestras) this.#muestraDeFrame(r);
 
     if (r.rica) {
