@@ -2,18 +2,19 @@
 // @ts-check
 // Avance automático con paneles (#/observar/torneo): la pelea en curso
 // arriba del panel derecho, en lugar del rótulo de abajo del campo (el que
-// se ve a pantalla completa, RotuloTv.svelte). Quién pelea, la fase, el
-// ganador y las rondas ganadas; el ciclo y los bots de cada especie ya
-// están en el panel «En vivo» (el marcador va compacto).
+// se ve a pantalla completa, RotuloTv.svelte). La fase, el ganador y el
+// marcador (sin el ciclo, que ya está en el panel «En vivo»); quién pelea
+// solo hasta que llega el marcador, que ya trae los nombres.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import Marcador from '../../competir/Marcador.svelte';
 import TablaMarcador from '../../competir/TablaMarcador.svelte';
-import { tr } from '../../competir/torneos.svelte.js';
+import { est, tr } from '../../competir/torneos.svelte.js';
 import { rotuloTV } from './rotulo.js';
 import { contextoTv, tv } from './tv.svelte.js';
 
 const r = $derived(rotuloTV(tv.e, contextoTv(), tr, tv.ahora, idioma()));
 const pelea = $derived(r.fase === 'lanzando' || r.fase === 'partido' || r.fase === 'resultado');
+const hayTabla = $derived(r.fase === 'resultado' ? !!tv.final : !!est.marcador?.f1);
 </script>
 
 {#if pelea}
@@ -24,14 +25,16 @@ const pelea = $derived(r.fase === 'lanzando' || r.fase === 'partido' || r.fase =
       {/if}
       {r.linea}
     </div>
-    <div class="vs">
-      {#each r.vs as f, i (f.name)}
-        {#if i > 0}
-          <span class="contra">{t('observar.tv.contra')}</span>
-        {/if}
-        <span class="luchador"><span class="sw" style:background={f.color}></span>{f.name}</span>
-      {/each}
-    </div>
+    {#if !hayTabla}
+      <div class="vs">
+        {#each r.vs as f, i (f.name)}
+          {#if i > 0}
+            <span class="contra">{t('observar.tv.contra')}</span>
+          {/if}
+          <span class="luchador"><span class="sw" style:background={f.color}></span>{f.name}</span>
+        {/each}
+      </div>
+    {/if}
     {#if r.etiqueta}
       <div class="etiqueta" class:grande={r.grande}>{r.etiqueta}</div>
     {/if}

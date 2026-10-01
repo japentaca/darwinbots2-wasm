@@ -3,7 +3,7 @@
 // Marcador de un partido en curso (el contestBoard de la clásica): ronda,
 // ciclo, población y victorias de cada luchador. `f1` = stats.f1 del
 // worker; `colores` = nombre → color del participante. `compacto`: sin el
-// ciclo ni los bots de cada uno (el panel «En vivo» de Observar ya los muestra).
+// ciclo (el panel «En vivo» de Observar ya lo muestra).
 import { num, t } from '../../i18n/index.svelte.js';
 import { textoRegla } from './textos.js';
 
@@ -44,18 +44,16 @@ const ronda = $derived(Math.min(f1.contests + 1, f1.minrounds));
     </div>
   {/if}
   {#each f1.sp as s (s.name)}
-    <div class="fila" class:fuera={!s.pop} class:compacto>
+    <div class="fila" class:fuera={!s.pop}>
       <span class="sw redondo" style:background={colores.get(s.name) ?? '#8899bb'}></span>
       <span class="nombre" title={s.name}>{s.name}</span>
-      {#if !compacto}
-        <span class="barra">
-          <span
-            style:width={`${Math.round((s.pop / total) * 100)}%`}
-            style:background={colores.get(s.name) ?? '#8899bb'}
-          ></span>
-        </span>
-        <span class="mono pop" title={t('competir.marcador.bots')}>{num(s.pop)}</span>
-      {/if}
+      <span class="barra">
+        <span
+          style:width={`${Math.round((s.pop / total) * 100)}%`}
+          style:background={colores.get(s.name) ?? '#8899bb'}
+        ></span>
+      </span>
+      <span class="mono pop" title={t('competir.marcador.bots')}>{num(s.pop)}</span>
       <span
         class="mono gana"
         class:lider={s.wins > 0 && s.wins === maxWins}
@@ -87,9 +85,6 @@ const ronda = $derived(Math.min(f1.contests + 1, f1.minrounds));
   grid-template-columns: 10px minmax(0, 1fr) 64px 40px 26px;
   align-items: center;
   gap: 8px;
-}
-.fila.compacto {
-  grid-template-columns: 10px minmax(0, 1fr) 26px;
 }
 .fila.fuera {
   opacity: 0.5;
