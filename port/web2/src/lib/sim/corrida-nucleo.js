@@ -349,7 +349,7 @@ export class NucleoCorrida {
     return !!this.#d.muestreo;
   }
 
-  /** ¿Es un partido de torneo? Su alga de arranque no es un luchador. */
+  /** Â¿Es un partido de torneo? Su alga de arranque no es un luchador. */
   get #esPartido() {
     return this.#datos.escenario?.id === ID_ESCENARIO_PARTIDO;
   }

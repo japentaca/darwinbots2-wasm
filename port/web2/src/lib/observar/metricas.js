@@ -288,7 +288,7 @@ export const ALGA_SISTEMA = 'Alga_Minimalis';
 
 /**
  * Una muestra del worker sin el alga de arranque: en un partido de torneo
- * no pelea, solo alimenta, así que no cuenta como especie ni en los totales.
+ * no pelea, solo alimenta, asÃ­ que no cuenta como especie ni en los totales.
  * @template {{metrics: ArrayLike<number>, especies?: {nombre: string, stats: ArrayLike<number>}[]}} M
  * @param {M} m @returns {M}
  */
