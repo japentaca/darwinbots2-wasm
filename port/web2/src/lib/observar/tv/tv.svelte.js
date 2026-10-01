@@ -47,6 +47,8 @@ import {
 /** Segundos de la cortinilla (la clave de la clásica se lee como valor inicial). */
 const KV_PAUSA = 'darwinbots2.tv-pausa';
 const KV_PAUSA_CLASICA = 'db-tv-pause';
+/** A pantalla completa, la tarjeta de la pelea oculta ('1') o a la vista. */
+const KV_OCULTA = 'darwinbots2.tv-tarjeta-oculta';
 const TIC_MS = 250;
 
 /**
@@ -62,6 +64,8 @@ class EstadoTv {
   liga = $state('');
   /** @type {MarcadorTv | null} el último marcador de la pelea (se ve en el respiro) */
   final = $state.raw(null);
+  /** a pantalla completa, la tarjeta de la pelea plegada a un chip */
+  oculta = $state(leer(KV_OCULTA) === '1');
 }
 
 export const tv = new EstadoTv();
@@ -112,6 +116,16 @@ export function ponerPausa(x) {
     // sin almacenamiento: no se recuerda
   }
   tv.e = { ...tv.e, pausa: p };
+}
+
+/** Pliega o despliega la tarjeta de la pelea (pantalla completa) y lo recuerda. */
+export function alternarTarjeta() {
+  tv.oculta = !tv.oculta;
+  try {
+    localStorage.setItem(KV_OCULTA, tv.oculta ? '1' : '0');
+  } catch {
+    // sin almacenamiento: no se recuerda
+  }
 }
 
 /** @param {import('./maquina.js').EventoTV} ev */

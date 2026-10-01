@@ -170,6 +170,8 @@
   "observar.tv.anuncio.proxima": "Next fight #{n}: {vs}",
   "observar.tv.anuncio.enVivo": "Live: fight #{n}, {vs}",
   "observar.tv.anuncio.campeon": "Edition {no} complete. Champion: {nombre}",
+  "observar.tv.ocultar.ayuda": "Hide the fight card to watch with nothing on top (M)",
+  "observar.tv.mostrar.ayuda": "Show the fight card (M)",
   "observar.tv.final": "Final score",
   "observar.tv.apagado": "TV mode off",
   "observar.tv.noArranco": "Fight #{n} could not start: {detalle}",

@@ -5,17 +5,16 @@
 // (a pantalla completa: «Con paneles (Esc)» y «Salir»; con paneles:
 // «Pantalla completa» y «Detener»);
 // en el centro, la cortinilla (quién contra quién, la fase de la pelea y la
-// cuenta atrás), el campeón o el error que apagó el TV; abajo, durante la
-// pelea, el rótulo con el marcador (Marcador.svelte integrado) y, en el
-// respiro, el marcador final que guardó el TV (solo a pantalla completa: con
-// paneles, eso va arriba del panel derecho, PeleaTv.svelte). Una región viva fija
+// cuenta atrás), el campeón o el error que apagó el TV; abajo a la derecha,
+// durante la pelea y en el respiro, la tarjeta oscura de PeleaTv.svelte
+// (solo a pantalla completa: con paneles, va arriba del panel derecho).
+// Una región viva fija
 // (siempre montada, fuera de la vista) anuncia solo los cambios de fase;
 // la cuenta atrás y el marcador quedan fuera de ella.
 import { idioma, t } from '../../../i18n/index.svelte.js';
-import Marcador from '../../competir/Marcador.svelte';
-import TablaMarcador from '../../competir/TablaMarcador.svelte';
 import { tr } from '../../competir/torneos.svelte.js';
 import { PAUSA_MAX } from './maquina.js';
+import PeleaTv from './PeleaTv.svelte';
 import { anuncioTV, rotuloTV } from './rotulo.js';
 import { contextoTv, ponerPausa, tv } from './tv.svelte.js';
 
@@ -123,52 +122,8 @@ $effect(() => {
         <div class="aviso">{r.aviso}</div>
       {/if}
     </div>
-  {:else if completa && r.fase !== 'apagado'}
-    <div class="tercio">
-      <div class="info">
-        <div class="linea">
-          {#if r.vivo}
-            <span class="punto"></span>
-          {/if}
-          {r.linea}
-        </div>
-        <div class="vs chico">
-          {#each r.vs as f, i (f.name)}
-            {#if i > 0}
-              <span class="contra">{t('observar.tv.contra')}</span>
-            {/if}
-            <span class="luchador"
-              ><span class="sw" style:background={f.color}></span>{f.name}</span
-            >
-          {/each}
-        </div>
-        {#if r.etiqueta}
-          <div class="etiqueta" class:grande={r.grande}>{r.etiqueta}</div>
-        {/if}
-        {#if r.ganador}
-          <div class="campeon">🏆 {r.ganador}</div>
-        {/if}
-        {#if r.aviso}
-          <div class="aviso">{r.aviso}</div>
-        {/if}
-      </div>
-      {#if r.fase === 'resultado'}
-        {#if tv.final}
-          <div class="tabla">
-            <div class="final">{t('observar.tv.final')}</div>
-            <TablaMarcador
-              f1={tv.final.f1}
-              ciclo={tv.final.ciclo}
-              colores={tv.final.colores}
-              rounds={tv.final.rounds}
-              wins={tv.final.wins}
-            />
-          </div>
-        {/if}
-      {:else}
-        <div class="tabla"><Marcador integrado /></div>
-      {/if}
-    </div>
+  {:else if completa}
+    <div class="tercio"><PeleaTv completa /></div>
   {/if}
 </section>
 
@@ -275,10 +230,6 @@ $effect(() => {
   font-size: 28px;
   font-weight: 700;
 }
-.vs.chico {
-  justify-content: flex-start;
-  font-size: 18px;
-}
 .contra {
   font-size: 0.6em;
   font-weight: 400;
@@ -326,39 +277,8 @@ $effect(() => {
 }
 .tercio {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-end;
   padding: 16px;
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75));
-}
-.info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-.tabla {
-  pointer-events: auto;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--tarjeta);
-  color: var(--texto);
-}
-.final {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.tabla:empty {
-  display: none;
-}
-.punto {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #e5484d;
 }
 @media (max-width: 700px) {
   .vs {

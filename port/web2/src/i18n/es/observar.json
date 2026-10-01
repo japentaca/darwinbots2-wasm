@@ -170,6 +170,8 @@
   "observar.tv.anuncio.proxima": "Próxima pelea n.º {n}: {vs}",
   "observar.tv.anuncio.enVivo": "En vivo: pelea n.º {n}, {vs}",
   "observar.tv.anuncio.campeon": "Edición {no} completa. Campeón: {nombre}",
+  "observar.tv.ocultar.ayuda": "Ocultar la tarjeta de la pelea para verla sin nada encima (M)",
+  "observar.tv.mostrar.ayuda": "Mostrar la tarjeta de la pelea (M)",
   "observar.tv.final": "Marcador final",
   "observar.tv.apagado": "Modo TV apagado",
   "observar.tv.noArranco": "La pelea n.º {n} no pudo empezar: {detalle}",
