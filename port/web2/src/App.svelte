@@ -2,7 +2,6 @@
 // @ts-check
 import { untrack } from 'svelte';
 import { idioma, t } from './i18n/index.svelte.js';
-import AvisoConstruccion from './lib/AvisoConstruccion.svelte';
 import BarraSuperior from './lib/BarraSuperior.svelte';
 import { actual } from './lib/sim/corrida.svelte.js';
 import { escucharHash, parsearHash } from './router.js';
@@ -64,7 +63,6 @@ const Actual = $derived(cargadas[ruta.seccion]);
 
 <div class="app">
   <BarraSuperior seccion={ruta.seccion} onMismaSeccion={cargar} />
-  <AvisoConstruccion />
   <main id="principal">
     {#if Actual}
       <Actual partes={ruta.partes} />

@@ -31,7 +31,7 @@ Este plan no forma parte de `spec/`: es un añadido fuera de etapa.
 | 13 | En caliente | Experimentar edita un borrador; «Aplicar a la actual» manda solo el diff. Cada parámetro indica si se aplica en vivo o si requiere simulación nueva (solo el tamaño del campo y la siembra inicial). Cada cambio aplicado queda como evento y las réplicas lo repiten en el mismo ciclo. |
 | 14 | Parámetros | Básico: ~10 controles, algunos compuestos (Costos F1 / sin costos / personalizados escribe los 71; intensidad = `MutCurrMult`). Avanzado: todos los parámetros por grupo, con buscador, nombre de variable, marca de «cambiado» y vuelta a la base. Catálogo declarativo `engine/opciones.js` con un test que verifica que cubre todos los ids del wasm. |
 | 15 | Objetos y modos | Obstáculos, laberintos y teleporters se editan sobre el mundo (barra «Mundo» en Observar); Experimentar muestra un resumen. El contest F1 manual pasa a Competir (single). Player Bot Mode va al inspector (nivel 4). |
-| 16 | Internet Mode | Tarjeta «Conexión» en Experimentar, más un indicador en la barra superior mientras está activo (abre los censos de los pares). Nivel 3. |
+| 16 | Internet Mode | Tarjeta «Conexión» en Experimentar, más un indicador en la barra superior mientras está activo (abre los censos de los pares). Pasa a E13 (ver C22). |
 | 17 | Datos del usuario | IndexedDB propia `darwinbots2` (bots propios, escenarios, corridas, informes, torneos, trabajos). La primera vez que arranca **copia** `darwinbots-inventario` y `darwinbots-ligas` de la clásica (mismo origen en Pages) y avisa qué importó; la clásica no se toca. Los imports aceptan los JSON viejos (inventario, torneos v1 y v2). |
 | 18 | Editor de ADN | Propio y sin dependencias: `textarea` con capa de resaltado y autocompletado de sysvars; `db_dna_lint` en el worker con debounce; vista por genes (plegar, apagar = comentar); versiones con diff gen por gen; «Probar» = N copias × X ciclos sin dibujar (la maquinaria de las réplicas), con supervivencia, hijos y energía contra la versión anterior. Los bots del foro son de solo lectura: se editan duplicándolos. |
 | 19 | Laboratorio | Es un panel «Genes» del mismo editor: busca en `genes.json` por capacidad o por bot. Los avisos de la clásica (memoria leída de otro gen, direcciones compartidas → remapeo 971-990, `.delgene`/`.mkvirus` literales) son avisos del editor con arreglo en un clic. Cada gen guarda su bot de origen. |
@@ -81,7 +81,8 @@ casos dorados y los smokes existentes siguen en verde.
   y la clásica en `/classic/`, con el mismo `build-wasm/`. Se mantiene el
   versionado de scripts (cache busting) en las dos.
 - Desde E0 la raíz es la nueva, con un aviso visible («en construcción») y un
-  enlace a `/classic/` hasta cerrar el nivel 3.
+  enlace a `/classic/` hasta cerrar el nivel 3. Cerrado el nivel 3, el aviso
+  se retiró (2026-10-01); la clásica sigue enlazada desde la barra superior.
 
 **Cierre:** el CI publica en la raíz una cáscara con la navegación de 6
 secciones y el aviso, y `/classic/` funciona igual que hoy.
@@ -139,10 +140,11 @@ import/export), Competir (single, koth, rr, ladder, cup y suizo con
 Buchholz; Elo; asistente; rondas en segundo plano; TV),
 plantilla de informe de Torneo, Experimentar en modo avanzado (todos los
 parámetros), barra «Mundo» en Observar (obstáculos, laberintos,
-teleporters) e Internet Mode.
+teleporters).
 
 **Cierre:** todo lo que hace la clásica en estas áreas se puede hacer en la
-nueva, salvo lo excluido en la decisión 5.
+nueva, salvo lo excluido en la decisión 5 e Internet Mode, que pasa a E13
+(C22).
 
 ### Nivel 4 · Veterano
 
@@ -185,5 +187,5 @@ Tomadas por el orquestador de la construcción cuando el plan no las resolvía
 | C19 | Semillas: el motor usa solo 16 bits del estado derivado de la semilla (`Randomize(seed/100)`, `rng.hpp`), así que hay 65.536 mundos distintos. Las réplicas descartan semillas cuyo estado equivalente ya salió (se calcula en JS con la misma mezcla) y la primera réplica es la semilla de la corrida. | Dos réplicas con el mismo mundo achican la banda y el desvío sin aviso. | Confiar en semillas distintas (3,5 % de trabajos de 64 réplicas repetían un mundo). |
 | C20 | La cola de trabajos corre en una sola pestaña (`navigator.locks`); las demás la ven por `BroadcastChannel` y no ejecutan. Se reanuda al arrancar la app, no al abrir Comparar. | Evita trabajos duplicados o resucitados entre pestañas; cumple «sobrevive a una recarga» (decisión 10). | Un lease en IndexedDB. |
 | C21 | Historia: manda el tope de 5 MB por corrida (decisión 8, «2–5 MB») sobre el de ~2.000 puntos por serie. Con 20 especies y los 6 grupos, 50.000 ciclos dan 501 puntos (2,2 MB) y 400.000 ciclos 869 puntos (4,6 MB); con 100 especies, unos 180. Los puntos viejos guardan media en float32 y mín/máx cuantizados a 8 bits por columna (la banda guardada contiene a la real, error ≤ 1/255); el último punto es siempre la última muestra sin fundir; la resolución queda pareja en el tiempo. | Llegar a 2.000 puntos con 20 especies exigiría < 2 B por valor (cuantizar también las medias). | Cuantizar las medias, o subir el tope de 5 MB. |
-| C22 | Internet Mode (decisión 16) queda fuera por ahora, por pedido del autor (2026-09-30). El borrador parcial `src/lib/internet/` se retiró del árbol; está en el commit `4b05e1c` para retomarlo. El protocolo IM del worker y sus smokes siguen intactos. | Pedido explícito del autor. | Terminarlo en el Nivel 3. |
+| C22 | Internet Mode (decisión 16) queda fuera por ahora, por pedido del autor (2026-09-30). El borrador parcial `src/lib/internet/` se retiró del árbol; está en el commit `4b05e1c` para retomarlo. El protocolo IM del worker y sus smokes siguen intactos. Actualización (2026-10-01): sale del nivel 3 y va con E13 (`spec/PLAN-EXTENSIONES.md`), cuyo servidor ya prevé el relay en `/im`. Sin servidor solo hay BroadcastChannel, que conecta pestañas del mismo navegador y no es Internet; WebRTC tampoco lo evita (necesita señalización y, tras muchos NAT, TURN). | Pedido explícito del autor; Internet Mode necesita un servidor. | Terminarlo en el Nivel 3 solo con BroadcastChannel, o con WebRTC. |
 | C23 | Rangos de los parámetros: el límite duro es el del tipo con que el core guarda cada valor (i16, i32, f32, f64, u8); el rango razonable anterior queda como `sugerido` y fuera de él solo hay un aviso. Excepciones: el tamaño del campo conserva su tope (un campo enorme agota la memoria del motor) y los enteros siguen exigiendo número entero. Los opt que el core satura (36, 38, 52, 56, 99) se guardan en su tope con aviso. | Paridad con la clásica, que acepta valores sin límites (Nivel 3: «todo lo que hace la clásica»), sin permitir valores que el core corrompe. | Mantener rangos estrictos. |
