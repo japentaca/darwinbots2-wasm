@@ -193,6 +193,16 @@ function fightCfg(rules, page, fmt, fighters, seed, a) {
 }
 
 function runFight(exe, cfg) {
+  // DBFIGHT_CFG=archivo: deja la configuración para correr dbfight a mano
+  // (p. ej. con DBFIGHT_TRACE).
+  if (process.env.DBFIGHT_CFG) {
+    // El alga va en un temporal que se borra: copia al lado de la config.
+    const out = process.env.DBFIGHT_CFG;
+    const src = cfg.split('\n').find((l) => l.startsWith('species\t1\t')).split('\t')[6];
+    const alga = path.join(path.dirname(out), path.basename(src));
+    fs.copyFileSync(src, alga);
+    fs.writeFileSync(out, cfg.split(src).join(alga));
+  }
   return new Promise((resolve, reject) => {
     const p = spawn(exe, ['-'], { stdio: ['pipe', 'pipe', 'pipe'] });
     // Prioridad baja: con varias peleas en paralelo la máquina sigue usable.

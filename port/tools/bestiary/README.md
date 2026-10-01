@@ -100,6 +100,35 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
     108-12 (Astronomo 2 0-6, Astronomo 2-4), ahora 119-1 (18-0 contra
     los Astronomo; la única derrota, 5-1 contra v1).
 
+    Revisión del 2026-10-01. En la página (torneo con 75 bots por
+    especie) Gimmick 1.0 (F2) le ganó una pelea; en el banco le sacaba
+    rondas en uno de cada tres partidos y uno de cada 15 partidos:
+    - Gimmick tiene poison 500 con `.ploc` = `.shoot`. Contra un rival
+      con más shell que poison Ringo cambiaba el golpe al cuerpo por un
+      `-1`, que con shell ≈ poison (Gimmick: ~500 los dos) rebotaba
+      envenenado: el poison le escribe 0 en `.shoot` cada ciclo, después
+      del ADN y antes del tiro, y Ringo se quedaba sin tirar (6 a 11 de
+      sus 13-16 bots envenenados a la vez). Ahora ese `-1` también pide
+      poco poison en el rival (la vara del tiro barato).
+    - Los `-6` de Gimmick (shootval 16) le comían el body y lo dejaban
+      sin dividirse mientras Gimmick llenaba sus 75. Con shell body/2 en
+      vez de body/3 los aguanta, pero siempre así se vuelve lento (la
+      masa es body/1000 + shell/200) y Multiply4 le sacaba 38 rondas en
+      60 partidos. Queda body/2 solo durante 500 ciclos después de ver un
+      rival con shell > 400. Recordar los `-6` recibidos (`.shflav`) no
+      sirve: los tiros cruzados de los propios Ringo también lo disparan.
+    - Probado y descartado: dividirse con mucha energía y poco body (con
+      `nrg > 6000`, 0-60 contra Gimmick: crías débiles; con 10000, peor
+      que sin el cambio).
+
+    Con 75 bots por especie, 60 semillas contra Gimmick 1.0: antes 56-4
+    (171-33 en rondas), ahora 60-0 (180-3); Multiply4 sigue 60-0
+    (180-0). Banco de 24 rivales (top 25 del suizo + los Astronomo) × 6
+    semillas: 144-0 antes y después, en rondas 432-5 → 432-0. Con 500
+    bots por especie (las reglas por defecto del torneo) el banco queda
+    igual (125-19 → 123-21): ahí pierde con Republican Wasp y Etch Mk II
+    0-6 y con This'n'That y Spinner v1.5, desde antes de esta revisión.
+
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.
 

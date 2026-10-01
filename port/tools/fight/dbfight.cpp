@@ -28,6 +28,7 @@
 // especie y cada ronda (quien la gano, en cuantos ciclos y como: 'extinct'
 // si el rival se extinguio, 'cap' si la decidio el tope de ciclos).
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
 #include <cstdio>
 #include <fstream>
@@ -262,6 +263,11 @@ int main(int argc, char** argv) {
   bool capThisRound = false;
   if (nsp < 2) voidWhy = nsp == 1 ? "only one species in the census" : "no combat species";
 
+  // Traza opcional (DBFIGHT_TRACE=n): cada n ciclos, por especie, bots,
+  // energia y medias de body/shell/poison y cuantos estan envenenados o
+  // paralizados. Va por stderr; no toca el partido.
+  const char* traceEnv = std::getenv("DBFIGHT_TRACE");
+  const long long traceEvery = traceEnv ? std::atoll(traceEnv) : 0;
   int prevWins[21] = {0};
   while (voidWhy.empty()) {
     db_sim_tick(sim);
@@ -284,6 +290,24 @@ int main(int argc, char** argv) {
         capThisRound = false;
       }
       prevWins[i] = w;
+    }
+    if (traceEvery > 0 && db_sim_cycle(sim) % traceEvery == 0) {
+      auto& sm = S(sim);
+      std::map<std::string, std::vector<double>> agg;  // n nrg body shell poison psn par
+      for (int x = 1; x <= sm.MaxRobs; ++x) {
+        const auto& b = sm.rob[x];
+        if (!b.exist || b.Veg) continue;
+        auto& a = agg[b.FName];
+        if (a.empty()) a.assign(7, 0);
+        a[0] += 1; a[1] += b.nrg; a[2] += b.body; a[3] += b.shell; a[4] += b.poison;
+        a[5] += b.Poisoned; a[6] += b.Paralyzed;
+      }
+      std::fprintf(stderr, "c%lld", static_cast<long long>(db_sim_cycle(sim)));
+      for (const auto& [nm, a] : agg)
+        std::fprintf(stderr, " | %.12s n%.0f nrg%.0f bd%.0f sh%.0f ps%.0f psn%.0f par%.0f",
+                     nm.c_str(), a[0], a[1] / a[0], a[2] / a[0], a[3] / a[0], a[4] / a[0],
+                     a[5], a[6]);
+      std::fprintf(stderr, "\n");
     }
     if (!winner.empty() || !voidWhy.empty()) break;
     if (db_sim_start_another_round(sim)) {

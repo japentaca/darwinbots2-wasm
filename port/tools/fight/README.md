@@ -146,6 +146,18 @@ vegetal de arranque. Imprime una línea JSON: `winner`, `void` (motivo si no
 hubo ganador), `seed`, `cycles`, `ticks`, `restarts`, `species` (victorias y
 población final) y `rounds` (ganador, ciclos y `how`: `extinct` | `cap`).
 
+### Diagnóstico de una pelea
+
+Para ver por qué un bot pierde una ronda:
+
+```sh
+# la configuración del partido (con el alga copiada al lado)
+DBFIGHT_CFG=/tmp/p.cfg node tools/fight/torneo.mjs duel A.txt B.txt --match-seed 31741
+# cada 250 ciclos, por especie: bots, medias de nrg/body/shell/poison,
+# envenenados y paralizados (por stderr; el partido no cambia)
+DBFIGHT_TRACE=250 build/dbfight.exe /tmp/p.cfg
+```
+
 ## Fidelidad con la web
 
 Con las mismas reglas, luchadores y semilla, `dbfight` da el mismo partido

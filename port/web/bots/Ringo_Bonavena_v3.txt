@@ -25,8 +25,13 @@
 '  lazos (.reftie). Sin rival a la vista, ronda en linea recta: antes
 '  giraba sin parar y daba vueltas en el lugar gastando energia.
 '- Las formas no son rivales: el foco sigue buscando.
+'- Gimmick (poison 500 con .ploc = .shoot): el -1 contra su shell le
+'  rebotaba envenenado y le dejaba .shoot en 0. El -1 solo va contra
+'  rivales de poco poison, y frente a uno acorazado (shell > 400, que
+'  ademas golpea al cuerpo) sube su propio shell a body/2.
 
 def dif 61
+def golpe 62
 
 'Lazos ajenos: cortarlos en el acto
 cond
@@ -173,6 +178,8 @@ start
 -6 .shoot store
 24 .shootval store
 *.refshell *.refpoison >
+*.refpoison *.body 5 div 20 add <
+and
 -1 .shoot 0 add store
 *.refnrg 800 <
 *.refpoison *.body 5 div 20 add <
@@ -195,9 +202,30 @@ start
 100 .fdbody store
 stop
 
-'Guardia: shell
+'Rival acorazado a la vista (Gimmick: shell 500 y golpe al cuerpo):
+'recordarlo 500 ciclos
+cond
+*.eyef 0 >
+*.dif 0 !=
+*.refshell 400 >
+start
+500 .golpe store
+stop
+
+cond
+*.golpe 0 >
+start
+*.golpe 1 sub .golpe store
+stop
+
+'Guardia: shell (body/3; body/2 con un rival acorazado cerca. Siempre
+'body/2 lo volvia lento: la masa es body/1000 + shell/200)
 cond
 *.shell 3 mult *.body <
+*.shell 2 mult *.body <
+*.golpe 0 >
+and
+or
 *.nrg 500 >
 start
 100 .mkshell store
