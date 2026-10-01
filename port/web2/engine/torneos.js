@@ -130,6 +130,7 @@ import {
   LG_OLD_ROSTER_KEY,
   LG_SCRATCH_ID,
   lgAddEntrant as lgAddEntrantPuro,
+  lgColorValido,
   lgCupDraw,
   lgCupSizeOk,
   lgDrawClean,
@@ -140,6 +141,7 @@ import {
   lgFixture,
   lgFmtSet,
   lgFought,
+  lgFreeColor,
   lgHash,
   lgImportObj,
   lgIsScratch,
@@ -1106,7 +1108,13 @@ export function crearTorneos(deps) {
       if (q > 0) x.qty = Math.min(200, q);
       else delete x.qty;
     }
-    if (patch.color !== undefined) x.color = patch.color;
+    if (patch.color !== undefined) {
+      // Nunca verde ni parecido al de otro participante: si no vale, un color libre.
+      const otros = S.entrants.filter((_e, j) => j !== i).map((e) => e.color);
+      x.color = lgColorValido(patch.color, otros)
+        ? patch.color
+        : lgFreeColor(S, () => inv().color(), i);
+    }
     await lgSave(lg.cur);
     lgRender();
     return true;

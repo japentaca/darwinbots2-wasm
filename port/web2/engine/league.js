@@ -1400,10 +1400,91 @@ export function lgOldHofFile(raw) {
 }
 
 // ---- Participantes ---------------------------------------------------------------
+// Reglas de color de un participante (el alga de arranque es verde): nunca un
+// verde, ni un color parecido al de otro participante. Un color que no es
+// '#rrggbb' no se juzga (ni verde ni parecido).
+/** @param {string} c @returns {[number, number, number] | null} */
+function lgRgb(c) {
+  const m = /^#([0-9a-f]{6})$/i.exec(c || '');
+  if (!m) return null;
+  const n = parseInt(/** @type {string} */ (m[1]), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** @param {string} c */
+export function lgEsVerde(c) {
+  const v = lgRgb(c);
+  if (!v) return false;
+  const [r, g, b] = v;
+  const mx = Math.max(r, g, b);
+  const d = mx - Math.min(r, g, b);
+  if (!d || d / mx < 0.2) return false; // grises y casi blancos
+  const h =
+    mx === r
+      ? (((g - b) / d + 6) % 6) * 60
+      : mx === g
+        ? ((b - r) / d + 2) * 60
+        : ((r - g) / d + 4) * 60;
+  return h >= 65 && h <= 170; // del verde amarillento al verde azulado
+}
+
+/** Distancia de color (RGB ponderado, "redmean"); bajo ~110 se confunden a simple vista. */
+/** @param {string} a @param {string} b */
+function lgDistColor(a, b) {
+  const p = lgRgb(a);
+  const q = lgRgb(b);
+  if (!p || !q) return Infinity;
+  const rm = (p[0] + q[0]) / 2;
+  const dr = p[0] - q[0];
+  const dg = p[1] - q[1];
+  const db = p[2] - q[2];
+  return Math.sqrt((2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db);
+}
+export const LG_COLOR_MIN_DIST = 110;
+
+/** @param {string} c @param {string[]} usados */
+export const lgColorValido = (c, usados) =>
+  !lgEsVerde(c) && usados.every((u) => u !== c && lgDistColor(c, u) >= LG_COLOR_MIN_DIST);
+
 /** @param {Season} S @param {() => string} [otro] color si la paleta está llena (invColor en la clásica) */
-export function lgFreeColor(S, otro = () => LG_NO_COLOR) {
-  const used = new Set(S.entrants.map((e) => e.color));
-  return LG_COLORS.find((c) => !used.has(c)) || otro();
+export function lgFreeColor(S, otro = () => LG_NO_COLOR, ignorar = -1) {
+  const used = S.entrants.filter((_e, i) => i !== ignorar).map((e) => e.color);
+  const c = LG_COLORS.find((x) => lgColorValido(x, used));
+  if (c) return c;
+  for (let i = 0; i < 200; i++) {
+    const x = otro();
+    if (lgColorValido(x, used)) return x;
+  }
+  // Barrido de tonos fijos (sin verdes): el que queda más lejos de los usados.
+  let mejor = LG_NO_COLOR;
+  let dMejor = -1;
+  for (let h = 0; h < 360; h += 5) {
+    for (const l of [0.6, 0.75, 0.45]) {
+      const x = lgHsl(h, 0.8, l);
+      if (lgEsVerde(x)) continue;
+      const d = Math.min(Infinity, ...used.map((u) => lgDistColor(x, u)));
+      if (d > dMejor) {
+        dMejor = d;
+        mejor = x;
+      }
+    }
+  }
+  return mejor;
+}
+
+/** @param {number} h @param {number} s @param {number} l */
+function lgHsl(h, s, l) {
+  const f = (/** @type {number} */ n) => {
+    const k = (n + h / 30) % 12;
+    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return `#${[0, 8, 4]
+    .map((n) =>
+      Math.round(f(n) * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
 }
 
 // Agrega {name, dna, src, file, qty?, color?}. El mismo ADN no entra dos
@@ -1416,7 +1497,13 @@ export function lgAddEntrant(S, e, otro) {
   if (S.entrants.some((x) => x.hash === hash)) return false;
   const name = lgUniqueName(e.name, new Set(S.entrants.map((x) => x.name)));
   const color =
-    e.color && !S.entrants.some((x) => x.color === e.color) ? e.color : lgFreeColor(S, otro);
+    e.color &&
+    lgColorValido(
+      e.color,
+      S.entrants.map((x) => x.color),
+    )
+      ? e.color
+      : lgFreeColor(S, otro);
   /** @type {Entrant} */
   const x = { name, dna: e.dna, hash, src: e.src, file: e.file || '', color };
   const q = parseInt(e.qty, 10);

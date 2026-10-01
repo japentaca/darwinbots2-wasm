@@ -124,6 +124,21 @@ function txt(x) {
 }
 /** @param {any} got @param {any} want @param {string} [msg] */
 const igual = (got, want, msg) => assert.deepStrictEqual(norm(txt(got)), norm(want), msg);
+// La nueva elige otros colores que la clásica (nunca verdes ni parecidos entre
+// participantes): para comparar el resto, se quitan los colores de ambos lados.
+/** @param {any} x @returns {any} */
+function sinColor(x) {
+  if (Array.isArray(x)) return x.map(sinColor);
+  if (Object.prototype.toString.call(x) === '[object Object]') {
+    /** @type {any} */
+    const o = {};
+    for (const k of Object.keys(x)) if (k !== 'color') o[k] = sinColor(x[k]);
+    return o;
+  }
+  return x;
+}
+/** @param {any} got @param {any} want @param {string} [msg] */
+const igualSinColor = (got, want, msg) => igual(sinColor(got), sinColor(want), msg);
 
 // Avance (tnProgress), aviso de sorteo (tnDrawHint) y de todos contra todos
 // (tnRrWarn) con el texto de la clásica.
@@ -672,8 +687,8 @@ test('participantes: sufijos, colores, cantidad y lista de lanzamiento', () => {
       E.lgAddEntrant(/** @type {any} */ (b), e, () => '#rnd'),
       C.lgAddEntrant(a, e),
     );
-  igual(b, a);
-  igual(E.lgLaunchList(b.fmt, b.entrants), C.lgLaunchList(a.fmt, a.entrants));
+  igualSinColor(b, a);
+  igualSinColor(E.lgLaunchList(b.fmt, b.entrants), C.lgLaunchList(a.fmt, a.entrants));
 });
 
 test('partido: regla de victorias y ganador de la ronda', () => {
@@ -787,7 +802,7 @@ test('sorteo por temporada y en cada pelea (colina, escalera, todos contra todos
         const r3 = await api.lgRedraw(L);
         out.push({ steps, r1, r2, r3, L, file: api.lgExportObj(L, api.lg.matches) });
       }
-      igual(out[1], out[0], `${fmt.format} ${draw.mode} semilla ${seed}`);
+      igualSinColor(out[1], out[0], `${fmt.format} ${draw.mode} semilla ${seed}`);
     }
 });
 
@@ -926,4 +941,34 @@ test('migración del roster del Contest y del Hall of Fame del Canal', async () 
   assert.equal(store.get('db-channel-hof'), hof);
   assert.equal(HOW_EN.cup, C.LG_HOW.cup);
   for (const k of Object.keys(C.LG_HOW)) assert.ok(E.LG_HOWS.includes(k), k);
+});
+
+test('participantes: nunca verde ni colores parecidos entre competidores', async () => {
+  assert.equal(E.lgEsVerde('#8ce83c'), true);
+  assert.equal(E.lgEsVerde('#1fbf7a'), true);
+  assert.equal(E.lgEsVerde('#c0ffc8'), true);
+  assert.equal(E.lgEsVerde('#ff4040'), false);
+  assert.equal(E.lgEsVerde('#ffffff'), false);
+  const S = { entrants: /** @type {any[]} */ ([]), fmt: { format: 'single', qty: 5 } };
+  const pedidos = ['#00ff00', '#ff4040', '#ff4545', '#3d9bff'];
+  for (const [i, color] of pedidos.entries())
+    E.lgAddEntrant(
+      /** @type {any} */ (S),
+      { name: `P${i}`, dna: `p${i}`, src: 'form', color },
+      () => '#00cc33',
+    );
+  for (let i = 0; i < 8; i++)
+    E.lgAddEntrant(
+      /** @type {any} */ (S),
+      { name: `Q${i}`, dna: `q${i}`, src: 'form' },
+      () => '#00cc33',
+    );
+  const cs = S.entrants.map((e) => e.color);
+  assert.equal(
+    cs.some((c) => E.lgEsVerde(c)),
+    false,
+  );
+  for (let i = 0; i < cs.length; i++)
+    for (let j = i + 1; j < cs.length; j++)
+      assert.equal(E.lgColorValido(cs[i], [cs[j]]), true, `${cs[i]} ~ ${cs[j]}`);
 });
