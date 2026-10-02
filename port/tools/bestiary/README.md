@@ -129,6 +129,31 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
     igual (125-19 → 123-21): ahí pierde con Republican Wasp y Etch Mk II
     0-6 y con This'n'That y Spinner v1.5, desde antes de esta revisión.
 
+    Medición del 2026-10-02 (`torneo.mjs gauntlet`, 3 peleas a la vez),
+    en 8 escenarios que cambian una cosa por vez sobre la receta
+    anti-pasivos: F1 tal cual, sin tope de ciclos, 1 y 75 bots por
+    especie, escasez y abundancia de algas, reglas del panel.
+    - Contra el Bestiary entero (2 partidos por rival): 98,1 % (F1 tal
+      cual) a 100 % en todos. Contra 38 rivales duros × 10: 100 % en la
+      receta, sin tope, con 75 bots y con abundancia; 99 % con escasez;
+      94 % con las reglas del panel (Gerbal3 2-8: el campo de 32000 lo
+      hace tardar ~10000 ciclos y lo decide el tope); 93 % con 1 bot
+      (Gimmick 1.0 y This'n'That 0-10); 70 % con F1 tal cual.
+    - Suizo con el top 64 del Bestiary: 1.º con la receta y con 1 bot
+      (dos semillas cada uno), 8.º y 7.º con F1 tal cual.
+    - F1 tal cual: lo decide el tope de 500 bots por especie (con 100,
+      Etch Mk II, Fruit Flies v0.2 y Republican Wasp pasan de 0-10 a
+      10-0). Etch llega a 300-400 bots y cada uno le tira por ciclo un
+      tiro de memoria (32000 en `.shootval`/`.strpoison`/`.strvenom`) y
+      un lazo. El poison bloquea el tiro y el slime el lazo, pero cada
+      bloqueo cuesta 18 de poison y 20 de slime, y el poison se repone
+      a lo sumo 100 por ciclo (~5 bloqueos): rodeado, se desgasta y los
+      tiros entran. Probado y descartado: dividirse antes (nrg 1500,
+      body 700), slime 1500 y borrar `.tieloc`/`.tieval` cada ciclo
+      (0-30 los tres). Queda así: Ringo es para la receta y para la
+      página con 75 bots por especie; ganar con 500 pediría otro diseño
+      (p. ej. huir del enjambre).
+
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.
 

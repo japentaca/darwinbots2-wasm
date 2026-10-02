@@ -12,6 +12,7 @@
 //   node tools/fight/torneo.mjs koth [opciones]        (desde port/)
 //   node tools/fight/torneo.mjs swiss [opciones]       (perfilar muchos bots)
 //   node tools/fight/torneo.mjs duel <bot A> <bot B> [opciones]
+//   node tools/fight/torneo.mjs gauntlet <bot> [opciones]  (un bot contra todos)
 //
 // Bots: por nombre o archivo del Bestiary (web/bots/bots.json) o por ruta a
 // un .txt. Sin --bots, el torneo usa todo el Bestiary de combate.
@@ -23,7 +24,9 @@
 //   --endless            la temporada no termina con el retiro
 //   --no-repeat          quien ya peleó no vuelve a retar
 //   --swiss-rounds n     suizo: rondas (⌈log2 N⌉ + 1)
-//   --jobs n             suizo: peleas en paralelo (núcleos − 2)
+//   --jobs n             suizo y gauntlet: peleas en paralelo (núcleos − 2)
+//   --seeds n            gauntlet: partidos contra cada rival, alternando
+//                        quién va primero (1)
 //   --qty n              bots por especie (5)
 //   --nrg n              energía inicial (3000)
 //   --rounds n           rondas mínimas por partido (5)
@@ -323,12 +326,84 @@ async function runSwiss({ lgx, S, a, draw, nextSeed, fight, matches, file, fmt, 
   console.log(`\n${matches.filter((m) => !m.bye).length} fights in ${((Date.now() - t0) / 60000).toFixed(1)} min → ${file}`);
 }
 
+// ---- Gauntlet ------------------------------------------------------------------------
+// Un bot contra cada rival (todo el Bestiary de combate o --bots), --seeds
+// partidos por rival: en los impares el bot va primero y en los pares el
+// rival, para no medir la ventaja de la posición. Las peleas son
+// independientes y corren en paralelo (--jobs); las semillas se fijan en el
+// orden de la lista, así que con --seed la corrida es reproducible.
+async function runGauntlet({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 }) {
+  const [hero, ...rest] = S.entrants;
+  let rivals = rest.filter((e) => e.file !== hero.file && e.name !== hero.name);
+  if (a.limit) {
+    for (let i = rivals.length - 1; i > 0; i--) {
+      const j = Math.floor(draw() * (i + 1));
+      [rivals[i], rivals[j]] = [rivals[j], rivals[i]];
+    }
+    rivals = rivals.slice(0, +a.limit);
+  }
+  const seeds = Math.max(1, num(a.seeds, 1));
+  const jobs = Math.max(1, num(a.jobs, Math.max(1, os.cpus().length - 2)));
+  console.log(`Gauntlet: ${hero.name} vs ${rivals.length} rivals × ${seeds} · ${jobs} parallel fights · ` +
+    `${fmt.qty} bots, ${fmt.nrg} nrg, ${fmt.rounds} rounds, ${fmt.wins} wins, cap ${fmt.cap} (${fmt.capMode}), ` +
+    `popcap ${fmt.popCap} · preset ${a.preset || 'f1'}`);
+  const todo = [];
+  for (const r of rivals) for (let k = 0; k < seeds; k++) {
+    const seed = nextSeed(), no = todo.length + 1;
+    todo.push(() => fight(k % 2 ? [r, hero] : [hero, r], seed, no));
+  }
+  // Por rival: partidos y rondas del bot, y las semillas de lo que perdió
+  // (con --match-seed y el mismo orden, duel lo reproduce).
+  const summary = () => {
+    const by = new Map(rivals.map((r) => [r.name, { rival: r.name, fights: 0, won: 0, lost: 0, void: 0,
+      roundsWon: 0, roundsWonExtinct: 0, roundsLost: 0, roundsLostCap: 0, cyclesWon: 0, losses: [] }]));
+    for (const m of matches) {
+      const x = by.get(m.fighters.find((n) => n !== hero.name));
+      x.fights++;
+      if (!m.winner) x.void++;
+      else if (m.winner === hero.name) { x.won++; x.cyclesWon += m.result.cycles; }
+      else { x.lost++; x.losses.push({ seed: m.seed, fighters: m.fighters }); }
+      for (const rd of m.result.rounds || []) {
+        if (rd.winner === hero.name) { x.roundsWon++; if (rd.how === 'extinct') x.roundsWonExtinct++; }
+        else { x.roundsLost++; if (rd.how === 'cap') x.roundsLostCap++; }
+      }
+    }
+    return [...by.values()].filter((x) => x.fights);
+  };
+  const save = (done) => {
+    const rows = summary();
+    const tot = (k) => rows.reduce((s, x) => s + x[k], 0);
+    fs.writeFileSync(file, JSON.stringify({ mode: 'gauntlet', done, date: new Date().toISOString(), hero: hero.name,
+      seeds, fmt, rules, totals: { fights: tot('fights'), won: tot('won'), lost: tot('lost'), void: tot('void'),
+        roundsWon: tot('roundsWon'), roundsWonExtinct: tot('roundsWonExtinct'), roundsLost: tot('roundsLost'),
+        roundsLostCap: tot('roundsLostCap'), cyclesWon: tot('cyclesWon') },
+      rivals: rows, matches }, null, 1));
+    return rows;
+  };
+  let n = 0;
+  await pool(todo.map((t) => async () => {
+    const m = await t();
+    matches.push(m);
+    if (++n % 20 === 0) save(false);
+    return m;
+  }), jobs);
+  matches.sort((x, y) => x.no - y.no);
+  const rows = save(true);
+  const won = rows.reduce((s, x) => s + x.won, 0), rw = rows.reduce((s, x) => s + x.roundsWon, 0);
+  const rl = rows.reduce((s, x) => s + x.roundsLost, 0);
+  console.log(`
+${hero.name}: ${won}/${matches.length} fights won · rounds ${rw}-${rl}`);
+  for (const x of rows.filter((x) => x.roundsLost).sort((p, q) => q.roundsLost / q.fights - p.roundsLost / p.fights))
+    console.log(`   ${x.rival}: ${x.won}-${x.lost}${x.void ? ` (${x.void} void)` : ''} · rounds ${x.roundsWon}-${x.roundsLost}`);
+  console.log(`${matches.length} fights in ${((Date.now() - t0) / 60000).toFixed(1)} min → ${file}`);
+}
+
 // ---- Main ---------------------------------------------------------------------------
 async function main() {
   const a = parseArgs(process.argv.slice(2));
   const mode = a._.shift();
-  if (mode !== 'koth' && mode !== 'duel' && mode !== 'swiss') {
-    console.error('usage: torneo.mjs koth|swiss [options] | duel <bot A> <bot B> [options]');
+  if (!['koth', 'duel', 'swiss', 'gauntlet'].includes(mode)) {
+    console.error('usage: torneo.mjs koth|swiss [options] | duel <bot A> <bot B> [options] | gauntlet <bot> [options]');
     process.exit(2);
   }
   const exe = a.exe || path.join(PORT_DIR, 'build', process.platform === 'win32' ? 'dbfight.exe' : 'dbfight');
@@ -354,6 +429,10 @@ async function main() {
   const bestiary = loadBestiary();
   let refs = mode === 'duel' ? a._.slice(0, 2) : a.bots ? a.bots.split(',') : bestiary.map((b) => b.file);
   if (mode === 'duel' && refs.length !== 2) throw new Error('duel needs two bots');
+  if (mode === 'gauntlet') {
+    if (!a._.length) throw new Error('gauntlet needs a bot');
+    refs = [a._[0], ...refs];
+  }
   const S = { no: 1, entrants: [], fmt };
   const byName = new Map();
   for (const ref of refs) {
@@ -362,7 +441,7 @@ async function main() {
     if (lgx.lgAddEntrant(S, { name: b.name, dna, src: 'form' }))
       byName.set(S.entrants[S.entrants.length - 1].name, b.file);
   }
-  if (a.limit) {
+  if (a.limit && mode !== 'gauntlet') {
     for (let i = S.entrants.length - 1; i > 0; i--) {   // Fisher-Yates
       const j = Math.floor(draw() * (i + 1));
       [S.entrants[i], S.entrants[j]] = [S.entrants[j], S.entrants[i]];
@@ -404,6 +483,11 @@ async function main() {
       ` · rounds ${rds || '-'} · ${res.cycles} cycles · ${res.secs}s · seed ${seed}`);
     return m;
   };
+  if (mode === 'gauntlet') {
+    await runGauntlet({ S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 });
+    fs.rmSync(tmp, { recursive: true, force: true });
+    return;
+  }
   if (mode === 'swiss') {
     await runSwiss({ lgx, S, a, draw, nextSeed, fight, matches, file, fmt, rules, t0 });
     fs.rmSync(tmp, { recursive: true, force: true });

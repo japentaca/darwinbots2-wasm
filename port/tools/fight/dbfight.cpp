@@ -264,8 +264,8 @@ int main(int argc, char** argv) {
   if (nsp < 2) voidWhy = nsp == 1 ? "only one species in the census" : "no combat species";
 
   // Traza opcional (DBFIGHT_TRACE=n): cada n ciclos, por especie, bots,
-  // energia y medias de body/shell/poison y cuantos estan envenenados o
-  // paralizados. Va por stderr; no toca el partido.
+  // energia y medias de body/shell/poison/slime/lazos y cuantos estan
+  // envenenados o paralizados. Va por stderr; no toca el partido.
   const char* traceEnv = std::getenv("DBFIGHT_TRACE");
   const long long traceEvery = traceEnv ? std::atoll(traceEnv) : 0;
   int prevWins[21] = {0};
@@ -293,20 +293,20 @@ int main(int argc, char** argv) {
     }
     if (traceEvery > 0 && db_sim_cycle(sim) % traceEvery == 0) {
       auto& sm = S(sim);
-      std::map<std::string, std::vector<double>> agg;  // n nrg body shell poison psn par
+      std::map<std::string, std::vector<double>> agg;  // n nrg body shell poison psn par slime ties
       for (int x = 1; x <= sm.MaxRobs; ++x) {
         const auto& b = sm.rob[x];
         if (!b.exist || b.Veg) continue;
         auto& a = agg[b.FName];
-        if (a.empty()) a.assign(7, 0);
+        if (a.empty()) a.assign(9, 0);
         a[0] += 1; a[1] += b.nrg; a[2] += b.body; a[3] += b.shell; a[4] += b.poison;
-        a[5] += b.Poisoned; a[6] += b.Paralyzed;
+        a[5] += b.Poisoned; a[6] += b.Paralyzed; a[7] += b.Slime; a[8] += b.numties;
       }
       std::fprintf(stderr, "c%lld", static_cast<long long>(db_sim_cycle(sim)));
       for (const auto& [nm, a] : agg)
-        std::fprintf(stderr, " | %.12s n%.0f nrg%.0f bd%.0f sh%.0f ps%.0f psn%.0f par%.0f",
+        std::fprintf(stderr, " | %.12s n%.0f nrg%.0f bd%.0f sh%.0f ps%.0f psn%.0f par%.0f sl%.0f tie%.1f",
                      nm.c_str(), a[0], a[1] / a[0], a[2] / a[0], a[3] / a[0], a[4] / a[0],
-                     a[5], a[6]);
+                     a[5], a[6], a[7] / a[0], a[8] / a[0]);
       std::fprintf(stderr, "\n");
     }
     if (!winner.empty() || !voidWhy.empty()) break;

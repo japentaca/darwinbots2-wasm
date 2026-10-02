@@ -70,6 +70,24 @@ mismos cruces. `node tools/swiss/cruces_suizo.mjs <JSON>` lo comprueba
 con una corrida (las corridas anteriores a la vuelta atrás, que aceptaban
 revanchas evitables, se comparan hasta la primera revancha).
 
+### Medir un bot: gauntlet
+
+Un bot contra cada rival (todo el Bestiary de combate o `--bots`), con
+`--seeds n` partidos por rival que alternan quién va primero:
+
+```sh
+node tools/fight/torneo.mjs gauntlet Ringo_Bonavena_v3.txt --seeds 2 --jobs 3 --seed 7 \
+  --cap 5000 --cap-mode nrg --cost 31=1 --popcap 100
+```
+
+Las peleas corren en paralelo (`--jobs`) y las semillas se fijan en el
+orden de la lista: con `--seed` la corrida es reproducible. Al final lista
+los rivales que le sacaron rondas; el JSON trae `totals`, una fila por
+rival (`rivals`: partidos, rondas ganadas y por extinción, rondas perdidas
+y perdidas por tope, ciclos de las victorias) y en `losses` la semilla y el
+orden de cada derrota, para reproducirla con `duel --match-seed`.
+`--limit n` sortea n rivales.
+
 ### Receta recomendada: castigar a los pasivos
 
 Con las reglas F1 tal cual, estar vivo casi no cuesta (AGECOST 0,01 y
@@ -120,7 +138,8 @@ partido (`--qty`, `--nrg`, `--rounds`, `--wins`, `--cap`, `--cap-mode`,
 `--seed` (el torneo entero reproducible: cruces y semillas de cada partido),
 `--match-seed` (en `duel`, la semilla del partido tal cual: reproduce un
 partido de un JSON con el mismo orden de luchadores),
-suizo (`--swiss-rounds`, `--jobs`), `--exe` y `--out`.
+suizo (`--swiss-rounds`, `--jobs`), gauntlet (`--seeds`, `--jobs`,
+`--limit`), `--exe` y `--out`.
 
 Cada `dbfight` arranca con prioridad baja (por debajo de lo normal): con
 varias peleas en paralelo la máquina sigue usable. Si igual se pone lenta,
@@ -154,7 +173,7 @@ Para ver por qué un bot pierde una ronda:
 # la configuración del partido (con el alga copiada al lado)
 DBFIGHT_CFG=/tmp/p.cfg node tools/fight/torneo.mjs duel A.txt B.txt --match-seed 31741
 # cada 250 ciclos, por especie: bots, medias de nrg/body/shell/poison,
-# envenenados y paralizados (por stderr; el partido no cambia)
+# slime, lazos, envenenados y paralizados (por stderr; el partido no cambia)
 DBFIGHT_TRACE=250 build/dbfight.exe /tmp/p.cfg
 ```
 
