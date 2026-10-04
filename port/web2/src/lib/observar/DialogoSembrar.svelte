@@ -217,7 +217,7 @@ textarea.txt {
   color: var(--gris-claro);
 }
 .error {
-  color: var(--error-texto, #9b2c1f);
+  color: var(--error-texto);
 }
 .btn:disabled {
   opacity: 0.5;

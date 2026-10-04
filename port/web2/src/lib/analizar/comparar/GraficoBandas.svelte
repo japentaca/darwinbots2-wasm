@@ -8,6 +8,8 @@
 // `marcasX` fija las marcas del eje X con su texto (bool y enum: solo los
 // valores de la grilla).
 import { num, t } from '../../../i18n/index.svelte.js';
+import { colorEnTema } from '../../tema.js';
+import { oscuro } from '../../tema.svelte.js';
 import { ejeY, escalaX } from './grafico.js';
 
 /**
@@ -24,6 +26,9 @@ let {
   ejeX = '',
   marcasX = null,
 } = $props();
+
+/** Color de la serie con el tema actual. @param {string} c */
+const ct = (c) => colorEnTema(c, oscuro());
 
 const W = 640;
 const H = $derived(ejeX ? 280 : 260);
@@ -86,13 +91,13 @@ const dibujo = $derived.by(() => {
       {/each}
       {#each dibujo.trazos as tr, i (i)}
         {#if tr.banda}
-          <path d={tr.banda} fill={tr.color} opacity="0.18" />
+          <path d={tr.banda} fill={ct(tr.color)} opacity="0.18" />
         {/if}
       {/each}
       {#each dibujo.trazos as tr, i (i)}
-        <path d={tr.linea} fill="none" stroke={tr.color} stroke-width="2" />
+        <path d={tr.linea} fill="none" stroke={ct(tr.color)} stroke-width="2" />
         {#each tr.marcas as p, j (j)}
-          <circle cx={p.x} cy={p.y} r="3.5" fill={tr.color} />
+          <circle cx={p.x} cy={p.y} r="3.5" fill={ct(tr.color)} />
         {/each}
       {/each}
       {#if ejeX}
@@ -101,7 +106,7 @@ const dibujo = $derived.by(() => {
     </svg>
     <ul class="leyenda">
       {#each dibujo.trazos as tr, i (i)}
-        <li><span class="sw" style:background={tr.color}></span>{tr.etiqueta}</li>
+        <li><span class="sw" style:background={ct(tr.color)}></span>{tr.etiqueta}</li>
       {/each}
       <li class="nota">{banda}</li>
     </ul>

@@ -126,7 +126,7 @@ textarea.txt {
   margin: 0;
   padding-left: 18px;
   font-size: 12px;
-  color: #9b2c1f;
+  color: var(--error-texto);
 }
 .btn:disabled {
   opacity: 0.5;

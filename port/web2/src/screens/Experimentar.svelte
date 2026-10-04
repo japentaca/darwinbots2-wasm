@@ -1051,7 +1051,7 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   background: var(--hover-claro);
 }
 .lista button.on {
-  background: #e3ecea;
+  background: var(--seleccion);
   font-weight: 600;
 }
 .k {
@@ -1133,8 +1133,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   gap: 6px;
 }
 .chg-sw {
-  background: #fff7e6;
-  border: 1px solid #e8c77a;
+  background: var(--aviso-fondo);
+  border: 1px solid var(--aviso-borde);
 }
 .ley-base {
   display: inline-flex;
@@ -1145,8 +1145,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   font-size: 11px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #f3e3bd;
-  color: #5a4a12;
+  background: var(--aviso-chip);
+  color: var(--aviso-texto);
 }
 .base-sel {
   display: inline-flex;
@@ -1160,7 +1160,7 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   padding: 0 4px;
 }
 .aviso-valor {
-  color: #7a4d00;
+  color: var(--aviso-texto);
 }
 .live,
 .new {
@@ -1171,7 +1171,7 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   white-space: nowrap;
 }
 .live {
-  color: #0a3f3a;
+  color: var(--acento-hover);
 }
 .live::before {
   content: "";
@@ -1219,8 +1219,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
 }
 .control.chg,
 .esp.chg {
-  background: #fff7e6;
-  border-color: #e8c77a;
+  background: var(--aviso-fondo);
+  border-color: var(--aviso-borde);
 }
 .lh {
   display: flex;
@@ -1235,7 +1235,7 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
   height: 34px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--campo);
   padding: 0 10px;
   color: var(--texto);
   box-sizing: border-box;
@@ -1271,12 +1271,12 @@ fieldset.seg {
   gap: 10px;
   padding: 10px 14px;
   border-radius: 8px;
-  background: #e3ecea;
+  background: var(--seleccion);
   font-size: 14px;
 }
 .aviso.error {
-  background: #fbe9e6;
-  color: #7a2317;
+  background: var(--error-fondo);
+  color: var(--error-texto);
 }
 .aviso-txt {
   flex-grow: 1;
@@ -1288,7 +1288,7 @@ fieldset.seg {
   font-size: 12px;
 }
 .errores {
-  color: #9b2c1f;
+  color: var(--error-texto);
 }
 .cerrar {
   border: 0;
@@ -1307,8 +1307,8 @@ fieldset.seg {
   gap: 12px;
   margin: 0 -28px -20px;
   padding: 12px 28px;
-  background: #fff7e6;
-  border-top: 1px solid #e8c77a;
+  background: var(--aviso-fondo);
+  border-top: 1px solid var(--aviso-borde);
 }
 .pend-txt {
   flex: 1 1 320px;

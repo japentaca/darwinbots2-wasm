@@ -248,7 +248,7 @@ const ficha = $derived.by(() => {
   white-space: nowrap;
 }
 tr.sel td {
-  background: #e3eeec;
+  background: var(--seleccion);
   font-weight: 600;
 }
 tr.extinta td {

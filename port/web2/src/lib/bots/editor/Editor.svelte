@@ -923,8 +923,8 @@ fieldset.seg legend + button {
   font-size: 13px;
 }
 .editor :global(.btn.on) {
-  background: var(--texto);
-  color: #fff;
+  background: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .editor :global(.btn:disabled) {
   opacity: 0.5;
@@ -935,7 +935,7 @@ fieldset.seg legend + button {
   box-sizing: border-box;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
   font: inherit;
   font-size: 13px;
   padding: 0 8px;

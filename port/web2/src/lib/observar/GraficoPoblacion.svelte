@@ -23,7 +23,7 @@ const T = 6;
 const R = 6;
 const PW = W - L - R;
 const PH = H - T - B;
-const OTRAS = '#a9a79f';
+const OTRAS = 'var(--grafico-otras)';
 
 const capas = $derived(capasApiladas(muestras));
 
@@ -99,14 +99,19 @@ const leyenda = $derived(
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t('observar.grafico.aria')}>
       <path
         d={`M${L} ${dibujo.yt[1].y.toFixed(1)}H${W - R}M${L} ${dibujo.yt[2].y.toFixed(1)}H${W - R}`}
-        stroke="#e1e0d9"
+        style:stroke="var(--grafico-rejilla)"
         stroke-width="1"
         fill="none"
       ></path>
       {#each dibujo.paths as p (p.clave)}
-        <path d={p.d} fill={p.color} stroke="#fcfcfb" stroke-width="1"></path>
+        <path d={p.d} style:fill={p.color} style:stroke="var(--tarjeta)" stroke-width="1"></path>
       {/each}
-      <path d={`M${L} ${T + PH}H${W - R}`} stroke="#c3c2b7" stroke-width="1" fill="none"></path>
+      <path
+        d={`M${L} ${T + PH}H${W - R}`}
+        style:stroke="var(--grafico-eje)"
+        stroke-width="1"
+        fill="none"
+      ></path>
       {#each dibujo.yt as tk (tk.v)}
         <text class="tick" x={L - 6} y={tk.y + 3} text-anchor="end">{corto(tk.v)}</text>
       {/each}

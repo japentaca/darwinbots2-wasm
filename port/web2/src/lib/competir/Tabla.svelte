@@ -213,7 +213,7 @@ const h2h = $derived(matrizH2H(S, ms));
 }
 .res.gano {
   background: var(--acento);
-  color: #fff;
+  color: var(--sobre-acento);
 }
 .ayuda {
   font-size: 12px;
@@ -240,6 +240,6 @@ summary {
   font-weight: 600;
 }
 .abajo {
-  color: #8a2b12;
+  color: var(--error-texto);
 }
 </style>

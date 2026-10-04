@@ -222,7 +222,7 @@ export function irALinea(linea) {
   display: flex;
   flex: 1;
   min-height: 0;
-  background: #fff;
+  background: var(--campo);
   font-family: var(--mono);
   font-size: 12.5px;
   line-height: 1.6;
@@ -232,7 +232,7 @@ export function irALinea(linea) {
   flex-shrink: 0;
   overflow: hidden;
   padding: 8px 0;
-  color: #a3a19a;
+  color: var(--codigo-numlinea);
   text-align: right;
   user-select: none;
   border-right: 1px solid var(--borde);
@@ -288,7 +288,7 @@ textarea:focus-visible {
   box-shadow: inset 0 0 0 2px var(--acento);
 }
 textarea::selection {
-  background: rgba(15, 92, 85, 0.22);
+  background: var(--codigo-seleccion);
   color: transparent;
 }
 .sug {
@@ -300,10 +300,10 @@ textarea::selection {
   min-width: 200px;
   max-height: 240px;
   overflow: auto;
-  background: #fff;
+  background: var(--campo);
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 18px var(--sombra);
   font-size: 12.5px;
 }
 .sug [role="option"] {
@@ -320,39 +320,39 @@ textarea::selection {
   color: var(--gris-claro);
 }
 :global(.r-com) {
-  color: #8a877f;
+  color: var(--codigo-com);
   font-style: italic;
 }
 :global(.r-off) {
-  color: #b3b1a9;
+  color: var(--codigo-off);
   text-decoration: line-through;
 }
 :global(.r-flu) {
-  color: #0a3f3a;
-  text-decoration: underline 1px rgba(10, 63, 58, 0.25);
+  color: var(--codigo-flu);
+  text-decoration: underline 1px color-mix(in srgb, currentColor 25%, transparent);
   text-underline-offset: 3px;
 }
 :global(.r-sys) {
-  color: #0f5c55;
+  color: var(--acento);
 }
 :global(.r-num) {
-  color: #9a4a12;
+  color: var(--codigo-num);
 }
 :global(.r-ref) {
-  color: #7a3fa0;
+  color: var(--codigo-ref);
 }
 :global(.r-cmd) {
-  color: #3d3c38;
+  color: var(--chip-texto);
 }
 :global(.r-def) {
-  color: #1c4f91;
+  color: var(--codigo-def);
 }
 :global(.r-err) {
-  color: #9a4a12;
-  text-decoration: underline wavy #c98500;
+  color: var(--codigo-num);
+  text-decoration: underline wavy var(--ambar);
   text-underline-offset: 3px;
 }
 :global(.r-otra) {
-  color: #151513;
+  color: var(--texto);
 }
 </style>

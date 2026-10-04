@@ -166,7 +166,7 @@ function textoValor(n) {
 .error {
   margin: 0;
   font-size: 12px;
-  color: #a3321a;
+  color: var(--error-texto);
 }
 .caja {
   padding: 12px 14px;

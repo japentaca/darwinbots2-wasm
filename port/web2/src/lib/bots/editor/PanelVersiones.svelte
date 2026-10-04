@@ -97,7 +97,7 @@ const fecha = (iso) => {
   align-items: center;
   font-size: 13px;
   padding: 4px 0;
-  border-top: 1px solid #ebe9e2;
+  border-top: 1px solid var(--borde);
 }
 .txt {
   min-width: 0;

@@ -57,7 +57,7 @@ const ALTO_OJO = 48;
       <svg class="chispa" viewBox="0 0 330 60" preserveAspectRatio="none" aria-hidden="true">
         <path
           d={`M0 ${base.toFixed(1)}H330`}
-          stroke="#c3c2b7"
+          style:stroke="var(--grafico-eje)"
           stroke-width="1"
           vector-effect="non-scaling-stroke"
         ></path>

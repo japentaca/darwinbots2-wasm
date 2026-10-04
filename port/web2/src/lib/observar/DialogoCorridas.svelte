@@ -181,8 +181,8 @@ img,
   font-size: 13px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid #d9a39a;
-  background: #fbeeec;
+  border: 1px solid var(--error-borde);
+  background: var(--error-fondo);
 }
 .vacio {
   margin: 0;

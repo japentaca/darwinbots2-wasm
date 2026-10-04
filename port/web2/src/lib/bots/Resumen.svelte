@@ -408,8 +408,8 @@ h3,
   align-items: center;
 }
 .chip.cap {
-  background: #e3ecea;
-  color: #0a3f3a;
+  background: var(--seleccion);
+  color: var(--acento-hover);
 }
 .le {
   display: flex;

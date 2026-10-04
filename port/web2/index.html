@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DarwinBots</title>
     <link rel="icon" href="data:,">
+    <script>
+    // Tema elegido (src/lib/tema.js): se fija antes de pintar para que no
+    // destelle el claro. Sin elección guardada sigue al sistema.
+    try {
+      const t = localStorage.getItem('darwinbots2.tema');
+      if (t === 'claro' || t === 'oscuro') document.documentElement.dataset.tema = t;
+    } catch {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

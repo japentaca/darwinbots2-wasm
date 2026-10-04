@@ -6,6 +6,8 @@ import { hashDe, SECCIONES } from '../router.js';
 import { clavePlural } from './experimentar/borrador.js';
 import { cicloVisible } from './sim/ciclo.js';
 import { actual } from './sim/corrida.svelte.js';
+import { TEMAS } from './tema.js';
+import { setTema, tema } from './tema.svelte.js';
 import { ACTIVOS, DESTINO_COMPARAR, destinoChip } from './trabajos/destino.js';
 
 /**
@@ -143,6 +145,42 @@ const trabajos = $derived.by(() => {
       </button>
     {/each}
   </fieldset>
+  <fieldset class="temas">
+    <legend class="oculto">{t('app.tema.aria')}</legend>
+    {#each TEMAS as tm (tm)}
+      <button
+        class="tema"
+        class:on={tema() === tm}
+        type="button"
+        title={t(`app.tema.${tm}`)}
+        aria-label={t(`app.tema.${tm}`)}
+        aria-pressed={tema() === tm}
+        onclick={() => setTema(tm)}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          {#if tm === 'auto'}
+            <circle cx="8" cy="8" r="5.5"></circle>
+            <path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"></path>
+          {:else if tm === 'claro'}
+            <circle cx="8" cy="8" r="3"></circle>
+            <path
+              d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M3 13l1.4-1.4M11.6 4.4L13 3"
+            ></path>
+          {:else}
+            <path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"></path>
+          {/if}
+        </svg>
+      </button>
+    {/each}
+  </fieldset>
   <span class="aviso-idioma" role="status" aria-live="polite"
     >{idiomaFallido ? t('app.idioma.error', { idioma: t(`app.idioma.${idiomaFallido}`) }) : ''}</span
   >
@@ -157,7 +195,8 @@ const trabajos = $derived.by(() => {
   height: 56px;
   padding: 0 24px;
   background: var(--barra);
-  color: var(--fondo);
+  border-bottom: 1px solid var(--barra-borde);
+  color: var(--barra-texto);
   box-sizing: border-box;
   overflow-x: auto;
 }
@@ -265,6 +304,30 @@ const trabajos = $derived.by(() => {
 .lang.on {
   color: #ffffff;
   font-weight: 600;
+}
+.temas {
+  display: flex;
+  margin: 0 0 0 12px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.tema {
+  display: inline-flex;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--barra-texto);
+  padding: 6px;
+  cursor: pointer;
+}
+.tema:hover {
+  color: #ffffff;
+  background: var(--barra-hover);
+}
+.tema.on {
+  color: #ffffff;
+  background: var(--barra-activa);
 }
 .aviso-idioma {
   color: #e0b050;

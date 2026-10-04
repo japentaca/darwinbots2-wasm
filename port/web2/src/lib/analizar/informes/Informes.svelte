@@ -711,7 +711,7 @@ aside {
 .tpl.on {
   border-color: var(--acento);
   box-shadow: inset 0 0 0 1px var(--acento);
-  background: #eef5f4;
+  background: var(--seleccion-suave);
 }
 .desc {
   font-size: 12px;
@@ -743,7 +743,7 @@ aside {
 .error {
   margin: 0;
   font-size: 13px;
-  color: #9b2c2c;
+  color: var(--error-texto);
 }
 .sub {
   margin: 0;
@@ -768,7 +768,7 @@ aside {
   height: 560px;
   border: 1px solid var(--borde);
   border-radius: 8px;
-  background: #e9e8e3;
+  background: var(--chip);
 }
 .nombre-inf {
   font-weight: 500;
@@ -780,7 +780,7 @@ aside {
   justify-content: space-between;
   gap: 10px;
   padding: 9px 0;
-  border-top: 1px solid #ebe9e2;
+  border-top: 1px solid var(--borde);
   font-size: 13px;
 }
 .fila.on .nombre-inf {

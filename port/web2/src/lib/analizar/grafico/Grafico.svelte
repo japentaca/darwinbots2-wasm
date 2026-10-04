@@ -5,6 +5,8 @@
 // el puntero, marca de un ciclo (evento elegido) y pines de eventos
 // opcionales. La geometría sale de geometria.js (pura, testeada).
 import { num, t } from '../../../i18n/index.svelte.js';
+import { colorEnTema } from '../../tema.js';
+import { oscuro } from '../../tema.svelte.js';
 import { corto } from './escala.js';
 import { geometria, valoresEn } from './geometria.js';
 
@@ -38,6 +40,9 @@ let {
   leyenda = true,
   cero = false,
 } = $props();
+
+/** Color de una serie o pin tal como se ve con el tema actual. @param {string} c */
+const ct = (c) => colorEnTema(c, oscuro());
 
 const uid = $props.id();
 const clip = `analizar-clip-${uid}`;
@@ -125,17 +130,17 @@ function valor(v) {
       <g clip-path={`url(#${clip})`}>
         {#each g.capas as c (c.clave)}
           {#if c.banda}
-            <path d={c.banda} fill={c.color} fill-opacity="0.16" stroke="none"></path>
+            <path d={c.banda} fill={ct(c.color)} fill-opacity="0.16" stroke="none"></path>
           {/if}
         {/each}
         {#each g.capas as c (c.clave)}
           {#if modo === 'apilado'}
-            <path d={c.d} fill={c.color} stroke="#fcfcfb" stroke-width="1"></path>
+            <path d={c.d} fill={ct(c.color)} style:stroke="var(--tarjeta)" stroke-width="1"></path>
           {:else}
             <path
               d={c.d}
               fill="none"
-              stroke={c.color}
+              stroke={ct(c.color)}
               stroke-width="1.8"
               stroke-linejoin="round"
             ></path>
@@ -174,7 +179,7 @@ function valor(v) {
             class:sel={p.sel}
             style:left={`${g.X(p.ciclo)}px`}
             style:top={`${g.y0 + 4}px`}
-            style:background={p.color}
+            style:background={ct(p.color)}
             title={p.titulo}
             aria-label={p.titulo}
             aria-pressed={p.sel}
@@ -193,7 +198,7 @@ function valor(v) {
         <div class="mono tip-ciclo">{t('analizar.grafico.ciclo', { n: num(tip.ciclo) })}</div>
         {#each tip.filas as f (f.clave)}
           <div class="tip-fila">
-            <span class="sw" style:background={f.color}></span>
+            <span class="sw" style:background={ct(f.color)}></span>
             <span class="tip-nombre">{f.nombre}</span>
             <span class="mono">{valor(f.v)}</span>
             {#if f.min !== null && f.max !== null}
@@ -214,7 +219,7 @@ function valor(v) {
 {#if leyenda && g && !g.vacio && series.length > 1}
   <div class="leyenda">
     {#each series as s (s.clave)}
-      <span><span class="sw" style:background={s.color}></span>{s.nombre}</span>
+      <span><span class="sw" style:background={ct(s.color)}></span>{s.nombre}</span>
     {/each}
   </div>
 {/if}
@@ -230,17 +235,17 @@ svg {
   touch-action: pan-y;
 }
 .rejilla {
-  stroke: #e1e0d9;
+  stroke: var(--grafico-rejilla);
   stroke-width: 1;
   fill: none;
 }
 .base {
-  stroke: #c3c2b7;
+  stroke: var(--grafico-eje);
   stroke-width: 1;
   fill: none;
 }
 .marca {
-  stroke: #151513;
+  stroke: var(--texto);
   stroke-width: 1.5;
   stroke-dasharray: 4 3;
   fill: none;
@@ -264,8 +269,8 @@ svg {
 }
 .marca-chip {
   position: absolute;
-  background: #151513;
-  color: #ffffff;
+  background: var(--texto);
+  color: var(--fondo);
   pointer-events: none;
   max-width: 45%;
   overflow: hidden;
@@ -277,7 +282,7 @@ svg {
   height: 11px;
   margin-left: -5.5px;
   border-radius: 50%;
-  border: 1.5px solid #fcfcfb;
+  border: 1.5px solid var(--tarjeta);
   padding: 0;
   cursor: pointer;
 }
@@ -286,16 +291,16 @@ svg {
   height: 15px;
   margin-left: -7.5px;
   margin-top: -2px;
-  box-shadow: 0 0 0 2px #151513;
+  box-shadow: 0 0 0 2px var(--texto);
 }
 .tip {
   position: absolute;
   z-index: 2;
   pointer-events: none;
-  background: #fcfcfb;
+  background: var(--tarjeta);
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px var(--sombra);
   padding: 6px 8px;
   font-size: 12px;
   min-width: 140px;

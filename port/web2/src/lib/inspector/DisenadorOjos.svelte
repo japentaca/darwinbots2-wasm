@@ -302,7 +302,7 @@ function reiniciarPunteria() {
   color: var(--gris);
 }
 .nota.error {
-  color: #9b2c1f;
+  color: var(--error-texto);
 }
 .aviso {
   margin: 0;
@@ -322,9 +322,9 @@ function reiniciarPunteria() {
   cursor: default;
 }
 .btn.on {
-  background: var(--texto);
-  border-color: var(--texto);
-  color: #ffffff;
+  background: var(--activo-fondo);
+  border-color: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .rejilla {
   display: grid;

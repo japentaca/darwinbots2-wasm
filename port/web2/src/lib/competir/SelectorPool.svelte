@@ -42,7 +42,7 @@ const lista = $derived(!valor || opciones.includes(valor) ? opciones : [...opcio
   padding: 0 8px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
   max-width: 100%;
 }
 </style>

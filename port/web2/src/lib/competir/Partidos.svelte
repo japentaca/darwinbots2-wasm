@@ -159,7 +159,7 @@ const filas = $derived(filasPartidos(ms));
   font-weight: 700;
 }
 .mal {
-  color: #8a2b12;
+  color: var(--error-texto);
   font-weight: 700;
 }
 .acciones {

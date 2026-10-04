@@ -179,7 +179,7 @@ function usarEscenario() {
   padding: 0 8px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
   max-width: 100%;
 }
 .campos {

@@ -334,12 +334,12 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
       >
         {#if sesion.corriendo}
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-            <rect x="2" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
-            <rect x="8.5" y="1" width="3.5" height="12" rx="1" fill="#ffffff"></rect>
+            <rect x="2" y="1" width="3.5" height="12" rx="1" fill="currentColor"></rect>
+            <rect x="8.5" y="1" width="3.5" height="12" rx="1" fill="currentColor"></rect>
           </svg>{t('mundo.pausar')}
         {:else}
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-            <path d="M3 1.5v11l9-5.5z" fill="#ffffff"></path>
+            <path d="M3 1.5v11l9-5.5z" fill="currentColor"></path>
           </svg>{t('mundo.iniciar')}
         {/if}
       </button>
@@ -542,13 +542,13 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   border-radius: 8px;
   background: var(--tarjeta);
   border: 1px solid var(--borde-control);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px var(--sombra);
   font-size: 13px;
   z-index: 3;
 }
 .aviso.error {
-  border-color: #d9a39a;
-  background: #fbeeec;
+  border-color: var(--error-borde);
+  background: var(--error-fondo);
 }
 .x {
   font: inherit;

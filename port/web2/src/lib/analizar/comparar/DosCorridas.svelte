@@ -12,6 +12,8 @@ import { traductor } from '../../../../engine/report/textos.js';
 import { idioma, num, t } from '../../../i18n/index.svelte.js';
 import { clavePlural } from '../../experimentar/borrador.js';
 import { actual } from '../../sim/corrida.svelte.js';
+import { colorEnTema } from '../../tema.js';
+import { oscuro } from '../../tema.svelte.js';
 import { diferenciasConfig, resumenEvento, valorParametro } from './diferencias.js';
 import { ID_ACTUAL, serieBanda } from './fuentes.js';
 import GraficoBandas from './GraficoBandas.svelte';
@@ -196,7 +198,10 @@ function eventos(evs) {
   <div class="elegir">
     {#each /** @type {const} */ (['a', 'b']) as lado (lado)}
       <div class="lado">
-        <span class="sw" style:background={lado === 'a' ? COLOR_A : COLOR_B}></span>
+        <span
+          class="sw"
+          style:background={colorEnTema(lado === 'a' ? COLOR_A : COLOR_B, oscuro())}
+        ></span>
         <label for={`${uid}-${lado}`}>
           {t(lado === 'a' ? 'comparar.corridaA' : 'comparar.corridaB')}
         </label>
@@ -383,7 +388,7 @@ tbody th {
   font-weight: 400;
 }
 .error {
-  color: #9b2c2c;
+  color: var(--error-texto);
   font-size: 13px;
   margin: 0;
 }

@@ -117,9 +117,9 @@ onMount(() => {
   line-height: 1.45;
 }
 .aviso.error {
-  background: var(--error-fondo, #f8e6e1);
-  border-color: var(--error-borde, #e3b3a5);
-  color: var(--error-texto, #8a2b12);
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+  color: var(--error-texto);
 }
 .txt {
   flex: 1;

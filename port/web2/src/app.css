@@ -21,12 +21,163 @@
   --aviso-fondo: #fbf3dc;
   --aviso-borde: #eadcae;
   --aviso-texto: #5a4a12;
+  --error-fondo: #f8e6e1;
+  --error-borde: #e3b3a5;
+  --error-texto: #8a2b12;
+  --sobre-acento: #ffffff;
+  --activo-fondo: #151513;
+  --activo-texto: #f4f3ef;
+  --barra-borde: transparent;
+  --velo: rgba(21, 21, 19, 0.45);
+  --sombra: rgba(0, 0, 0, 0.15);
+  --grafico-rejilla: #e1e0d9;
+  --grafico-eje: #c3c2b7;
+  --grafico-otras: #a9a79f;
+  --adn-clave: #8a2f7a;
+  --adn-num: #b35a00;
+  --adn-op: #1d4f91;
+  --campo: #ffffff;
+  --seleccion: #e3ecea;
+  --seleccion-suave: #eef5f4;
+  --seleccion-borde: #9cc5bf;
+  --aviso-chip: #f3e3bd;
+  --ambar: #c98500;
+  --ok: #2f7d32;
+  --diff-menos-fondo: #fbe3d8;
+  --diff-menos-texto: #7a2a0a;
+  --diff-mas-fondo: #dde7f6;
+  --diff-mas-texto: #123a6b;
+  --codigo-com: #8a877f;
+  --codigo-off: #b3b1a9;
+  --codigo-flu: #0a3f3a;
+  --codigo-num: #9a4a12;
+  --codigo-ref: #7a3fa0;
+  --codigo-def: #1c4f91;
+  --codigo-numlinea: #a3a19a;
+  --codigo-seleccion: rgba(15, 92, 85, 0.22);
   --sans: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
-html {
+/* Tema (src/lib/tema.svelte.js): sin data-tema sigue al sistema; con
+   data-tema="claro" u "oscuro" en <html> lo fija el usuario. Los dos bloques
+   oscuros son idénticos (test/tema.test.js). El mundo (--mundo) no cambia. */
+:root {
   color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fondo: #121312;
+    --texto: #e8e6df;
+    --tarjeta: #1b1c1a;
+    --borde: #2e2f2b;
+    --borde-control: #44453f;
+    --acento: #5cc2b5;
+    --acento-hover: #86d9ce;
+    --chip: #282925;
+    --chip-texto: #d4d2ca;
+    --gris: #b8b6ad;
+    --gris-claro: #9c9a91;
+    --hover-claro: #252623;
+    --barra: #0b0c0b;
+    --barra-borde: #2e2f2b;
+    --barra-hover: #22231f;
+    --barra-activa: #23403c;
+    --aviso-fondo: #2b2611;
+    --aviso-borde: #51461f;
+    --aviso-texto: #ecd98f;
+    --error-fondo: #331a15;
+    --error-borde: #6b3127;
+    --error-texto: #f2a493;
+    --sobre-acento: #0b1413;
+    --activo-fondo: #2f5a54;
+    --activo-texto: #f4f3ef;
+    --velo: rgba(0, 0, 0, 0.6);
+    --sombra: rgba(0, 0, 0, 0.5);
+    --grafico-rejilla: #2e2f2b;
+    --grafico-eje: #55564f;
+    --grafico-otras: #6e6c65;
+    --adn-clave: #e08ad2;
+    --adn-num: #f0a656;
+    --adn-op: #8db7f0;
+    --campo: #161715;
+    --seleccion: #1f3633;
+    --seleccion-suave: #192826;
+    --seleccion-borde: #2f5a54;
+    --aviso-chip: #463b17;
+    --ambar: #e0a83a;
+    --ok: #6cc070;
+    --diff-menos-fondo: #3a2015;
+    --diff-menos-texto: #f2b08f;
+    --diff-mas-fondo: #16263d;
+    --diff-mas-texto: #a9c8f2;
+    --codigo-com: #8a887f;
+    --codigo-off: #5a5953;
+    --codigo-flu: #9fe3d9;
+    --codigo-num: #f0a656;
+    --codigo-ref: #c99ae8;
+    --codigo-def: #8db7f0;
+    --codigo-numlinea: #66645e;
+    --codigo-seleccion: rgba(92, 194, 181, 0.3);
+    color-scheme: dark;
+  }
+}
+
+:root[data-tema="oscuro"] {
+  --fondo: #121312;
+  --texto: #e8e6df;
+  --tarjeta: #1b1c1a;
+  --borde: #2e2f2b;
+  --borde-control: #44453f;
+  --acento: #5cc2b5;
+  --acento-hover: #86d9ce;
+  --chip: #282925;
+  --chip-texto: #d4d2ca;
+  --gris: #b8b6ad;
+  --gris-claro: #9c9a91;
+  --hover-claro: #252623;
+  --barra: #0b0c0b;
+  --barra-borde: #2e2f2b;
+  --barra-hover: #22231f;
+  --barra-activa: #23403c;
+  --aviso-fondo: #2b2611;
+  --aviso-borde: #51461f;
+  --aviso-texto: #ecd98f;
+  --error-fondo: #331a15;
+  --error-borde: #6b3127;
+  --error-texto: #f2a493;
+  --sobre-acento: #0b1413;
+  --activo-fondo: #2f5a54;
+  --activo-texto: #f4f3ef;
+  --velo: rgba(0, 0, 0, 0.6);
+  --sombra: rgba(0, 0, 0, 0.5);
+  --grafico-rejilla: #2e2f2b;
+  --grafico-eje: #55564f;
+  --grafico-otras: #6e6c65;
+  --adn-clave: #e08ad2;
+  --adn-num: #f0a656;
+  --adn-op: #8db7f0;
+  --campo: #161715;
+  --seleccion: #1f3633;
+  --seleccion-suave: #192826;
+  --seleccion-borde: #2f5a54;
+  --aviso-chip: #463b17;
+  --ambar: #e0a83a;
+  --ok: #6cc070;
+  --diff-menos-fondo: #3a2015;
+  --diff-menos-texto: #f2b08f;
+  --diff-mas-fondo: #16263d;
+  --diff-mas-texto: #a9c8f2;
+  --codigo-com: #8a887f;
+  --codigo-off: #5a5953;
+  --codigo-flu: #9fe3d9;
+  --codigo-num: #f0a656;
+  --codigo-ref: #c99ae8;
+  --codigo-def: #8db7f0;
+  --codigo-numlinea: #66645e;
+  --codigo-seleccion: rgba(92, 194, 181, 0.3);
+  color-scheme: dark;
 }
 
 body {
@@ -74,12 +225,12 @@ a:hover {
 .btn.pri {
   background: var(--acento);
   border-color: var(--acento);
-  color: #ffffff;
+  color: var(--sobre-acento);
 }
 
 .btn.pri:hover {
   background: var(--acento-hover);
-  color: #ffffff;
+  color: var(--sobre-acento);
 }
 
 .chip {
@@ -131,8 +282,8 @@ a:hover {
 }
 
 .seg button.on {
-  background: var(--texto);
-  color: #ffffff;
+  background: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 
 .sw {

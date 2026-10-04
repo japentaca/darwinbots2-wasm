@@ -236,7 +236,7 @@ const resumen = $derived.by(() => {
   top: 66px;
   right: 16px;
   z-index: 50;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 18px var(--sombra);
 }
 .flotante {
   width: 340px;

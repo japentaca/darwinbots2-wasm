@@ -329,7 +329,7 @@ function teclado(e) {
   background: var(--tarjeta);
   border: 1px solid var(--borde-control);
   border-radius: 8px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 24px var(--sombra);
   padding: 10px 12px;
 }
 .cat-cab {
@@ -357,7 +357,7 @@ function teclado(e) {
   font: inherit;
   font-size: 12px;
   border: 1px solid var(--borde-control);
-  background: #ffffff;
+  background: var(--campo);
   border-radius: 999px;
   padding: 3px 9px;
   cursor: pointer;
@@ -367,9 +367,9 @@ function teclado(e) {
   background: var(--hover-claro);
 }
 .cat-item.on {
-  background: var(--texto);
-  border-color: var(--texto);
-  color: #ffffff;
+  background: var(--activo-fondo);
+  border-color: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .por {
   opacity: 0.7;
@@ -409,7 +409,7 @@ aside {
   font-size: 13px;
   line-height: 1.45;
   padding: 8px 0;
-  border-top: 1px solid #ebe9e2;
+  border-top: 1px solid var(--borde);
 }
 .find-sw {
   flex-shrink: 0;

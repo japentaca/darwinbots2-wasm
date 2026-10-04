@@ -151,7 +151,7 @@ const resumen = (p) => {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  background: #fff;
+  background: var(--campo);
 }
 .fila {
   display: grid;
@@ -159,7 +159,7 @@ const resumen = (p) => {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border-bottom: 1px solid #ebe9e2;
+  border-bottom: 1px solid var(--borde);
   font-size: 13px;
 }
 .cab {
@@ -169,8 +169,8 @@ const resumen = (p) => {
   z-index: 1;
 }
 .fila.apagado {
-  background: #f4f3ef;
-  color: #9a988f;
+  background: var(--fondo);
+  color: var(--gris-claro);
 }
 .fila.aviso {
   background: var(--aviso-fondo);
@@ -223,8 +223,8 @@ const resumen = (p) => {
   padding: 6px 12px 8px 76px;
   font-size: 12px;
   line-height: 1.5;
-  background: #fcfcfb;
-  border-bottom: 1px solid #ebe9e2;
+  background: var(--tarjeta);
+  border-bottom: 1px solid var(--borde);
   white-space: pre;
   overflow-x: auto;
 }

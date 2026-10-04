@@ -232,7 +232,7 @@ progress {
   gap: 8px;
 }
 .error {
-  color: #9b2c2c;
+  color: var(--error-texto);
   font-size: 12px;
   width: 100%;
 }

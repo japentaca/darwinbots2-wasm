@@ -603,9 +603,9 @@ h2 {
   padding: 0 12px;
 }
 .btn.on {
-  background: var(--texto);
-  border-color: var(--texto);
-  color: #ffffff;
+  background: var(--activo-fondo);
+  border-color: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .btn:disabled {
   opacity: 0.5;

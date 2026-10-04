@@ -48,7 +48,7 @@ dialog {
   max-height: calc(100dvh - 48px);
 }
 dialog::backdrop {
-  background: rgba(21, 21, 19, 0.45);
+  background: var(--velo);
 }
 h2 {
   margin: 0 0 14px;

@@ -191,18 +191,18 @@ function elegirEspecie(e) {
           >
             <path
               d={dibujoH.d}
-              fill={ambito ? colorEspecie(ambito, fuente.colores) : '#0f5c55'}
+              style:fill={ambito ? colorEspecie(ambito, fuente.colores) : 'var(--acento)'}
               fill-opacity="0.85"
             ></path>
             <path
               d={`M${dibujoH.x0} ${dibujoH.y1}H${dibujoH.x1}`}
-              stroke="#c3c2b7"
+              style:stroke="var(--grafico-eje)"
               fill="none"
             ></path>
             {#if dibujoH.xMed !== null}
               <path
                 d={`M${dibujoH.xMed.toFixed(1)} 4V${dibujoH.y1}`}
-                stroke="#151513"
+                style:stroke="var(--texto)"
                 stroke-width="1.5"
                 stroke-dasharray="4 3"
                 fill="none"
@@ -252,10 +252,10 @@ function elegirEspecie(e) {
                 y={dibujoM.y0}
                 width={dibujoM.x1 - dibujoM.x0}
                 height={dibujoM.y1 - dibujoM.y0}
-                fill="#f4f3ef"
+                style:fill="var(--fondo)"
               ></rect>
               {#each dibujoM.capas as c (c.op)}
-                <path d={c.d} fill="#0f5c55" fill-opacity={c.op}></path>
+                <path d={c.d} style:fill="var(--acento)" fill-opacity={c.op}></path>
               {/each}
               {#each dibujoM.xt as tk (tk.a)}
                 <text class="tick" x={tk.x} y={M_ALTO - 5} text-anchor={tk.a}>{fmt(tk.v)}</text>
@@ -422,9 +422,9 @@ function elegirEspecie(e) {
   color: var(--texto);
 }
 .kind.on {
-  background: var(--texto);
-  border-color: var(--texto);
-  color: #ffffff;
+  background: var(--activo-fondo);
+  border-color: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .bloque {
   padding: 12px 16px;
@@ -451,8 +451,8 @@ svg {
 .med {
   position: absolute;
   top: 2px;
-  background: #151513;
-  color: #ffffff;
+  background: var(--texto);
+  color: var(--fondo);
   pointer-events: none;
 }
 .adn {
@@ -564,12 +564,12 @@ svg {
   word-break: break-word;
 }
 .diff.menos {
-  background: #fbe3d8;
-  color: #7a2a0a;
+  background: var(--diff-menos-fondo);
+  color: var(--diff-menos-texto);
 }
 .diff.mas {
-  background: #dde7f6;
-  color: #123a6b;
+  background: var(--diff-mas-fondo);
+  color: var(--diff-mas-texto);
 }
 .diff .dif {
   font-weight: 600;
@@ -586,7 +586,7 @@ details summary {
 pre {
   font-size: 12px;
   line-height: 1.5;
-  background: #f4f3ef;
+  background: var(--fondo);
   border-radius: 6px;
   padding: 10px;
   max-height: 360px;

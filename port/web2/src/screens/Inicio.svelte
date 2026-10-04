@@ -461,7 +461,7 @@ const recientes = $derived(
             height="36"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#6b6962"
+            stroke="currentColor"
             stroke-width="1.5"
           >
             <path d="M6 3h8l4 4v14H6z"></path>
@@ -738,6 +738,7 @@ h2.seccion {
   align-items: center;
   justify-content: center;
   background: var(--chip);
+  color: var(--gris-claro);
 }
 .cuerpo {
   display: flex;

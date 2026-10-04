@@ -184,7 +184,7 @@ const conSorteo = $derived(lgDrawOf(L).mode !== 'fixed');
   text-align: left;
 }
 tr.on td {
-  background: #e3ecea;
+  background: var(--seleccion);
 }
 .nombre {
   display: inline-flex;

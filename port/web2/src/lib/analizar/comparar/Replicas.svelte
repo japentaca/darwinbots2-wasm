@@ -387,7 +387,7 @@ tbody th {
   color: var(--gris-claro);
 }
 .error {
-  color: #9b2c2c;
+  color: var(--error-texto);
   font-size: 13px;
   margin: 0;
 }

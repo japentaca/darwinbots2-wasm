@@ -193,7 +193,7 @@ function elegirEspecie(nombre) {
           <svg width={arbol.w} height={arbol.alto + 20} aria-hidden="true">
             <path
               d={arbol.grid.map((g) => `M${g.x.toFixed(1)} 0V${arbol.alto}`).join('')}
-              stroke="#e1e0d9"
+              style:stroke="var(--grafico-rejilla)"
               fill="none"
             ></path>
             <path d={arbol.enlaces} stroke="#898781" stroke-width="1.5" fill="none"></path>
@@ -207,7 +207,7 @@ function elegirEspecie(nombre) {
                 opacity={b.nombre === seleccionada || !seleccionada ? 1 : 0.55}
               ></path>
             {/each}
-            <path d={arbol.muertes} stroke="#151513" stroke-width="2" fill="none"></path>
+            <path d={arbol.muertes} style:stroke="var(--texto)" stroke-width="2" fill="none"></path>
             {#each arbol.grid as g (g.v)}
               <text class="tick" x={g.x} y={arbol.alto + 14} text-anchor="middle">{num(g.v)}</text>
             {/each}
@@ -259,7 +259,7 @@ function elegirEspecie(nombre) {
               class:on={individuo === n.abs}
               style:left={`${n.cx}px`}
               style:top={`${n.cy}px`}
-              style:background={n.vivo ? colorEspecie(seleccionada, fuente.colores) : '#151513'}
+              style:background={n.vivo ? colorEspecie(seleccionada, fuente.colores) : 'var(--texto)'}
               tabindex={foco === n.abs ? 0 : -1}
               aria-pressed={individuo === n.abs}
               aria-describedby={`${uid}-ayuda`}
@@ -418,7 +418,7 @@ function elegirEspecie(nombre) {
   background: var(--hover-claro);
 }
 .lane.on {
-  background: #e3eeec;
+  background: var(--seleccion);
   font-weight: 600;
 }
 .txt {
@@ -466,10 +466,10 @@ svg {
   width: 10px;
   height: 10px;
   margin: -5px 0 0 -5px;
-  border: 1px solid #fcfcfb;
+  border: 1px solid var(--tarjeta);
 }
 .nodo.on {
-  box-shadow: 0 0 0 2px #151513;
+  box-shadow: 0 0 0 2px var(--texto);
 }
 .nodo:focus-visible {
   outline: 2px solid var(--acento);

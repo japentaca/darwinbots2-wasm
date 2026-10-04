@@ -751,7 +751,7 @@ fieldset.seg {
   background: var(--tarjeta);
   border: 1px solid var(--borde);
   border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(21, 21, 19, 0.12);
+  box-shadow: 0 6px 20px var(--sombra);
   display: flex;
   flex-direction: column;
   min-width: 220px;
@@ -842,14 +842,14 @@ fieldset.seg {
   color: var(--gris-claro);
 }
 .chip.cap.req {
-  background: #e3ecea;
-  color: #0a3f3a;
-  border-color: #9cc5bf;
+  background: var(--seleccion);
+  color: var(--acento-hover);
+  border-color: var(--seleccion-borde);
 }
 .chip.cap.excl {
-  background: #f8e6e1;
-  color: #8a2b12;
-  border-color: #e3b3a5;
+  background: var(--error-fondo);
+  color: var(--error-texto);
+  border-color: var(--error-borde);
   text-decoration: line-through;
 }
 .sels {
@@ -936,7 +936,7 @@ fieldset.seg {
   background: var(--hover-claro);
 }
 .li.on {
-  background: #e3ecea;
+  background: var(--seleccion);
 }
 .estrella {
   font-size: 16px;
@@ -945,7 +945,7 @@ fieldset.seg {
   flex-shrink: 0;
 }
 .estrella.fav {
-  color: #c98500;
+  color: var(--ambar);
 }
 .nombre {
   flex: 1;
@@ -968,7 +968,7 @@ fieldset.seg {
 }
 .veg {
   font-weight: 400;
-  color: #2f7d32;
+  color: var(--ok);
 }
 .n2 {
   font-size: 12px;

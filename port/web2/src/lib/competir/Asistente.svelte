@@ -233,8 +233,8 @@ h1 {
   font-size: 13px;
 }
 .chip.on {
-  background: var(--texto);
-  color: #fff;
+  background: var(--activo-fondo);
+  color: var(--activo-texto);
 }
 .ayuda {
   font-size: 13px;
@@ -274,7 +274,7 @@ h1 {
   padding: 0 8px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
 }
 .num {
   width: 80px;
@@ -294,7 +294,7 @@ h1 {
 .error {
   margin: 0;
   font-size: 13px;
-  color: var(--error-texto, #8a2b12);
+  color: var(--error-texto);
 }
 .aviso {
   margin: 0;

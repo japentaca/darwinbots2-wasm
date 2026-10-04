@@ -625,14 +625,14 @@ const lineasMigracion = $derived(
   color: var(--texto);
 }
 .li.on {
-  background: #e3ecea;
+  background: var(--seleccion);
 }
 .li.rapido {
   border: 1px solid var(--borde);
   background: var(--tarjeta);
 }
 .li.rapido.on {
-  background: #e3ecea;
+  background: var(--seleccion);
 }
 .col {
   display: flex;
@@ -711,7 +711,7 @@ h1 {
 .nombre:hover,
 .nombre:focus {
   border-color: var(--borde-control);
-  background: #fff;
+  background: var(--campo);
 }
 .meta {
   display: flex;
@@ -739,7 +739,7 @@ h1 {
   padding: 0 8px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
   width: 180px;
 }
 .btn.chico {
@@ -748,8 +748,8 @@ h1 {
   padding: 0 10px;
 }
 .btn.peligro {
-  border-color: #c96b50;
-  color: #8a2b12;
+  border-color: var(--error-borde);
+  color: var(--error-texto);
 }
 .seg {
   align-self: flex-start;
@@ -774,9 +774,9 @@ h1 {
   line-height: 1.45;
 }
 .aviso.error {
-  background: var(--error-fondo, #f8e6e1);
-  border-color: var(--error-borde, #e3b3a5);
-  color: var(--error-texto, #8a2b12);
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+  color: var(--error-texto);
 }
 .txt {
   flex: 1;
@@ -798,7 +798,7 @@ ul {
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 6px;
-  background: #eef5f4;
+  background: var(--seleccion-suave);
   color: var(--acento-hover);
 }
 .nota.alerta {

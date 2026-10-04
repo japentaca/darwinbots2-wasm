@@ -818,15 +818,15 @@ tbody th {
   border-radius: 3px;
   background: linear-gradient(
     to right,
-    var(--acento, #0f5c55) calc(var(--p) * 100%),
+    var(--acento) calc(var(--p) * 100%),
     var(--borde) calc(var(--p) * 100%)
   );
 }
 .celda .est.hecha {
-  background: var(--acento, #0f5c55);
+  background: var(--acento);
 }
 .celda .est.reiniciada {
-  background: repeating-linear-gradient(45deg, var(--acento, #0f5c55) 0 3px, var(--borde) 3px 6px);
+  background: repeating-linear-gradient(45deg, var(--acento) 0 3px, var(--borde) 3px 6px);
 }
 .celda .est.fallida {
   background: #9b2c2c;
@@ -837,7 +837,7 @@ tbody th {
   color: var(--gris-claro);
 }
 .error {
-  color: #9b2c2c;
+  color: var(--error-texto);
   font-size: 13px;
   margin: 0;
 }

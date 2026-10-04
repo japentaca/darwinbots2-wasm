@@ -183,13 +183,13 @@ const nombreCap = (k) => {
   overflow: auto;
   min-height: 80px;
   flex: 1;
-  border-top: 1px solid #ebe9e2;
+  border-top: 1px solid var(--borde);
 }
 .gi {
   display: flex;
   align-items: center;
   gap: 6px;
-  border-bottom: 1px solid #ebe9e2;
+  border-bottom: 1px solid var(--borde);
 }
 .ver {
   flex: 1;
@@ -217,7 +217,7 @@ const nombreCap = (k) => {
   height: 26px;
   border-radius: 6px;
   border: 1px solid var(--borde-control);
-  background: #fff;
+  background: var(--campo);
   cursor: pointer;
   font-size: 15px;
 }
@@ -226,7 +226,7 @@ const nombreCap = (k) => {
   max-height: 180px;
   overflow: auto;
   font-size: 12px;
-  background: #fff;
+  background: var(--campo);
   border: 1px solid var(--borde);
   border-radius: 6px;
   padding: 6px 8px;

@@ -250,7 +250,7 @@ function reiniciar() {
   background: var(--tarjeta);
   border: 1px solid var(--borde-control);
   border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 20px var(--sombra);
   font-size: 13px;
 }
 .item {
@@ -291,6 +291,6 @@ function reiniciar() {
   color: var(--gris);
 }
 .nota.error {
-  color: #9b2c1f;
+  color: var(--error-texto);
 }
 </style>

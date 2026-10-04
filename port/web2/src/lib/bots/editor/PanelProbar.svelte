@@ -304,7 +304,7 @@ const filas = $derived.by(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-top: 1px solid #ebe9e2;
+  border-top: 1px solid var(--borde);
   padding-top: 8px;
 }
 .tabla {
@@ -352,7 +352,7 @@ const filas = $derived.by(() => {
 }
 .error {
   margin: 0;
-  color: #8a2a12;
+  color: var(--error-texto);
   font-size: 13px;
 }
 </style>

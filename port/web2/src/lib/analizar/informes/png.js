@@ -2,8 +2,9 @@
 // PNG de un gráfico de Analizar (decisión 11: export PNG): el <svg> que
 // dibuja Grafico.svelte se clona con sus estilos calculados escritos en
 // cada elemento (las clases y variables CSS de la página no viajan con el
-// SVG suelto), se serializa, se dibuja en un canvas con fondo blanco, el
-// título arriba y la leyenda abajo, y sale como Blob PNG. Necesita el DOM
+// SVG suelto), se serializa, se dibuja en un canvas con el fondo de las
+// tarjetas del tema que se ve (claro u oscuro, src/lib/tema.js), el título
+// arriba y la leyenda abajo, y sale como Blob PNG. Necesita el DOM
 // (solo en el navegador); lo puro (medidas del lienzo y partir la leyenda
 // en filas) se exporta aparte y se prueba en node. La imagen sale con la
 // densidad de la pantalla (devicePixelRatio, entre 1 y 4). Los errores
@@ -48,6 +49,8 @@ const PROPIEDADES = Object.freeze([
   'text-anchor',
   'visibility',
 ]);
+
+import { colorEnTema } from '../../tema.js';
 
 const NS_SVG = 'http://www.w3.org/2000/svg';
 const MARGEN = 16;
@@ -157,9 +160,14 @@ export async function svgAPng(svg, o) {
   lienzo.width = m.ancho * escala;
   lienzo.height = m.alto * escala;
   ctx.scale(escala, escala);
-  ctx.fillStyle = '#ffffff';
+  // Colores del tema que se ve (tokens de src/app.css); sin ellos, los del claro.
+  const raiz = getComputedStyle(document.documentElement);
+  const token = (/** @type {string} */ k, /** @type {string} */ porDefecto) =>
+    raiz.getPropertyValue(k).trim() || porDefecto;
+  const oscuro = raiz.getPropertyValue('color-scheme').trim() === 'dark';
+  ctx.fillStyle = token('--tarjeta', '#ffffff');
   ctx.fillRect(0, 0, m.ancho, m.alto);
-  ctx.fillStyle = '#151513';
+  ctx.fillStyle = token('--texto', '#151513');
   ctx.font = `600 15px 'IBM Plex Sans', system-ui, sans-serif`;
   ctx.textBaseline = 'middle';
   ctx.fillText(o.titulo, m.xSvg, MARGEN + ALTO_TITULO / 2 - 4, w);
@@ -168,9 +176,9 @@ export async function svgAPng(svg, o) {
   filas.forEach((fila, k) => {
     const y = m.ySvg + h + 8 + k * ALTO_FILA_LEYENDA + ALTO_FILA_LEYENDA / 2;
     for (const it of fila) {
-      ctx.fillStyle = it.color;
+      ctx.fillStyle = colorEnTema(it.color, oscuro);
       ctx.fillRect(m.xSvg + it.x, y - 5, 10, 10);
-      ctx.fillStyle = '#3d3c38';
+      ctx.fillStyle = token('--chip-texto', '#3d3c38');
       ctx.fillText(it.nombre, m.xSvg + it.x + 16, y);
     }
   });

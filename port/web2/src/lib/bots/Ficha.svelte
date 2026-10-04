@@ -460,7 +460,7 @@ h2 {
   color: var(--gris-claro);
 }
 .estrella.fav {
-  color: #c98500;
+  color: var(--ambar);
 }
 .tabs {
   display: flex;

@@ -190,7 +190,7 @@ function valorFmt(k) {
 }
 .error {
   font-size: 13px;
-  color: var(--error-texto, #8a2b12);
+  color: var(--error-texto);
   margin: 0;
 }
 .tbl {

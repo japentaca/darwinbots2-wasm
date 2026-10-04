@@ -5,6 +5,8 @@
 // los gráficos del Panel (y de Especies).
 import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { textoEvento } from '../observar/eventos.js';
+import { colorEnTema } from '../tema.js';
+import { oscuro } from '../tema.svelte.js';
 import { COLOR_GLOBAL } from './catalogo.js';
 import { colorEvento, cuentas, FILTROS, filtrarEventos } from './eventos.js';
 import Grafico from './grafico/Grafico.svelte';
@@ -130,8 +132,11 @@ function elegir(clave) {
         >
           <span class="mono ciclo">{num(e.ciclo)}</span>
           <span
-            ><span class="chip tipo" style:border-color={colorEvento(e.tipo)}
-              ><span class="sw" style:background={colorEvento(e.tipo)}></span>
+            ><span class="chip tipo" style:border-color={colorEnTema(colorEvento(e.tipo), oscuro())}
+              ><span
+                class="sw"
+                style:background={colorEnTema(colorEvento(e.tipo), oscuro())}
+              ></span>
               {t(`analizar.ev.tipo.${e.tipo}`)}</span
             ></span
           >
@@ -195,10 +200,10 @@ function elegir(clave) {
   border-top: 0;
 }
 .row:hover {
-  background: #f1f0eb;
+  background: var(--hover-claro);
 }
 .row.on {
-  background: #e3eeec;
+  background: var(--seleccion);
   font-weight: 600;
 }
 .ciclo {

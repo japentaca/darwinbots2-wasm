@@ -107,17 +107,17 @@ $effect(() => () => clearTimeout(borrar));
   font-style: italic;
 }
 .adn :global(.clave) {
-  color: #8a2f7a;
+  color: var(--adn-clave);
   font-weight: 600;
 }
 .adn :global(.sysvar) {
   color: var(--acento);
 }
 .adn :global(.num) {
-  color: #b35a00;
+  color: var(--adn-num);
 }
 .adn :global(.op) {
-  color: #1d4f91;
+  color: var(--adn-op);
   font-weight: 500;
 }
 </style>

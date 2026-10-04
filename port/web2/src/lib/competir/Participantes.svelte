@@ -307,7 +307,7 @@ async function inscribir() {
   padding: 0 6px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
 }
 .num {
   width: 70px;

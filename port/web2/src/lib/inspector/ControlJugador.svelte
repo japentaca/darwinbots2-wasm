@@ -353,7 +353,7 @@ async function cargarPbkp(e) {
   color: var(--gris);
 }
 .nota.error {
-  color: #9b2c1f;
+  color: var(--error-texto);
 }
 .aviso {
   margin: 0;

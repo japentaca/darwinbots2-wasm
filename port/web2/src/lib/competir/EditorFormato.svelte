@@ -159,7 +159,7 @@ const campos = $derived(
 .fmt.on {
   border-color: var(--acento);
   box-shadow: inset 0 0 0 1px var(--acento);
-  background: #eef5f4;
+  background: var(--seleccion-suave);
   opacity: 1;
 }
 .fmt strong {
@@ -210,7 +210,7 @@ const campos = $derived(
   padding: 0 8px;
   border: 1px solid var(--borde-control);
   border-radius: 6px;
-  background: #fff;
+  background: var(--campo);
   min-width: 110px;
 }
 .oculto {

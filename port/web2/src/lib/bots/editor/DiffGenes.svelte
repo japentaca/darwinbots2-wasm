@@ -91,7 +91,7 @@ function origen(o) {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--campo);
 }
 .cab {
   display: flex;
@@ -123,13 +123,13 @@ function origen(o) {
   padding-left: 8px;
 }
 .cambio.cambiado {
-  border-color: #1c4f91;
+  border-color: var(--codigo-def);
 }
 .cambio.agregado {
   border-color: var(--acento);
 }
 .cambio.quitado {
-  border-color: #9a4a12;
+  border-color: var(--codigo-num);
 }
 .rot {
   display: flex;
@@ -151,8 +151,8 @@ pre {
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 12px;
-  background: #fcfcfb;
-  border: 1px solid #ebe9e2;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
   border-radius: 6px;
   padding: 4px 6px;
 }
