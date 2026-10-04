@@ -212,6 +212,7 @@ test('extensiones: sysvars, operadores, parámetros, páginas y anclas; los roto
     '## Uno',
     'Ver [[.shoot]], [[.aimright]], [[.7]], [[op:store]], [[op:dupint]], [[op:!=]], [[param:opt:11]],',
     '[[adn/pilas]], [[adn/pilas|las pilas]], [[adn/genes#uno]] y [[sysvars/todas]].',
+    'Con texto: [[.up|empujar]], [[op:store|guardar]], [[param:opt:11|el tope]], [[op:|]].',
     '',
     'Rotos: [[.noexiste]], [[op:nada]], [[param:opt:99999]], [[adn/nada]], [[adn/pilas#nada]].',
   ].join('\n');
@@ -223,6 +224,10 @@ test('extensiones: sysvars, operadores, parámetros, páginas y anclas; los roto
   assert.match(html, /href="\.\.\/\.\.\/operadores\/distinto\/"><code>!=<\/code>/);
   assert.match(html, /href="\.\.\/\.\.\/app\/parametros-fisica\/#p-opt-11">Velocidad máxima</);
   assert.match(html, />las pilas</);
+  assert.match(html, /href="\.\.\/\.\.\/sysvars\/up\/">empujar</);
+  assert.match(html, /href="\.\.\/\.\.\/operadores\/store\/">guardar</);
+  assert.match(html, /#p-opt-11">el tope</);
+  assert.match(html, /href="\.\.\/\.\.\/operadores\/bit-or\/"><code>\|<\/code>/);
   const rotos = r.errores.filter((e) => e.startsWith('adn/genes:'));
   assert.equal(rotos.length, 5, rotos.join('\n'));
 });

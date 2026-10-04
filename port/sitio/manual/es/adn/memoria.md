@@ -65,7 +65,7 @@ Al correrlo, [[.nrg]] vuelve a valer la energía real (3000) en cada ciclo, y es
 
 - **Disparos de memoria.** Otro bot puede dispararte un valor que se escribe en una dirección cualquiera de tu memoria (ver [[simulacion/disparos]]).
 - **Lazos.** Un bot atado a vos puede escribir cualquier celda tuya con [[.tieloc]] y [[.tieval]] (ver [[simulacion/lazos]]).
-- **Veneno y ponzoña.** Mientras dura el efecto, escriben cada ciclo en la celda que eligió el atacante con [[.vloc]] o [[.ploc]] (ver [[simulacion/defensas]]).
+- **Veneno y toxina.** Mientras dura el efecto, escriben cada ciclo en la celda que eligió el atacante con [[.vloc]] o [[.ploc]] (ver [[simulacion/defensas]]).
 - **Exceso de desechos.** Cuando el [[.waste]] acumulado pasa un umbral, el motor escribe valores al azar en celdas al azar de toda la memoria (ver [[simulacion/energia]]).
 
 ## Qué borra el motor y cuándo {#que-borra}
@@ -83,7 +83,7 @@ El ADN corre en el medio del ciclo; casi todo lo demás (física, visión, dispa
 Hay órdenes que no se borran siempre, y conviene conocerlas:
 
 - [[.repro]] (y [[.mrepro]], [[.sexrepro]]) solo se pone en 0 si el hijo nace. Si la reproducción no se puede hacer, el valor queda y se reintenta en cada ciclo.
-- [[.strbody]] y [[.fdbody]] negativos no se consumen nunca: quedan ahí para siempre.
+- [[.strbody]] y [[.fdbody]] negativos se borran sin efecto (en el DarwinBots original quedaban ahí para siempre).
 - [[.shootval]] solo se borra cuando efectivamente disparás.
 - [[.fixang]], [[.fixlen]] y [[.stifftie]] solo se borran si tenés un lazo elegido con [[.tienum]]; si no, quedan.
 
@@ -146,4 +146,4 @@ y al leer, el 0 cae en la 1000 (`*0` y `0 *` leen la celda 1000). Un store a la
 dirección 0 no hace nada. Las reglas, con ejemplos, están en
 [[adn/numeros#fuera]] y [[adn/numeros#cero]].
 
-Por dentro existe una celda 0, pero la usa solo el motor, como basurero: si un ataque de veneno o ponzoña apunta a la 340 ([[.delgene]], la que borra genes), el golpe se desvía a la celda 0 y así no puede borrarle genes a nadie. Nadie la lee. Ver [[sysvars/mem-0]].
+Por dentro existe una celda 0, pero la usa solo el motor, como basurero: si un ataque de veneno o toxina apunta a la 340 ([[.delgene]], la que borra genes), el golpe se desvía a la celda 0 y así no puede borrarle genes a nadie. Nadie la lee. Ver [[sysvars/mem-0]].

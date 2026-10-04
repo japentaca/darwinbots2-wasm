@@ -38,7 +38,7 @@ basicos: # tipo 2, dispatcher DNA.bas:181-218, cost BCCMDCOST=2 (DNA.bas:186)
   - {token: sub,  value: 2,  pops_i: 2, pushes_i: 1, sem: "a-b; identico a add", cite: "DNA.bas:236-251"}
   - {token: mult, value: 3,  pops_i: 2, pushes_i: 1, sem: "a*b en Double; si |c|>2e9 SATURA a Sgn(c)*2e9", cite: "DNA.bas:253-262"}
   - {token: div,  value: 4,  pops_i: 2, pushes_i: 1, sem: "b=0 -> 0; si no a/b division REAL, redondeo banker (5 2 div = 2; 7 2 div = 4)", cite: "DNA.bas:264-274"}
-  - {token: rnd,  value: 5,  pops_i: 1, pushes_i: 1, sem: "uniforme 0..n = Int((n+1)*rndy); n<0 -> n+1..0; CONSUME 1 RNG", cite: "DNA.bas:276-278; Common.bas:53-56"}
+  - {token: rnd,  value: 5,  pops_i: 1, pushes_i: 1, sem: "uniforme 0..n = Int((n+1)*rndy); n<0 -> n+1..-1 (Int es piso; 0 solo con rndy=0); CONSUME 1 RNG", cite: "DNA.bas:276-278; Common.bas:53-56"}
   - {token: "*",  value: 6,  pops_i: 1, pushes_i: 1, sem: "deref: push mem(Abs(b) Mod 1000; 0->1000). '0 *' lee mem(1000)", cite: "DNA.bas:280-295"}
   - {token: mod,  value: 7,  pops_i: 2, pushes_i: 1, sem: "b=0 -> 0 (consume a); si no a Mod b truncado, signo del dividendo", cite: "DNA.bas:297-307"}
   - {token: sgn,  value: 8,  pops_i: 1, pushes_i: 1, sem: "Sgn", cite: "DNA.bas:309-311"}

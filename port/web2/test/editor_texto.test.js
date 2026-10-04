@@ -298,6 +298,12 @@ test('avisos del lint: código estable y arreglo de un clic', () => {
     [{ kind: 'primero', token: 'x', count: 1, line: 0, hint: '…' }, 'primero', null],
     [{ kind: 'sombra', token: 'def up', count: 1, line: 1, hint: '…' }, 'sombra', null],
     [{ kind: 'error', token: 'error 6', count: 1, line: 0, hint: '…' }, 'error', null],
+    [
+      { kind: 'defpegado', token: 'defensa', count: 1, line: 2, hint: '… this one defines nsa' },
+      'defpegado',
+      null,
+    ],
+    [{ kind: 'defvalor', token: 'def mov .up', count: 1, line: 1, hint: '…' }, 'defvalor', null],
   ];
   for (const [h, codigo, arreglo] of casos) {
     const a = describirLint(/** @type {any} */ (h));
@@ -306,6 +312,12 @@ test('avisos del lint: código estable y arreglo de un clic', () => {
   }
   assert.equal(describirLint(/** @type {any} */ (casos[10][0])).params.nombre, 'up');
   assert.equal(describirLint(/** @type {any} */ (casos[11][0])).params.codigo, '6');
+  assert.equal(describirLint(/** @type {any} */ (casos[12][0])).params.nombre, 'nsa');
+  assert.deepEqual(describirLint(/** @type {any} */ (casos[13][0])).params, {
+    token: 'def mov .up',
+    nombre: 'mov',
+    valor: '.up',
+  });
   const t = "cond *.refshel 5 < ' *.refshel\nstart *.refshel .x store stop";
   assert.equal(
     aplicarArreglo(t, { de: '*.refshel', a: '*.refshell' }),

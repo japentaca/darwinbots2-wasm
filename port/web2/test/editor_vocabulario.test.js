@@ -135,6 +135,21 @@ test('lint-dna: hallazgos del core con su línea, sin sim y por el linter del ed
     // un ADN sano: nada
     c.send({ t: 'lint-dna', dna: 'cond\n*.eye5 0 >\nstart\n10 .up store\nstop\n', req: 'b' });
     assert.deepEqual((await esperar(c, 'b')).issues, []);
+    // def con valor que no es número, y una línea leída como def; con
+    // espacios de más el valor sí se lee (Val los saltea)
+    c.send({
+      t: 'lint-dna',
+      dna: 'def mov .up\ndefensa 50\ndef ok    5\ncond\nstart\n10 .mov store\nstop\n',
+      req: 'd',
+    });
+    const d = (await esperar(c, 'd')).issues.map(describirLint);
+    assert.deepEqual(
+      d.map((/** @type {any} */ a) => [a.codigo, a.linea, a.params.nombre]),
+      [
+        ['defvalor', 1, 'mov'],
+        ['defpegado', 2, 'nsa'],
+      ],
+    );
   } finally {
     await c.stop();
   }

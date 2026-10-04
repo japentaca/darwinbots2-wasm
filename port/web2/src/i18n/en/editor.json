@@ -57,6 +57,8 @@
   "editor.lint.pegado-otro": "{token} is only partly read (missing space?).",
   "editor.lint.primero": "With defs, the first word ({token}) is not flow control and is lost.",
   "editor.lint.sombra": "The private variable {nombre} hides the sysvar .{nombre} in the whole bot.",
+  "editor.lint.defpegado": "Every line that starts with “def” is a definition: {token} defines the variable {nombre}. If it is text, add the comment mark '.",
+  "editor.lint.defvalor": "The value of a def must be a number: in def {nombre}, “{valor}” reads as 0.",
   "editor.lint.error": "The engine rejects this DNA (error {codigo}: a number outside ±32767 or a malformed def).",
   "editor.lint.otro": "{token}: the engine reads it differently than it looks.",
   "editor.genes.gen": "Gene",

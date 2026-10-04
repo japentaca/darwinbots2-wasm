@@ -193,8 +193,8 @@ cobra energía y actualiza los sentidos. De ahí salen tres reglas:
 
 Hay algunas órdenes que no se borran siempre. [[.repro]] queda escrita hasta que la
 reproducción sale bien, así que se reintenta sola cada ciclo. [[.fdbody]] y
-[[.strbody]] solo se consumen si son positivas: un valor negativo queda ahí para
-siempre. Y [[.shootval]] solo se borra cuando de verdad se dispara.
+[[.strbody]] solo actúan si son positivas: un valor negativo se borra sin
+efecto (en el DarwinBots original quedaba ahí para siempre). Y [[.shootval]] solo se borra cuando de verdad se dispara.
 
 ## Stores y condiciones
 <!-- 20-VM §1 (tipo 7: body/ELSEBODY y CondStateIsTrue), §4; core vm.hpp: el gate va antes de ExecuteStores -->

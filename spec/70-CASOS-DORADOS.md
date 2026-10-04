@@ -512,6 +512,9 @@ construido token a token). Notación de tokens: `(tipo,value)` según `20-VM.md 
 
 ### V-01 · El `else` tras `start` está muerto — [unit] · [PROBABLE BUG] A2-1
 
+> **Port (2026-09-29):** A2-1 está corregido (`port/README.md`). El test de V-01 afirma
+> lo contrario de lo que sigue: caso a, `mem(200) = 9`. El texto describe el original.
+
 **Estado**: bot con `mem` en cero; ADN texto:
 
 ```

@@ -92,7 +92,7 @@ prosa breve).
 3. **La simulación** (14): el ciclo y el orden de las acciones; energía,
    cuerpo y desechos; cloroplastos y vegetales; física (movimiento, masa,
    fricción, gravedad, browniano, bordes); visión; disparos; defensas
-   (escudo, veneno, ponzoña, baba); lazos y multicelulares; virus;
+   (caparazón, veneno, toxina, baba); lazos y multicelulares; virus;
    reproducción asexual y sexual; mutaciones; muerte y cadáveres; el mundo
    (formas, laberintos, teleporters, día y noche, costos); especies y linaje.
 4. **El lenguaje del ADN** (12): estructura de un bot; genes (`cond`,
@@ -200,13 +200,35 @@ Lo que salió de la ola:
 - El `else` tras `cond … start` corre en el port (corrección A2-1 de
   `port/README.md`); las páginas lo cuentan así y dejan el comportamiento del
   original en un `:::cuidado`. `spec/20-VM.md` §0.3, §5.4, §5.5, §12.1 y el
-  caso dorado V-01 todavía lo describen como código muerto.
-- `db_dna_lint` no avisa de `def x .sysvar` (vale 0) ni de líneas como
-  `defensa 50` (definen `nsa`). Las páginas lo cuentan como un error
-  frecuente; el lint podría marcarlo.
+  caso dorado V-01 describen el original; desde el 2026-10-03, §5.4 y V-01
+  llevan una nota que remite a la corrección.
+- `db_dna_lint` no avisaba de `def x .sysvar` (vale 0) ni de líneas como
+  `defensa 50` (definen `nsa`). Desde el 2026-10-03 avisa (`defvalor` y
+  `defpegado`, con sus textos en el editor y en la clásica). Le salta a 8 bots
+  del Bestiario: 7 con `def botname .out1` y W6, que tiene los `def` al revés.
 - `markdown.mjs`: una línea sangrada de continuación se une al texto del
   ítem de lista, y el `|` de `[[destino|texto]]` ya no parte una celda de
   tabla.
+
+Capítulos 5 y 6 (referencia) hechos el 2026-10-04: las 354 páginas (17 grupos
+y 250 sysvars, 8 familias y 79 operadores) están `revisada`, con unas 560
+citas. Fueron 10 lotes, cada uno con su redactor y su revisor (un pipeline de
+20 agentes). Lo que salió de la ola:
+
+- `[[.x|texto]]`, `[[op:x|texto]]` y `[[param:x|texto]]` aceptan texto
+  propio, como las páginas (`[[op:|]]` sigue siendo el `|` bit a bit).
+- `rnd` con n negativo da n+1..−1 (`Int` es piso); `20-VM` §6.1 y
+  `opcodes.yaml` decían n+1..0. Corregido en la spec.
+- Notas para la spec, sin tocar: `36-REPRO` §0.3 (tras el rechazo por
+  distancia no hay reintento), `34-TIES` §0.4 (los dos extremos pasan a
+  `.multi`), `.tienum`/`.tiepres` en `sysvars.yaml`, y el rango de `.tieang1`
+  (llega a 1257).
+- **Pendiente: las fichas de datos.** Copian los campos de `sysvars.yaml` y
+  `opcodes.yaml` (jerga interna, nombres de VB6, citas a `Robots.bas`) y
+  describen el original, así que contradicen la prosa donde el port corrigió
+  algo (A2-1, A3-5, A3-7, A3-10…).
+- Términos: «toxina» (poison) y «veneno» (venom), como en la app; nunca
+  «ponzoña».
 
 ### S-D · La app enlaza al manual
 

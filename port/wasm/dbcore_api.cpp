@@ -3348,7 +3348,7 @@ DB_EXPORT int db_sim_sysvar_tok(void* h, int n, const char* name) {
 // devuelve esos tokens para que la página avise. No toca ninguna sim ni
 // consume RNG. Salida: una línea por hallazgo, campos separados por TAB:
 //   tipo \t token \t veces \t primera_linea \t pista
-// tipos: nombre | palabra | pegado | primero | sombra | error
+// tipos: nombre | palabra | pegado | primero | sombra | defpegado | defvalor | error
 }  // extern "C" (los helpers del lint son C++ con enlace normal)
 
 namespace lint_detail {
@@ -3511,6 +3511,22 @@ std::string Lint(const std::string& text) {
         insertvar(*bot, a);
         useref = true;
         const std::string& name = bot->vars.back().name;
+        // Toda línea que empieza con "def" es una definición: insertvar
+        // recorta 4 caracteres, así que "defensa 50" define "nsa".
+        if (a.size() > 3 && a[3] != ' ')
+          report.add("defpegado", a.substr(0, a.find(' ')), lineNo,
+                     "every line starting with 'def' is a definition: this one "
+                     "defines " + name);
+        // El valor se lee con Val(): ".up" o "*5" valen 0, no la dirección.
+        const std::string rest = a.substr(4);
+        std::string valText = rest.substr(rest.find(' ') + 1);
+        valText.erase(0, valText.find_first_not_of(' '));  // Val() los saltea
+        bool valDigits = false;
+        ValPrefix(valText.substr(0, valText.find(' ')), valDigits);
+        if (!valDigits)
+          report.add("defvalor", "def " + name + " " + valText, lineNo,
+                     "the value of a def must be a number: " + valText +
+                         " reads as 0");
         if (IsSysvarName(lcase(name), sv))
           report.add("sombra", "def " + name, lineNo,
                      "the private variable shadows the sysvar ." + name +

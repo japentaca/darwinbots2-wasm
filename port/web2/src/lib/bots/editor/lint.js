@@ -82,6 +82,15 @@ export function describirLint(h) {
     case 'sombra':
       params.nombre = token.replace(/^def\s+/, '');
       return aviso('sombra');
+    case 'defpegado':
+      params.nombre = /defines (\S+)/.exec(hint)?.[1] ?? '';
+      return aviso('defpegado');
+    case 'defvalor': {
+      const [, nombre = '', ...valor] = token.split(/\s+/);
+      params.nombre = nombre;
+      params.valor = valor.join(' ');
+      return aviso('defvalor');
+    }
     case 'error':
       params.codigo = token.replace(/^error\s+/, '');
       return aviso('error');

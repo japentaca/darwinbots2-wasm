@@ -92,7 +92,7 @@ stop
 
 `original` es una dirección (la 971, que se hereda: ver [[adn/memoria#memoria-genetica]]) y `origkey` es una constante. El gen guarda 1234 en la 971 durante los dos primeros ciclos de vida.
 
-Como es solo un número, el `def` puede valer cualquier cosa en ±32767. Si lo usás como dirección y cae fuera de 1..1000, se ajusta igual que cualquier dirección (ver [[adn/numeros]]): `def x 1050` y `def x -50` terminan los dos en la celda 50. El valor tiene que ser un número escrito con cifras: `def x .up` no copia la dirección de `.up`, vale 0.
+Como es solo un número, el `def` puede valer cualquier cosa en ±32767. Si lo usás como dirección y cae fuera de 1..1000, se ajusta igual que cualquier dirección (ver [[adn/numeros]]): `def x 1050` y `def x -50` terminan los dos en la celda 50. El valor tiene que ser un número escrito con cifras: `def x .up` no copia la dirección de `.up`, vale 0. El [[app/editor]] lo marca.
 
 ## Un def que pisa una sysvar {#sombra}
 <!-- 20-VM §2.4, §8.2 (la privada sombrea a la sysvar homónima); lint «sombra» -->
@@ -121,7 +121,7 @@ Más raro todavía: cualquier línea que empiece con las letras `def` se toma co
 defensa 50
 ```
 
-define una variable llamada `nsa` con el valor 50. Si alguna vez un bot hace cosas inexplicables, revisá que ninguna línea empiece con «def» por accidente.
+define una variable llamada `nsa` con el valor 50. Si alguna vez un bot hace cosas inexplicables, revisá que ninguna línea empiece con «def» por accidente. El editor también te avisa cuando una línea se lee como `def`.
 
 ## use: una palabra muerta {#use}
 <!-- 20-VM §8.5 -->

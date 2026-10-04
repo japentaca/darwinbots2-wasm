@@ -57,6 +57,8 @@
   "editor.lint.pegado-otro": "{token} se lee solo en parte (¿falta un espacio?).",
   "editor.lint.primero": "Con def, la primera palabra ({token}) no es de control de flujo y se pierde.",
   "editor.lint.sombra": "La variable privada {nombre} tapa al sysvar .{nombre} en todo el bot.",
+  "editor.lint.defpegado": "Toda línea que empieza con «def» es una definición: {token} define la variable {nombre}. Si es texto, ponele la marca de comentario '.",
+  "editor.lint.defvalor": "El valor de un def tiene que ser un número: en def {nombre}, «{valor}» vale 0.",
   "editor.lint.error": "El motor rechaza este ADN (error {codigo}: un número fuera de ±32767 o un def mal formado).",
   "editor.lint.otro": "{token}: el motor lo lee distinto de lo que parece.",
   "editor.genes.gen": "Gen",

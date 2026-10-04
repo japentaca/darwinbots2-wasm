@@ -467,10 +467,16 @@ export async function generar(m, o = {}) {
     const desde = r;
     const prosaParam = new Map();
     /** @param {string} d */
-    const enlace = (d) => {
+    const enlace = (/** @type {string} */ todo) => {
+      // [[destino|otro texto]] vale para los cuatro tipos de destino. El | de
+      // [[op:|]] (or bit a bit) es parte del token, no un separador.
+      const corte = todo.startsWith('op:') ? todo.indexOf('|', 4) : todo.indexOf('|');
+      const d = (corte < 0 ? todo : todo.slice(0, corte)).trim();
+      const texto = corte < 0 ? '' : todo.slice(corte + 1).trim();
+      const propio = texto ? enLinea(texto, { enlace }) : '';
       const fallar = (/** @type {string} */ msg) => {
         errores.push(`${pe}${r || 'portada'}: ${msg}`);
-        return { href: '#', html: escapar(d) };
+        return { href: '#', html: escapar(todo) };
       };
       if (d.startsWith('.')) {
         const n = d.slice(1);
@@ -478,29 +484,31 @@ export async function generar(m, o = {}) {
           ? sysvarPorDir.get(Number(n))
           : sysvarPorNombre.get(n.toLowerCase());
         if (!ruta) return fallar(`no existe la sysvar ${d}`);
-        return { href: href(desde, ruta), html: `<code>${escapar(d)}</code>` };
+        return { href: href(desde, ruta), html: propio || `<code>${escapar(d)}</code>` };
       }
       if (d.startsWith('op:')) {
         const t = d.slice(3);
         const ruta = operadorPorToken.get(/^[a-z]+$/i.test(t) ? t.toLowerCase() : t);
         if (!ruta) return fallar(`no existe el operador ${t}`);
-        return { href: href(desde, ruta), html: `<code>${escapar(t)}</code>` };
+        return { href: href(desde, ruta), html: propio || `<code>${escapar(t)}</code>` };
       }
       if (d.startsWith('param:')) {
         const clave = d.slice(6);
         const ruta = parametroEn.get(clave);
         const par = PARAMETROS.find((x) => x.clave === clave);
         if (!ruta || !par) return fallar(`no existe el parámetro ${clave}`);
-        return { href: `${href(desde, ruta)}#${anclaParam(clave)}`, html: escapar(par[idioma]) };
+        return {
+          href: `${href(desde, ruta)}#${anclaParam(clave)}`,
+          html: propio || escapar(par[idioma]),
+        };
       }
-      const [destinoTexto, texto] = d.split('|');
-      const [ruta, ancla] = destinoTexto.trim().split('#');
+      const [ruta, ancla] = d.split('#');
       const dest = paginas.get(ruta);
       if (!dest || dest.tipo === 'portada') return fallar(`no existe la página ${ruta}`);
       if (ancla) anclasPedidas.push({ desde: `${pe}${r}`, ruta, ancla });
       return {
         href: `${href(desde, ruta)}${ancla ? `#${ancla}` : ''}`,
-        html: enLinea(texto?.trim() || dest.titulo, { enlace }),
+        html: propio || enLinea(dest.titulo, { enlace }),
       };
     };
     /** @param {string} lenguaje @param {string} texto @param {string[]} opciones */
