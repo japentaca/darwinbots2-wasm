@@ -1,0 +1,85 @@
+cond
+*990 0 =
+start
+998 rnd 530 rnd 2 div abs 1 add 971 store
+998 rnd 530 rnd 2 div abs 1 add 972 store
+998 rnd 530 rnd 2 div abs 1 add 973 store
+998 rnd 530 rnd 2 div abs 1 add 974 store
+998 rnd 530 rnd 2 div abs 1 add 975 store
+998 rnd 530 rnd 2 div abs 1 add 976 store
+998 rnd 530 rnd 2 div abs 1 add 977 store
+998 rnd 530 rnd 2 div abs 1 add 978 store
+998 rnd 530 rnd 2 div abs 1 add 979 store
+998 rnd 530 rnd 2 div abs 1 add 980 store
+998 rnd 530 rnd 2 div abs 1 add 981 store
+998 rnd 530 rnd 2 div abs 1 add 982 store
+998 rnd 530 rnd 2 div abs 1 add 983 store
+998 rnd 530 rnd 2 div abs 1 add 984 store
+998 rnd 530 rnd 2 div abs 1 add 985 store
+998 rnd 530 rnd 2 div abs 1 add 986 store
+998 rnd 530 rnd 2 div abs 1 add 987 store
+998 rnd 530 rnd 2 div abs 1 add 988 store
+998 rnd 530 rnd 2 div abs 1 add 989 store
+998 rnd 530 rnd 2 div abs 1 add 990 store
+*.thisgene .delgene store
+stop
+
+cond
+1000 *.kills 1 add mult rnd 5 =
+start
+971 19 rnd add inc 999 ceil store
+stop
+
+cond
+1000 *.kills 1 add mult rnd 10 =
+start
+971 19 rnd add dec -6 floor store
+stop
+
+cond
+*.fixed 1 =
+start
+0 .fixpos store
+stop
+
+cond *971 *972 * > start *973 *974 * store stop
+cond *971 *972 * = start *974 *975 * store stop
+cond *971 *972 * < start *975 *976 * store stop
+
+cond *973 *974 * > start *973 *974 * store stop
+cond *973 *974 * = start *974 *975 * store stop
+cond *973 *974 * < start *975 *976 * store stop
+
+cond *975 *976 * < start *977 *978 * store stop
+cond *975 *976 * > start *978 *979 * store stop
+cond *975 *976 * = start *979 *980 * store stop
+
+cond *977 *978 * < start *977 *978 * store stop
+cond *977 *978 * > start *978 *979 * store stop
+cond *977 *978 * = start *979 *980 * store stop
+
+cond *979 *980 * < start *981 *982 * store stop
+cond *979 *980 * = start *982 *983 * store stop
+cond *979 *980 * > start *983 *984 * store stop
+
+cond *981 *982 * < start *981 *982 * store stop
+cond *981 *982 * = start *982 *983 * store stop
+cond *981 *982 * > start *983 *984 * store stop
+
+cond *983 *984 * = start *985 *986 * store stop
+cond *983 *984 * < start *986 *987 * store stop
+cond *983 *984 * > start *987 *988 * store stop
+
+cond *985 *986 * = start *985 *986 * store stop
+cond *985 *986 * < start *986 *987 * store stop
+cond *985 *986 * > start *987 *988 * store stop
+
+cond *987 *988 * > start *989 *990 * store stop
+cond *987 *988 * = start *990 *971 * store stop
+cond *987 *988 * < start *971 *972 * store stop
+
+cond *989 *990 * < start *977 *978 * store stop
+cond *989 *990 * > start *978 *979 * store stop
+cond *989 *990 * = start *979 *980 * store stop
+
+end

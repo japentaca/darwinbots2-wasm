@@ -1,0 +1,77 @@
+'Name: Fishy 1.0
+'Author: MacadamiaNuts 11 June 2007
+'Description: Turn your simulation into a fishtank!
+'Watch them tailing each other and forming big masses of different size fish.
+
+'FOLLOW THE MASS
+cond
+pain 0 =<
+start
+-10 *.eye9 sgn mult 
+-10 *.eye8 sgn mult add
+-10 *.eye7 sgn mult add
+-10 *.eye6 sgn mult add
+
+10 *.eye4 sgn mult add
+10 *.eye3 sgn mult add
+10 *.eye2 sgn mult add
+10 *.eye1 sgn mult add
+
+*.aim add 1256 mod .setaim store
+
+50 *.velup sub .up store
+0 .fixpos store
+stop
+
+'MATCH SPEED
+cond
+*.eye5 0 >
+start
+50 *.velup sub .up store
+*.refveldx .dx store
+0 .fixpos store
+stop
+
+
+'MATCH DIRECTION
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim *.aim sub 2 div *.aim add .setaim store
+stop
+
+'FEED
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+stop
+
+'STOP FOR FEEDING
+cond
+*.eye5 65 >
+*.refeye *.myeye !=
+start
+1 .fixpos store
+stop
+
+
+'DO LOTS OF LITTLE FISHIES
+cond
+*.nrg 30000 >
+start
+1256 rnd .setaim store
+5 .repro store
+stop
+
+'MAINTENANCE AND EDGE CHECK
+cond
+start
+*.nrg 10 div *.body sub .strbody store
+*.body 10 mult *.nrg sub .fdbody store
+*.waste .shootval *.waste 100 div abs mult store
+-4 .shoot *.waste 100 div abs mult store
+628 .aimdx *.edge mult store
+stop

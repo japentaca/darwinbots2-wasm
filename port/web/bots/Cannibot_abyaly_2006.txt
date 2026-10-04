@@ -1,0 +1,57 @@
+'Attacks conspecs, but only the ones who are more distant relatives
+'The theory is that a cannibot who also attacks his close relatives 
+'wont have anyone to protect them against them against their cousins
+
+
+cond
+*.robage 0 =
+start
+'the value initiallystored in 971 determines how well he gets along with his family
+'the higher the number, the more distant the relatives need to be in order to get attacked
+50 971 store
+.delgene inc
+stop
+
+cond
+*.robage 0 =
+start
+971 .memloc store
+stop
+
+cond
+*.robage 2 =
+start
+*971 2 rnd add 1 sub 971 store
+stop
+
+cond
+*.eye5 0 =
+*.memval *971 %= or
+start
+5 .up store
+314 rnd .aimdx store
+stop
+
+cond
+*.eye5 0 >
+*.eye5 40 <=
+*.memval *971 !%=
+start
+*.refvelup 10 add .up store
+*.refveldx .dx store
+stop
+
+cond
+*.eye5 40 >
+*.memval *971 !%=
+start
+-6 .shoot store
+*.refvelup .up store
+stop
+
+cond
+*.nrg 10000 >
+*.robage 100 >
+start
+30 .repro store
+stop

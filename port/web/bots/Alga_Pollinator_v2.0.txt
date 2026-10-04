@@ -1,0 +1,52 @@
+'Alga_Pollinator v 2.0
+'By: jknilinux 
+'It infects bots with a virus that makes them pollinate it and spread the virus to other bots.
+
+cond
+*.robage 0 =
+start
+7 989 store
+stop
+
+cond
+*.vtimer 0 =
+start
+3 .mkvirus store
+stop
+
+cond
+7 *989 !=
+start
+*.thisgene 1 rnd 2 mult -1 add add .delgene store
+*.eyef 0 =
+10 .up store
+not
+*.refxpos *.refypos angle .setaim store
+*.refvelup 5 add .up store
+*.refveldx .dx store
+-8 .shoot store
+*.thisgene .mkvirus store
+50 .vshoot store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+50 .vshoot store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+cond
+*.fertilized 0 >
+*.nrg 5000 >          'Sometimes works better without this
+start
+33 .sexrepro store
+stop
+end

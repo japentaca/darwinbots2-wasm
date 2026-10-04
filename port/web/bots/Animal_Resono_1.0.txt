@@ -1,0 +1,171 @@
+' Animal_Resono_1.0 (F2)(Tilthan) 30.05.12
+' Also Blind Bot, Interesting Behavior
+
+' This bot does not use any eyes and can run with vision disabled 
+' It uses info shots as conspec recognition, I'm in the process of changing this so it can be in F3
+' It is the only bot I know of that uses echolation using shots
+' I'm very proud that it can beat some bots with eyes (A_Minimalis...)
+' A side effect of it's conspec is that it makes a mine field and plays pinball
+' Version 1.1 is in the bestiary.
+
+def guess 50
+def search 51
+
+def me 52
+def age 10
+def power 32
+
+
+' 1 Get Mom Tie
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+' 2 Get Rid of Mom Tie
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+' 3 Get Away from Mom
+cond
+*.robage .age <
+*.vel 180 <
+start
+10 .dn store
+stop
+
+' 4 Find Food, Start Sonar
+cond
+300 *.nrg div 5 add rnd 0 =
+and
+*.guess 0 =
+and
+*.robage .age >
+start
+100 rnd 100 add .aimdx store
+-1 .shoot store
+.search inc
+stop
+
+' 5 Find Food, Get Sonar
+cond
+*.shang 0 >
+and
+*.robage .age >
+and
+*.me 0 =
+start
+*.shang .aimdx store
+3 .guess store
+*.velup -1 mult .up store
+*.veldx -1 mult .dx store
+0 .search store
+stop
+
+' 6 Tell Comrades to Move
+cond
+*.guess 1 =
+start
+.me .shoot store
+.shootval inc
+.guess dec
+stop
+
+' 7 Shoot at Food
+cond
+*.guess 1 >
+start
+-6 .shoot store
+.power .shootval store
+.guess dec
+stop
+
+' 8 Migrate for more Food
+cond
+*.search 600 >
+*.nrg 500 >
+start
+-100 .up store
+0 .search store
+stop
+
+' 9 Unstick if stuck
+cond
+*.fixed 0 >
+start
+0 .fixpos store
+stop
+
+'''''''''''Better movement hopefully
+' 10 Shot Front, move forward
+cond
+*.shdn 0 !=
+start
+*.up -10 add .up store
+stop
+
+' 11 Shot Back, move back
+cond
+*.shup 0 !=
+start
+*.up 10 add .up store
+stop
+
+' 12 Shot Right, Move Right
+cond
+*.shdx 0 !=
+start
+*.dx 10 add .dx store
+stop
+
+' 13 Shot Left, Move Left
+cond
+*.shsx 0 !=
+start
+*.dx -10 add .dx store
+stop
+
+' 14 Body Maintenence
+cond
+*.nrg 1120 >
+*.body 500 <
+start
+100 .strbody store
+stop
+
+' 15
+cond
+*.nrg 1000 <
+*.body 50 >
+start
+100 .fdbody store
+stop
+
+' 16 If Fam warns me or If I hit Fam, Move
+cond
+*.me 0 !=
+and
+*.robage 0 !=
+start
+0 .guess store
+284 rnd 120 add .aimdx store
+-80 .up store
+0 .me store
+stop
+
+' 17 Reproduce
+cond
+*.nrg 10000 >
+and
+*.pleas 0 %=
+'and
+'*.robage .age >
+start
+30 .repro store
+stop
+
+end

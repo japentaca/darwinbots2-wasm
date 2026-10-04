@@ -271,18 +271,27 @@ test('dependencias: «+ gen N» agrega el gen que escribe la memoria', () => {
   assert.ok(probados >= 10, `${probados}`);
 });
 
+/**
+ * Palabras del gen desde su `cond`/`start`, como en el editor (sin lo que el
+ * core deja delante, p. ej. `0 *0` en Flyfruit v0.92). @param {string} t
+ */
+const palabrasDelGen = (t) => {
+  const w = t.split(/\s+/).filter(Boolean);
+  return w.slice(genesTexto(w.join('\n'))[0]?.t0 ?? 0);
+};
+
 test('números de gen literales: «Renumerar» y «+ gen N»', () => {
   let probados = 0;
   for (const file of conGl) {
     const gs = genes.bots[file];
     const gi = gs.findIndex((g) => {
       if (!g.gl) return false;
-      const lits = literalesGen(g.t.split(/\s+/));
+      const lits = literalesGen(palabrasDelGen(g.t));
       return lits.length > 0 && lits.every((x) => x.n - 1 < gs.length && x.n - 1 !== gs.indexOf(g));
     });
     if (gi < 0) continue;
     const g = gs[gi];
-    const lits = literalesGen(g.t.split(/\s+/));
+    const lits = literalesGen(palabrasDelGen(g.t));
     const refs = [...new Set(lits.map((x) => x.n - 1))];
     // solo el gen: faltan sus referidos
     const solo = armar([{ file, gi }]);
@@ -297,7 +306,7 @@ test('números de gen literales: «Renumerar» y «+ gen N»', () => {
     const hace = lits.some((x) => x.n !== 2 + refs.indexOf(x.n - 1));
     if (!hace) continue;
     assert.ok(gl2 && gl2.tipo === 'gl', `${file}: numeración vieja`);
-    assert.deepEqual(gl2.acciones, [{ tipo: 'renumerar', i: 0 }]);
+    assert.deepEqual(gl2.acciones, [{ tipo: 'renumerar', i: 0 }], file);
     const r = aplicarAccion({ adn: h.adn, origenes: h.origenes, genes }, gl2.acciones[0]);
     const g0 = genesTexto(r.adn)[0].palabras;
     for (const x of lits) assert.equal(g0[x.k], String(2 + refs.indexOf(x.n - 1)));

@@ -1,0 +1,49 @@
+.eye8dir store
+ addstore
+ *344 floorstore
+ *.eye7
+ start
+ *.refshoot 5 .up store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  11  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  12  '''''''''''''''''''''''
+ else
+ 531 *.tieang4 *850
+''''''''''''''''''''''''  Gene:  2 Ends at position  15  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  16  '''''''''''''''''''''''
+ cond
+ 13449 *.eye4 negstore
+ *162 *.trefvelyourup *.in1 *.eye5 *.availability *.mydx *.refeye >
+ !~=
+ *.in2 *.in9 start
+ -6 .shoot ceilstore
+ 5 .tout1 store
+ *.refveldx .dx addstore
+ *344 floorstore
+ 17930 2464 23925 substore
+ sqrstore
+ 1807 false
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  50  '''''''''''''''''''''''
+ *.trefvelyoursx 29301 store
+ *.tmemval *.pleas rndstore
+ 527 *.poison dist floor stop
+ drop
+''''''''''''''''''''''''  Gene:  4 Begins at position  63  '''''''''''''''''''''''
+ start
+ 19824 12314 *29566
+''''''''''''''''''''''''  Gene:  4 Ends at position  66  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  67  '''''''''''''''''''''''
+ start
+ 2523 *.refsx *.tin8 *.reffixed *.ypos *.veldn multstore
+ *771 *.nrg 586 *.shdx rnd swapbool
+ addstore
+ *.thisgene floorstore
+ 30007 >
+ 7437 *.trefxpos ^ .repro store
+ 259 store
+ .backshot store
+ and
+ *.eye1 store
+ 4 6 518 418 *.eye1 *.in1''''''''''''''''''''''''  Gene:  5 Ends at position  103  '''''''''''''''''''''''

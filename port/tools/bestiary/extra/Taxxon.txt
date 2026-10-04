@@ -1,0 +1,81 @@
+'Taxxon
+'By: southpointingchariot
+'Eat each other, yo.
+
+'Hunting
+
+'Food Finder
+cond
+ *.eye5 -10 >
+ *.in1 *971 sub abs 1 >
+ start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+
+'Eat Food
+cond
+ *.eye5 50 >
+ *.in1 *971 sub abs 1 >
+ start
+ -1 .shoot store
+ *.refvelup .up store
+ stop
+
+'Turn around
+cond
+ *.eye5 0 >
+ *.in1 *971 sub abs 1 =
+start
+ 314 rnd .aimdx store
+stop
+
+'Generation
+
+'Who Am I?
+cond
+*971 0 =
+start
+10000 rnd 971 store
+stop
+
+'Here's who I am
+cond
+*971 *.out1 !=
+start
+*971 .out1 store
+stop
+
+'Reproduction
+
+'Am I Fertilized?
+cond
+*.fertilized 0 >
+start
+*.fertilized .out2 store
+stop
+ 
+Sperm shooter
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+*.in1 *971 sub abs 2 >
+*.in2 0 =
+start
+-8 .shoot store
+stop
+
+'Sexual Reproduction
+cond
+*.fertilized 0 >
+*.nrg 25000 >
+start
+50 .sexrepro store
+stop
+
+'Reproduction
+ cond
+ *.nrg 30000 >
+ start
+ 50 .repro store
+ stop

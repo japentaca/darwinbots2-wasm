@@ -1,0 +1,25 @@
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 100 <
+*.numties 1 =
+start
+1000 .tielen1 store
+stop
+
+cond
+*.chlr *.light <
+start
+160 .mkchlr store
+stop
+
+cond
+*.body 100 >
+start
+50 .repro store
+15 .aimsx store
+stop

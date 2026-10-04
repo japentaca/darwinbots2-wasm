@@ -1,0 +1,128 @@
+'by Shadowgod2
+'first parent to child NNet pass down working
+'2 input per neuron
+'1 in 10000 chance to change/mutate each neuron aspect
+
+'start nnet
+
+cond
+*.robage 1 =
+start
+5 rnd 995 add 971 store
+5 rnd 995 add 972 store
+5 rnd 995 add 973 store
+5 rnd 995 add 974 store
+5 rnd 995 add 975 store
+5 rnd 995 add 976 store
+5 rnd 995 add 977 store
+5 rnd 995 add 978 store
+6 rnd 3 sub 979 store
+6 rnd 3 sub 980 store
+6 rnd 3 sub 981 store
+6 rnd 3 sub 982 store
+6 rnd 3 sub 983 store
+6 rnd 3 sub 984 store
+6 rnd 3 sub 985 store
+6 rnd 3 sub 986 store
+6 rnd 3 sub 987 store
+6 rnd 3 sub 988 store
+6 rnd 3 sub 989 store
+6 rnd 3 sub 990 store
+stop
+
+cond
+*.robage 2 >
+start
+1 .delgene store
+stop
+
+'birth mutations
+
+cond
+*.robage 0 =
+start
+10000 50 store
+stop
+
+cond
+*.robage 16 =
+start
+5 rnd 995 add 971 1 *50 rnd sub 0 floor mult store
+5 rnd 995 add 972 *50 rnd sub 0 floor mult store
+5 rnd 995 add 973 *50 rnd sub 0 floor mult store
+5 rnd 995 add 974 *50 rnd sub 0 floor mult store
+5 rnd 995 add 975 *50 rnd sub 0 floor mult store
+5 rnd 995 add 976 *50 rnd sub 0 floor mult store
+5 rnd 995 add 977 *50 rnd sub 0 floor mult store
+5 rnd 995 add 978 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 979 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 980 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 981 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 982 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 983 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 984 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 985 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 986 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 987 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 988 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 989 *50 rnd sub 0 floor mult store
+6 rnd 3 sub 990 *50 rnd sub 0 floor mult store
+stop
+
+'input
+
+cond
+*.robage 16 >
+*.numties 0 =
+start
+*.eye5 995 store
+*.refeye *.myeye sub 996 store
+stop
+
+'invisable
+
+cond
+*.numties 0 =
+*.robage 16 >
+start
+*971 * *979 mult *972 * *980 mult add *987 add 997 store
+*973 * *981 mult *974 * *982 mult add *988 add 998 store
+*975 * *983 mult *976 * *984 mult add *989 add 999 store
+*977 * *985 mult *978 * *986 mult add *990 add 1000 store
+stop
+
+'output
+
+cond
+*.numties 0 =
+*.robage 16 >
+*1000 *990 >
+start
+-1 .shoot store
+stop
+
+
+cond
+*.numties 0 =
+*.robage 16 >
+*998 5 sub *989 >
+start
+*999 5 sub -60 floor 60 ceil .up store
+stop
+
+cond
+*.numties 0 =
+*.robage 16 >
+*998 5 add *989 <
+start
+*998 5 add -60 floor 60 ceil .aimsx store
+stop
+
+cond
+*.numties 0 =
+*.robage 16 >
+*.nrg 5000 >
+*.body 5000 >
+start
+50 .repro store
+stop

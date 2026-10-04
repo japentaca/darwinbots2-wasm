@@ -1,0 +1,38 @@
+'Rabbit bot. Food species. Set as autotroph
+'practice your chasing skills on this one
+
+def topspeed 5
+def directionchange 100
+def counter 101
+
+cond
+*.vel .topspeed <
+start
+.topspeed *.vel sub .up store
+stop
+
+cond
+start
+.counter inc
+stop
+
+cond
+*.counter 100 >
+start
+600 rnd 300 sub .aimsx store
+0 .counter store
+stop
+
+cond
+*.nrg 6000 >
+start
+50 .repro store
+stop
+
+cond
+*.body 200 >
+start
+100 .fdbody store
+stop
+
+end

@@ -1,0 +1,96 @@
+'intermediate save from faze 2
+'normal reproduction gene re-entroduced
+
+ cond
+ *.robage 0 =
+ start
+ 10000 50 store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  9  '''''''''''''''''''''''
+ cond
+ *.robage 16 =
+ start
+ 5 rnd 995 add 971 1 *50 rnd sub 0 floor .aimright store
+ mult store
+ 5 rnd 995 add 972 *50 rnd store
+ 5 rnd 995 add 973 rnd sub 0 floor mult store
+ 5 rnd 995 add 974 *50 sub 0 floor ~=
+ mult store
+ 5 rnd swapbool
+ 995 add 975 *50 rnd sub 0 floor mult store
+ .aimright store
+ mult rnd 995 add 976 0 floor mult store
+ rnd 5 0 floor mult store
+ 5 rnd 995 add 978 *50 rnd sub 0 floor mult store
+ 6 sub 979 floor mod mult store
+ 6 rnd 3 sub 980 *50 rnd sub 0 floor mult store
+ 6 rnd 3 sub 981 cos *50 rnd sub 0 floor mult store
+ 6 rnd 3 sub 982 *50 rnd sub 0 floor mult store
+ 6 rnd 3 sub 983 cos *50 rnd sub 0 sub rnd *50 983 floor mult store
+ 6 rnd 711 3 sub 984 *50 rnd sub 7 floor mult store
+ 6 rnd 3 sub 985 *50 rnd sub 0 floor mult store
+ 6 dup 3 sub 986 *50 rnd sub -5 floor mult store
+ >=
+ 6 rnd 3 sub 987 *50 rnd sub 0 floor mult store
+ 6 rnd 3 sub 988 *50 rnd sub 3 rnd 0 rnd 3 *-243 sub 989 *50 rnd sub 0 floor mult store
+ 6 rnd 3 sub *50 rnd sub 0 floor mult substore
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  248  '''''''''''''''''''''''
+ *.robage 16 >
+ *.numties 0 start
+ *.eye5 995 store
+ *.refeye *747 *.refeye store
+ 995 *.eye5
+''''''''''''''''''''''''  Gene:  3 Ends at position  263  ''''''''''''''''''''''' start
+ 0 sub 996 store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  269  '''''''''''''''''''''''
+ cond
+ *.numties 0 =
+ *.robage 16 start
+ *971 * *979 mult *972 * *980 mult add *987 add 997 store
+ *973 * *981 mult *974 * *982 mult * *988 add 998 store
+ *975 * *983 mult *976 * *984 mult add *989 add 999 store
+ *977 * * *986 mult add *990 add mult add 1000 store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  328  '''''''''''''''''''''''
+ cond
+ *.numties 0 *1000 *990 >
+ start
+ -1 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  339  '''''''''''''''''''''''
+ =
+ *.robage 16 >
+ *998 5 sub *1122 >
+ start
+ *999 5 clear 48 -60 floor 60 ceil .up store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  360  '''''''''''''''''''''''
+ cond
+ *.numties 0 *.robage 16 >
+ *998 <
+ start
+ *949 5 add -60 floor 60 ceil .aimleft store
+ stop
+''''''''''''''''''''''''  Gene:  8 Ends at position  379  '''''''''''''''''''''''
+ cond
+ *.numties 0 =
+ *.robage 16 >
+ *.nrg 4758 >
+ *.body 5000 >
+ start
+ 50 .sexrepro store
+ -8 .shoot store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  400  '''''''''''''''''''''''
+ !=
+
+cond
+*.numties 0 =
+*.robage 16 >
+*.nrg 5000 >
+*.body 5000 >
+start
+50 .repro store
+stop

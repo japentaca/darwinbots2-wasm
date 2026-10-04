@@ -1,0 +1,517 @@
+'uses tie feeding
+'and shooting
+'more to come(I hope)
+cond
+*.refdn
+20
+>
+start
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+*.eye5
+0
+=
+start
+  1
+  *40
+  add
+  40
+  store
+stop
+
+cond
+  *.refdn
+  20
+  >
+  start
+  100
+  .aimdx
+  store
+stop
+
+cond
+  *40
+  200
+  >
+  start
+  1
+  40
+  store
+stop
+
+cond
+  *.eye1
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  59
+  .aimsx
+  store
+stop
+
+cond
+  *.eye2
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  46
+  .aimsx
+  store
+stop
+
+cond
+  *.eye3
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  31
+  .aimsx
+  store
+stop
+
+cond
+  *.eye4
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  16
+  .aimsx
+  store
+stop
+
+cond
+  *.eye5
+  0
+  >
+  *.eye5
+  50
+  <
+  *.refdn
+  20
+  <
+start
+  5
+  .up
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  >
+  *.refshoot
+  0
+  =
+start
+  -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refshoot
+  0
+  >
+start
+  .dn
+  .shoot
+  store
+  5000
+  .shootval
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  <
+  *.nrg
+  500
+  <
+  *.refshoot
+  0
+  =
+start
+  -1
+  .shoot
+  store
+stop
+
+cond
+  *.eye5
+  49
+  >
+  *.refdn
+  20
+  <
+  *.refnrg
+  500
+  <
+  *.nrg
+  499
+  >
+start
+  200
+  .aimdx
+  store
+stop
+
+cond
+  *.eye6
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  15
+  .aimdx
+  store
+stop
+
+cond
+  *.eye7
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  30
+  .aimdx
+  store
+stop
+
+cond
+  *.eye8
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  45
+  .aimdx
+  store
+stop
+
+cond
+  *.eye9
+  0
+  >
+  *.refdn
+  20
+  <
+  *.eye5
+  0
+  =
+start
+  60
+  .aimdx
+  store
+stop
+
+cond
+*.eye1
+0
+=
+*.eye2
+0
+=
+*.eye3
+0
+=
+*.eye4
+0
+=
+*.eye5
+0
+=
+*.eye7
+0
+=
+*.eye8
+0
+=
+*.eye9
+0
+=
+*40
+100
+<
+start
+  4
+  .up
+  store
+  5
+  .aimdx
+  store
+stop
+
+cond
+*.eye1
+0
+=
+*.eye2
+0
+=
+*.eye3
+0
+=
+*.eye4
+0
+=
+*.eye5
+0
+=
+*.eye7
+0
+=
+*.eye8
+0
+=
+*.eye9
+0
+=
+*40
+100
+>
+start
+  4
+  .up
+  store
+  5
+  .aimsx
+  store
+stop
+
+cond
+  *.nrg
+  10000
+  >
+start
+  400
+  .aimdx
+  store
+  20
+  .repro
+  store
+stop
+
+cond
+1
+0
+=
+start
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+0
+.dn
+store
+stop
+
+'initialize 1
+cond
+*.robage 0 =
+start
+31998 rnd 2 add 55 store
+1 .tie store
+stop
+
+'initialize 2
+cond
+*.robage 1 =
+start
+1 .deltie store
+stop
+
+cond
+*.eye2 *.eye8 !=
+*.eye4 *.eye6 !=
+*.eye4 0 >
+start
+*.eye2 *.eye8 sub .aimsx store
+stop
+
+cond
+*.eye4 *.eye6 !=
+start
+*.eye4 *.eye6 sub .aimsx store
+stop
+
+cond
+*.refeye *.myeye =
+start
+200 .aimsx store
+stop
+
+cond
+*.vel 40 <
+*.refeye *.myeye !=
+start
+40 *.vel sub .up store
+stop
+
+cond 
+*.nrg 4000 >
+*.eye5 30 <
+start
+50 .repro store
+stop
+
+cond
+*.eye5 50 >
+*.refpoison 0 =
+start
+-1 .shoot store
+stop
+
+cond
+*.eye5 30 >
+*.eye4 *.eye6 %=
+*.eye5 77 !=
+*.refeye *.myeye !=
+start
+*55 .tie store
+*55 .readtie store
+stop
+
+cond
+*.trefeye *.myeye =
+start
+*55 .deltie store
+stop
+
+cond
+*.numties 0 >
+start
+-1 .tieloc store
+-1000 .tieval store
+*55 .tienum store
+stop
+
+cond
+*.slime 100 <
+start
+50 .mkslime store
+stop
+
+end

@@ -1,0 +1,148 @@
+'An explained bot, like a manual inside a bot, by peterB.
+'As a starter bot to learn from.
+'You can copy this entire text inside a txt file and use it as a bot. 
+'The bot in the end became a bit more advanced then i had planned.
+'Its a result of playing with all the inner valleus, and learning them. 
+'I used it to make notes and learn this Bot language.
+'I still dont understand it all, but hey this bot allready defeats lots of other bots.
+'As a canibal its stable alone for quite a while, but as a group of pirhana's its also a feeder.
+'Tough in such a group it not realy kills it prey fast so its a long lunch... 
+'And so it has time to create group ofspring, as sexual reproduction from a group.
+'
+'SENSORS and variables
+'=========================================================================================
+'
+' A basic sensor is an eye
+' to get info from an eyse you need to read it out.
+' this is done by command:
+'    *.eye5    
+' Its reads from fronteye (number 5 is front)  
+' Its the same as reading from memory location *505  (dough thats harder to understand).
+' Its value 'll be greater then 0 if it sees something 
+'
+' *.up                my own up speed. 
+'                     note to add 30 up to my own speed use:  *.up 30 add .up store
+'
+'  
+'
+' 
+'   Often remote sensed bots start with ref, and local sensors with my like:
+'
+' *.refeye   *.myeye   (counts number of eyes often used for species comparison)
+' *.refvelup           (relative bots speed from your eyevector)
+'
+'
+'
+'CONDITONAL COMPARISON
+'==========================================================================================
+
+' =   equals
+' %=  almost equal, whitin 10% 
+' !=  notequal
+' > greather then
+' 
+ *.refage 300 >
+start
+ -1 .shoot store
+ *.refveldx .dx store
+ *.refvelup 10 add .up store
+stop
+
+
+
+
+'GENE 3
+' If i remember one thing of bioligy lessons in fact my only lesson
+' That it had all to do with reproction, DarwinBots can reproduce too
+' The question is when should we do this, and how does it work.
+' Wel most cell in darwinbots devide asexual, only based on their energy reserve
+' Energie level can be retrieved trough sensor *.nrg
+' most of the times i saw    *.nrg 5000 >
+' but i will use a lower value  2500 in this one just for fun...(life is like go and multiply)
+' Also the question is how much energy would you like to give to your child mostly I see
+' 50 .repro store
+' will result in a child with 50% of the energy stored it is commonly used.
+' But just for the fun of it, the parents will only give 30% (childs are weaker then parents)
+' After givin birth the parent runs fast away, yup that can happen in nature.
+
+cond
+*.nrg 1500 >
+start
+30 .repro store
+'10 .up store
+100 .dn store
+stop
+
+
+'GENE 4
+' if it doesnt see anything every hunderst turn
+' then perform a command .aimdx (clockwise turn) 
+' for the other counter-directipon use aimsx
+' A total turn in DarwinBots = 1256 units
+' so 1256 = 360 degrees or 2pi   
+'     628 = 180             pi 
+'     314 =  90             pi/2
+' lets add a random valeu of such degrees to the current direction.
+cond
+*.eye5 0 =
+*.robage 100 mod 0 =
+start
+628 rnd *.aimdx add .aimdx store
+stop
+
+
+'GENE 5
+' This gene realy is programing evolution at work.. :)
+' What i tried to do first was remove a child's birth tye, if also he had clear runaway path.
+' Dough i didnt clearly understood how that worked.
+' For some reason a tie kept alive 
+' So i started up mixing code from the website, and then it turned into something else
+' I left this killer bot keep his tye's, till it has more then 1500 energy (adulthood) 
+' Now my first tought was to run away forward
+' Hmm.. but if runned backward and not to fast
+' Then it would probaply gonna eat from something it had catched before.
+' I still regulary see some of them break free, like a spore thats nice.
+' Dough since also a single bot could could activate this gene but should not runaway from its food..
+' so lets dont walk that fast backwards just say 5 or so.
+
+cond
+' *.robage 1 
+  *.eye5 60 
+start
+ .tie inc
+'*.tiepres .deltie store
+5 .dn store
+stop
+
+
+
+'GENE 6 
+' i actualy found from the website
+' it eats the others bot energy (plankton here we go...)
+' but also dumps waste in the other bot.
+' it took 99 % of energy, but hey lets be a little bit fair here and take 16%
+' that sounds small, but keep in mind we dont break the tye..
+'
+' note when not using any conditionar and changing this valeu to 5 10 15 25 etc 
+' gives nice side efects in ofspringg creatures
+' soms might be able to live together with 1 plankton a quationing of balancing this valeu.
+'
+' However i took a different aprouch i wont eat others energy all the time.
+' So there will be differences in a group (to let others be able to get energy offspring).
+' The way it is balanced a cingle plankton and a single canibal will also grow slowly.
+
+
+cond
+*.robage 20 mod 0 =
+start
+50 .sharenrg *.multi mult store
+.sharewaste *.multi mult inc
+stop
+
+
+
+
+' So that was the whole genome, it ends with the word end, 
+' But wait there is much more then this writing above here.
+' A lot of other function vars and commands can be found here at this site:
+'  http://wiki.darwinbots.com/w/Sysvars

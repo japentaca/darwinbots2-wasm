@@ -154,6 +154,33 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
       página con 75 bots por especie; ganar con 500 pediría otro diseño
       (p. ej. huir del enjambre).
 
+- **Bots extra** (`extra/`): bots del resto del foro (boards que no son
+  el Bestiary: DNA - General, Newbie, Bot Tavern, Evolution Sims,
+  Suggestions…, y las respuestas de los temas del Bestiary, que el
+  crawler no mira) y del wiki (wiki.darwinbots.com). `extra/extra.json`
+  tiene su registro con el formato de `bots.json`; `publish_bots.py` los
+  copia antes que los de la casa. Corrida del 2026-10-02, con el foro y el
+  wiki archivados enteros fuera del repo (temas por `action=printpage`,
+  páginas por la API de MediaWiki):
+  - 1455 bloques con pinta de ADN (`cond`/`start`, `store`, `stop`);
+    1449 cargan en el core; 550 son ADN ya publicado;
+  - de los 899 restantes se quitaron los fragmentos (menos de 2-3 genes)
+    y las variantes de bots publicados (Jaccard de 4-gramas de tokens del
+    ADN canónico ≥ 0,8, o ≥ 90 % contenido en uno publicado), y se
+    agruparon las versiones casi iguales (Jaccard ≥ 0,6): 239 grupos, uno
+    por grupo (el más largo);
+  - curados a mano leyendo el tema: fuera los fragmentos, el código que el
+    autor dice que no anda, las versiones intermedias de tutoriales y las
+    pruebas de bugs. Entran 115: 45 «Forum bots», 40 Mutations (sobre
+    todo bots evolucionados publicados en el foro: Coexistence 2022,
+    Sexrepro experiment del wiki, Internet Mode), 15 Veggies, 6
+    Interesting behaviour, 3 Multi-Bots, 3 «Wiki bots», 1 F1, 1 F2 y
+    1 Short. Uno (Occura Amplificis) traía etiquetas `[color]` del foro
+    dentro del ADN, quitadas a mano.
+  Para agregar uno: su `.txt` en `extra/`, su registro en `extra.json`,
+  copiarlo a `web/bots/` + su registro en `web/bots/bots.json` (antes de
+  los de la casa) y correr `analyze_bots.js`.
+
 `bots_raw/` y `validated.json` son productos intermedios (ignorados por git);
 lo publicado en `port/web/bots/` sí se versiona.
 

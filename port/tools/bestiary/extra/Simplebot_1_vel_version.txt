@@ -1,0 +1,49 @@
+' Simplebot 1
+' Gene1. Simple search pattern.
+cond
+  *.eye3 *.eye5 >
+start
+  -70 .aimdx store
+stop
+
+' Gene2. Simple search pattern part 2
+cond
+  *.eye7 *.eye5 >
+start
+  70 .aimdx store
+stop
+
+' Gene 3. Move forward
+cond
+  *.vel 40 <
+start
+  '40 *.vel sub .up store
+  *.refvelup 30 add .up store
+  *.refveldx .dx store
+stop
+
+' Gene 4. Shoot the food
+cond
+  *.eye5 40 >
+start
+  -1 .shoot store
+  *.refvelup .up store
+  *.refveldx .dx store
+stop
+
+' Gene 5. Reproduce
+cond
+  *.nrg 5000 >
+start
+  50 .repro store
+stop
+
+' Gene 6. Avoid conspecifics
+cond
+*.refeye 6 =
+*.eye5 0 >
+start
+180 .aimdx store
+stop
+
+end

@@ -1,0 +1,36 @@
+cond
+ *.eye5 0 *.rmchlr *.refnrg *.myeye !=
+ start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  17  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  18  '''''''''''''''''''''''
+ cond
+ *.eye5 50 >
+ *.bodgain *.myeye !=
+ start
+ -1 .shoot store
+ *748 .up store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  32  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  33  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ store
+ *.myeye =
+ or
+ start
+ *.timer rnd .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  46  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  47  '''''''''''''''''''''''
+ cond
+ *.nrg 20000 >
+ start
+ 10 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  55  '''''''''''''''''''''''

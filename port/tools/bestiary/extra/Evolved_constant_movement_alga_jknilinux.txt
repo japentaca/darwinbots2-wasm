@@ -1,0 +1,146 @@
+~ 12 -3 0 1 0 0 0 0 *69 floor 0 ~=
+ 0 0 0 and
+ 0 0 6 0 and
+ 0 >=
+ false
+
+''''''''''''''''''''''''  Gene:  1 Begins at position  26  '''''''''''''''''''''''
+ start
+ *-71 975 ++ 1000 102 *972 store
+ sub false
+ store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  36  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  37  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  2 Ends at position  37  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  38  '''''''''''''''''''''''
+ cond
+ 3 start
+ 1000 rnd 972 store
+ store
+
+''''''''''''''''''''''''  Gene:  3 Ends at position  45  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  46  '''''''''''''''''''''''
+ cond
+ *.robage 3 =
+ store
+ =
+ sgn *.tin1 ceil *.tin2 *971 drop !=
+ inc
+ *102 !=
+ start
+ add store
+
+''''''''''''''''''''''''  Gene:  4 Ends at position  64  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  65  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  66  '''''''''''''''''''''''
+ inc
+ 50 0 mult ~=
+ =
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  73  '''''''''''''''''''''''
+ else
+ 38 *.eye5 *106
+''''''''''''''''''''''''  Gene:  6 Ends at position  76  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  77  '''''''''''''''''''''''
+ start
+ floor *991
+''''''''''''''''''''''''  Gene:  7 Ends at position  79  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  8 Begins at position  80  '''''''''''''''''''''''
+ start
+ =
+ >> *102 *.in4
+''''''''''''''''''''''''  Gene:  8 Ends at position  84  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  85  '''''''''''''''''''''''
+ cond
+ *.numties 0 <
+ *971 5 =
+ start
+ 0 215 %=
+ *972 .out1 store
+ *971 .tout2 store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  102  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  103  '''''''''''''''''''''''
+ cond
+ 0 store
+ 1 - >=
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  109  '''''''''''''''''''''''
+ sub 10 mult *971 .stifftie store
+ .setaim store
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  118  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  11 Ends at position  118  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  12 Begins at position  119  '''''''''''''''''''''''
+ start
+ *.multi 1
+''''''''''''''''''''''''  Gene:  12 Ends at position  121  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  13 Begins at position  122  '''''''''''''''''''''''
+ else
+ =
+ *96
+''''''''''''''''''''''''  Gene:  13 Ends at position  124  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  125  '''''''''''''''''''''''
+ cond
+ add 300 >
+ inc
+ -504 1 swap .fixpos store
+ start
+ *971 *.nrg 98 <=
+
+''''''''''''''''''''''''  Gene:  14 Ends at position  139  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  15 Begins at position  140  '''''''''''''''''''''''
+ start
+ *.xpos 973 store
+ store
+ 974 *.ypos 314 .aimleft dec
+ *971 10 mult -1 mult sub .repro store
+ =
+
+''''''''''''''''''''''''  Gene:  15 Ends at position  158  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  159  '''''''''''''''''''''''
+ cond
+ *1082
+''''''''''''''''''''''''  Gene:  16 Ends at position  160  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  161  '''''''''''''''''''''''
+ cond
+ *.numties 105 14 *.multi dec
+ 0 angle << start
+ *973 *974 angle .setaim store
+ dec
+ -3 972
+''''''''''''''''''''''''  Gene:  17 Ends at position  178  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  179  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  180  '''''''''''''''''''''''
+ store
+ mult *306 >
+ and
+ =
+ *.thisgene mult 312 mult 1000 <
+ *.nrg store
+ stop
+
+''''''''''''''''''''''''  Gene:  19 Begins at position  196  '''''''''''''''''''''''
+ cond
+ *971 100 .strbody store
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  201  '''''''''''''''''''''''

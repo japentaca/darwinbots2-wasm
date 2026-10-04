@@ -1,0 +1,174 @@
+'orkyboy
+
+def tgtpoison 50
+def tgtvenom 51
+def tgtslime 52
+def tgtshell 53
+def tgtparalyzed 54
+def tgtma 55
+
+'tie to parent
+cond
+*.robage 0 =
+start
+.tie inc
+*.tiepres .tienum store
+stop
+
+'untie
+cond
+*.robage = 1
+start
+*.tienum .deltie store
+ stop
+
+
+'movement genes
+
+
+cond
+ *.eye3 *.eye5 >
+start
+ -30 .aimdx store
+stop
+
+cond
+ *.eye7 *.eye5 >
+start
+ 30 .aimdx store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refxpos *.refypos angle .setaim store
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+
+'waste shoot
+cond
+ *.waste 800 >
+start
+ -4 .shoot store
+stop
+
+cond
+ *.venom 30 <
+ *.nrg 2000 >
+start
+ 30 *.venom sub .strvenom store
+ .up .vnloc store
+ 0 .venval store
+stop
+
+
+'venom shoot
+cond
+*.eye5 =!
+*.refeye *.myeye !=
+start
+ *.memval .tgtID store
+ .up .memloc store
+ *.memval .tgtma store
+ .paralyzed .memloc store
+ *.memval .tgtparalyzed store
+ .shell .memloc store
+ *.memval .tgtshell store
+ .poison .memloc store
+ *.memval .tgtpoison store
+ .slime .memloc store
+ *.memval .tgtslime store
+stop
+
+
+cond
+ *.eye5 20 >=
+ *.refeye *.myeye !=
+ *.tgtma 0 =!
+ *.tgt paralyzed 0 !=
+ *.tgtshell 0 =
+ *.tgtpoison 0 =
+ *.tgtID *out1 =
+start
+ -3 .shoot store 
+stop
+
+
+'attackshoot
+
+cond
+ *.eye5 20 >=
+ *.refeye *.myeye !=
+ *.tgtshell 0 =
+start
+ -6 .shoot store
+stop
+
+'nrg shot
+cond
+*.eye5 20 >=
+*.refeye *.myeye !=
+*.tgtpoison 0 =
+start
+
+stop
+
+'feeding genes
+cond
+ *.eye5 0 !=
+ *.refeye *.myeye !=
+ *.tgtslime 0 =
+start
+  50 rnd .tie store
+ *.tiepres .tienum store
+ -6 .tieloc store
+ -1000 .tieval store
+stop
+
+
+'anti leach gene
+cond
+*.tiepres *.tienum !=
+start
+*.tiepres .deltie store
+stop
+
+
+'reproductive gene
+cond
+ *.nrg 6000 >
+ *.body 800 >
+ *.eye5 40 <
+start
+ 50 .repro store
+stop
+
+
+'shell gene
+cond
+ *.slime 20 <
+start
+ 20 *.slime sub .mkslime store
+stop
+
+'poison gene
+cond
+ *.poison 10 <
+ *.nrg 2000 >
+start
+ 10 *.poison sub .mkpoison store
+ .shoot .ploc store
+stop
+
+
+end

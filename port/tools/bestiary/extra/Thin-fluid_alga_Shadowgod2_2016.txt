@@ -1,0 +1,36 @@
+cond
+*971 0 =
+*.nrg 100 >
+*.daytime 1 =
+start
+10 .mkchlr store
+stop
+
+cond
+*.nrg 20000 >
+start
+50 .repro store
+stop
+
+cond
+*.pain 10 >
+*971 0 =
+start
+50 971 store
+10 .repro store
+314 rnd .aimsx store
+stop
+
+cond
+*971 0 >
+start
+*.body 5 sub .fdbody store
+10 .dn store
+971 dec
+stop
+
+cond
+*.robage 100 <
+start
+*.chlr .rmchlr store
+stop

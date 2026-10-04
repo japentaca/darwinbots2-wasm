@@ -1,0 +1,100 @@
+'evoless evo
+'Adaptive_preditor
+
+'seting vars
+def iset 971
+def mconup 972
+def mconsx 973
+def mcondx 974
+def scondi 975
+
+'initial random setup
+cond
+ *.robage 0 =
+ *.iset 0 =
+start
+ .iset inc
+ 100 rnd .mconup store
+ 100 rnd .mconsx store
+ 100 rnd .mcondx store
+ 100 rnd .scondi store
+stop
+
+'setup / evo
+cond
+ *.robage 0 =
+start
+ 'setting eyes
+ 40 .eye5width store
+ 60 .eye1width store
+ 60 .eye9width store
+ 'evo
+ 5 rnd 970 add dup
+ 1 rnd 0 =
+ inc
+ not
+ dec
+ dropbool
+stop
+
+'chasing food / feeding
+
+cond
+ *.robage 0 >
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.eye5 *.scondi >
+ -1 .shoot store
+ not
+ *.mconup .up store
+ dropbool
+stop
+
+'finding food
+
+cond
+ *.eye1 *.eye9 add 0 =
+ *.eye5 0 =
+ *.refeye *.myeye = or and
+ *.robage 0 >
+start
+ rnd *.mcondx *.mcondx add .aimdx store
+stop
+
+cond
+ *.eye1 *.eye9 >
+ *.eye5 0 =
+ *.refeye *.myeye = or and
+ *.robage 0 >
+start
+ *.mconsx .aimsx store
+ *.mconup .up store
+stop
+
+cond
+ *.eye9 *.eye1 >
+ *.eye5 0 =
+ *.refeye *.myeye = or and
+ *.robage 0 >
+start
+ *.mcondx .aimdx store
+ *.mconup .up store
+stop
+
+cond
+ *.scondi *.eyef <
+ *.refeye *.myeye =
+ *.robage 0 >
+start
+ *.mconup .dn store
+ 0 .up store
+stop
+
+'reprodicing
+
+cond
+ *.nrg 3000 >
+start
+ 30 .repro store
+stop

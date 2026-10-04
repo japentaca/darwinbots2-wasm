@@ -1,0 +1,53 @@
+cond
+  *.eye5  0 !=
+start
+ -1  .shoot store
+stop
+
+'''''''''Gene  2: Last 'stop' at position  9'''''''''
+
+cond
+start
+ add -668  20  1  *146 rnd store
+  *.refshoot  *.veldn  *.eye4 sub  5  786 store
+stop
+
+'''''''''Gene  3: Last 'stop' at position  26'''''''''
+
+cond
+  *.eye5  0 !=
+start
+  20  .up store
+  *.eye6  *.eye4 sub  .aimdx store
+ store
+ rnd
+stop
+
+'''''''''Gene  4: Last 'stop' at position  42'''''''''
+
+cond
+  *.eye5  0 =
+start
+  314 rnd  .aimdx store
+ add
+stop
+
+'''''''''Gene  5: Last 'stop' at position  53'''''''''
+
+cond
+  *.nrg  10000 >
+start
+  10  .repro store
+stop
+
+'''''''''Gene  6: Last 'stop' at position  62'''''''''
+
+cond
+  *.numties  0 >
+start
+  32000  .tielen1 store
+stop
+
+'''''''''Gene  7: Last 'stop' at position  71'''''''''
+
+end

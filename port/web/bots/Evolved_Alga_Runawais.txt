@@ -1,0 +1,314 @@
+'#generation: 5
+'#mutations: 1139
+ cond
+ angle << *598 false
+ else
+ dec
+ -102 floor stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  10  '''''''''''''''''''''''
+ !~=
+ swapbool
+ clearbool
+ abs ceil sub not
+ inc
+ overbool
+ false
+ drop <=
+ !%=
+ 42 true
+ pow cond
+ *430 dec
+ .tin10 dec
+ 144 *100 angle >
+ *740 ^ clearbool
+ !~=
+ -148
+''''''''''''''''''''''''  Gene:  2 Ends at position  40  '''''''''''''''''''''''
+ cond
+ not
+ or
+ - clear or
+ -887 start
+ angle *-42 store
+ dup -307
+''''''''''''''''''''''''  Gene:  3 Ends at position  53  ''''''''''''''''''''''' else
+ dec
+ inc
+ <=
+ %=
+ mult store
+ -- xor
+ =
+ pyth xor
+ inc
+ sqr or
+ !%=
+ pow inc
+ dec
+ pyth
+''''''''''''''''''''''''  Gene:  4 Ends at position  73  ''''''''''''''''''''''' else
+ -221
+''''''''''''''''''''''''  Gene:  5 Ends at position  75  '''''''''''''''''''''''
+ cond
+ store
+ pow store
+ -610 .myties inc
+ or
+ *-44 -269 clearbool
+ angle overbool
+ xor
+ >> 738 floor add swapbool
+ inc
+ store
+ 520 and
+ *-20 else
+ << dec
+ ceil
+''''''''''''''''''''''''  Gene:  6 Ends at position  103  ''''''''''''''''''''''' start
+ ~ *-119 .strbody store
+ ^ floor | -656 >> ~=
+ swap dec
+ <=
+ >=
+ overbool
+
+''''''''''''''''''''''''  Gene:  7 Ends at position  119  ''''''''''''''''''''''' else
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  120  ''''''''''''''''''''''' else
+ -47 dec
+
+''''''''''''''''''''''''  Gene:  9 Ends at position  123  ''''''''''''''''''''''' start
+ swapbool
+ *27 *798 784
+''''''''''''''''''''''''  Gene:  10 Ends at position  128  ''''''''''''''''''''''' start
+
+''''''''''''''''''''''''  Gene:  11 Ends at position  129  '''''''''''''''''''''''
+ cond
+ << >=
+ 1130 >> <
+ false
+ sqr <=
+ overbool
+ clear dupbool
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  142  '''''''''''''''''''''''
+ or
+ -- floor & *995 ~=
+ else
+ abs or
+ ~=
+ *683 ++
+''''''''''''''''''''''''  Gene:  13 Ends at position  154  ''''''''''''''''''''''' else
+ *642
+''''''''''''''''''''''''  Gene:  14 Ends at position  156  ''''''''''''''''''''''' else
+ *.readtie 417 878 -459 -- pow sqr angle sgn inc
+ %=
+ false
+ -85 ++ inc
+ ~=
+ ~=
+ inc
+ *664 overbool
+ 487 *46 clear -430 !=
+ 265 sqr -359 true
+ -22 >
+ dec
+ >> >=
+ | =
+ store
+ store
+ *154 stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  197  '''''''''''''''''''''''
+ drop dupbool
+ sqr drop start
+ *113 pow =
+ 104 div *57 stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  209  '''''''''''''''''''''''
+ ~ ~ -- 118 <
+ store
+ ++ store
+ ++ *305 rnd dup mult *-492 pyth - =
+ ~ dec
+ inc
+ -66 *.shsx %=
+ 606 cond
+ -142 sqr *-618 - angle -- -- clear %=
+ !%=
+ over ceil inc
+ - dup dec
+ mod - !=
+ drop -479 mult start
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  258  '''''''''''''''''''''''
+ sgn *382 *.shsx floor >=
+ inc
+ !%=
+ and
+ floor swapbool
+ drop clearbool
+ mod *-734 abs ~=
+ stop
+ <
+ 396 1083 store
+ and
+ <=
+ inc
+ dec
+ *27 pow dup dropbool
+ & stop
+ *-168 clearbool
+ pow div *-149 start
+
+''''''''''''''''''''''''  Gene:  18 Ends at position  295  '''''''''''''''''''''''
+ cond
+ true
+ pow %=
+ 232 dist !%=
+ drop dec
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  305  '''''''''''''''''''''''
+ -83 else
+ floor !%=
+ swap | & ceil sgn
+''''''''''''''''''''''''  Gene:  20 Ends at position  314  ''''''''''''''''''''''' else
+ *171 538 add not
+ drop -60 -470
+''''''''''''''''''''''''  Gene:  21 Ends at position  322  '''''''''''''''''''''''
+ cond
+ start
+ =
+ * and
+ | pyth mod stop
+''''''''''''''''''''''''  Gene:  22 Ends at position  331  '''''''''''''''''''''''
+ *1374 633 stop
+ pow else
+ -354 <
+ clearbool
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  339  ''''''''''''''''''''''' else
+ !%=
+ 76 dist not
+ -467 ~=
+ store
+ -1056 sqr
+''''''''''''''''''''''''  Gene:  24 Ends at position  349  ''''''''''''''''''''''' else
+ *374
+''''''''''''''''''''''''  Gene:  25 Ends at position  351  '''''''''''''''''''''''
+ cond
+ >=
+ dec
+ *598 61 false
+ ++ *345 -524 clearbool
+ %=
+ ~ drop | swapbool
+ overbool
+ add ++ add store
+ pow -- stop
+''''''''''''''''''''''''  Gene:  26 Ends at position  374  '''''''''''''''''''''''
+ stop
+ start
+ >> -889 clearbool
+ *.shoot %=
+ ++ pow store
+ or
+ dup -113 *358 116 div << floor stop
+''''''''''''''''''''''''  Gene:  27 Ends at position  393  '''''''''''''''''''''''
+ -554 pow 785 mult store
+ | dist -698 691 381 -- *67 !~=
+ sqr abs else
+ & - false
+
+''''''''''''''''''''''''  Gene:  28 Ends at position  412  '''''''''''''''''''''''
+ cond
+ -222 swapbool
+ <
+ *-169 !~=
+ sgn | floor dec
+ else
+ %=
+ *.tout2
+''''''''''''''''''''''''  Gene:  29 Ends at position  425  ''''''''''''''''''''''' else
+ stop
+''''''''''''''''''''''''  Gene:  30 Ends at position  427  '''''''''''''''''''''''
+ 590 stop
+ store
+ add add <=
+ stop
+ *-90 else
+ store
+ << & rnd dec
+ ~=
+ -701 ^ sqr >=
+ stop
+''''''''''''''''''''''''  Gene:  31 Ends at position  447  '''''''''''''''''''''''
+ >=
+ <
+ clear ~=
+ ++ -54 false
+ pyth << *.setboy * angle 346 *143 xor
+ rnd pyth - dup sub angle true
+ >
+ mod dec
+ >
+ clearbool
+ !=
+ =
+ dupbool
+ dropbool
+ dec
+ true
+ %=
+ overbool
+ start
+
+''''''''''''''''''''''''  Gene:  32 Ends at position  483  ''''''''''''''''''''''' start
+ ++ angle ceil
+''''''''''''''''''''''''  Gene:  33 Ends at position  487  ''''''''''''''''''''''' else
+ ~ *.tmemval <<
+''''''''''''''''''''''''  Gene:  34 Ends at position  491  ''''''''''''''''''''''' start
+ -- !=
+ xor
+ add *.shsx >=
+ over ceil -525 >=
+ * store
+ ~ pyth inc
+ dec
+ sqr *-950 angle
+''''''''''''''''''''''''  Gene:  35 Ends at position  511  '''''''''''''''''''''''
+ cond
+ dupbool
+ 453 48 163 ^ <=
+ ^ inc
+ *.myaimsx >> false
+ sub stop
+''''''''''''''''''''''''  Gene:  36 Ends at position  525  '''''''''''''''''''''''
+ inc
+ not
+ sub abs 550 -- 111 false
+ xor
+ -108 cond
+ sgn <=
+ * inc
+ dec
+ !~=
+ dup div >
+ *82 * >=
+ -497 dec
+ rnd pow dec
+ start
+ >> <=
+ 64 dist mod
+''''''''''''''''''''''''  Gene:  37 Ends at position  559  ''''''''''''''''''''''' start
+ 2 .up dec
+ stop
+''''''''''''''''''''''''  Gene:  38 Ends at position  564  '''''''''''''''''''''''
+ else
+ *.nrg 5000 >
+
+''''''''''''''''''''''''  Gene:  39 Ends at position  568  ''''''''''''''''''''''' start
+ 38 .repro store
+ 31 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  40 Ends at position  576  '''''''''''''''''''''''
+
+'#hash: 8D7'Mz$B3+b5:q>"5Y-d

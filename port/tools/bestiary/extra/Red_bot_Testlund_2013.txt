@@ -1,0 +1,167 @@
+'RED
+
+@
+def red 200
+def green 60
+def blue 60
+
+'*** Red bot ***
+
+'Unfix me from birth (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ .robage 0 =
+start
+0 .fixpos store
+stop
+
+'Make a protective shell against -6 shots (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.nrg 2000 >
+ *.shell 500 <
+start
+ 1 .mkshell store
+stop
+
+'If I'm hit with a -1 or -6 shot I will flee (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.refxpos *.refypos angle sub .setaim store
+ 32 .up store
+stop
+
+'If I see something to the left I will turn to it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye3 *.eye5 >
+start
+ -50 .aimright store
+stop
+
+'If I see something to the right I will turn to it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye7 *.eye5 >
+start
+ 50 .aimright store
+stop
+
+'Swim forward (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.nrg 32 >
+start
+ 32 .up store
+stop
+
+'If I see something I
+'will ask if I can eat it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+start
+ 1 .out1 store
+stop
+
+'If it doesn't say "No", I will eat it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.out1 1 =
+ *.in2 2 !=
+ *.reftype 1 !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ -6 .shoot store
+stop
+
+'If a bot asks if it can eat me,
+'I will say "No" and turn away (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.in1 1 =
+start
+ 2 .out2 store
+ 314 rnd .aimright store
+stop
+
+'Shape avoidence - right (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye1 0 >
+ *.reftype 1 =
+start
+ 314 .aimright store
+stop
+
+'Shape avoidence - left (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye9 0 >
+ *.reftype 1 =
+start
+ -314 .aimright store
+stop
+
+'If I see a bot with no eyes
+'I will turn away from it (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.eye5 0 >
+ *.refeye 0 =
+start
+ 314 rnd .aimsx store
+stop
+
+'If I'm small I will store energy to make me larger (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.body 16000 <
+ *.nrg 8000 >
+start
+ 2 .strbody store
+stop
+
+'If I'm large and healthy I will reproduce (red bot)
+cond
+ .red 127 >
+ .green 128 <
+ .blue 128 <
+ *.body 16000 >
+ *.nrg 8000 >
+start
+ 50 .repro store
+ 314 rnd .aimsx store
+stop

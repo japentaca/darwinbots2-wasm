@@ -1,0 +1,144 @@
+' Alga Treedepthicus
+'
+' Vegetable
+'
+'Kelp that maintains depth and creates other strands of kelp
+
+'Allocate Address 50 as the identifier for cell type
+def type 50
+
+'type = 1 : head
+'type = 2 : tail
+
+'Gene 1 - Make head if out is head
+
+cond
+*.in1 1 =
+*.type 0 =
+start
+1 .type store
+stop
+
+'Gene 2 - Assign Type
+
+cond
+*.type 1 <
+start
+2 rnd .type store
+stop
+
+'Gene 3 - Delete assignment for tail cells
+
+cond
+*.type 2 =
+start
+1 .delgene store
+stop
+
+'Gene 4 - Assign Tail offspring
+
+cond
+*.type 1 <
+start
+2 .type store
+stop
+
+'Gene 5 - make ties
+
+start
+*.eye5 0 >
+*.robage 1 =
+*.numties type <=
+*.type 1 !=
+and
+.tie inc
+stop
+
+'==================HEAD==================
+'-------DEPTH MAINTENANCE--------
+'Gene 6- Maintain Downward aim
+
+cond
+ *.aim 942 !=
+ *.type 1 =
+start
+ 942 .setaim store
+stop
+
+'Gene 7 - Lower Depth
+ 
+cond
+ *.depth 5000 >
+ *.type 1 =
+start
+ 10 .dn store
+stop
+
+'Gene 8 - Upper Depth
+
+cond
+ *.depth 3500 <
+ *.type 1 =
+start
+ 0 .dn store
+stop
+
+'-------REPRODUCTION-----
+
+'Gene 9 - Make other head
+
+cond
+ *.nrg 20000 >=
+ *.type 1 =
+ *.numties 1 =
+start
+  50 .repro store
+  1 .out1 store
+stop
+
+'Gene 10 - Make tail
+
+cond
+ *.nrg 10000 >=
+ *.type 1 =
+ *.numties 0 = 
+start
+  50 .repro store
+stop
+
+'==================TAIL=============
+'Gene 11 - Share Energy
+cond
+ *.nrg 5000 >
+ *.type 2 =
+start
+ 50 .sharenrg store
+stop
+'Gene 12 - Make more tail
+cond
+ *.nrg 10000 >=
+ *.type 2 =
+ *.numties 2 <
+start
+  50 .repro store
+  15 .aimdx store
+stop
+
+'============MAINTAIN SIZE===========
+
+'Gene 13 - Make less body
+
+cond
+ *.body 10000 >=
+ *.nrg 1000 < or
+start
+ 100 .fdbody store
+stop
+
+'Gene 14 - More Body
+
+cond
+ *.body 1000 <=
+ *.nrg 4000 >=
+start
+ 100 .strbody store

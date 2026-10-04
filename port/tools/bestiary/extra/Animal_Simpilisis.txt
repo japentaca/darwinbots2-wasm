@@ -1,0 +1,60 @@
+'Animal_Simpilisis
+'A basic but powerful animal bot.
+'It will find food and reproduce.
+
+def speciesid 101
+
+' Gene 1 Species ID
+cond
+*.robage 0 =
+start
+99 .speciesid store
+.speciesid .memloc store
+stop
+
+' Gene 2 Follow food
+cond
+ *.eye5 0 >
+*.memval *.speciesid !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 3 Find food
+cond
+*.eye5 0 =
+*.memval *.speciesid =
+or
+start
+157 314 rnd sub .aimdx store
+10 .up store
+stop
+
+' Gene 4 Eat food
+cond
+ *.eye5 50 >
+*.memval *.speciesid !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 5 Eliminate waste
+cond
+*.waste 100 >
+start
+1 .backshot store
+-4 .shoot store
+*.waste .shootval store
+stop
+
+' Gene 6 Reproduction
+cond
+*.nrg 20000 >
+*.eye5 50 <
+start
+25 .mrepro store
+stop
+
+end

@@ -1,0 +1,73 @@
+'evoless evo
+'Animal_Adaptis
+
+'seting vars
+def iset 972
+def shootvalue 971
+
+'initial random setup
+cond
+ *.robage 0 =
+ *.iset 0 =
+start
+ .iset inc
+ 100 rnd .shootvalue store
+stop
+
+'setup / evo
+cond
+ *.robage 0 =
+start
+ 'evo
+ 1 rnd 970 add dup
+ 1 rnd 0 =
+ inc
+ not
+ dec
+ dropbool
+stop
+
+' Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Eat Food
+cond
+ *.robage 0 !=
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+*.shootvalue .shootval store
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+' Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+' Reproduce
+cond
+ *.nrg 20000 >
+start
+ 30 .repro store
+stop
+
+' Body
+cond
+ *.body 1000 <
+ *.nrg 500 >
+start
+ 100 .strbody store
+stop
+
+end

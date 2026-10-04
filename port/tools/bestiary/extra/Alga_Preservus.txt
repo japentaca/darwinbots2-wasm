@@ -1,0 +1,36 @@
+'Alga Preservus
+'
+'Vegetable
+'
+'This plant will react if it is shot.
+
+
+cond
+*.shup 0 != 
+start
+*.refvelup 25 add .up store
+50 .repro store
+stop
+
+cond
+*.shdn 0 != 
+start
+*.refvelup 25 add .up store
+50 .repro store
+stop
+
+cond
+*.shdx 0 != 
+start
+*.refvelup 25 add .up store
+50 .repro store
+stop
+
+cond
+*.shsx 0 != 
+start
+*.refvelup 25 add .up store
+50 .repro store
+stop
+
+end

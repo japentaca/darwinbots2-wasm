@@ -1,0 +1,120 @@
+''''''''''''''''''''''''  Gene:  1 Begins at position  1  '''''''''''''''''''''''
+ start
+ 189 0 >
+ *626 -4 =
+ 50 .repro store
+ 314 *.aimleft store
+ *.out3 *.refvelup =
+ *.robage 1 >
+ or
+ !%=
+ 0 *769 and
+ *.thisgene 1 <
+ 326 store
+ *.thisgene 1 * 340 1 rnd mult store
+ *872 *.myeye =
+ *.out3 0 !=
+ and
+ *.thisgene -11 >=
+ and
+ *366 <
+ store
+ *.vtimer 0 =
+ *.thisgene 94 store
+ 335 329 store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  61  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  62  '''''''''''''''''''''''
+ cond
+ *111 431 !=
+ start
+ 99 .sharenrg store
+ 298 *-274 store
+ 336 .memloc store
+ 336 .tmemloc store
+ 3 rnd 973 store
+ *.body 5 >
+ *.nrg 80 >
+ and
+ *.maxvel *.dn store
+ 50 .repro store
+ *.tin3 1000 <
+ *.nrg 164 >
+ and
+ 60 mult 10 *.body sub .strbody store
+ not
+ *.body 1 >
+ and
+ *.body 10 mult 10 sub 0 floor .fdbody store
+ *.numties 0 !=
+ *.robage 1 !%=
+ .tienum store
+ *.numties and
+ *.numties .deltie store
+ *-284 dupbool
+ *973 1 =
+ and
+ 453 .tieloc store
+ 1000 .tieval store
+ dropbool
+ dupbool
+ *973 =
+ and
+ 509 .tieloc store
+ -1 .tieval store
+ dropbool
+ *973 8 >
+ true
+ 8 .tieloc store
+ -31999 .tieval store
+ *.numties 0 =
+ *.body 1 =
+ and
+ dupbool
+ *.eye5 0 =
+ *.memval *.dnalen =
+ or
+ and
+ 350 .aimright store
+ dropbool
+ *.eye5 0 !=
+ and
+ *.memval *.dnalen !%=
+ and
+ *.refbody 20 >
+ *.totalmyspecies 600 >
+ or
+ and
+ *.refxpos *.refypos angle .setaim store
+ .tie inc
+ clearbool
+ dec
+ *.thisgene *.genes sgn add .mkvirus store
+ *.genes 777 *777 1 sub -1 mult sqr dup *777 .genes dec
+ *.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  252  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  253  '''''''''''''''''''''''
+ start
+ *189 ~ >
+ *.refkills -4 =
+ 50 315 angle 300 .aimleft store
+ *.out3 *.refvelup =
+ *.robage 1 >
+ or
+ =
+ 0 *769 and
+ *.thisgene 1 add 326 store
+ *.thisgene 1 * 340 1 rnd mult store
+ *872 *.myeye =
+ *.out3 0 !=
+ and
+ *.thisgene -11 <
+ and
+ *366 .delgene store
+ *.vtimer 0 =
+ *.thisgene .mkvirus store
+ dec
+ 329 94''''''''''''''''''''''''  Gene:  3 Ends at position  312  '''''''''''''''''''''''

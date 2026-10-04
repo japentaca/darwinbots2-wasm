@@ -1,0 +1,188 @@
+' Scudmarxis Rex
+'
+' My first bot
+
+'Gene 1 - Identify Yourself
+cond
+*.robage 0 =
+start
+6284 .out1 store
+180 .aimdx store
+5 .dx store
+stop
+
+'Gene 2 - Reproduce
+cond
+*.nrg 4000 >
+start
+50 .repro store
+stop
+
+'Gene 3 - Find nearest object
+cond
+start
+*.eye1 *.eye2 add *.eye3 add *.eye4 add 51 store
+*.eye6 *.eye7 add *.eye8 add *.eye9 add 52 store
+stop
+
+'Gene 4 - Turn to face
+cond
+start
+*52 *51 sub *.eye5 1 add div 10 mult .aimdx store
+stop
+
+'Accelerate
+'Gene 5 - Default to maximum
+cond
+start
+mult 30 *.vel sub
+stop
+
+'Gene 6 - If out of range from food but still in sight, approach at 5
+cond
+*.eye5 0 >
+*.eye5 80 <
+*.in1 6284 !=
+start
+mult *.refvel *.vel sub 6 div 5 add
+stop
+
+'Gene 7 - If in range of food, match velocities
+cond
+*.eye5 80 >
+*.in1 6284 !=
+start
+mult *.refvel *.vel sub 6 div
+stop
+
+'Gene 8 - If very close on one side, go slow.
+cond
+*51 150 >
+start
+mult 1
+stop
+
+'Gene 9 - If very close on the other side, go slow.
+cond
+*52 150 >
+start
+mult 1
+stop
+
+'Gene 10 - If very close, stop.
+cond
+*.eye5 95 >
+start
+mult 0
+stop
+
+'Gene 11 - Accelerate
+cond
+start
+.up store 0
+stop
+
+'Gene 12 - If in a lot of pain, run!
+cond
+*.pain 40 >
+start
+100 rnd 50 sub .aimdx store
+60 rnd 30 sub .dx store
+30 *.vel sub .up store 0
+1 .repro store
+2 .deltie store
+stop
+
+'Shooting
+'Gene 13 - If in range of food, shoot
+cond
+*.eye5 50 >
+*.in1 6284 !=
+start
+2 .tie store
+2 60 store
+-1 .shoot store
+stop
+
+'Gene 14 - If in range of a hurt friend, help it out
+cond
+*.eye5 50 >
+*.refnrg *.nrg <
+*.in1 6284 =
+*.refnrg 500 <
+*.nrg 1000 >
+start
+1 .tie store
+1 60 store
+stop
+
+'Gene 15 - When tied to a hurt friend, heal it
+cond
+*.numties 0 >
+*60 1 =
+start
+1 .tienum store
+100 .tieval store
+-1 .tieloc store
+stop
+
+'Gene 16 - When healing is finished, break off
+cond
+*.numties 0 >
+*60 1 =
+*.refnrg *.nrg %=
+start
+2 60 store
+1 .deltie store
+stop
+
+'Gene 17 - when tied to food, feed
+cond
+*.numties 0 >
+*60 2 =
+start
+2 .tienum store
+-1000 .tieval store
+-1 .tieloc store
+stop
+
+'Gene 18 - If looking at a friend that isn't hurt, turn away
+cond
+*.in1 6284 =
+*.refnrg *.nrg %=
+start
+20 rnd 10 sub .aimdx store
+stop
+
+'Gene19 - If going fast but not seeing anything, look around
+cond
+*.vel 25 >
+*.eye5 0 =
+*51 0 =
+*52 0 =
+start
+20 rnd 10 sub .aimdx store
+stop
+
+'Gene X - If you're very nearly dead, stop everything and pray for help.
+cond
+*.nrg 100 <
+start
+0 *.aimdx store
+0 *.up store
+0 *.shoot store
+0 *.dx store
+stop
+
+'Gene XX - Try to remain unpredictable
+cond
+*.robage 1000 >
+*61 0 =
+start
+50 .aimdx store
+10 .dx store
+10 .mrepro store
+1 61 store
+stop
+
+end

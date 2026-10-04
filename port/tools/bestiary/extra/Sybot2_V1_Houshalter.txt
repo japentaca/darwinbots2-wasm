@@ -1,0 +1,66 @@
+'find a sybot1
+cond
+*.in1 88 =
+*.in2 33 =
+*.numties 0 =
+start
+.tie inc .tie inc
+.refvelup .up store
+stop
+
+'store 77 in my out1
+cond
+*.out1 77 !=
+start
+77 .out1 store
+stop
+
+'also to help in the search
+cond
+*.numties 0 =
+*.eye5 0 =
+start
+314 rnd .aimdx store
+stop
+
+'dump waste
+cond
+*.waste 100 >
+start
+100 .shootval store
+-4 .shootstore
+stop
+
+'store 2 in readtie
+cond
+*.multi 1 =
+*.readtie 2 !=
+start
+.readtie inc .readtie inc
+stop
+
+'turn away if i see something
+cond
+*.eye5 0 !=
+*.multi 1 !=
+start
+314 rnd .aimdx store
+stop
+
+'collectively reproduce
+cond
+*.trefnrg *.nrg add 6000 >
+*.multi 1 =
+start
+2 .tienum store
+.repro .tieloc store
+50 .tieval store
+50 .repro store
+stop
+
+'manage body
+cond
+*.body 20 <
+start
+20 .strbody store
+stop

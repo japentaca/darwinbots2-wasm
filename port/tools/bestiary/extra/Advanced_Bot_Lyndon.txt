@@ -1,0 +1,162 @@
+' Advanced Bot
+' I grab a Vegiie and share nrgy
+' That way I can have a stable source of nrgy
+' I'll still eat other things
+' I can also check to see if other bots have poison or shells
+
+' Gene 1 Reproduce
+cond
+ *.nrg 3000 >
+star
+ 50 .repro store
+ 10 .aimdx store
+stop
+
+‘Gene 2. Simple search pattern part 1
+cond
+ *.eye3 *.eye5 >
+start
+ -25 .aimdx store
+stop
+
+‘Gene 3. Simple search pattern part 2
+cond
+ *.eye7 *.eye5 >
+start
+ 25 .aimdx store
+stop
+
+' Gene 4 Food Finder
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+' Gene 5 Eat Food with shell
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refshell 0 > ' Has a shell so use -1 shot
+start
+ -1 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 6 Eat Food with poison
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refshell 0 =
+ *.refpoison 0 >
+start
+ -6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 7 Shoot out a tie to veggie
+cond
+ *.refeye *.myeye !=
+ *.eye5 45 >
+ *.refshoot 1 <
+ *.tienum 1 <
+ *.refnrg 100 >
+start
+ 13 .tie *.robage sgn mult *.refage sgn mult store
+stop
+
+' Gene 8 Store latest tie number
+cond
+ *.tiepres 0 >
+ *.tienum 0 =
+start
+ *.tiepres .tienum store
+stop
+
+' Gene 9 Share energy
+cond
+ *.tienum 0 >
+start
+ 75 .sharenrg
+ store
+
+ 1 .sharewaste store
+stop
+
+' Gene 10 Eat Food without poison or Shell and not a veggie
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+ *.refshell 0 =
+ *.refpoison 0 =
+ *.refshoot 0 >
+start
+ -6 .shoot store
+ *.refvelup .up store
+stop
+
+' Gene 11 Avoiding Family
+cond
+ *.eye5 0 =
+ *.refeye *.myeye = 
+ or
+start
+ 314 rnd .aimdx store
+stop
+
+' Gene 12 Form and break birth ties
+cond
+ *.robage 2 <
+start
+ .tie *.robage 1 add mult inc
+ .deltie inc
+stop
+
+' Gene 13 make body
+cond
+ *.nrg 2000 >
+ *.body 500 <
+start
+ 200 .strbody store
+stop
+
+' Gene 14 Waste
+cond
+ *.waste 40 >
+start
+ .backshot inc
+ -4 .shoot store
+ *.waste .shootval store
+stop
+
+' Gene 15 Defend Against fixed shots
+cond
+start
+ .fixpos *.fixed mult dec
+stop
+
+' Gene 16 Set Poison loc
+cond
+ *.robage 0 =
+start
+ .shoot .ploc store
+stop
+
+' Gene 17 Make Poison
+cond
+ *.nrg 100 >
+ *.poison 500 <
+start
+ 50 .strpoison store
+stop
+
+' Gene 18 Escape from Tie feeder
+cond
+ *.tienum 0 >
+ *.pain 500 >
+start
+ .tiepres .deltie store
+stop
+end

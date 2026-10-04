@@ -1,0 +1,81 @@
+cond 
+*.eye3  *.eye8  > 
+start  
+*568  store  
+div  *568  store  
+div  *413  *720  sub  rnd  *720  sub  rnd  *.poison  *720  rnd  *581  746  *332  store  
+dec  *840  store 
+-25  .aimdx  store 
+-25  5  rnd  store  store  
+*416  mult  inc  add 
+stop
+
+cond  
+*.eye7  *.eye1  > 
+start  
+*954  25  add  .aimdx  store 
+stop
+
+cond  
+*.ploc  0  >  
+*.in1  0  >  
+*.mydx -1  < 
+start 
+-2070  *.dnalen  *.refveldn -56  *240  rnd  rnd  *136  381 -1193 -56  sub  
+rnd -56  div  rnd  2092 -132  *742  dec  store  
+*136 -56  rnd  *.veldx  427  mult  dec  *162  801  516  2  div  914  201  
+*56  *535  sub  dec  *917  mult  dec  *917  mult  rnd  *.eye5  sub  *940  mult  
+*.eye5  sub  *976  dec  mult  div  *.eye5  sub  mult  rnd  *.aimsx  *17  *782  div  
+*.in1  492  rnd -122  *.mass  200  add  rnd -40  1431  div  rnd  sub  rnd  *.tmemval  
+*.shoot  add  mult  *.shoot  add  mult -40 -773  div  529  store 
+-646  dec -186 -773 -647 dec  dec  454  23  store 
+-647  dec  store  
+div  dec  store  
+div  dec  store  
+div  327  1783  dec  div  dec  524 -640 -580  201 -962  *157  rnd  sub  8 
+stop
+
+cond  
+*.veldx  0  !%=  
+*.sharewaste  0  != 
+start  
+*.memloc  rnd  *.memloc  *924  rnd  *.fixlen  *.veldx  .dn  store  
+*.trefvelyourdx  mult  div  dec  inc  200  div  mult  *.mysx  dec  store  
+mult  *264  dec  1725  store  
+sub  1725  store  
+sub  rnd  store 
+stop
+
+cond 
+start  
+5  1501  1321  mult  rnd  1321  mult  rnd  .up  store  
+1531  inc -147 
+stop
+
+cond  
+*.eye5  41  >  
+*.eye5  41  > 
+start  
+916  add -347  rnd  rnd  mult -1  64  add  7  259  *374  878  rnd  *854  40  store  
+*514  *.refsx  add -690  inc  *.fdbody -35  *417  div  store  
+rnd  store  
+dec  mult -1  .shoot  store 
+-1577  div  add 
+stop
+
+cond  
+*.nrg  5000  =
+start  
+*260  div  *368  1158  50  *.tieloc  add  140 -1115  *975  store  
+821  mult  821  dec  mult  div  mult  store  
+div  store  
+*.mkshell  *353 
+stop
+
+cond  
+*.nrg  5100  > 
+start  
+50  .repro  store 
+stop
+
+end

@@ -1,0 +1,73 @@
+store
+ store
+ *.tin9 *.tielen2 <
+ 481 sub *.refveldx !=
+ *.refage *.shang 3106 * sub 419 -19
+ start
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  17  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  18  '''''''''''''''''''''''
+ start
+ *.trefaimdx store
+ *.tin9 *.eye2 <
+ <=
+ ++ inc
+ store
+ 469 *.refmulti substore
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  31  '''''''''''''''''''''''
+ 432 ceil * rndstore
+ *.refmulti -6 *.genes
+''''''''''''''''''''''''  Gene:  3 Begins at position  39  '''''''''''''''''''''''
+ cond
+ store
+ 300 *.mydn *.tielen2 254 div 2 *600 *.refveldx inc
+ 1 *.refvelsx *.eye5 *.venom
+''''''''''''''''''''''''  Gene:  3 Ends at position  53  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  54  '''''''''''''''''''''''
+ cond
+ >
+ *.bodloss .fixang store
+ -6 3097 -6 start
+ 7 *.refvelscalar *.refeye addstore
+ .up store
+ store
+ *.trefvelyourup *.tielen2 <
+ <=
+ 1 -19
+''''''''''''''''''''''''  Gene:  4 Ends at position  75  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  76  '''''''''''''''''''''''
+ start
+ inc
+
+''''''''''''''''''''''''  Gene:  5 Ends at position  77  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  78  '''''''''''''''''''''''
+ cond
+ .strbody store
+ start
+ *.veldn | multstore
+ *.nrg ++ *.totalbots *.thisgene substore
+ 30007 >
+ 553 sgnstore
+ 446 11194 *.refshoot
+''''''''''''''''''''''''  Gene:  6 Ends at position  96  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  97  '''''''''''''''''''''''
+ start
+ swapbool
+ | <<
+''''''''''''''''''''''''  Gene:  7 Ends at position  100  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  8 Begins at position  101  '''''''''''''''''''''''
+ start
+ *.veldn | *.mypoison *.nrg *.nrg
+''''''''''''''''''''''''  Gene:  8 Ends at position  106  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  9 Begins at position  107  '''''''''''''''''''''''
+ start
+ swapbool
+ | <<
+''''''''''''''''''''''''  Gene:  9 Ends at position  110  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  10 Begins at position  111  '''''''''''''''''''''''
+ start
+ *.veldn | *.mypoison *.nrg *.refshoot 14938 .repro store
+''''''''''''''''''''''''  Gene:  10 Ends at position  119  '''''''''''''''''''''''

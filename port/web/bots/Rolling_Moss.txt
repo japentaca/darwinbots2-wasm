@@ -1,0 +1,49 @@
+' Rolling Moss
+' by: southpointingchariot
+' Vegetable
+'
+' A scared plant
+
+'Mate Finder
+cond
+ *.eye5 -10 >
+ *.in1 0 =
+ start
+ *.refveldx .dx store
+ *.refvelup 10 add .up store
+ stop
+
+'Sperm shooter
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+*.in1 0 =
+start
+-8 .shoot store
+stop
+
+'Sexual Reproduction
+cond
+*.fertilized 0 >
+*.nrg 20000 >
+start
+50 .sexrepro store
+stop
+
+Mitosis
+cond
+ *.nrg  30000  >
+start
+ 50  .repro  store
+ 15  .aimdx  store
+stop
+
+'Run away
+cond
+ *.eye5 0 >
+start
+ *.refveldx .dx store
+ *.refvelup -10 add .up store
+stop
+
+end

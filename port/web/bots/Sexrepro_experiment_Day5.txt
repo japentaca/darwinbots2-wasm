@@ -1,0 +1,60 @@
+'#generation: 325
+'#mutations: 68
+
+ cond
+ *.eye5 *.aimleft >
+ *.refeye *.myeye *.refeye *.shang %=
+ start
+ *.refveldx .dx store
+ *.tieang2 30 add .up store
+ clear
+''''''''''''''''''''''''  Gene:  1 Ends at position  19  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  20  '''''''''''''''''''''''
+ cond
+ *.eye5
+''''''''''''''''''''''''  Gene:  2 Ends at position  21  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  22  '''''''''''''''''''''''
+ cond
+ *.venval *.tin3 *.multi over *.multi *.out7 start
+ 1 add *.eye5 pow *-121
+''''''''''''''''''''''''  Gene:  3 Ends at position  34  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  35  '''''''''''''''''''''''
+ cond
+ store
+ *.myeye *.shup *.refage *.shell start
+ -1 .shoot store
+ *.focuseye -677 *.eye5 *.backshot *.refeye *.myeye =
+ *.aimright
+''''''''''''''''''''''''  Gene:  4 Ends at position  52  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  53  '''''''''''''''''''''''
+ start
+ *.veldn .up store
+ >
+ >> *.refnrg *.veldn .up store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  63  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  64  '''''''''''''''''''''''
+ cond
+ *.eye5 *.vshoot =
+ *.refeye *.myeye =
+ or
+ *.tieang4 *.refnrg start
+ -406 292 .aimright store
+ *.totalbots *.velscalar 1 *.totalbots 37 .sexrepro store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  86  '''''''''''''''''''''''
+
+'normal repro gene:
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+'#hash: nI!HdvO1*P'_f/9]*[JP
+'#tag:Day5.txt

@@ -1,0 +1,62 @@
+cond
+*.eye5 30 <
+start
+.aimsx store
+stop
+
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+cond
+*.numties 1 <
+start
+10 .up store
+stop
+
+cond
+*.numties 1 =
+*.eye9 add *.eye8 add *.eye7 add *.eye6 add *.eye5 add *.eye4 add *.eye3 add *.eye2 add *.eye1 0 =
+start
+1 .fixpos store
+stop
+
+cond
+*.numties 4 <
+start
+0 .fixpos store
+stop
+
+cond
+*.numties 1 =>
+*.nrg 2000 >
+start
+60 .repro store
+stop
+
+cond
+start
+*.tiepres .readtie *.numties sgn mult store
+.tiepres .memloc *.robage -1 mult 1 add sgn mult store
+.numties .tmemloc *.robage -1 mult 1 add sgn mult store
+55 10 rnd add .tie *.refeye sgn -1 mult 1 add sgn mult *.eye5 45 sub sgn mult *.memval sgn -1 mult 1 add sgn mult *.robage sgn mult store
+628 .fixang *.numties sgn mult store
+200 .fixlen *.numties sgn mult store
+*.tiepres .tienum *.numties sgn mult store
+.fixpos .tieloc *.numties sgn mult *.treffixed mult store
+0 .tieval *.numties sgn mult *.treffixed mult store
+80 .sharenrg *.multi mult store
+*.tiepres .deltie *.tmemval 1 sub sgn mult store
+*.tiepres .deltie *.myeye *.trefeye sub sgn abs -1 mult 1 add mult store
+stop
+
+end

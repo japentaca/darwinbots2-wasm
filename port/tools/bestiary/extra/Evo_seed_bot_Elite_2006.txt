@@ -1,0 +1,40 @@
+cond
+*.robage 0 =
+start
+stop
+
+cond
+start
+-1 .shoot store
+stop
+
+cond
+start
+20 .up store
+stop
+
+cond
+*.refeye *.myeye !=
+start
+*.eye9 *.eye1 sub .aimdx store
+stop
+
+cond
+*.nrg 3000 >
+start
+50 .repro store
+stop
+
+cond
+start
+stop
+
+cond
+start
+stop
+
+cond
+start
+stop
+
+end

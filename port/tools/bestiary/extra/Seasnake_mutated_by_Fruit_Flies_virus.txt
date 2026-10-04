@@ -1,0 +1,126 @@
+''''''''''''''''''''''''  Gene:  1 Begins at position  1  '''''''''''''''''''''''
+ cond
+ *111 431 !=
+ start
+ 99 .sharenrg store
+ .dnalen store
+ 300 .memloc store
+ 336 973 store
+ *.body 5 >
+ *.nrg 80 >
+ dropbool
+ *.maxvel .dn store
+ 50 .repro store
+ *.totalmyspecies 1000 <
+ *.nrg 200 >
+ and
+ 60 mult not
+ *.body 1 >
+ and
+ *.body 0 sub 10 drop 10 91 floor 312 *.robage !=
+ 0 *.numties 1 -3 >
+ .tienum inc
+ *.numties .up store
+ >
+ or
+ and
+ *.numties .deltie store
+ dupbool
+ *973 and
+ =
+ 1 453 .tieloc store
+ 1000 .tieval store
+ not
+ and
+ =
+ 2 *973 dupbool
+ 452 .tieloc store
+ -1 .tieval store
+ dropbool
+ *973 2 >
+ and
+ 8 .tieval store
+ 1 *.body =
+ 0 *.numties =
+ and
+ dupbool
+ *.eye5 0 =
+ *.memval *.dnalen dec
+ =
+ or
+ and
+ 350 .aimright store
+ *.eye5 0 *.dnalen !%=
+ and
+ *.refbody 20 >
+ *.totalmyspecies 600 >
+ or
+ and
+ *.refxpos *.refypos floor .setaim store
+ .tie inc
+ clearbool
+ dec
+ *.thisgene *.genes sgn add >=
+ *.genes 777 *777 1 sub -1 mult sqr dup *777 .genes dec
+ *.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 ceil dec
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  179  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  180  '''''''''''''''''''''''
+ cond
+ *104 431 2 !=
+ start
+ .eye5width store
+ 336 .eye3width store
+ 336 .tmemloc store
+ *.body 80 >
+ and
+ *.maxvel store
+ 402 -133 1000 <
+ *.nrg 200 >
+ and
+ ^ 60 *.body 10 mult sub .strbody inc
+ not
+ *.body 10 mult 10 sub 0 floor .fdbody store
+ *.numties 0 div *.robage 1 >
+ and
+ *.tiepres .tienum store
+ *.tmemval *.dnalen !=
+ *.numties 8 >
+ or
+ and
+ *.numties .deltie store
+ *.tmemval *.dnalen !=
+ 452 .tieloc store
+ -1 .tieval store
+ *.numties 0 =
+ and
+ dupbool
+ *.eye5 0 =
+ *.memval dec
+ *.dnalen =
+ or
+ and
+ 350 .aimright store
+ dropbool
+ *.memval *308 !=
+ and
+ *683
+''''''''''''''''''''''''  Gene:  2 Ends at position  278  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  279  '''''''''''''''''''''''
+ cond
+ .setaim store
+ .tie inc
+ clearbool
+ *.genes
+''''''''''''''''''''''''  Gene:  3 Ends at position  285  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  286  '''''''''''''''''''''''
+ cond
+ .genes dec
+ *.thisgene *.genes sgn add .mkvirus store
+ *.genes 777 *777 1 sub overbool
+ mult sqr dup store
+ mult *777 store
+ *.thisgene 1 sub sgn 1 *.thisgene *.shootval mult sqr *.thisgene add 7 1 sub clear add sgn -1 mult mult add .delgene store
+ else
+''''''''''''''''''''''''  Gene:  4 Ends at position  331  '''''''''''''''''''''''

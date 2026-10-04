@@ -1,0 +1,46 @@
+*.eye5 .out10 store
+ negstore
+ .out7 store
+ pow 13475 2 xor
+ *-610
+ start
+ 25696 5 .up store
+ *.tielen1 *.refage swapbool
+ 13771 * stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  22  '''''''''''''''''''''''
+ ~=
+ *.tiepres
+''''''''''''''''''''''''  Gene:  2 Begins at position  25  '''''''''''''''''''''''
+ cond
+ *.eye5 *.tiepres >
+ *.refeye *.myeye !=
+ start
+ -6 .shoot store
+ sin ceilstore
+ 20551 *.refveldx .dx store
+ !=
+ .out7 store
+ pow *.readtie floor ceil !%=
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  50  '''''''''''''''''''''''
+ 573 dist multstore
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  54  '''''''''''''''''''''''
+ start
+ .eye9dir store
+ 475 sgn *.availability *.dnalen *.refdx substore
+ 314 rnd *.thisgene 205 .tielen3 store
+ sub .aimright store
+ 102 sin
+''''''''''''''''''''''''  Gene:  3 Ends at position  73  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  74  '''''''''''''''''''''''
+ else
+ sqr
+''''''''''''''''''''''''  Gene:  4 Ends at position  75  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  76  '''''''''''''''''''''''
+ start
+ div *.refvelup !%=
+ swapbool
+ *274 21 *.nrg 23486 >
+ *.tieang *.vel .repro store
+''''''''''''''''''''''''  Gene:  5 Ends at position  89  '''''''''''''''''''''''

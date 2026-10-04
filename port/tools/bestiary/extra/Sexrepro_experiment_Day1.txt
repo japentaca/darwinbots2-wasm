@@ -1,0 +1,64 @@
+'#generation: 61
+'#mutations: 7
+
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ *.tieang2 30 add .up store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  16  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  17  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ 21069 >
+ 20000 >
+ start
+ *.refveldx .dx store
+ *.refvelup pow add 30 add *.eye5 *.refeye *.myeye *.shup
+''''''''''''''''''''''''  Gene:  2 Ends at position  37  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  38  '''''''''''''''''''''''
+ start
+ -1 .shoot store
+ addstore
+ -677
+''''''''''''''''''''''''  Gene:  3 Ends at position  43  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  44  '''''''''''''''''''''''
+ cond
+ *.eye5 50 *.refeye *.myeye =
+ *.nrg start
+ -8 7 *.out10 *.refvelup .up store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  58  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  59  '''''''''''''''''''''''
+ cond
+ *.eye5 0 =
+ *.refeye *.myeye =
+ or
+ *.nrg 20000 
+ 20000 *.nrg 20000 >
+ inc
+ start
+ 314 rnd .aimright store
+ 100 rnd
+''''''''''''''''''''''''  Gene:  6 Ends at position  93  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  94  '''''''''''''''''''''''
+ start
+ 37 .sexrepro store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  98  '''''''''''''''''''''''
+
+'normal repro gene:
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+'#hash: Ub8N:$-sI!%KCT_=<c!!
+'#tag:Day1.txt

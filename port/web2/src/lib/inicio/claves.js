@@ -41,6 +41,8 @@ export const CATEGORIAS = Object.freeze({
   'The Starting Gate': 'inicial',
   'Single store': 'unStore',
   'Untagged bots': 'sinEtiqueta',
+  'Forum bots': 'foro',
+  'Wiki bots': 'wiki',
   'House bots': 'casa',
 });
 

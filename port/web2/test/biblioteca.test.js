@@ -127,7 +127,7 @@ function hashDelAnalizador() {
   };
 }
 
-test('canonico = canonical del analizador en los 569 .txt', () => {
+test('canonico = canonical del analizador en los 684 .txt', () => {
   const an = hashDelAnalizador();
   for (const b of bestiario) {
     const t = fs.readFileSync(path.join(BOTS, b.file), 'utf8');
@@ -136,15 +136,15 @@ test('canonico = canonical del analizador en los 569 .txt', () => {
   }
 });
 
-test('el índice carga los 569 bots con los hashes de la clásica (inventory.js en vm)', async () => {
+test('el índice carga los 684 bots con los hashes de la clásica (inventory.js en vm)', async () => {
   const idx = construirIndice({ bestiario, perfiles, registros: [] });
-  assert.equal(idx.length, 569);
-  assert.equal(new Set(idx.map((e) => e.id)).size, 569);
-  assert.equal(new Set(idx.map((e) => e.hash)).size, 550, 'varios archivos comparten ADN');
+  assert.equal(idx.length, 684);
+  assert.equal(new Set(idx.map((e) => e.id)).size, 684);
+  assert.equal(new Set(idx.map((e) => e.hash)).size, 665, 'varios archivos comparten ADN');
   const { ev } = await clasicaInventario();
   const items = plano(ev('inv.items'));
-  assert.equal(items.length, 569);
-  for (let i = 0; i < 569; i++) {
+  assert.equal(items.length, 684);
+  for (let i = 0; i < 684; i++) {
     assert.equal(idx[i].archivo, items[i].b.file);
     assert.equal(idx[i].hash, items[i].key, items[i].b.file);
     assert.equal(idx[i].nombre, items[i].b.name);
@@ -773,7 +773,7 @@ test('los del foro son de solo lectura: se duplican sin tocar sus marcas; marcas
   // el índice mezcla foro + propios, con marcas por clave
   await bots.favorito([again.hash], true);
   const todo = construirIndice({ bestiario, perfiles, registros: await bots.todos() });
-  assert.equal(todo.length, 569 + 3);
+  assert.equal(todo.length, 684 + 3);
   const p = todo.filter((e) => e.clase === 'propio');
   assert.deepEqual(
     p.map((e) => e.nombre),

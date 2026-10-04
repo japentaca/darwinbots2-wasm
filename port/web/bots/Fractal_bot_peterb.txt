@@ -1,0 +1,21 @@
+cond
+*.971 6 <
+start
+.971 inc
+1256 6 div .aimdx store
+30 .repro store
+stop
+
+'first
+cond
+*.971 1 =
+start
+1256 4 div
+*.971 .tie store
+stop
+
+cond
+*.nrg 3000 mod 0 =
+start
+.971 0 store
+stop

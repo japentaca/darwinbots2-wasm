@@ -1,0 +1,55 @@
+' Get rid of birth tie
+
+cond
+start
+ .tie *.robage 1 add mult inc
+ .deltie inc
+stop
+
+' Search
+
+cond
+ *.eye5 0 =
+start
+ 10 .up store
+ *.eye9 *.eye1 sub 2 mult .aimdx store
+stop
+
+' Swarm
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye =
+start
+ *.refaim .setaim *.robage sgn mult store
+ *.refvelup .up store
+stop
+
+' Hunt
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refvelup 50 add .up 40 *.eye5 sub sgn mult store
+ *.refxpos *.refypos angle .setaim *.robage sgn mult store
+stop
+
+cond
+ *.eye5 40 >
+ *.refeye *.myeye !=
+start
+-6 .shoot store
+ 8 .shootval store
+ *.refveldx .dx store
+stop
+
+' Reproduce
+
+cond
+ *.body 500 >
+start
+ 50 .repro store
+stop
+
+end

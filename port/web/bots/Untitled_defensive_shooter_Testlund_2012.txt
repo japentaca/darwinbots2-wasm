@@ -1,0 +1,36 @@
+cond
+*.refxpos 0 > and
+*.refdn *.mydn !=
+start
+*.refxpos *.refypos angle .setaim store
+8 .shootval store
+-6 .shoot store
+stop
+cond
+*.nrg 16000 >
+start
+10 .strbody store
+stop
+cond
+*.body 16000 >
+start
+50 .repro store
+32 .aimdx store
+stop
+start
+*.shflav -1 =
+32 rnd .up store
+stop
+start
+*.shflav -6 =
+32 rnd .dn store
+stop
+start
+*.shflav 0 !=
+*.shflav -2 != and
+0 .shflav store
+*.aim *.shang sub .setaim store
+*.maxvel .dn store
+-4 .shoot store
+*.waste .shootval store
+stop

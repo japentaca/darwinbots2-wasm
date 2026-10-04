@@ -1,0 +1,1151 @@
+'#generation: 8
+'#mutations: 1535
+ *.tieloc -13 .maxvel store
+ 0 *.poisoned *.deltie 900 *.tin7
+ start
+ !~=
+ *.aimright *.treffixed *.sharewaste 237 *.in2 rnd *789 6 *.dn *.trefvelmydn *.trefaimdx 0 *.refage *.trefaimsx *947
+''''''''''''''''''''''''  Gene:  1 Ends at position  26  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  27  '''''''''''''''''''''''
+ cond
+ *350
+''''''''''''''''''''''''  Gene:  2 Ends at position  28  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  29  '''''''''''''''''''''''
+ cond
+ *.aimleft *.trefvelmysx *.bodloss 261 *.eye5width =
+ not
+ *.xpos store
+ *22 >
+ *.tielen3 =
+ *.in2 *.aimright store
+ *.mkchlr =
+ *.trefaim 0 0 448 *.trefvelyoursx >
+ .tmemloc store
+ >
+ 424 14 *.refypos *.tieang3 0 *.out7 .tieang store
+ >
+ substore
+ .out10 store
+ store
+ *.myshoot *.tin1 .up sqrstore
+ *.mypoison *.myaimdx or
+ *.fixlen angle !=
+ pyth xor
+ 0 *.dnalen *.eye5 0 *.in1 454 *.out4 *.hitdn -884 -13 *.tout6 *.eye9width =
+ swapbool
+ *.trefage 0 *.trefaim *.trefvelmydn *.trefvelyoursx >
+ -2 *.light *.paralyzed 0 *.setaim *.refdx 3 *.aimshoot *.velsx *.in6 *.out10 909 *.refxpos *613 -4 *.tieang *.tout3 store
+ *271 *.eye2 0 *.tieang4 =
+ *.mkpoison 0 =
+ 0 0 %=
+ *.in3 2 *177 *789 *790 *.shareslime *.in4 >=
+ clearbool
+ *.hitdx *.eye6dir *.trefeye *.xpos 0 *.refsx =
+ 474 0 =
+ *788 ~ *497 -5 mult *.trefvelyourdn *.trefvelmydx *.tieloc else
+ *.tieang3 *.memval *.tin2 *.reffixed *.reftie *.slime 0 0 *.eye1width
+''''''''''''''''''''''''  Gene:  3 Ends at position  167  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  168  '''''''''''''''''''''''
+ else
+ *.mass *.tout4 0 or
+ store
+ *.tieloc 5 *.light 0 *.aimright 16 dropbool
+ .hitdn store
+ store
+ -12 3 666 *1064 %=
+ 0 21 *.tieloc *.hitdx 16 =
+ *.eye3width *.aim 837 17 !%=
+ *.sharechlr 0 multstore
+ 622 0 *.refpoison =
+ -14 0 =
+ *.shareslime *.eye9 *.refeye *.trefaimdx -1 *.out7 store
+ *.refxpos *.mkvirus .tin2 store
+ *.out10 *.in7 ~=
+ *.tin9 0 =
+ 0 *.shup ++ 1054 -5 *.vel *.refvelscalar *.xpos 445 *737 787 818 *.fertilized *.out1 0 *.trefeye *.refaimdx *.trefvelyourup <
+ 0 *.refdn *.refveldn 894 *.trefypos 0 0 *.aim 837 *.shell dropbool
+ store
+ *.vshoot 0 0 0 0
+''''''''''''''''''''''''  Gene:  4 Ends at position  262  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  263  '''''''''''''''''''''''
+ cond
+ >
+ << 12 *.fdbody 459 0 =
+ *.refvelup *.bodloss 0 0 *.tiepres 461 *.tout4 *.trefvelmydn *.trefdn =
+ 0 *.eye9width *.eye7 *.out1 *.eye7width !=
+ *.out6 0 *.tielen2 *.trefvelmysx 0 *.in8 0 0 =
+ 0 0 *.tin3 *.tin7 *.tieang3 store
+ *0 *.vel 0 9 .dx store
+ =
+ *.in2 *274 *794 *.tout5 *.myaimsx *.refnrg | -10 *393 23 *.eye3dir *.hitsx 293 3 *434 store
+ 6 =
+ .sexrepro dec
+ =
+ 19 0 *.out8 511 *.stifftie *.bodgain *.shootval 25 store
+ *.refsx *.myshoot *.tin2 .dx store
+ mult *.tmemloc *.in7 *.tielen *.eye5 -17 *.vtimer *.strvenom *.tout3 *.hitdn -884 .fertilized store
+ =
+ *.refvelscalar 0 *.aimright 445 *.bodloss =
+ -15 0 *.genes *.shflav 0 =
+ 0 0 *.trefnrg =
+ store
+ *.fixpos *.maxvel -3 *.tieang2 .trefdx store
+ =
+ *.eye4dir *.hitsx *.refypos *.tieang1 6 *.refbody divstore
+ 336 .out2 divstore
+ 0 *.tmemloc *.slime store
+ *.trefvelyourdn *.tieang4 0 *.in10 =
+ 314 0 *.kills << store
+ !%=
+ 305 *.tout6 .hitang store
+ !%=
+ >
+ 327 20 *.sun 572 0 =
+ *.tout9 *.eye5width !%=
+ 699 0 =
+ .tin6 store
+ *.fdbody *.trefup *.refmulti =
+ -26 *.refage *.deltie 688 !~=
+ *.refage *.deltie =
+ 703 0 *.dnalen 0 *.refshoot %=
+ 908 *13 *187 store
+ *.rdboy >
+ *.sexrepro *.tieloc *21 ~=
+ add *.sharewaste *.trefdn -9 *978 <
+ *.tin2 15 -12 *.myaimdx %=
+ <
+ *.tienum store
+ 0 *.tieloc 0 0 0 0 *.trefaimdx 0 *.refaimdx *.refsx *.daytime .dx store
+ 0 0 =
+ *.mkchlr *.aimright *.nrg *.tin9 0 =
+ 512 -3 =
+ *.refbody *.shsx *.fixlen *.out9 *.tin2 =
+ 0 0 =
+ 465 0 *.tout4 *.out10 *.trefshoot *.hitang *.tout1 *.ypos negstore
+ store
+ 27 *497 405 *.up ~=
+ *.tin9 floor *.sharewaste 399 0 *.vel 0 *663 *873 *.refvelup 0 -5 *.mkpoison *.paralyzed *.tin10 *.myaimsx 0 *.trefaimdx 0 *.tieloc 0 0 0 0 *.trefaimdx 12 *.rdboy store
+ 14 0 =
+ 0 *.ypos 0 -12 *814 <
+ !%=
+ 3 *.aimshoot *.velsx *.mkpoison *.aimshoot 0 divstore
+ store
+ 401 0 store
+ *.slime *.refbody *.robage *.shdx *.eye7width *.refbody 0 0 -4 <=
+ *.hitang 0 *.tmemval *.out10 0 *231 *.tout1 *.stifftie *.sx *497 *542 *20 405 *.refage =
+ *.trefvelscalar *.pval *.sharewaste 420 *.tin6 *.vel *.in10 *.tin5 *.tin6 469 *609 *.refshell 0 *.shootval 204 start
+ dec
+ *.edge angle *.trefaimsx *.paralyzed *.tin2 *.tout7 0 =
+ 0 *.eye8width *.aimright *.refpoison 0 =
+ 0 -12 *.tieval 665 *.refeye 21 *.mass =
+ *.numties 486 16 =
+ 0 *.tin5 *.totalbots 17 *.refmulti !%=
+ store
+ .out8 multstore
+ 888 -15 *.refpoison *.tin5 *.poisoned *.out10 900 *.vel =
+ -6 -- *564 0 *.eye6width ~=
+ 9 *497 ~=
+ *776 0 =
+ *.eye3dir 0 *.refdn *.genes *.aimright *225 *.hit .pleas store
+ *.tout10 *.mydn *.trefaim *.paralyzed *.tin2 =
+ 695 pow 0 =
+ 0 0 *.out2 *.refpoison 0 *.trefvelmydn *.trefvelmydn *.ypos 3 665 *.timer =
+ 0 21 *.tieloc *.eye9width *.trefaimsx =
+ *273 =
+ 449 12 *.trefdn *.tmemval *.dx -- 1 *.trefaimsx 194 *606 *.eye1width 6 0 *.myaimdx *.refdx *.fixang =
+ *.eye8dir *.refshoot =
+ *.aim *.shareslime .veldn multstore
+ *.eye2 !~=
+ 342 *0 =
+ 0 *.tout6 *.setaim *.shsx !%=
+ *.pwaste =
+ *.refvelscalar 0 *.tieang3 *.trefvelyoursx ^ - clear -7 *.tielen1 =
+ *.deltie 0 *17 403 *349 divstore
+ *.hitup -11 *609 226 =
+ *.tin8 >> 0 =
+ *.thisgene *.refdn *.refvelup 0 store
+ *.refpoison *962 224 *.venom *.rmchlr *.refnrg -3 *.eye5 0 0 *.aimleft 464 *.tin2 *.out10 0 0 =
+ 465 24 !~=
+ drop 0 *.refxpos *.tout1 *.refpoison store
+ *20 11 *497 405 *.myeye =
+ *.dn floor *.sharewaste 399 0 =
+ store
+ *.refdx *.in2 544 *.refvelscalar =
+ *.mkchlr store
+ *.sharenrg 484 0 674 sgnstore
+ -10 *.refveldn *.eye5 800 *760 4 0 * 486 *.ploc !~=
+ store
+ 0 =
+ *.tout7 *.strvenom *.refvelsx 0 *.tout7 *.shareshell *.mkpoison !%=
+ -18 *.mass *.myaimdx 445 *.eye1 *.eye7width *.venom 0 =
+ -11 *.out6 *.eye9dir 0 *.tieang2 !=
+ clearbool
+ *.eye6dir !%=
+ 16 *.in7 !%=
+ *.tout5 -17 *.in3 0 *.shsx store
+ *.vloc 18 -6 *.strbody 313 *.tielen *.refvelup 0 *.aimright =
+ *.eye4dir divstore
+ *700 *.sharechlr 0 *.shsx =
+ store
+ %=
+ 715 *.out10 *.myup 15 0 =
+ .myup store
+ *.refshoot *.tin1 0 =
+ 4 *321 div 723 *.genes =
+ 0 >> -5 =
+ store
+ >=
+ 0 *.out1 *.velscalar *.tout3 *.numties *.trefage *.out6 !~=
+ 222 *354 !%=
+ *.refaim 0 *.refmulti 220 18 >=
+
+''''''''''''''''''''''''  Gene:  5 Ends at position  929  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  930  '''''''''''''''''''''''
+ start
+ *.trefvelyourup 2 =
+ *.in2 *.tin5 *.myup *.eyef 0 =
+ *.edge =
+ *.aimleft *.trefypos 0 *.myaimdx store
+ 9 xor
+ .dx rndstore
+ addstore
+ *.memloc 0 *.aimleft =
+ *.ypos *381 *769 221 *.tout2 *.repro *.refvelup 0 *.thisgene *.myaimdx *.refpoison ~=
+ ++ *.poison *.myup -11 -2 *.dn *.trefxpos 0 *.aimshoot *.tin8 *21 *.in10 *.aimleft *.fixed *.trefvelmydn .maxvel absstore
+ <
+ *.tin2 15 *.refshoot 3 *.refup 3 <
+ *.eye6dir *.tieang1 *.mrepro 6 *.out10 601 *.up =
+ store
+ *.shang >
+ *.refvelup *.trefsx !%=
+ *.delgene *.sx 18 =
+ -7 *.eye8width or
+ dup sqr <=
+ 0 0 *.out1 *.timer *.tmemloc 0 =
+ *.fixed *.eye2width =
+ store
+ ~ !%=
+ 716 swapbool
+ sgn 300 *.refveldn *.refvelup *.eye1dir *.refaimdx =
+ *.eye6 substore
+ *.trefvelyourdn <
+ 11 <=
+ 314 0 *.kills *.velsx *.tout6 !%=
+ *.hitsx !=
+ *.in8 *.tin2 <
+ *.fertilized *.sx 18 =
+ 4 *.eye8width *.fixlen .up store
+ <
+ 0 .trefeye store
+ store
+ !%=
+ store
+ *.tiepres addstore
+ 0 0 =
+ 0 *.trefypos *.in2 floorstore
+ 487 *.vloc *.refsx .robage store
+ *.shup *.aimshoot *.eye4 *.eye7dir *.aim =
+ 283 sqrstore
+ =
+ 0 *.mypoison *.sharewaste 237 *.mydx clear *.waste 0 *.trefvelmydx 210 *.eye5width 8 *886 <
+ *778 *.trefvelyourup *.tin4 0 0 529 *.aimright *.trefvelmyup *.in7 712 *.refup *.tin2 *.tieval -10 %=
+ *.maxvel 300 *.bodgain 221 *.bodloss >
+ <
+ 0 *.aim *.up add *.tin2 *.focuseye *789 *.myup 0 store
+ *.slime *.trefaimsx store
+ *.edge *.shdx *.in10 0 *.tout9 *.eye4dir 438 0 *.refage 0 0 *.in1 529 add %=
+ 0 store
+ =
+ *.eye7dir *.eye1width 0 *.refdn *.refsx .tout5 substore
+ *.kills 0 *.shdx *.sx .trefvelmydn store
+ store
+ 0 *.trefvelmyup *.trefxpos 13 =
+ 0 =
+ .fertilized store
+ *.myvenom 522 and
+ 7 584 579 *.up =
+ *.slime *.vloc 4 *.in8 *.vloc =
+ *.shang 0 *.trefage *.fixlen *.refmulti *.eye8 =
+ 9 *.tout6 *.repro *.sharenrg 0 *255 sgnstore
+ store
+ =
+ *.genes 0 *225 *.trefvelmyup .shareslime store
+ *.tout10 *.velscalar !~=
+ *.veldx *323 >
+ 800 -5 -14 *436 *.myup *.trefdn *.tiepres *367 *.mass *.refshoot *.shootval <=
+ and
+ -7 *.strvenom sqr mult <=
+ -11 *.shareslime *.tie *.eye6width *.treffixed *.ypos *.reftie =
+ *.trefdn -10 *.refage *.out6 *.daytime =
+ pow absstore
+ >=
+ *.eyef *.venom *.aimright *.refage *.repro *.myshoot *.myaimsx *.shareshell >
+ *.in8 store
+ *578 - sub *.tin7 .dx store
+ *.venval 0 =
+ *.out1 1 =
+ *.rdboy 6 %=
+ *.memval 0 =
+ >
+ 11
+''''''''''''''''''''''''  Gene:  6 Ends at position  1292  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  1293  '''''''''''''''''''''''
+ cond
+ *.aimshoot 0 *.backshot dec
+ true
+ 445 *.trefage =
+ *.refaimdx =
+ *.in9 *.aim .paralyzed store
+ *.trefeye *929 0 multstore
+ 895 *433 *373 689 -5 *.refshoot .eye1dir store
+ store
+ *.trefage *.refdn *.tielen4 ++ =
+ 0 0 *.eye4dir *.tielen2 8 *.eye7width 0 *.out3 =
+ .pain store
+ =
+ 0 *273 =
+ *.rdboy 0 >=
+ -6 15 =
+ 205 0 *.vloc -10 *.tieval *.trefvelscalar 226 *.aimright <
+ -3 *.refdx !=
+ *.shup store
+ 0 !~=
+ -6 *.refpoison *.out2 5 -6 .robage store
+ *.setboy !~=
+ 10 0 store
+ *.refbody *.ypos 822 <=
+ >
+ start
+ .tie multstore
+ *.tieang *.daytime *.tout5 *.trefshoot =
+ *.trefdx -7 *265 *.refdn *.refnrg ~=
+ *.tout3 *316 *.eye8width -11 *.eye5 store
+ *.mass *.in9 *.aimshoot <=
+ *.dx *.tout6 =
+ *.memval *.trefvelyourup !=
+ *.in10 *.tin5 =
+ *.tin6 469 *.trefypos 1 0 *.tin8 *.veldx 0 *663 .out6 store
+ *.myties *.trefup *.sharechlr %=
+ *.trefshell angle =
+ 0 *.dx *.in1 =
+ 203 0 =
+ 0 0 *.refvelscalar =
+ 457 0 =
+ *.veldn *.up =
+ store
+ store
+ *.fertilized store
+ -3 *.shdn *.myup *.refvelup *.in10 0 0 *.eye8dir *.aimleft 0 *.bodloss *.tieang2 0 =
+ 461 *.eye5width *.hitdx 0 0 store
+ *.nrg 0 *.refveldx *.tin9 0 =
+ 421 -3 =
+ 0 0 =
+ 464 *.tin2 =
+ *.eye8 dropbool
+ store
+ *.tielen2 *.refvelup *.eye4width 215 0 store
+ 0 11 *.tin2 *.tiepres -11 >=
+ *.mkpoison store
+ >=
+ *.venval *.tout6 dropbool
+ *.out7 *.myeye 0 *.sun *.mkchlr *.deltie *.trefshoot *.tienum angle *.refveldx 0 =
+ 0 15 -12 *.bodloss *.out7 *.myup 0 *.eye6 *.treffixed *.stifftie 0 *.refveldx =
+ 485 800 !=
+ 0 *.tout8 *.trefvelmysx 3 *.eye4width =
+ *.velscalar 0 *.mkslime 739 *.tin3 *.aimleft 3 *.eye5dir -7 <=
+ 718 *926 *.mydn 15 0 store
+ 721 *.trefvelmydx 707 *.tieloc sub =
+ *.kills *.strbody 723 =
+ *.trefup =
+ *.eye4width *.shoot =
+ *.shflav *.shsx -5 =
+ *.eyef *.eye1 *.trefvelmydx *.chlr *.refvelup 0 *.tout3 *.velscalar *.tout3 *.numties *.refdn 0 *.tout2 *.hitang 222 *354 !%=
+ *.refaim 0 store
+ *.tmemloc 6 >=
+ *0 *.velsx 0 0 0 *.in4 *.out7 -4 *.tiepres 0 0 *.delgene =
+ 711 *.trefdx !~=
+ *.eye9 0 *.aim *.in6 712 *.in7 *.trefvelyoursx *.reffixed 801 *.pwaste *.ploc -3 *.refbody
+''''''''''''''''''''''''  Gene:  7 Ends at position  1628  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  8 Begins at position  1629  '''''''''''''''''''''''
+ else
+ 697
+''''''''''''''''''''''''  Gene:  8 Ends at position  1630  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  1631  '''''''''''''''''''''''
+ cond
+ *0 3 !%=
+ *.focuseye 0 0 =
+ 302 0 =
+ *.vtimer 0 *.slime .sharewaste absstore
+ *.in3 << =
+ 464 *.tin2 =
+ *.mass dropbool
+ *.reftype 1 dist -8 0 0 0 *.veldx -4 *.tiepres 0 0 *.delgene >=
+ *.sexrepro 0 *.in7 712 -7 <
+ *.myties *.tin9 14 *.aim 0 =
+ 0 store
+ *.trefvelmysx 213 0 *.myvenom 0 *273 0 >=
+ -6 *.out4 *.myup 215 *.out8 *848 *.pleas *.tieval *.trefvelscalar 226 -1 <
+ -3 *.refdx !=
+ store
+ angle !~=
+ -8 *.aim =
+ 208 *614 =
+ 0 *.treffixed *.mass 237 dist rnd store
+ 0 *.dn 210 *.deltie *765 store
+ =
+ *.hitdn dropbool
+ *.eye4width .tin1 absstore
+ -12 *642 741 0 =
+ *.tieval *.fdbody >
+ *260 >> *226 .trefvelmydn ceilstore
+ add 304 *.refveldn *678 *.focuseye -5 *227 *.eye6 5 *.shang *.tin1 *.tielen1 *.out10 *.tout5 *.refvelup 866 store
+ =
+ .eye2dir store
+ =
+ 818 *.tielen3 root -24 *.trefvelmydn %=
+ 790 10 *.eye2width -1 *.tin8 =
+ .tout1 store
+ store
+ *385 not
+ -7 =
+ *.tout9 0 *.trefvelmysx *.myties *.out10 4 *.mkslime *409 -4 *.in1 213 *.vel *.refshoot *.aimleft <
+ 0 674 *.trefaim *.velsx *.sharenrg =
+ 703 *.tin3 *.dnalen *.stifftie *.trefbody =
+ *.light *.shootval *.velsx *.refsx *.trefnrg <
+ -4 *.tielen2 0 0 *.delgene =
+ 711 =
+ *.mkchlr *.sun *.eye5 *.tin2 dropbool
+ xor
+ pow ~ 338 -8 *.trefvelscalar *.trefup 0 and
+ -4 *.tiepres 0 *157 *790 *.deltie *779 *.aimshoot 0 *.aimleft *.pain *.eye9 .readtie substore
+ anglecmp *.trefdx *.tielen swapbool
+ 212 >=
+ *.aim 0 0 0 <
+ 536 *.in1 *189 *.out10 *.shoot *231 *.tout1 *.tout10 -25 xor
+ *.bodgain 213 *.trefaim *.trefage *.refvelup *.eye4width *.dnalen ++ 3 *.tiepres *.xpos <=
+ *.mkpoison *.fixed >=
+ *.refeye *317 513 *497 208 *.trefvelmysx *.aimright *.refaim *909 *633 *.tin1 root floorstore
+ =
+ 484 *.myeye 674 negstore
+ -10 *.mydn ceil *.trefvelyourdn *.ypos *.totalbots *.myties *.edge *.mkslime *.mrepro *.hitdx =
+ *.fixlen *234 *.sexrepro 826 *.fixang *.bodgain 0 *.tin10 0 0 =
+ 538 << *.myup *.trefnrg 0 *.sharechlr -3 *.shoot 9 <
+ *.eye6 *.sx *.eye5width false
+ root *.refveldx 831 10 *.kills *.eye4dir *.trefbody %=
+ *.out1 0 !~=
+ *.refsx *.trefvelmydn store
+ store
+ 0 *.fertilized *.refsx *.trefshoot >=
+ *.sharenrg *.trefvelscalar .mkshell store
+ *.shsx *.trefdx 0 *.out1 *.setboy *.mass 0 <
+ -17 13 else
+ *.reftype *.nrg !~=
+ *.eye1 0 *.eye4dir *.mypoison *.bodgain *.tin6 *.nrg 0 *.trefvelyourdn *.tout3 0 =
+ 512 -3 =
+ 0 *.mkchlr =
+ 464 *.tin2 =
+ 0 *326 !%=
+ 465 0 !=
+ *592 -1 *246
+''''''''''''''''''''''''  Gene:  9 Ends at position  2014  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  2015  '''''''''''''''''''''''
+ cond
+ <
+ *.sx *.out2 11 *497 ++ 0 *.mrepro *.myaimsx store
+ *.hitang *.eye9dir *.eye3dir 461 4 *.out7 0 0 =
+ 0 *.in4 *.refveldx 0 *.tielen4 =
+ 512 *.strbody *.trefvelmysx *.myaimsx *.pain pow *.refshoot 3 <
+ 0 0 *.mrepro - -7 *.trefvelyoursx <
+ *.out2 1 *.tienum *.rdboy *.hitang *.strvenom *.refveldx 0 0 *.refvelscalar *.eye3width 0 *.hitsx *.totalmyspecies *.maxvel *.tmemval *.hit -16 <=
+ *.shdn 0 *.out7 *.out6 0 *.sun =
+ *.eye3dir 0 =
+ dec
+ -8 .pleas store
+ store
+ !%=
+ *.trefup !~=
+ *.setaim *.tin2 *.refkills 621 -11 *.eye1width -1 0 17 =
+ *.shup *.refpoison *.out2 *.aimright 3 400 *.tielen3 =
+ 0 21 *.refeye 486 *613 *.aimright *743 *.setaim 844 17 dist !%=
+ add -9 *.genes 895 *.paralyzed *.refpoison 0 *.poisoned !=
+ 900 -1 *.trefage *187 *176 399 -1 =
+ *.trefvelscalar dist 381 0 *.vel *.in10 *.tin5 *.trefypos =
+ 0 .trefvelscalar store
+ !%=
+ -18 -28 =
+ *.vel 0 *.eye7width *.venom *.tout7 =
+ *.out10 0 *.mkchlr store
+ *.eye5 484 0 674 *964 *.refvelup =
+ store
+ *.eye2 !=
+ 0 *.tout3 *.trefvelmysx *.ypos *.ploc =
+ *.in7 0 *.trefvelmydx *.sharewaste 361 -9 *.vel *.in10 *.tin5 *.tin6 469 *.trefypos *.eye6width
+''''''''''''''''''''''''  Gene:  10 Ends at position  2195  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  2196  '''''''''''''''''''''''
+ cond
+ ceil *349 1 *617 *.shdn .repro store
+ *.tin10 *.hitup 209 *.tin5 *.slime *.up *.rmchlr *.tout6 =
+ *.sharenrg <=
+ 0 *.bodloss *.setaim 0 =
+ *.genes 0 *225 *.shootval *.edge 0 *843 store
+ *228 9 *.trefaim *.tout1 8 =
+ *232 ~ angle !%=
+ 443 *.mass *.eye2dir 304 *-113 *.treffixed *.refdn *.myshoot 0 0 *.refaim *.sharewaste 0 =
+ *.out3 -12 7 665 *.out3 21 0 *.trefeye *.tieloc 486 16 =
+ *.eye8dir *.shup *.numties 0 store
+ store
+ 203 0 =
+ 0 0 =
+ *.out7 *.vshoot >=
+ *.slime 15 1 *.trefsx *.refshell 205 *.eye5dir store
+ =
+ 504 0 *.refsx *.trefnrg %=
+ *292 *47 divstore
+ 3 else
+ -6 *.myaimdx 0 %=
+ !~=
+ -9 *770 *.velsx *.mkpoison *.aimshoot 0 *.backshot dec
+ 401 >
+ 11 *.in2 *.mrepro 533 *.myvenom 522 and
+ 7 *.mydx *.out4 -15 <=
+ *.in8 *.tin2 =
+ *349 *.myshoot *23 =
+ *.eye8dir *.dn *329 swapbool
+ 8 *.shflav *.tmemloc *.timer *.out1 | =
+ *.fixed *489 *.eye6dir -6 *.venom *962 224 store
+ -13 2 !~=
+ *.refvenom *.refeye *.refdn *0 0 .refmulti store
+ 17 store
+ *.venom 0 !%=
+ *.shoot *.eye6width *.readtie *.velsx *.deltie %=
+ 10 *.refmulti *.daytime *.mkchlr 5 *.refdn *.timer *.out10 =
+ *.daytime 0 =
+ *750 *.refvelsx 0 *.eye8dir *.aimleft *.mkvirus *.bodloss *.tieang *.tieang =
+ *.trefbody *.memloc *.strvenom *.light *.reffixed =
+ *.out1 0 *.chlr 0 0 0 store
+ 413 =
+ *.rmchlr *.eye4dir !~=
+ store
+ 0 *.ploc *.mkshell 0 =
+ *.tieval *.tin4 %=
+ 739 .repro store
+ *.vtimer *.shdn
+''''''''''''''''''''''''  Gene:  11 Ends at position  2425  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  12 Begins at position  2426  '''''''''''''''''''''''
+ else
+ *.chlr *.tout4 *.aimright -7 =
+ 715 *.out10 *.myup *.myties 0 *.in10 =
+ ~ 2
+''''''''''''''''''''''''  Gene:  12 Ends at position  2440  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  2441  '''''''''''''''''''''''
+ cond
+ *.tout5 *.tie .hitdn store
+ *.aimright *.mysx 6 >
+ -10 start
+ *.veldn 142 *.in10 *.tout8 *.trefbody 0 *.strvenom *.refaimsx 261 store
+ =
+ ~ 0 *.aimleft 482 *.trefage =
+ store
+ *.refvelscalar 474 *913 substore
+ ceilstore
+ 484 0 674 *.eye1dir *.sx *20 *-13 *.xpos !~=
+ *.refkills 0 *.eye3width *.eye9width store
+ =
+ *.eye4dir *.treffixed !%=
+ *.eye6 *.genes *.up *.setboy >
+ -16 *.out6 23 !%=
+ *390 *.totalmyspecies 703 0 *.velscalar *.eye2dir 704 *.shootval =
+ *651 store
+ =
+ *.memval 0 *.tmemval *.deltie *.out4 *.shell *.aimright - *.tin1 707 0 =
+ *382 *.shareslime sqr
+''''''''''''''''''''''''  Gene:  13 Ends at position  2528  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  14 Begins at position  2529  '''''''''''''''''''''''
+ start
+ *.myties 0 store
+ *.refdx *.fdbody 0 674 *.venval -10 *.waste *.out8 *.in3 !=
+ *.light *.in8 *.eye8dir *.trefvelmysx *.trefvelyourdx *.ploc *.tieang =
+ 512 *.hitup =
+ 0 *.eye7width =
+ 464 *.tout2 *.myaimdx *.pain *.ploc *.refshoot .sharewaste store
+ 6 *.sx *.readtie *233 *.tin10 *.fixlen *.tout1 *.myup -14 5 5 4 *.trefup *.dnalen 10 *.trefdn 9 =
+ 575 -6 *.sx *365 *.trefvelmysx !%=
+ 699 *.sharewaste =
+ .tin6 store
+ *.trefage *.trefvelscalar *.refmulti =
+ -26 store
+ *.tout3 688 =
+ *.mkchlr 0 *.refveldx *.reftie *.trefvelyourdx *.trefbody 0 *.dnalen 0 704 *.ploc =
+ *.myup 0 =
+ *.venval 0 *.tmemval *.refmulti *.vel *.maxvel -3 *.rdboy 459 -14 sgnstore
+ *.shdx *307 4
+''''''''''''''''''''''''  Gene:  14 Ends at position  2631  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  15 Begins at position  2632  '''''''''''''''''''''''
+ else
+ *.shoot 0 =
+ *.fixpos 0 *.myaimsx 214 *.fixpos 417 *.tout10 -10 =
+ 485 *.trefaimdx !=
+ 0 *.eye5width *.slime 486 *.refvenom >=
+ *679 8 =
+ *.tin2 =
+ 0 *.bodgain =
+ *.thisgene *.veldn *.timer *.eye3dir *.in9 *.tout6 *.eye9dir 565 0 *373 *.trefaimdx *.in3 -- *496 sgnstore
+ 19 -24 <
+ 854 *.dn *.trefup store
+ *.refvelscalar 0 *894 *.eye3 -18 >=
+ & 456 *.vtimer add !~=
+ 0 0 *.mkpoison 457 0 >=
+ *.in10 0 =
+ *.fixpos *.maxvel =
+ *.eye5dir -3 *.trefeye 459 0 *.vtimer *.refvelup 0 *.tin7 *.aimleft sin 0 *.bodloss *.tieang2 0 =
+ *.refdx 4 *.eye9 *.vtimer 0 *.tielen2 *.nrg 0 *.refveldx *.tin9 0 !%=
+ !=
+ *.mkpoison =
+ 0 0 =
+ 464 *.tin2 =
+ xor
+ dropbool
+ *.trefaim 0 *.reftie 0 0 store
+ *.hit *.repro *.veldx *.tout6 <
+ 0 *.fertilized !=
+ 731 *.focuseye *.tie =
+ 539 *.tin2 *.daytime *.trefvelyourdn 0 *.tiepres *.eye2 12 *.refdn <
+ *.sx *.tout6 405 *497 19 & =
+ store
+ root *747 *.vel 0 399 *.in10 *.hit *.tin6 469 *.trefypos *.hitup 0 =
+ *.veldx 0 *663 0 *.tout2 *.vel *168 *.strvenom *.refveldx 0 0 *.tieang 501 0 *.vel div 5 -13 *.tout3 *.tin6 -16 <=
+ *.xpos -6 *374 *592 *.mkshell *.numties *.vel 0 !~=
+ pow *346 !%=
+ ceil -7 *.refmulti store
+ 0 <
+ =
+ *.in2 0 *.myup *.tie 0 *.shang -- *.refup =
+ 0 - 0 0 *.venval *.trefvelyourdn -4 *613 >=
+ *.up 7 *.readtie 0 *.backshot *.trefaim *.mkpoison 0 *.eye8dir *.refpoison 0 %=
+ 1023 *.trefsx 2 *.vel store
+ *.xpos *.eye3width *.out7 =
+ *167 *778 !%=
+ 0 *.trefeye -322 *.daytime -6 <
+ 0 *.backshot *.sharewaste *.tout3 *.trefdx 0 0 *.aim angle 39 *.in8 *797 0 *.refpoison *.tielen *.sharewaste <=
+ *758 *.eye5width =
+ -10 *.tout5 *.trefage *.trefaimsx 0 *.refpoison 0 *.poisoned =
+ 900 *.tin7 *.reftie *.shang 0 *.trefage *.fixlen 23 >
+ -12 dup 534 *.sharewaste 0 9 *.trefvelyourdx *.tiepres -11 ~=
+ *.tiepres *.veldn >=
+ *.eye5width *.trefage ~ *.eye1 213 *.veldn *.eye3 462 *.out1 =
+ *999 *570 =
+ 484 0 .pval inc
+ *.in4 =
+ 485 800 *.trefvelmydn 0 =
+ *.ploc 486 *.tieloc *.refypos *.in7 *.light >
+ *.trefvelmydx *779 *.tout10 *.out8 0 444 *.refaimdx *.tin9 -18 -28 -- =
+ 445 0 *.trefvelmydx *.shell -4 ++ *620 =
+ *.eye9dir *.out8 *.shareshell 1 >
+ *.out1 <=
+ *.xpos *.totalmyspecies 0 =
+ 0 529 =
+ over *.in9 !=
+ sin pow *432 *.mass *380 =
+ *.reftype *.velsx clearbool
+ 6 *.tout6 6 0 and
+ *.refmulti -4 *.tiepres 0 0 *.delgene *.rmchlr *.up *.aimright *.eye5 *.trefaimdx -- 0 =
+ =
+ 0 *.dnalen - 0 store
+ *.refaimsx !~=
+ .reftype store
+ *.in3 *.in3 *.refvelscalar *.rdboy 0 *.hit *.robage *.tielen4 *.aim *.eye3width 0 *.refvelscalar 0 dupbool
+ *0 *.repro *.multi >> 445 0 =
+ 413 ~ *281 *.refshoot *.shflav 0 .tielen3 store
+ 0 =
+ 0 *.tie =
+ 723 0 =
+ 0 >> *.shoot =
+ *.eyef drop *495 *.refup 0 330 *.eye6dir *.eye4 -15 %=
+ *.mkshell 0 *.tiepres *.myaimdx and
+ =
+ 0 0 =
+ .eye8dir store
+ .vel store
+ *.tmemval !=
+ *.in8 0 =
+ *342 *.sx <=
+ *.vel 18 *.stifftie *.eye7 0 *.eye8width =
+ *.shflav *.eye9 0 0 =
+ *.nrg 0 *.slime *.eye3 *.veldn 0 =
+ *.tieloc 0 *.chlr *.nrg =
+ store
+ 527 *895 *.refeye *.aimright *.thisgene *.veldn *.dnalen =
+ 529 0 !~=
+ store
+ *.tout6 16 dropbool
+ 0 *.refdn angle *.velsx *.multi 0 0 =
+ 0 *380 *.ypos 214 *.veldx =
+ *.out6 *.in6 *.trefshell *.memval 0 0 =
+ *.sexrepro 0 =
+ *.vtimer 0 837 mult *.mkvirus *.totalbots *910 clear *490 =
+ .tin6 store
+ *.fdbody *.rmchlr *.trefvelyoursx *.out10 *.eye8dir *.deltie 688 =
+ *.eye9dir *.tielen1 *1089 >=
+ *.shareslime *.eye9 !%=
+ 16 -1 *.tieang2 909 *.refxpos *613 -4 *.eye4dir >=
+ store
+ 7 *.readtie *.refaimdx *.out3 =
+ *789 17 =
+ 0 *.mypoison %=
+ 1023 2 *.vel *.refvelscalar *.xpos *.myaimdx 824 !=
+ =
+ *.out1 0 *.refaimsx *.sun -6 <
+ 0 *672 substore
+ 937 *.hitsx 0 <=
+ 0 *.aim 837 *.mkslime *.ypos !%=
+ *.sharechlr 482 *.refypos =
+ store
+ *.aimright *.mysx 483 *.refvelscalar <=
+ .eye9 store
+ *.eye3 484 0 674 sgnstore
+ -10 *.eye8dir *.aimleft 0 0 0 *.refnrg =
+ *.body *.totalmyspecies *.tout7 -13 0 !%=
+ *.nrg *.trefvelmyup *.shsx *.tin9 0 =
+ *.eye4dir -3 !~=
+ *.reftie -6 -5 *.trefdx *364 *864 ~=
+ 0 store
+
+''''''''''''''''''''''''  Gene:  15 Ends at position  3301  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  3302  '''''''''''''''''''''''
+ cond
+ *.myeye *.mypoison *.bodloss *.tielen2 *.tie 512 *.ploc *.ploc 0 0 =
+ *.mrepro 445 -15 *955 *.tout9 12 0 !%=
+ 0 457 *.refvelup .timer store
+ -11 * 0 9 *.tielen3 *.aimleft *.tout8 *.vel div *.eye3 699 *.mrepro *.pwaste *.sx *.eyef *.venval
+''''''''''''''''''''''''  Gene:  16 Ends at position  3342  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  3343  '''''''''''''''''''''''
+ cond
+ start
+ *.nrg *.backshot *.strvenom 527 *.tin6 =
+ *.out1 *.thisgene *.veldn *.dnalen 485 800 *.memloc 0 444 *.mkpoison !%=
+ -18 -30 *.trefvelmydn 445 0 store
+ *.venom 0 =
+ 446 *.tin5 store
+ 469 *.trefypos ~ 0 =
+ *.veldx 1 *.pval =
+ *.veldx 0 *622 180 store
+ 0 *.eye8dir *.aimleft 0 *.bodloss *.veldx 0 *.eye9dir =
+ *.trefaimdx 0 0 0 =
+ *.body =
+ *.mkvirus 0 *.shootval <
+ 619
+''''''''''''''''''''''''  Gene:  17 Ends at position  3408  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  3409  '''''''''''''''''''''''
+ cond
+ *.refshoot *.tin1 0 =
+ -1 | 0 *.shareshell *.eye2width 224 *.shoot =
+ 0 *.pain =
+ 203 0 =
+ *.shflav *.pwaste 0 *273 =
+ -6 *.vloc -19 253 =
+ store
+ *.pleas *.tieval *.trefvelscalar 226 *.eye2width *.totalmyspecies *.ypos *.trefshoot *.edge *.trefshell *.out2 *.maxvel -8 *.aim *.trefvelyourdn 208 *.shareslime =
+ 0 *.pain *.sharewaste *.refup angle rnd *.waste 0 *.hitdx *.trefshell 211 *.trefaimdx 0 522 ~=
+ *890 store
+ *.tin4 0 0 =
+ 302 and
+ *396 *.tielen1 565 0 *.vtimer *.in10 0 0 <
+ *.refvelup *.tout5 =
+ 16 .aimright store
+ 0 *.trefdn *.rdboy *.ploc *.mkpoison *.in7 *.out1 =
+ *364 *880 *.strvenom 0 0 444 %=
+ *.out2 300 696 *.aimleft *.shdn .ploc store
+ <
+ store
+ -7 %=
+ 715 *.out10 <
+ 0 *.tieloc .myup store
+ *.eye2width *.tin1 *.tieang3 =
+ 722 0 =
+ 0 -- !~=
+ >> 0 *.eye5 0 *.setaim *.vtimer -5 *.up *.eyef false
+ 0 store
+ *.refvelup 0 *.tout3 *.sun *.tout3 *.numties *.refveldn 0 *.refmulti 222 *354 !%=
+ *.refaim 0 *.refmulti *.veldx *.tout6 =
+ 0 0 <=
+ *844 *.out8 *659 *.poisoned 0 dec
+ ~ store
+ =
+ 0 169 0 29 clearbool
+ .maxvel inc
+ *225 *.trefvelmysx 0 0 !~=
+ 0 *380 *.sx !~=
+ store
+ *.refvelup *.eye4width 215 *.eye9width *.eye4dir 0 9 >=
+ *.mkpoison *.fixed =
+ 0 *.refeye =
+ 723 0 *.trefvelscalar 0 >> -9 =
+ *.eye3 dropbool
+ 18 *.chlr store
+ *.tmemval 0 *.ploc =
+ 681 store
+ mod 0 =
+ *.tin6 *780 0 start
+ !=
+ *.myaimdx *.tout2 *.trefaim *.body 0 0 *.refdn *.refshoot .sharewaste store
+ 6 *.sx -11 .strbody store
+ *.fixlen *.tout1 *.trefypos -14 5 3 *.mkslime *.shang 10 -5 *.shup *.paralyzed *.tin10 *.myaimsx 0 *.trefaimdx 0 *.vel *.in10 *.tin5 *.shsx 469 *.trefypos *.refshoot 0 *.refkills *.veldx 0 *663 211 *750 store
+ *.tin10 *.eye4 *.refaimsx ~=
+ *.up 9 *.tout6 <=
+ *.rdboy store
+ *.tieang1 *.myaimsx -1 !%=
+ -3 *.refdx floor 225 *.mypoison *.vel -8 *.timer =
+ *.paralyzed *577 =
+ 0 *.venval *.sharewaste *.refvenom angle over *398 *.dn *.veldx 688 *.venom *.refdn *.mkchlr 0 =
+ 703 0 -19 *.out9 -3 15 *.trefeye *.in9 >
+ *388 *.veldx 0 0 17 *649 *.eye1 -11 *.shdx *.tin10 *.refaim *.refmulti dec
+ 2 *666 *.trefshell *.refmulti 220 0 *.ploc 0 0 =
+ *.trefvelmydn 0 *.myup *.tout5 *.fdbody >=
+ & *.poisoned =
+ *.hitdn *.eye3dir =
+ 301 *.out3 *.totalbots .aimright store
+ *
+''''''''''''''''''''''''  Gene:  18 Ends at position  3774  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  19 Begins at position  3775  '''''''''''''''''''''''
+ else
+ 292 11 *.mass *.refbody =
+ ~ -8 *390 *.shflav .refvelscalar store
+ 716 *.eye3dir add 304 695 *.myaimdx *.poison 0 0 *.out2 *.sharewaste -9
+''''''''''''''''''''''''  Gene:  19 Ends at position  3798  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  20 Begins at position  3799  '''''''''''''''''''''''
+ else
+ *.sharewaste *.refvelup *.xpos
+''''''''''''''''''''''''  Gene:  20 Ends at position  3802  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  21 Begins at position  3803  '''''''''''''''''''''''
+ cond
+ *187 *.tieval *.tin5 21 *.tieloc 486 *.trefaimsx *.tin10 *.eye8dir *.setaim 0 572
+''''''''''''''''''''''''  Gene:  21 Ends at position  3815  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  22 Begins at position  3816  '''''''''''''''''''''''
+ cond
+ *.reftype =
+ *.hitdx *.mkchlr =
+ *.tielen1 0 =
+ *.fixpos *.in3 *.trefaimsx -3 *.strvenom *.trefage *.out1 -4 and
+ else
+ *.tiepres 0 0 *.delgene =
+ 711 *.trefdx *.poisoned *.rmchlr *.bodloss *.velscalar 712 0 =
+ *.tieval *.trefvelscalar %=
+ 739 *.tieloc *.refshoot
+''''''''''''''''''''''''  Gene:  22 Ends at position  3854  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  23 Begins at position  3855  '''''''''''''''''''''''
+ else
+ *.shdn *.shootval store
+ *.vloc <
+ *.aimright *.tout6 *.eye2dir -11 =
+ *.eye9dir *.tout5 *.light 0 0 0 *.eye9width store
+ *.vloc *.eye4dir *.sx *.tielen1 *.strbody 313 *.tielen3 *.mkchlr 0 *.aimright =
+ *.tout4 *.numties *.refypos 0 *.stifftie 475 *.mkvirus =
+ angle 476 =
+ *.pval *.in7 *.tin10 angle 24 0 *.vel *.tielen *.eye7dir %=
+ -6 -21 ~=
+ ++ *882 >=
+ *.bodloss *.out2 *394 523 mod =
+ *.refshoot *.in10 =
+ *.eye8dir *.tin2 <
+ -2 *.edge !%=
+ *.body *.trefbody *333 0 *231 *.tout1 ~ *-14 *20 11 *.in1 *.out6 -1 206 *.up *.myties 5 4 =
+ *.trefeye 0 =
+ *-309 0 0 *.in1 *.refveldx *.tin8 *.mkslime *.fdbody *248 and
+ store
+ 0 =
+ *.refup *.refxpos =
+ <=
+ *.eye5width 7 =
+ *.setboy *.sx %=
+ .tout3 absstore
+ stop
+''''''''''''''''''''''''  Gene:  23 Ends at position  3974  '''''''''''''''''''''''
+ *.shareslime *495 *.refage 442 <
+ -- -18 *515 >
+ sin *.hitdx *.tout7 0 =
+ 616 *.fixpos and
+ *.shdx -9 =
+ *.refup store
+ =
+ *.mysx 4 !~=
+ *.refkills 0 *.rmchlr 0 *.eye8 =
+ *.eye4dir *.treffixed !%=
+ *.sexrepro *433 *.shang *.fixlen 0 *.eye2width 510 *.in8 =
+ store
+ <=
+ 505 !=
+ *.daytime =
+ store
+ *.trefvelyourdx =
+ *.in6 0 store
+ *.refage *.daytime =
+ *.refvenom *.in10 *.robage *.refvelscalar *.fertilized *578 sub *623 & 4 <
+ -10 *.eye4dir =
+ store
+ store
+ *.tin6 >
+ *342 *.myaimsx *.aimright 2 0 *.myshoot *.vel -19 *.out1 7 7 !~=
+ *.tiepres 0 819 *.veldn *.out9 =
+ *.out2 *.eye5width =
+ 5 0 *.tin5 *.hitdn *.hitdn *.stifftie 5 -5 pow <
+ 0 *.tin7 *.chlr -1 %=
+ *.eye4dir *.shsx *.tin2 angle *.trefaimsx *.in8 =
+ *516 .refvelscalar store
+ ~=
+ *.hitup *.refvelscalar 18 !~=
+ store
+ store
+ <
+ 0 *.refshell *.mysx *.stifftie *.refaim *.shdx 0 0 =
+ *.pleas 0 *.refvenom *.setaim *.daytime store
+ *.tieval 0 !~=
+ store
+ 0 *.eye1dir 10 *.fixpos *.bodloss *193 ~ !%=
+ .tin3 ceilstore
+ *.tout1 304 *.trefdn *.refvelup *.refmulti *.numties >=
+ =
+ *.tielen4 *.tin2 =
+ 0 0 *.pwaste *.refpoison 0 =
+ 0 =
+ *.aimleft store
+ =
+ *.in1 2 *.dn *.maxvel sgn *915 *.refpoison *.aimleft =
+ store
+ absstore
+ *862 *892 *623 *.fertilized *.in9 >
+ *.refvelup *.eye1dir *.hitsx =
+ *.eye6 5 *.tieang4 0 *.refvelup =
+ 314 0 *.kills *.velsx store
+ !%=
+ 305 *.eye6width *.in10 store
+ *.fixed =
+ 330 *.tmemval *.tin6 572 0 store
+ *.tin9 *.refvenom !%=
+ 699 0 *.ypos *.tout2 -1 =
+ *.trefvelscalar floor *.sharewaste 399 0 *.vel *.in10 *.eye4dir *.tin6 *.vloc 5 *.tin10
+''''''''''''''''''''''''  Gene:  24 Begins at position  4223  '''''''''''''''''''''''
+ cond
+ *.shdx =
+ store
+ 6 *.fixlen >
+ *36 store
+ *.eye7 *.out3 0 =
+ <
+ *.trefdn =
+ *.daytime -3 *.trefsx *.mkshell stop
+''''''''''''''''''''''''  Gene:  24 Ends at position  4243  '''''''''''''''''''''''
+ *.shdn -18
+''''''''''''''''''''''''  Gene:  25 Begins at position  4246  '''''''''''''''''''''''
+ else
+ <=
+ =
+ 0 *.eye4 *.fixpos 214 0 =
+ *.repro store
+ *494 false
+ *0 *.eye4dir 0 *.trefshoot *.mkpoison *.fixed >=
+ 261 *.trefsx =
+ ~ *.out1 21 =
+ *.aimshoot 0 add 805 *.vshoot *.backshot *.hitdx *.tout4 *.refvelup 802 *.venval *.in10 -11 *.trefvelyoursx *.tielen1 *.refypos 0 81 store
+ *.out8 *.tout9 *.mypoison 804 *.tin8 *.refaimsx *.hitdx *.trefshoot =
+ *266 19 *.trefvelyourup -4 7 *.eye3 811 -30 *430 0 0 =
+ *.tiepres =
+ *.myaimsx 0 *184 *380 *.fixpos 214 *.eye2 -3 *582 not
+ *.rmchlr *.eye7 215 0 *.eye4dir 0 *.reftie *.tielen1 *.tiepres -11 >=
+ *.paralyzed *.shdn *.out8 *.in10 <
+ *.sx *20 11 *.tieloc 409 store
+ =
+ *.out6 floor *.sharewaste 384 *184 *500 *.eye5width *.tielen4 *.backshot dec
+ 401 .out2 store
+ *.slime *.mass *.refbody *.eye5 0 =
+ *.shdx *.fixang 0 .eye8 sgnstore
+ -10 =
+ *.trefdx 800 !=
+ *.refxpos -242 0 0 =
+ *.tieloc 0 *.stifftie *.refvelup *751 div *.xpos stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  4389  '''''''''''''''''''''''
+ >=
+ *.repro *.refdn !~=
+ 685 *.mydx *.tout1 *.tieang1 0 *.trefvelyourdx 0 *.shareslime *.eye2dir 828 *.mydn *.eye3width 0 *.refvelscalar *.eye9dir 461 -1 << .mass store
+ *.eye2width 224 *.trefbody =
+ 0 *.poison ~=
+ 224 0 =
+ 0 store
+ =
+ *273 *.tout9 >=
+ *.shareslime 15 =
+ 205 0 *.refdn
+''''''''''''''''''''''''  Gene:  26 Begins at position  4436  '''''''''''''''''''''''
+ else
+ *.focuseye 226 -1 *.kills -3 *.refdx *.readtie !~=
+ -8 *.aim =
+ *.in6 *.refveldn *.refup *.in9 *.tielen4 *.eye9dir 565 0 *.reffixed -12 0 pow store
+ 3 <
+ 0 *.refdn *.sharewaste *.aimshoot 0 .trefbody dec
+ 0 =
+ 454 *.pain *.pleas 12 *597 floorstore
+ *.setboy .eye4dir store
+ 0 *.refdn *.trefshell .tout5 absstore
+ store
+ *.thisgene store
+ *.maxvel 442 0 *.tiepres 0 *.pval =
+ 443 *.out9 =
+ 0 0 *.shdx 520 *.ploc 631 6 *.reffixed *.thisgene *.trefvelmyup *.mkvirus *.sharenrg 0 =
+ *.eye3dir 0 *.out2 *.ypos 0 sqrstore
+ *225 -8 200 .trefaimsx store
+ *.velscalar =
+ *.refpoison *.trefbody =
+ store
+ *.fixang <
+ *.sx *20 11 *.readtie 348 -1 .poison store
+ floor *.aimright pow *.rmchlr *.delgene *.sx *.reffixed ~=
+ -4 *573 *772 *.tmemloc *321 dup *.tout7 *.tielen4 *892 0 *.deltie and
+ ~=
+ *.eye5width 0 =
+ *232 *.velsx !%=
+ 716 divstore
+ mod 304 *.refveldn *.shdn *.eye1dir *.waste | dist 5 *.tieang4 0 *.myaimsx *.shang 325 *13 %=
+ *.kills *.velsx *.trefvelyourdn *.tielen4 305 *.eye6width *.treffixed *.eye2width *.reftie =
+ *.robage 9 *.trefvelyourup 501 <
+ <=
+ store
+ *.trefvelmysx *.mkpoison 699 *.trefdn sqr =
+ 440 *.mkchlr *.hitdn store
+ *.refmulti =
+ -26 0 *.tout10 *.fixpos *.myeye 0 =
+ *.repro *.shsx *.eye4width 215
+''''''''''''''''''''''''  Gene:  26 Ends at position  4624  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  27 Begins at position  4625  '''''''''''''''''''''''
+ start
+ sgn *.eye4dir 0 *.sun <=
+
+''''''''''''''''''''''''  Gene:  27 Ends at position  4630  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  28 Begins at position  4631  '''''''''''''''''''''''
+ start
+ store
+ >=
+ 261 *.eye5width =
+ ~ *.eye1 *.aimleft 482 *.trefvelscalar =
+ store
+ *.aimright *.mysx 483 *.refvelscalar addstore
+ store
+ *.tin10 >=
+ .tin5 store
+ *.trefypos 0 0 *.dn *.refaimsx *.refvenom *.mysx *.in7 0 *.poisoned *.tieang *.trefvelmydx *.eye4width =
+ *.trefaim *.bodgain =
+ *.thisgene *.veldn *.dnalen *.sx =
+ *.refaimdx 0 *.eye3dir *.in9 *.tout6 store
+ 565 0 *.vtimer -12 *.refnrg pow *.refshoot <
+ *.refaimsx *.sx *.refnrg 190 2 *.aimshoot 0 *.tout1 809 *.bodgain << and
+ 0 %=
+ mult *693 505 *224 *.shdn 0 0 *.eye4dir *.mkpoison 0 *.refage 0 0 =
+ 486 *.tin6 0 0 *.venom 0 *.trefxpos =
+ 443 *.out9 *.pleas 0 0 *.trefvelmyup 444 *.mkpoison !%=
+ -18 -28 =
+ 445 0 *.sx *911 13 xor
+ ++ -5 486 *.trefvelmysx 0 *.ploc =
+ store
+ 0 *.trefshoot *.tieang *755 0 *.eye1dir store
+ 501 0 *.vel 0 *.trefnrg *.trefbody *.tin6 *.backshot <=
+ *.shsx 0 *.myaimsx *.out3 0 *.sun <
+ store
+ *.mrepro *.tielen 0 *.refsx *491 *.out8 *.sexrepro *26 *21 *.eye8dir 0 *.eye3dir *.trefvelmydn -9 *978 <
+ and
+ 15 -15 *.refmulti ++ substore
+ <
+ store
+ 533 *.myvenom *.trefaim
+''''''''''''''''''''''''  Gene:  28 Ends at position  4802  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  29 Begins at position  4803  '''''''''''''''''''''''
+ cond
+ 584 579 *.bodgain =
+ *.tie store
+ *.myup 0 *.tout9 *.trefaim *.fixed 0 >
+ -13 9 *.mydn >=
+ 2 614 or
+ 0 *.strbody 728 0 *.refpoison stop
+''''''''''''''''''''''''  Gene:  29 Ends at position  4829  '''''''''''''''''''''''
+ ~ *.in10 =
+ rndstore
+ *556 4 *.trefshell =
+ *169 0 >=
+ 6 mult *.eye2 *.refmulti 0 *.ploc *.shup *.fixpos *369 *.nrg *.ypos *.refkills *.bodloss | -1 224 *.tieang3 =
+ 0 *.out3 0 471 *.tiepres *.trefnrg *.myties .tout4 store
+ >=
+ 261 *.eye5width =
+ ~ 0 *.trefdx 482 *.trefvelscalar =
+ addstore
+ *.aimright *.mysx 483 *.shareshell =
+ 920 -1 *.rmchlr *.eye1dir *.eye7dir *.eye4 861 0 *.hitdx 0 0 *.myshoot 828 *.mydn *.out10 0 -11 =
+ !%=
+ not
+ *.refvelsx !=
+ -2 add 406 store
+ .tielen3 store
+ =
+ *.in7 =
+ store
+ | *433 -10 0 *.tieang *.eye9dir 0 *.vel 0 0 *.tout10 *.tout3 *.refypos 0 *.tin10 *.in4 *640 ~=
+ 358 *.trefypos >=
+ <
+ *.tielen2 0 & 0 store
+ <=
+ *.hitup *.in2 *.out10 *.maxvel *.trefeye 459 *.reffixed *.totalmyspecies *.refvelup 0 *.eye8dir *.aimleft *.eye5dir *.bodloss *.out10 =
+ 471 0 *.slime *.mass *.vel
+''''''''''''''''''''''''  Gene:  30 Begins at position  4965  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  30 Ends at position  4965  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  31 Begins at position  4966  '''''''''''''''''''''''
+ cond
+ ~=
+ start
+ *.trefvelscalar *183 *.sharewaste 399 *.eye8 *404 *.in10 *.bodgain *431 *.trefvelyourdn *.refvelup 1 0 *.myties 5 *.tieang2 *.rmchlr *.eye3 0 *.totalbots 0 0 *.in1 *.myvenom 0 >
+ 4
+''''''''''''''''''''''''  Gene:  31 Ends at position  4995  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  32 Begins at position  4996  '''''''''''''''''''''''
+ cond
+ multstore
+ 214 0 *.trefdn *.strvenom store
+ *.eye4width 215 0 *.eye4dir 0 9 >
+ *.tiepres *.tout8 *.mkpoison *.mkpoison *.hitang root *24 *.out4 *.velscalar ~ *.trefxpos 0 138 =
+ *.out10 *.tin5 *.shsx store
+ <
+ *.sx store
+ <
+ *571 381 5 *.shang *.trefvelmysx floor *.sharewaste *.eye3 0 *356 *495 *.out10 9 *.vtimer -12 *.venom pow *.refshoot 3 *.numties *.shootval *.setboy *.tin3 *.aimleft *.tout3 0 *.in10 *.sharenrg *.refaimdx 211 *.refvelup *.aimleft *.bodloss *.tin9 | *.tieval *.eye2width 224 0 =
+ *.vshoot *.out3 =
+ *.shsx *294 store
+ *.tout1 *.dnalen *.veldn *.thisgene *.out1 *.tielen3 *.trefypos *.refaimsx *.refbody *.trefypos *.eye1width =
+ 0 *.tout6 *.vtimer -12 0 pow *.refshoot *.myshoot add -8 0 *.mrepro .eye3width store
+ 522 and
+ *.tin7 584 *.tout6 *.up *.mkpoison 681 store
+ *.shell *.mkvirus - *.trefeye 685 0 *.memval *.trefypos *928 *732 510 *.in8 =
+ *231 -8 =
+ xor
+ *.daytime =
+ *.aimleft *.trefvelyourdx =
+ *858 0 *.aimright *.refage *180 *766 *.refvenom 0 =
+ else
+ *.trefage *578 sub *623 & ^ *16 !~=
+ 524 0 =
+ *.repro 1 *.tin5 *.rdboy *.mass =
+ *.tieloc *.rmchlr *.chlr *.nrg *.backshot *.strvenom 527 *.tin6 =
+ *.out1 *.refypos 429''''''''''''''''''''''''  Gene:  32 Ends at position  5173  '''''''''''''''''''''''
+
+'#hash: iCa^G/JWsMN`d&Y\#qr_

@@ -14,12 +14,15 @@ DEST = os.path.normpath(os.path.join(HERE, "..", "..", "web", "bots"))
 # Bots de la casa (no vienen del foro): house/house.json + sus .txt. Se
 # publican al final, así sobreviven a cada nueva corrida del archivador.
 HOUSE = os.path.join(HERE, "house")
+# Bots del resto del foro y del wiki (fuera del Bestiary), curados a mano:
+# extra/extra.json + sus .txt. Se publican antes que los de la casa.
+EXTRA = os.path.join(HERE, "extra")
 
 # Orden de presentación de las categorías en el selector
 BOARD_ORDER = ["F1 bots", "F2 bots", "F3 bots", "Short bots", "Multi-Bots",
                "Veggies", "Interesting behaviour bots", "EcoSim Bots",
                "Mutations", "The Starting Gate", "Single store",
-               "Untagged bots", "House bots"]
+               "Untagged bots", "Forum bots", "Wiki bots", "House bots"]
 
 
 def clean_name(title):
@@ -77,13 +80,14 @@ def main():
             "url": r["url"],
         })
 
-    # bots de la casa: el registro de house.json tal cual (file, name, board, veg, url)
-    house_idx = os.path.join(HOUSE, "house.json")
-    if os.path.isfile(house_idx):
-        with open(house_idx, encoding="utf-8") as f:
-            for e in json.load(f):
-                shutil.copyfile(os.path.join(HOUSE, e["file"]), os.path.join(DEST, e["file"]))
-                index.append(e)
+    # extra y casa: el registro de su .json tal cual (file, name, board, veg, url)
+    for folder, reg in ((EXTRA, "extra.json"), (HOUSE, "house.json")):
+        reg_path = os.path.join(folder, reg)
+        if os.path.isfile(reg_path):
+            with open(reg_path, encoding="utf-8") as f:
+                for e in json.load(f):
+                    shutil.copyfile(os.path.join(folder, e["file"]), os.path.join(DEST, e["file"]))
+                    index.append(e)
 
     with open(os.path.join(DEST, "bots.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(index, f, ensure_ascii=False, indent=1)

@@ -1,0 +1,58 @@
+'This is HazD's version of a tiebot.
+'This uses code given to me by henk and elite
+'Now I understand this code hopefully.
+
+cond
+*.robage 0 =
+start
+.tie inc
+stop
+
+cond
+*.robage 1 =
+start
+.deltie inc
+stop
+
+'Gene find food
+cond
+*.eye5 0 >
+*.eye5 50 <
+*.myeye *.refeye !=
+start
+*.refveldx .dx store
+*.refvelup 50 add .up store
+stop
+
+'Gene create tie with ID of 5
+cond
+*.myeye *.refeye !=
+*.eye5 30 >
+start
+5 .tie store
+stop
+
+'Gene tie feed
+cond
+*.numties 0 >
+start
+5 .tienum store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+'Gene Avoid own kind
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+'Gene reproduce
+cond
+*.nrg 4000 >
+start
+40 .repro store
+stop
+end

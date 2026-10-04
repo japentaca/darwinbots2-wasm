@@ -250,6 +250,9 @@ propio `dbcore.wasm`. Los de Veggies se siembran como vegetales. El
 archivador que los baja/valida/publica vive en `tools/bestiary/` (ver su
 README); si `bots.json` no está, la página funciona igual con los dos
 presets de siempre.
+Desde el 2026-10-02 incluye también 115 bots del resto del foro y del wiki
+(`tools/bestiary/extra/`, categorías «Forum bots» y «Wiki bots», o la de
+liga/tipo cuando el autor la declara): 684 bots en total.
 
 Los bots del Bestiary no van al `<select>`: se eligen desde el
 **Inventario** (botón "📚 Inventory…", `web/inventory.js`), una ventana
@@ -272,7 +275,7 @@ de distintos bots: se buscan por capacidad en todo el Bestiary (o se
 recorren los de un bot), se ordenan y se siembran, se llevan al formulario
 o se guardan en IndexedDB. Los genes vienen de `web/bots/genes.json`, el
 texto de cada gen tal como lo dejó el core (verificado con una ida y
-vuelta por el core para los 568 bots). El Laboratorio avisa de lo que se
+vuelta por el core para los 684 bots). El Laboratorio avisa de lo que se
 rompe al mezclar: un gen que lee memoria propia que en su bot escribía otro
 gen ("+ gen N" lo agrega), dos bots que usan la misma dirección propia (por
 defecto se remapea la del segundo a una libre, empezando por 971-990) y los

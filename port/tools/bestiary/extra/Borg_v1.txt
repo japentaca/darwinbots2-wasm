@@ -1,0 +1,139 @@
+' Borg v1
+
+def mrnd 950
+def mdaimdx 951
+
+cond
+start
+  1000 rnd .mrnd store
+stop
+
+cond
+  *.mdaimdx 0 >
+start
+  *.mdaimdx .aimdx store
+  0 .mdaimdx store
+stop
+
+cond
+  *.eye3 *.eye7 >
+start
+  35 .aimsx store
+  3 .up store
+  2 .sx store
+stop
+
+cond
+  *.eye7 *.eye3 >
+start
+  35 .aimdx store
+  3 .up store
+  2 .dx store
+stop
+
+cond
+  *.eye5 10 >
+  *.eye5 25 <
+  *.refeye *.myeye !=
+start
+  3 .up store
+stop
+
+cond
+  *.nrg 30000 <
+  *.eye5 30 >
+  *.refshoot 0 =
+  *.refnrg 3000 >
+start
+  -8 .shootval store
+  -1 .shoot store
+  0 .up store
+stop
+
+cond
+  *.nrg 30000 <
+  *.eye5 30 >
+  *.refshoot 0 =
+  *.refbody 3000 >
+start
+  -8 .shootval store
+  -6 .shoot store
+  0 .up store
+stop
+
+cond
+  *.eye5 30 >
+  *.refeye *.myeye !=
+  *.refshoot 0 >
+start
+  -16 .shootval store
+  -6 .shoot store
+  0 .up store
+stop
+
+cond
+  *.eye5 30 >
+  *.refeye *.myeye =
+start
+  1256 rnd .aimsx store
+  10 .up store
+stop
+
+cond
+  *.eye3 10 < *.eye5 10 < *.eye7 10 < and and
+  *.mrnd 0 > *.mrnd 101 < and
+start
+  314 rnd 157 sub .aimsx store
+  5 .up store
+stop
+
+cond
+  *.eye3 10 < *.eye5 10 < *.eye7 10 < and and
+  *.mrnd 0 > *.mrnd 6 < and
+  *.vel 3 < or
+start
+  1256 rnd .aimsx store
+  10 .up store
+stop
+
+cond
+  *.eye3 10 <
+  *.eye5 10 <
+  *.eye7 10 <
+start
+  3 .up store
+stop
+
+cond
+  *.numties 0 >
+start
+  0 .up store
+  0 .sx store
+  0 .dx store
+stop
+
+cond
+  *.nrg 10000 >
+  *.mrnd 0 > *.mrnd 34 < and
+start
+  1256 rnd .mdaimdx store
+  *.mdaimdx .aimsx store
+  30 .repro store
+stop
+
+cond
+  *.nrg 15000 > *.body 30000 < and
+  *.nrg 10000 > *.body 1000 < and
+  or
+start
+  *.nrg 100 div .strbody store
+stop
+
+cond
+  *.body 200 >
+  *.nrg 3000 <
+start
+  100 .fdbody store
+stop
+
+end

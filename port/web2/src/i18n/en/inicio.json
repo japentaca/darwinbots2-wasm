@@ -70,6 +70,8 @@
   "inicio.categoria.inicial": "Starter",
   "inicio.categoria.unStore": "Single store",
   "inicio.categoria.sinEtiqueta": "Untagged",
+  "inicio.categoria.foro": "Forum",
+  "inicio.categoria.wiki": "Wiki",
   "inicio.categoria.casa": "House",
   "inicio.categoria.propio": "Custom",
   "inicio.nota": "Runs, custom bots and tournaments are stored in this browser. Export them to take them to another computer.",

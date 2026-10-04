@@ -1,0 +1,336 @@
+def births 50
+
+'Maximum alertness required
+start
+ 250 .eye3dir store
+ 75 .eye4dir store
+ -75 .eye6dir store
+ -250 .eye7dir store
+stop
+
+start
+ 250 .eye3width store
+ 100 .eye4width store
+ 45 .eye5width store
+ 100 .eye6width store
+ 250 .eye7width store
+stop
+
+cond
+ *.robage 0 =
+start
+ 628 .aimdx store
+stop
+
+cond
+ *.robage 2
+start
+ 0 .focuseye store
+stop
+
+cond
+ *.robage 4 mod 0 =
+start
+ -1 .focuseye store
+stop
+
+cond
+ *.robage 4 mod 1 =
+start
+ 1 .focuseye store
+stop
+
+cond
+ *.robage 6 mod 0 =
+start
+ -6 .focuseye store
+stop
+
+cond
+ *.robage 6 mod 1 =
+start
+ 2 .focuseye store
+stop
+
+'Better get away before my parents eat me!
+cond
+ *.robage 128 <
+start
+  64 .up store
+stop
+
+'If I see a tie bot I will make slime and delete any ties.
+cond
+ *.eyef 0 >
+ *.reftie 0 >
+ *.slime 2000 <
+ *.nrg 2000 >
+start
+ 1000 .mkslime store
+ *.tiepres .deltie store
+stop
+
+'Ouch! Time to flee!
+cond
+ *.shflav -1 = or
+ *.shflav -6 =
+start
+ *.shang sub .setaim store
+ *.maxvel .up store
+stop
+
+'Non-shooting bots are safe to eat.
+cond
+ *.eyef 0 >
+ *.reftype 1 !=
+ *.refshoot 0 =
+start
+ *.refxpos *.refypos angle .setaim store
+ .up store
+ -6 .shoot store
+stop
+
+'But if a shooting bot is smaller than me I think I can eat it.
+cond
+ *.eyef 0 >
+ *.reftype 1 !=
+ *.refshoot 0 >
+ *.refbody *.body <
+ *.refbody *.body !%=
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.refvelup 16 add .up store
+ 16 .shootval store
+ -6 .shoot store
+stop
+
+If I'm female and see a male I should stay around (Not sure if this DNA does it right though).
+cond
+ *.robage 5000 >
+ *.robage 10000 <
+ *.eyef 0 >
+ *.refshoot *.myshoot =
+ *.refup *.myup =
+ *.refaimsx *.myaimsx =
+ *.refage 10000 >
+ *.refage 15000 <
+start
+ *.refxpos *.refypos angle sub .setaim store
+ .dn inc
+stop
+
+'If I'm male and see a female it's time to make babies, unless I'm not hungry. Then I'll eat her instead!
+cond
+ *.robage 10000 >
+ *.robage 15000 <
+ *.eyef 0 >
+ *.refage 5000 >
+ *.refage 10000 <
+ *.refshoot *.myshoot =
+ *.refup *.myup =
+ *.refaimsx *.myaimsx =
+ *.refbody 500 >
+ *.refbody *.body <
+ *.nrg *.body >
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.refvelup 16 add .up store
+ -8 .shoot store
+stop
+
+'Metabolism
+cond
+ *.nrg *.body >
+start
+ 10 .strbody store
+stop
+
+'Time to poop!
+cond
+ *.waste 1000 >
+start
+ 628 .aimshoot store
+ -4 .shoot store
+ 1000 .shootval store
+stop
+
+'Has to use my fat reserves cause I'm starving!
+cond
+ *.nrg 128 <
+start
+ 100 .fdbody store
+stop
+
+'Navigation
+cond
+ *.eye4 25 >
+start
+ -50 .aimright store
+stop
+
+cond
+ *.eye6 25 >
+start
+ 50 .aimright store
+stop
+
+'Being hungry makes me wanna search around for food.
+cond
+ *.nrg 32 >
+ *.body *.nrg >
+start
+ 32 rnd .aimsx store
+ 32 rnd .aimdx store
+ .up inc
+stop
+
+'Stearing away from those shapes.
+cond
+ *.eye4 50 >
+ *.reftype 1 =
+start
+ 157 .aimright store
+stop
+
+cond
+ *.eye6 50 >
+ *.reftype 1 =
+ *.edge 0 !>
+start
+ -157 .aimright store
+stop
+
+'The edge. No way forward here.
+cond
+ *.edge 0 >
+start
+ 157 rnd .aimsx store
+stop
+
+'Making babies is costly. No more than 5 at a time. (though the counter stops already at 3-5 births)
+cond
+ *.shflav -8 =
+ *.body 1000 >
+ *.nrg 1000 >
+ *.robage 5000 >
+ *.robage 10000 <
+ *.births 5 <=
+start
+ 5 .sexrepro store
+ .births inc
+ 314 rnd .aimdx store
+stop
+
+'No more mating now! I have to eat first.
+cond
+ *.eyef 0 >
+ *.refshoot *.myshoot >=
+ *.refup *.myup =
+ *.refaimsx *.myaimsx =
+ *.refage 10000 >
+ *.births 4 >
+start
+ 64 .dn store
+ *.refxpos *.refypos .setaim store
+ 628 .aimdx store
+stop
+
+'Alright I think I can handle another pregnancy now.
+cond
+ *.body 3000 >
+ *.nrg 3000 >
+start
+ 0 .births store
+stop
+
+'Can't wait for a male here. Better multiply by myself before my species die out.
+cond
+ *.robage 5000 >
+ *.robage 10000 <
+ *.Body 64 >
+ *.nrg 64 >
+ *.totalmyspecies 5 <
+start
+ 50 .repro store
+ 314 rnd .aimdx store
+stop
+
+'Protection against body shots.
+cond
+ *.nrg 999 >
+ *.body 999 >
+ *.shell 34 <
+start
+ 300 .mkshell store
+stop
+
+cond
+ *.nrg 1999 >
+ *.body 1999 >
+ *.shell 68 <
+start
+ 600 .mkshell store
+stop
+
+cond
+ *.nrg 3999 >
+ *.body 3999 >
+ *.shell 334 <
+start
+ 1000 .mkshell store
+stop
+
+cond
+ *.nrg 7999 >
+ *.body 7999 >
+ *.shell 668 <
+start
+ 2000 .mkshell store
+stop
+
+cond
+ *.nrg 15999 >
+ *.body 15999 >
+ *.shell 334 <
+start
+ 5000 .mkshell store
+stop
+
+'I'm just a kid so I better stay away from those grown-ups.
+cond
+ *.robage 5000 <
+ *.eyef 0 >
+ *.refshoot *.myshoot >=
+ *.refbody *.body >
+start
+ 628 .aimdx store
+ *.maxvel 64 add .dn store
+stop
+
+'I'm getting old. My senses are not as alert as they used to be.
+cond
+ *.robage 32000 =
+start
+ 0 .eye1dir store
+ 0 .eye2dir store
+ 0 .eye3dir store
+ 0 .eye4dir store
+ 0 .eye6dir store
+ 0 .eye7dir store
+ 0 .eye8dir store
+ 0 .eye9dir store
+ 0 .eye1width store
+ 0 .eye2width store
+ 0 .eye3width store
+ 0 .eye4width store
+ 0 .eye5width store
+ 0 .eye6width store
+ 0 .eye7width store
+ 0 .eye8width store
+ 0 .eye9width store
+ 0 .focuseye store
+stop
+
+end

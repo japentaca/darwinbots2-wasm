@@ -1,0 +1,24 @@
+' Floating Veggies
+
+cond
+*.robage 0 =
+start
+960 1 rnd mult 1 rnd mult inc
+stop
+
+cond
+*960 0 =
+*.nrg 5000 >
+start
+15 rnd .aimdx store
+50 .repro store
+stop
+
+cond
+*960 1 =
+start
+15 rnd .aimdx *.sun 1 sub -1 mult mult store
+*.maxvel *.vel sub .up *.sun mult *.edge sub store
+.repro inc
+stop
+end

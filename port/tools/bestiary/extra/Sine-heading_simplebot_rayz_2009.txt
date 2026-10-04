@@ -1,0 +1,96 @@
+'An attempt to make the bot move north no matter how it is turned.
+'Lacks precision due to a integer-only stack.
+'Attempt to correct that by waiting to divide bigs numbers till end.
+
+'edit these to wherever--maybe pi should be epigenetic?
+def sineIn 50
+def sineOut 51
+def pi 52
+def factor 53
+def aimHeading 410
+def magnitude 54
+
+'set constants
+cond
+*.robage 1 =
+start
+31415 .pi store
+10000 .factor store
+100 .magnitude store
+628 .aimHeading store
+stop
+
+'try to aim the eye and shoot
+cond
+*.refsx *.mysx !=
+*.eye5 0 !=
+start
+*.refxpos *.refypos angle .aimHeading store
+*.aimHeading *.aim sub .eye5dir store
+*.aim *.aimHeading sub .aimshoot store
+-1 .shoot store
+stop
+
+cond
+start
+*.aim 10 add .setaim store
+*.aimHeading 1 add .aimHeading store
+*.aimHeading *.aim sub .sineIn store
+stop
+
+cond
+*.sineIn 0 <
+start
+*.sineIn 1256 add .sineIn store
+stop
+
+cond
+*.sineIn 1256 >
+start
+*.sineIn 1256 sub .sineIn store
+stop
+
+'Taylor expansion of sine function
+cond
+start
+628 *.sineIn sub *.pi mult 628 div *.factor div 1 pow 1 div 628 *.sineIn sub *.pi mult 628 div *.factor div 3 pow 6 div sub 628 *.sineIn sub *.pi mult 628 div *.factor div 5 pow 120 div add 628 *.sineIn sub *.pi mult 628 div *.factor div 7 pow 5040 div sub .sineOut store
+stop
+
+cond
+start
+*.sineOut *.magnitude mult .sx store
+stop
+
+cond
+start
+314 *.aimHeading *.aim sub sub .sineIn store
+stop
+
+cond
+*.sineIn 0 <
+start
+*.sineIn 1256 add .sineIn store
+stop
+
+cond
+*.sineIn 1256 >
+start
+*.sineIn 1256 sub .sineIn store
+stop
+
+cond
+start
+628 *.sineIn sub *.pi mult 628 div *.factor div 1 pow 1 div 628 *.sineIn sub *.pi mult 628 div *.factor div 3 pow 6 div sub 628 *.sineIn sub *.pi mult 628 div *.factor div 5 pow 120 div add 628 *.sineIn sub *.pi mult 628 div *.factor div 7 pow 5040 div sub .sineOut store
+stop
+
+cond
+start
+*.sineOut *.magnitude mult .up store
+stop
+
+cond
+*.nrg 4000 >
+start
+50 .repro store
+stop
+end

@@ -1,0 +1,30 @@
+cond
+ start
+ -32000 8 *.eye5 40 sub sgn 0 floor mult *.memval *999 sub sgn abs mult store
+ 8 7 *.eye5 40 sub sgn 0 floor mult *.memval *999 sub sgn abs mult store
+ 3 .up store
+ 3 .sx store
+ 24 999 store
+ *.nrg 3 div *.body sub dup .strbody store
+ - .fdbody store
+ *.trefnrg !=
+ add swap * ++ rnd 296 inc
+ *547 abs store
+ sgn sqr inc
+ clear 1 *.up 95 true
+ inc
+ -11 sqr inc
+ 31 .tin3 inc
+ -9 .eye5dir dec
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  84  '''''''''''''''''''''''
+ cond
+ .tielen1 inc
+ 99 755 dec
+ 108 747 dec
+ *.dnalen 169 start
+ div sqr mult 47 over 395 inc
+ 908 .tout1 inc
+ 15 drop ^ 2 mult 3 sub *.thisgene add .delgene store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  118  '''''''''''''''''''''''

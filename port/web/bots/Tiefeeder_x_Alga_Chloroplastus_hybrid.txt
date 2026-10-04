@@ -1,0 +1,65 @@
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ cond
+ *.eye5 0 =
+ start
+ .aimleft inc
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  37  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  38  '''''''''''''''''''''''
+ cond
+ *.eye5 0 !=
+ start
+ *.refxpos *.refypos angle .setaim store
+ *.refveldx .dx store
+ *.eye5 20 <
+ *.refxpos *.refypos dist 1 .mkchlr store
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  60  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  61  '''''''''''''''''''''''
+ cond
+ *.body 50 >=
+ 0 inc
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  67  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  68  '''''''''''''''''''''''
+ cond
+ *.nrg 30000 >
+ start
+ .mrepro inc
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  75  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  76  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ *.body 1000 >
+ start
+ 1 .strbody store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  87  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  88  '''''''''''''''''''''''
+ cond
+ *.nrg 10000 >
+ *.body 3999 >
+ *.nrg 1000 >
+ start
+ 50 .repro store
+ 32 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  105  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  106  '''''''''''''''''''''''
+ cond
+ *.refxpos 0 >
+ *.chlr *.light <
+ *.daytime 1 =
+ start
+ -8 .shoot store
+ 30 .sexrepro store
+ 100 .dn store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  126  '''''''''''''''''''''''[code]

@@ -1,0 +1,202 @@
+'made from animal minimalis
+'by anazasi
+
+'genes 1 to 4 animal minimalis modified to identify by aimdx instead of eye
+cond
+ *.eye5 0 >
+ *.refaimdx *.myaimdx !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+stop
+
+cond
+ *.eye5 50 >
+ *.refaimdx *.myaimdx !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+cond
+ *.eye5 0 =
+ *.refaimdx *.myaimdx = or
+start
+ 314 rnd .aimdx store
+stop
+
+cond
+ *.nrg 15000 >
+start
+ 30 .repro store
+stop
+
+'gene 5 gene deletion gne
+cond
+ *.refeye *.myeye <
+ *.refeye 3 > and
+start
+*.genes .delgene store
+stop
+
+' gene 6 and later fake eye calls
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+
+cond
+*.eye1 0 >
+start
+stop
+end

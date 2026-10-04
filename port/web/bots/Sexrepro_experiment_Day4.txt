@@ -1,0 +1,48 @@
+'#generation: 252
+'#mutations: 84
+
+ cond
+ *.eye5 *.aimleft >
+ *.refeye *.myeye *.refeye *.hit %=
+ start
+ *.refveldx .dx store
+ *.tieang2 30 add .up store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  18  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  19  '''''''''''''''''''''''
+ cond
+ *.eye5
+''''''''''''''''''''''''  Gene:  2 Ends at position  20  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  21  '''''''''''''''''''''''
+ cond
+ *256 *.shell 0 *.fixlen swap over *.multi >
+ 
+ *.veldn .up store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  62  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  63  '''''''''''''''''''''''
+ cond
+ *.eye5 *.vshoot =
+ *.refeye *.myeye =
+ or
+ rndstore
+ *.trefaimdx start
+ -406 292 .aimright store
+ *.refeye !%=
+ *.waste 37 .sexrepro store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  84  '''''''''''''''''''''''
+
+'normal repro gene:
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+'#hash: )KV*'%&t&)JtqYV!T?0e
+'#tag:Day4.txt

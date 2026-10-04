@@ -1,0 +1,22 @@
+cond
+ *.robage 0 =
+start
+ .shoot .ploc store
+ .shoot .vloc store
+ -2 .venval store
+stop
+
+cond
+start
+ 120 rnd .aimdx store
+ -3 .shoot store
+stop
+
+cond
+ *.nrg 1000 >
+start
+ 50 .repro store
+ 100 .strpoison store
+ 100 .strvenom store
+stop
+end

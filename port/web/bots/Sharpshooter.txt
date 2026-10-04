@@ -1,0 +1,210 @@
+'Sharpshooter: A bot by googlyeyesultra.
+'It semi-accurately leads targets.
+
+cond
+start
+'Conspec
+*.myeye *.myshoot add *.myup add 998 *.robage sgn 1 sub -1 mult mult store
+
+'Sharefeed if multi
+99 .sharenrg *.multi mult store
+.sharewaste *.multi mult inc
+
+'Set eyewidth
+1221 .eye5width *.robage sgn 1 sub -1 mult mult store
+stop
+
+'Reproduce
+cond
+*.nrg 25000 >=
+*.nrg 2 div *.body ~=
+start
+49 .repro store
+stop
+
+'Conspec
+cond
+*.refeye *.refshoot add *.refup add *.refshell add *997 !=
+start
+*.refeye *.refshoot add *.refup add *.refshell add 997 store
+stop
+
+'Birthie cut
+cond
+*.robage 2 <
+start
+.tie *.robage -1 mult 1 add mult inc
+.deltie inc
+stop
+
+'Shoot feed
+cond
+*.eyef 0 >
+*997 *998 !=
+*.refpoison *.refshell >=
+start
+*.refxpos *.refveldx *.veldx sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add *.refypos *.velup *.refvelup sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add dist 30 div -1 mult .shootval store
+-6 .shoot store
+stop
+
+cond
+*.eyef 0 >
+*997 *998 !=
+*.refpoison *.refshell <
+start
+*.refxpos *.refveldx *.veldx sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add *.refypos *.velup *.refvelup sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add dist 30 div -1 mult .shootval store
+-1 .shoot store
+stop
+
+'Deltie enemy ties/conspec ties
+cond
+*.numties 0 >
+*.tiepres *996 !=
+*.trefshoot *.trefeye add *.trefup add *998 = or
+start
+*.tiepres .deltie store
+stop
+
+'Tie
+cond
+*.eyef 30 >
+*997 *998 !=
+start
+998 rnd 1 add 996 *996 sgn -1 mult 1 add mult store
+*996 .tie store
+stop
+
+'Tiefeed/Counter leach
+cond
+*.numties 0 >
+*.trefshoot *.trefeye add *.trefup add *998 !=
+start
+*996 .tienum store
+*.tieval sgn .tieloc store
+-1000 .tieval store
+stop
+
+'Regulate body/energy
+cond
+*.nrg 2 div *.body >
+start
+*.nrg 2 div *.body sub .strbody store
+stop
+
+cond
+*.nrg 2 div *.body <
+start
+*.body *.nrg 2 div sub .fdbody store
+stop
+
+'Waste Removal
+cond
+*.waste 100 >=
+start
+-4 .shoot store
+*.waste .shootval store
+stop
+
+'Aiming
+cond
+*.eyef 0 >
+start
+*.aim *.refxpos *.refveldx *.veldx sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add *.refypos *.velup *.refvelup sub *.refxpos *.refveldx *.veldx sub add *.refypos *.velup *.refvelup sub add dist 40 div mult add angle sub .aimshoot store
+stop
+
+'Orientation
+cond
+*.aim 314 !=
+start
+314 .setaim store
+stop
+
+'Search
+cond
+*.eyef 0 =
+*.velscalar 10 <
+start
+50 4 rnd store
+stop
+
+'Movement
+cond
+*.eyef 0 >
+*997 *998 !=
+start
+*.velup *.refvelup sub *.refypos *.ypos sub 2 div dup .dn store
+*.refveldx *.veldx sub *.refxpos *.xpos sub 2 div dup .dx store
+stop
+
+'Avoid conspecs
+cond
+*.eyef 0 >
+*997 *998 =
+start
+200 *.velup *.refvelup sub *.refypos *.ypos sub 2 div add sub .dn store
+200 *.refveldx *.veldx sub *.refxpos *.xpos sub 2 div add sub .dx store
+stop
+
+'Chameleon genes
+cond
+*.in1 0 !=
+*.in1 *.out1 !=
+start
+*.in1 .out1 store
+stop
+
+cond
+*.in2 0 !=
+*.in2 *.out2 !=
+start
+*.in2 .out2 store
+stop
+
+'Some various code defenses
+cond
+*.fixed 0 !=
+start
+0 .fixpos store
+stop
+
+cond
+*.delgene 0 !=
+start
+0 .delgene store
+stop
+
+cond
+*.shoot -2 =
+start
+0 .shoot store
+stop
+
+cond
+*.mrepro 0 !=
+start
+0 .mrepro store
+stop
+
+cond
+*.sexrepro 0 !=
+start
+0 .sexrepro store
+stop
+
+cond
+*.repro 49 !=
+*.repro 0 !=
+start
+0 .repro store
+stop
+
+'Antivirus
+cond
+*.mkvirus 0 !=
+start
+*.mkvirus .delgene store
+0 .mkvirus store
+stop
+
+'End of Program
+end

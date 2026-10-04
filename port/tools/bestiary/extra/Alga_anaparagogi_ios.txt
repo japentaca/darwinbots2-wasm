@@ -1,0 +1,37 @@
+' Alga anaparagogi ios
+
+cond
+ .myup 2=
+start
+ 7 989 store
+stop
+
+def counter 50
+
+cond
+*.vtimer 0 =
+start
+*.counter 3 mod ++ .mkvirus store
+.counter inc
+stop
+
+cond
+ 7 *989 !=
+ *.nrg 0 !=
+start
+ 50 .repro store
+ 15 .aimdx store
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ 50 .vshoot store
+stop
+
+cond
+ *.eye5 0 =
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ 50 .vshoot store
+stop
+end

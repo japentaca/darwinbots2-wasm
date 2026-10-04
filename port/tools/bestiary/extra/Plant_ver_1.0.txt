@@ -1,0 +1,133 @@
+'Plant ver_1.0
+'(Multi-veggie-bot)
+' 
+'The bot has three cell types - a stem, a leaf and a flower.
+'
+'A stem is the only part of the bot that can reproduce. It can 
+
+by tied to a maximum of 4 other cells.
+'
+'A leaf is denoted by spinning to the left (anti-clockwise).
+'
+'A flower is denoted by spinning to the right (clockwise).
+
+
+'Declare plant specific variables
+
+'Allocate Address 50 as the identifier for cell type
+def type 50
+
+'Allocate Address 51 as a count for the number of times a stem 
+
+cell has turned
+def turn 51
+
+'Allocate Address 52 as a counter for use during tie creation
+def tiecounter 52
+
+'End of Declarations
+
+
+'Gene 1 - Allocate cell type at birth
+'
+'NB - Value of type can be:-
+'
+'1 - Stem
+'2 - Leaf
+'3 - Flower
+
+cond
+*.type 1 <
+start
+2 rnd 1 add .type store
+stop
+
+'End of Gene 1
+
+
+'Gene 2 - I am a leaf
+'
+'Show I am a leaf by spinning to the left
+
+cond
+*.type 2 =
+start
+'10 .aimsx store
+stop
+
+'End of Gene 2
+
+
+'Gene 3 - I am a flower
+'
+'Show I am a flower by spinning to the right
+
+cond
+*.type 3 =
+start
+'10 .aimdx store
+stop
+
+'End of Gene 3
+
+
+'Gene 4 - I am a stem part 1
+'
+'I am a stem.
+'I have enough energy
+'I can still turn
+'I can't see anything
+'
+'As a result I will reproduce and turn
+
+cond
+*.type 1 =
+*.turn 8 <
+'*.numties 4 <
+*.eye5 40 <
+*.tiecounter 1 <
+start
+20 .repro store
+.tiecounter inc
+stop
+
+'End of Gene 4
+
+
+'Gene 5 - I am a stem part 2
+'
+'I am a stem.
+'I have enough energy
+'I can still turn
+'I can see something
+'
+'As a result I will just turn
+
+cond
+*.type 1 =
+*.turn 8 <
+'*.numties 4 <
+*.eye5 40 >
+*.tiecounter 1 <
+start
+314 .aimsx store
+.turn inc
+stop
+
+'End of Gene 5
+
+cond
+*.tiecounter 0 >
+start
+1 .tie store
+.tiecounter inc
+stop
+
+cond
+*.tiecounter 10 >
+start
+0 .tiecounter store
+stop
+
+
+end

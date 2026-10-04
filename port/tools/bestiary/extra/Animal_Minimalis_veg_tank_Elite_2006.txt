@@ -1,0 +1,94 @@
+'Animal_Minimalis
+
+'Contains everything necessary for it
+'to survive and reproduce.
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 60 add .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+*.refeye 0 >
+start
+-1 .shoot store
+*.refveldx .dx store
+*.refvelup .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+*.refeye 0 =
+*.numties 0 =
+start
+.tie inc
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+cond
+*.body 7500 >
+start
+10 .repro store
+stop
+
+cond
+*.numties 0 >
+start
+628 .fixang store
+0 .fixlen store
+1 .tienum store
+.fixang .tieloc store
+628 .tieval store
+1 .readtie store
+stop
+
+cond
+*.numties 0 >
+*.treffixed 0 !=
+start
+*.tiepres .tienum store
+.fixpos .tieloc store
+0 .tieval store
+stop
+
+cond
+*.multi 1 =
+start
+75 .sharenrg store
+.sharewaste inc
+*.pleas 1.5 div .strbody *.pleas sgn mult store
+stop
+
+cond
+*.multi 1 =
+*.eye5 0 >
+start
+32 .shootval store
+-6 .shoot store
+stop
+
+cond
+*.myeye *.trefeye =
+start
+*.tiepres .deltie store
+stop
+
+cond
+*.nrg 100 <
+start
+100 .fdbody *.body sgn mult store
+stop
+
+end

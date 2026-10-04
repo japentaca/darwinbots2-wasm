@@ -1,0 +1,807 @@
+[
+ {
+  "file": "Occura_Amplificis.txt",
+  "name": "Occura Amplificis",
+  "board": "F1 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2593.0.html"
+ },
+ {
+  "file": "Animal_Resono_1.0.txt",
+  "name": "Animal_Resono_1.0",
+  "board": "F2 bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3549.0.html"
+ },
+ {
+  "file": "Tibbles_First_Bot1-5_SB.txt",
+  "name": "Tibbles First Bot1-5 (SB)",
+  "board": "Short bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3318.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_veg_tank_Elite_2006.txt",
+  "name": "Animal_Minimalis veg tank (Elite, 2006)",
+  "board": "Multi-Bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1068.0.html"
+ },
+ {
+  "file": "Primordius.txt",
+  "name": "Primordius",
+  "board": "Multi-Bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3286.0.html"
+ },
+ {
+  "file": "T3_MB_nimbim_2.txt",
+  "name": "T3 (MB)(nimbim)",
+  "board": "Multi-Bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3722.0.html"
+ },
+ {
+  "file": "Alga_anaparagogi_ios.txt",
+  "name": "Alga anaparagogi ios",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1976.0.html"
+ },
+ {
+  "file": "Alga_packus.txt",
+  "name": "Alga packus",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3209.0.html"
+ },
+ {
+  "file": "Alga_Preservus.txt",
+  "name": "Alga Preservus",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1011.0.html"
+ },
+ {
+  "file": "Alga_Toxicus.txt",
+  "name": "Alga Toxicus",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://wiki.darwinbots.com/w/Elite%27s_Bot_Tutorial"
+ },
+ {
+  "file": "Alga_Treedepthicus.txt",
+  "name": "Alga Treedepthicus",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,2428.0.html"
+ },
+ {
+  "file": "Alga_Pair_1.1.1.txt",
+  "name": "Alga_Pair 1.1.1",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,2790.0.html"
+ },
+ {
+  "file": "Floating_Veggies.txt",
+  "name": "Floating Veggies",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://wiki.darwinbots.com/w/.sun"
+ },
+ {
+  "file": "Flyfruit_v0.92.txt",
+  "name": "Flyfruit v0.92",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,2900.0.html"
+ },
+ {
+  "file": "Fungus.txt",
+  "name": "Fungus",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,2575.0.html"
+ },
+ {
+  "file": "Plant_ver_1.0.txt",
+  "name": "Plant ver_1.0",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,1012.0.html"
+ },
+ {
+  "file": "Rabbit_bot_PurpleYouko.txt",
+  "name": "Rabbit bot (PurpleYouko)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,454.0.html"
+ },
+ {
+  "file": "Rolling_Moss.txt",
+  "name": "Rolling Moss",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3679.0.html"
+ },
+ {
+  "file": "Thin-fluid_alga_Shadowgod2_2016.txt",
+  "name": "Thin-fluid alga (Shadowgod2, 2016)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6864.0.html"
+ },
+ {
+  "file": "Tied_alga_Shadowgod2_2014.txt",
+  "name": "Tied alga (Shadowgod2, 2014)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6379.0.html"
+ },
+ {
+  "file": "Untitled_fixed_veggie_Ammeh_2010.txt",
+  "name": "Untitled fixed veggie (Ammeh, 2010)",
+  "board": "Veggies",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3420.0.html"
+ },
+ {
+  "file": "Alga_Pollinator_v2.0.txt",
+  "name": "Alga_Pollinator v2.0",
+  "board": "Interesting behaviour bots",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3026.0.html"
+ },
+ {
+  "file": "Ameoba_d-EVO.txt",
+  "name": "Ameoba (d-EVO)",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3020.0.html"
+ },
+ {
+  "file": "Ant_colony_atrop_2011.txt",
+  "name": "Ant colony (atrop, 2011)",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3605.0.html"
+ },
+ {
+  "file": "Fishy_1.0.txt",
+  "name": "Fishy 1.0",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2091.0.html"
+ },
+ {
+  "file": "Fractal_bot_peterb.txt",
+  "name": "Fractal bot (peterb)",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3020.0.html"
+ },
+ {
+  "file": "Sybot2_V1_Houshalter.txt",
+  "name": "Sybot2 V1 (Houshalter)",
+  "board": "Interesting behaviour bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3322.0.html"
+ },
+ {
+  "file": "Coexistence_best_bot_Mar_17_2022.txt",
+  "name": "Coexistence best bot (Mar 17 2022)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,7295.0.html"
+ },
+ {
+  "file": "Coexistence_best_bot_Mar_26_2022.txt",
+  "name": "Coexistence best bot (Mar 26 2022)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,7295.0.html"
+ },
+ {
+  "file": "Coexistence_champion_Apr_10_2022.txt",
+  "name": "Coexistence champion (Apr 10 2022)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,7295.0.html"
+ },
+ {
+  "file": "Coexistence_scavenger_Jun_2022.txt",
+  "name": "Coexistence scavenger (Jun 2022)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,7295.0.html"
+ },
+ {
+  "file": "Coexistence_viral_plant_Apr_2022.txt",
+  "name": "Coexistence viral plant (Apr 2022)",
+  "board": "Mutations",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,7295.0.html"
+ },
+ {
+  "file": "Connecto_Preservans_2.txt",
+  "name": "Connecto_Preservans",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2156.0.html"
+ },
+ {
+  "file": "Convergent_2.0_Aug_10_2015.txt",
+  "name": "Convergent 2.0 (Aug 10 2015)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6808.0.html"
+ },
+ {
+  "file": "Evolved_Alga_Runawais.txt",
+  "name": "Evolved Alga Runawais",
+  "board": "Mutations",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3465.0.html"
+ },
+ {
+  "file": "Evolved_Animal_Minimalis_Shadowgod2_2016.txt",
+  "name": "Evolved Animal Minimalis (Shadowgod2, 2016)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6864.0.html"
+ },
+ {
+  "file": "Evolved_Animal_Minimalis_The_Duck_2008.txt",
+  "name": "Evolved Animal Minimalis (The_Duck, 2008)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2635.0.html"
+ },
+ {
+  "file": "Evolved_cannibot_Elite_2006.txt",
+  "name": "Evolved cannibot (Elite, 2006)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1128.0.html"
+ },
+ {
+  "file": "Evolved_constant_movement_alga_jknilinux.txt",
+  "name": "Evolved constant movement alga (jknilinux)",
+  "board": "Mutations",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3287.0.html"
+ },
+ {
+  "file": "Evolved_Duplo_follow-the-leader_shvarz.txt",
+  "name": "Evolved Duplo follow-the-leader (shvarz)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2199.0.html"
+ },
+ {
+  "file": "Evolved_first-bot_Botsareus_2011.txt",
+  "name": "Evolved first-bot (Botsareus, 2011)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3519.0.html"
+ },
+ {
+  "file": "Evolved_FirstBot_A_shvarz_2005.txt",
+  "name": "Evolved FirstBot A (shvarz, 2005)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,589.0.html"
+ },
+ {
+  "file": "Evolved_FirstBot_B_shvarz_2005.txt",
+  "name": "Evolved FirstBot B (shvarz, 2005)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,589.0.html"
+ },
+ {
+  "file": "Evolved_PY_Simplebot_A_Greven.txt",
+  "name": "Evolved PY Simplebot A (Greven)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,583.0.html"
+ },
+ {
+  "file": "Evolved_PY_Simplebot_B_Greven.txt",
+  "name": "Evolved PY Simplebot B (Greven)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,583.0.html"
+ },
+ {
+  "file": "Evolved_thin-fluid_alga_Shadowgod2_2016.txt",
+  "name": "Evolved thin-fluid alga (Shadowgod2, 2016)",
+  "board": "Mutations",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,6864.0.html"
+ },
+ {
+  "file": "Evolved_tie-escaping_alga_jknilinux.txt",
+  "name": "Evolved tie-escaping alga (jknilinux)",
+  "board": "Mutations",
+  "veg": true,
+  "url": "http://forum.darwinbots.com/index.php/topic,3287.0.html"
+ },
+ {
+  "file": "Evolved_zerobot_Ta-183_2009.txt",
+  "name": "Evolved zerobot (Ta-183, 2009)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3091.0.html"
+ },
+ {
+  "file": "FirstBot_evolved_3.8_shvarz.txt",
+  "name": "FirstBot evolved 3.8 (shvarz)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,589.0.html"
+ },
+ {
+  "file": "Flocking_amoeba_evo_hdggDalton.txt",
+  "name": "Flocking amoeba (evo, hdggDalton)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,7288.0.html"
+ },
+ {
+  "file": "HSLiteSammeh_mutated_IM.txt",
+  "name": "HSLiteSammeh mutated (IM)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3247.0.html"
+ },
+ {
+  "file": "Movement_evosim_bot_Bagel.txt",
+  "name": "Movement evosim bot (Bagel)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3523.0.html"
+ },
+ {
+  "file": "NNetsmallfixed_evolved.txt",
+  "name": "NNetsmallfixed evolved",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6220.0.html"
+ },
+ {
+  "file": "Peksa_evolved_feeder_2007.txt",
+  "name": "Peksa evolved feeder (2007)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2322.0.html"
+ },
+ {
+  "file": "Seasnake_mutated_by_Fruit_Flies_virus.txt",
+  "name": "Seasnake mutated by Fruit Flies virus",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2900.0.html"
+ },
+ {
+  "file": "Seasnake_triple_infected_IM.txt",
+  "name": "Seasnake triple infected (IM)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2900.0.html"
+ },
+ {
+  "file": "Sexrepro_experiment_Day1.txt",
+  "name": "Sexrepro experiment Day1",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Sexrepro_experiment"
+ },
+ {
+  "file": "Sexrepro_experiment_Day2.txt",
+  "name": "Sexrepro experiment Day2",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Sexrepro_experiment"
+ },
+ {
+  "file": "Sexrepro_experiment_Day3.txt",
+  "name": "Sexrepro experiment Day3",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Sexrepro_experiment"
+ },
+ {
+  "file": "Sexrepro_experiment_Day4.txt",
+  "name": "Sexrepro experiment Day4",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Sexrepro_experiment"
+ },
+ {
+  "file": "Sexrepro_experiment_Day5.txt",
+  "name": "Sexrepro experiment Day5",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Sexrepro_experiment"
+ },
+ {
+  "file": "Singula_Rangercus.txt",
+  "name": "Singula_Rangercus",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6602.0.html"
+ },
+ {
+  "file": "Survival_evo_bot_gen_45_Botsareus.txt",
+  "name": "Survival evo bot gen 45 (Botsareus)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6347.0.html"
+ },
+ {
+  "file": "Swinger_Swinging_Amoeba_evo.txt",
+  "name": "Swinger, Swinging Amoeba (evo)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6316.0.html"
+ },
+ {
+  "file": "Tiefeeder_x_Alga_Chloroplastus_hybrid.txt",
+  "name": "Tiefeeder x Alga Chloroplastus hybrid",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6320.0.html"
+ },
+ {
+  "file": "upgraded_sporebot_12_mutations.txt",
+  "name": "upgraded sporebot (12 mutations)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3428.0.html"
+ },
+ {
+  "file": "vrukt_evolved_bot_2014.txt",
+  "name": "vrukt evolved bot (2014)",
+  "board": "Mutations",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6489.0.html"
+ },
+ {
+  "file": "Adaptive_preditor.txt",
+  "name": "Adaptive_preditor",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3066.0.html"
+ },
+ {
+  "file": "Advanced_Bot_Lyndon.txt",
+  "name": "Advanced Bot (Lyndon)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2837.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_body-repro_Testlund.txt",
+  "name": "Animal Minimalis body-repro (Testlund)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6194.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_max_velocity_ashton15.txt",
+  "name": "Animal Minimalis max velocity (ashton15)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2624.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_mod_stress.txt",
+  "name": "Animal Minimalis mod (stress)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1128.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_optisim_MacadamiaNuts.txt",
+  "name": "Animal Minimalis optisim (MacadamiaNuts)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2090.0.html"
+ },
+ {
+  "file": "Animal_Adaptis.txt",
+  "name": "Animal_Adaptis",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3066.0.html"
+ },
+ {
+  "file": "Animal_martinis.txt",
+  "name": "Animal_martinis",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2040.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_Antivirus_Shasta.txt",
+  "name": "Animal_Minimalis Antivirus (Shasta)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2430.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_crab_PhiNotPi.txt",
+  "name": "Animal_Minimalis crab (PhiNotPi)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3280.0.html"
+ },
+ {
+  "file": "Animal_Minimalis_Sex_Botsareus.txt",
+  "name": "Animal_Minimalis_Sex (Botsareus)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6333.0.html"
+ },
+ {
+  "file": "Animal_Simpilisis.txt",
+  "name": "Animal_Simpilisis",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3338.0.html"
+ },
+ {
+  "file": "Artemis_Minimalis_2.txt",
+  "name": "Artemis Minimalis",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2274.0.html"
+ },
+ {
+  "file": "Battery_bot_v2.txt",
+  "name": "Battery bot v2",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1142.0.html"
+ },
+ {
+  "file": "Blind_Boticus.txt",
+  "name": "Blind Boticus",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6194.0.html"
+ },
+ {
+  "file": "Borg_v1.txt",
+  "name": "Borg v1",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1139.0.html"
+ },
+ {
+  "file": "Borg_v2.0.txt",
+  "name": "Borg v2.0",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1146.0.html"
+ },
+ {
+  "file": "Cannibot_abyaly_2006.txt",
+  "name": "Cannibot (abyaly, 2006)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1501.0.html"
+ },
+ {
+  "file": "Evo_seed_bot_Elite_2006.txt",
+  "name": "Evo seed bot (Elite, 2006)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1128.0.html"
+ },
+ {
+  "file": "First_custombot_spike43884_2014.txt",
+  "name": "First custombot (spike43884, 2014)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6589.0.html"
+ },
+ {
+  "file": "FirstBot_evo_genome_PurpleYouko_2006.txt",
+  "name": "FirstBot evo genome (PurpleYouko, 2006)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1128.0.html"
+ },
+ {
+  "file": "H_0.1.txt",
+  "name": "H 0.1",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2273.0.html"
+ },
+ {
+  "file": "HazD_first_bot_2006.txt",
+  "name": "HazD first bot (2006)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1229.0.html"
+ },
+ {
+  "file": "HazD_s_tiebot.txt",
+  "name": "HazD's tiebot",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1252.0.html"
+ },
+ {
+  "file": "HSLiteSammeh.txt",
+  "name": "HSLiteSammeh",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3247.0.html"
+ },
+ {
+  "file": "I_flamma_killer.txt",
+  "name": "I flamma killer",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3205.0.html"
+ },
+ {
+  "file": "I_flamma_beater_Moonfisher_2009.txt",
+  "name": "I_flamma beater (Moonfisher, 2009)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3206.0.html"
+ },
+ {
+  "file": "L-Sesilia_Lazy_Sessile.txt",
+  "name": "L-Sesilia (Lazy Sessile)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2742.0.html"
+ },
+ {
+  "file": "Mini_Chameleon.txt",
+  "name": "Mini Chameleon",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2113.0.html"
+ },
+ {
+  "file": "Moonlander.txt",
+  "name": "Moonlander",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6697.0.html"
+ },
+ {
+  "file": "NNetsmallfixed_Shadowgod2.txt",
+  "name": "NNetsmallfixed (Shadowgod2)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6220.0.html"
+ },
+ {
+  "file": "orkyboy.txt",
+  "name": "orkyboy",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3543.0.html"
+ },
+ {
+  "file": "Red_bot_Testlund_2013.txt",
+  "name": "Red bot (Testlund, 2013)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6227.0.html"
+ },
+ {
+  "file": "Scudmarxis_Rex.txt",
+  "name": "Scudmarxis Rex",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2270.0.html"
+ },
+ {
+  "file": "Sharpshooter.txt",
+  "name": "Sharpshooter",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2185.0.html"
+ },
+ {
+  "file": "Simplebot_1_vel_version.txt",
+  "name": "Simplebot 1 (vel version)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,134.0.html"
+ },
+ {
+  "file": "Sine-heading_simplebot_rayz_2009.txt",
+  "name": "Sine-heading simplebot (rayz, 2009)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3078.0.html"
+ },
+ {
+  "file": "SocialSwarmX.txt",
+  "name": "SocialSwarmX",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1157.0.html"
+ },
+ {
+  "file": "Survival-of-the-fittest_evobot.txt",
+  "name": "Survival-of-the-fittest evobot",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1127.0.html"
+ },
+ {
+  "file": "Taxxon.txt",
+  "name": "Taxxon",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3679.0.html"
+ },
+ {
+  "file": "Templated_blank_bot.txt",
+  "name": "Templated blank bot",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,2176.0.html"
+ },
+ {
+  "file": "Untitled_age-staged_bot_Testlund_2014.txt",
+  "name": "Untitled age-staged bot (Testlund, 2014)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6543.0.html"
+ },
+ {
+  "file": "Untitled_defensive_shooter_Testlund_2012.txt",
+  "name": "Untitled defensive shooter (Testlund, 2012)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,3690.0.html"
+ },
+ {
+  "file": "Untitled_swarm_bot_Testlund-Elite_2006.txt",
+  "name": "Untitled swarm bot (Testlund-Elite, 2006)",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,1194.0.html"
+ },
+ {
+  "file": "Venemous_Predator.txt",
+  "name": "Venemous Predator",
+  "board": "Forum bots",
+  "veg": false,
+  "url": "http://forum.darwinbots.com/index.php/topic,6535.0.html"
+ },
+ {
+  "file": "Harvasting_bot_collective_canibals.txt",
+  "name": "Harvasting bot collective canibals",
+  "board": "Wiki bots",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Harvasting_bot_collective_canibals"
+ },
+ {
+  "file": "Hunter_V2.13.txt",
+  "name": "Hunter V2.13",
+  "board": "Wiki bots",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/BotTxt"
+ },
+ {
+  "file": "Swarming_bot_wiki.txt",
+  "name": "Swarming bot (wiki)",
+  "board": "Wiki bots",
+  "veg": false,
+  "url": "http://wiki.darwinbots.com/w/Swarming"
+ }
+]

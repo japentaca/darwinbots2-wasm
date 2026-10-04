@@ -1,0 +1,76 @@
+def drag 50
+
+cond
+ *.robage 0 =
+start
+ .tie inc
+stop
+
+cond
+ *.robage 1 =
+start
+ .deltie inc
+stop
+
+cond
+ *.robage 1 >
+ *.robage 21 <
+start
+ *.maxvel .dn store
+stop
+
+cond
+ *.robage 20 <
+start
+ *.drag *.nrg add *.robage 1 sub div .drag store
+stop
+
+cond
+ *.robage 22 =
+start
+ *.drag *.maxvel div .maxvel store
+stop
+
+cond
+ *.robage 23 >
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup *.drag add .up store
+stop
+
+cond
+ *.robage 23 >
+ *.mass 1.1 >
+start
+ 30 .repro store
+stop
+
+cond
+ *.robage 23 >
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-1 .shoot store
+ *.refvelup .up store
+stop
+
+cond
+ *.robage 23 >
+ *.eye5 0 =
+ *.refeye *.myeye = or
+start
+ 314 rnd .aimdx store
+stop
+
+cond
+ *.robage 23 >
+ *.waste 40 >
+start
+ .backshot inc
+ -4 .shoot store
+ *.waste .shootval store
+stop
+
+end

@@ -1,0 +1,1196 @@
+def botlen 280
+def lock 431
+def alge 4251
+def maxpop 1000
+def feedtime 6000
+
+def rand 110
+def key 111
+def virus 112
+def badvirus 113
+def conspec 114
+def tconspec 115
+def feeding 116
+
+def type 973
+
+'============================================================================
+============
+
+cond
+start
+*.thisgene 1 !=
+1 .badvirus store
+
+.lock *.key !=
+.lock .key store
+stop
+
+
+'1
+cond
+*.key .lock !=
+start
+.fixpos dec
+
+'-- Birth
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+31999 rnd .out10 store
+31999 rnd .tout10 store
+
+*.memval *.dnalen !=
+*.in9 .alge !=
+*.in10 .out10 = or and
+1 .conspec store
+
+not
+2 .conspec store
+
+*.eye5 0 =
+0 .conspec store
+
+*.tmemval *.dnalen !=
+*.tin9 .alge !=
+*.tin10 .tout10 = or and
+*.robage 1 > and
+1 .tconspec store
+
+not
+2 .tconspec store
+
+*.numties 0 =
+0 .tconspec store
+
+*.robage 0 =
+5 rnd .rand store
+
+*.rand 4 < and
+*.rand .type store
+
+*.type 0 =
+*.type 3 >= or
+3 rnd .type store
+
+
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.maxvel .dn store
+50 .repro store
+
+'*.totalmyspecies .maxpop <
+*.nrg 200 > 'and
+60 *.body 10 mult sub .strbody store
+
+
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+
+
+'-- Tie feeding
+*.tconspec 2 =
+*.numties 1 > or 
+*.numties .deltie store
+
+*.tconspec 1 =
+*.tiepres .tienum store
+40 .stifftie store
+99 .sharenrg store
+10 .fixlen store
+
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+1000 .tieval store
+
+dropbool
+dupbool
+*.type 2 = and
+.tieloc .tieloc store
+-1 .tieval store
+
+dropbool
+*.type 2 > and
+.shootval .tieloc store
+-31999 .tieval store
+
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 = 
+*.conspec 2 = or and
+350 .aimright store
+
+dropbool
+*.conspec 1 = and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+
+clearbool
+*.genes 1 !=
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+stop
+
+
+'============================================================================
+============
+
+'2
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+10000 rnd 520 19 rnd add store
+stop
+
+'3
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+stop
+
+'4
+cond
+*.key .lock !=
+start
+32000 299 14 rnd add store
+stop
+
+'5
+cond
+*.key .lock !=
+start
+32000 309 4 rnd add store
+stop
+
+'6
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+32000 .shootval store
+32000 .strvenom store
+32000 .mkpoison store
+32000 .strbody store
+.shoot dec
+stop
+
+'7
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+-31999 .shootval store
+32000 .strbody store
+-31999 .fdbody store
+.shoot dec
+stop
+
+'8
+cond
+*.key .lock !=
+start
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+100 .vshoot store
+stop
+
+'9
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+stop
+
+'10
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+*.thisgene 1 sub .delgene store
+stop
+
+'11
+cond
+*.key .lock !=
+start
+.mkvirus inc
+32000 .vshoot store
+stop
+
+'12
+cond
+*.key .lock !=
+start
+-31999 .shootval store
+0 .tie store
+.shoot dec
+stop
+
+'13
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+50 .repro store
+stop
+
+'------------------------------  Copy's, add more stuff no more news here
+
+'****************************************************************************
+*******************
+'============================================================================
+==================
+'****************************************************************************
+*******************
+
+
+'Stolen
+
+'Virus 1 - kill shot
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+-32000 .vshoot store
+stop
+
+'Virus 2 - clears genes
+cond
+*.key .lock !=
+start
+*.thisgene 1 rnd 2 mult -- add .delgene store
+*.thisgene .mkvirus store
+*.nrg 2 div .vshoot store
+stop
+
+'Virus 3 - ties to others
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+50 .vshoot store
+.tie inc
+-1 .tieloc store
+-1000 *.tin2 77 sub sgn abs 2 mult -- mult .tieval store
+stop
+
+'Virus 4 - Mass reproduction
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+20 *.nrg sub sgn 0 floor mult .repro store
+100 .vshoot store
+stop
+
+Virus 5 - Spreads virus to other areas
+cond
+*.key .lock !=
+start
+20 .dx store
+20 .up store
+*.thisgene .mkvirus store
+50 .vshoot store
+stop 
+
+
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+100 .vshoot store
+.tie inc
+25 *.nrg 200 sub sgn 1 add mult .repro store
+12 .up store
+600 rnd .aimsx store
+*.nrg 3 div *.body sub .strbody store
+*.body *.nrg 3 div sub .fdbody store
+-32000 .shootval store
+.shootval .shoot store
+0 .delgene store
+stop
+
+
+'============================================================================
+==================
+'****************************************************************************
+*******************
+'---------------------- DUPLICATES -------------------------------------------------------------
+'****************************************************************************
+*******************
+'============================================================================
+==================
+
+'1
+cond
+*.key .lock !=
+start
+.fixpos dec
+
+'-- Birth
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+31999 rnd .out10 store
+31999 rnd .tout10 store
+
+*.memval *.dnalen !=
+*.in9 .alge !=
+*.in10 .out10 = or and
+1 .conspec store
+
+not
+2 .conspec store
+
+*.eye5 0 =
+0 .conspec store
+
+*.tmemval *.dnalen !=
+*.tin9 .alge !=
+*.tin10 .tout10 = or and
+*.robage 1 > and
+1 .tconspec store
+
+not
+2 .tconspec store
+
+*.numties 0 =
+0 .tconspec store
+
+*.robage 0 =
+5 rnd .rand store
+
+*.rand 4 < and
+*.rand .type store
+
+*.type 0 =
+*.type 3 >= or
+3 rnd .type store
+
+
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.maxvel .dn store
+50 .repro store
+
+'*.totalmyspecies .maxpop <
+*.nrg 200 > 'and
+60 *.body 10 mult sub .strbody store
+
+
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+
+
+'-- Tie feeding
+*.tconspec 2 =
+*.numties 1 > or 
+*.numties .deltie store
+
+*.tconspec 1 =
+*.tiepres .tienum store
+40 .stifftie store
+99 .sharenrg store
+10 .fixlen store
+
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+1000 .tieval store
+
+dropbool
+dupbool
+*.type 2 = and
+.tieloc .tieloc store
+-1 .tieval store
+
+dropbool
+*.type 2 > and
+.shootval .tieloc store
+-31999 .tieval store
+
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 = 
+*.conspec 2 = or and
+350 .aimright store
+
+dropbool
+*.conspec 1 = and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+
+clearbool
+*.genes 1 !=
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+stop
+
+
+'============================================================================
+============
+
+'2
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+10000 rnd 520 19 rnd add store
+stop
+
+'3
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+stop
+
+'4
+cond
+*.key .lock !=
+start
+32000 299 14 rnd add store
+stop
+
+'5
+cond
+*.key .lock !=
+start
+32000 309 4 rnd add store
+stop
+
+'6
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+32000 .shootval store
+32000 .strvenom store
+32000 .mkpoison store
+32000 .strbody store
+.shoot dec
+stop
+
+'7
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+-31999 .shootval store
+32000 .strbody store
+-31999 .fdbody store
+.shoot dec
+stop
+
+'8
+cond
+*.key .lock !=
+start
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+100 .vshoot store
+stop
+
+'9
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+stop
+
+'10
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+*.thisgene 1 sub .delgene store
+stop
+
+'11
+cond
+*.key .lock !=
+start
+.mkvirus inc
+32000 .vshoot store
+stop
+
+'12
+cond
+*.key .lock !=
+start
+-31999 .shootval store
+0 .tie store
+.shoot dec
+stop
+
+
+
+'1
+cond
+*.key .lock !=
+start
+.fixpos dec
+
+'-- Birth
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+31999 rnd .out10 store
+31999 rnd .tout10 store
+
+*.memval *.dnalen !=
+*.in9 .alge !=
+*.in10 .out10 = or and
+1 .conspec store
+
+not
+2 .conspec store
+
+*.eye5 0 =
+0 .conspec store
+
+*.tmemval *.dnalen !=
+*.tin9 .alge !=
+*.tin10 .tout10 = or and
+*.robage 1 > and
+1 .tconspec store
+
+not
+2 .tconspec store
+
+*.numties 0 =
+0 .tconspec store
+
+*.robage 0 =
+5 rnd .rand store
+
+*.rand 4 < and
+*.rand .type store
+
+*.type 0 =
+*.type 3 >= or
+3 rnd .type store
+
+
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.maxvel .dn store
+50 .repro store
+
+'*.totalmyspecies .maxpop <
+*.nrg 200 > 'and
+60 *.body 10 mult sub .strbody store
+
+
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+
+
+'-- Tie feeding
+*.tconspec 2 =
+*.numties 1 > or 
+*.numties .deltie store
+
+*.tconspec 1 =
+*.tiepres .tienum store
+40 .stifftie store
+99 .sharenrg store
+10 .fixlen store
+
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+1000 .tieval store
+
+dropbool
+dupbool
+*.type 2 = and
+.tieloc .tieloc store
+-1 .tieval store
+
+dropbool
+*.type 2 > and
+.shootval .tieloc store
+-31999 .tieval store
+
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 = 
+*.conspec 2 = or and
+350 .aimright store
+
+dropbool
+*.conspec 1 = and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+
+clearbool
+*.genes 1 !=
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+stop
+
+
+'============================================================================
+============
+
+'2
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+10000 rnd 520 19 rnd add store
+stop
+
+'3
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+stop
+
+'4
+cond
+*.key .lock !=
+start
+32000 299 14 rnd add store
+stop
+
+'5
+cond
+*.key .lock !=
+start
+32000 309 4 rnd add store
+stop
+
+'6
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+32000 .shootval store
+32000 .strvenom store
+32000 .mkpoison store
+32000 .strbody store
+.shoot dec
+stop
+
+'7
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+-31999 .shootval store
+32000 .strbody store
+-31999 .fdbody store
+.shoot dec
+stop
+
+'8
+cond
+*.key .lock !=
+start
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+100 .vshoot store
+stop
+
+'9
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+stop
+
+'10
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+*.thisgene 1 sub .delgene store
+stop
+
+'11
+cond
+*.key .lock !=
+start
+.mkvirus inc
+32000 .vshoot store
+stop
+
+'12
+cond
+*.key .lock !=
+start
+-31999 .shootval store
+0 .tie store
+.shoot dec
+stop
+
+
+
+'1
+cond
+*.key .lock !=
+start
+.fixpos dec
+
+'-- Birth
+300 .eye5width store
+.dnalen .memloc store
+.dnalen .tmemloc store
+31999 rnd .out10 store
+31999 rnd .tout10 store
+
+*.memval *.dnalen !=
+*.in9 .alge !=
+*.in10 .out10 = or and
+1 .conspec store
+
+not
+2 .conspec store
+
+*.eye5 0 =
+0 .conspec store
+
+*.tmemval *.dnalen !=
+*.tin9 .alge !=
+*.tin10 .tout10 = or and
+*.robage 1 > and
+1 .tconspec store
+
+not
+2 .tconspec store
+
+*.numties 0 =
+0 .tconspec store
+
+*.robage 0 =
+5 rnd .rand store
+
+*.rand 4 < and
+*.rand .type store
+
+*.type 0 =
+*.type 3 >= or
+3 rnd .type store
+
+
+'-- Reproduction
+*.body 5 >
+*.nrg 80 > and
+*.maxvel .dn store
+50 .repro store
+
+'*.totalmyspecies .maxpop <
+*.nrg 200 > 'and
+60 *.body 10 mult sub .strbody store
+
+
+'-- Shrinking
+not
+*.body 1 > and
+*.body 10 mult 10 sub 0 floor .fdbody store
+
+
+'-- Tie feeding
+*.tconspec 2 =
+*.numties 1 > or 
+*.numties .deltie store
+
+*.tconspec 1 =
+*.tiepres .tienum store
+40 .stifftie store
+99 .sharenrg store
+10 .fixlen store
+
+dupbool
+*.type 1 = and
+.tieval .tieloc store
+1000 .tieval store
+
+dropbool
+dupbool
+*.type 2 = and
+.tieloc .tieloc store
+-1 .tieval store
+
+dropbool
+*.type 2 > and
+.shootval .tieloc store
+-31999 .tieval store
+
+'-- Hunting
+*.numties 0 =
+*.body 1 = and
+dupbool
+*.eye5 0 = 
+*.conspec 2 = or and
+350 .aimright store
+
+dropbool
+*.conspec 1 = and
+*.refxpos *.refypos angle .setaim store
+.tie inc
+
+clearbool
+*.genes 1 !=
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+stop
+
+
+'============================================================================
+============
+
+'2
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+10000 rnd 520 19 rnd add store
+stop
+
+'3
+cond
+*.key .lock !=
+start
+32000 819 7 rnd add store
+stop
+
+'4
+cond
+*.key .lock !=
+start
+32000 299 14 rnd add store
+stop
+
+'5
+cond
+*.key .lock !=
+start
+32000 309 4 rnd add store
+stop
+
+'6
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+32000 .shootval store
+32000 .strvenom store
+32000 .mkpoison store
+32000 .strbody store
+.shoot dec
+stop
+
+'7
+cond
+*.key .lock !=
+start
+32000 .mkshell store
+-31999 .shootval store
+32000 .strbody store
+-31999 .fdbody store
+.shoot dec
+stop
+
+'8
+cond
+*.key .lock !=
+start
+.genes dec
+*.thisgene *.genes sgn add .mkvirus store
+*.genes 777 *777 1 sub -1 mult sqr dup div mult store
+*777 .genes store
+*.thisgene 1 sub *.thisgene 1 sub sgn mult *.thisgene 1 add *.thisgene 1 sub sgn 1 sub -1 mult mult add .delgene store
+100 .vshoot store
+stop
+
+'9
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+stop
+
+'10
+cond
+*.key .lock !=
+start
+*.thisgene .mkvirus store
+32000 .vshoot store
+*.thisgene 1 sub .delgene store
+stop
+
+'11
+cond
+*.key .lock !=
+start
+.mkvirus inc
+32000 .vshoot store
+stop
+
+'12
+cond
+*.key .lock !=
+start
+-31999 .shootval store
+0 .tie store
+.shoot dec
+stop
+
+'============================================================================
+============
+
+'****************************************************************************
+****
+
+cond
+start
+
+'---------- Antiviral safety ---------------
+0 .shoot *.shoot abs sgn mult store
+0 .shootval *.shootval abs sgn mult store
+0 .mkshell *.mkshell abs sgn mult store
+0 .mkslime *.mkslime abs sgn mult store
+0 .strvenom *.strvenom abs sgn mult store
+0 .strpoison *.strpoison abs sgn mult store
+0 .tie *.tie abs sgn mult store
+0 .strbody *.strbody abs sgn mult store
+0 .fdbody *.fdbody abs sgn mult store
+0 .backshot *.backshot abs sgn mult store
+0 .aimshoot *.aimshoot abs sgn mult store
+0 .repro *.repro abs sgn mult store
+0 .mrepro *.mrepro abs sgn mult store
+0 .sexrepro *.sexrepro abs sgn mult store
+0 .aimdx *.aimdx abs sgn mult store
+0 .aimsx *.aimsx abs sgn mult store
+0 .up *.up abs sgn mult store
+0 .sx *.sx abs sgn mult store
+0 .dx *.dx abs sgn mult store
+0 .dn *.dn abs sgn mult store
+0 .tieloc *.tieloc abs sgn mult store
+0 .tieval *.tieval abs sgn mult store
+0 .stifftie *.stifftie abs sgn mult store
+0 .deltie *.deltie abs sgn mult store
+0 .delgene *.delgene abs sgn mult store
+0 .tienum *.tienum abs sgn mult store
+0 .tieang *.tieang abs sgn mult store
+0 .tielen *.tielen abs sgn mult store
+0 .fixpos *.fixpos abs sgn mult store
+0 .setboy *.setboy abs sgn mult store
+'---------- Last of : Antiviral safety ---------------
+
+*.setaim *.aim !=
+*.aim .setaim store
+
+*.dnalen 20000 >
+2 .delgene store
+
+*.badvirus 0 !=
+1 .delgene store
+0 .badvirus store
+
+*.mkvirus 0 !=
+*.mkvirus *.virus != and
+*.mkvirus .delgene store
+
+*.thisgene *.genes !=
+*.thisgene 1 add .delgene store
+
+clearbool
+*.body 10 mult 10 sub 0 floor .fdbody store
+*.maxvel .dn store
+.deltie inc
+.fixpos dec
+50 .repro store
+99 .sharenrg store
+99 .shareshell store
+99 .shareslime store
+1 .sharewaste store
+.dn .shoot store
+32000 .shootval store
+.alge .out9 store
+.alge .tout9 store
+31999 rnd .out10 store
+31999 rnd .tout10 store
+
+.dnalen *.memloc !=
+.dnalen .memloc store
+.dnalen *.tmemloc !=
+.dnalen .tmemloc store
+.body *.ploc !=
+.body .ploc store
+.fixpos *.vloc !=
+.fixpos .vloc store
+1 *.venval !=
+1 .venval store
+
+*.robage 0 =
+628 rnd 314 sub *.aim 628 add add .setaim store
+15 rnd .rand store
+
+*.rand 6 < and
+*.rand .type store
+
+*.type 0 =
+*.type 6 >= or
+5 rnd .type store
+
+*.type 1 =
+-1 .tieloc store
+-1000 .tieval store
+
+*.type 2 =
+.tieloc .tieloc store
+-1 .tieval store
+
+*.type 3 =
+.tieval .tieloc store
+1000 .tieval store
+
+*.type 4 =
+.fixpos .tieloc store
+1 .tieval store
+
+*.type 4 >
+.shootval .tieloc store
+-31999 .tieval store
+
+*.shflav 0 !=
+150 rnd 300 sub dup .aimright stor
+10 mult .sx store
+0 .shflav store
+-3 .shoot store
+
+*.nrg 500 >
+*.robage 10 > and
+200 *.shell sub .mkshell store
+300 *.poison sub 0 floor .strpoison store
+100 *.venom sub 0 floor .mkvenom store
+3 .mkslime store
+
+*.nrg 1000 >
+*.robage 10 > and
+500 *.shell sub .mkshell store
+600 *.poison sub 0 floor .strpoison store
+5 .mkslime store
+
+*.nrg 2000 >
+*.robage 10 > and
+1000 *.shell sub .mkshell store
+1100 *.poison sub 0 floor .strpoison store
+8 .mkslime store
+
+
+'==================================DROP FEEDING THING, JUST USE IN OUT CONSPEC ???
+
+
+*.tin10 *.tout10 !=
+*.tmemval .botlen = and
+*.feeding 0 > or
+*.nrg .feedtime > and
+*.tiepres .tienum store
+-1 .tieloc store
+1000 .tieval store
+1 .sharenrg store
+0 .deltie store
+
+clearbool
+*.feeding 0 >
+.feeding inc
+
+*.feeding 5 >
+*.nrg .feedtime < or
+*.numties 0 = or
+0 .feeding store
+
+*.feeding 2 >
+*.tmemval .botlen != and
+0 .feeding store
+
+*.numties 0 =
+*.in10 *.out10 != and
+*.memval .botlen = and
+*.nrg .feedtime > and
+.tie inc
+1 .tienum store
+-1 .tieloc store
+1000 .tieval store
+1 .sharenrg store
+1 .feeding store
+0 .deltie store
+
+*.numties 0 >
+*.feeding 0 = and
+*.numties .deltie store
+
+*.tiepres 0 >
+*.feeding 0 = and
+*.tiepres .deltie store
+0 .tiepres store
+
+*.vtimer 0 =
+*.genes 2 sub rnd 1 add dup .mkvirus store
+.virus store
+
+*.vtimer 1 =
+*.nrg 300 > and
+*.nrg 30 div .vshoot store
+
+*.vshoot *.nrg 30 div >
+0 .vshoot store
+
+*.timer 10 mod 0 =
+200 rnd 20 floor *.aim add .setaim store
+stop
+
+end

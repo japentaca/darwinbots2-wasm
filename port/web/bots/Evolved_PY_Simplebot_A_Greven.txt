@@ -1,0 +1,75 @@
+cond  
+*.eye3  *.eye8  > 
+start  
+div  *413  *720  sub  rnd  *413  *720  rnd  *581  746  *332  store  
+*840  inc -25  .aimdx  store  
+sub  mult  add 
+stop
+
+cond  
+*.eye7  *.eye5  > 
+start  
+*954  25  .aimdx  store 
+stop
+
+cond  
+*.ploc  0  >  
+*.ploc  0  >  
+*.in1  0  >  
+*.veldx -1  <  
+*.aim  0  > 
+start 
+-2069  *587  *136 -56  rnd  *136 -56  div  
+rnd  2092  rnd  *136 -56  rnd  *.veldx  427  
+516  2  div  921  201  *56  dec  mult  *.eye5  
+sub  *976  mult  div  *.eye5  sub  sub  *.maxvel  *782  
+div  *.in1  482  rnd  *.pwaste  200  add  rnd -39  1431  div  
+rnd  dec  *344  *.shoot  add -40 -773 -646  dec -773 -647  dec  store  
+1790  dec  div  510 -640 -580  201 -962  *157  8 
+stop
+
+cond  
+*.veldx  0  !%=  
+*.veldx  0  !%=  
+*.sharewaste  0  != 
+start  
+*.memloc  rnd  *.fixlen  *.veldx  2  rnd  *.trefage  mult  200  add  mult  dec  store  
+mult  *264  dec  store  
+div  sub  *25  dec -1142  *170  551  *100  sub  *.myshoot  rnd  sub  *.myshoot  rnd  
+214  789  add  *863  .nrg  store  
+789  add  .trefvelmydn  store -144  92  dec -439  936  *636  *.reftie  *565  mult  inc  
+*170  dec  sub  *344  107  add  rnd  107  div  add  rnd  sub  dec -40  store 
+-40  store 
+-40  store 
+-775  1839  dec  *.setboy  7 -237 
+stop
+
+cond 
+start  
+5  1501  1321  mult  rnd  .up  store  
+1531  inc -147 
+stop
+
+cond  
+*.eye5  41  > 
+start  
+916  rnd  rnd -1  add  7  *374  878  rnd  
+*854 -40  *514  *.refsx -690  *.fdbody  *417  store  
+rnd  store  
+dec  mult -1  .shoot  store  
+add 
+stop
+
+cond  
+*.nrg  5000  = 
+start  
+*260  1158  50  *.tieloc  inc  140 -1117  *975  .slime  store 
+stop
+
+cond  
+*.nrg  5100  > 
+start  
+50  300  store 
+stop
+
+end

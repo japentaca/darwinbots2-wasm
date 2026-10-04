@@ -1,0 +1,60 @@
+rndstore
+ rnd store
+ *.tieang angle 1 *.myvenom *.veldx sgnstore
+ .out2 store
+ 31198 .reffixed divstore
+ *.eye2 floorstore
+ *488 <=
+ .vshoot store
+ store
+ =
+ *1172 383 ++ 528 *582 *.shdn ceilstore
+ stop
+ divstore
+ ^ true
+ not
+ cos & ~ 566 ^ 532 - ^ - ++
+ start
+ *.refxpos 3 .up addstore
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  49  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  50  '''''''''''''''''''''''
+ cond
+ *.eye5 *.refeye >
+ ~ .tout8 inc
+ start
+ -6 .shoot store
+ 818 331 .out4 store
+ *.refveldx .dx addstore
+ *.refeye store
+ *.myaimdx *.trefvelmysx .strbody inc
+ 1 450 *.in3 7814 divstore
+ ^ >
+
+''''''''''''''''''''''''  Gene:  2 Ends at position  80  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  81  '''''''''''''''''''''''
+ start
+ *.memval
+''''''''''''''''''''''''  Gene:  3 Ends at position  82  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  83  '''''''''''''''''''''''
+ else
+ swapbool
+ true
+ addstore
+ *488 <=
+ | pow substore
+ ^
+''''''''''''''''''''''''  Gene:  4 Ends at position  92  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  93  '''''''''''''''''''''''
+ start
+ *.refdn floorstore
+ %=
+ not
+ *-735 pyth addstore
+ 24709 *.veldn multstore
+ 4701 *.nrg 516 30200 32000 ceilstore
+ *.thisgene substore
+ 30007 >
+ 13337 .repro store
+''''''''''''''''''''''''  Gene:  5 Ends at position  116  '''''''''''''''''''''''

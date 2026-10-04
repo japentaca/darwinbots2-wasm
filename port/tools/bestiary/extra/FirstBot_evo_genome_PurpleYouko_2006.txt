@@ -1,0 +1,62 @@
+'Perfect Bot for evolution
+'FirstBot is the official name
+
+'/*****proper reproduction 1
+
+cond
+*.nrg
+20000
+>
+start
+50
+.repro
+store
+'if time to reproduce store it
+1
+972
+store
+stop
+
+cond
+'/after robot reproduces it reproduces more until energy less then 3000
+*972
+1
+=
+start
+50
+.repro
+store
+stop
+
+cond
+*.nrg
+3000
+<
+start
+0
+972
+store
+stop
+
+'\*****proper reproduction 1
+
+cond
+start
+-1
+.shoot
+store
+10
+.up
+store
+stop
+
+'poop gene added because these stupid idiots
+'keep getting altzheimers and getting fixed in place
+cond
+*.waste 10 >
+start
+-4 .shoot store
+10 .shootval store
+0 .fixpos store
+stop
+end

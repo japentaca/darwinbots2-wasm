@@ -1,0 +1,42 @@
+H 0.1
+def Vbody 800
+def Vrepro 801
+
+cond
+*.robage 1 =
+start
+1221 .eye5width store
+*.in1 100 sub 200 rnd add 100 floor 10000 ceil .out1 store
+*.in2 100 sub 200 rnd add 100 floor 10000 ceil .out2 store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye !=
+start
+*.refxpos *.refypos angle .setaim store
+-6 .shoot store
+*.refveldx .dx store
+*.refvelup 10 add .up store
+stop
+
+cond
+*.eye5 0 =
+*.myeye *.refeye = or
+start
+10 .up store
+stop
+
+cond
+*.nrg *.body >
+*.body *.Vbody <
+start
+*.Vbody *.body sub .strbody store
+stop
+
+cond
+  *.nrg *.Vrepro >
+  *.body *.Vbody >
+start
+  50 .repro store
+stop

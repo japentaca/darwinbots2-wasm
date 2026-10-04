@@ -1,0 +1,258 @@
+'#generation: 45
+'#mutations: 14
+ ~=
+ xor
+ *-368 sin not
+ <
+ xor
+ <
+ *-580 sgn dupbool
+ store
+ dupbool
+ *283 *.tout4 cond
+ ceil substore
+ !~=
+ *.refshoot stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  21  '''''''''''''''''''''''
+ cos substore
+ 521 275 pow swapbool
+ *.eye6 >
+ *756 or
+ - ceilstore
+ dupbool
+ dec
+ >
+ root -163 *-498 rnd ~=
+ abs 546 *-565 80 %=
+ rndstore
+ -396 *-622 -509 else
+ dup !%=
+ -233 !~=
+ *-115 ceil swapbool
+ !=
+ inc
+ 447 *46 -94 *-308 or
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  66  '''''''''''''''''''''''
+ stop
+ *.tieang4 sgn rnd start
+ substore
+ - anglecmp -- *-77 ^ 347 -648 ^ *.aimright *0 angle ceil *-778 mod negstore
+ dupbool
+ -54 *-619 -130 *.tin3 divstore
+ & dist .mass divstore
+ or
+ or
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  100  '''''''''''''''''''''''
+ %=
+ logx swapbool
+ multstore
+ cond
+ mod -86 -891 << *-23 *-171
+''''''''''''''''''''''''  Gene:  4 Ends at position  111  '''''''''''''''''''''''
+ cond
+ *170 *671 stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  115  '''''''''''''''''''''''
+ clearbool
+ >> >
+ inc
+ start
+ -337 <
+ dec
+ mod -- *153 rndstore
+ -- ~=
+
+''''''''''''''''''''''''  Gene:  6 Ends at position  129  '''''''''''''''''''''''
+ cond
+ >=
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  132  '''''''''''''''''''''''
+ 25 xor
+ swap swap %=
+ sqr 374 dup *.myaimdx divstore
+ *.trefnrg -187 pyth pyth stop
+ anglecmp & and
+ negstore
+ sqr start
+ =
+ *115 1124 ~ * over =
+ -- add addstore
+ ^ !~=
+ * <=
+ 3 div *31 angle =
+ *758 swapbool
+ false
+ -614 ~ divstore
+ *-28 >
+ sub xor
+ >
+ *.eye9dir ~=
+ ++
+''''''''''''''''''''''''  Gene:  8 Ends at position  186  '''''''''''''''''''''''
+ cond
+ !~=
+ -34 -707 stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  191  '''''''''''''''''''''''
+ !~=
+ 31 *-264 !~=
+ 796 stop
+ *.focuseye %=
+ & sqr logx or
+ ~ stop
+ rndstore
+ stop
+ 357 -15 ~=
+ start
+ stop
+''''''''''''''''''''''''  Gene:  10 Ends at position  212  '''''''''''''''''''''''
+ ^ logx true
+ swap *.eye8 dropbool
+ start
+ sgn substore
+ *69 839 150 overbool
+ *.eye4 ceilstore
+ !%=
+ *.sharenrg dec
+ swapbool
+ *57 logx *.fertilized ceil rndstore
+ & ^ mod root -360 *290 -497 *624 swapbool
+ rndstore
+ <
+ 2 165 -256 sub dec
+ drop ceil false
+ -492 -572 !~=
+ << sqr | >> sgnstore
+ -384 inc
+ drop ~=
+ <
+ - *242 *.shdn not
+ false
+ << stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  275  '''''''''''''''''''''''
+ logx *-32 !%=
+ inc
+ add drop pyth xor
+ -843 stop
+ 78 *.edge swap mult -239 *.shoot pyth xor
+ pow sin *69 & store
+ *.mydn >=
+ =
+ start
+ logx 512 abs *-867 ceilstore
+ !~=
+ -1324 >
+ *.aimright >=
+ dupbool
+ sgnstore
+ *740
+''''''''''''''''''''''''  Gene:  12 Ends at position  315  '''''''''''''''''''''''
+ cond
+ <
+ 619 ceilstore
+ << start
+ 120 stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  323  '''''''''''''''''''''''
+ -676 stop
+ *-608 root dist sgn *.tout5 not
+ ~ cond
+ *-52 -699 *-252 true
+ start
+ =
+
+''''''''''''''''''''''''  Gene:  14 Ends at position  339  '''''''''''''''''''''''
+ cond
+ clearbool
+ dec
+
+''''''''''''''''''''''''  Gene:  15 Ends at position  342  '''''''''''''''''''''''
+ cond
+ *.trefvelmydn dist *295 ^ overbool
+ ~ - *583 dupbool
+ sin *344 *370 over mod swapbool
+ *.myaimdx -263
+''''''''''''''''''''''''  Gene:  16 Ends at position  360  '''''''''''''''''''''''
+ cond
+ dupbool
+ *174 true
+ *79 ~=
+ - xor
+ dist xor
+ 839 sqr abs sgnstore
+ 295 mod *631 439 else
+ mult negstore
+ anglecmp dup over xor
+ *872 *256 sqrstore
+ angle stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  390  '''''''''''''''''''''''
+ *.refpoison -379 start
+ -1 .shoot store
+
+''''''''''''''''''''''''  Gene:  18 Ends at position  396  '''''''''''''''''''''''
+ cond
+ ++ -99 *-588 10 -7 4 abs >=
+ xor
+
+''''''''''''''''''''''''  Gene:  19 Ends at position  406  '''''''''''''''''''''''
+ cond
+ start
+ 201 sqr 901 -1 .shoot store
+ negstore
+ *.tielen3 10 *.mydn -263
+''''''''''''''''''''''''  Gene:  20 Ends at position  419  '''''''''''''''''''''''
+ cond
+ *.fixpos *174 true
+ floorstore
+ else
+ %=
+ *79 ~=
+ sqr 155 sin * abs *-60 >=
+ sqrstore
+ mod *631 439 mult negstore
+ anglecmp -- >
+ 166
+''''''''''''''''''''''''  Gene:  21 Ends at position  445  '''''''''''''''''''''''
+ cond
+ dup over xor
+ *872 *285 sqrstore
+ xor
+ angle stop
+''''''''''''''''''''''''  Gene:  22 Ends at position  455  '''''''''''''''''''''''
+ logx -379 start
+ 0 .shoot store
+ *-588 10 1 ^ abs overbool
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  467  '''''''''''''''''''''''
+ cond
+ start
+ 901 -1 .shoot store
+ negstore
+ store
+ stop
+''''''''''''''''''''''''  Gene:  24 Ends at position  476  '''''''''''''''''''''''
+ stop
+ *286 1500 *624 clearbool
+ -- >
+ start
+ overbool
+ sgnstore
+ pyth addstore
+ stop
+''''''''''''''''''''''''  Gene:  25 Ends at position  489  '''''''''''''''''''''''
+ dup .repro store
+ store
+ stop
+ cond
+ *.body 1500 >
+ start
+
+''''''''''''''''''''''''  Gene:  26 Ends at position  499  '''''''''''''''''''''''
+ cond
+ *.body 1500 >
+ start
+ 50 .repro store
+ stop
+''''''''''''''''''''''''  Gene:  27 Ends at position  508  '''''''''''''''''''''''
+ addstore
+ substore
+ *772

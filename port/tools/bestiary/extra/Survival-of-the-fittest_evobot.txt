@@ -1,0 +1,53 @@
+cond
+start
+.tie *.robage 1 add mult inc
+.deltie inc
+stop
+
+cond
+*.robage 1 =
+start
+628 .aimdx store
+stop
+
+cond
+*.fixed 0 =
+*.eye5 0 !=
+start
+-6 .shoot store
+stop
+
+cond
+*.eye5 0 !=
+start
+40 .up store
+stop
+
+cond
+*.eye5 0 =
+start
+314 rnd .aimdx store
+stop
+
+cond
+*.robage 1000 >
+*.body 500 >
+start
+1 .fixpos store
+stop
+
+cond
+*.fixed 0 !=
+start
+314 rnd .aimdx store
+100 *.nrg 500 div div 50 ceil .repro 1 rnd add store
+stop
+
+cond
+*.fixed 0 !=
+*.robage 1000 <
+start
+.fixpos dec
+stop
+
+end

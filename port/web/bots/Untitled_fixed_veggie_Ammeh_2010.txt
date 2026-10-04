@@ -1,0 +1,43 @@
+cond
+start
+.fixpos inc
+1 53 store
+*.thisgene .delgene store
+stop
+
+cond
+1 *53 !=
+*971 *972 dist 1000 >=
+start
+.fixpos inc
+stop
+
+cond
+1 *53 !=
+*971 *972 dist 1000 <
+start
+100 .veldn store
+0 .fixpos store
+stop
+
+cond
+1 *53 !=
+*.nrg 1000 >
+*.fixpos 0 !=
+start
+100 .strbody store
+100 .strpoison store
+100 .mkslime store
+100 .mkshell store
+stop
+
+
+cond
+*53 1 =
+*.nrg 1000 >
+start
+*.xpos 971 store
+*.ypos 972 store
+314 rnd .aimdx store
+10 .repro store
+stop

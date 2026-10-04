@@ -1,0 +1,59 @@
+'Birth gene
+cond
+*.robage 0 =
+start
+*.maxvel .sx store
+150 .aimdx store
+.deltie inc
+stop
+
+'Reproduction and scouting gene
+cond
+*.eyef 0 =
+*.refup *.myup = or
+start
+*.body 3000 >
+140 .aimsx store
+30 .repro store
+not
+5 .sx store
+stop
+
+'Attack gene
+cond
+*.eyef 0 !=
+*.refup *.myup !=
+*.shflav 0 =
+start
+*.refxpos *.refypos angle .setaim store
+0 .aimshoot store
+*.veldx .sx store
+*.refvelup 15 add .up store
+10 .shootval store
+-6 .shoot store
+stop
+
+'Growth gene
+cond
+*.body 2 mult *.nrg <
+start
+100 .strbody store
+stop
+
+'Shrink gene
+cond
+*.body 2 mult *.nrg >
+start
+100 .fdbody store
+stop
+
+'Counter attack gene
+cond
+*.shflav 0 !=
+*.shflav -2 !=
+start
+*.shang .aimshoot store
+30 .shootval store
+-6 .shoot store
+0 .shflav store
+stop

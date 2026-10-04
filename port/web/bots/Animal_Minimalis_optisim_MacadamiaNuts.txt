@@ -1,0 +1,64 @@
+cond
+*.robage 21 =
+*990 0 =
+start
+0 971 store 
+30 972 store
+50 973 store
+0 974 store
+314 975 store
+3000 976 store
+90 977 store
+100 978 store
+100 .out1 store
+1 990 store
+stop
+
+
+cond
+*.robage 21 =
+*990 1 =
+start
+*971 2 rnd 1 sub add 971 store 
+*972 2 rnd 1 sub add 972 store
+*973 2 rnd 1 sub add 973 store
+*974 2 rnd 1 sub add 974 store
+*975 4 rnd 2 sub add 975 store
+*976 100 rnd 50 sub add 976 store
+*977 2 rnd 1 sub add 977 store
+*978 2 rnd 1 sub add 978 store
+*978 .out1 store
+stop
+
+
+
+cond
+*.eye5 *971 >
+*.out1 *.in1 !%=
+start
+*.refveldx .dx store
+*.refvelup *972 add .up store
+stop
+
+cond
+*.eye5 *973 >
+*.out1 *.in1 !%=
+*.refage 20 >
+start
+-1 .shoot store
+*.refvelup .up store
+stop
+
+cond
+*.eye5 *974 =
+*.out1 *.in1 %= or
+start
+*975 rnd .aimdx store
+stop
+
+cond
+*.nrg *976 >
+start
+*977 .repro store
+stop
+end

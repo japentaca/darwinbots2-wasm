@@ -1,0 +1,50 @@
+'Animal_martinis
+'By Marax
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+33 .aimdx store
+1 .up store
+stop
+
+cond
+*.eye5 0 !=
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+*.refvelup .up store
+-6 .shoot store
+stop
+
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+*.nrg 20000 >
+start
+*.refvelup .up store
+-6 .shoot store
+stop
+ 
+cond
+*.eye5 25 >
+*.refeye *.myeye !=
+start
+*.refvelup .up store
+-1 .shoot store
+stop
+
+cond
+ *.nrg 7000 >
+*.body 2000 >
+start
+ 40 .repro store
+stop

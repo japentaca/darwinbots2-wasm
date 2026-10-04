@@ -1,0 +1,68 @@
+'Gene 1. Reproduction
+cond
+*.nrg 5000 >
+start
+50 .repro store
+15 .aimdx store
+stop
+
+'Gene 2. Attach to parent
+cond
+*.robage 0 =
+start
+.tie inc
+.shoot .ploc store
+stop
+
+'Gene 3. Simple search pattern 1
+cond
+*.eye3 *.eye5 >
+start
+-25 .aimdx store
+stop
+
+'Gene 4. Simple search pattern 2
+cond
+*.eye7 *.eye5 >
+start
+25 .aimdx store
+stop
+
+'Gene 5. Feeding
+cond
+*.eye5 40 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+stop
+
+'Gene 6. Swarm with conspecs
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+start
+*.refaim .setaim store
+stop
+
+'Gene 7. Sever tie to parent
+cond
+start
+.deltie inc
+stop
+
+'Gene 8. Store poison
+cond
+*.poison 500 <
+start
+50 .strpoison store
+stop
+
+'Gene 8. Actually move
+cond
+*.eye5 40 <
+*.nrg 5000 <
+start
+10 .up store
+stop
+
+end

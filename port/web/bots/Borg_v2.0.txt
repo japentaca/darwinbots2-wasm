@@ -1,0 +1,279 @@
+' Borg v2.0
+'
+' Simple bot with mission to populate area
+' with food. Dont kill veggies.
+' Uses some interesting defense techniques.
+
+def mc1 951
+def mc2 952
+def mc3 953
+def mc4 954
+def mc5 955
+
+def mid 51
+def mvcnt 52
+def ma 53
+def mrnd 54
+def mdaimdx 55
+
+'$ 1
+cond
+  *.robage 0 =
+start
+  8888 .mid store
+stop
+
+'$ 2
+cond
+start
+  1000 rnd .mrnd store
+  0 .fixpos store
+  *.body 1000 sub
+  dup sgn dup add sgn mult
+  1000 div 1 add .ma store
+  *.numties sgn .mc1 store
+  *.tiepres .tienum *.mc1 mult store
+  .dn .tieloc *.mc1 mult store
+  32000 .tieval *.mc1 mult store
+stop
+
+'$ 3
+cond
+  *.mdaimdx 0 >
+start
+  *.mdaimdx .aimdx store
+  0 .mdaimdx store
+stop
+
+'$ 4
+cond
+  *.vtimer 0 =
+start
+  5 .mkvirus store
+stop
+
+'$ 5
+cond
+  *.mid 8888 !=
+start
+  *.numties sgn .mc1 store
+  *.tiepres .tienum *.mc1 mult store
+  .dn .tieloc *.mc1 mult store
+  32000 .tieval *.mc1 mult store
+  *.genes rnd 1 add dup
+  *.thisgene sub sgn abs *.myshoot 1 sub sgn abs mult mult .delgene store
+  *.vtimer sgn 1 sub abs .mc1 store
+  *.thisgene .mkvirus *.mc1 mult store
+  100 .mkslime 1000 *.slime sub sgn mult store
+  100 .strvenom store
+  100 .shootval store
+  .mkslime .vloc store
+  -32000 .venval store
+  -3 .shoot store
+  1256 rnd .aimsx *.mc1 mult store
+  150 .vshoot *.vtimer 1 sub sgn abs 1 sub abs mult store
+stop
+
+'$ 6
+cond
+  *.eye3 *.eye7 >
+start
+  35 .aimsx store
+  4 *.ma mult .up store
+  2 *.ma mult .sx store
+stop
+
+'$ 7
+cond
+  *.eye7 *.eye3 >
+start
+  35 .aimdx store
+  4 *.ma mult .up store
+  2 *.ma mult .dx store
+stop
+
+'$ 8
+cond
+  *.eye5 10 >
+  *.eye5 25 <
+  *.refeye *.myeye != *.refshoot *.myshoot != or
+start
+  4 *.ma mult .up store
+stop
+
+'$ 9
+cond
+  *.nrg 30000 <
+  *.eye5 30 >
+  *.refshoot 0 =
+  *.refmulti 0 =
+  *.refnrg 3000 >
+  *.refbody 300 <
+start
+  -8 .shootval store
+  -1 .shoot store
+  0 .up store
+  .fixpos inc
+stop
+
+'$ 10
+cond
+  *.nrg 30000 <
+  *.eye5 30 >
+  *.refshoot 0 =
+  *.refmulti 0 =
+  *.refbody 300 >
+start
+  -8 .shootval store
+  -6 .shoot store
+  0 .up store
+  .fixpos inc
+stop
+
+'$ 11
+cond
+  *.eye5 30 >
+  *.refeye *.myeye != *.refshoot *.myshoot != or
+  *.refmulti 0 =
+  *.refshoot 0 >
+  *.refaimsx 0 = *.refaimdx = 0 and
+  or
+start
+  -16 .shootval store
+  -6 .shoot store
+  0 .up store
+stop
+
+'$ 12
+cond
+  *.venom 100 >
+  *.eye5 30 >
+  *.refeye *.myeye != *.refshoot *.myshoot != or
+  *.refmulti 0 >
+start
+  100 .shootval store
+  .mkslime .vloc store
+  -32000 .venval store
+  -3 .shoot store
+  .mvcnt inc
+stop
+
+'$ 13
+cond
+  *.eye5 30 >
+  *.refeye *.myeye != *.refshoot *.myshoot != or
+  *.refmulti 0 >
+  *.vtimer 1 =
+  *.mvcnt 5 >
+start
+  50 .vshoot store
+  0 .mvcnt store
+stop
+
+'$ 14
+cond
+  *.eye5 30 >
+  *.refeye *.myeye = *.refshoot *.myshoot = and
+start
+  1256 rnd .aimsx store
+  10 *.ma mult .up store
+stop
+
+'$ 15
+cond
+  *.eye3 10 < *.eye5 10 < *.eye7 10 < and and
+  *.mrnd 0 > *.mrnd 11 < and
+start
+  314 rnd 157 sub .aimsx store
+  5 *.ma mult .up store
+stop
+
+'$ 16
+cond
+  *.eye3 10 < *.eye5 10 < *.eye7 10 < and and
+  *.mrnd 0 > *.mrnd 21 < and
+  *.vel 3 < or
+start
+  1256 rnd .aimsx store
+  20 *.ma mult .up store
+stop
+
+'$ 17
+cond
+  *.eye3 10 <
+  *.eye5 10 <
+  *.eye7 10 <
+start
+  5 *.ma mult .up store
+stop
+
+'$ 18
+cond
+  *.numties 0 >
+start
+  0 *.ma mult .up store
+  0 .sx store
+  0 .dx store
+stop
+
+'$ 19
+cond
+  *.nrg 10000 >
+  *.mrnd 0 > *.mrnd 21 < and
+start
+  1256 rnd .mdaimdx store
+  *.mdaimdx .aimsx store
+  30 .repro store
+stop
+
+'$ 20
+cond
+  *.nrg 8000 >
+  *.shell 500 <
+start
+  50 .mkshell store
+stop
+
+'$ 21
+cond
+  *.nrg 4000 >
+  *.slime 1000 <
+start
+  50 .mkslime store
+stop
+
+'$ 22
+cond
+  *.nrg 2000 >
+  *.venom 2000 <
+start
+  50 .strvenom store
+stop
+
+'$ 23
+cond
+  *.nrg 15000 > *.body 5000 < and
+  *.nrg 10000 > *.body 1000 < and
+  or
+start
+  *.nrg 100 div .strbody store
+stop
+
+'$ 24
+cond
+  *.body 200 >
+  *.nrg 3000 <
+start
+  100 .fdbody store
+stop
+
+'$ 25
+cond
+  *.waste 50 >
+start
+  .backshoot inc
+  -4 .shoot store
+  50 .shootval store
+stop
+
+end

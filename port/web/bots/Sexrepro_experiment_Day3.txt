@@ -1,0 +1,64 @@
+'#generation: 205
+'#mutations: 42
+
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ *.tieang2 30 add .up store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  16  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  17  '''''''''''''''''''''''
+ cond
+ *.eye5
+''''''''''''''''''''''''  Gene:  2 Ends at position  18  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  19  '''''''''''''''''''''''
+ cond
+ *256 *.in2 0 dropbool
+ >
+ 
+ start
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  28  '''''''''''''''''''''''
+ *650 4 1 add *.eye5 *.refeye *.myeye *.shup
+''''''''''''''''''''''''  Gene:  4 Begins at position  37  '''''''''''''''''''''''
+ start
+ -1 .shoot store
+ addstore
+ -677 *.eye5 50 *.refeye *.myeye =
+ *.out2
+''''''''''''''''''''''''  Gene:  4 Ends at position  48  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  49  '''''''''''''''''''''''
+ start
+ *.veldn .up store
+ >
+ *.veldn .up store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  57  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  58  '''''''''''''''''''''''
+ cond
+ *.eye5 *.vshoot =
+ *.refeye *.myeye =
+ or
+ rndstore
+ *.refnrg and
+ start
+ -406 292 .aimright store
+ *.refaimsx 37 .sexrepro store
+ >=
+''''''''''''''''''''''''  Gene:  6 Ends at position  78  '''''''''''''''''''''''
+
+'normal repro gene:
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+'#hash: gs*hpo!QD%eL<%hl$<I_
+'#tag:Day3.txt

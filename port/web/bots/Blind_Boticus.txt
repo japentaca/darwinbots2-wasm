@@ -1,0 +1,46 @@
+' Blind Boticus is a modified version of A. Boticus
+'
+'Modified by Testlund to use touch senses instead of vision (check Disable Vision).
+'
+start
+.fixpos *.fixed mult dec
+51 *51 sgn mult dec
+51 *51 sgn -1 mult mult inc
+stop
+
+cond
+*.nrg 1000 >
+start
+10 *.vel sub 2 div .up store
+stop
+
+cond
+*.refup *.myup = or
+*.refxpos 0 = and
+*51 20 !=
+start
+314 rnd .aimdx store
+51 inc
+51 inc
+stop
+
+cond
+*.refxpos 0 != and
+*.refup *.myup !=
+start
+*.refxpos *.refypos angle .setaim store
+8 .fixpos store
+-6 .shoot store
+stop
+
+cond
+*.nrg 5000 >
+start
+32 .strbody store
+stop
+
+cond
+*.body 5000 >
+start
+50 .repro store
+stop

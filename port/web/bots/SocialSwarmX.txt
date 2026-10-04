@@ -1,0 +1,87 @@
+' SocialSwarmX
+'
+' An advancement on the SWARM concept
+
+cond
+start
+.tie *.robage 1 add mult inc
+.deltie inc
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye =
+*.in1 0 !=
+*.in2 0 !=
+start
+*.in1 .out1 store
+*.in2 .out2 store
+stop
+
+cond
+*.body 500 <
+*.out1 0 !=
+*.out2 0 !=
+start
+*.out1 *.out2 angle .setaim store
+stop
+
+cond
+*.eye5 50 <
+start
+10 .up store
+stop
+
+cond
+*.eye1 *.eye5 >
+*.eye9 *.eye5 > or
+start
+*.eye9 *.eye1 sub 2 mult .aimdx store
+stop
+
+cond
+*.eye5 35 >
+*.refeye *.myeye !=
+start
+-6 .shoot store
+8 .shootval store
+stop
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refxpos .out1 store
+*.refypos .out2 store
+*.refveldx .dx *.eye5 sgn mult store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+start
+*.refaim .setaim store
+stop
+
+cond
+*.nrg 5000 >
+*.body 10 >
+start
+50 .repro store
+*.nrg 5000 sub .strbody store
+stop
+
+cond
+*.body 10 >
+start
+*.body 10 sub .fdbody store
+stop
+
+cond
+*.nrg 100 <
+*.body 100 *.nrg sub 10 div >
+start
+*.body 100 *.nrg sub 10 div sub .fdbody *.body sgn mult store
+stop
+
+end

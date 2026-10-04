@@ -1,0 +1,207 @@
+'Alga_Pair 1.1.1 (Trafalgar).txt compiled by PyBot V2 from Alga_Pair 1.1.1 (Trafalgar).pyr.
+
+'define childTie: 2395
+'def lastAngle at 1000
+def lastAngle 1000
+'def generation at 971
+def generation 971
+'def reproducedLastCycle at 999
+def reproducedLastCycle 999
+'def launch at 972
+def launch 972
+'def ninjaShoot at 1007
+def ninjaShoot 1007
+'def ninjaShootval at 1008
+def ninjaShootval 1008
+'def ninjaAimshoot at 1901
+def ninjaAimshoot 1901
+'def ninjaUp at 1001
+def ninjaUp 1001
+'if ():
+cond
+
+start
+'    generation when (robage==0) ++
+.generation *.robage 0 = inc dropbool
+'    fixpos = 0
+0 dup *.fixpos != .fixpos store
+'    if ((numties == 0) and (abs(reproducedLastCycle-timer)>2) and (launch==0)):
+*.numties 0 = *.reproducedLastCycle *.timer sub abs 2 > and *.launch 0 = and
+'        reproducedLastCycle = timer
+*.timer dupbool dup *.reproducedLastCycle != and .reproducedLastCycle store dropbool
+'        repro = 50
+50 dupbool dup *.repro != and .repro store dropbool
+'    if (abs(reproducedLastCycle-timer)<2 and (numties>0) and (tiepres==0)):
+dropbool *.reproducedLastCycle *.timer sub abs 2 < *.numties 0 > and *.tiepres 0 = and
+'        if (multi==0):
+dupbool dupbool *.multi 0 = and
+'            tie = childTie
+2395 dupbool dup *.tie != and .tie store dropbool
+'    readtie = tiepres
+dropbool dropbool
+dropbool
+*.tiepres dup *.readtie != .readtie store
+'    tienum = tiepres
+*.tiepres dup *.tienum != .tienum store
+'    if (numties>1):
+*.numties 1 >
+'        if (tiepres!=0):
+dupbool dupbool *.tiepres 0 != and
+'            deltie = tiepres
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+'        elif (multi!=0):
+not and not dupbool not dupbool *.multi 0 != and
+'            readtie = rnd(numties-1)+1
+*.numties 1 sub rnd 1 add dupbool dup *.readtie != and .readtie store dropbool
+'            tienum = readtie
+*.readtie dupbool dup *.tienum != and .tienum store dropbool
+'            deltie = readtie
+*.readtie dupbool dup *.deltie != and .deltie store dropbool
+'        tieloc = &shootval
+dropbool dropbool dropbool
+.shootval dupbool dup *.tieloc != and .tieloc store dropbool
+'        tieval = 31999
+31999 dupbool dup *.tieval != and .tieval store dropbool
+'    elif ((robage < 50) and (launch>0)):
+dupbool not dupbool *.robage 50 < *.launch 0 > and and
+'        if (tiepres!=0):
+dupbool dupbool *.tiepres 0 != and
+'            deltie = tiepres
+*.tiepres dupbool dup *.deltie != and .deltie store dropbool
+'            setaim = rnd(1260)
+1260 rnd dupbool dup *.setaim != and .setaim store dropbool
+'        (ninjaUp-1000) = 500
+dropbool dropbool
+500 dupbool dup *.ninjaUp 1000 sub != and .ninjaUp 1000 sub store dropbool
+'    elif ((launch>0) and (abs(reproducedLastCycle-timer)>2)):
+not and dupbool *.launch 0 > *.reproducedLastCycle *.timer sub abs 2 > and and
+'        launch = 0
+0 dupbool dup *.launch != and .launch store dropbool
+'    if (multi!=0):
+dropbool dropbool dropbool *.multi 0 !=
+'        fixlen = 900
+900 dupbool dup *.fixlen != and .fixlen store dropbool
+'        fixang = 157*((abs(timer)+generation) andbits 7)
+157 *.timer abs *.generation add 7 & mult dupbool dup *.fixang != and .fixang store dropbool
+'    if ((nrg>25000) and (numties>0) and (abs(reproducedLastCycle-timer)>2) and (rnd(30)>=totalmyspecies) and (rnd(100)==0)) :
+dropbool *.nrg 25000 > *.numties 0 > and *.reproducedLastCycle *.timer sub abs 2 > and 30 rnd *.totalmyspecies >= and 100 rnd 0 = and
+'        reproducedLastCycle = timer
+*.timer dupbool dup *.reproducedLastCycle != and .reproducedLastCycle store dropbool
+'        repro = 50
+50 dupbool dup *.repro != and .repro store dropbool
+'        launch = 1
+1 dupbool dup *.launch != and .launch store dropbool
+'    #disable-storecheck
+'    if (body>200):
+dropbool *.body 200 >
+'        fdbody = body-100
+*.body 100 sub .fdbody store
+'    #enable-storecheck
+'    if (nrg>=28000):
+dropbool *.nrg 28000 >=
+'        #disable-storecheck
+'        (ninjaShoot - 1000) = -2
+-2 .ninjaShoot 1000 sub store
+'        (ninjaShootval - 1000) = nrg-1000
+*.nrg 1000 sub .ninjaShootval 1000 sub store
+'        (ninjaAimshoot - 1000) = rnd(1260)
+1260 rnd .ninjaAimshoot 1000 sub store
+'        #enable-storecheck
+'    if ((robage>1) and (((genes!=5) or (thisgene!=1)) or (vtimer!=0) or (fertilized!=0))):
+dropbool *.robage 1 > *.genes 5 != *.thisgene 1 != or *.vtimer 0 != or *.fertilized 0 != or and
+'        strvenom = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dupbool dup *.strvenom != and .strvenom store dropbool
+'        strpoison = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dupbool dup *.strpoison != and .strpoison store dropbool
+'        mkshell = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dupbool dup *.mkshell != and .mkshell store dropbool
+'        mkslime = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dupbool dup *.mkslime != and .mkslime store dropbool
+'        repro = 0
+0 dupbool dup *.repro != and .repro store dropbool
+'        mrepro = 0
+0 dupbool dup *.mrepro != and .mrepro store dropbool
+'        sexrepro = 0
+0 dupbool dup *.sexrepro != and .sexrepro store dropbool
+'if ((robage>1) and (((genes!=5) or (thisgene!=2)) or (vtimer!=0) or (fertilized!=0))):
+dropbool
+stop
+
+cond
+*.robage 1 > *.genes 5 != *.thisgene 2 != or *.vtimer 0 != or *.fertilized 0 != or and
+start
+'    strvenom = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strvenom != .strvenom store
+'    strpoison = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strpoison != .strpoison store
+'    mkshell = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkshell != .mkshell store
+'    mkslime = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkslime != .mkslime store
+'    repro = 0
+0 dup *.repro != .repro store
+'    mrepro = 0
+0 dup *.mrepro != .mrepro store
+'    sexrepro = 0
+0 dup *.sexrepro != .sexrepro store
+'if ((robage>1) and (((genes!=5) or (thisgene!=3)) or (vtimer!=0) or (fertilized!=0))):
+stop
+
+cond
+*.robage 1 > *.genes 5 != *.thisgene 3 != or *.vtimer 0 != or *.fertilized 0 != or and
+start
+'    strvenom = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strvenom != .strvenom store
+'    strpoison = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strpoison != .strpoison store
+'    mkshell = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkshell != .mkshell store
+'    mkslime = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkslime != .mkslime store
+'    repro = 0
+0 dup *.repro != .repro store
+'    mrepro = 0
+0 dup *.mrepro != .mrepro store
+'    sexrepro = 0
+0 dup *.sexrepro != .sexrepro store
+'if ((robage>1) and (((genes!=5) or (thisgene!=4)) or (vtimer!=0) or (fertilized!=0))):
+stop
+
+cond
+*.robage 1 > *.genes 5 != *.thisgene 4 != or *.vtimer 0 != or *.fertilized 0 != or and
+start
+'    strvenom = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strvenom != .strvenom store
+'    strpoison = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strpoison != .strpoison store
+'    mkshell = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkshell != .mkshell store
+'    mkslime = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkslime != .mkslime store
+'    repro = 0
+0 dup *.repro != .repro store
+'    mrepro = 0
+0 dup *.mrepro != .mrepro store
+'    sexrepro = 0
+0 dup *.sexrepro != .sexrepro store
+'if ((robage>1) and (((genes!=5) or (thisgene!=5)) or (vtimer!=0) or (fertilized!=0))):
+stop
+
+cond
+*.robage 1 > *.genes 5 != *.thisgene 5 != or *.vtimer 0 != or *.fertilized 0 != or and
+start
+'    strvenom = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strvenom != .strvenom store
+'    strpoison = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.strpoison != .strpoison store
+'    mkshell = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkshell != .mkshell store
+'    mkslime = 30000*(((abs(timer) andbits 1)+dup)-1)
+30000 *.timer abs 1 & dup add 1 sub mult dup *.mkslime != .mkslime store
+'    repro = 0
+0 dup *.repro != .repro store
+'    mrepro = 0
+0 dup *.mrepro != .mrepro store
+'    sexrepro = 0
+0 dup *.sexrepro != .sexrepro store
+stop

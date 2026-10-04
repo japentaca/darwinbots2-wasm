@@ -1,0 +1,65 @@
+'#generation: 134
+'#mutations: 37
+
+ cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+ start
+ *.refveldx .dx store
+ 30 add .up store
+
+''''''''''''''''''''''''  Gene:  1 Ends at position  15  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  16  '''''''''''''''''''''''
+ cond
+ *.eye5 *.shell 0 dropbool
+ *.multi >
+ 20000 >
+ 
+ start
+ *.refveldx 4 1 add *.eye1width add 1 add *.eye1width add *.eye5 50 >
+ *.refeye *.myeye *.shup
+''''''''''''''''''''''''  Gene:  2 Ends at position  43  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  44  '''''''''''''''''''''''
+ start
+ -1 .shoot store
+ *.refvelup
+''''''''''''''''''''''''  Gene:  3 Ends at position  48  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  49  '''''''''''''''''''''''
+ cond
+ *.eye5 50 *.refeye *.myeye =
+ *.nrg start
+ -8 7 1 *.veldn .up store
+ *.trefage stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  64  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  65  '''''''''''''''''''''''
+ cond
+ *.eye5 *.vshoot =
+ *.refeye *.myeye =
+ or
+ rndstore
+ *.refveldn *.pain start
+ 314 .aimright store
+ *.refeye >
+ *.refypos clear *.eye4width rnd
+''''''''''''''''''''''''  Gene:  5 Ends at position  85  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  86  '''''''''''''''''''''''
+ start
+ 37 .sexrepro store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  90  '''''''''''''''''''''''
+ 50 .sexrepro store
+ stop
+
+'normal repro gene:
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+
+'#hash: yYuoy&oUNFo8'%'\!%Gv
+'#tag:Day2.txt

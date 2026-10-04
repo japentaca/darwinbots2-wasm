@@ -1,0 +1,86 @@
+'Animal_Minimalis
+'By: Nums
+'Good for mutation sims and for
+'newbies to see how a basic bot works.
+'Contains everything necessary for it
+'to survive and reproduce.
+def g1num 71
+def g2num 72
+def g3num 73
+def g4num 74
+def g5num 75
+
+' Gene 1 Food Finder
+cond
+start
+ *.eye5 0 >
+ *.refeye *.myeye != and
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+ true
+ *.thisgene .g1num store 'Always Store the gene # for later
+stop
+
+' Gene 2 Eat Food
+cond
+start
+ *.eye5 50 >
+ *.refeye *.myeye != and
+ -1 .shoot store
+ *.refvelup .up store
+ true
+ *.thisgene .g2num store 'Always Store the gene # for later
+stop
+
+' Gene 3 Avoiding Family
+cond
+start
+ *.eye5 0 =
+ *.refeye *.myeye = or
+ 314 rnd .aimdx store
+ true
+ *.thisgene .g3num store 'Always Store the gene # for later
+stop
+
+' Gene 4 Reproduce
+cond
+start
+ *.nrg 20000 >
+ 10 .repro store
+ true
+ *.thisgene .g4num store 'Always Store the gene # for later
+stop
+
+' Gene 5 AntiVirus
+cond
+start
+'Always Store the gene # for later
+*.thisgene .g5num store 
+'Make Sure My Gene #s get A chance to record (if not here good genes get delted
+ *.robage 1 != 
+'Check If first gene is still first
+   *.g1num 1 !=
+'If Not, get rid of genes above it
+    *.g1num 1 sub .delgene store clearbool
+'Check the distance between gene 1 and 2 
+   *.g2num *.g1num sub 1 != 
+'Delete the Genes below 2 if distance is > than 1   
+    *.g2num 1 sub .delgene store clearbool
+'Check the distance between gene 2 and 3 
+   *.g3num *.g2num sub 1 !=
+'Delete the Genes below 3 if distance is > than 1   
+    *.g3num 1 sub .delgene store clearbool
+'Check the distance between gene 3 and 4     
+   *.g4num *.g3num sub 1 !=
+'Delete the Genes below 4 if distance is > than 1   
+    *.g4num 1 sub .delgene store clearbool
+'Check the distance between gene 4 and 5 
+   *.g5num *.g4num sub 1 != 
+'Delete the Genes below 5 if distance is > than 1     
+    *.g5num 1 sub .delgene store clearbool
+'Check if gene 5 is last 
+   *.genes *.g5num != 
+'Delete the Genes above 5 if not 
+    *.g5num 1 add .delgene store clearbool
+stop
+end

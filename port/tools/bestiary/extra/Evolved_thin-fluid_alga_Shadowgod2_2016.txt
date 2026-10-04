@@ -1,0 +1,44 @@
+cond
+ *971 0 =
+ *.nrg 100 >
+ *.tieang2 *.mkvirus =
+ start
+ 10 .mkchlr store
+ stop
+''''''''''''''''''''''''  Gene:  1 Ends at position  15  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  16  '''''''''''''''''''''''
+ cond
+ *.nrg 20000 >
+ *.refaim 50 .repro dec
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  24  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  25  '''''''''''''''''''''''
+ cond
+ *.robage 100 <
+ store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  30  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  31  '''''''''''''''''''''''
+ cond
+ *.pain 10 >
+ *.trefsx *.tin1 *.in1 start
+ 50 971 store
+ 10 .repro store
+ 314 rnd .aimleft store
+ stop
+''''''''''''''''''''''''  Gene:  4 Ends at position  49  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  50  '''''''''''''''''''''''
+ cond
+ *971 0 >
+ start
+ *.body store
+ *.eye5dir *.eye5 .fdbody store
+ *.eye6 .dn store
+ 971 dec
+ *.chlr .rmchlr store
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  69  '''''''''''''''''''''''

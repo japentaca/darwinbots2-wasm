@@ -1,0 +1,84 @@
+cond
+*.totalbots 50 <
+*.robage 2 =
+start
+7 .out1 store
+stop
+
+cond
+*.totalbots 100 >
+*.robage 2 =
+start
+1 .out1 store
+stop
+
+
+' Find food
+cond
+ *.eye5 0 >
+ *.eye5 50 <
+ *.out1 7 !=
+start
+ *.refveldx .dx store
+ 5 .up store
+stop
+
+' Eat
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+-1 .shoot store
+
+stop
+
+'  Feed
+cond
+ *.eye5 50 >
+ *.refeye *.myeye =
+ *.in1 7 =
+ *.out1 7 !=
+ *.nrg 100 >
+start
+-2 .shoot store
+
+stop
+
+' Looking at queen but no food left -> turn away
+cond
+ *.eye5 50 >
+ *.refeye *.myeye =
+ *.in1 7 =
+ *.out1 7 !=
+ *.nrg 101 <
+start
+400 .aimdx store
+
+stop
+
+
+' Reproduce
+cond
+ *.nrg 2000 >
+ *.out1 7 =
+ *.totalbots 100 >
+start
+ 10 .repro store
+stop
+
+' Turn Turn Turn
+cond
+ *.eye5 0 =
+start
+ 100 .aimdx store
+stop
+
+' Turn Turn Turn
+cond
+ *.out1 7 =
+ *.robage 10 mod 0 =
+start
+ 100 .aimdx store
+stop
+
+end

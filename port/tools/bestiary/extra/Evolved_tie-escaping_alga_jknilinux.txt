@@ -1,0 +1,167 @@
+- 0 add 0 0 0 0 0 0 0 8 0 - 0 0 0 0 0 0 0 0 and
+ 0 0 0 0 0 0
+''''''''''''''''''''''''  Gene:  1 Begins at position  29  '''''''''''''''''''''''
+ cond
+ *.robage *971 !~=
+ 1 0 971 store
+ 1000 rnd 975 store
+ 1 .deltie store
+ =
+ 2 *.robage
+''''''''''''''''''''''''  Gene:  1 Ends at position  46  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  2 Begins at position  47  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  2 Ends at position  48  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  49  '''''''''''''''''''''''
+ start
+ 971 div 4 *971 dec
+ sub .xpos store
+ *972 102 store
+ stop
+''''''''''''''''''''''''  Gene:  3 Ends at position  61  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  62  '''''''''''''''''''''''
+ cond
+ *.robage 3 =
+ start
+ 1000 rnd 972 store
+ *971 1 swap 107 store
+ *.robage
+''''''''''''''''''''''''  Gene:  4 Ends at position  76  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  77  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  5 Ends at position  78  '''''''''''''''''''''''
+ 3 =
+ *971 5 =
+ *.tin1 *102 !=
+ *971 21 sub *.tin2 !=
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  92  '''''''''''''''''''''''
+ start
+ 1 .deltie store
+ stop
+''''''''''''''''''''''''  Gene:  6 Ends at position  96  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  97  '''''''''''''''''''''''
+ cond
+ *.robage 50 >
+ *.refage 50 >
+ *.multi 0 =
+ *.in1 *106 =
+ *.in2 0 =
+ *.eye5 50 >
+ *.in3 *975 =
+ *.in4 *102 =
+ start
+ 1 .tie store
+ stop
+''''''''''''''''''''''''  Gene:  7 Ends at position  126  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  127  '''''''''''''''''''''''
+ cond
+ *.numties 0 =
+ *971 5 !=
+ start
+ 0 .fixpos store
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  137  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  9 Begins at position  138  '''''''''''''''''''''''
+ start
+ *971 .out1 store
+ *975 div store
+ *993 .out4 store
+ *972 .tout1 store
+ *971 .tout2 store
+ stop
+''''''''''''''''''''''''  Gene:  9 Ends at position  154  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  155  '''''''''''''''''''''''
+ cond
+ *.numties 0 =
+ start
+ 0 104 store
+ 0 0 *.multi *0
+''''''''''''''''''''''''  Gene:  10 Ends at position  166  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  167  '''''''''''''''''''''''
+ cond
+ stop
+''''''''''''''''''''''''  Gene:  11 Ends at position  168  '''''''''''''''''''''''
+ store
+ 1 =
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  172  '''''''''''''''''''''''
+ start
+ *.tiepres .tienum inc
+ sub 10 mult *.mkshell 20 *971 .sharenrg store
+ *971 200 mult .fixlen store
+ 100 .stifftie store
+ 314 .setaim store
+ 100 .up store
+ stop
+''''''''''''''''''''''''  Gene:  12 Ends at position  198  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  199  '''''''''''''''''''''''
+ cond
+ *.multi 1 =
+ *.robage 0 inc
+ 1 104 start
+ store
+ stop
+''''''''''''''''''''''''  Gene:  13 Ends at position  210  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  211  '''''''''''''''''''''''
+ cond
+ *.multi 1 =
+ *103 287 rnd *.robage <=
+ start
+ 1 .fixpos store
+ stop
+''''''''''''''''''''''''  Gene:  14 Ends at position  224  '''''''''''''''''''''''
+ add *.fixed =
+ *105 3 <
+ *971 1000 mult *.nrg <
+ *971 100 mult *.body <
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  241  '''''''''''''''''''''''
+ start
+ *.xpos 973 store
+ dup *.ypos 974 store
+ 314 .aimleft store
+ *971 10 mult *971 2 mult sub .repro store
+ 105 inc
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  263  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  264  '''''''''''''''''''''''
+ cond
+ *.multi 0 =
+ *.numties =
+ *971 5 !=
+ start
+ & *974 angle .setaim store
+ .up store
+ stop
+''''''''''''''''''''''''  Gene:  16 Ends at position  281  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  282  '''''''''''''''''''''''
+ cond
+ << *971 100 mult *.body <
+ start
+ 100 store
+ stop
+''''''''''''''''''''''''  Gene:  17 Ends at position  292  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  293  '''''''''''''''''''''''
+ cond
+ 1000 dup *.nrg <
+ *971 100 mult *.body >
+ start
+ 100 .strbody store
+ stop
+''''''''''''''''''''''''  Gene:  18 Ends at position  307  '''''''''''''''''''''''

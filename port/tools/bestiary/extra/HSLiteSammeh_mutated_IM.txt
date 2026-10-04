@@ -1,0 +1,60 @@
+~=
+ clearbool
+ store
+
+ start
+
+
+ cond
+ *.refeye and
+ >
+ rnd *.eye5 floor !=
+ mod sqr start
+ *36 inc
+ store
+ store
+ 444 --
+
+ cond
+ *.eye5 50 >
+ *.refeye *.myeye <
+ true
+ start
+ *644 inc
+ 1 .tie inc
+ .up inc
+ store
+ -1000 .tieval dec
+
+
+ start
+ ~ *.eye5
+
+ cond
+ =
+ *.refeye =
+ or
+ start
+ sgn 205 rnd .aimright store
+ 1 *-653 .tieloc dec
+ -1000 .tieval store
+
+
+ start
+ *.shell 5000 * or
+ store
+ store
+ stop
+
+ cond
+ *.nrg 5483 -- >
+ start
+ 35 .repro store
+ stop
+
+ else
+ %=
+ *-222 <
+ stop
+
+ 292 21

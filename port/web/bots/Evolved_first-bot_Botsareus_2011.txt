@@ -1,0 +1,576 @@
+'1583
+ .repro store
+ -6 7
+''''''''''''''''''''''''  Gene:  1 Begins at position  5  '''''''''''''''''''''''
+ start
+ 329 ceil 1 sub rnd
+''''''''''''''''''''''''  Gene:  1 Ends at position  10  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  11  '''''''''''''''''''''''
+ else
+ ceil
+''''''''''''''''''''''''  Gene:  2 Ends at position  12  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  3 Begins at position  13  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  3 Ends at position  17  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  4 Begins at position  18  '''''''''''''''''''''''
+ cond
+ inc
+ ++ else
+ .repro store
+ *.aim 256 sub 3 ceil 1
+''''''''''''''''''''''''  Gene:  4 Ends at position  29  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  5 Begins at position  30  '''''''''''''''''''''''
+ cond
+ start
+ *.body 10 256 *.aim store
+
+''''''''''''''''''''''''  Gene:  5 Ends at position  36  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  6 Begins at position  37  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  6 Ends at position  41  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  7 Begins at position  42  '''''''''''''''''''''''
+ cond
+ ~ sub 3 ceil 1 pow store
+ 5 sub 1 300 mult 50 1 else
+
+''''''''''''''''''''''''  Gene:  7 Ends at position  57  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  8 Begins at position  58  '''''''''''''''''''''''
+ cond
+ 300 mult 50 div 1500 *.body start
+
+''''''''''''''''''''''''  Gene:  8 Ends at position  65  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  9 Begins at position  66  '''''''''''''''''''''''
+ cond
+ 1 ceil 3 sub 256 *.aim store
+ 300 else
+ ++
+''''''''''''''''''''''''  Gene:  9 Ends at position  76  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  10 Begins at position  77  '''''''''''''''''''''''
+ cond
+ 8 .sx store
+ *.aim 256 .mass inc
+ add | rnd 19 angle mult ^ drop *1048 drop - -139 327 inc
+ else
+ -64 * pyth -620 add inc
+ *145 inc
+ store
+
+''''''''''''''''''''''''  Gene:  10 Ends at position  108  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  11 Begins at position  109  '''''''''''''''''''''''
+ cond
+ *287 abs dec
+ pow and
+ dist pyth store
+ -596 sqr rnd 466 *1130 .up store
+ ceil
+''''''''''''''''''''''''  Gene:  11 Ends at position  125  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  12 Begins at position  126  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  12 Ends at position  130  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  13 Begins at position  131  '''''''''''''''''''''''
+ cond
+ inc
+ ++ else
+ .repro store
+ *.aim 256 sub 3 ceil 1
+''''''''''''''''''''''''  Gene:  13 Ends at position  142  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  14 Begins at position  143  '''''''''''''''''''''''
+ cond
+ start
+ *.body 10 256 *.aim store
+
+''''''''''''''''''''''''  Gene:  14 Ends at position  149  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  15 Begins at position  150  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  15 Ends at position  154  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  155  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  16 Ends at position  155  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  17 Begins at position  156  '''''''''''''''''''''''
+ cond
+ inc
+ *.aim store
+ 1500 div 50 mult .repro store
+ -6 7 start
+ 329 ceil 1 sub <
+ <
+ and
+ floor
+''''''''''''''''''''''''  Gene:  17 Ends at position  176  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  18 Begins at position  177  '''''''''''''''''''''''
+ cond
+ swapbool
+ <
+ start
+
+''''''''''''''''''''''''  Gene:  18 Ends at position  180  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  19 Begins at position  181  '''''''''''''''''''''''
+ cond
+ 1 ceil 3 sub 256 *.aim store
+ 300 else
+ ++ inc
+
+''''''''''''''''''''''''  Gene:  19 Ends at position  192  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  20 Begins at position  193  '''''''''''''''''''''''
+ cond
+ ceil 3 *.dn ~
+''''''''''''''''''''''''  Gene:  20 Ends at position  197  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  21 Begins at position  198  '''''''''''''''''''''''
+ cond
+ ceil else
+ rnd pyth
+''''''''''''''''''''''''  Gene:  21 Ends at position  202  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  22 Begins at position  203  '''''''''''''''''''''''
+ else
+ and
+ dec
+ store
+ 582 *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  22 Ends at position  210  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  23 Begins at position  211  '''''''''''''''''''''''
+ cond
+ ~ start
+ .up store
+ rnd 19 .up store
+ rnd =
+
+''''''''''''''''''''''''  Gene:  23 Ends at position  221  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  24 Begins at position  222  '''''''''''''''''''''''
+ cond
+ inc
+ *.aim store
+ 1500 div 50 mult .repro store
+ -6 7 start
+ 329 ceil 1 sub rnd
+''''''''''''''''''''''''  Gene:  24 Ends at position  239  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  25 Begins at position  240  '''''''''''''''''''''''
+ else
+ ceil
+''''''''''''''''''''''''  Gene:  25 Ends at position  241  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  26 Begins at position  242  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  26 Ends at position  246  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  27 Begins at position  247  '''''''''''''''''''''''
+ cond
+ inc
+ ++ else
+ .repro store
+ *.aim 256 sub 3 ceil 1
+''''''''''''''''''''''''  Gene:  27 Ends at position  258  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  28 Begins at position  259  '''''''''''''''''''''''
+ cond
+ start
+ *.body 10 256 *.aim store
+
+''''''''''''''''''''''''  Gene:  28 Ends at position  265  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  29 Begins at position  266  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  29 Ends at position  270  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  30 Begins at position  271  '''''''''''''''''''''''
+ cond
+ ~ sub 3 ceil 1 ++ start
+ 329 ceil 1 10 256 *.aim sub -17 sqr .aim dec
+ sqr .aim dec
+ *53 244 rnd *.dx 3 ceil 1 sub .aimright store
+ dec
+
+''''''''''''''''''''''''  Gene:  30 Ends at position  303  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  31 Begins at position  304  '''''''''''''''''''''''
+ else
+ 1 50 mult 300 1 sub .aimright store
+ pow
+''''''''''''''''''''''''  Gene:  31 Ends at position  313  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  32 Begins at position  314  '''''''''''''''''''''''
+ cond
+ start
+ *.body 1500 div
+''''''''''''''''''''''''  Gene:  32 Ends at position  318  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  33 Begins at position  319  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil div 50 mult 300
+''''''''''''''''''''''''  Gene:  33 Ends at position  327  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  34 Begins at position  328  '''''''''''''''''''''''
+ cond
+ mod .up store
+ rnd 19 5
+''''''''''''''''''''''''  Gene:  34 Ends at position  334  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  35 Begins at position  335  '''''''''''''''''''''''
+ cond
+ start
+ store
+
+''''''''''''''''''''''''  Gene:  35 Ends at position  337  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  36 Begins at position  338  '''''''''''''''''''''''
+ start
+ pow
+''''''''''''''''''''''''  Gene:  36 Ends at position  339  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  37 Begins at position  340  '''''''''''''''''''''''
+ cond
+ start
+ *.body 1500 div 50 mult 300
+''''''''''''''''''''''''  Gene:  37 Ends at position  347  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  38 Begins at position  348  '''''''''''''''''''''''
+ cond
+ inc
+ 10 256 *.aim store
+ 3 8
+''''''''''''''''''''''''  Gene:  38 Ends at position  355  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  39 Begins at position  356  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  39 Ends at position  356  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  40 Begins at position  357  '''''''''''''''''''''''
+ cond
+ sub stop
+''''''''''''''''''''''''  Gene:  40 Ends at position  359  '''''''''''''''''''''''
+ store
+
+''''''''''''''''''''''''  Gene:  41 Begins at position  361  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  41 Ends at position  365  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  42 Begins at position  366  '''''''''''''''''''''''
+ cond
+ ~ dec
+ else
+ =
+ inc
+ dec
+ abs or
+ pyth false
+ ~=
+
+''''''''''''''''''''''''  Gene:  42 Ends at position  377  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  43 Begins at position  378  '''''''''''''''''''''''
+ start
+
+''''''''''''''''''''''''  Gene:  43 Ends at position  378  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  44 Begins at position  379  '''''''''''''''''''''''
+ cond
+ pow store
+ 5 sub div ceil 3 *.dn dropbool
+ pow dupbool
+ ~=
+ pyth *1145 | store
+ pow <=
+ inc
+ dec
+ stop
+''''''''''''''''''''''''  Gene:  44 Ends at position  400  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  45 Begins at position  401  '''''''''''''''''''''''
+ start
+ pow
+''''''''''''''''''''''''  Gene:  45 Ends at position  402  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  46 Begins at position  403  '''''''''''''''''''''''
+ cond
+ start
+ *.body 1500 div 50 mult 300
+''''''''''''''''''''''''  Gene:  46 Ends at position  410  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  47 Begins at position  411  '''''''''''''''''''''''
+ cond
+ inc
+ 10 256 *.aim store
+ 3 8
+''''''''''''''''''''''''  Gene:  47 Ends at position  418  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  48 Begins at position  419  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  48 Ends at position  419  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  49 Begins at position  420  '''''''''''''''''''''''
+ cond
+ sub stop
+''''''''''''''''''''''''  Gene:  49 Ends at position  422  '''''''''''''''''''''''
+ store
+
+''''''''''''''''''''''''  Gene:  50 Begins at position  424  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  50 Ends at position  428  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  51 Begins at position  429  '''''''''''''''''''''''
+ cond
+ inc
+ ++ else
+ .repro store
+ *.aim 256 sub 3 ceil 1
+''''''''''''''''''''''''  Gene:  51 Ends at position  440  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  52 Begins at position  441  '''''''''''''''''''''''
+ cond
+ start
+ *.body 10 256 1 1500 div
+''''''''''''''''''''''''  Gene:  52 Ends at position  448  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  53 Begins at position  449  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil div 50 mult 300
+''''''''''''''''''''''''  Gene:  53 Ends at position  457  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  54 Begins at position  458  '''''''''''''''''''''''
+ cond
+ mod .robage dec
+ clear store
+ 228 sgn and
+ sub .aimright store
+ else
+ rnd
+''''''''''''''''''''''''  Gene:  54 Ends at position  471  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  55 Begins at position  472  '''''''''''''''''''''''
+ else
+ -22 inc
+ 1 sub pow store
+ 5 sub 1 300 mult 50 1
+''''''''''''''''''''''''  Gene:  55 Ends at position  485  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  56 Begins at position  486  '''''''''''''''''''''''
+ else
+ dec
+ ~
+''''''''''''''''''''''''  Gene:  56 Ends at position  488  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  57 Begins at position  489  '''''''''''''''''''''''
+ cond
+ ceil 3 *.dn ~
+''''''''''''''''''''''''  Gene:  57 Ends at position  493  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  58 Begins at position  494  '''''''''''''''''''''''
+ cond
+ store
+ stop
+''''''''''''''''''''''''  Gene:  58 Ends at position  496  '''''''''''''''''''''''
+ sub
+''''''''''''''''''''''''  Gene:  59 Begins at position  498  '''''''''''''''''''''''
+ cond
+ =
+ 3
+''''''''''''''''''''''''  Gene:  59 Ends at position  500  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  60 Begins at position  501  '''''''''''''''''''''''
+ cond
+ 300 mult 50 div 1500 *.body start
+
+''''''''''''''''''''''''  Gene:  60 Ends at position  508  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  61 Begins at position  509  '''''''''''''''''''''''
+ cond
+ 1 ceil 3 sub 256 *.aim store
+ 300 else
+ ++
+''''''''''''''''''''''''  Gene:  61 Ends at position  519  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  62 Begins at position  520  '''''''''''''''''''''''
+ cond
+ 8 .sx store
+ *.aim 3 ceil div 50 mult 300
+''''''''''''''''''''''''  Gene:  62 Ends at position  530  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  63 Begins at position  531  '''''''''''''''''''''''
+ cond
+ mod .up store
+ rnd *.aim 256 sub 1 sub .aimright store
+ else
+ rnd
+''''''''''''''''''''''''  Gene:  63 Ends at position  544  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  64 Begins at position  545  '''''''''''''''''''''''
+ else
+ -22 inc
+ 1 sub pow store
+ 5 sub 1 300 mult 50 1
+''''''''''''''''''''''''  Gene:  64 Ends at position  558  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  65 Begins at position  559  '''''''''''''''''''''''
+ else
+ dec
+ ~ 256 .repro inc
+ ++
+''''''''''''''''''''''''  Gene:  65 Ends at position  565  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  66 Begins at position  566  '''''''''''''''''''''''
+ else
+ .repro store
+ *.aim 256 sub 3 ceil 1
+''''''''''''''''''''''''  Gene:  66 Ends at position  574  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  67 Begins at position  575  '''''''''''''''''''''''
+ cond
+ start
+ <
+ swapbool
+
+''''''''''''''''''''''''  Gene:  67 Ends at position  578  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  68 Begins at position  579  '''''''''''''''''''''''
+ cond
+ floor and
+ <
+ <
+ sub 1 ceil 329 start
+ 7 .aimleft store
+ 300 mult 50 div 1500 store
+ *.aim inc
+
+''''''''''''''''''''''''  Gene:  68 Ends at position  599  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  69 Begins at position  600  '''''''''''''''''''''''
+ cond
+
+''''''''''''''''''''''''  Gene:  69 Ends at position  600  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  70 Begins at position  601  '''''''''''''''''''''''
+ cond
+ ceil 3 *.dn ~
+''''''''''''''''''''''''  Gene:  70 Ends at position  605  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  71 Begins at position  606  '''''''''''''''''''''''
+ cond
+ store
+ *.aim 256 10 *.body start
+
+''''''''''''''''''''''''  Gene:  71 Ends at position  612  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  72 Begins at position  613  '''''''''''''''''''''''
+ cond
+ 1 ceil 3 sub 256 *.aim store
+ 300 else
+ ++ inc
+
+''''''''''''''''''''''''  Gene:  72 Ends at position  624  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  73 Begins at position  625  '''''''''''''''''''''''
+ cond
+ ceil 3 *.dn ~
+''''''''''''''''''''''''  Gene:  73 Ends at position  629  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  74 Begins at position  630  '''''''''''''''''''''''
+ cond
+ ceil div 50 mult 300
+''''''''''''''''''''''''  Gene:  74 Ends at position  635  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  75 Begins at position  636  '''''''''''''''''''''''
+ cond
+ 3 =
+
+''''''''''''''''''''''''  Gene:  75 Ends at position  638  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  76 Begins at position  639  '''''''''''''''''''''''
+ cond
+ sub stop
+''''''''''''''''''''''''  Gene:  76 Ends at position  641  '''''''''''''''''''''''
+ store
+
+''''''''''''''''''''''''  Gene:  77 Begins at position  643  '''''''''''''''''''''''
+ cond
+ ~ *.dn 3 ceil
+''''''''''''''''''''''''  Gene:  77 Ends at position  647  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  78 Begins at position  648  '''''''''''''''''''''''
+ cond
+ ~ dec
+ else
+ 1 50 mult 300 1 sub .aimright store
+ pow sub .up inc
+ -22
+''''''''''''''''''''''''  Gene:  78 Ends at position  664  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  79 Begins at position  665  '''''''''''''''''''''''
+ else
+ rnd
+''''''''''''''''''''''''  Gene:  79 Ends at position  666  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  80 Begins at position  667  '''''''''''''''''''''''
+ else
+ store
+ 5 sub 1 sub
+''''''''''''''''''''''''  Gene:  80 Ends at position  672  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  81 Begins at position  673  '''''''''''''''''''''''
+ cond
+ ceil 3 *.dn ~ *.dn ~
+''''''''''''''''''''''''  Gene:  81 Ends at position  679  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  82 Begins at position  680  '''''''''''''''''''''''
+ cond
+ div 1500 *.body stop
+''''''''''''''''''''''''  Gene:  82 Ends at position  684  '''''''''''''''''''''''
+ dec
+ inc
+ <=
+ pow store
+ | *1145 pyth ~=
+ dupbool
+ pow dropbool
+ *.dn 3 ceil div sub .aimright store
+ pow
+''''''''''''''''''''''''  Gene:  83 Begins at position  705  '''''''''''''''''''''''
+ cond
+ start
+ ~=
+ false
+ pyth or
+ abs dec
+ inc
+ =
+ 50 div ceil 3 *.dn ~
+''''''''''''''''''''''''  Gene:  83 Ends at position  720  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  84 Begins at position  721  '''''''''''''''''''''''
+ cond
+ div 1500 *.body start
+
+''''''''''''''''''''''''  Gene:  84 Ends at position  725  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  85 Begins at position  726  '''''''''''''''''''''''
+ cond
+ pow
+''''''''''''''''''''''''  Gene:  85 Ends at position  727  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  86 Begins at position  728  '''''''''''''''''''''''
+ cond
+ ceil -620 pyth * -64 else
+ inc
+ 327 -139 - drop *1048 drop ^ mult angle 19 rnd store
+ 1 mod
+''''''''''''''''''''''''  Gene:  86 Ends at position  749  '''''''''''''''''''''''

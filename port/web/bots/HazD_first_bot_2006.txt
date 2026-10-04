@@ -1,0 +1,68 @@
+def venomcounter 51
+
+cond
+ *.robage 0 =
+start
+ .shoot .ploc store
+ .mkshell .vloc store
+ -32000 .venval store
+stop
+
+cond
+*.eye5 0 >
+*.myeye *.refeye =
+start
+*.refveldx .dx store
+*.refvelup .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye =
+start
+-6 .shoot store
+stop
+
+
+cond
+*.waste 40 >
+start
+.backshot inc
+-4 .shoot store
+*.waste .shootval store
+stop
+
+cond
+ *.venomcounter 19 >
+start
+ 50 .shootval store
+ -3 .shoot store
+ 0 .venomcounter store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+
+cond
+ *.poison 500 <
+start
+ 50 .strpoison store
+stop
+
+cond
+ *.venom 500 <
+start
+ 50 .strvenom store
+stop
+
+cond
+ *.nrg 20000 >
+start
+ 10 .repro store
+stop
+end

@@ -1,0 +1,632 @@
+start
+ 16427 *.refveldx 16427 *.refveldx 4 overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ 832 -32 pyth dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  1 Ends at position  46  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  2 Begins at position  47  '''''''''''''''''''''''
+ start
+ 16427 *-526 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow 516 >
+ *.tieang 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  2 Ends at position  87  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  3 Begins at position  88  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos rnd .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 - 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *381 *.rdboy *.myties 832 -29 sqr
+''''''''''''''''''''''''  Gene:  3 Ends at position  129  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  4 Begins at position  130  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 17531 31505 dec
+ *.thisgene .mkvirus store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 >
+
+''''''''''''''''''''''''  Gene:  4 Ends at position  166  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  5 Begins at position  167  '''''''''''''''''''''''
+ start
+ 15425 4 *.refveldx 16427 addstore
+ >> .vshoot floorstore
+ *.refeye pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  5 Ends at position  198  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  6 Begins at position  199  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos ceil .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 >> *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  6 Ends at position  239  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  7 Begins at position  240  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos -124 addstore
+ >> .vshoot store
+ *.refeye *.tieang .out2 dec
+ *.thisgene .mkvirus store
+ .repro store
+ *911 9524 *.tin7 >
+
+''''''''''''''''''''''''  Gene:  7 Ends at position  266  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  8 Begins at position  267  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 9524 *.tin7 *.tin3 *-499 *.myties 832 -32 pyth sqr
+''''''''''''''''''''''''  Gene:  8 Ends at position  303  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  9 Begins at position  304  '''''''''''''''''''''''
+ start
+ 16427 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *381 *.rdboy *.myties 832 -29 sqr
+''''''''''''''''''''''''  Gene:  9 Ends at position  325  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  10 Begins at position  326  '''''''''''''''''''''''
+ start
+ divstore
+ overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> 338 11 dup store
+ *.refeye store
+
+''''''''''''''''''''''''  Gene:  10 Ends at position  341  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  11 Begins at position  342  '''''''''''''''''''''''
+ start
+ *273 & store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  11 Ends at position  357  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  12 Begins at position  358  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup clearbool
+ 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ *.in5 store
+ .repro store
+ *911 store
+ *572 *.nrg 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  12 Ends at position  398  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  13 Begins at position  399  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx 4 .shareshell store
+ .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 *.poison 832 -32 >
+
+''''''''''''''''''''''''  Gene:  13 Ends at position  426  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  14 Begins at position  427  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *918 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  14 Ends at position  461  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  15 Begins at position  462  '''''''''''''''''''''''
+ start
+ <
+ *.availability 516 30200 31505 .mkchlr store
+ stop
+''''''''''''''''''''''''  Gene:  15 Ends at position  470  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  16 Begins at position  471  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup clearbool
+ 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 store
+ *604 *.setboy 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  16 Ends at position  511  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  17 Begins at position  512  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx store
+ *911 store
+ .dx addstore
+ >> 338 9524 *.myties *.rdboy store
+ *.refeye *.in7 dup 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 store
+ *572 *.nrg 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  17 Ends at position  557  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  18 Begins at position  558  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos 4 *.thisgene .mkvirus store
+ addstore
+ >> .vshoot store
+ *.refeye store
+ dup *.tieang pow 11 >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  18 Ends at position  600  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  19 Begins at position  601  '''''''''''''''''''''''
+ start
+ 15425 16427 >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ store
+ 9524 *.tin7 pyth store
+ 15425 16427 *.myvenom .dx addstore
+ ~ 333 store
+ *.refeye *.thisgene ceilstore
+ store
+ floorstore
+ 30007 >
+ dup 11 pow *.tieang 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ stop
+''''''''''''''''''''''''  Gene:  19 Ends at position  658  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  20 Begins at position  659  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx 4 .out2 store
+ .vshoot store
+ *.refeye store
+ dup clearbool
+ 11 30200 516 >
+ *.tieang pow 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  20 Ends at position  696  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  21 Begins at position  697  '''''''''''''''''''''''
+ else
+ *.tout2 6000 >
+ inc
+ -637 16427 *.refveldx overbool
+ *.refkills 16427 *.ypos .dx addstore
+ >> dist store
+ *.refeye store
+ dup 11 pow *.tieang .out2 store
+ 31505 dec
+ *.thisgene .mkvirus store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 >
+
+''''''''''''''''''''''''  Gene:  21 Ends at position  735  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  22 Begins at position  736  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx pow 11 dup *.trefypos !=
+ 516 30200 31505 *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 9524 *.tin7 *.tin3 *.myties 832 -32 pyth sqr
+''''''''''''''''''''''''  Gene:  22 Ends at position  763  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  23 Begins at position  764  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx .dx addstore
+ >> .vshoot floorstore
+ *.refeye pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  23 Ends at position  795  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  24 Begins at position  796  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *129 .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 4709 30200 31505 dec
+ *.thisgene 335 800 true
+ store
+ .repro store
+ *911 9524 *381 *.rdboy *.myties 832 -29 sqr
+''''''''''''''''''''''''  Gene:  24 Ends at position  834  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  25 Begins at position  835  '''''''''''''''''''''''
+ start
+ *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 root
+''''''''''''''''''''''''  Gene:  25 Ends at position  872  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  26 Begins at position  873  '''''''''''''''''''''''
+ cond
+ *.chlr *.availability start
+ 837 *.refeye *.myties 15425 16427 *.refveldx .aim addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 31505 30200 516 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ 300 .dx addstore
+ >> .vshoot store
+ *.refeye store
+ store
+ *911 store
+ 6000 sub *.in4 *.in4 468 6000 >
+
+''''''''''''''''''''''''  Gene:  26 Ends at position  921  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  27 Begins at position  922  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  27 Ends at position  961  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  28 Begins at position  962  '''''''''''''''''''''''
+ start
+ 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *.thisgene .mkvirus store
+ *918 9524 *.tin7 *.rdboy *.myties 832 -32 pyth *.refveldx overbool
+ *.refkills
+''''''''''''''''''''''''  Gene:  28 Ends at position  1002  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  29 Begins at position  1003  '''''''''''''''''''''''
+ start
+ 50 .repro store
+ 15 .aimright store
+ stop
+''''''''''''''''''''''''  Gene:  29 Ends at position  1010  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  30 Begins at position  1011  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 - 516 30200 31505 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *381 *.rdboy *.myties 832 -29 sqr
+''''''''''''''''''''''''  Gene:  30 Ends at position  1054  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  31 Begins at position  1055  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 - 31505 dec
+ *.thisgene 335 800 true
+ store
+ .repro store
+ *911 9524 *381 *.rdboy *.myties 832 -29 sqr
+''''''''''''''''''''''''  Gene:  31 Ends at position  1094  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  32 Begins at position  1095  '''''''''''''''''''''''
+ start
+ -637 16427 15425 16427 *.ypos .dx addstore
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *.tin7 9524 *911 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  32 Ends at position  1128  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  33 Begins at position  1129  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 xor
+ 30200 31505 dec
+ *.thisgene .mkvirus rndstore
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  33 Ends at position  1169  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  34 Begins at position  1170  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refpoison 15425 16427 .dx addstore
+ >> .vshoot store
+ *.refeye *982 store
+ dup 11 pow *.tieang >
+ *.eyef *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  34 Ends at position  1205  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  35 Begins at position  1206  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup clearbool
+ 11 30200 516 >
+ *.tieang pow 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  35 Ends at position  1243  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  36 Begins at position  1244  '''''''''''''''''''''''
+ start
+ 15425 16427 >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ store
+ 9524 *.tin7 pyth store
+ 15425 16427 *.myvenom .dx addstore
+ ~ 333 store
+ *.refeye *.thisgene ceilstore
+ store
+ floorstore
+ 30007 >
+ dup 11 pow *.tieang 516 30200 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ stop
+''''''''''''''''''''''''  Gene:  36 Ends at position  1301  '''''''''''''''''''''''
+
+''''''''''''''''''''''''  Gene:  37 Begins at position  1302  '''''''''''''''''''''''
+ cond
+ *.chlr *.availability start
+ 837 *.refeye *.myties 15425 16427 *.refveldx & 17 addstore
+ >> .vshoot store
+ *.refeye pow *.tieang >
+ store
+ dup 11 pow *.tieang >
+ 31505 30200 516 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 store
+ 6000 sub *.in4 >
+ *.in4 468 6000 >
+
+''''''''''''''''''''''''  Gene:  37 Ends at position  1348  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  38 Begins at position  1349  '''''''''''''''''''''''
+ start
+ 16427 *.tin10 overbool
+ *.refkills .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  38 Ends at position  1385  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  39 Begins at position  1386  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  39 Ends at position  1423  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  40 Begins at position  1424  '''''''''''''''''''''''
+ start
+ 160 *.treffixed store
+ 834 *.refeye *.myties 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 ceilstore
+ *.trefvelyoursx .mkvirus store
+ .out1 store
+ .repro store
+ *911 store
+ *572 *.nrg 6000 >
+ *.in4 *.nrg 6000 >
+ 16427 *.refveldx .dx addstore
+ >> *.trefvelyourup store
+ *.trefsx store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 9524 *.tin7 *.tin3 *.myties 832 -32 pyth sqr
+''''''''''''''''''''''''  Gene:  40 Ends at position  1500  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  41 Begins at position  1501  '''''''''''''''''''''''
+ start
+ 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties 832 -32 pyth
+''''''''''''''''''''''''  Gene:  41 Ends at position  1540  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  42 Begins at position  1541  '''''''''''''''''''''''
+ start
+ -637 16427 16427 *.ypos 4 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 *.refkills 15425 16427 pow *.tieang >
+ 516 17531 31505 dec
+ *.thisgene .mkvirus store
+ .repro store
+ addstore
+ >> 340 *.out6 9524 *.tin7 *.rdboy *.myties -32 >
+
+''''''''''''''''''''''''  Gene:  42 Ends at position  1586  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  43 Begins at position  1587  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx *.nrg 6000 >
+ overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *.tin7 9524 *911 *.rdboy *.myties -32 pyth
+''''''''''''''''''''''''  Gene:  43 Ends at position  1629  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  44 Begins at position  1630  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 .tienum store
+ addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 pow *.tieang >
+ 516 30200 31505 dec
+ *.thisgene .mkvirus store
+ 800 true
+ store
+ .repro store
+ *911 *.tin7 -32 pyth
+''''''''''''''''''''''''  Gene:  44 Ends at position  1666  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  45 Begins at position  1667  '''''''''''''''''''''''
+ start
+ 834 *.refeye *.myties 15425 16427 *.refveldx .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup clearbool
+ 11 30200 516 >
+ *.tieang pow 31505 ceilstore
+ *.thisgene .mkvirus store
+ .out1 store
+ .repro store
+ *911 6000 >
+ *.in4 *.nrg 6000 >
+
+''''''''''''''''''''''''  Gene:  45 Ends at position  1704  '''''''''''''''''''''''
+''''''''''''''''''''''''  Gene:  46 Begins at position  1705  '''''''''''''''''''''''
+ start
+ -637 16427 *.refveldx overbool
+ *.refkills 15425 16427 *.ypos .dx addstore
+ >> .vshoot store
+ *.refeye store
+ dup 11 15425 16427 pow *.tieang >
+ 516 17531 31505 dec
+ *.thisgene .mkvirus store
+ .repro store
+ *911 9524 *.tin7 *.rdboy *.myties -32 >
+''''''''''''''''''''''''  Gene:  46 Ends at position  1743  '''''''''''''''''''''''

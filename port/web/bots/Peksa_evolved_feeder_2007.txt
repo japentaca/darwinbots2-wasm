@@ -1,0 +1,113 @@
+cond
+ *576 !=
+ !=
+ ~ *498 *.eye2dir 0 and
+ not
+ <
+ !=
+ -489 !=
+ | not
+ 0 *677 and
+ ~=
+ ~ .aimleft dec
+ and
+ .up dec
+ 0 and
+ & *.eyef store
+ *.tmemloc else
+ stop
+
+''''''''''''''''''''''''Gene  1: Last 'stop' at position  34''''''''''''''''''''''',
+
+ stop
+
+''''''''''''''''''''''''Gene  1: Last 'stop' at position  35''''''''''''''''''''''',
+
+ >> 1 -4 *555 <
+ not
+ -4 or
+ start
+ store
+ ~ 0 dec
+ stop
+
+''''''''''''''''''''''''Gene  1: Last 'stop' at position  49''''''''''''''''''''''',
+
+ angle *.tmemloc *.eye1 0 add dec
+ store
+ cond
+ *426 dist ceil *.eye3 0 mod !=
+ 0 add ~ inc
+ 6 not
+ and
+ 16 else
+ >=
+ 0 inc
+ *.trefaimsx div start
+ or
+ dec
+ *.dn 336 sub .aimright store
+ ^ <
+ else
+ pyth <
+ *.eye9 mult -129 start
+ *919 -31 !~=
+ dec
+ ~ *.eye9 *.eye1 start
+ stop
+
+''''''''''''''''''''''''Gene  2: Last 'stop' at position  104''''''''''''''''''''''',
+
+ *-388 *.eye8 add stop
+ *.eye2 ~ !=
+ ~=
+ pow %=
+ abs *-117 pow !~=
+ *.eye7 start
+ *.eye7 *.eye3 <
+ sub 
+
+'The main gene
+
+cond
+ or
+'The bot evolved with circling bots, hence eye4, not 5
+ *.eye4 !=
+ pow cond
+ 1 and
+ start
+ add 35 *.eye3 *.eye7 sub 453 sgn div .sx store
+ rnd 30 .up store
+ *.refveldx .dx store
+ start
+ *20 522 and
+ *754 ^ sub ^ << !%=
+ 1 start
+ .shoot dec
+ 37 
+
+'the second clearly meaningful gene
+
+cond
+ *.up dec
+ 7 *.eye5 47 >
+ *.refeye *.myeye !=
+ *50 ceil 0 =
+ add start
+ *.refvelup .up store
+ 10 .shootval inc
+ start
+ store
+ floor inc
+ *.nrg not
+ =
+ 114 *.aimright pyth and
+ floor *.body cond
+ store
+ <
+ 3284 start
+ store
+ xor
+ pow sub dup 41 300 >
+ store
+ else

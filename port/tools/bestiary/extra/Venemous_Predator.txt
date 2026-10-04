@@ -1,0 +1,109 @@
+'*********************
+'* Venemous Predator *
+'*                   *
+'*********************
+
+cond
+ *.robage 0 =
+start
+ 67 .memloc store
+ 101 67 store
+ 0 .fixpos store
+stop
+
+cond
+ *.venom 50 <
+start
+ 1 .strvenom store
+stop
+
+cond
+ *.nrg 32 >
+start
+ 16 rnd .aimsx store
+ 16 rnd .aimdx store
+ .up inc
+stop
+
+cond
+ *.eye5 0 >
+ *.memval *67 !=
+ *.refeye 0 >
+ *.reftie 0 =
+ *.reffixed 0 =
+ *.venom 16 >
+start
+ *.refxpos *.refypos angle .setaim store
+ *.refvelup .up inc
+stop
+
+cond
+ *.eyef 5 >
+ *.eyef 20 <
+ *.memval *67 !=
+start
+ -3 .shoot store
+ .aimsx .vloc store
+ 314 .venval store
+stop
+
+cond
+ *.eyef 20 >
+ *.eyef 30 <
+ *.memval *67 !=
+start
+ .fdbody .vloc store
+ 128 .venval store
+stop
+
+cond
+ *.eyef 30 >
+ *.memval *67 !=
+ *.venom 100 <
+start
+ 128 .shootval store
+ -1 .shoot store
+stop
+
+cond
+ *.eye5 0 >
+ *.memval *67 =
+start
+ 314 rnd .aimright store
+stop
+
+cond
+ *.eye5 0 >
+ *.refeye 0 =
+ *.reftie 0 > or
+start
+ -314 rnd .aimright store
+stop
+
+cond
+ *.shflav -1 =
+ *.shflav -6 = or
+start
+ *.refxpos *.refypos angle .setaim store
+ .fixpos .vloc store
+ 1 .venval store
+ -3 .shoot store 
+ 32 .dn 314 rnd .aimright store
+stop
+
+cond
+ *.body 16000 <
+ *.nrg 8000 >
+start
+ 2 .strbody store
+stop
+
+cond
+ *.body 16000 >
+ *.nrg 8000 >
+start
+ 50 .repro store
+ 314 rnd .aimright store
+stop
+
+end

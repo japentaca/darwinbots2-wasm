@@ -1,0 +1,162 @@
+cond
+  *.nrg  20536 >
+  *.nrg  20536 !%=
+start
+ sub  *.tielen3 inc
+ inc
+  *.daytime inc
+  *102 inc
+ rnd  50  *.myeye  .repro store
+  369  380  *297
+stop
+
+'''''''''Gene  2: Last 'stop' at position  26'''''''''
+
+cond
+  *.nrg  20536 >
+  *.nrg  20536 !%=
+  *.nrg  19616 !%=
+start
+ inc
+  51  300 add
+stop
+
+'''''''''Gene  3: Last 'stop' at position  43'''''''''
+
+cond
+  *.nrg  20536 >
+  *.nrg  20536 !%=
+  *.nrg  19616 !%=
+start
+ inc
+  53  300
+stop
+
+'''''''''Gene  4: Last 'stop' at position  59'''''''''
+
+cond
+  *.out2  *490 !%=
+cond
+ store
+stop
+
+'''''''''Gene  5: Last 'stop' at position  70'''''''''
+
+cond
+  *.shareslime  *180 <
+start
+  1168  *.refvelsx store
+  *652  *.rdboy -12 rnd  *.rdboy -12 rnd  *553  *790 -12 rnd sub rnd sub rnd sub sub sub -522 rnd add  *790  *387  *.veldx  *.rdboy rnd  *387  *.rdboy rnd  *.sharenrg sub  *43  *121 div  *735  *916  *.mydn rnd  *.shootval  *.shdx mult  *.bodloss  *372  *768 rnd inc
+  446 -130 dec
+ rnd -130 dec
+ rnd  *735 rnd -215  *.daytime dec
+  *.bodloss -1 div -1292  *.pwaste inc
+ inc
+  *.pwaste inc
+ inc
+  *.pwaste inc
+ mult  *307 div  460 -565  644 -818  1180 store
+  *273 dec
+  *353 -1179 -1022 dec
+ store
+  *948  218 -1203 inc
+  841  11 dec
+  841 -549  11 inc
+  *868  *.trefvelmydx -434  1 div div inc
+  9  1  354 store
+ -813  10 add  *.trefvelmydx  1  *676 store
+  11  342 store
+ store
+  1278 inc
+  1342
+stop
+
+'''''''''Gene  6: Last 'stop' at position  212'''''''''
+
+cond
+  *.shareslime  *.eye8 !%=
+start
+  1168  *.refvelsx store
+  *652  *553 -12 dec
+  *.sx sub inc
+ rnd sub inc
+ rnd mult rnd dec
+ mult rnd  962  *.hitup  *735  *.shdx dec
+  *.trefup  *.fixang -1195  *772  *.trefypos div  *772  *606  *.trefypos div dec
+ rnd  *735 rnd  *.fixpos inc
+  *735 rnd inc
+ div  *735 rnd dec
+  627 div inc
+  *.tieloc rnd sub -952 inc
+  *.daytime dec
+  1 store
+ div -1460 -1291  *.pwaste inc
+ sub inc
+  395 -909 add -187  *307 div add rnd  *307 div  460 -565 div  476 -565  460 -565 div store
+ div dec
+ store
+  *.tie  218 -1203 inc
+  9 dec
+  *363  *868  *381 inc
+ div  *.trefvelmydn  3 -494 dec
+  9 -8  1 -354 store
+  10 add  1  *676 store
+  11  .up store
+ store
+  *415 store
+  *415  1278 inc
+  1342  *.shdn  *40
+stop
+
+'''''''''Gene  7: Last 'stop' at position  353'''''''''
+
+cond
+start
+  *.tieang2  *591 inc
+  *.trefypos  *591 rnd  *.trefypos  *591 rnd rnd -382  *816  128 -331  401 -376 dec
+ -792 inc
+ -1163 -178 div dec
+ -1  7 rnd -949
+stop
+
+'''''''''Gene  8: Last 'stop' at position  383'''''''''
+
+cond
+start
+ -1  7 -1  7
+stop
+
+'''''''''Gene  9: Last 'stop' at position  392'''''''''
+
+cond
+ store
+ sub  10 add sub  10 rnd mult dec
+ rnd mult dec
+  *268  *650  *969 store
+ dec
+ dec
+ inc
+ inc
+ sub mult dec
+ sub div dec
+ sub sub store
+ div sub inc
+ div sub inc
+ dec
+  *50 div sub store
+ dec
+ inc
+ div dec
+ inc
+ dec
+ dec
+ inc
+ dec
+ dec
+ inc
+ add  1 sub
+stop
+
+'''''''''Gene  10: Last 'stop' at position  449'''''''''
+
+end

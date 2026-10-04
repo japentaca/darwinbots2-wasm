@@ -1,0 +1,64 @@
+' Alga packus
+cond
+*.robage 2 <
+start
+471 .eye1dir store
+stop
+cond 
+*.robage 0 >
+start
+57 .out1 store
+stop
+cond
+ *.eye5 0 > 
+ *.refshoot *.myshoot  !=
+start
+ *.refvelup 30 add .dn store
+3 .out1 store
+stop
+cond
+*.nrg 2000 >
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+10 .repro store
+140 rnd 140 add .aimsx store
+stop
+cond
+ *.eye1 0 > 
+*.refshoot *.myshoot !=
+start
+ *.refvelup 30 add .up store
+3 .out1 store
+stop
+cond
+ *.eye5 0 >
+ *.refshoot *.myshoot =
+*.out1 3 !=
+start
+ *.refveldx .dx store
+ *.refvelup 1 add .up store
+stop
+cond
+ *.eye5 0 =
+ *.eye1 0 =
+start
+0 .out1 store
+0 .in1 store
+stop
+cond
+*.in1 3 =
+*.eye5 0 =
+*.refshoot *.myshoot = or
+start
+3 .out1 store 
+30 .up store
+stop
+cond
+ *.eye1 0 >
+ *.refshoot *.myshoot =
+*.out1 3 !=
+start
+ *.refveldx .dx store
+ *.refvelup 1 add .dn store
+stop

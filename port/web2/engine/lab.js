@@ -513,6 +513,19 @@ export function textoGenRemapeado(g, remap) {
 const palabras = (t) => t.split(/\s+/).filter(Boolean);
 
 /**
+ * Palabras de un gen de genes.json tal como lo delimita genesTexto: sin las
+ * palabras sueltas que el core deja delante de su `cond` (lo que sigue al
+ * `stop` del gen anterior, p. ej. `0 *0` en Flyfruit v0.92), que en el
+ * editor no son de ningún gen. Así los índices valen desde `gt.t0`.
+ * @param {GenJson} g @param {Map<number, number> | null} remap
+ */
+function palabrasGen(g, remap) {
+  const w = palabras(textoGenRemapeado(g, remap));
+  const gs = genesTexto(w.join('\n'));
+  return gs.length ? w.slice(gs[0].t0, gs[gs.length - 1].t1 + 1) : w;
+}
+
+/**
  * Posiciones (índice de palabra del gen) de los números de gen literales:
  * `N .delgene store` / `N .mkvirus store` con N > 0.
  * @param {string[]} p
@@ -570,7 +583,7 @@ function partesEditor(adn, origenes, genes) {
  * @param {ParteEditor} p
  */
 function intacta(p) {
-  const esperado = palabras(textoGenRemapeado(p.g, p.remap));
+  const esperado = palabrasGen(p.g, p.remap);
   if (esperado.length !== p.gt.palabras.length) return false;
   const lit = new Set(p.g.gl ? literalesGen(esperado).map((x) => x.k) : []);
   return esperado.every((w, k) => lit.has(k) || w === p.gt.palabras[k]);
@@ -619,7 +632,7 @@ export function avisosLab(o) {
     } else if (a.tipo === 'gl') {
       for (const p of partes) {
         if (p.archivo !== a.archivo || p.gen !== a.gen) continue;
-        const esperado = palabras(textoGenRemapeado(p.g, p.remap));
+        const esperado = palabrasGen(p.g, p.remap);
         const lits = literalesGen(esperado);
         /** @type {number[]} */
         const faltan = [];
@@ -744,7 +757,7 @@ export function aplicarAccion(o, accion) {
     for (const p of partes) {
       const m = plan.get(p.archivo);
       if (!m) continue;
-      const nuevas = palabras(textoGenRemapeado(p.g, m));
+      const nuevas = palabrasGen(p.g, m);
       const lit = new Set(p.g.gl ? literalesGen(nuevas).map((x) => x.k) : []);
       nuevas.forEach((w, k) => {
         if (!lit.has(k) && w !== p.gt.palabras[k]) cambios.push({ i: p.gt.t0 + k, w });
@@ -761,7 +774,7 @@ export function aplicarAccion(o, accion) {
   if (!p || !intacta(p)) return { adn: o.adn, origenes };
   /** @type {{i: number, w: string}[]} */
   const cambios = [];
-  for (const x of literalesGen(palabras(textoGenRemapeado(p.g, p.remap)))) {
+  for (const x of literalesGen(palabrasGen(p.g, p.remap))) {
     const pos = partes.find((q) => q.archivo === p.archivo && q.gen === x.n - 1)?.i;
     if (pos !== undefined && tt.tokens[p.gt.t0 + x.k].w !== String(pos + 1))
       cambios.push({ i: p.gt.t0 + x.k, w: String(pos + 1) });

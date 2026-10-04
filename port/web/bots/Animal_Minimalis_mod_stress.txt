@@ -1,0 +1,54 @@
+'Animal Minimalis mod
+
+def stress 50
+
+cond
+*.eye5 0 >
+*.refeye *.myeye !=
+start
+*.refveldx .dx store
+*.refvelup 30 add .up store
+stop
+
+cond
+*.eye5 50 >
+*.refeye *.myeye !=
+start
+-1 .shoot store
+*.refveldx .dx store
+*.refvelup .up store
+stop
+
+cond
+*.eye5 0 =
+*.refeye *.myeye = or
+start
+314 rnd .aimdx store
+stop
+
+cond
+*.nrg 4000 >
+*.stress 1 <
+start
+33 .repro store
+stop
+
+cond
+*.nrg 4000 >
+*.stress 0 >
+start
+33 .mrepro store
+stop
+
+cond
+*.pain 50 >
+start
+.stress inc
+stop
+
+cond
+*.pleas 50 >
+start
+.stress dec
+stop
+end

@@ -1,0 +1,61 @@
+cond
+ *.robage 10 <
+start
+ 30 .up store
+stop
+
+cond
+ *.eye5 0 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup 30 add .up store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+
+cond
+ *.eye5 50 >
+ *.refeye *.myeye !=
+start
+ *.refveldx .dx store
+ *.refvelup .up store
+ 1 .tie store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+
+cond
+ *.eye5 0 = 
+ *.refeye *.myeye = or
+start
+314 rnd .aimdx store
+10 .up store
+-1 .tieloc store
+-1000 .tieval store
+stop
+
+'can't afford to make shell with less than 2000 energy
+cond
+*.shell 5000 <
+*.nrg 2000 >
+start
+100 .mkshell store
+stop
+
+
+cond
+ *.nrg 5000 >
+start
+ 50 .repro store
+stop
+
+'oh god I'm gonna die, panic and make tons of offspring
+cond 
+ *.nrg 1000 <
+ *.nrg 500 >
+start
+ 20 .repro store
+stop
