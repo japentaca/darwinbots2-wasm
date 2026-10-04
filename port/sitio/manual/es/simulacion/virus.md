@@ -198,7 +198,7 @@ saltean y el veneno no puede apuntarle. Pero un bot atado sí puede, con
 [[.tieloc]] (ver [[simulacion/lazos]]).
 
 ## Costos y reglas de torneo {#costos}
-<!-- core BotDNAManipulation, Vshoot (nrg −= tempa/20 + SHOTCOST·mult, tempa = min(20·vshoot, 32000)), delgene; port/README B3b-1; opciones.js opt 93 (nivel 1: ataduras/virus) -->
+<!-- core BotDNAManipulation, Vshoot (nrg −= tempa/20 + SHOTCOST·mult, tempa = min(20·vshoot, 32000)), delgene; port/README B3b-1; opciones.js opt 93 (nivel 1: virus y lazos con otra especie) -->
 
 | Acción | Costo |
 |---|---|

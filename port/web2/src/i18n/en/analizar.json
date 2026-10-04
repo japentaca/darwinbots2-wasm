@@ -180,6 +180,7 @@
   "analizar.ev.tipo.llegada": "Arrival",
   "analizar.ev.tipo.especieNueva": "New species",
   "analizar.ev.tipo.cambio": "Live change",
+  "analizar.ev.tipo.objetos": "World objects",
   "analizar.ev.tipo.sembrado": "Seeding",
   "analizar.ev.tipo.guardada": "Saved",
   "analizar.ev.tipo.cargada": "Loaded",

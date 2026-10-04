@@ -128,9 +128,9 @@ function sesionFalsa() {
 
 test('detalleMemloc: número junto al sysvar y aclaración de los laterales', () => {
   assert.deepEqual(detalleMemloc('.up'), { numero: '1', lateral: null });
-  assert.deepEqual(detalleMemloc('.sx'), { numero: '3', lateral: 'derecha' });
-  assert.deepEqual(detalleMemloc('.dx'), { numero: '4', lateral: 'izquierda' });
-  assert.deepEqual(detalleMemloc('3'), { numero: '', lateral: 'derecha' });
+  assert.deepEqual(detalleMemloc('.sx'), { numero: '3', lateral: 'izquierda' });
+  assert.deepEqual(detalleMemloc('.dx'), { numero: '4', lateral: 'derecha' });
+  assert.deepEqual(detalleMemloc('3'), { numero: '', lateral: 'izquierda' });
   assert.deepEqual(detalleMemloc('50'), { numero: '', lateral: null });
   assert.deepEqual(detalleMemloc('.nada'), { numero: '', lateral: null });
   // Las filas del preset: → escribe en 3 (.sx) y ← en 4 (.dx).

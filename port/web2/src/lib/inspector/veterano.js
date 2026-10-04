@@ -41,9 +41,10 @@ export const VALOR_MAX = 32000;
 
 /**
  * Presets de teclas. `flechas` es el juego fijo de la interfaz clásica
- * (flechas = motor a 40, espacio = .shoot −1). Ojo con los laterales: en
- * el motor la dirección 3 empuja a la derecha y la 4 a la izquierda
- * (memmap.hpp: dirdx = 3, dirsx = 4), aunque el sysvar `.sx` valga 3.
+ * (flechas = motor a 40, espacio = .shoot −1). Ojo con los laterales: la
+ * dirección 3 (`.sx`) empuja al bot hacia su izquierda y la 4 (`.dx`) hacia
+ * su derecha, aunque memmap.hpp las llame dirdx = 3 y dirsx = 4 (comprobado
+ * con el core: con .aim 0, `.sx` le baja la y).
  */
 export const PRESETS_PB = Object.freeze({
   flechas: Object.freeze([
@@ -133,8 +134,8 @@ export function nombreMemloc(memloc) {
 /**
  * Lo que se muestra junto al campo «Memoria» de una fila: el número de la
  * dirección cuando el texto es un sysvar ('' si ya es un número o no vale) y
- * hacia dónde empuja si es un lateral (null si no lo es): en el motor la 3
- * (.sx) empuja a la derecha y la 4 (.dx) a la izquierda.
+ * hacia dónde empuja si es un lateral (null si no lo es): la 3 (.sx) empuja
+ * al bot hacia su izquierda y la 4 (.dx) hacia su derecha.
  * @param {string | number} texto
  * @returns {{ numero: string, lateral: 'derecha' | 'izquierda' | null }}
  */
@@ -142,7 +143,7 @@ export function detalleMemloc(texto) {
   const d = leerMemloc(texto);
   if (d === null) return { numero: '', lateral: null };
   const esNumero = /^[+-]?\d+$/.test(String(texto).trim());
-  const lateral = d === 3 ? 'derecha' : d === 4 ? 'izquierda' : null;
+  const lateral = d === 3 ? 'izquierda' : d === 4 ? 'derecha' : null;
   return { numero: esNumero ? '' : String(d), lateral };
 }
 

@@ -324,7 +324,7 @@ que hace o lo que gasta.
 <!-- PanelGenes.svelte (editor.lab.*: por capacidad / de un bot, solo autónomos, Ver el código, +); engine/lab.js avisosLab (dep → agregar-gen; col → remapear 971-990; gl → renumerar / agregar-gen; info sin-repro / sin-energia solo si todo el ADN viene del Bestiario); PLAN.md decisión 19 -->
 
 El **Laboratorio** sirve para armar un bot con genes de otros. Al
-encenderlo, el panel de la derecha pasa a **Genes del Bestiary**, con los
+encenderlo, el panel de la derecha pasa a **Genes del Bestiario**, con los
 genes de todos los bots del foro.
 
 Hay dos formas de buscar:

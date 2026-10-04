@@ -175,7 +175,7 @@ y no queda en la corrida: si la repetís, no se repite.
 :::
 
 ## Control {#control}
-<!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip inspector.pb.memoria.derecha dice lo contrario (anotado como error de la app). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
+<!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip de la app decía lo contrario (corregido el 2026-10-04). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
 <!-- lib/inspector/ControlJugador.svelte, jugador.svelte.js, veterano.js PRESETS_PB; DisenadorOjos.svelte, ACCESIBILIDAD (cost:54, opt:13), SETAIM; i18n inspector.pb.*, inspector.ojos.*, inspector.noReproducible -->
 
 La última pestaña tiene dos herramientas para intervenir: el Player Bot y el

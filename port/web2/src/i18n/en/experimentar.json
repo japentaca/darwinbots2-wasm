@@ -72,7 +72,7 @@
   "experimentar.objetos.teleporters.uno": "{n} teleporter",
   "experimentar.objetos.teleporters.otros": "{n} teleporters",
   "experimentar.objetos.quitar": "Remove all",
-  "experimentar.objetos.ayuda": "Obstacles and teleporters are placed at random with the seed. Changing them needs a new simulation.",
+  "experimentar.objetos.ayuda": "Obstacles and teleporters are placed at random with the seed when the simulation is created. Afterwards you can edit them live with the World button in Observe.",
   "experimentar.laberinto.h": "horizontal",
   "experimentar.laberinto.v": "vertical",
   "experimentar.laberinto.spiral": "spiral",

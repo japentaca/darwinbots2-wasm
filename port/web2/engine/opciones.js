@@ -262,8 +262,8 @@ opt(
   'PhysMoving',
   ['Eficiencia del motor', 'Motor efficiency'],
   [
-    'Fracción del impulso pedido que se convierte en movimiento.',
-    'Fraction of the requested thrust that becomes motion.',
+    'Fracción del impulso pedido que se convierte en movimiento. Con 0 los bots no se mueven por su cuenta.',
+    'Fraction of the requested thrust that becomes motion. At 0 bots cannot move on their own.',
   ],
   real(0.66, 0, 1, 0.01),
 );
@@ -368,7 +368,10 @@ opt(
   'luz',
   'CycleLength',
   ['Medio período (ciclos)', 'Half period (cycles)'],
-  ['Cuánto dura el día (y la noche).', 'How long the day (and the night) lasts.'],
+  [
+    'Cada tramo de día o de noche dura este valor más 1 ciclos.',
+    'Each stretch of day or night lasts this value plus 1 cycles.',
+  ],
   { ...ent(500, 1, 32000), nivel: 'basico' },
 );
 opt(
@@ -446,7 +449,10 @@ opt(
   'luz',
   'LightIntensity',
   ['Intensidad de la luz', 'Light intensity'],
-  ['Luz en la superficie del estanque.', 'Light at the pond surface.'],
+  [
+    'Luz en la superficie del estanque. Con 0 nadie hace fotosíntesis en el modo estanque.',
+    'Light at the pond surface. At 0 nobody photosynthesizes in pond mode.',
+  ],
   ent(0, 0, 32000),
 );
 opt(
@@ -518,7 +524,10 @@ opt(
   'muerte',
   'NoShotDecay',
   ['Los disparos de energía no se gastan', 'Energy shots do not decay'],
-  ['Los disparos de energía conservan su valor.', 'Energy shots keep their value.'],
+  [
+    'Los regalos de energía (.shoot −2) no pierden valor ni envejecen: vuelan hasta pegarle a alguien.',
+    'Energy gifts (.shoot −2) neither lose value nor age: they fly until they hit someone.',
+  ],
   bool(0),
 );
 opt(
@@ -526,7 +535,10 @@ opt(
   'muerte',
   'NoWShotDecay',
   ['Los disparos de residuos no se gastan', 'Waste shots do not decay'],
-  ['Los disparos de residuos conservan su valor.', 'Waste shots keep their value.'],
+  [
+    'Los disparos de residuos no pierden valor ni envejecen: vuelan hasta pegarle a alguien.',
+    'Waste shots neither lose value nor age: they fly until they hit someone.',
+  ],
   bool(0),
 );
 opt(
@@ -534,7 +546,10 @@ opt(
   'muerte',
   'BadWastelevel',
   ['Los residuos son tóxicos desde', 'Waste is toxic from'],
-  ['Residuos acumulados a partir de los que dañan.', 'Accumulated waste from which it hurts.'],
+  [
+    'Residuos acumulados a partir de los que dañan. 0 se toma como 400.',
+    'Accumulated waste from which it hurts. 0 is taken as 400.',
+  ],
   ent(400, 0, 2147483647, 1, 'i32'),
 );
 
@@ -688,7 +703,10 @@ opt(
   'restricciones',
   'DisableFixing',
   ['Nadie se puede fijar', 'Nobody can fix position'],
-  ['Desactiva .fixpos para todos.', 'Disables .fixpos for everyone.'],
+  [
+    'Desactiva .fixpos para todos. Los que ya estaban fijos quedan fijos, y sus hijos también.',
+    'Disables .fixpos for everyone. Bots already fixed stay fixed, and so do their offspring.',
+  ],
   bool(0),
 );
 
@@ -779,10 +797,20 @@ cost(
   'costos',
   'TURNCOST',
   ['Girar', 'Turn'],
-  ['Por unidad de giro.', 'Per unit of turn.'],
+  ['Por cada 200 unidades de giro (un radián).', 'Per 200 units of turn (one radian).'],
   costo(),
 );
-cost(22, 'costos', 'TIECOST', ['Atar', 'Tie'], ['Por cada atadura.', 'Per tie.'], costo());
+cost(
+  22,
+  'costos',
+  'TIECOST',
+  ['Atar', 'Tie'],
+  [
+    'Por cada intento de atar, dividido por los lazos después del intento más 1. El lazo de nacimiento se lo cobra al padre.',
+    'Per tie attempt, divided by the ties after the attempt plus 1. The birth tie charges it to the parent.',
+  ],
+  costo(),
+);
 cost(23, 'costos', 'SHOTCOST', ['Disparar', 'Shoot'], ['Por cada disparo.', 'Per shot.'], costo());
 cost(
   24,
@@ -1069,7 +1097,10 @@ opt(
   'modos',
   'MaxCycles',
   ['Tope de ciclos por ronda (0 = no)', 'Cycle cap per round (0 = off)'],
-  ['Corta la ronda a los N ciclos.', 'Ends the round after N cycles.'],
+  [
+    'Corta la ronda a los N ciclos. Solo en duelos: con más de 2 especies se apaga.',
+    'Ends the round after N cycles. Duels only: with more than 2 species it is turned off.',
+  ],
   ent(0, 0, 2147483647, 1, 'i32'),
 );
 opt(
@@ -1077,7 +1108,10 @@ opt(
   'modos',
   'MaxPop',
   ['Población máxima por especie (0 = no)', 'Max population per species (0 = off)'],
-  ['Tope de bots de cada especie en el concurso.', 'Bot cap per species in the contest.'],
+  [
+    'Tope de bots de cada especie en el concurso. Solo en duelos: con más de 2 especies se apaga.',
+    'Bot cap per species in the contest. Duels only: with more than 2 species it is turned off.',
+  ],
   ent(0, 0, 32000),
 );
 opt(
@@ -1085,14 +1119,25 @@ opt(
   'modos',
   'Disqualify',
   ['Descalificación', 'Disqualification'],
-  ['Qué acciones descalifican en el concurso.', 'Which actions disqualify in the contest.'],
+  [
+    'Qué acciones descalifican en el concurso. Solo actúa con F1 o con el modo de reinicio en 1.',
+    'Which actions disqualify in the contest. Only active with F1 or with restart mode 1.',
+  ],
   {
     valor: 'enum',
     porDefecto: 0,
     valores: [
       { v: 0, es: 'no', en: 'off' },
-      { v: 1, es: 'nivel 1 (ataduras/virus)', en: 'level 1 (ties/virus)' },
-      { v: 2, es: 'nivel 2 (todo)', en: 'level 2 (everything)' },
+      {
+        v: 1,
+        es: 'nivel 1 (virus; dar o quitar por lazo a otra especie)',
+        en: 'level 1 (viruses; giving or taking through ties to another species)',
+      },
+      {
+        v: 2,
+        es: 'nivel 2 (defensas, lazos, virus, borrar genes, disparos de memoria, sexual)',
+        en: 'level 2 (defenses, ties, viruses, deleting genes, memory shots, sexual)',
+      },
     ],
   },
 );
@@ -1102,8 +1147,8 @@ opt(
   'optMinRounds',
   ['Rondas mínimas configuradas', 'Configured minimum rounds'],
   [
-    'Valor al que vuelve MinRounds en cada concurso nuevo.',
-    'Value MinRounds goes back to in each new contest.',
+    'Valor al que vuelve MinRounds cuando termina un concurso.',
+    'Value MinRounds goes back to when a contest ends.',
   ],
   {
     ...ent(0, 0, 32000),
@@ -1131,7 +1176,10 @@ opt(
   'evolucion',
   'hidePredCycl',
   ['Ciclos del depredador oculto', 'Hidden predator cycles'],
-  ['Rampa del depredador oculto.', 'Ramp of the hidden predator.'],
+  [
+    'Duración de cada época del depredador oculto (entre 0,83 y 1,17 veces este valor) y de su rampa de energía. Con 0, el modo cambia en cada ciclo.',
+    'Length of each hidden-predator epoch (between 0.83 and 1.17 times this value) and of its energy ramp. At 0 the mode changes every cycle.',
+  ],
   ent(0, 0, 32000),
 );
 opt(

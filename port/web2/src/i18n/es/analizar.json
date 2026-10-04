@@ -180,6 +180,7 @@
   "analizar.ev.tipo.llegada": "Llegada",
   "analizar.ev.tipo.especieNueva": "Especie nueva",
   "analizar.ev.tipo.cambio": "Cambio en caliente",
+  "analizar.ev.tipo.objetos": "Objetos del mundo",
   "analizar.ev.tipo.sembrado": "Siembra",
   "analizar.ev.tipo.guardada": "Guardada",
   "analizar.ev.tipo.cargada": "Cargada",

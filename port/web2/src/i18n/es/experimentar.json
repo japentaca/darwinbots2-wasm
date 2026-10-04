@@ -72,7 +72,7 @@
   "experimentar.objetos.teleporters.uno": "{n} teleporter",
   "experimentar.objetos.teleporters.otros": "{n} teleporters",
   "experimentar.objetos.quitar": "Quitar todo",
-  "experimentar.objetos.ayuda": "Los obstáculos y teleporters se ubican al azar con la semilla. Cambiarlos requiere una simulación nueva.",
+  "experimentar.objetos.ayuda": "Los obstáculos y teleporters se ubican al azar con la semilla al crear la simulación. Después se pueden editar en vivo con el botón Mundo de Observar.",
   "experimentar.laberinto.h": "horizontal",
   "experimentar.laberinto.v": "vertical",
   "experimentar.laberinto.spiral": "espiral",
