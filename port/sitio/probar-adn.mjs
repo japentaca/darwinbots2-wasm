@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import fs from 'node:fs';
-import { createRequire } from 'node:module';
 // Corre un ADN unos ciclos sin dibujar (core wasm) y muestra memoria y estado.
 //
 //   node probar-adn.mjs bot.txt [opciones]
@@ -18,11 +16,19 @@ import { createRequire } from 'node:module';
 //   --campo WxH    tamaño del mundo (4000x3000)
 //   --set a=v,...  escribe memoria del bot 1 antes del primer ciclo
 //   --cost i=v,... fija costos por índice (db_sim_set_cost); si no, valen 0
+//   --opt i=v,...  fija opciones de la sim por id (db_sim_set_opt; ver
+//                  port/web2/engine/opciones.js, claves opt:N)
+//   --maxe E       energía máxima de la fotosíntesis (base:maxEnergy; el core
+//                  arranca en 100, la app en 10)
+//   --veg          la primera especie es vegetal
 // Sin mutaciones. Imprime los avisos de db_dna_lint y, por ciclo, de cada bot
 // vivo de la primera especie (hasta 4): slot, x, y, nrg, body y las --mem.
 //
 // Herramienta de los redactores del manual (PLAN-SITIO.md, S12): comprueba que
 // un ejemplo que dice «hace X» hace X. Necesita port/build-wasm/dbcore.{js,wasm}.
+
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,6 +52,11 @@ const semilla = +op('--semilla', 1);
 const [cw, ch] = op('--campo', '4000x3000').split('x').map(Number);
 const setArg = op('--set', '');
 const costArg = op('--cost', '');
+const optArg = op('--opt', '');
+const maxe = op('--maxe', null);
+const iVeg = a.indexOf('--veg');
+const veg = iVeg >= 0;
+if (veg) a.splice(iVeg, 1);
 let adn = op('--adn', null);
 if (adn == null) {
   if (!a[0]) {
@@ -79,6 +90,8 @@ const api = {
   setMem: C('db_sim_bot_set_mem', null, ['number', 'number', 'number', 'number']),
   tok0: C('db_sim_sysvar_tok0', 'number', ['number', 'string']),
   setCost: C('db_sim_set_cost', null, ['number', 'number', 'number']),
+  setOpt: C('db_sim_set_opt', null, ['number', 'number', 'number']),
+  setMaxE: C('db_sim_set_max_energy', null, ['number', 'number']),
   mut: C('db_sim_set_mutations', null, ['number', 'number']),
   minvegs: C('db_sim_set_minvegs', null, ['number', 'number']),
   lint: C('db_dna_lint', 'number', ['string']),
@@ -99,7 +112,12 @@ for (const kv of costArg ? costArg.split(',') : []) {
   const [i, v] = kv.split('=');
   api.setCost(h, +i, +v);
 }
-const sp = api.addSpecies(h, adn, 'prueba', 0, 0, nrg, 0x3080ff, qty);
+for (const kv of optArg ? optArg.split(',') : []) {
+  const [i, v] = kv.split('=');
+  api.setOpt(h, +i, +v);
+}
+if (maxe !== null) api.setMaxE(h, +maxe);
+const sp = api.addSpecies(h, adn, 'prueba', veg ? 1 : 0, 0, nrg, 0x3080ff, qty);
 let sp2 = -1;
 if (otro) sp2 = api.addSpecies(h, fs.readFileSync(otro, 'utf8'), 'otro', 0, 0, nrg, 0xff4040, 1);
 api.seed(h, sp, 0);

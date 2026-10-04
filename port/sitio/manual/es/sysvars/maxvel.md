@@ -6,8 +6,7 @@ estado: revisada
 ---
 <!-- sysvars.yaml .maxvel; 30-FISICA §6 (MaxVelocity forzado a 40 fuera de (0,200]), §2.1 -->
 `.maxvel` informa el límite de velocidad de la simulación. Es un dato del mundo,
-igual para todos los bots: lo fija la configuración (por defecto 40, y nunca más
-de 200) y el motor lo publica en cada ciclo. Escribir en ella no cambia nada.
+igual para todos los bots: lo fija la configuración ([[param:opt:11]]; por defecto 40) y el motor lo publica en cada ciclo. Escribir en ella no cambia nada.
 
 Ese tope actúa dos veces. Ningún bot puede ir más rápido que `.maxvel` ([[.velscalar]]
 nunca lo supera), y el empujón de un ciclo, después de multiplicarse por la masa,

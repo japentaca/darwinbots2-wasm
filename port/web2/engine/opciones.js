@@ -483,7 +483,10 @@ opt(
   'muerte',
   'Decay',
   ['Descomposición por ciclo', 'Body decay per cycle'],
-  ['Cuerpo que pierde un cadáver en cada paso.', 'Body a corpse loses at each step.'],
+  [
+    'En cada paso de descomposición, un cadáver pierde la décima parte de este valor en cuerpo.',
+    'At each decay step, a corpse loses a tenth of this value in body.',
+  ],
   real(0, 0, 1000, 0.1),
 );
 opt(
@@ -541,7 +544,10 @@ base(
   'energia',
   'MaxEnergy',
   ['Energía solar por ciclo', 'Solar share per cycle'],
-  ['Energía que se reparten los vegetales cada ciclo.', 'Energy shared by vegetables each cycle.'],
+  [
+    'Base de la fotosíntesis: cada bot con cloroplastos produce a partir de este valor.',
+    'Photosynthesis base: every bot with chloroplasts produces from this value.',
+  ],
   { ...ent(10, 0, 100000, 1, 'i32'), nivel: 'basico' },
 );
 base(
@@ -641,8 +647,11 @@ opt(
   63,
   'energia',
   'VegFeedingToBody',
-  ['Comer vegetales: fracción al cuerpo', 'Eating vegetables: fraction to body'],
-  ['El resto va a energía.', 'The rest goes to energy.'],
+  ['Fotosíntesis: fracción al cuerpo', 'Photosynthesis: fraction to body'],
+  [
+    'Parte de lo que producen los cloroplastos (y de los desechos digeridos) que va al cuerpo; el resto va a energía.',
+    'Share of what chloroplasts produce (and of digested waste) that goes to body; the rest goes to energy.',
+  ],
   real(0.75, 0, 1, 0.01),
 );
 opt(
@@ -650,7 +659,10 @@ opt(
   'energia',
   'Tides',
   ['Mareas (ciclos; 0 = no)', 'Tides (cycles; 0 = off)'],
-  ['Período de las mareas del alimento vegetal.', 'Period of the vegetable feeding tides.'],
+  [
+    'Período de las mareas: mientras están activas, pisan la gravedad y el movimiento browniano.',
+    'Tide period: while active, tides override gravity and Brownian motion.',
+  ],
   ent(0, 0, 32000),
 );
 
@@ -800,8 +812,8 @@ cost(
   27,
   'costos',
   'POISONCOST',
-  ['Ponzoña', 'Poison'],
-  ['Por unidad de ponzoña fabricada.', 'Per unit of poison made.'],
+  ['Toxina', 'Poison'],
+  ['Por unidad de toxina fabricada.', 'Per unit of poison made.'],
   costo(),
 );
 cost(

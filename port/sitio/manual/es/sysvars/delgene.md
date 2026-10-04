@@ -37,6 +37,7 @@ guardaste números de gen en memoria (para [[.mkvirus]] u otro `.delgene`), ya n
 apuntan a lo mismo.
 :::
 
-Ningún ataque de afuera puede escribir en `.delgene`: los disparos de memoria la
-saltean y el veneno no puede apuntarle. La única forma de que otro te borre un gen
-es meterte un virus cuyo código lo haga.
+Los ataques a distancia no pueden escribir en `.delgene`: los disparos de memoria
+la saltean y el veneno no puede apuntarle. Pero quedan dos caminos: un virus cuyo
+código lo haga, y un bot atado a vos, que puede escribirla por el lazo con
+`340 .tieloc` y el número del gen en [[.tieval]] (ver [[simulacion/lazos]]).

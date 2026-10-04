@@ -34,9 +34,11 @@ energía ya publicada.
 
 <!-- 31-ENERGIA §1 (Shock); port/README A1-1 (la energía pasa al cuerpo); comprobado con un disparo −1 de shootval 6000 -->
 :::cuidado
-Un bot que no es vegetal, tiene más de 3000 de energía y pierde más de la mitad en
-un solo ciclo sufre un _shock_: toda la energía que le quedaba se le pasa al cuerpo
-(a razón de 10 por 1) y queda en 0, lo que normalmente lo mata. Pasa, por ejemplo,
+Un bot que no es vegetal y pierde más de la mitad de su energía en un solo ciclo,
+pero aun así se queda con más de 3000, sufre un _shock_: toda la energía que le
+quedaba se le pasa al cuerpo (a razón de 10 por 1) y queda en 0, así que en ese
+mismo ciclo muere o queda como cadáver. De 20000 a 8000 hay shock; de 8000 a 2000,
+no. Pasa, por ejemplo,
 con un disparo de energía muy grande ([[.shootval]] de miles). Gastá de a poco.
 :::
 

@@ -101,7 +101,7 @@ Las celdas 971 a 990 no tienen nombre, pero el motor las trata distinto: son el 
 
 **976–990, diferida.** Al nacer, las quince celdas del padre se guardan aparte, en una reserva del hijo, y le llegan de a una por ciclo y en orden: primero la 976, después la 977, y así hasta la 990, unos quince ciclos después de nacer. Cada entrega tiene dos condiciones:
 
-- el hijo tiene que seguir atado a su padre por el lazo de nacimiento; si lo corta, las entregas que faltan se pierden;
+- el hijo tiene que seguir atado a su padre por el lazo de nacimiento; si lo corta, o si lo reemplaza atándose de nuevo al padre con [[.tie]] (lo habitual en los multicelulares), las entregas que faltan se pierden;
 - la celda del hijo tiene que seguir en 0; si el hijo ya escribió algo ahí, la entrega no la pisa.
 
 Ver [[sysvars/mem-976-990]].

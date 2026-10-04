@@ -24,7 +24,7 @@ escrituras. Eso le rompe variables, órdenes y contadores.
 
 - Tirándolos con un disparo de tipo −4: `-4 .shoot store` saca la cantidad que
   pongas en [[.shootval]] (o 1/20 de los desechos si está en 0). Un 1 % de lo
-  tirado pasa a [[.pwaste]].
+  tirado se queda en `.waste` y otro 1 % pasa a [[.pwaste]].
 - Con cloroplastos: un bot con [[.chlr]] digiere sus desechos y los convierte en
   energía y cuerpo.
 - Pasándolos a un compañero de organismo con [[.sharewaste]].

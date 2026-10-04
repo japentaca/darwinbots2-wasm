@@ -9,7 +9,9 @@ estado: revisada
 [[.aim]] (0 a la derecha de la pantalla, 314 arriba, 1256 una vuelta), y el bot
 queda apuntando ahí al final del ciclo, por grande que sea el giro. Cualquier
 número sirve: se toma su resto de dividir por 1256, así que -314 es 942 y 1570
-es 314. El giro cuesta energía según el ángulo recorrido.
+es 314. El giro cuesta energía, pero no según el ángulo recorrido sino según el número
+que escribiste: `1200 .setaim` cuesta mucho más que `-56 .setaim`, aunque los dos
+dejan el mismo rumbo (ver [[simulacion/fisica#giro]]).
 
 El motor no la borra a 0: después de girar al bot le copia el rumbo actual. Por eso
 `*.setaim` siempre se puede leer como el rumbo del bot, y en el primer ciclo de

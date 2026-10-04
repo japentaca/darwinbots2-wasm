@@ -231,6 +231,31 @@ citas. Fueron 10 lotes, cada uno con su redactor y su revisor (un pipeline de
 - Términos: «toxina» (poison) y «veneno» (venom), como en la app; nunca
   «ponzoña».
 
+Capítulo 3 (La simulación) hecho el 2026-10-04: las 14 páginas están
+`revisada`, con 144 citas. Lo hizo una ola de 8 redactores y después un revisor.
+Lo que salió:
+
+- **Bug del host, abierto:** `db_sim_add_species` crea la especie con
+  `Mutables{}` (`Mutations = false`, tasas en 0) y ninguna API le pone las tasas
+  de fábrica. En la app nueva y en la clásica, los bots sembrados no mutan con
+  `.repro` aunque «Mutaciones» esté encendido; solo con `.mrepro`.
+  `simulacion/mutaciones` lo cuenta así (en un `:::cuidado` y en #quien-muta,
+  #mrepro y #encender), igual que la ficha de `.mrepro`. Si se corrige, hay
+  que reescribir esas partes.
+- Corregido en la referencia: `.delgene` (también se escribe por el lazo),
+  `.nrg` (la condición del shock), `.maxvel` (el tope sale de opt:11),
+  `.setaim` (el costo depende del número escrito), `.waste` (el −4) y
+  `adn/memoria` (atarse de nuevo al padre corta la memoria diferida).
+- Corregidos en la app (`opciones.js`): «Toxina» en vez de «Ponzoña», y los
+  textos de base:maxEnergy, opt:51, opt:63 y opt:64.
+- `probar-adn.mjs` suma `--opt`, `--maxe` y `--veg`.
+- Notas para la spec, sin tocar: `36-REPRO` §2 (el impuesto al hijo es
+  0,1 %, no 1 %), `33-SHOTS` §5 (takenrg da 0,4 % en cuerpo), `35-VIRUS` §4
+  (el lazo también escribe en `.delgene`) y `50-MUNDO` §7 (checkvegstatus ya
+  está descrito según el core).
+- Hay páginas largas, de unas 2500 a 2800 palabras: `fisica`, `vision`,
+  `lazos` y `reproduccion`. Se pueden partir si el autor lo decide.
+
 ### S-D · La app enlaza al manual
 
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector
