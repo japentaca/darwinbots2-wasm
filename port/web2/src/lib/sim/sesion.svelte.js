@@ -6,7 +6,7 @@
 // Decisión 5: las skins y el monitor RGB no se piden (skins apagadas).
 
 import { PARAMETROS } from '../../../engine/opciones.js';
-import { BUILD_ID } from '../../build.js';
+import { BUILD_ID, urlSitio } from '../../build.js';
 import { ConexionSim } from './conexion.js';
 import { focoVivo } from './frame.js';
 
@@ -450,7 +450,7 @@ export function sesion() {
       : new Worker(new URL('../../../engine/worker.js', import.meta.url));
     const conexion = new ConexionSim({
       worker,
-      base: new URL('./build-wasm/', document.baseURI).href,
+      base: urlSitio('build-wasm/'),
       v: BUILD_ID,
     });
     unica = new Sesion(conexion);

@@ -25,7 +25,7 @@
 
 import { ACTIVOS, ColaCompartida, NOMBRE_CANAL } from '../../../engine/cola.js';
 import { TIPO_RONDA } from '../../../engine/rondas.js';
-import { BUILD_ID } from '../../build.js';
+import { BUILD_ID, urlSitio } from '../../build.js';
 import { t } from '../../i18n/index.svelte.js';
 import { almacen } from '../sim/almacen.svelte.js';
 import { ejecutores } from './ejecutores.js';
@@ -81,7 +81,7 @@ function crearWorkerPagina() {
   const w = import.meta.env.DEV
     ? new Worker(new URL('../../../engine/worker.js', import.meta.url), { type: 'module' })
     : new Worker(new URL('../../../engine/worker.js', import.meta.url));
-  w.postMessage({ t: 'init', base: new URL('./build-wasm/', document.baseURI).href, v: BUILD_ID });
+  w.postMessage({ t: 'init', base: urlSitio('build-wasm/'), v: BUILD_ID });
   return {
     canal: {
       enviar: (/** @type {any} */ m) => w.postMessage(m),

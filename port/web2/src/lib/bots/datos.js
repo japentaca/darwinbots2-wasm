@@ -4,10 +4,11 @@
 // genes.json (solo para armar híbridos viejos al migrar o importar) y el
 // .txt de cada bot. Se piden una vez y quedan en memoria.
 
+import { urlSitio } from '../../build.js';
 import { indiceBestiario } from '../observar/bestiario.js';
 
 /** @param {string} ruta */
-const url = (ruta) => new URL(`./classic/bots/${ruta}`, document.baseURI).href;
+const url = (ruta) => urlSitio(`classic/bots/${ruta}`);
 
 /**
  * @typedef {import('../../../engine/biblioteca.js').BotForo} BotForo

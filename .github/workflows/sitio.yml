@@ -1,12 +1,14 @@
-# Sitio en GitHub Pages (port/web2/PLAN.md E0, decisiones 3 y 5, C1-C4):
-#  - raíz:         la interfaz nueva (port/web2, build de Vite con base './').
+# Sitio darwinbots-wasm.org en Cloudflare Pages (port/web2/PLAN-SITIO.md S1-S3):
+#  - raíz:         portada (port/sitio/publico/).
+#  - /app/:        la interfaz nueva (port/web2, build de Vite con base './').
 #  - /classic/:    la clásica (port/web/, congelada, sin cambios en sus fuentes).
 #  - /build-wasm/: dbcore.js + dbcore.wasm, compilados una sola vez y
 #                  compartidos (classic/worker.js carga ../build-wasm/dbcore.js;
-#                  la nueva pide ./build-wasm/dbcore.js?v=<commit>).
+#                  la nueva pide ../build-wasm/dbcore.js?v=<commit>).
 # El armado vive en port/web2/scripts/armar-sitio.sh para probarlo igual en local.
-# Requiere habilitar Pages en el repo con Source = "GitHub Actions".
-name: Pages
+# Solo despliega un push a main: los secretos de Cloudflare están en el
+# entorno «produccion», que solo acepta la rama main. Nunca pull_request_target.
+name: Sitio
 
 on:
   push:
@@ -15,11 +17,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: sitio
   cancel-in-progress: true
 
 jobs:
@@ -50,19 +50,30 @@ jobs:
         run: |
           npm ci
           DB_BUILD_ID="${GITHUB_SHA::7}" npx vite build
-      - name: Armar el sitio (nueva en la raíz, clásica en classic/, build-wasm/)
+      - name: Armar el sitio (portada, app/, classic/, build-wasm/)
         # Incluye el versionado de la clásica (cache busting con ?v=<commit>).
         run: sh port/web2/scripts/armar-sitio.sh site "${GITHUB_SHA::7}"
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: sitio
           path: site
+          include-hidden-files: true
+          retention-days: 7
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: produccion
+      url: https://darwinbots-wasm.org
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sitio
+          path: site
+      - name: Publicar en Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=darwinbots-wasm --branch=main --commit-hash=${{ github.sha }} --commit-dirty=true

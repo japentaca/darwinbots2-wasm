@@ -6,11 +6,13 @@
 //   genes.json     el texto y la memoria de cada gen (Laboratorio, decisión 19)
 //   <archivo>.txt  el ADN de un bot del foro
 
+import { urlSitio } from '../../../build.js';
+
 /** @type {Map<string, Promise<any>>} */
 const cache = new Map();
 
 /** @param {string} ruta */
-const url = (ruta) => new URL(`./classic/bots/${ruta}`, document.baseURI).href;
+const url = (ruta) => urlSitio(`classic/bots/${ruta}`);
 
 /**
  * @param {string} ruta @param {'json' | 'text'} como

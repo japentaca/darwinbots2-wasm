@@ -1,0 +1,7 @@
+# Cabeceras de Cloudflare Pages (PLAN-SITIO.md S-A).
+# Los assets de Vite llevan hash en el nombre: se cachean para siempre.
+/app/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/build-wasm/*
+  X-Content-Type-Options: nosniff

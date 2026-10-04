@@ -8,7 +8,7 @@ test('fuera de Vite el id es dev', () => {
 });
 
 test('urlWasm versiona con el id del build', () => {
-  assert.equal(BASE_WASM, './build-wasm/');
-  assert.equal(urlWasm('dbcore.wasm'), './build-wasm/dbcore.wasm?v=dev');
-  assert.equal(urlWasm('dbcore.js'), './build-wasm/dbcore.js?v=dev');
+  assert.equal(BASE_WASM, '../build-wasm/');
+  assert.equal(urlWasm('dbcore.wasm'), '../build-wasm/dbcore.wasm?v=dev');
+  assert.equal(urlWasm('dbcore.js'), '../build-wasm/dbcore.js?v=dev');
 });

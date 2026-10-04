@@ -3,13 +3,15 @@
 // datos se leen de `classic/bots/` (bots.json + un .txt por bot), la carpeta
 // que ya publica la clásica. Se piden solo los bots que hacen falta.
 
+import { urlSitio } from '../../build.js';
+
 /** @type {Promise<{ file: string, name: string }[]> | null} */
 let indice = null;
 /** @type {Map<string, Promise<string>>} */
 const textos = new Map();
 
 /** @param {string} ruta */
-const url = (ruta) => new URL(`./classic/bots/${ruta}`, document.baseURI).href;
+const url = (ruta) => urlSitio(`classic/bots/${ruta}`);
 
 /** Índice del Bestiary (se pide una vez). */
 export function indiceBestiario() {

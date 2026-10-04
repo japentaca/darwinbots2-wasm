@@ -184,7 +184,7 @@ const trabajos = $derived.by(() => {
   <span class="aviso-idioma" role="status" aria-live="polite"
     >{idiomaFallido ? t('app.idioma.error', { idioma: t(`app.idioma.${idiomaFallido}`) }) : ''}</span
   >
-  <a class="clasica" href="./classic/">{t('app.clasica.enlace')}</a>
+  <a class="clasica" href="../classic/">{t('app.clasica.enlace')}</a>
 </nav>
 
 <style>

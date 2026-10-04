@@ -10,8 +10,9 @@
 > belongs to them; this repository only tries to keep their work running
 > on modern machines.
 >
-> **Live demo:** https://japentaca.github.io/darwinbots2-wasm/
-> (the demo's interface is in English, like the original program).
+> **Site:** https://darwinbots-wasm.org (the app at `/app/`, in Spanish and
+> English, and the classic interface at `/classic/`). Every push to `main`
+> publishes it to Cloudflare Pages (`.github/workflows/sitio.yml`).
 
 ## The original project and its community
 

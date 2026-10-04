@@ -12,7 +12,7 @@
 // error en vez de quedar esperando, y el próximo pedido prueba con uno
 // nuevo.
 
-import { BUILD_ID } from '../../../build.js';
+import { BUILD_ID, urlSitio } from '../../../build.js';
 
 export const PLAZO_MS = 30_000;
 
@@ -35,7 +35,7 @@ function workerPagina() {
   const w = import.meta.env.DEV
     ? new Worker(new URL('../../../../engine/worker.js', import.meta.url), { type: 'module' })
     : new Worker(new URL('../../../../engine/worker.js', import.meta.url));
-  w.postMessage({ t: 'init', base: new URL('./build-wasm/', document.baseURI).href, v: BUILD_ID });
+  w.postMessage({ t: 'init', base: urlSitio('build-wasm/'), v: BUILD_ID });
   return {
     enviar: (m) => w.postMessage(m),
     on: (fn) => {
