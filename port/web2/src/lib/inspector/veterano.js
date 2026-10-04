@@ -44,21 +44,22 @@ export const VALOR_MAX = 32000;
  * (flechas = motor a 40, espacio = .shoot −1). Ojo con los laterales: la
  * dirección 3 (`.sx`) empuja al bot hacia su izquierda y la 4 (`.dx`) hacia
  * su derecha, aunque memmap.hpp las llame dirdx = 3 y dirsx = 4 (comprobado
- * con el core: con .aim 0, `.sx` le baja la y).
+ * con el core: con .aim 0, `.sx` le baja la y). Por eso → y D escriben en la
+ * 4 y ← y A en la 3 (hasta el 2026-10-04 estaban al revés).
  */
 export const PRESETS_PB = Object.freeze({
   flechas: Object.freeze([
     { codigo: 'ArrowUp', memloc: 1, valor: 40, invertir: false },
     { codigo: 'ArrowDown', memloc: 2, valor: 40, invertir: false },
-    { codigo: 'ArrowRight', memloc: 3, valor: 40, invertir: false },
-    { codigo: 'ArrowLeft', memloc: 4, valor: 40, invertir: false },
+    { codigo: 'ArrowRight', memloc: 4, valor: 40, invertir: false },
+    { codigo: 'ArrowLeft', memloc: 3, valor: 40, invertir: false },
     { codigo: 'Space', memloc: 7, valor: -1, invertir: false },
   ]),
   wasd: Object.freeze([
     { codigo: 'KeyW', memloc: 1, valor: 40, invertir: false },
     { codigo: 'KeyS', memloc: 2, valor: 40, invertir: false },
-    { codigo: 'KeyD', memloc: 3, valor: 40, invertir: false },
-    { codigo: 'KeyA', memloc: 4, valor: 40, invertir: false },
+    { codigo: 'KeyD', memloc: 4, valor: 40, invertir: false },
+    { codigo: 'KeyA', memloc: 3, valor: 40, invertir: false },
     { codigo: 'Space', memloc: 7, valor: -1, invertir: false },
   ]),
   vacio: Object.freeze([]),

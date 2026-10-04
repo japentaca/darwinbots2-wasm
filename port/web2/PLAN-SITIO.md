@@ -277,9 +277,11 @@ para los parámetros. Lo que salió:
   `analizar.ev.tipo.objetos` (nueva) y `experimentar.objetos.ayuda`. En
   `opciones.js`, las ayudas de opt:12, 31, 34, 54, 55, 56, 72, 93 (también las
   etiquetas de los niveles), 94, 99, 100 y 101, y de cost:21 y cost:22.
+- Player Bot corregido el 2026-10-04, en la app nueva y en la clásica: en los
+  juegos Flechas y WASD, → y D escribían en la dirección 3, que empuja al bot
+  hacia su izquierda. Ahora escriben en la 4 (`.dx`), y ← y A en la 3. Quien
+  tenga guardado el juego viejo lo ve como «Personalizadas» y lo recupera eligiendo de nuevo el juego.
 - Pendiente en la app (cambia el comportamiento; sin tocar):
-  - Player Bot: en los juegos Flechas y WASD (y en la clásica), → y D
-    escriben en la dirección 3, que empuja al bot hacia su izquierda.
   - opt:31 viene en 0, así que el modo estanque sin tocarla no tiene sol.
     «Tamaño del campo» no tiene 32000×32000, el de la base Clásica.
   - Pantallas: Experimentar reemplaza la simulación sin preguntar; los avisos

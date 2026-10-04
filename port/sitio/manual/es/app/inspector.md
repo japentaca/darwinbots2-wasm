@@ -175,7 +175,7 @@ y no queda en la corrida: si la repetís, no se repite.
 :::
 
 ## Control {#control}
-<!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip de la app decía lo contrario (corregido el 2026-10-04). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
+<!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip y los juegos de teclas de la app lo tenían al revés (corregido el 2026-10-04). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
 <!-- lib/inspector/ControlJugador.svelte, jugador.svelte.js, veterano.js PRESETS_PB; DisenadorOjos.svelte, ACCESIBILIDAD (cost:54, opt:13), SETAIM; i18n inspector.pb.*, inspector.ojos.*, inspector.noReproducible -->
 
 La última pestaña tiene dos herramientas para intervenir: el Player Bot y el
@@ -200,15 +200,14 @@ Los juegos de fábrica escriben esto:
 |---|---|---|---|
 | ↑ | W | 1 ([[.up]]) | 40 |
 | ↓ | S | 2 ([[.dn]]) | 40 |
-| → | D | 3 ([[.sx]]) | 40 |
-| ← | A | 4 ([[.dx]]) | 40 |
+| → | D | 4 ([[.dx]]) | 40 |
+| ← | A | 3 ([[.sx]]) | 40 |
 | espacio | espacio | 7 ([[.shoot]]) | −1 |
 
 Con el bot mirando al puntero, ↑ lo lleva hacia el puntero y espacio dispara
-hacia él (−1 es el disparo que le saca energía al otro, ver [[.shoot]]). Ojo
-con los laterales: [[.sx]] empuja al bot hacia _su_ izquierda y [[.dx]] hacia
-su derecha, así que con estos juegos → lo corre a su izquierda. Si lo querés al
-revés, cambiá las direcciones.
+hacia él (−1 es el disparo que le saca energía al otro, ver [[.shoot]]). Los
+laterales son relativos al bot: [[.dx]] lo empuja hacia _su_ derecha y [[.sx]]
+hacia su izquierda, así que → lo corre a la derecha de hacia donde mira.
 
 La tabla de teclas se edita: tocá la tecla de una fila y apretá otra para
 cambiarla; **Memoria** acepta una dirección (1 a 999) o el nombre de una sysvar

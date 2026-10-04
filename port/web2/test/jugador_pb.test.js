@@ -133,10 +133,14 @@ test('detalleMemloc: número junto al sysvar y aclaración de los laterales', ()
   assert.deepEqual(detalleMemloc('3'), { numero: '', lateral: 'izquierda' });
   assert.deepEqual(detalleMemloc('50'), { numero: '', lateral: null });
   assert.deepEqual(detalleMemloc('.nada'), { numero: '', lateral: null });
-  // Las filas del preset: → escribe en 3 (.sx) y ← en 4 (.dx).
+  // Las filas de los presets: → y D escriben en 4 (.dx, la derecha del bot);
+  // ← y A, en 3 (.sx, su izquierda).
   const f = preset('flechas');
-  assert.equal(f.find((k) => k.codigo === 'ArrowRight')?.memloc, 3);
-  assert.equal(f.find((k) => k.codigo === 'ArrowLeft')?.memloc, 4);
+  assert.equal(f.find((k) => k.codigo === 'ArrowRight')?.memloc, 4);
+  assert.equal(f.find((k) => k.codigo === 'ArrowLeft')?.memloc, 3);
+  const w = preset('wasd');
+  assert.equal(w.find((k) => k.codigo === 'KeyD')?.memloc, 4);
+  assert.equal(w.find((k) => k.codigo === 'KeyA')?.memloc, 3);
 });
 
 test('mismasTeclas y modificadorAjeno', () => {
