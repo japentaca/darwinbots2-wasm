@@ -609,6 +609,11 @@ DB_EXPORT int db_sim_add_species(void* h, const char* dnatext,
   sp.color = color;
   sp.qty = static_cast<db::vb_integer>(qty > 0 ? qty : 1);
   sp.Native = true;
+  // Como el AddSpecie de la pantalla de opciones (OptionsForm.frm:3290-3296):
+  // tasas por defecto y Mutations = True. Sin esto la especie nacía con la
+  // tabla vacía y sus bots no mutaban al reproducirse con .repro.
+  db::SetDefaultMutationRates(sp.Mutables);
+  sp.Mutables.Mutations = true;
   sim.Specie.push_back(sp);
   return static_cast<int>(sim.Specie.size()) - 1;
 }

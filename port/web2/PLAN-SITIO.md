@@ -235,13 +235,15 @@ Capítulo 3 (La simulación) hecho el 2026-10-04: las 14 páginas están
 `revisada`, con 144 citas. Lo hizo una ola de 8 redactores y después un revisor.
 Lo que salió:
 
-- **Bug del host, abierto:** `db_sim_add_species` crea la especie con
-  `Mutables{}` (`Mutations = false`, tasas en 0) y ninguna API le pone las tasas
-  de fábrica. En la app nueva y en la clásica, los bots sembrados no mutan con
-  `.repro` aunque «Mutaciones» esté encendido; solo con `.mrepro`.
-  `simulacion/mutaciones` lo cuenta así (en un `:::cuidado` y en #quien-muta,
-  #mrepro y #encender), igual que la ficha de `.mrepro`. Si se corrige, hay
-  que reescribir esas partes.
+- **Bug del host, corregido el 2026-10-04:** `db_sim_add_species` creaba la
+  especie con `Mutables{}` (`Mutations = false`, tasas en 0), así que en la app
+  nueva y en la clásica los bots sembrados no mutaban con `.repro`, solo con
+  `.mrepro`. Ahora le pone las tasas de fábrica (`SetDefaultMutationRates`:
+  5000 en las 21 celdas) y `Mutations = true`, como el AddSpecie de
+  `OptionsForm.frm:3290-3296`. `simulacion/mutaciones` (#quien-muta, #tasas,
+  #mrepro, #encender) y la página de `.mrepro` ya describen el comportamiento
+  nuevo, medido con las mutaciones encendidas: con `.repro` muta ≈ 1 hijo de
+  cada 60 (ADN de 20 instrucciones) y con `.mrepro` ≈ 1 de cada 5.
 - Corregido en la referencia: `.delgene` (también se escribe por el lazo),
   `.nrg` (la condición del shock), `.maxvel` (el tope sale de opt:11),
   `.setaim` (el costo depende del número escrito), `.waste` (el −4) y

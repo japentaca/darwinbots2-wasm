@@ -585,3 +585,23 @@ TEST_CASE("F1 popcap - poda por especie a los mas pobres") {
   CHECK(db_sim_f1_popcap(h, 3) == 0);  // ya en el tope
   db_sim_destroy(h);
 }
+
+// OptionsForm.frm:3290-3296 — AddSpecie: la especie nueva nace con las tasas
+// por defecto (SetDefaultMutationRates sin skipNorm: 5000 en las 21 celdas,
+// P2UP incluido, y SetDefaultLengths) y Mutations = True. db_sim_add_species
+// la dejaba con la tabla vacía: sus bots no mutaban con .repro.
+TEST_CASE("db_sim_add_species - tasas de mutacion por defecto, como OptionsForm") {
+  void* h = db_sim_create();
+  db_sim_set_field(h, 8000, 6000);
+  db_sim_start(h, 1234);
+  const int sp = db_sim_add_species(h, kAlga, "a.txt", 0, 0, 3000, 0, 1);
+  const db::Mutationprobs& m = S(h).Specie[static_cast<std::size_t>(sp)].Mutables;
+  CHECK(m.Mutations);
+  for (int a = 0; a <= 20; ++a) CHECK(m.mutarray[a] == 5000);
+  CHECK(m.Mean[db::mut::PointUP] == 3);
+  CHECK(m.StdDev[db::mut::DeltaUP] == 150);
+  REQUIRE(db_sim_seed_species(h, sp, 0) == 1);
+  CHECK(S(h).rob[1].Mutables.Mutations);
+  CHECK(S(h).rob[1].Mutables.mutarray[db::mut::P2UP] == 5000);
+  db_sim_destroy(h);
+}

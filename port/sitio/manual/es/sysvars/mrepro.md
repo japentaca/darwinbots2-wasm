@@ -9,8 +9,9 @@ Funciona igual que [[.repro]]: el número es el porcentaje que se lleva el hijo,
 toma módulo 100, la orden queda escrita hasta que el parto sale bien y se cancela
 escribiendo 0. La diferencia está en el hijo: con la configuración habitual, sus
 probabilidades de mutar al nacer son diez veces más altas que las normales, y muta
-aunque su especie tenga las mutaciones apagadas. Si las mutaciones están apagadas
-para toda la simulación, no muta igual. Las mutaciones se explican en
+aunque su propia tabla de mutaciones esté apagada, algo que solo pasa en los bots de
+una simulación guardada que la trae así. Si las mutaciones están apagadas para toda
+la simulación, no muta igual. Las mutaciones se explican en
 [[simulacion/mutaciones]].
 
 Para qué sirve: un bot que se reproduce casi siempre con `.repro` y de vez en cuando

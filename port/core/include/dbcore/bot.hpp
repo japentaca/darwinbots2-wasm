@@ -110,6 +110,19 @@ inline void SetDefaultMutationRatesSkipNorm(Mutationprobs& changeme) {
   SetDefaultLengths(changeme);
 }
 
+// NeoMutations.bas:1072-1102 — SetDefaultMutationRates SIN skipNorm y con
+// NormMut = False (su valor de arranque; la rama NormMut está acoplada a la
+// UI): mutarray = 5000 en las 21 celdas, P2UP incluido, Mean = 1,
+// StdDev = 0, y SetDefaultLengths encima.
+inline void SetDefaultMutationRates(Mutationprobs& changeme) {
+  for (int a = 0; a <= 20; ++a) {
+    changeme.mutarray[a] = 5000;
+    changeme.Mean[a] = 1;
+    changeme.StdDev[a] = 0;
+  }
+  SetDefaultLengths(changeme);
+}
+
 // Type robot (Robots.bas:179-357). Subconjunto que el ciclo M3 necesita;
 // crece con los milestones (mutación/virus/skin quedan fuera).
 struct Bot {

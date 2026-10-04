@@ -161,7 +161,10 @@ Emscripten; presentación web separada.
     `db_sim_set_minvegs/set_repop/set_maxpop/set_max_energy/
     set_mutations/set_start_chlr`.
   - *Especies y siembra*: `db_sim_add_species` (ADN en memoria + color BGR
-    decidido por el host, Q01) y `db_sim_seed_species` — la siembra de
+    decidido por el host, Q01; la especie nace con las tasas de mutación de
+    fábrica y `Mutations = True`, como el AddSpecie de `OptionsForm.frm`;
+    hasta el 2026-10-04 nacía con la tabla vacía y sus bots solo mutaban con
+    `.mrepro`) y `db_sim_seed_species` — la siembra de
     `loadrobs` (`main.frm:1517-1573`) completa: `InsertFounder` + NoChlr,
     `chloroplasts = StartChlr`, Mutables, Skin, color y
     `GenMut = DnaLen/GeneticSensitivity`. `db_sim_insert_founder` se

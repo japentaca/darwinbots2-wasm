@@ -986,12 +986,7 @@ inline vb_integer AddSpecieFromFile(Sim& sim, int n, bool IsNative) {
 
   // SetDefaultMutationRates SIN skipNorm y NormMut = False: mutarray = 5000
   // en las 21 celdas (P2UP incluido) + SetDefaultLengths.
-  for (int a = 0; a <= 20; ++a) {
-    sp.Mutables.mutarray[a] = 5000;
-    sp.Mutables.Mean[a] = 1;
-    sp.Mutables.StdDev[a] = 0;
-  }
-  SetDefaultLengths(sp.Mutables);
+  SetDefaultMutationRates(sp.Mutables);
   sp.Mutables.Mutations = b.Mutables.Mutations;
 
   sp.qty = 5;

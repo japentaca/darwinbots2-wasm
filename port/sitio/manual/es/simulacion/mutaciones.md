@@ -14,7 +14,7 @@ nacer**, cuando se copia el ADN del padre (o se mezcla, en la reproducción
 sexual) para el hijo.
 
 ## Quién muta {#quien-muta}
-<!-- 40-MUTACIONES §1 (gates: Mutables.Mutations por bot y DisableMutations global); core mutations.hpp mutate -->
+<!-- 40-MUTACIONES §1 (gates: Mutables.Mutations por bot y DisableMutations global); core mutations.hpp mutate; dbcore_api.cpp db_sim_add_species (SetDefaultMutationRates y Mutations = True, como OptionsForm.frm:3290-3296) -->
 
 Para que un bot mute tienen que cumplirse dos cosas:
 
@@ -24,15 +24,10 @@ Para que un bot mute tienen que cumplirse dos cosas:
    una tabla con una tasa para cada tipo de mutación, que hereda de su padre.
    Un tipo con tasa 0 no ocurre nunca.
 
-:::cuidado
-Hoy la app siembra cada especie con la tabla **vacía**. Sus bots no mutan ni en
-vida ni al reproducirse con [[.repro]], aunque [[param:base:mutations]] esté
-encendido. Las mutaciones aparecen con [[.mrepro]], que le arma al hijo una
-tabla propia para ese parto ([[simulacion/mutaciones#mrepro|ver abajo]]), y en los bots de una
-simulación guardada por el DarwinBots original, que traen su tabla. La
-reproducción sexual varía igual el ADN, por la mezcla
-([[simulacion/reproduccion#mezcla]]).
-:::
+La app siembra cada especie con la tabla encendida y las tasas de fábrica
+([[simulacion/mutaciones#tasas|ver abajo]]), así que en la práctica alcanza con
+el interruptor. Una tabla apagada o con tasas en 0 solo llega en los bots de una
+simulación guardada que la traen así.
 
 ## Los tipos de mutación {#tipos}
 <!-- 40-MUTACIONES §0.1 (dos familias y orden al nacer), §2, §3; core bot.hpp SetDefaultLengths; sunbelt apagado (sim.hpp) -->
@@ -98,10 +93,11 @@ quedan en la zona de condiciones y no escriben nada (ver [[adn/genes]]). Ese
 bot ya no se reproduce.
 
 ## Las tasas {#tasas}
-<!-- 40-MUTACIONES §0.2 (agenda geométrica 1/(1000·rate) para Point; Bernoulli 1/rate por token al nacer; DeltaMut 1/(100·rate)); core bot.hpp SetDefaultMutationRatesSkipNorm (5000) -->
+<!-- 40-MUTACIONES §0.2 (agenda geométrica 1/(1000·rate) para Point; Bernoulli 1/rate por token al nacer; DeltaMut 1/(100·rate)); core bot.hpp SetDefaultMutationRates (5000), que usa db_sim_add_species -->
 
 Cada tasa es un número _N_ que se lee «**una en _N_**»: cuanto más grande, más
-rara la mutación. El valor de fábrica del motor es 5000 para todos los tipos.
+rara la mutación. El valor de fábrica es 5000 para todos los tipos, y es el
+que reciben las especies que siembra la app.
 
 | Tipo | Probabilidad |
 |---|---|
@@ -133,7 +129,7 @@ como estaba.
 :::
 
 ## Reproducirse para explorar: .mrepro {#mrepro}
-<!-- 36-REPRO §2 (sin Delta2: tasas ÷10, 0 → 1000, Mutations forzado solo para ese parto); core robots.hpp Reproduce; comprobado: con la tabla vacía de la app, 80 partos con .repro dan 0 mutaciones y con .mrepro 6 -->
+<!-- 36-REPRO §2 (sin Delta2: tasas ÷10, 0 → 1000, Mutations forzado solo para ese parto); core robots.hpp Reproduce; comprobado con las tasas de fábrica y un ADN de 20 instrucciones, 3 semillas: .repro 5 a 7 hijos mutantes de unos 360, .mrepro 57 a 61 de unos 330, y 0 con las mutaciones apagadas -->
 
 [[.mrepro]] funciona como [[.repro]], pero el hijo nace con la tabla de
 mutaciones **dividida por 10** solo para ese parto: cada tipo de nacimiento es
@@ -144,9 +140,9 @@ aunque su tabla estuviera apagada; lo único que lo impide es apagar
 Después del parto el hijo vuelve a la tabla heredada: en vida muta como su
 padre, y sus propios hijos con [[.repro]] también.
 
-Con la tabla vacía de la app, un bot de 13 instrucciones que se reproduce con
-[[.mrepro]] tuvo 6 hijos mutantes en 80 partos; el mismo bot con [[.repro]],
-ninguno.
+Con las tasas de fábrica, en una población de bots de 20 instrucciones, cerca
+de 1 de cada 60 hijos nació con algún cambio al reproducirse con [[.repro]], y
+casi 1 de cada 5 con [[.mrepro]].
 
 La idea es reservar [[.mrepro]] para cuando conviene probar cosas nuevas. El
 Animal_Minimalis_mod_stress del Bestiario se reproduce con [[.repro]] en
@@ -204,7 +200,7 @@ apagada y la app no tiene un control para encenderla. El detalle está en
 | Querés | Hacé |
 |---|---|
 | Que nadie mute | Apagá [[param:base:mutations]]. Es la única forma de frenar también a [[.mrepro]]. |
-| Copias exactas salvo cuando el bot lo pide | Con la tabla vacía de la app ya es así: usá [[.repro]] para copiar y [[.mrepro]] para explorar. |
+| Que muten más los hijos que el bot elija | Usá [[.repro]] para el parto normal y [[.mrepro]] para explorar: esos hijos mutan diez veces más. |
 | Hijos distintos sin mutaciones | Usá la reproducción sexual: la mezcla ya varía el ADN. |
 
 El motor trae además tres mecanismos que vienen apagados y la app no ofrece:
