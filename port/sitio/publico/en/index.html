@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DarwinBots</title>
+<meta name="description" content="DarwinBots 2.48.32 ported to WebAssembly: artificial life and evolution in the browser.">
+<link rel="icon" href="data:,">
+<link rel="alternate" hreflang="es" href="../">
+<script>
+// Mismo tema que la app (port/web2/src/lib/tema.js): mismo origen, misma clave.
+try {
+  const t = localStorage.getItem('darwinbots2.tema');
+  if (t === 'claro' || t === 'oscuro') document.documentElement.dataset.tema = t;
+} catch {}
+</script>
+<style>
+/* Portada provisoria en inglés (PLAN-SITIO.md, etapas S-A y S-E). Tokens de port/web2/src/app.css. */
+:root {
+  --fondo: #f4f3ef;
+  --texto: #151513;
+  --tarjeta: #fcfcfb;
+  --borde: #e1e0d9;
+  --acento: #0f5c55;
+  --acento-hover: #0a3f3a;
+  --sobre-acento: #ffffff;
+  --gris: #52514e;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fondo: #121312;
+    --texto: #e8e6df;
+    --tarjeta: #1b1c1a;
+    --borde: #2e2f2b;
+    --acento: #5cc2b5;
+    --acento-hover: #7fd3c8;
+    --sobre-acento: #0e0f0f;
+    --gris: #b8b6ad;
+    color-scheme: dark;
+  }
+}
+:root[data-tema="oscuro"] {
+  --fondo: #121312;
+  --texto: #e8e6df;
+  --tarjeta: #1b1c1a;
+  --borde: #2e2f2b;
+  --acento: #5cc2b5;
+  --acento-hover: #7fd3c8;
+  --sobre-acento: #0e0f0f;
+  --gris: #b8b6ad;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 17px/1.55 var(--sans);
+}
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 72px 16px 48px;
+}
+h1 { font-size: 2.4rem; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+.bajada { color: var(--gris); font-size: 1.15rem; margin: 0 0 32px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 48px; }
+.boton {
+  display: inline-block;
+  padding: 11px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: var(--tarjeta);
+  color: var(--texto);
+  text-decoration: none;
+  font-weight: 600;
+}
+.boton:hover { border-color: var(--acento); }
+.boton.principal { background: var(--acento); border-color: var(--acento); color: var(--sobre-acento); }
+.boton.principal:hover { background: var(--acento-hover); border-color: var(--acento-hover); }
+section {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+h2 { font-size: 1.1rem; margin: 0 0 6px; }
+section p { margin: 0; color: var(--gris); }
+a { color: var(--acento); }
+footer { color: var(--gris); font-size: 0.9rem; margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>DarwinBots</h1>
+  <p class="bajada">Artificial life in the browser: bots programmed in a stack language that
+    eat, shoot each other, tie together, reproduce and evolve by mutation.
+    It is DarwinBots 2.48.32 ported to WebAssembly, with the same engine.</p>
+  <div class="acciones">
+    <a class="boton principal" href="../app/">Open the app</a>
+    <a class="boton" href="manual/">Read the manual</a>
+    <a class="boton" href="../classic/">Classic interface</a>
+    <a class="boton" href="https://github.com/japentaca/darwinbots2-wasm">Source code</a>
+  </div>
+  <section>
+    <h2>Experiment</h2>
+    <p>Pick a scenario, seed species and change the world parameters while it runs.</p>
+  </section>
+  <section>
+    <h2>Analyze</h2>
+    <p>Population, genetics, phylogeny and events of every run, with replicates and reports.</p>
+  </section>
+  <section>
+    <h2>Bots and tournaments</h2>
+    <p>More than 600 bots from the forum, a DNA editor and tournaments in several formats.</p>
+  </section>
+  <section>
+    <h2><a href="manual/">Manual</a></h2>
+    <p>How the simulation works, the DNA language and every sysvar and operator. The reference is ready; the text is written in Spanish first and translated afterwards.</p>
+  </section>
+  <footer>
+    <p><a href="../" hreflang="es" lang="es">Español</a></p>
+  </footer>
+</main>
+</body>
+</html>

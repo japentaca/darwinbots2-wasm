@@ -1,5 +1,8 @@
 # Sitio darwinbots-wasm.org en Cloudflare Pages (port/web2/PLAN-SITIO.md S1-S3):
 #  - raíz:         portada (port/sitio/publico/).
+#  - /manual/:     el manual (port/sitio/generar.mjs: .md de port/sitio/manual/
+#                  más la referencia generada de spec/ y engine/opciones.js).
+#  - /en/, /en/manual/: la portada y el manual en inglés.
 #  - /app/:        la interfaz nueva (port/web2, build de Vite con base './').
 #  - /classic/:    la clásica (port/web/, congelada, sin cambios en sus fuentes).
 #  - /build-wasm/: dbcore.js + dbcore.wasm, compilados una sola vez y
@@ -50,8 +53,10 @@ jobs:
         run: |
           npm ci
           DB_BUILD_ID="${GITHUB_SHA::7}" npx vite build
-      - name: Armar el sitio (portada, app/, classic/, build-wasm/)
-        # Incluye el versionado de la clásica (cache busting con ?v=<commit>).
+      - name: Armar el sitio (portada, manual/, app/, classic/, build-wasm/)
+        # Incluye el versionado de la clásica (cache busting con ?v=<commit>) y
+        # el manual: falla con enlaces rotos, referencia incompleta o un bloque
+        # adn con avisos del lint.
         run: sh port/web2/scripts/armar-sitio.sh site "${GITHUB_SHA::7}"
       - uses: actions/upload-artifact@v4
         with:

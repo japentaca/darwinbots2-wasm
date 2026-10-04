@@ -1,0 +1,15 @@
+# Los datos de la spec en inglés, para las fichas de la referencia
+# (PLAN-SITIO.md S11, etapa S-E). spec/sysvars.yaml y spec/opcodes.yaml están
+# en español: cada entrada traduce algunos campos de una sysvar (por addr) o
+# de un operador (por token). Un campo que no está sale en español, marcado
+# con lang="es". El generador falla con una dirección, un token o un campo
+# que no existen.
+#   registros: escribe, lee, borra, rango, nota
+#   opcodes:   sem, effect, value
+# Ejemplo:
+#   registros:
+#     - {addr: 7, escribe: "DNA", borra: "…"}
+#   opcodes:
+#     - {token: add, sem: "a+b; …"}
+registros: []
+opcodes: []

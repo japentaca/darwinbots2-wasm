@@ -115,7 +115,7 @@ jobs:
       - name: Tests (node:test)
         run: npm test
       - name: Biome
-        run: npx biome check .
+        run: npx biome check . ../sitio/generar.mjs ../sitio/markdown.mjs ../sitio/yaml.mjs ../sitio/indice.mjs ../sitio/textos.mjs ../sitio/plantilla
       - name: Build (Vite)
         run: npx vite build
       - name: Build con DB_BUILD_ID (C4, el id llega al bundle)

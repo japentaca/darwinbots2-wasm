@@ -149,6 +149,37 @@ parámetros (S7, S8) con la prosa vacía, el índice con cada página en
 **Cierre:** el manual publicado muestra las ~360 páginas de referencia con
 sus datos, se busca y se navega.
 
+Hecho el 2026-10-03:
+
+- `port/sitio/generar.mjs` (sin dependencias; usa `yaml.mjs` y
+  `markdown.mjs`, propios) y `port/sitio/indice.mjs` (capítulos, páginas,
+  grupos de sysvars, familias de operadores). La plantilla está en
+  `port/sitio/plantilla/` (`manual.css` y `manual.js`); los tokens de tema
+  se copian al generar de `src/app.css` (todo lo anterior a `body {`).
+- 441 páginas: portada del manual, 9 capítulos, 75 de prosa, 17 grupos de
+  sysvars con 251 páginas (una por dirección con nombre, más `mem-0` y la
+  memoria genética en dos páginas por rango: `mem-971-975` y
+  `mem-976-990`), 8 familias con 79 operadores, 12 grupos de parámetros
+  (hijas de `app/experimentar-avanzado`) y las tablas `sysvars/todas` y
+  `operadores/todos`. Los 429 `.md` están sembrados con `estado: pendiente`.
+- URLs: `/manual/<capítulo>/<página>/`. Los símbolos de los operadores
+  tienen slug propio (`SLUG_OPERADOR`: `!=` → `distinto`, `&` → `bit-and`…).
+- Buscador: `buscar.json` (título, resumen, capítulo y palabras extra: alias,
+  dirección, nombre y variable de cada parámetro), que se baja la primera vez
+  que se usa; `/` lo enfoca. Tema: el botón cicla sistema → claro → oscuro con
+  la misma clave que la app (`darwinbots2.tema`).
+- Tests: `port/web2/test/manual.test.js` (10). Cubren el lector YAML, la
+  cobertura contra el vocabulario del editor (las 255 sysvars y todos los
+  comandos) y contra `PARAMETROS`, que todo enlace interno del HTML apunte a
+  un archivo generado, las extensiones (y que las rotas fallen), el Markdown y
+  el lint con el wasm. `npm run check` y el job web2 de `ci.yml` pasan Biome
+  también por las fuentes de `port/sitio`.
+- `armar-sitio.sh` genera el manual en `<sitio>/manual` con `--lint` (falla
+  si un bloque `adn` tiene avisos de `db_dna_lint`), y la portada enlaza al
+  manual.
+- «Abrir en la app» de los bloques `adn` queda para S-D: la app todavía no
+  tiene la ruta `#/bots/nuevo?adn=…`. Por ahora cada bloque lleva «Copiar».
+
 ### S-C · Redacción en español (en paralelo)
 
 Olas de redactores por capítulo, cada uno con su lista de páginas y las
@@ -162,11 +193,96 @@ Orden: 4, 5–6, 3, 1–2, 7, 8–9.
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector
 (S10).
 
+También: la ruta `#/bots/nuevo?adn=…` en la app (abre el editor con ese
+ADN) y el enlace «Abrir en la app» en los bloques `adn` del manual.
+
 **Cierre:** cada pantalla y cada parámetro llevan a su página.
 
 ### S-E · Inglés
 
 Traducción por capítulo en paralelo, con el test de paridad (S11).
+
+**Cierre:** cero páginas `pendiente` en `manual/en/` y `spec.yaml` con todos
+los campos traducidos.
+
+Parte técnica adelantada el 2026-10-03 (antes de S-C):
+
+- `generar.mjs` arma un manual por idioma (`IDIOMAS` en `port/sitio/textos.mjs`):
+  el español en `<sitio>/manual/` y el inglés en `<sitio>/en/manual/`, con las
+  mismas páginas y los mismos slugs (en español también en las URLs en
+  inglés). La CLI pasó de `--destino` a `--sitio <raíz>`; `armar-sitio.sh`
+  le pasa la carpeta del sitio.
+- Textos fijos: los de la plantilla, las fichas y los avisos en
+  `port/sitio/textos.mjs`; los títulos del índice, de los grupos de sysvars y
+  de las familias, en el campo `en` de `indice.mjs`; los parámetros salen de
+  `engine/opciones.js`, que ya tenía `en`. `manual.js` toma los suyos de
+  `<html lang>`.
+- Los 429 `.md` de `port/sitio/manual/en/` están sembrados (`pendiente`, con
+  el título en inglés). Las claves del frontmatter y los valores de `estado`
+  son los mismos que en español.
+- Los datos de la spec (en español) se traducen en
+  `port/sitio/manual/en/spec.yaml` (`registros` por `addr`, `opcodes` por
+  `token`; campos `escribe`, `lee`, `borra`, `rango`, `nota`, `sem`,
+  `effect`, `value`). Lo que falta sale en español con `lang="es"`. Una
+  dirección, un token o un campo que no existen hacen fallar el build.
+- Paridad (falla el build): una página en inglés que no está `pendiente`
+  necesita el original escrito, el mismo número de bloques ```` ```adn ```` y
+  los mismos `:::parametro`. Una página en inglés pendiente cuyo original está
+  escrito dice «This page has not been translated yet» y enlaza al español.
+- Cada página enlaza a su par en el otro idioma (barra y
+  `<link rel="alternate" hreflang>`). Portada en inglés en
+  `port/sitio/publico/en/index.html`; las dos portadas se enlazan.
+- Tests: 3 nuevos en `manual.test.js` (inglés con los textos fijos y los
+  enlaces cruzados, `spec.yaml`, paridad), y el de enlaces internos recorre
+  los dos idiomas.
+
+### Cómo se traduce una página
+
+`port/sitio/manual/en/<capítulo>/<página>.md`, con el mismo frontmatter
+(`titulo`, `resumen`, `etiquetas`, `estado`) en inglés. Se traduce desde el
+original en español ya `revisada`; los bloques ```` ```adn ```` se copian tal
+cual (se pueden traducir los comentarios `'`), los enlaces `[[…]]` no
+cambian, y un `[[página#ancla]]` usa el ancla de la página en inglés (o fijala
+con `{#ancla}` en los dos idiomas). Sysvars, operadores y nombres de bots no
+se traducen. Si el original cambia, la traducción se revisa a mano: la
+paridad solo compara bloques y parámetros.
+
+## Cómo se escribe una página
+
+Cada página es `port/sitio/manual/es/<capítulo>/<página>.md`:
+
+```
+---
+titulo: Genes: cond, start, else y stop
+resumen: "Una frase: sale bajo el título, en el índice y en el buscador."
+etiquetas: [gen, cond, start]
+estado: borrador
+---
+Texto en Markdown…
+```
+
+- `estado`: `pendiente` (sin escribir) → `borrador` (escrita) → `revisada`
+  (pasó el revisor de S12). Las comillas son opcionales: un valor entre
+  comillas se lee como cadena JSON.
+- Cursiva con `_guiones bajos_`: el asterisco es del ADN (`*.eye5`).
+- `[[.shoot]]` (o `[[.7]]`, por dirección), `[[op:store]]` (también
+  `[[op:!=]]`), `[[param:opt:11]]` y `[[adn/genes]]`, `[[adn/genes#ancla]]`
+  o `[[adn/genes|otro texto]]`. Un destino o un ancla que no existen hacen
+  fallar el build.
+- `## Título {#ancla}` fija el ancla; si no, sale del texto (sin acentos).
+- ```` ```adn ```` pasa por el lint; ```` ```adn sin-lint ```` no (para
+  mostrar un error a propósito). `:::nota` y `:::cuidado` hasta `:::`.
+- En una página de referencia (sysvar, operador, grupo) los datos de la spec
+  ya salen arriba: el `.md` lleva el resumen y la prosa (qué es, para qué
+  sirve, un ejemplo). En una de parámetros, la prosa de cada uno va en
+  `:::parametro opt:11` … `:::` y sale dentro de su ficha.
+- Las citas a la spec del revisor van en comentarios `<!-- 20-VM §5.4 -->`,
+  que no se publican.
+
+Se genera con `node port/sitio/generar.mjs` (salida en
+`port/sitio/salida/manual/` y `port/sitio/salida/en/manual/`, ignorada por
+git); `--sembrar` crea los `.md` que falten de páginas nuevas del índice, en
+los dos idiomas.
 
 ## Cómo se reparte el trabajo
 

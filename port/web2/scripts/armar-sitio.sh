@@ -1,6 +1,10 @@
 #!/bin/sh
 # Arma el sitio darwinbots-wasm.org (PLAN-SITIO.md S1; PLAN.md C1, C2 y C4):
-#   <destino>/                 port/sitio/publico/ (portada, _headers)
+#   <destino>/                 port/sitio/publico/ (portadas en español y en
+#                              en/, _headers)
+#   <destino>/manual/          el manual, generado por port/sitio/generar.mjs
+#                              (con el lint de sus bloques adn: usa el wasm)
+#   <destino>/en/manual/       el manual en inglés (el mismo generador)
 #   <destino>/app/             port/web2/dist/ (la interfaz nueva)
 #   <destino>/classic/         copia de port/web/ (la clásica, congelada)
 #   <destino>/build-wasm/      dbcore.js + dbcore.wasm, compartidos por las dos
@@ -25,7 +29,7 @@ AQUI=$(cd "$(dirname "$0")" && pwd)
 PORT=$(cd "$AQUI/../.." && pwd)
 DIST=${DB_DIST:-$PORT/web2/dist}
 
-for f in "$PORT/sitio/publico/index.html" "$DIST/index.html" "$PORT/build-wasm/dbcore.js" "$PORT/build-wasm/dbcore.wasm" "$PORT/web/index.html" "$PORT/web/worker.js"; do
+for f in "$PORT/sitio/publico/index.html" "$PORT/sitio/generar.mjs" "$DIST/index.html" "$PORT/build-wasm/dbcore.js" "$PORT/build-wasm/dbcore.wasm" "$PORT/web/index.html" "$PORT/web/worker.js"; do
   if [ ! -f "$f" ]; then
     echo "falta $f" >&2
     exit 1
@@ -52,6 +56,7 @@ fi
 mkdir -p "$DEST/app"
 cp -R "$PORT/sitio/publico/." "$DEST/"
 cp -R "$DIST/." "$DEST/app/"
+node "$PORT/sitio/generar.mjs" --sitio "$DEST" --lint
 cp -R "$PORT/web" "$DEST/classic"
 mkdir -p "$DEST/build-wasm"
 cp "$PORT/build-wasm/dbcore.js" "$PORT/build-wasm/dbcore.wasm" "$DEST/build-wasm/"

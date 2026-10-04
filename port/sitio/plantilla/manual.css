@@ -1,0 +1,482 @@
+/* Estilos del manual (PLAN-SITIO.md S9). Los tokens vienen de app.css, arriba. */
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-padding-top: 72px;
+}
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px / 1.6 var(--sans);
+}
+a {
+  color: var(--acento);
+}
+a:hover {
+  color: var(--acento-hover);
+}
+code,
+pre {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+:not(pre) > code {
+  background: var(--chip);
+  color: var(--chip-texto);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+a code {
+  color: inherit;
+}
+
+/* ---- Barra superior ---- */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--barra);
+  color: var(--barra-texto);
+  border-bottom: 1px solid var(--barra-borde);
+}
+.barra a,
+.barra button {
+  color: var(--barra-texto);
+  text-decoration: none;
+  font: inherit;
+  font-size: 14px;
+}
+.barra .marca {
+  font-weight: 700;
+  color: #fff;
+}
+.barra .marca-manual {
+  color: var(--barra-texto);
+}
+.barra button {
+  background: none;
+  border: 1px solid var(--barra-hover);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.barra button:hover,
+.barra .ir-app:hover,
+.barra .idioma:hover {
+  background: var(--barra-hover);
+}
+.barra .ir-app,
+.barra .idioma {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--barra-hover);
+  white-space: nowrap;
+}
+.menu,
+.idioma .corto {
+  display: none;
+}
+.buscador {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+  margin-left: auto;
+}
+.buscador input {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--barra-hover);
+  background: var(--barra-hover);
+  color: #fff;
+}
+.buscador input::placeholder {
+  color: var(--barra-texto);
+}
+.resultados {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--tarjeta);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px var(--sombra);
+  max-height: 70vh;
+  overflow: auto;
+}
+.resultados .vacio {
+  padding: 6px 8px;
+  color: var(--gris);
+  font-size: 14px;
+}
+
+/* ---- Cuerpo ---- */
+.cuerpo {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+main {
+  padding: 24px 32px 48px;
+  max-width: 860px;
+  min-width: 0;
+}
+.migas {
+  font-size: 13px;
+  color: var(--gris);
+  min-height: 1em;
+}
+.migas a {
+  color: var(--gris);
+}
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin: 2em 0 0.5em;
+}
+h3 {
+  font-size: 1.1rem;
+  margin: 1.6em 0 0.4em;
+}
+.resumen,
+.bajada {
+  font-size: 1.1rem;
+  color: var(--gris);
+  margin-top: 0;
+}
+.tabla {
+  overflow-x: auto;
+  margin: 1em 0;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: top;
+}
+th {
+  font-weight: 600;
+  color: var(--gris);
+}
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.alias {
+  color: var(--gris);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.ficha,
+.param {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 18px;
+  margin: 16px 0 24px;
+}
+.param h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+.ficha-tit {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gris);
+}
+dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+dt {
+  color: var(--gris);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.cita {
+  font-size: 12px;
+  color: var(--gris-claro);
+  margin: 10px 0 0;
+}
+.ayuda {
+  margin: 0 0 10px;
+}
+.aviso {
+  border-radius: var(--radio);
+  padding: 4px 16px;
+  margin: 16px 0;
+  border: 1px solid var(--borde);
+  background: var(--tarjeta);
+}
+.aviso.cuidado {
+  background: var(--aviso-fondo);
+  border-color: var(--aviso-borde);
+  color: var(--aviso-texto);
+}
+.aviso.nota {
+  background: var(--seleccion-suave);
+  border-color: var(--seleccion-borde);
+}
+.aviso.pendiente {
+  color: var(--gris);
+}
+blockquote {
+  margin: 1em 0;
+  padding: 0 16px;
+  border-left: 3px solid var(--borde);
+  color: var(--gris);
+}
+pre {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 12px 14px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.adn {
+  position: relative;
+}
+.adn .copiar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--borde-control);
+  background: var(--fondo);
+  color: var(--gris);
+  cursor: pointer;
+}
+.adn .copiar:hover {
+  color: var(--texto);
+}
+.indice-caps {
+  list-style: none;
+  padding: 0;
+}
+.indice-caps li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+.indice-caps a {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.indice-caps span {
+  display: block;
+  color: var(--gris);
+  font-size: 14px;
+}
+.chip-estado {
+  margin-left: 8px;
+  font-size: 11px;
+  font-style: normal;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--gris);
+}
+.pasos {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+.pasos a {
+  display: block;
+  max-width: 48%;
+  text-decoration: none;
+}
+.pasos small {
+  display: block;
+  color: var(--gris);
+  font-size: 12px;
+}
+.pasos .sig {
+  text-align: right;
+}
+footer {
+  border-top: 1px solid var(--borde);
+  color: var(--gris);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 16px;
+}
+.lateral {
+  position: sticky;
+  top: 56px;
+  align-self: start;
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 20px 12px 40px 16px;
+  font-size: 14px;
+  border-right: 1px solid var(--borde);
+}
+.lateral ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lateral ul ul {
+  padding-left: 12px;
+  margin: 2px 0 6px;
+  border-left: 1px solid var(--borde);
+}
+.lateral a {
+  display: block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--texto);
+  text-decoration: none;
+}
+.cap > a {
+  font-weight: 600;
+}
+.lateral a:hover {
+  background: var(--hover-claro);
+}
+.lateral a[aria-current="page"] {
+  background: var(--seleccion);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+.resultados a {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--texto);
+}
+.resultados a small {
+  display: block;
+  color: var(--gris);
+  font-size: 12px;
+}
+.resultados .activo a,
+.resultados a:hover {
+  background: var(--seleccion);
+}
+/* Colores del ADN: los del editor (AreaAdn.svelte). */
+.r-com {
+  color: var(--codigo-com);
+  font-style: italic;
+}
+.r-off {
+  color: var(--codigo-off);
+  text-decoration: line-through;
+}
+.r-flu {
+  color: var(--codigo-flu);
+  font-weight: 600;
+}
+.r-sys {
+  color: var(--acento);
+}
+.r-num {
+  color: var(--codigo-num);
+}
+.r-ref {
+  color: var(--codigo-ref);
+}
+.r-cmd {
+  color: var(--chip-texto);
+}
+.r-def {
+  color: var(--codigo-def);
+}
+.r-err {
+  color: var(--codigo-num);
+  text-decoration: underline wavy var(--ambar);
+}
+
+/* ---- Celular ---- */
+@media (max-width: 900px) {
+  .cuerpo {
+    display: block;
+  }
+  .menu {
+    display: inline-block;
+  }
+  .lateral {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    max-height: none;
+    z-index: 9;
+    background: var(--fondo);
+    box-shadow: 4px 0 24px var(--sombra);
+  }
+  body.con-indice .lateral {
+    display: block;
+  }
+  main {
+    padding: 16px 16px 40px;
+  }
+  .barra {
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .barra .marca-manual,
+  .barra .ir-app {
+    display: none;
+  }
+  h1 {
+    font-size: 1.6rem;
+  }
+}
+@media (max-width: 520px) {
+  .barra .marca,
+  .idioma .largo {
+    display: none;
+  }
+  .idioma .corto {
+    display: inline;
+  }
+  dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  dd {
+    margin-bottom: 6px;
+  }
+}

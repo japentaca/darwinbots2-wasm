@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test \"test/**/*.test.js\"",
-    "check": "biome check ."
+    "check": "biome check . ../sitio/generar.mjs ../sitio/markdown.mjs ../sitio/yaml.mjs ../sitio/indice.mjs ../sitio/textos.mjs ../sitio/plantilla"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
