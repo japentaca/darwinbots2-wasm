@@ -7,7 +7,7 @@ estado: revisada
 Funciona igual que [[.tieang1]], pero para el **tercer lazo** del bot, contando
 desde el más antiguo que le queda (si se corta uno anterior, este corre un
 lugar). Solo actúa si el bot es multicelular ([[.multi]]) y ese lazo está
-endurecido; si no, el motor no toca la celda.
+endurecido; si no, el motor no toca la celda. Tampoco la toca si [[.tienum]] y [[.tiepres]] valen 0 los dos.
 
 Al leerla, da la dirección del compañero vista desde el bot, de 0 a 1256, medida
 antes de que el motor mueva a los bots. Al escribirla con [[op:store]] u otro

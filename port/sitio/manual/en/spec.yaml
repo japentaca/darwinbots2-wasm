@@ -1,11 +1,12 @@
-# Los datos de la spec en inglés, para las fichas de la referencia
-# (PLAN-SITIO.md S11, etapa S-E). spec/sysvars.yaml y spec/opcodes.yaml están
-# en español: cada entrada traduce algunos campos de una sysvar (por addr) o
-# de un operador (por token). Un campo que no está sale en español, marcado
-# con lang="es". El generador falla con una dirección, un token o un campo
-# que no existen.
+# Las fichas de la referencia en inglés (PLAN-SITIO.md S11, etapa S-E). Se
+# traducen desde la versión llana en español (manual/es/spec/*.yaml), no desde
+# spec/: cada entrada traduce algunos campos de una sysvar (por addr) o de un
+# operador (por token). Un campo que no está sale en español, marcado con
+# lang="es". El generador falla con una dirección, un token o un campo que no
+# existen, o con una entrada repetida. También se puede repartir en
+# manual/en/spec/*.yaml.
 #   registros: escribe, lee, borra, rango, nota
-#   opcodes:   sem, effect, value
+#   opcodes:   sem, effect, value, cost, flow
 # Ejemplo:
 #   registros:
 #     - {addr: 7, escribe: "DNA", borra: "…"}

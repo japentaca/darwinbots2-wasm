@@ -44,9 +44,10 @@ El gen que guarda va después del que compara, así la celda 50 todavía tiene
 el valor viejo cuando se la lee.
 
 :::cuidado
-Como en `%=`, con una referencia negativa el margen queda dado vuelta y `~=` es
-**siempre falso**, aunque los números sean iguales. Lo mismo pasa con un
-porcentaje negativo. Pasá los valores por [[op:abs]] si pueden ser negativos.
+Como en `%=`, si la referencia o el porcentaje es negativo (uno solo de los dos),
+el margen queda dado vuelta y `~=` es **siempre falso**, aunque los números sean
+iguales. Con los dos negativos, los signos se cancelan y el margen vuelve a ser
+positivo. Pasá los valores por [[op:abs]] si pueden ser negativos.
 :::
 
 Si te olvidás del porcentaje, `~=` igual saca tres números: toma como

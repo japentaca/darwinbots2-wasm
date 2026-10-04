@@ -8,7 +8,7 @@ estado: revisada
 Escribí cuántos cloroplastos querés sacar y el motor los quita en el mismo ciclo. No
 cuesta energía, pero tampoco la devuelve: lo que pagaste con [[.mkchlr]] se pierde.
 Si pedís sacar más de los que hay, quedan en 0. La orden se borra después de
-usarse, y un valor negativo no hace nada.
+usarse. Un valor negativo no hace nada y queda escrito en la celda.
 
 Sirve para alivianar al bot (los cloroplastos pesan mucho, ver [[.mass]]) o para
 dejar de ser planta, por ejemplo antes de fabricar un virus, que exige no tener

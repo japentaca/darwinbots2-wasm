@@ -24,7 +24,7 @@ superpongan. Después el motor vuelve a escribir la medición en la celda. Con
 <!-- port/core ties.hpp Update_Ties (sin Abs, a diferencia de fixlen); 20-VM §7 -->
 
 Si el bot no es multicelular o el primer lazo no está endurecido, el motor no toca
-la celda.
+la celda. Tampoco la toca si [[.tienum]] y [[.tiepres]] valen 0 los dos.
 
 ```adn
 ' mantener el primer lazo a 150

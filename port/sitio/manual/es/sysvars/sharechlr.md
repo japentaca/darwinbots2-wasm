@@ -14,7 +14,7 @@ mayor parte.
 
 Detalles que conviene saber:
 
-- El valor va de 0 a 99: un número mayor cuenta como 99.
+- El valor va de 1 a 99 (con 0 no reparte): un número mayor cuenta como 99.
 - Se aplica en el mismo ciclo y la celda se vuelve a 0 en todos los bots, tengan
   lazos o no. Para compartir de forma continua, escribila cada ciclo.
 - Solo comparte con parientes cercanos. Si el ADN de los dos bots difiere más de un

@@ -1,0 +1,21 @@
+# Fichas en castellano llano: escritura en memoria (stores) y flujo (cond, start, else, stop, end)
+opcodes:
+  - {token: store, sem: "Saca una dirección y un valor, y escribe el valor en esa celda, recortado a ±32000 de forma circular: 32001 queda en 1. Con la dirección 0 no escribe, no cobra y el valor queda en la pila."}
+  - {token: inc, sem: "Saca una dirección y le suma 1 a esa celda. Pasando 32000 vuelve a 1. Con la dirección 0 no hace nada."}
+  - {token: dec, sem: "Saca una dirección y le resta 1 a esa celda. No se frena en 0, y por debajo de −32000 vuelve a −1. Con la dirección 0 no hace nada."}
+  - {token: addstore, sem: "Saca una dirección y un valor, y le suma el valor a esa celda, recortado a ±32000 de forma circular. Con la dirección 0 el valor queda en la pila."}
+  - {token: substore, sem: "Saca una dirección y un valor, y deja en la celda lo que tenía menos el valor, recortado a ±32000 de forma circular. Con la dirección 0 el valor queda en la pila."}
+  - {token: multstore, sem: "Saca una dirección y un valor, y multiplica la celda por el valor, recortado a ±32000 de forma circular. Con la dirección 0 el valor queda en la pila."}
+  - {token: divstore, sem: "Saca una dirección y un valor, y divide la celda por el valor, redondeando al entero más cercano (en el empate, al par). Dividir por 0 la deja en 0. Con la dirección 0 el valor se pierde."}
+  - {token: ceilstore, sem: "Saca una dirección y un valor, y deja en la celda el menor de los dos: es un techo. Con la dirección 0 el valor se pierde."}
+  - {token: floorstore, sem: "Saca una dirección y un valor, y deja en la celda el mayor de los dos: es un piso. Con la dirección 0 el valor se pierde."}
+  - {token: rndstore, sem: "Saca una dirección y cambia la celda por un número al azar entre 0 y lo que tenía, ambos incluidos. Con −5 da de −5 a 0."}
+  - {token: sgnstore, sem: "Saca una dirección y deja en la celda solo su signo: −1, 0 o 1."}
+  - {token: absstore, sem: "Saca una dirección y le quita el signo a la celda: −77 pasa a 77."}
+  - {token: sqrstore, sem: "Saca una dirección y deja en la celda su raíz cuadrada, redondeada al entero más cercano. Si tenía 0 o un negativo, queda en 0."}
+  - {token: negstore, sem: "Saca una dirección y le invierte el signo a la celda: 20 pasa a −20."}
+  - {token: cond, sem: "Cierra el gen anterior y abre uno nuevo con su zona de condiciones. Vacía la pila booleana. Ahí corre todo, pero los stores no escriben."}
+  - {token: start, sem: "Abre el cuerpo del gen. Tras un [[op:cond]], vacía la pila booleana y corre solo si todas las condiciones dan verdadero (o no hay ninguna). Sin cond delante, abre un gen sin condiciones."}
+  - {token: else, sem: "Abre el cuerpo del «si no»: corre solo si las condiciones del gen dieron falso. Después de un start sin cond, de un stop o de otro else, no corre nunca."}
+  - {token: stop, sem: "Cierra el gen: hasta el próximo cond, start o else no se ejecuta nada. No vacía la pila booleana, salvo que cierre directamente las condiciones de un cond."}
+  - {token: end, sem: "Corta la ejecución del ADN en ese ciclo: lo que viene después no corre. El motor agrega uno al final al cargar el bot."}

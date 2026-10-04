@@ -20,8 +20,7 @@ stop
 ```
 
 :::nota
-Los datos de arriba vienen del DarwinBots original, donde esta sysvar no se borraba
-nunca: al perder el lazo seguías leyendo el caparazón del último compañero. En esta
-versión se borra junto con las otras [[sysvars/tref|tref*]] (ver
+En el DarwinBots original esta sysvar no se borraba nunca: al perder el lazo
+seguías leyendo el caparazón del último compañero. En esta versión se borra junto con las otras [[sysvars/tref|tref*]] (ver
 [[tecnico/diferencias]]).
 :::

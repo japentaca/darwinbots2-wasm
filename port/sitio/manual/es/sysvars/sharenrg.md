@@ -18,7 +18,7 @@ Condiciones y límites:
 - En un ciclo no se mueve más energía que tu cuerpo ([[.body]]); si la
   diferencia es grande, tarda varios ciclos.
 - Quien pide el reparto paga el 1 % de lo que se movió.
-- El valor se toma módulo 100, con el 0 convertido en 100: 100 es «todo para mí»
+- El valor se toma módulo 100, y un resto de 0 (como 200) vale 100: 100 es «todo para mí»
   y 150 es 50. Un 0 o un negativo no hace nada.
 
 <!-- 34-TIES §2 (sharing P3, solo multibot y ties no-back), §2.1 (límite por body, 1 % al iniciador); comprobado con probar-adn: con 90 en los dos, solo el hijo (creador) mueve energía, de a 500 por ciclo (su body) y pagando 5 -->

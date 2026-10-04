@@ -35,7 +35,7 @@ En la prueba, la celda 50 del blanco pasó a valer 77 dos ciclos después.
 
 :::cuidado
 A diferencia de `.shoot`, el motor no borra `.shootval` todos los ciclos:
-solo cuando de verdad dispara. Si la escribís en un ciclo en que no
-disparás, queda ahí y se aplica al próximo disparo, aunque sea de otro tipo.
+solo en los ciclos en que [[.shoot]] tiene algo distinto de 0, aunque el tiro
+no llegue a salir. Si la escribís en un ciclo en que no disparás, queda ahí y se aplica al próximo disparo, aunque sea de otro tipo.
 Lo seguro es escribirla siempre junto con la orden de disparo.
 :::

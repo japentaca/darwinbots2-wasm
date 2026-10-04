@@ -343,8 +343,8 @@ export const MEMORIA_GENETICA = [
 /**
  * Familias de operadores: la sección de spec/opcodes.yaml de cada una, y el
  * costo y el momento en que se ejecutan (spec/20-VM.md §1, tabla de tipos).
- * Los costos son índices de la tabla de costos, multiplicados por
- * COSTMULTIPLIER (índice 54).
+ * El costo va con enlaces a sus parámetros ([[param:cost:N]]); todos se
+ * multiplican por el multiplicador de costos (cost:54).
  */
 const DENTRO_DEL_GEN = 'dentro de un gen: en la condición (cond) y en el cuerpo (start o else)';
 const INSIDE_A_GENE = 'inside a gene: in the condition (cond) and in the body (start or else)';
@@ -353,11 +353,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'literales',
     titulo: 'Números y lecturas',
     secciones: ['pseudo_tokens'],
-    costo: 'NUMCOST (0) el número, DOTNUMCOST (1) la lectura',
+    costo: '[[param:cost:0]] el número, [[param:cost:1]] la lectura',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Numbers and reads',
-      costo: 'NUMCOST (0) for the number, DOTNUMCOST (1) for the read',
+      costo: '[[param:cost:0]] for the number, [[param:cost:1]] for the read',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -365,11 +365,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'basicos',
     titulo: 'Básicos',
     secciones: ['basicos'],
-    costo: 'BCCMDCOST (2)',
+    costo: '[[param:cost:2]]',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Basic',
-      costo: 'BCCMDCOST (2)',
+      costo: '[[param:cost:2]]',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -377,11 +377,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'avanzados',
     titulo: 'Avanzados',
     secciones: ['avanzados'],
-    costo: 'ADCMDCOST (3); debugint y debugbool no cuestan',
+    costo: '[[param:cost:3]]; debugint y debugbool no cuestan',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Advanced',
-      costo: 'ADCMDCOST (3); debugint and debugbool are free',
+      costo: '[[param:cost:3]]; debugint and debugbool are free',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -389,11 +389,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'bits',
     titulo: 'Bit a bit',
     secciones: ['bitwise'],
-    costo: 'BTCMDCOST (4)',
+    costo: '[[param:cost:4]]',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Bitwise',
-      costo: 'BTCMDCOST (4)',
+      costo: '[[param:cost:4]]',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -401,11 +401,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'comparaciones',
     titulo: 'Comparaciones',
     secciones: ['condiciones'],
-    costo: 'CONDCOST (5)',
+    costo: '[[param:cost:5]]',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Comparisons',
-      costo: 'CONDCOST (5)',
+      costo: '[[param:cost:5]]',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -413,11 +413,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'logicos',
     titulo: 'Lógicos',
     secciones: ['logicos'],
-    costo: 'LOGICCOST (6)',
+    costo: '[[param:cost:6]]',
     cuando: DENTRO_DEL_GEN,
     en: {
       titulo: 'Logic',
-      costo: 'LOGICCOST (6)',
+      costo: '[[param:cost:6]]',
       cuando: INSIDE_A_GENE,
     },
   },
@@ -425,12 +425,12 @@ export const FAMILIAS_OPERADORES = [
     slug: 'escritura',
     titulo: 'Escritura en memoria',
     secciones: ['stores'],
-    costo: 'COSTSTORE (7) dividido por el divisor de cada uno, solo si escribe',
+    costo: '[[param:cost:7]] dividido por el divisor de cada uno, solo si escribe',
     cuando:
       'en el cuerpo de un gen (start o else) y solo si el tope de la pila booleana es verdadero o está vacía',
     en: {
       titulo: 'Writing to memory',
-      costo: 'COSTSTORE (7) divided by the divisor of each one, only if it writes',
+      costo: '[[param:cost:7]] divided by the divisor of each one, only if it writes',
       cuando:
         'in the body of a gene (start or else), and only if the top of the boolean stack is true or the stack is empty',
     },
@@ -439,11 +439,11 @@ export const FAMILIAS_OPERADORES = [
     slug: 'flujo',
     titulo: 'Flujo',
     secciones: ['flujo', 'flujo_maestro'],
-    costo: 'FLOWCOST (9); end no cuesta',
+    costo: '[[param:cost:9]]; end no cuesta',
     cuando: 'siempre',
     en: {
       titulo: 'Flow',
-      costo: 'FLOWCOST (9); end is free',
+      costo: '[[param:cost:9]]; end is free',
       cuando: 'always',
     },
   },

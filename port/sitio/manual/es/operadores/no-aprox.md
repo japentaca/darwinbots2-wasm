@@ -33,8 +33,8 @@ Fuera del caso de los números enormes que se cuenta abajo, `~=` y `!~=` son
 complementarios: si le ponés al bot este contador y el de la página de
 [[op:~=]], en cada ciclo suma exactamente uno de los dos.
 
-Como es la negación, hereda al revés las rarezas de `~=`: con una referencia
-negativa o un porcentaje negativo da **siempre verdadero**. Y tiene una
+Como es la negación, hereda al revés las rarezas de `~=`: si la referencia o
+el porcentaje es negativo (uno solo de los dos), da **siempre verdadero**. Y tiene una
 diferencia propia: el margen calculado se planta en dos mil millones, cosa que
 `~=` no hace. Solo importa con números enormes, de los que no entran en la
 memoria; en ese caso `~=` y `!~=` pueden dar los dos verdadero a la vez.

@@ -7,7 +7,7 @@ estado: revisada
 Funciona igual que [[.tielen1]], pero para el **segundo lazo** del bot, contando
 desde el más antiguo que le queda (si se corta uno anterior, este corre un
 lugar). Solo actúa si el bot es multicelular ([[.multi]]) y ese lazo está
-endurecido; si no, el motor no toca la celda.
+endurecido; si no, el motor no toca la celda. Tampoco la toca si [[.tienum]] y [[.tiepres]] valen 0 los dos.
 
 Al leerla, da la distancia al compañero descontando los dos radios, medida antes
 de que el motor mueva a los bots. Al escribirla con [[op:store]] u otro store de

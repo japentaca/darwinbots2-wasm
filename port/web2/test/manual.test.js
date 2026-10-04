@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import {
   anclaParam,
   armarPaginas,
+  CAMPOS_TRADUCIBLES,
   cargarSpec,
   cargarTraduccionSpec,
   generar,
@@ -171,6 +172,67 @@ test('inglés: spec.yaml traduce campos de la spec y rechaza lo que no existe', 
     /<dt>Read by<\/dt><dd>Shooting<\/dd>/,
   );
   assert.match(String(r.archivos.get('operadores/add/index.html')), /<dd>a\+b<\/dd>/);
+});
+
+test('fichas: cada campo de la spec tiene su versión llana (manual/es/spec/*.yaml)', () => {
+  /** @type {string[]} */
+  const errores = [];
+  const llano = cargarTraduccionSpec('es', spec, errores);
+  assert.deepEqual(errores, []);
+  const vacio = (/** @type {any} */ v) => v === null || v === undefined || v === '';
+  const faltan = [];
+  for (const r of spec.registros)
+    for (const k of CAMPOS_TRADUCIBLES.registros)
+      if (!vacio(r[k]) && llano.registros.get(r.addr)?.[k] === undefined)
+        faltan.push(`${r.addr}.${k}`);
+  for (const [sec, ops] of Object.entries(spec.opcodes))
+    if (sec !== 'meta')
+      // value solo sale en la ficha de los pseudo-tokens (los que tienen tipo)
+      for (const op of /** @type {any[]} */ (ops))
+        for (const k of CAMPOS_TRADUCIBLES.opcodes)
+          if (
+            !vacio(op[k]) &&
+            (k !== 'value' || op.tipo !== undefined) &&
+            llano.opcodes.get(op.token)?.[k] === undefined
+          )
+            faltan.push(`${op.token}.${k}`);
+  assert.deepEqual(faltan, []);
+});
+
+test('fichas: la versión llana en español reemplaza el dato, enlaza y "" oculta', async () => {
+  /** @type {string[]} */
+  const errores = [];
+  const llano = cargarTraduccionSpec(
+    'es',
+    spec,
+    errores,
+    'registros:\n  - {addr: 7, lee: "El motor, al disparar ([[.shootval]])", nota: ""}\nopcodes:\n  - {token: add, sem: "Suma", cost: "Barato"}\n',
+  );
+  assert.deepEqual(errores, []);
+  const es = armarPaginas(spec);
+  es.traduccion = llano;
+  es.llano = llano;
+  leerMd(es.paginas, es.errores, 'es');
+  const r = await generar(es);
+  const shoot = String(r.archivos.get('sysvars/shoot/index.html'));
+  assert.match(
+    shoot,
+    /<dt>Quién la lee<\/dt><dd>El motor, al disparar \(<a href="\.\.\/\.\.\/sysvars\/shootval\/">/,
+  );
+  assert.doesNotMatch(shoot, /<dt>Nota<\/dt>/);
+  assert.doesNotMatch(shoot, /Fuente en el original/);
+  const add = String(r.archivos.get('operadores/add/index.html'));
+  assert.match(add, /<dd>Suma<\/dd>/);
+  assert.match(add, /<dt>Costo<\/dt><dd>Barato<\/dd>/);
+  // En inglés, lo que falta traducir sale de la versión llana, marcado.
+  const en = armarPaginas(spec, 'en');
+  en.llano = llano;
+  leerMd(en.paginas, en.errores, 'en');
+  const re = await generar(en, { original: es.paginas });
+  assert.match(
+    String(re.archivos.get('operadores/add/index.html')),
+    /<dd><span lang="es">Suma<\/span><\/dd>/,
+  );
 });
 
 test('inglés: paridad con el original y aviso de página sin traducir', async () => {

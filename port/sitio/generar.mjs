@@ -80,44 +80,66 @@ export function cargarSpec(raiz = RAIZ_REPO) {
   return { registros: /** @type {any[]} */ (sysvars.registros), opcodes };
 }
 
-/** Campos de la spec que se traducen en manual/<idioma>/spec.yaml. */
+/** Campos de la spec que se reescriben en manual/<idioma>/spec.yaml y spec/*.yaml. */
 export const CAMPOS_TRADUCIBLES = {
   registros: ['escribe', 'lee', 'borra', 'rango', 'nota'],
-  opcodes: ['sem', 'effect', 'value'],
+  opcodes: ['sem', 'effect', 'value', 'cost', 'flow'],
 };
 
 /**
- * La traducción de los datos de la spec de un idioma (manual/<idioma>/spec.yaml):
- * `registros: [{addr, escribe, …}]` y `opcodes: [{token, sem, …}]`. Falta el
- * archivo = nada traducido. Una dirección, un token o un campo que no existen
- * van a `errores`. `texto` reemplaza al archivo (para los tests).
+ * Los datos de la spec reescritos para las fichas en un idioma:
+ * manual/<idioma>/spec.yaml más manual/<idioma>/spec/*.yaml, con
+ * `registros: [{addr, escribe, …}]` y `opcodes: [{token, sem, …}]`. En español
+ * es la versión llana (sin jerga, y con lo que hace el port); en inglés, su
+ * traducción. Sin archivos = nada reescrito. Una dirección, un token o un campo
+ * que no existen, o una entrada repetida, van a `errores`. `texto` reemplaza a
+ * los archivos (para los tests).
  * @param {Idioma} idioma @param {{registros: any[], opcodes: any}} spec @param {string[]} errores
  * @param {string} [texto]
  */
 export function cargarTraduccionSpec(idioma, spec, errores, texto) {
   /** @type {{registros: Map<number, any>, opcodes: Map<string, any>}} */
   const t = { registros: new Map(), opcodes: new Map() };
-  const f = path.join(manualDe(idioma), 'spec.yaml');
-  if (idioma === 'es' || (texto === undefined && !fs.existsSync(f))) return t;
-  const y = leerYaml(texto ?? fs.readFileSync(f, 'utf8'));
+  const base = manualDe(idioma);
+  const dir = path.join(base, 'spec');
+  /** @type {[string, string][]} nombre → texto */
+  const fuentes =
+    texto !== undefined
+      ? [['spec.yaml', texto]]
+      : [
+          ...(fs.existsSync(path.join(base, 'spec.yaml')) ? ['spec.yaml'] : []),
+          ...(fs.existsSync(dir)
+            ? fs
+                .readdirSync(dir)
+                .filter((f) => f.endsWith('.yaml'))
+                .sort()
+                .map((f) => `spec/${f}`)
+            : []),
+        ].map((f) => [f, fs.readFileSync(path.join(base, f), 'utf8')]);
   const dirs = new Set(spec.registros.map((r) => r.addr));
   const tokens = new Set(
     Object.entries(spec.opcodes)
       .filter(([k]) => k !== 'meta')
       .flatMap(([, ops]) => /** @type {any[]} */ (ops).map((o) => o.token)),
   );
-  for (const [lista, clave, validas] of /** @type {const} */ ([
-    ['registros', 'addr', dirs],
-    ['opcodes', 'token', tokens],
-  ])) {
-    for (const e of y[lista] ?? []) {
-      const id = e[clave];
-      if (!(/** @type {Set<any>} */ (validas).has(id)))
-        errores.push(`${idioma}/spec.yaml: ${lista} ${id} no está en la spec`);
-      for (const k of Object.keys(e))
-        if (k !== clave && !CAMPOS_TRADUCIBLES[lista].includes(k))
-          errores.push(`${idioma}/spec.yaml: ${lista} ${id}: el campo ${k} no se traduce`);
-      /** @type {Map<any, any>} */ (t[lista]).set(id, e);
+  for (const [nombre, contenido] of fuentes) {
+    const y = leerYaml(contenido);
+    const donde = `${idioma}/${nombre}`;
+    for (const [lista, clave, validas] of /** @type {const} */ ([
+      ['registros', 'addr', dirs],
+      ['opcodes', 'token', tokens],
+    ])) {
+      for (const e of y[lista] ?? []) {
+        const id = e[clave];
+        if (!(/** @type {Set<any>} */ (validas).has(id)))
+          errores.push(`${donde}: ${lista} ${id} no está en la spec`);
+        if (t[lista].has(/** @type {never} */ (id)))
+          errores.push(`${donde}: ${lista} ${id} está repetido`);
+        for (const k of Object.keys(e))
+          if (k !== clave && !CAMPOS_TRADUCIBLES[lista].includes(k))
+            errores.push(`${donde}: ${lista} ${id}: el campo ${k} no se reescribe`);
+        /** @type {Map<any, any>} */ (t[lista]).set(id, e);
+      }
     }
   }
   return t;
@@ -141,6 +163,8 @@ export function armarPaginas(spec, idioma = 'es') {
   /** Un objeto del índice con sus textos en el idioma. @template {{titulo: string, en: any}} O @param {O} o */
   const loc = (o) => (es ? o : { ...o, ...(typeof o.en === 'string' ? { titulo: o.en } : o.en) });
   const traduccion = cargarTraduccionSpec(idioma, spec, errores);
+  // La versión llana en español: en inglés, lo que falta traducir sale de acá.
+  const llano = es ? traduccion : cargarTraduccionSpec('es', spec, []);
   /** @param {Partial<Pagina> & {ruta: string, tipo: TipoPagina, titulo: string}} p */
   const agregar = (p) => {
     if (paginas.has(p.ruta)) errores.push(`página repetida: ${p.ruta}`);
@@ -308,6 +332,7 @@ export function armarPaginas(spec, idioma = 'es') {
     paginas,
     errores,
     traduccion,
+    llano,
     sysvarPorNombre,
     sysvarPorDir,
     operadorPorToken,
@@ -549,6 +574,7 @@ export async function generar(m, o = {}) {
       operadorPorToken,
       idioma,
       traduccion: m.traduccion,
+      llano: m.llano,
     });
     const orig = o.original?.get(r);
     if (orig?.md && p.estado !== 'pendiente') {
@@ -684,7 +710,8 @@ const sentido = (s, idioma) =>
  * @param {Pagina} p
  * @param {{paginas: Map<string, Pagina>, desde: string, enlace: (d: string) => {href: string, html: string},
  *   prosaParam: Map<string, string>, sysvarPorDir: Map<number, string>, operadorPorToken: Map<string, string>,
- *   idioma: Idioma, traduccion: ReturnType<typeof cargarTraduccionSpec>}} c
+ *   idioma: Idioma, traduccion: ReturnType<typeof cargarTraduccionSpec>,
+ *   llano: ReturnType<typeof cargarTraduccionSpec>}} c
  */
 function htmlDatos(p, c) {
   const { idioma } = c;
@@ -699,15 +726,23 @@ function htmlDatos(p, c) {
    * @param {'registros' | 'opcodes'} lista @param {any} obj @param {string} campo
    */
   const dato = (lista, obj, campo) => {
-    const v = obj[campo];
-    if (v === null || v === undefined || v === '') return '';
-    if (idioma === 'es') return escapar(txt(v));
-    const tr = /** @type {Map<any, any>} */ (c.traduccion[lista]).get(
-      lista === 'registros' ? obj.addr : obj.token,
-    )?.[campo];
-    return tr !== undefined ? escapar(txt(tr)) : `<span lang="es">${escapar(txt(v))}</span>`;
+    const id = lista === 'registros' ? obj.addr : obj.token;
+    const de = (/** @type {any} */ t) => /** @type {Map<any, any>} */ (t[lista]).get(id)?.[campo];
+    const md = (/** @type {any} */ v) => enLinea(txt(v), { enlace: c.enlace });
+    // En español, la versión llana (un "" la oculta); si no hay, el dato de la spec.
+    const llano = de(c.llano);
+    const es =
+      llano !== undefined
+        ? llano === ''
+          ? ''
+          : md(llano)
+        : obj[campo] === null || obj[campo] === undefined || obj[campo] === ''
+          ? ''
+          : escapar(txt(obj[campo]));
+    if (idioma === 'es' || !es) return es;
+    const tr = de(c.traduccion);
+    return tr !== undefined ? md(tr) : `<span lang="es">${es}</span>`;
   };
-  const cita = (/** @type {any} */ v) => `<p class="cita">${T.fuente}: ${escapar(txt(v))}</p>`;
   switch (p.tipo) {
     case 'sysvar': {
       const regs = p.datos.registros;
@@ -718,7 +753,7 @@ function htmlDatos(p, c) {
               `<tr><td class="num">${r.addr}</td><td>${dato('registros', r, 'escribe')}</td><td>${dato('registros', r, 'borra')}</td></tr>`,
           )
           .join('');
-        return `<div class="ficha"><p class="ficha-tit">${T.datosSpec}</p><div class="tabla"><table><thead><tr><th>${T.direccion}</th><th>${T.escribe}</th><th>${T.borra}</th></tr></thead><tbody>${filas}</tbody></table></div>${cita(regs[0].cite)}</div>`;
+        return `<div class="ficha"><p class="ficha-tit">${T.datosSpec}</p><div class="tabla"><table><thead><tr><th>${T.direccion}</th><th>${T.escribe}</th><th>${T.borra}</th></tr></thead><tbody>${filas}</tbody></table></div></div>`;
       }
       const r = regs[0];
       const nombres = (r.names ?? [])
@@ -737,7 +772,7 @@ function htmlDatos(p, c) {
         filaDl(T.rango, dato('registros', r, 'rango')),
         filaDl(T.nota, dato('registros', r, 'nota')),
         filaDl(T.mutaciones, mut ? T.laEligen(mut) : T.noLaEligen),
-      ].join('')}</dl>${cita(r.cite)}</div>`;
+      ].join('')}</dl></div>`;
     }
     case 'grupo-sysvars':
     case 'tabla-sysvars': {
@@ -791,14 +826,14 @@ function htmlDatos(p, c) {
         filaDl(T.pilaBooleana, pila(op.pops_b, op.pushes_b)),
         filaDl(T.queHace, dato('opcodes', op, op.sem !== undefined ? 'sem' : 'effect')),
         filaDl(T.valor, op.tipo !== undefined ? dato('opcodes', op, 'value') : ''),
-        filaDl(T.costo, escapar(txt(op.cost ?? familia.costo))),
-        filaDl(T.divisionCosto, op.cost_div !== undefined ? `÷ ${escapar(txt(op.cost_div))}` : ''),
         filaDl(
-          T.seEjecuta,
-          Array.isArray(op.flow) ? escapar(op.flow.join(', ')) : escapar(txt(familia.cuando)),
+          T.costo,
+          dato('opcodes', op, 'cost') || enLinea(txt(familia.costo), { enlace: c.enlace }),
         ),
+        filaDl(T.divisionCosto, op.cost_div !== undefined ? `÷ ${escapar(txt(op.cost_div))}` : ''),
+        filaDl(T.seEjecuta, dato('opcodes', op, 'flow') || escapar(txt(familia.cuando))),
         filaDl(T.marcaLazos, op.flags_tie === undefined ? '' : op.flags_tie ? T.si : T.no),
-      ].join('')}</dl>${cita(op.cite)}</div>`;
+      ].join('')}</dl></div>`;
     }
     case 'familia':
     case 'tabla-operadores': {
@@ -822,7 +857,9 @@ function htmlDatos(p, c) {
         .join('');
       const famTh = p.tipo === 'tabla-operadores' ? `<th>${T.familia}</th>` : '';
       const costo =
-        p.tipo === 'familia' ? `<p class="cita">${T.costo}: ${escapar(p.datos.costo)}</p>` : '';
+        p.tipo === 'familia'
+          ? `<p class="cita">${T.costo}: ${enLinea(p.datos.costo, { enlace: c.enlace })}</p>`
+          : '';
       return `${costo}<div class="tabla"><table class="lista-ref"><thead><tr><th>${T.operador}</th>${famTh}<th>${T.queHace}</th></tr></thead><tbody>${filas}</tbody></table></div>`;
     }
     case 'parametros': {

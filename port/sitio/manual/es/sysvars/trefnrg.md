@@ -21,8 +21,7 @@ stop
 ```
 
 :::nota
-Los datos de arriba vienen del DarwinBots original, donde un compañero con 32000
-exactos de energía dejaba esta sysvar congelada en el valor anterior. En esta
-versión se topa: si el otro tiene 32000 o más, leés 32000 (ver
+En el DarwinBots original, un compañero con 32000 exactos de energía dejaba esta
+sysvar congelada en el valor anterior. En esta versión se topa: si el otro tiene 32000 o más, leés 32000 (ver
 [[tecnico/diferencias]]).
 :::

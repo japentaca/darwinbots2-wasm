@@ -8,8 +8,9 @@ Ajusta qué tan fuerte el lazo elegido con [[.tienum]] (o el de [[.tiepres]])
 vuelve a su largo y cuánto amortigua las oscilaciones. Vale para los dos extremos
 y queda hasta que la cambies; el motor borra la orden después de usarla.
 
-La escala va de 1 a 100. El motor se queda con el resto de dividir por 100, un 0
-pasa a ser 100 y un negativo pasa a ser 1. Así, 150 es 50 y 100 es el máximo.
+La escala va de 1 a 100. El motor se queda con el resto de dividir por 100; si
+ese resto da 0 (como con 200), vale 100, y un negativo vale 1. Escribir 0 no es
+una orden. Así, 150 es 50 y 100 es el máximo.
 Como referencia, un lazo recién endurecido equivale a 20, y uno blando, recién
 hecho, a 4.
 

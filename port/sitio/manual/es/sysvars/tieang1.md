@@ -28,7 +28,7 @@ un operando cambian el número pero no le avisan al lazo (ver [[adn/stores]]).
 <!-- 20-VM §7 (TieAngOverwrite solo en los stores de dos operandos) -->
 
 Si el bot no es multicelular o el primer lazo no está endurecido, el motor no toca
-la celda.
+la celda. Tampoco la toca si [[.tienum]] y [[.tiepres]] valen 0 los dos.
 
 ```adn
 ' hacer girar el primer lazo alrededor del bot

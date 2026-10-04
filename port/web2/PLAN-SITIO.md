@@ -223,10 +223,11 @@ citas. Fueron 10 lotes, cada uno con su redactor y su revisor (un pipeline de
   distancia no hay reintento), `34-TIES` §0.4 (los dos extremos pasan a
   `.multi`), `.tienum`/`.tiepres` en `sysvars.yaml`, y el rango de `.tieang1`
   (llega a 1257).
-- **Pendiente: las fichas de datos.** Copian los campos de `sysvars.yaml` y
-  `opcodes.yaml` (jerga interna, nombres de VB6, citas a `Robots.bas`) y
-  describen el original, así que contradicen la prosa donde el port corrigió
-  algo (A2-1, A3-5, A3-7, A3-10…).
+- Las fichas de datos copiaban los campos de `sysvars.yaml` y `opcodes.yaml`
+  (jerga interna, nombres de VB6, citas a `Robots.bas`) y describían el
+  original, así que contradecían la prosa donde el port corrigió algo (A2-1,
+  A3-5, A3-7, A3-10…). Decisión del autor (2026-10-04): reescribirlas.
+  Ver «Fichas en castellano llano».
 - Términos: «toxina» (poison) y «veneno» (venom), como en la app; nunca
   «ponzoña».
 
@@ -314,8 +315,9 @@ Texto en Markdown…
 - `## Título {#ancla}` fija el ancla; si no, sale del texto (sin acentos).
 - ```` ```adn ```` pasa por el lint; ```` ```adn sin-lint ```` no (para
   mostrar un error a propósito). `:::nota` y `:::cuidado` hasta `:::`.
-- En una página de referencia (sysvar, operador, grupo) los datos de la spec
-  ya salen arriba: el `.md` lleva el resumen y la prosa (qué es, para qué
+- En una página de referencia (sysvar, operador, grupo) la ficha de datos
+  ya sale arriba (de `manual/es/spec/*.yaml`, ver «Fichas en castellano
+  llano»): el `.md` lleva el resumen y la prosa (qué es, para qué
   sirve, un ejemplo). En una de parámetros, la prosa de cada uno va en
   `:::parametro opt:11` … `:::` y sale dentro de su ficha.
 - Las citas a la spec del revisor van en comentarios `<!-- 20-VM §5.4 -->`,
@@ -325,6 +327,23 @@ Se genera con `node port/sitio/generar.mjs` (salida en
 `port/sitio/salida/manual/` y `port/sitio/salida/en/manual/`, ignorada por
 git); `--sembrar` crea los `.md` que falten de páginas nuevas del índice, en
 los dos idiomas.
+
+## Fichas en castellano llano
+
+La ficha de cada sysvar y cada operador sale de `port/sitio/manual/es/spec/*.yaml`
+(un archivo por lote; `registros` por `addr` y `opcodes` por `token`). Los
+campos son `escribe`, `lee`, `borra`, `rango` y `nota` en los registros, y
+`sem`, `effect`, `value`, `cost` y `flow` en los operadores. Cada campo
+reescribe en castellano llano el de `spec/sysvars.yaml` o `spec/opcodes.yaml`
+y describe lo que hace el port, con las correcciones de `port/README.md`. Puede
+llevar enlaces `[[…]]`; un `""` oculta la fila. Un campo sin versión llana sale
+tal cual está en la spec.
+
+Las fases del ciclo se nombran siempre igual: el ADN → se borran los
+sentidos → los disparos → fuerzas y choques → movimiento → acciones →
+nacimientos y muertes → el sol. La ficha ya no cita el fuente original, y el
+costo enlaza a su parámetro (`[[param:cost:N]]`). El inglés
+(`manual/en/spec.yaml`) se traduce desde esta versión.
 
 ## Cómo se reparte el trabajo
 

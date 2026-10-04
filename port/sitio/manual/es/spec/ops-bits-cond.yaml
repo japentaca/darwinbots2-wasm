@@ -1,0 +1,32 @@
+# Fichas en castellano llano: operadores de bits, comparaciones y lógicos
+opcodes:
+  - {token: "~", sem: "Cambia el tope por su complemento: da vuelta los 32 bits, así que x queda en −x − 1. Con la pila vacía deja −1."}
+  - {token: "&", sem: "Saca dos números y apila uno con prendidos solo los bits que están prendidos en los dos. Con la pila vacía da 0."}
+  - {token: "|", sem: "Saca dos números y apila uno con prendidos los bits que están prendidos en alguno de los dos. Con la pila vacía da 0."}
+  - {token: "^", sem: "Saca dos números y apila uno con prendidos los bits que están prendidos en uno solo de los dos. Con la pila vacía da 0."}
+  - {token: "++", sem: "Cambia el tope por ese número más 1. En el borde de los 32 bits, 2147483647 ++ da 0."}
+  - {token: "--", sem: "Cambia el tope por ese número menos 1. En el borde de los 32 bits, −2147483647 -- da 0."}
+  - {token: "-", sem: "Cambia el signo del tope: 5 queda en −5. No resta; para restar está [[op:sub]]. Con la pila vacía deja 0."}
+  - {token: "<<", sem: "Corre los bits del tope un lugar a la izquierda: lo multiplica por 2. Con números enormes puede cambiar el signo, y 1073741824 << da 0."}
+  - {token: ">>", sem: "Corre los bits del tope un lugar a la derecha conservando el signo: lo divide por 2 redondeando hacia abajo. −1 >> sigue en −1."}
+  - {token: "<", sem: "Saca dos números a b y apila verdadero si a, el de abajo, es menor que b. Con la pila vacía da falso."}
+  - {token: ">", sem: "Saca dos números a b y apila verdadero si a, el de abajo, es mayor que b. Con la pila vacía da falso."}
+  - {token: "=", sem: "Saca dos números y apila verdadero si son iguales. Con la pila vacía compara 0 con 0 y da verdadero."}
+  - {token: "!=", sem: "Saca dos números y apila verdadero si son distintos. Con la pila vacía da falso."}
+  - {token: "%=", sem: "Saca a b y apila verdadero si b está dentro del 10 % de a, límites incluidos. Con a negativo da siempre falso."}
+  - {token: "!%=", sem: "Saca a b y apila verdadero si b se aleja más del 10 % de a: lo contrario de [[op:%=]]. Con a negativo da siempre verdadero."}
+  - {token: "~=", sem: "Saca tres números a b d y apila verdadero si b está dentro del d % de a. Si uno solo de a y d es negativo, da siempre falso."}
+  - {token: "!~=", sem: "Saca tres números a b d y apila verdadero si b se aleja más del d % de a. Si uno solo de a y d es negativo, da siempre verdadero."}
+  - {token: ">=", sem: "Saca dos números a b y apila verdadero si a, el de abajo, es mayor o igual que b. Con la pila vacía da verdadero."}
+  - {token: "<=", sem: "Saca dos números a b y apila verdadero si a, el de abajo, es menor o igual que b. Con la pila vacía da verdadero."}
+  - {token: "and", sem: "Saca dos valores de la pila booleana y apila verdadero si los dos lo son. Con uno solo lo deja igual; con la pila vacía apila verdadero."}
+  - {token: "or", sem: "Saca dos valores de la pila booleana y apila verdadero si alguno lo es. Con uno solo, o con la pila vacía, apila verdadero."}
+  - {token: "xor", sem: "Saca dos valores de la pila booleana y apila verdadero si exactamente uno lo es. Con uno solo lo invierte; con la pila vacía apila falso."}
+  - {token: "not", sem: "Invierte el tope de la pila booleana. Con la pila vacía apila falso, porque la vacía cuenta como verdadera."}
+  - {token: "true", sem: "Apila un verdadero en la pila booleana."}
+  - {token: "false", sem: "Apila un falso en la pila booleana."}
+  - {token: "dropbool", sem: "Saca el tope de la pila booleana y lo descarta. Con la pila vacía no hace nada."}
+  - {token: "clearbool", sem: "Vacía la pila booleana. La pila entera no la toca."}
+  - {token: "dupbool", sem: "Copia el tope de la pila booleana. Con la pila vacía no hace nada, a diferencia de [[op:dup]]."}
+  - {token: "swapbool", sem: "Intercambia los dos de arriba de la pila booleana. Con uno o ningún valor no hace nada."}
+  - {token: "overbool", sem: "Copia arriba el segundo de la pila booleana: a b queda a b a. Con un solo valor apila verdadero; con la pila vacía no hace nada."}

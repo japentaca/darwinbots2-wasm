@@ -1,0 +1,32 @@
+# Fichas en castellano llano: operadores básicos y avanzados, números y lecturas
+opcodes:
+  - {token: "<numero>", effect: "Apila el número tal cual en la pila entera. El nombre de una sysvar sin asterisco apila su dirección.", value: "El número escrito, de −32768 a 32767; fuera de ese rango el bot no carga. Un decimal se redondea al entero más cercano (al par en el empate).", cost: "Cada número cobra el costo [[param:cost:0]] (0 con las reglas F1).", flow: "dentro de un gen: en la condición (cond) y en el cuerpo (start o else)"}
+  - {token: "*<numero> | *.<sysvar>", effect: "Apila lo que hay en esa celda de memoria. Un sentido que escribe el motor lo leés en el ciclo siguiente.", value: "La dirección de la celda, de 1 a 1000. Fuera de ese rango se le saca el signo y se toma el resto de dividir por 1000; el 0, o una sysvar mal escrita, lee la 1000.", cost: "Cada lectura cobra el costo [[param:cost:1]] (0 con las reglas F1).", flow: "dentro de un gen: en la condición (cond) y en el cuerpo (start o else)"}
+  - {token: add, sem: "Saca dos números y apila su suma. Arriba de 16.777.216 pierde precisión, y pasando los 2000 millones da la vuelta."}
+  - {token: sub, sem: "Saca dos números y apila el de abajo menos el de arriba. Con números enormes se comporta igual que [[op:add]]."}
+  - {token: mult, sem: "Saca dos números y apila su producto. Si pasa de 2000 millones, se queda en ±2000 millones."}
+  - {token: div, sem: "Saca dos números y apila el de abajo dividido por el de arriba, redondeado al entero más cercano (al par en el empate). Dividir por 0 da 0."}
+  - {token: rnd, sem: "Saca un número n y apila uno al azar entre 0 y n, ambos incluidos. Con n negativo no es simétrico: −5 rnd da de −4 a −1."}
+  - {token: "*", sem: "Saca una dirección y apila lo que hay en esa celda. Fuera de 1 a 1000 se le saca el signo y se toma el resto de dividir por 1000; el 0 lee la 1000. Con la pila vacía lee la 1000."}
+  - {token: mod, sem: "Saca dos números y apila el resto de dividir el de abajo por el de arriba, con el signo del de abajo. Con divisor 0 da 0."}
+  - {token: sgn, sem: "Cambia el tope por su signo: −1 si es negativo, 0 si es cero y 1 si es positivo."}
+  - {token: abs, sem: "Cambia el tope por su valor absoluto: le saca el signo."}
+  - {token: dup, sem: "Copia el tope: a queda a a. Con la pila vacía apila dos ceros."}
+  - {token: drop, sem: "Saca el tope y lo descarta. Con la pila vacía no hace nada."}
+  - {token: clear, sem: "Vacía la pila entera. La pila booleana no la toca."}
+  - {token: swap, sem: "Intercambia los dos de arriba: a b queda b a. Con uno o ningún número no hace nada."}
+  - {token: over, sem: "Copia arriba el segundo: a b queda a b a. Con un solo número apila un 0; con la pila vacía no hace nada."}
+  - {token: angle, sem: "Saca un punto (x abajo, y arriba) y apila el ángulo desde el bot hasta él, en unidades de [[.aim]] (0 a unos 1256)."}
+  - {token: dist, sem: "Saca un punto (x abajo, y arriba) y apila la distancia desde el bot hasta él, en el tamaño real del mundo. Se queda en 2000 millones como máximo."}
+  - {token: ceil, sem: "Saca dos números y apila el menor. Arriba de 16.777.216 la comparación pierde precisión."}
+  - {token: floor, sem: "Saca dos números y apila el mayor."}
+  - {token: sqr, sem: "Cambia el tope por su raíz cuadrada, redondeada al entero más cercano. Si no es positivo, da 0."}
+  - {token: pow, sem: "Saca dos números y apila el de abajo elevado al de arriba, redondeado. El exponente se recorta a ±10, base 0 da 0 y el resultado se queda en ±2000 millones."}
+  - {token: pyth, sem: "Saca dos números a y b y apila la raíz de a² + b², redondeada. Se queda en 2000 millones como máximo."}
+  - {token: anglecmp, sem: "Saca dos ángulos a y b, en unidades de [[.aim]], y apila a − b por el camino corto: de −628 a 628."}
+  - {token: root, sem: "Saca dos números a y b, les saca el signo y apila la raíz b-ésima de a, redondeada. Con b en 0 da 0."}
+  - {token: logx, sem: "Saca dos números a y b, les saca el signo y apila el logaritmo de a en base b, redondeado. Con b menor que 2 o a en 0 da 0."}
+  - {token: sin, sem: "Cambia un ángulo en unidades de [[.aim]] por su seno multiplicado por 32000 y redondeado: de −32000 a 32000."}
+  - {token: cos, sem: "Cambia un ángulo en unidades de [[.aim]] por su coseno multiplicado por 32000 y redondeado: de −32000 a 32000."}
+  - {token: debugint, sem: "Anota el tope de la pila entera en la traza del bot, sin sacarlo. No cuesta energía. Arriba de 16.777.216 el valor puede cambiar un poco."}
+  - {token: debugbool, sem: "Anota el tope de la pila booleana en la traza del bot, sin sacarlo. No cuesta energía. Con la pila booleana vacía apila un verdadero."}
