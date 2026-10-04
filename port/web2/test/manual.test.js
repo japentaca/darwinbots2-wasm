@@ -237,11 +237,14 @@ test('markdown: bloques, en línea y escape', () => {
       '',
       '- uno',
       '  - dos',
+      '- tres',
+      '  sigue',
       '1. a',
       '',
       '| op | qué |',
       '|---|---|',
       '| `|` | o bit a bit |',
+      '| enlace | [[x|con texto]] |',
       '',
       ':::cuidado',
       'Ojo.',
@@ -255,9 +258,10 @@ test('markdown: bloques, en línea y escape', () => {
     html,
     /<code>\*\.eye5<\/code> con <strong>negrita<\/strong>, <em>cursiva<\/em>, snake_case y &lt;b&gt;/,
   );
-  assert.match(html, /<ul><li>uno<ul><li>dos<\/li><\/ul><\/li><\/ul>/);
+  assert.match(html, /<ul><li>uno<ul><li>dos<\/li><\/ul><\/li><li>tres sigue<\/li><\/ul>/);
   assert.match(html, /<ol><li>a<\/li><\/ol>/);
   assert.match(html, /<td><code>\|<\/code><\/td><td>o bit a bit<\/td>/);
+  assert.match(html, /<td>enlace<\/td><td><a href="#x\|con texto">/);
   assert.match(html, /<aside class="aviso cuidado"><p>Ojo\.<\/p><\/aside>/);
   assert.deepEqual(
     frontmatter('---\ntitulo: X\nresumen: ""\netiquetas: [a, b]\n---\ncuerpo').datos,

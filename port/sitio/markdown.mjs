@@ -84,14 +84,17 @@ function procesar(s, o, guardado) {
 function partirFila(fila) {
   const out = [''];
   let enCodigo = false;
+  let enEnlace = false; // el | de [[destino|texto]] no corta la celda
   for (let i = 0; i < fila.length; i++) {
     const c = fila[i];
     if (c === '\\' && fila[i + 1] === '|') {
       out[out.length - 1] += '|';
       i++;
-    } else if (c === '|' && !enCodigo) out.push('');
+    } else if (c === '|' && !enCodigo && !enEnlace) out.push('');
     else {
-      if (c === '`') enCodigo = !enCodigo;
+      if (c === '`' && !enEnlace) enCodigo = !enCodigo;
+      if (!enCodigo && fila.startsWith('[[', i)) enEnlace = true;
+      if (enEnlace && fila.startsWith(']]', i)) enEnlace = false;
       out[out.length - 1] += c;
     }
   }
@@ -227,7 +230,9 @@ function bloques(ls, o, titulos) {
         ) {
           const sang = ls[i].length - ls[i].trimStart().length;
           if (sang <= base && !esLista(ls[i])) break;
-          item.push(ls[i].slice(Math.min(sang, base + 2)));
+          // Continuación del texto del ítem (antes de cualquier sublista).
+          if (item.length === 1 && !esLista(ls[i])) item[0] += ` ${ls[i].trim()}`;
+          else item.push(ls[i].slice(Math.min(sang, base + 2)));
           i++;
         }
         // Una línea en blanco entre ítems no corta la lista.

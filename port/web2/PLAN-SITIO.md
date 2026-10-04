@@ -188,6 +188,26 @@ Orden: 4, 5–6, 3, 1–2, 7, 8–9.
 
 **Cierre:** cero páginas `pendiente`, todas revisadas y con citas a la spec.
 
+Herramienta: `node port/sitio/probar-adn.mjs bot.txt --ciclos 20 --mem up,50`
+(o `--adn "…"`) corre un ADN sin dibujar, sin mutaciones y con costos en 0
+(`--cost i=v` los fija), e imprime el lint y, por ciclo, posición, energía y
+las direcciones pedidas. Con eso se comprueba cada «hace X» de S12.
+
+Capítulo 4 (El lenguaje del ADN) hecho el 2026-10-03: las 12 páginas están
+`revisada`, con 101 citas. Lo hizo una ola de 8 redactores y después un revisor.
+Lo que salió de la ola:
+
+- El `else` tras `cond … start` corre en el port (corrección A2-1 de
+  `port/README.md`); las páginas lo cuentan así y dejan el comportamiento del
+  original en un `:::cuidado`. `spec/20-VM.md` §0.3, §5.4, §5.5, §12.1 y el
+  caso dorado V-01 todavía lo describen como código muerto.
+- `db_dna_lint` no avisa de `def x .sysvar` (vale 0) ni de líneas como
+  `defensa 50` (definen `nsa`). Las páginas lo cuentan como un error
+  frecuente; el lint podría marcarlo.
+- `markdown.mjs`: una línea sangrada de continuación se une al texto del
+  ítem de lista, y el `|` de `[[destino|texto]]` ya no parte una celda de
+  tabla.
+
 ### S-D · La app enlaza al manual
 
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector
