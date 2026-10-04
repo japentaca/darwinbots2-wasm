@@ -258,6 +258,49 @@ Lo que salió:
 - Hay páginas largas, de unas 2500 a 2800 palabras: `fisica`, `vision`,
   `lazos` y `reproduccion`. Se pueden partir si el autor lo decide.
 
+Capítulos 1 (Empezar) y 2 (Guía de la app) hechos el 2026-10-04: las 30
+páginas (5 de Empezar, 13 pantallas y 12 grupos con los 108 `:::parametro`)
+están `revisada`, con unas 180 citas a la spec, al core y a `web2/src`. Lo
+hizo una ola de 8 redactores con dos revisores, uno para las pantallas y otro
+para los parámetros. Lo que salió:
+
+- Corregido en el capítulo 3: `simulacion/cloroplastos` (la energía total
+  cuenta también los cadáveres), `simulacion/mundo` (las paredes de
+  «escombros» solo se mueven con opt:85 > 0) y `simulacion/lazos` (el costo de
+  atar se divide por los lazos *después* del intento más uno, y el lazo de
+  nacimiento se lo cobra al padre).
+- Para arreglar en la app, sin tocar todavía:
+  - `i18n/es`: los tooltips del Player Bot tienen la dirección 3 y la 4 al
+    revés (`.sx` es la izquierda); «limo» y los términos en inglés de
+    `mundo.accion.coraza` y `mundo.accion.veneno`, que deberían ser
+    baba, caparazón, veneno y toxina; «Bestiary» en el editor; «las
+    marcadas» en las corridas, aunque no hay cómo marcarlas;
+    `observar.sembrar.nota` quedó vieja; falta `analizar.ev.tipo.objetos`;
+    `experimentar.objetos.ayuda` contradice la barra Mundo.
+  - `opciones.js`, ayudas que no cuentan todo: opt:34 (cada tramo dura N + 1),
+    opt:54 y opt:55 (esos disparos no envejecen), opt:56 (0 vale 400 y un
+    negativo apaga la intoxicación), opt:72 (también congela a los ya
+    anclados), opt:12 (con 0 no se mueven), opt:93 (las etiquetas de los
+    niveles engañan), opt:94, opt:99, opt:100 y opt:101, cost:21 (por cada 200
+    de giro) y cost:22 (también en los partos). opt:31 viene en 0, así que el
+    modo estanque sin tocarla no tiene sol. El control «Tamaño del campo» no
+    tiene 32000×32000, el tamaño de la base Clásica.
+  - Pantallas: Experimentar reemplaza la simulación sin preguntar; los avisos
+    del motor de F1 y de una sola especie solo llegan a Competir; no se ve el
+    multiplicador de costos mientras lo mueve el ajuste dinámico; el botón
+    «ADN vs fundador» compara con el ADN dominante; «Avanzar solo» y «Modo TV»
+    vuelven a sortear una temporada de «Lista fija».
+  - El lint sugiere `stop` para `stor`, y para `sotre` no sugiere nada.
+  - El generador muestra «Por defecto» con punto decimal (0.66) y la prosa
+    usa coma.
+- `port/README.md`: el desglose del Bestiario (545 + 115) no da los 684 de
+  `bots.json`.
+- `tecnico/semillas` y `tecnico/formatos` ya tienen muchos enlaces: tienen que
+  cubrir la reproducibilidad (C17, los 65.536 mundos) y los formatos `.dbsim`,
+  `.snp` y el `.json` de escenarios y torneos.
+- Páginas largas, de 2000 a 3200 palabras: `observar`, `inspector`, `bots`,
+  `editor` y `competir`.
+
 ### S-D · La app enlaza al manual
 
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector

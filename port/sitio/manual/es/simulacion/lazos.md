@@ -46,8 +46,13 @@ Para que el lazo se forme:
   baba nadie lo puede atar. Cada intento, salga o no, le gasta 20 de baba.
 - Ninguno de los dos puede tener ya 9 lazos, que es el máximo.
 
+<!-- core ties.hpp maketie: TIECOST / (numties + 1), con numties ya actualizado si el lazo salió; robots.hpp: el lazo de nacimiento pasa por maketie -->
 Cada intento con alguien a tiro cuesta energía: el costo de atar
-([[param:cost:22]]) dividido por la cantidad de lazos que ya tenés más uno.
+([[param:cost:22]]) dividido por la cantidad de lazos que tenés después del
+intento más uno. El primer lazo cuesta la mitad, el segundo un tercio, y un
+intento que falla sin ningún lazo cuesta el precio entero. El lazo de
+nacimiento también lo cobra: lo paga el padre (en la sexual, la madre) en cada
+parto.
 Si ya había un lazo entre esos dos bots, el nuevo lo reemplaza: vuelve a
 contar desde cero y pasa a ser un lazo de `.tie`.
 

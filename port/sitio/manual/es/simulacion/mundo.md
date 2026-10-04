@@ -83,7 +83,7 @@ pasillo y el de la pared, y en el damero, el del pasillo:
 | espiral | Anillos rectangulares uno dentro del otro, con las bocas corridas. |
 | damero | Una cuadrícula de bloques cuadrados en el centro del campo. |
 | polar | Nueve bloques grandes, uno encima del otro en el centro, que se separan a la deriva (el laberinto enciende la deriva). |
-| escombros | Dos paredes que avanzan desde los costados, se cruzan y vuelven. |
+| escombros | Dos paredes desde los costados. Si [[param:opt:85]] es mayor que 0 al crearlas, avanzan, se cruzan y vuelven; con el valor de fábrica (0) quedan quietas. |
 
 Un bot que choca con un obstáculo es empujado hacia afuera por el lado más cercano
 y siente el golpe en [[.hit]] y sus direcciones. Si un bot queda apretado entre

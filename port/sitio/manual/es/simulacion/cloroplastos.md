@@ -124,7 +124,7 @@ Si nadie lo cambia, siempre es de día. Hay dos maneras de que haya noche:
   tramo dura [[param:opt:34]] ciclos más uno (con 3, cuatro ciclos de sol y cuatro
   de oscuridad); solo el primer día de la simulación dura uno menos.
 - **La energía total del mundo**, que suma la energía y diez veces el cuerpo de
-  cada bot vivo, más la de los disparos de energía en vuelo. Con [[param:opt:35]]
+  cada bot, cadáveres incluidos, más la de los disparos de energía en vuelo. Con [[param:opt:35]]
   sale el sol si baja de [[param:opt:36]]; con [[param:opt:37]] se pone si pasa de
   [[param:opt:38]]. Así se frena una población que crece demasiado o se rescata a
   una que se está muriendo. Qué hace el umbral con el reloj lo decide
