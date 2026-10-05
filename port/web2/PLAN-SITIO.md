@@ -300,6 +300,42 @@ para los parámetros. Lo que salió:
 - Páginas largas, de 2000 a 3200 palabras: `observar`, `inspector`, `bots`,
   `editor` y `competir`.
 
+Capítulo 7 (Tutoriales) hecho el 2026-10-05: las 8 páginas están `revisada`,
+con 118 citas. Lo hizo una ola de 8 redactores y después un revisor. Los bots
+finales de las 8 páginas corrieron con `probar-adn.mjs`, con 499 bloques `adn`
+en el manual y el `--lint` limpio. Lo que salió:
+
+- Correcciones del revisor: en `busca-comida`, el parto sale **delante** del
+  padre (lo decía «detrás») y [[op:floor]] sí sirve de máximo, de a pares (no
+  hay máximo de nueve de una); en `dispara`, [[param:cost:23]] vale 2 en la
+  liga F1, no «por defecto» (el default de la app es 0); en `alimentador`, las
+  órdenes por puerto del lazo les llegan a **todos** los lazos con ese puerto
+  (solo `.readtie` lee el primero y `.deltie` corta uno por pasada, que es
+  comportamiento del original, no bug del port), y los cadáveres no se
+  descomponen de fábrica porque [[param:opt:51]] viene en 0; en `multibot`,
+  el enlace al alimentador decía «alimentar a» en vez de «chuparle la energía
+  a». El bot final del multibot avanza más lento que un bot suelto y el hijo
+  nace delante del padre mirando hacia él: ambas correcciones medidas.
+- Notas para la spec, sin tocar: `36-REPRO` §2, «posición a sondist… mirando
+  en sentido opuesto» es ambiguo (el hijo nace delante del padre, mirando
+  hacia él: convendría reescribirlo), y el impuesto del parto es 0,1 %, ya
+  anotado.
+- `simulacion/disparos.md` verificado tras la duda de un redactor: la víctima
+  del −1 pierde el 90 % de la fuerza en energía y el 1 % en cuerpo (core
+  `shots.hpp`, `releasenrg`: 198 y 2,2 con fuerza 220). Está bien; la
+  confusión venía del reparto de quien recibe el regalo (95 %, 0,4 %, 1 %).
+- Corregido fuera del capítulo: el comentario desactualizado de
+  `app/analizar.md` (decía que faltaba `analizar.ev.tipo.objetos`, que ya
+  existe).
+- `probar-adn.mjs` (notas de la herramienta, no de las páginas): con `--veg`
+  los vegetales nacen sin cloroplastos (el core arranca `startChlr` en 0; la
+  app manda 16000); `--vegs` solo siembra si hay una especie vegetal
+  registrada; `--cost i=v` solo cobra con el multiplicador (p. ej.
+  `--cost 8=0.2,54=1`); y la salida imprime los primeros slots sin filtrar
+  por especie.
+- Sin arreglos pendientes de la app. Las 11 páginas `pendiente` que quedan
+  son los capítulos 8 y 9.
+
 ### S-D · La app enlaza al manual
 
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector

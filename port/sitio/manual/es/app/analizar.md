@@ -198,7 +198,7 @@ mutar está en [[simulacion/mutaciones]], y [[tutoriales/evolucion]] propone un
 experimento para verlo en esta pestaña.
 
 ## Eventos {#eventos}
-<!-- web2/src/lib/analizar/Eventos.svelte; eventos.js (FILTROS; además del filtro «Todos»); i18n analizar.ev.* (falta analizar.ev.tipo.objetos: anotado como texto de la app) -->
+<!-- web2/src/lib/analizar/Eventos.svelte; eventos.js (FILTROS; además del filtro «Todos»); i18n analizar.ev.* -->
 
 Un gráfico de la población total con un pin por evento y, debajo, la lista de los
 eventos de la corrida: los mismos que avisa Observar, guardados sin recortar. Los
