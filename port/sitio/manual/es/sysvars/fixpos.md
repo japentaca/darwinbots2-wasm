@@ -5,13 +5,13 @@ etiquetas: [fijo, orden, movimiento]
 estado: revisada
 ---
 <!-- sysvars.yaml .fixpos (latch, nunca la borra el motor) -->
-`.fixpos` es un interruptor: con un valor mayor que 0 el bot queda fijo, con 0 o
+`.fixpos` es un interruptor: con un valor mayor que 0 el bot queda anclado, con 0 o
 negativo queda libre. A diferencia de las órdenes de movimiento, el motor nunca la
 borra: lo que escribís queda hasta que lo cambies, así que alcanza con escribirla
 una vez. El estado efectivo se lee en [[.fixed]].
 
 <!-- 30-FISICA §2 (gate Not Fixed), §4.3 (fijo = masa 32000; separación posicional), §7 -->
-Un bot fijo no recibe ninguna fuerza: ni sus propios empujones con [[.up]] (que
+Un bot anclado no recibe ninguna fuerza: ni sus propios empujones con [[.up]] (que
 tampoco le cobran energía) ni la gravedad. En un choque su velocidad no cambia y
 cuenta como un cuerpo muy pesado, aunque el motor igual puede correrlo un poco para
 separar a los dos bots si se superponen. Sí puede girar con [[.aimsx]], [[.aimdx]]

@@ -10,7 +10,7 @@ controles del modo **Básico** son atajos sobre algunos de ellos. Acá tenés
 todo lo demás: la física fina, los costos de cada instrucción, las reglas de
 los torneos, la luz por profundidad.
 
-Para entrar, tocá **Avanzado** arriba a la derecha de los controles. Los dos
+Para entrar, hacé clic en **Avanzado** arriba a la derecha de los controles. Los dos
 modos editan el mismo borrador: lo que cambiás en uno se ve en el otro. Las
 especies, la semilla, los objetos del mundo y la barra de cambios sin aplicar
 siguen igual que en el modo básico.

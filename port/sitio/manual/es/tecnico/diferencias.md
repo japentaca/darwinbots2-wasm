@@ -179,7 +179,7 @@ Cinco de los sentidos de siempre:
   lazo.
   <!-- port/README A3-2; sysvars/trefshell -->
 - [[.trefnrg]] **se congelaba en 32000 exactos**: un compañero con la energía
-  al tope dejaba la lectura clavada en el valor anterior. Ahora se topa y
+  al tope dejaba la lectura anclada en el valor anterior. Ahora se topa y
   listo.
   <!-- port/README A3-3; sysvars/trefnrg -->
 - **El espionaje de ojos por lazo leía la dirección equivocada**, así que un
@@ -247,7 +247,7 @@ era correcta si el ojo con foco era el frontal. Todo corregido
   y volvía a empezar: consumía azar de más. Acá siembra directo.
   <!-- port/README B7-1 -->
 - **Un teleporter con un solo eje de deriva se mueve.** En el original
-  acumulaba velocidad que nunca aplicaba, y quedaba clavado.
+  acumulaba velocidad que nunca aplicaba, y quedaba anclado.
   <!-- port/README B7-3 -->
 - **La primera repoblación después de cargar una simulación guardada tarda lo
   que tiene que tardar.** En el original se pagaba el doble de espera la

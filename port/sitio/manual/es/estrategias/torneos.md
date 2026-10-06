@@ -78,7 +78,7 @@ unas 65 comparaciones de sus condiciones.
 **Robustez: no depender de un solo canal.** Mi primer buscador tenía un solo
 ojo y una lección gratis: cuando un pariente se le ponía delante, se quedaba
 mirándolo para siempre. Veía algo (entonces no buscaba), pero no era comida
-(entonces no lo cazaba): clavado, gastando sin avanzar. Los bots de torneo
+(entonces no lo cazaba): anclado, gastando sin avanzar. Los bots de torneo
 reparten la mirada: _Russia_ usa ocho ojos bien abiertos para el perímetro y
 uno fino de mira, así que ningún pariente distraído le tapa el mundo. La
 versión mínima del arreglo es hacer que «no veo nada _o_ solo veo familia»

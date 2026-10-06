@@ -121,7 +121,7 @@ siguiente.
 Una tabla con una fila por especie y estas columnas: **Especie**, **Hoy** (bots
 vivos en la última muestra), **Máximo**, **Aparición**, **Extinción** («viva» si
 sigue), **Gen. máx.**, **Mutaciones**, **ADN medio**, **Energía por bot**, **Edad
-media** e **Hijos por bot**, más una curva chica de **Bots vivos**. Tocá un
+media** e **Hijos por bot**, más una curva chica de **Bots vivos**. Hacé clic en un
 encabezado para ordenar por esa columna; otro toque invierte el orden.
 
 Al tocar el nombre de una especie se abre su ficha, debajo de la tabla:
@@ -239,7 +239,7 @@ típico y cuál fue suerte.
    escenario; una simulación cargada de un archivo no se puede replicar.
 2. Elegí cuántas **Réplicas** (de 1 a 64), cuántos **Ciclos** y cuántos **Workers
    a la vez** (hasta 8 de fábrica, como mucho los núcleos de tu equipo menos uno).
-3. Elegí la métrica que querés ver y tocá **Lanzar réplicas**.
+3. Elegí la métrica que querés ver y hacé clic en **Lanzar réplicas**.
 
 Cada réplica corre sin dibujar, a toda velocidad, y repite los cambios en caliente
 de la corrida de origen en el mismo ciclo. La réplica 1 usa la semilla de la

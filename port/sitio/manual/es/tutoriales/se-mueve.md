@@ -14,7 +14,7 @@ lenguaje está en [[adn/estructura]] y [[adn/genes]]; acá escribimos.
 <!-- i18n/es/bots.json (bots.nuevo «+ Nuevo bot»); i18n/es/editor.json (editor.guardar.*, editor.borrador.*); app/bots.md #nuevo -->
 
 1. Andá a la sección **Bots**, en la barra de arriba.
-2. Tocá **+ Nuevo bot** y ponle nombre (por ejemplo, «Caminante»).
+2. Hacé clic en **+ Nuevo bot** y ponle nombre (por ejemplo, «Caminante»).
 3. Se abre la ficha, en la pestaña **ADN**: ese es el editor. Mientras
    escribís, colorea cada clase de palabra, te autocompleta los nombres de
    las sysvars y avisa enseguida de las palabras que el motor leería
@@ -59,7 +59,7 @@ clásica: [[adn/errores#direccion]]).
 ## Paso 3: sembralo y miralo {#sembralo}
 <!-- app/bots.md #sembrar (ficha → Sembrar; nombre, color, cantidad 5, energía 3000; «Sembrar en la corrida actual» / «Nuevo escenario con estos») -->
 
-1. En la ficha del bot, tocá **Sembrar**: se abre el diálogo de siembra.
+1. En la ficha del bot, hacé clic en **Sembrar**: se abre el diálogo de siembra.
 2. Dejá la **Cantidad de bots** en 5 y la **Energía inicial** en 3000, y
    elegí un **Color** que se distinga.
 3. Elegí **Sembrar en la corrida actual** si tenés un mundo corriendo (si no

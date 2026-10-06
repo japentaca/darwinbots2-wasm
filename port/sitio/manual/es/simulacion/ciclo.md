@@ -135,7 +135,7 @@ La población que cuenta son los bots que no son vegetales (con [[param:cost:61]
 
 - Si la población está por encima de la [[param:cost:53]] más su [[param:cost:57]] y además creció respecto de la de unos cien ciclos atrás, el multiplicador **sube**: la vida se encarece.
 - Si está por debajo del objetivo menos su [[param:cost:58]] y además bajó, el multiplicador **baja**.
-- Si la población lleva diez ciclos clavada en el mismo valor de hace cien, se ajusta igual, aunque no crezca ni baje.
+- Si la población lleva diez ciclos anclada en el mismo valor de hace cien, se ajusta igual, aunque no crezca ni baje.
 - Dentro de la banda, nada cambia.
 
 Cada ajuste es pequeño: 0,0000001 × (bots fuera de la banda) × [[param:cost:55]]. Con el objetivo en 100, márgenes en 0, sensibilidad 50 y 200 bots, el multiplicador sube 0,0005 por ciclo: medio punto cada mil ciclos. Es un termostato lento, pensado para corridas largas. El multiplicador no baja de 0 salvo que actives [[param:cost:62]].

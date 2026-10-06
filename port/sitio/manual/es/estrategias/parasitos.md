@@ -95,12 +95,12 @@ apretado contra la pared del campo, con el lazo estirado sosteniéndolo.
 
 _P1 Parasite bot_ (Fizban, 2004) es un parásito de lazo con modales. Elige
 huésped: quien dispara ([[.refshoot]] por encima de 0, así no pierde tiempo en
-vegetales), que no esté clavado, que no sepa atarse ([[.reftie]], la firma de
+vegetales), que no esté anclado, que no sepa atarse ([[.reftie]], la firma de
 los lazos) y que no lleve su código de familia, un 666 que publica en
 [[.out1]] y comprueba en [[.in1]]:
 
 ```adn
-' Solo un huésped que dispara, no clavado, que no sepa atar
+' Solo un huésped que dispara, no anclado, que no sepa atar
 ' y que no lleve mi marca: atarlo con el puerto 666
 cond
 *999 0 =
@@ -231,7 +231,7 @@ drena, solo inmoviliza. El gen inyectado escribe 1 en [[.fixpos]], y ya está:
 sin importar dónde cayó el gen en el ADN ajeno ni qué escriba después el
 huésped. A vos la marca te salva: la celda 91 se escribe antes de que corra el
 gen del sedante.
-<!-- .fixpos: latch (el motor nunca la borra), un bot fijo no recibe fuerzas (30-FISICA §2); 35-VIRUS §3 (la inserción cae en cualquier frontera entre genes) -->
+<!-- .fixpos: latch (el motor nunca la borra), un bot anclado no recibe fuerzas (30-FISICA §2); 35-VIRUS §3 (la inserción cae en cualquier frontera entre genes) -->
 
 ```adn
 ' Gen 1: marcarme (antes de que corra el gen 3) y avanzar
@@ -258,7 +258,7 @@ stop
 ```
 
 Corrido contra un blanco que camina, en un campo de 300×200: al ciclo ~15 un
-virus le pegó; el blanco quedó clavado en seco (velocidad 40 a 0, posición
+virus le pegó; el blanco quedó anclado en seco (velocidad 40 a 0, posición
 congelada el resto de la corrida) y su ADN pasó de 1 gen a 2. El fabricante
 siguió moviéndose: la marca funciona. Y siguió disparando: como ninguna
 infección deja inmunidad, cada copia que le pega al mismo huésped le suma un
@@ -266,9 +266,9 @@ gen — al ciclo 150 su ADN ya llevaba siete copias del sedante, ocho genes en
 total. Lo que paga el fabricante es la fuerza de cada disparo (acá 30, que el
 multiplicador de costos no toca), más la copia y el disparo de costos de
 siempre ([[simulacion/virus#costos]]).
-<!-- probado: 300x200, semilla 1, 150 ciclos: victima fixed 1 y vel 0 desde el ~15, clavada en (185,7; 85,7), genes 1 -> 2 -> 8; fabricante fixed 0 toda la corrida; −30 de energia por virus (la fuerza), con todos los costos en 0 -->
+<!-- probado: 300x200, semilla 1, 150 ciclos: victima fixed 1 y vel 0 desde el ~15, anclada en (185,7; 85,7), genes 1 -> 2 -> 8; fabricante fixed 0 toda la corrida; −30 de energia por virus (la fuerza), con todos los costos en 0 -->
 
-¿Y ahora qué hacés con la presa clavada? Lo que quieras, con calma: acercarte a
+¿Y ahora qué hacés con la presa anclada? Lo que quieras, con calma: acercarte a
 dispararle como en [[tutoriales/dispara]], o atarte y chuparla como el
 alimentador. ¿Hacerlo epidémico, agregándole `*.thisgene .mkvirus store` al gen
 del sedante? Se puede, pero ojo: los virus no distinguen especie, así que un
@@ -289,7 +289,7 @@ contagiosa necesita su marca, como la celda 91 de esta.
   ([[simulacion/defensas]], [[estrategias/defensivos]]). Y hay antivirus de
   verdad: _Animal Minimalis Antivirus_ (Shasta) registra el número de cada
   gen y, si una infección le desacomoda el ADN, borra al intruso. Lo probamos
-  contra el sedante: el gen entró (lo dejó clavado), el antivirus lo borró en
+  contra el sedante: el gen entró (lo dejó anclado), el antivirus lo borró en
   el acto y su ADN volvió a los cinco genes… pero lo que el gen ya había
   escrito en `.fixpos` no se deshace: siguió inmóvil hasta el final. Y de paso
   se comió a mi sedante a disparos: la mejor defensa sigue siendo atacar.

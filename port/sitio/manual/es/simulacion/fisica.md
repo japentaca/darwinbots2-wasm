@@ -16,7 +16,7 @@ Cada bot es un círculo que se desliza sobre un plano. Tiene una posición, una 
 | Rumbo | [[.aim]] (1256 es una vuelta) |
 | Masa | [[.mass]] |
 | Radio | no tiene sysvar |
-| Clavado o libre | [[.fixed]] |
+| Anclado o libre | [[.fixed]] |
 
 Todas llegan con un ciclo de atraso, como todos los sentidos ([[adn/ejecucion#retraso]]).
 
@@ -57,7 +57,7 @@ El bot se empuja escribiendo en [[.up]], [[.dn]], [[.sx]] y [[.dx]] (el grupo co
 
 Como después se divide por la masa, para un bot liviano la masa se cancela: `10 .up store` le suma unos 6,6 de velocidad por ciclo. Pero el recorte del paso 2 llega antes cuanto más pesa el bot, así que un bot pesado acelera muy poco aunque empuje fuerte.
 
-**El costo** es el empujón ya recortado del paso 2 por [[param:cost:20]] (y por el [[param:cost:54]]). Con el costo de mover en 1, `10 .up store` cuesta 10 y `100 .up store` cuesta 40, lo mismo que 40, porque el tope ya lo recortó. Se cobra aunque el empujón no logre mover al bot (por el rozamiento, ver abajo), pero nunca más de la energía que le queda. Los cadáveres y los bots fijos no se empujan ni pagan.
+**El costo** es el empujón ya recortado del paso 2 por [[param:cost:20]] (y por el [[param:cost:54]]). Con el costo de mover en 1, `10 .up store` cuesta 10 y `100 .up store` cuesta 40, lo mismo que 40, porque el tope ya lo recortó. Se cobra aunque el empujón no logre mover al bot (por el rozamiento, ver abajo), pero nunca más de la energía que le queda. Los cadáveres y los bots anclados no se empujan ni pagan.
 
 Este bot compra 500 cloroplastos al nacer y después empuja a fondo:
 
@@ -153,9 +153,9 @@ Con [[param:opt:13]] distinto de 0, cada bot recibe en cada ciclo un empujón al
 
 Dos bots chocan cuando sus círculos se superponen. El mundo lo revisa en _fuerzas y choques_, con las posiciones del final del ciclo anterior, una sola vez por par. Chocan todos: vivos, vegetales y cadáveres. Cada choque hace tres cosas:
 
-**Los separa.** Si los dos están quietos (o los dos fijos), cada uno retrocede la mitad de lo que se superponen y quedan apenas tocándose. Si no, se corrigen solo una parte por ciclo, que depende de [[param:opt:18]]: con 0 se deshace cerca de un cuarto de la superposición, con 1 casi toda. El más liviano es el que más se corre.
+**Los separa.** Si los dos están quietos (o los dos anclados), cada uno retrocede la mitad de lo que se superponen y quedan apenas hacé clic enndose. Si no, se corrigen solo una parte por ciclo, que depende de [[param:opt:18]]: con 0 se deshace cerca de un cuarto de la superposición, con 1 casi toda. El más liviano es el que más se corre.
 
-**Les cambia la velocidad.** Solo cuenta la parte de la velocidad sobre la línea que une los centros; la de costado no cambia. Con elasticidad 0 (el valor por defecto, y el de F1) el choque es blando: los dos terminan con la misma velocidad en esa dirección, como si uno empujara al otro. Con 1 rebotan como bolas de billar. Un bot fijo cuenta como masa 32000 y no cambia su velocidad.
+**Les cambia la velocidad.** Solo cuenta la parte de la velocidad sobre la línea que une los centros; la de costado no cambia. Con elasticidad 0 (el valor por defecto, y el de F1) el choque es blando: los dos terminan con la misma velocidad en esa dirección, como si uno empujara al otro. Con 1 rebotan como bolas de billar. Un bot anclado cuenta como masa 32000 y no cambia su velocidad.
 
 **Les avisa.** Los dos leen [[.hit]] en el ciclo siguiente, con el lado del golpe en [[.hitup]], [[.hitdn]], [[.hitdx]] o [[.hitsx]], y sus sysvars `ref*` se llenan con los datos del otro aunque no lo estén viendo (ver [[sysvars/contacto]] y [[sysvars/ref]]).
 
@@ -177,7 +177,7 @@ Con gravedad 1 y paredes, un bot quieto cae al fondo y se queda ahí leyendo [[.
 ## El rumbo y el giro {#giro}
 <!-- 30-FISICA §7 (SetAimFunc: prioridad de setaim, costo |Round((diff+diff2)/200,3)|·TURNCOST, ma); comprobado: 314 .aimsx cuesta 1,57; de 0 a 1200 con 1200 .setaim 6,56 y con -56 .setaim 0,28 -->
 
-El bot gira en _movimiento_, antes de moverse: [[.aimsx]] y [[.aimdx]] giran _tanto_, [[.setaim]] gira _hasta_ un rumbo, y si escribís en `.setaim` un rumbo distinto del actual, manda ese. Un bot fijo también puede girar.
+El bot gira en _movimiento_, antes de moverse: [[.aimsx]] y [[.aimdx]] giran _tanto_, [[.setaim]] gira _hasta_ un rumbo, y si escribís en `.setaim` un rumbo distinto del actual, manda ese. Un bot anclado también puede girar.
 
 Girar cuesta [[param:cost:21]] (multiplicado por el [[param:cost:54]]) por cada 200 unidades de giro: un cuarto de vuelta (314) sale 1,57 y una vuelta entera, 6,28. Con `.setaim` el giro es el más corto hasta el rumbo pedido, pero el costo depende del _número_ que escribís: si queda a más de media vuelta del rumbo actual, cuenta como número, se cobran además tantas vueltas enteras como entren en la diferencia, redondeando (1256 por vuelta).
 
@@ -201,10 +201,10 @@ Con el costo de girar en 1, este bot paga 0,28 por pasar de 0 a 1200. Si escribe
 
 **El giro tiene inercia.** El browniano y los lazos ([[simulacion/lazos]]) pueden dejarle al bot un giro propio que se suma al rumbo en cada ciclo, aunque el ADN no pida nada. El rozamiento lo frena, el fluido lo anula casi siempre, y un giro voluntario en sentido contrario lo descuenta. Un giro en el mismo sentido no lo aumenta.
 
-## Bots fijos {#fijos}
+## Bots anclados {#fijos}
 <!-- 30-FISICA §2 (gate Not Fixed), §4.3 (fijo = masa 32000; la separación posicional mueve también al fijo), §6 (vel = 0) -->
 
-Un bot con [[.fixpos]] mayor que 0 queda clavado: no recibe ninguna fuerza (ni su empuje, ni la gravedad, ni el browniano), su velocidad es 0 y en los choques cuenta como un muro de masa 32000. Lo único que lo puede correr un poco es la separación de un choque o una forma que se le meta encima. [[param:opt:72]] desactiva la fijación para todos.
+Un bot con [[.fixpos]] mayor que 0 queda anclado: no recibe ninguna fuerza (ni su empuje, ni la gravedad, ni el browniano), su velocidad es 0 y en los choques cuenta como un muro de masa 32000. Lo único que lo puede correr un poco es la separación de un choque o una forma que se le meta encima. [[param:opt:72]] desactiva la fijación para todos.
 
 ## Los parámetros, de un vistazo {#parametros}
 <!-- spec/constants.yaml (valores por defecto); web2/engine/opciones.js (F1_OPTS, F1_COSTOS) -->

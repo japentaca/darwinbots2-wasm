@@ -23,7 +23,7 @@ Competir, y el de un barrido de parámetros, desde Comparar.
    dos corridas a comparar, el trabajo de réplicas o el torneo, según la
    plantilla. Elegí también el **Idioma del informe**: **Español** o **English**,
    aunque la app esté en el otro.
-3. Tocá **Generar y ver**. El informe aparece en la **Vista previa**, a la
+3. Hacé clic en **Generar y ver**. El informe aparece en la **Vista previa**, a la
    derecha.
 4. Con **Descargar .html** lo bajás; con **Imprimir / PDF** se abre en una ventana
    y el navegador ofrece imprimirlo o guardarlo como PDF.
@@ -180,7 +180,7 @@ Algunas cosas útiles:
   ejecuta la cola; en las demás se ven y se manejan igual. Si esa pestaña se
   cierra, otra toma la cola.
 - **Avisos.** La barra de arriba muestra cuántos trabajos hay en curso o, cuando
-  terminan, cuántos terminaron; al tocarla te lleva a Comparar (o a Competir, si
+  terminan, cuántos terminaron; al hacer clic en ella te lleva a Comparar (o a Competir, si
   son rondas de torneo). Al terminar un trabajo aparece además un aviso en la
   lista, con **Ver** y **Descartar**. Con **Avisarme con una notificación**, el
   navegador te avisa también con una notificación del sistema.

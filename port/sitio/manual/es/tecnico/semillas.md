@@ -154,7 +154,7 @@ La app conoce el asunto y te cubre:
 
 | Querés | Hacé |
 |---|---|
-| Repetir exacto una corrida | En [[app/experimentar]], abrí el mismo escenario, escribí la misma **Semilla** y tocá **Nueva simulación**. Si la corrida tenía cambios en caliente, usá **Réplicas** en [[app/analizar#comparar]]: la primera repite la corrida entera, con sus cambios en el mismo ciclo. |
+| Repetir exacto una corrida | En [[app/experimentar]], abrí el mismo escenario, escribí la misma **Semilla** y hacé clic en **Nueva simulación**. Si la corrida tenía cambios en caliente, usá **Réplicas** en [[app/analizar#comparar]]: la primera repite la corrida entera, con sus cambios en el mismo ciclo. |
 | Repetir un partido | En [[app/competir]], pestaña **Partidos**, **↻ Repetir**: mismas reglas, participantes, orden de siembra y semilla. |
 | Comparar mundos | **Réplicas** en [[app/analizar#comparar]]: hasta 64 corridas del mismo escenario con semillas que no repiten mundo, con media, banda y desvío. Para dos corridas sueltas, mirá si el informe avisa que las semillas dan el mismo mundo. |
 | Compartir tu corrida | Para que otro la siga desde donde la dejaste: **Guardar** → **Descargar .dbsim** en [[app/observar#guardar]]. Para que la repita exacta desde el arranque: **Exportar** el escenario y pasale también la semilla. |

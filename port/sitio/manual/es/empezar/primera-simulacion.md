@@ -171,7 +171,7 @@ end
 
 Para sembrarlo:
 
-1. Tocá **Abrir en la app** en el bloque: la app abre el diálogo de bot
+1. Hacé clic en **Abrir en la app** en el bloque: la app abre el diálogo de bot
    nuevo con este ADN ya cargado. (El botón **Copiar** te lo lleva al
    portapapeles, por si preferís pegarlo a mano.)
 2. Poné un **Nombre** (por ejemplo, «Mi primer bot») y pulsá **Crear**: se

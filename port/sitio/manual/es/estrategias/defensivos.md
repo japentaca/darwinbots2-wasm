@@ -258,12 +258,12 @@ El porqué del 1000: la toxina solo rebota golpes más chicos que ella, y un
 de energía por ciclo (25 por cada reposición de 100, más el 2 % que se
 evapora; con los costos de la liga F1, 5,2), mientras haya energía de sobra.
 
-<!-- probado: erizo-toxina contra el cazador del tutorial (campo 1500x1000, semilla 1), --ciclos 200: tres mordidas en los primeros ciclos, el cazador queda .poisoned 438 → 263 y con .shoot borrado; su energia clavada en 3000 (2994 con --cost de la F1: 3 disparos × 2); erizo 3000 → 1600. El mismo cazador contra un blanco quieto: cadaver antes del ciclo 40, cazador 3000 → 6163; re-corrido: idéntico (poisoned 438 → 263, cazador en 3000, erizo 3000 → 1600) -->
+<!-- probado: erizo-toxina contra el cazador del tutorial (campo 1500x1000, semilla 1), --ciclos 200: tres mordidas en los primeros ciclos, el cazador queda .poisoned 438 → 263 y con .shoot borrado; su energia anclada en 3000 (2994 con --cost de la F1: 3 disparos × 2); erizo 3000 → 1600. El mismo cazador contra un blanco quieto: cadaver antes del ciclo 40, cazador 3000 → 6163; re-corrido: idéntico (poisoned 438 → 263, cazador en 3000, erizo 3000 → 1600) -->
 
 Contra el cazador del tutorial, en 200 ciclos: el cazador lo mordió tres
 veces en los primeros ciclos, cada rebote le sumó ~146 ciclos de
 envenenamiento, y con su [[.shoot]] borrada ciclo a ciclo no volvió a
-disparar nunca. Su energía quedó clavada en 3000: cero ganancia. El erizo
+disparar nunca. Su energía quedó anclada en 3000: cero ganancia. El erizo
 gastó 1400 en mantenerse tóxico y terminó entero. El mismo cazador contra un
 blanco quieto lo dejó cadáver antes del ciclo 40, con 6163 de energía.
 
@@ -280,7 +280,7 @@ stop
 end
 ```
 
-<!-- probado: erizo-caparazon contra un cazador de -6 (campo 1500x1000, semilla 1), --ciclos 200: caparazon oscila alrededor de 1000, cuerpo 1000 intacto, energia 3000 → 2440 (~2,8 por ciclo); cazador clavado en 3000. El blanco quieto contra el mismo cazador: cadaver antes del ciclo 60, cazador 3000 → 14871 -->
+<!-- probado: erizo-caparazon contra un cazador de -6 (campo 1500x1000, semilla 1), --ciclos 200: caparazon oscila alrededor de 1000, cuerpo 1000 intacto, energia 3000 → 2440 (~2,8 por ciclo); cazador anclado en 3000. El blanco quieto contra el mismo cazador: cadaver antes del ciclo 60, cazador 3000 → 14871 -->
 
 Como el caparazón no se evapora, este erizo solo repara lo que le comen los
 disparos: unos 2,8 de energía por ciclo bajo fuego. En 200 ciclos terminó con

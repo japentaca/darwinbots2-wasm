@@ -164,7 +164,7 @@ sol se ponga: cada tramo dura ese valor más 1 ciclos, y solo el primer día dur
 menos (con 3: tres de día, cuatro de noche, cuatro de día…).
 <!-- opciones.js, control 'dia-noche' (escribe opt:33 y opt:34; 0 = siempre de dia); 50-MUNDO §2.2 (reloj, primer dia uno menos); comprobado con opt:33 = 1, opt:34 = 3: dia los ciclos 1-3, noche 4-7, dia 8-11 -->
 
-De noche no hay fotosíntesis: en la prueba, la energía y el cuerpo quedaron clavados
+De noche no hay fotosíntesis: en la prueba, la energía y el cuerpo quedaron anclados
 ciclo tras ciclo mientras [[.daytime]] estuvo en 0. El gen de compras no se entera
 —[[.light]] no se recalcula de noche— y el bot sigue comprando en la oscuridad: gratis
 con los costos apagados, energía tirada con costos reales. _Chloroplastus_, del

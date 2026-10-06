@@ -205,13 +205,13 @@ Si en una corrida sembraste el mismo ADN con otro nombre, también aparece.
 ## Crear un bot nuevo {#nuevo}
 <!-- Biblioteca.svelte crearNuevo; DialogoBot.svelte (modo nuevo); adn.js ADN_NUEVO = 'cond\nstart\nstop\nend\n'; i18n bots.datos.*, bots.error.nombre-*, bots.confirmar.nombreForo -->
 
-1. En la biblioteca, tocá **+ Nuevo bot**.
+1. En la biblioteca, hacé clic en **+ Nuevo bot**.
 2. Escribí el **Nombre**. Marcá **Es vegetal (fotosintetiza)** si va a vivir
    de la luz (ver [[simulacion/cloroplastos]]).
 3. Si querés, escribí una **Descripción**.
 4. En **ADN** viene un gen vacío. Podés dejarlo así o pegar un ADN entero,
    por ejemplo el de un `.txt` que tengas.
-5. Tocá **Crear**. La app abre el bot en la pestaña ADN, lista para editar.
+5. Hacé clic en **Crear**. La app abre el bot en la pestaña ADN, lista para editar.
 
 El gen vacío con el que arranca es este:
 
@@ -238,11 +238,11 @@ ya cargado, y vos solo elegís el nombre.
 de modificar un bot del foro y también de probar una variante de uno tuyo
 sin tocar el original.
 
-1. En la ficha, tocá **Duplicar** (en los del foro dice **Duplicar para
+1. En la ficha, hacé clic en **Duplicar** (en los del foro dice **Duplicar para
    editar**).
 2. Escribí el **Nombre de la copia**, o dejalo vacío: la app usa el mismo
    nombre con un número.
-3. Tocá **Duplicar**. La copia se abre en la pestaña ADN.
+3. Hacé clic en **Duplicar**. La copia se abre en la pestaña ADN.
 
 La copia recuerda de dónde salió: en su ficha dice «copia de» y el nombre del
 original.
@@ -277,7 +277,7 @@ así que podés repetir el experimento cuando quieras.
 <!-- Ficha.svelte abrirInscribir/inscribir; i18n bots.inscribir.* -->
 
 **Inscribir en torneo** abre una lista con el partido rápido y tus torneos,
-cada uno con su temporada y cuántos participantes tiene. Elegís uno y tocás
+cada uno con su temporada y cuántos participantes tiene. Elegís uno y hacé clic ens
 **Inscribir**; la app abre ese torneo en [[app/competir]].
 
 Dos cosas a tener en cuenta:

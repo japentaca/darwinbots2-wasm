@@ -111,7 +111,7 @@ raise more than one daughter cell. In step 4, when the ties stretch the cells
 apart, the spot is free again and the factory starts up again.
 
 What you should see: with a single cell seeded and energy to spare, after a while
-there are two; the child is born with 30 % of the parent's energy and body (minus
+there are two; the child is born with 30% of the parent's energy and body (minus
 a thousandth of the transfer that each side pays). And since the child also has
 the gene from step 1, it ties itself and the organism already has two cells.
 
@@ -127,7 +127,7 @@ end up even. Three conditions, always the same:
 - The engine clears the command every cycle, so you have to ask for it every
   time.
 - In one cycle no more energy moves than the body itself ([[.body]]), and
-  whoever asks pays 1 % of what was moved.
+  whoever asks pays 1% of what was moved.
 
 ```adn
 ' as long as I'm multicellular, I share energy evenly
@@ -141,7 +141,7 @@ stop
 <!-- comprobado con probar-adn (bot de este paso, 5000 de energia inicial): 3498.50/1498.50 pasan a 2493.47/2493.48 y quedan clavadas; con tres celulas, ~1650 cada una -->
 What you should see: with the parent at 3498 and the child at 1498 (seeded with
 5000 energy), as soon as `.multi` is 1 the two figures converge and stay pinned
-at ~2493 each: even, minus the 1 % for the trip. In longer chains the sharing
+at ~2493 each: even, minus the 1% for the trip. In longer chains the sharing
 goes in pairs, but since every cell asks for it, the pantry evens out by itself.
 
 ## Step 4 · Hold the shape {#forma}

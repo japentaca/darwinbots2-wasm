@@ -135,9 +135,9 @@ start
 stop
 ```
 
-<!-- comprobado con probar-adn (bot de este paso, 5000 de energia inicial): 3498.50/1498.50 pasan a 2493.47/2493.48 y quedan clavadas; con tres celulas, ~1650 cada una -->
+<!-- comprobado con probar-adn (bot de este paso, 5000 de energia inicial): 3498.50/1498.50 pasan a 2493.47/2493.48 y quedan ancladas; con tres celulas, ~1650 cada una -->
 Qué deberías ver: con el padre a 3498 y el hijo a 1498 (sembrado con 5000 de
-energía), en cuanto `.multi` vale 1 las dos cifras convergen y quedan clavadas
+energía), en cuanto `.multi` vale 1 las dos cifras convergen y quedan ancladas
 en ~2493 cada una: parejas, menos el 1 % del viaje. En cadenas más largas el
 reparto va de a pares, pero como todas las células lo piden, la despensa se
 iguala sola.

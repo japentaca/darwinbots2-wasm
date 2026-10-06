@@ -18,9 +18,9 @@ chloroplasts and make energy from the sun
 
 1. Open a run; the one from the previous tutorial will do.
 2. In **Observe**, click **Seed** on the bottom bar. Under **Bot**, pick the
-   **Alga Minimalis (plant)** preset: it marks it as a vegetable by itself and
+   **Alga Minimalis (vegetable)** preset: it marks it as a vegetable by itself and
    suggests 15 copies with 3000 energy. If you seed another DNA, check
-   **Plant (photosynthesizes)** by hand.
+   **Vegetable (photosynthesizes)** by hand.
 3. In the same dialog, seed your bot: 5 copies, 3000 energy, a color that
    stands out.
 <!-- app/observar #sembrar (DialogoSembrar: preset Alga Minimalis, 15 y 3000 si es vegetal; «Vegetal (hace fotosíntesis)») -->

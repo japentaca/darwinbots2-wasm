@@ -14,7 +14,7 @@ estado: revisada
 |---|---|---|
 | `100 120 25` | true | the margin is 75 to 125 |
 | `100 130 25` | false | out of range |
-| `1000 1015 1` | false | 1 % of 1000 is 10 |
+| `1000 1015 1` | false | 1% of 1000 is 10 |
 | `100 120 -25` | **false** | negative percentage |
 | `-100 -100 5` | **false** | negative reference |
 
@@ -24,10 +24,10 @@ not rounded.
 It is useful for detecting whether a reading changed “for real” or just
 wobbled. This bot stores in cell 50 what the middle eye ([[.eye5]]) was
 seeing, and counts in cell 51 the cycles in which what it sees now is similar,
-within 5 %, to what it saw in the previous cycle:
+within 5%, to what it saw in the previous cycle:
 
 ```adn
-' counts the cycles in which what it sees did not change by more than 5 %
+' counts the cycles in which what it sees did not change by more than 5%
 cond
   *50 *.eye5 5 ~=
 start

@@ -12,7 +12,7 @@ DNA and not from what runs, so it only changes if the other bot mutates.
 
 <!-- conteo en port/web/bots: .trefeye en 103 bots; formas más comunes «*.trefeye 0 =», «*.trefeye *.myeye %=», «=» y «!=» -->
 It is the most used tie sysvar in the Bestiary, almost always compared with your own:
-`*.trefeye *.myeye =` (or with [[op:%=]], which allows a 10 % difference): if the
+`*.trefeye *.myeye =` (or with [[op:%=]], which allows a 10% difference): if the
 tied bot has the same number of eye reads as you do, it is most likely of your species.
 `*.trefeye 0 =` also shows up a lot; it is also true when no tie is being read,
 because then all the [[sysvars/tref|tref*]] are 0.

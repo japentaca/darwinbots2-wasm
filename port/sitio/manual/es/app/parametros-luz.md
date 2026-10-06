@@ -32,7 +32,7 @@ el reloj y cualquier otro número lo prende con esa duración.
 <!-- core vegs.hpp reloj (DayNightCycleCounter > CycleLength → !Daytime); comprobado: planta.txt con opt:33=1, opt:34=3 → 3 ciclos de sol, 4 de noche, 4 de sol -->
 Prende el reloj del día y la noche: el sol se apaga y se prende solo, con
 tramos que duran [[param:opt:34]] ciclos más uno. Apagado (como arranca la
-app), el estado queda fijo en lo que diga [[param:opt:41]], que normalmente es
+app), el estado queda anclado en lo que diga [[param:opt:41]], que normalmente es
 de día.
 
 En una prueba con 3 de medio período, un vegetal comió tres ciclos, pasó

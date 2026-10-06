@@ -190,7 +190,7 @@ métricas, especies, árbol genealógico e informes.
 reiniciarlo. Sirve para meter un depredador en un mundo tranquilo, reponer una
 especie que se extinguió o probar un bot nuevo contra los que ya están.
 
-1. Tocá **Sembrar** en la barra.
+1. Hacé clic en **Sembrar** en la barra.
 2. En **Bot**, elegí de dónde sale el ADN:
    - **Un bot de la biblioteca…**: buscalo por nombre, archivo, etiqueta o nota.
      Toma su nombre, si es vegetal, 5 copias (15 si es vegetal) y un color que no
@@ -201,7 +201,7 @@ especie que se extinguió o probar un bot nuevo contra los que ya están.
 3. Revisá **Nombre de la especie**, **Cantidad** (de 1 a 500), **Energía inicial**
    y **Color**, y marcá **Vegetal (hace fotosíntesis)** si corresponde (ver
    [[simulacion/cloroplastos]]).
-4. Tocá **Sembrar**.
+4. Hacé clic en **Sembrar**.
 
 Los bots aparecen enseguida y la siembra queda anotada en
 **Eventos**. Las especies sembradas mutan con las tasas de fábrica, como las
@@ -258,7 +258,7 @@ repetirla. Cómo afectan los obstáculos a los bots está en [[simulacion/mundo]
   para llevarlo a otro equipo o compartirlo.
 
 **Corridas** abre la lista de lo guardado, con una miniatura, el ciclo, los bots
-y la fecha de cada una. **Retomar** la carga en pausa (tocá **Iniciar** para
+y la fecha de cada una. **Retomar** la carga en pausa (hacé clic en **Iniciar** para
 seguir), **Borrar** la elimina y **Abrir un archivo .dbsim…** carga uno desde
 tu equipo. La que está cargada lleva la marca **la actual**.
 

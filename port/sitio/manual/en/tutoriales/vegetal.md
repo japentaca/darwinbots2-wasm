@@ -13,7 +13,7 @@ DNA and tells you what you should see.
 ## What a vegetable has {#que-es}
 
 A vegetable is a bot of a species you marked as such: the **Is a vegetable
-(photosynthesizes)** checkbox when editing the species in Experiment, or **Plant
+(photosynthesizes)** checkbox when editing the species in Experiment, or **Vegetable
 (photosynthesizes)** when seeding from Observe.
 <!-- i18n es: experimentar.especie.vegetal, observar.sembrar.vegetal -->
 
@@ -98,7 +98,7 @@ start
 stop
 ```
 
-[[.repro]] asks for a child that takes 50 % of the energy, body, chloroplasts and
+[[.repro]] asks for a child that takes 50% of the energy, body, chloroplasts and
 waste ([[simulacion/reproduccion#reparto]]). The number is the percentage, modulo
 100, and the command stays written until the birth goes through. The child is born
 in front of the parent, facing it, in the births and deaths phase of the same
@@ -153,7 +153,7 @@ In a long run it filled the field: 1 → 4 → 12 → 16 → 21 → 23 bots in 1
 and there it stopped by itself. It wasn't bad luck: with the field full, each bot
 covers the light of the others ([[simulacion/cloroplastos#fotosintesis]]), the free
 light dropped to less than half and the gain no longer reaches for more births. If
-in addition the chloroplasts of the whole field go over 90 % of the cap, only one
+in addition the chloroplasts of the whole field go over 90% of the cap, only one
 in eleven births goes ahead ([[param:base:maxPopulation]] and
 [[simulacion/cloroplastos#tope]]).
 <!-- 36-REPRO §2, §0.4; cloroplastos#tope (loteria de 1/11 por encima del 90 % del tope); comprobado en 4000x3000: 1 -> 4 -> 12 -> 16 -> 21 -> 23 bots en 1500 ciclos, *.light cayo de ~31900 a 13898 -->

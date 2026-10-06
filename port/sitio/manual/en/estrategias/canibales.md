@@ -103,7 +103,7 @@ After that, the marker never changes again.
 
 And how does it use it? By spying: [[.memloc]] on 971 makes [[.memval]] bring
 back the marker _of the other bot_. The comparison is by family: [[op:%=]]
-accepts a difference of up to 10 %.
+accepts a difference of up to 10%.
 
 ```adn
 ' Close relative (or nobody): wander
@@ -142,7 +142,7 @@ It works in the three cases that matter:
    60 cycles. They pass each other, spy on each other, and each goes its own way.
 2. **Against a stranger** (a still, peaceful bot): it hunts it down, bleeds it
    and kills it before cycle 30, finishing at 14875 energy from the starting
-   3000. Its 971 starts at 0 and nobody wrote to it: 0 is more than 10 % away
+   3000. Its 971 starts at 0 and nobody wrote to it: 0 is more than 10% away
    from 50, so it's food.
    <!-- probado: contra un blanco quieto, campo 300x300, 90 ciclos, semilla 3: muerto antes del 30, kills=1, el Cannibot en 14875 -->
 3. **Against a distant cousin**: an identical copy with the initial marker at 90
@@ -158,7 +158,7 @@ had a child at 51. If the deleted gene had survived, the children would all
 have gone back to 50.
 <!-- probado: Cannibot_abyaly_2006.txt, --nrg 30000, 130 ciclos: 7 bots al 125; hijos con 971=48 (padre 49) y 971=51 (padre 51) -->
 
-How far does a branch have to drift to stop being family? A 10 % tolerance on a
+How far does a branch have to drift to stop being family? A 10% tolerance on a
 marker that starts at 50 is about 5 units: by adding ±1 per generation, two
 branches that haven't crossed paths for a few dozen generations end up outside
 each other's margin—and that's where the war between cousins begins. The author
@@ -235,7 +235,7 @@ stop
 ```
 
 The three criteria complement each other: one that has no [[.shoot]] in its DNA
-([[.refshoot]]) is easy prey; one with less body than you—more than 10 % less
+([[.refshoot]]) is easy prey; one with less body than you—more than 10% less
 ([[op:!%=]])—is prey even if it's your clone; and one with more body _and_ that
 shoots as much as you do is a problem: about-face and off the other way. With
 [[.shootval]] at 16, the shot against the small ones goes out with triple the
@@ -244,7 +244,7 @@ force ([[simulacion/disparos#cuerpo]]).
 The result with its own brothers depends on size:
 
 - **clones of the same size**: not a single shot in 120 cycles. Their bodies
-  march in step and the difference never exceeds 10 %, so the attack gene never
+  march in step and the difference never exceeds 10%, so the attack gene never
   switches on.
   <!-- probado: Sneaker_Cannibalistic_F3..., 4 copias, campo 600x600, 120 ciclos: cuerpos identicos (1029, 1059...), kills=0 -->
 - **an uneven family**: I tested it by adding a gene that makes it reproduce

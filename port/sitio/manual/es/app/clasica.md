@@ -90,7 +90,7 @@ El panel **Seed species**, al final de la columna derecha:
 2. Completá **Name** y el color.
 3. Marcá **vegetable** si es un vegetal, y poné la cantidad en **qty** y la
    energía inicial en **nrg** (5 y 3000 por defecto).
-4. Tocá **Seed**. Los bots aparecen en el mundo en curso, sin reiniciarlo.
+4. Hacé clic en **Seed**. Los bots aparecen en el mundo en curso, sin reiniciarlo.
 
 Si el ADN tiene palabras que el motor no reconoce, la clásica lo siembra
 igual y muestra los avisos debajo del botón. Es el mismo análisis que el
@@ -186,7 +186,7 @@ por un teleporter especial. En la clásica funciona así:
      ofrece uno público.
 4. Elegí la **Room** (`public` por defecto): se ven entre sí las
    simulaciones de la misma sala.
-5. Tocá **Connect Internet Mode**.
+5. Hacé clic en **Connect Internet Mode**.
 
 Al conectarte, la simulación gana un teleporter de Internet y aparece el
 rótulo «Internet Mode» sobre el campo. Lo que entra en ese teleporter viaja a

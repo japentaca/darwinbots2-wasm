@@ -77,7 +77,7 @@ Two world settings trim it, never stretch it:
 
 - **Night.** While it's night ([[param:opt:41]] off, whether because of the
   [[param:opt:33]] clock or the energy thresholds; see
-  [[simulacion/cloroplastos#dia-y-noche]]), all eyes see 20 % less.
+  [[simulacion/cloroplastos#dia-y-noche]]), all eyes see 20% less.
 - **The pond.** In pond mode ([[param:opt:30]]) sight fades with depth: the
   deeper the bot is, the shorter it sees. How much depends on the gradient
   ([[param:opt:32]]).

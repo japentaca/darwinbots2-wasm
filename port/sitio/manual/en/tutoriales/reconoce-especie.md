@@ -310,7 +310,7 @@ it. Both signals drift with evolution; see
 
 **Without seeing: through ties.** A bot tied to another recognizes it with
 [[.trefeye]] instead of `refeye`, and compared with [[op:%=]] it allows up to a
-10 % difference, useful if you expect relatives that mutated a little. To learn
+10% difference, useful if you expect relatives that mutated a little. To learn
 how to build ties, see [[tutoriales/multibot]].
 
 **Hidden passwords.** With [[.memloc]] you can spy on any cell of the bot you see

@@ -26,7 +26,7 @@ ficha. Las fichas se acumulan en la simulación hasta que las bajes:
    se aplica en el acto y queda anotado en la corrida.
 3. Dejá correr la simulación. El menú muestra cuántas fichas lleva en
    **Registros acumulados**.
-4. Tocá **Descargar**: bajan dos archivos, `DeadRobots.snp` con las fichas y
+4. Hacé clic en **Descargar**: bajan dos archivos, `DeadRobots.snp` con las fichas y
    `DeadRobots_Mutations.txt` con la historia de mutaciones de cada bot.
    Descargar no borra nada: el registro sigue sumando.
 5. Para empezar de cero, **Reiniciar** borra lo acumulado (pide confirmación).

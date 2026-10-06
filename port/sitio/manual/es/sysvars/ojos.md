@@ -28,8 +28,8 @@ el ojo de fábrica, que llega a unas 1440 unidades:
 
 | Distancia entre bordes | Valor |
 |---|---|
-| tocándose o encimados | 32000 |
-| casi tocándose | unos 20700 |
+| hacé clic enndose o encimados | 32000 |
+| casi hacé clic enndose | unos 20700 |
 | 134 | 100 |
 | 278 | 25 |
 | 710 | 4 |

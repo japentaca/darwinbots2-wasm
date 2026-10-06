@@ -16,7 +16,7 @@ girar libre.
 <!-- sysvars.yaml .fixang (≥ 0 fija ángulo Mod 1256 /200; < 0 libera); 30-FISICA §3.2 (TieTorque, holgura de 5°); comprobado con probar-adn: con 314 el lazo se sostiene en ~333 -->
 
 Solo actúa sobre lazos endurecidos de un bot multicelular ([[.multi]]). Al
-endurecerse, el lazo del bot que lo creó ya queda fijo en el ángulo que tenía en
+endurecerse, el lazo del bot que lo creó ya queda anclado en el ángulo que tenía en
 ese momento; `.fixang` sirve para cambiarlo.
 
 <!-- 34-TIES §0.4 (regang fija el ángulo actual; solo el lado no-back) -->

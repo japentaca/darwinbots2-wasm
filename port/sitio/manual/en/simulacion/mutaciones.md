@@ -65,7 +65,7 @@ the **type**:
 - **Changing the value of a number** (or of a read such as `*50`): shifts it a
   little. Half the time it's a big jump (a few tens or a couple of hundred)
   and the other half a small tweak of a few units. A number above 1000 moves
-  in proportion: about 10 %.
+  in proportion: about 10%.
 - **Changing the value of a command**: replaces it with another one from the
   same family. One operator for another operator ([[op:add]] for [[op:mult]],
   for example), one comparison for another, a `start` for a `cond`.
@@ -109,7 +109,7 @@ species the app seeds get.
 
 With the rates at 5000 and a 100-instruction DNA:
 
-- Each birth type has a 2 % chance of touching the child; adding up the five,
+- Each birth type has a 2% chance of touching the child; adding up the five,
   about one child in ten is born with some change.
 - A point mutation hits the bot about every 50000 cycles of life. During life
   almost nothing changes: evolution happens through births.

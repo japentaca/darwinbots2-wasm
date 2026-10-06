@@ -30,7 +30,7 @@ leer qué.
 
 Los pasos:
 
-1. En [[app/inicio|Inicio]], buscá el escenario **Sopa primordial** y tocá
+1. En [[app/inicio|Inicio]], buscá el escenario **Sopa primordial** y hacé clic en
    **Ajustar**: se abre en Experimentar ya cargado. Es el molde justo: un mundo
    sin costos, 15 algas, 5 animales y las mutaciones encendidas.
    <!-- web2/engine/escenarios/fabrica/sopa-primordial.json (base clasica, sin cambios: costos 0, mutaciones encendidas) -->
@@ -43,7 +43,7 @@ Los pasos:
    cada especie con su tabla de mutaciones encendida y las tasas de fábrica, así
    que con el interruptor alcanza.
    <!-- 40-MUTACIONES §1; core db_sim_add_species (SetDefaultMutationRates y Mutations = True); simulacion/mutaciones #quien-muta -->
-4. Elegí la **Semilla** y tocá **Nueva simulación**. La app arma el mundo, lo
+4. Elegí la **Semilla** y hacé clic en **Nueva simulación**. La app arma el mundo, lo
    pone a correr y te lleva a Observar.
 
 :::cuidado
@@ -73,7 +73,7 @@ sirven para esto:
 - **Especies**: una fila por especie, con el promedio de **Mutaciones**, la
   **Gen. máx.**, el **ADN medio** y los **Hijos por bot**.
 - **Filogenia**: el árbol de individuos de tu especie, ordenado por
-  generación. Tocá un bot y la tarjeta dice su madre, sus mutaciones, el largo
+  generación. Hacé clic en un bot y la tarjeta dice su madre, sus mutaciones, el largo
   de su ADN y sus hijos.
 - **Genética**: histogramas de la población (largo del ADN, generación,
   mutaciones, hijos) y la vista más directa de todas, **ADN dominante vs

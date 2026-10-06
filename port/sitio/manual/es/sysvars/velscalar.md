@@ -14,7 +14,7 @@ velocidad con que se movió en el ciclo anterior, y en el primer ciclo vale 0.
 <!-- 30-FISICA §5 (borde rígido: clamp de posición, vel·0,05) -->
 :::cuidado
 Es la velocidad que el bot _lleva_, no la que logra. Un bot que empuja contra el
-borde del mundo puede quedar clavado en la esquina y seguir leyendo
+borde del mundo puede quedar anclado en la esquina y seguir leyendo
 `.velscalar` 40: el borde lo frena en el lugar, pero no le borra la velocidad. Para
 saber si está trabado, mirá [[.edge]] o compará [[.xpos]] y [[.depth]] entre
 ciclos.

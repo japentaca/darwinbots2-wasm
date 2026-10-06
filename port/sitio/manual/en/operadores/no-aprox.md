@@ -13,10 +13,10 @@ percentage goes on top.
 
 It's useful for reacting to big changes and ignoring small ones. This bot
 counts in cell 51 the cycles in which what the middle eye ([[.eye5]]) sees
-changed by more than 5 % from the previous cycle, which it keeps in cell 50:
+changed by more than 5% from the previous cycle, which it keeps in cell 50:
 
 ```adn
-' counts the cycles in which what it sees changed by more than 5 %
+' counts the cycles in which what it sees changed by more than 5%
 cond
   *50 *.eye5 5 !~=
 start
@@ -40,6 +40,6 @@ at two billion, which `~=` doesn't do. It only matters with enormous numbers,
 which don't fit in memory; in that case `~=` and `!~=` can both give true at
 once.
 
-The bot _Chaotic Swarm ver 1.2_ (SA), from the Bestiary, uses `!~=` with a 5 %
+The bot _Chaotic Swarm ver 1.2_ (SA), from the Bestiary, uses `!~=` with a 5%
 margin to decide whether what each eye sees has changed. The version with a
-fixed 10 % is [[op:!%=]].
+fixed 10% is [[op:!%=]].

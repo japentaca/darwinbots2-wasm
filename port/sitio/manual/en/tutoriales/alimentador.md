@@ -31,7 +31,7 @@ the command goes through every cycle, for free and with no aiming.
 
 You need something with energy that does not defend itself. In **Observe** →
 **Seed**, seed the alga you built in [[tutoriales/vegetal]] marked as
-**Plant (photosynthesizes)**, or a few copies of a motionless target like the
+**Vegetable (photosynthesizes)**, or a few copies of a motionless target like the
 one in [[tutoriales/dispara]]:
 
 ```adn

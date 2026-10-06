@@ -17,7 +17,7 @@ cargan cloroplastos y fabrican energía con el sol
 <!-- 50-MUNDO §2.2 (feedvegs, el sol); 31-ENERGIA §0.4 -->
 
 1. Abrí una corrida; la del tutorial anterior sirve.
-2. En **Observar**, tocá **Sembrar**, en la barra de abajo. En **Bot**, elegí
+2. En **Observar**, hacé clic en **Sembrar**, en la barra de abajo. En **Bot**, elegí
    el preset **Alga Minimalis (vegetal)**: lo marca como vegetal solo y
    propone 15 copias con 3000 de energía. Si sembrás otro ADN, marcá a mano
    **Vegetal (hace fotosíntesis)**.
@@ -193,7 +193,7 @@ hasta sube, despacito, mientras le dé el sol). Eso es lo que sigue.
 
 ## Paso 5: comer {#comer}
 
-Un vegetal no se come tocándolo: tu bot no tiene boca. Se come a disparos. El
+Un vegetal no se come hacé clic enndolo: tu bot no tiene boca. Se come a disparos. El
 disparo −1 es un _pedido de energía_: cuando le pega a un bot vivo, la víctima
 pierde el 90 % de la fuerza del golpe en energía y otro 1 % en cuerpo, y del
 punto del golpe vuelve hacia el tirador un disparo de regalo con el botín. Al

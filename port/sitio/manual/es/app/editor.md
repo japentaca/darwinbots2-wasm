@@ -22,10 +22,10 @@ probarlos y mirar el Laboratorio.
 
 Para modificar uno:
 
-1. Tocá **Duplicar para editar**, arriba a la derecha.
+1. Hacé clic en **Duplicar para editar**, arriba a la derecha.
 2. Escribí el **Nombre del bot nuevo**, o dejalo vacío: se llama igual con
    « 2» al final.
-3. Tocá **Duplicar**. Se abre la copia, ya editable.
+3. Hacé clic en **Duplicar**. Se abre la copia, ya editable.
 
 ## La barra de arriba {#barra}
 <!-- Editor.svelte barra: seg Texto/Por genes; chip v{n}; editor.sinGuardar; editor.avisos; editor.laboratorio; nota + Guardar v{n} -->
@@ -249,7 +249,7 @@ Tus bots guardan su historia completa. Para guardar:
 
 1. Si querés, escribí una **Nota de la versión** («gira más rápido»,
    «sin el gen de disparo»).
-2. Tocá **Guardar v4** (el número es el de la versión que se va a crear).
+2. Hacé clic en **Guardar v4** (el número es el de la versión que se va a crear).
 
 La versión guarda el texto exacto: un cambio en un comentario o en la
 sangría también es un cambio. Si no tocaste nada, la app no crea otra

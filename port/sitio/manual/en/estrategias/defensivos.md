@@ -31,8 +31,8 @@ them:
 | Defense | Works against | Doesn't stop | Price per 100 (F1 league) | Evaporates |
 |---|---|---|---|---|
 | Shell | body theft (−6) and venom (−3) | −1, memory, viruses | 10 (20) | no |
-| Slime | ties and viruses | all shots | 10 (20) | 2 % per cycle |
-| Poison | energy theft (−1), memory shots and tie drains | −6 | 25 (26) | 2 % per cycle |
+| Slime | ties and viruses | all shots | 10 (20) | 2% per cycle |
+| Poison | energy theft (−1), memory shots and tie drains | −6 | 25 (26) | 2% per cycle |
 | Venom | nothing: it's ammunition, it punishes whoever gets close | — | 100 (101) | no |
 
 Read as strategy:
@@ -70,7 +70,7 @@ the price of shell and slime (0.1 per unit, [[param:cost:29]] and
 [[param:cost:54]]. In the built-in scenarios, except the F1 match, the costs
 are 0 and you only pay the conversion.
 
-What really costs is upkeep. Slime and poison lose 2 % per cycle
+What really costs is upkeep. Slime and poison lose 2% per cycle
 ([[simulacion/defensas#decaimiento]]): keeping both above 100 means topping up
 one recharge of each about every 35 cycles. Measured on the bot that follows,
 with F1 league costs: **66 energy to arm 100 of each, and then 46 every ~35
@@ -256,7 +256,7 @@ end
 
 The reason for 1000: poison only bounces hits smaller than itself, and a −1 from
 a hunter with 1000 body hits with 220. Keeping 1000 up costs about 5 energy per
-cycle (25 for each 100 refill, plus the 2 % that evaporates; with F1 league
+cycle (25 for each 100 refill, plus the 2% that evaporates; with F1 league
 costs, 5.2), as long as there's energy to spare.
 
 <!-- probado: erizo-toxina contra el cazador del tutorial (campo 1500x1000, semilla 1), --ciclos 200: tres mordidas en los primeros ciclos, el cazador queda .poisoned 438 → 263 y con .shoot borrado; su energia clavada en 3000 (2994 con --cost de la F1: 3 disparos × 2); erizo 3000 → 1600. El mismo cazador contra un blanco quieto: cadaver antes del ciclo 40, cazador 3000 → 6163; re-corrido: idéntico (poisoned 438 → 263, cazador en 3000, erizo 3000 → 1600) -->

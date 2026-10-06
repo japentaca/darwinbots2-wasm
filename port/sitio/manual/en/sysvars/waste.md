@@ -9,7 +9,7 @@ Waste is a byproduct of activity. The main sources are:
 
 - making defenses: the extra cost of building shell, slime, venom or poison
   ([[.mkshell]], [[.mkslime]]…) doesn't vanish, it becomes waste;
-- eating: 1 % of what the bot takes from another, by shooting or through a tie;
+- eating: 1% of what the bot takes from another, by shooting or through a tie;
 - receiving other bots' waste: a −4 shot from another bot, or whatever is passed to it
   through a tie.
 
@@ -24,8 +24,8 @@ writes. That breaks its variables, commands and counters.
 **How to get rid of it.**
 
 - By throwing it away with a −4 shot: `-4 .shoot store` shoots out the amount you
-  put in [[.shootval]] (or 1/20 of the waste if it is 0). 1 % of what is thrown stays in
-  `.waste` and another 1 % goes to [[.pwaste]].
+  put in [[.shootval]] (or 1/20 of the waste if it is 0). 1% of what is thrown stays in
+  `.waste` and another 1% goes to [[.pwaste]].
 - With chloroplasts: a bot with [[.chlr]] digests its waste and turns it into
   energy and body.
 - By passing it to a partner in the same organism with [[.sharewaste]].

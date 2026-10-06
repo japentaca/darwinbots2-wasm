@@ -23,13 +23,13 @@ There are ten: [[op:<]], [[op:>]], [[op:<=]], [[op:>=]], [[op:=]], [[op:!=]] and
 “approximate” ones [[op:%=]], [[op:!%=]], [[op:~=]] and [[op:!~=]]. The table of what
 each one asks is in [[adn/operadores#comparaciones]].
 
-The two “approximate” ones take `a` as the reference. `100 109 %=` is true
-(109 is within 10 of 100) and `100 111 %=` is false. `~=` pops a third number,
+The two “approximate” ones take `a` as the reference. `100 109%=` is true
+(109 is within 10 of 100) and `100 111%=` is false. `~=` pops a third number,
 the percentage: `100 120 25 ~=` is true and `100 130 25 ~=` is not.
 
 :::cuidado
 A quirk inherited from DarwinBots 2.48.32: with a negative reference, `%=` and `~=`
-are **always false**, even if both numbers are equal (`-100 -100 %=` gives
+are **always false**, even if both numbers are equal (`-100 -100%=` gives
 false). If you compare values that can be negative, such as a speed, use
 [[op:abs]] first, or a subtraction and `<`.
 :::

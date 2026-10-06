@@ -1,6 +1,6 @@
 ---
 titulo: .treffixed
-resumen: "Vale 1 si el bot atado está fijo en su lugar, 0 si se puede mover."
+resumen: "Vale 1 si el bot atado está anclado en su lugar, 0 si se puede mover."
 etiquetas: [tref, lazos, fijo]
 estado: revisada
 ---
@@ -10,7 +10,7 @@ y 0 si no. Es el [[.fixed]] del otro, leído por el lazo; la
 versión de la vista es [[.reffixed]].
 
 Sirve en organismos donde una célula hace de ancla y las demás se mueven: si sabés
-que el otro extremo está fijo, tirar de él no lo va a mover.
+que el otro extremo está anclado, tirar de él no lo va a mover.
 
 ```adn
 ' Si el atado esta fijo, me anclo yo tambien

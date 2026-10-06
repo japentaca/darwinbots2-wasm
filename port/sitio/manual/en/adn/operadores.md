@@ -159,7 +159,7 @@ leaves _one_ result, true or false, on the boolean one. With `a b` on the stack:
 | [[op:%=]] · [[op:!%=]] | `b` is · is not within 10% of `a` |
 | [[op:~=]] · [[op:!~=]] | with `a b d`: `b` is · is not within `d`% of `a` |
 
-`100 105 %=` is true and `100 115 %=` is false; `100 115 20 ~=` is
+`100 105%=` is true and `100 115%=` is false; `100 115 20 ~=` is
 true. An inherited oddity: if `a` is negative, `%=` and `~=` always give
 false.
 

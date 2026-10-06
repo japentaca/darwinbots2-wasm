@@ -7,7 +7,7 @@ estado: revisada
 Inicio es la primera pantalla de la app y el lugar al que volvés para cambiar de
 corrida. Desde acá arrancás un mundo nuevo a partir de un escenario, seguís el
 que dejaste corriendo, retomás uno guardado o abrís un archivo. Se llega con
-**Inicio** en la barra de arriba o tocando el nombre **DarwinBots**.
+**Inicio** en la barra de arriba o haciendo clic en el nombre **DarwinBots**.
 
 La pantalla tiene dos columnas. A la izquierda, la tarjeta de la última corrida
 y la galería de escenarios; a la derecha, tus **Corridas guardadas** y los
@@ -33,7 +33,7 @@ La tarjeta de arriba cambia según lo que haya:
 
 **Continuar** te lleva a [[app/observar]] con el mundo tal como estaba, sin
 recargar nada. **Ver análisis** abre [[app/analizar]] sobre esa misma corrida.
-**Retomar** carga la corrida guardada y te lleva a Observar en pausa: tocás
+**Retomar** carga la corrida guardada y te lleva a Observar en pausa: hacé clic ens
 **Iniciar** para que siga.
 
 El mundo en memoria vive mientras la pestaña esté abierta. Si recargás la página
@@ -87,7 +87,7 @@ La última tarjeta de la galería, **Desde un archivo**, abre dos clases de
 archivo con el botón **Elegir archivo**:
 
 - **Un `.dbsim`**: una simulación guardada, tuya o de otra persona. Se carga en
-  pausa y te lleva a Observar: tocás **Iniciar** para que siga.
+  pausa y te lleva a Observar: hacé clic ens **Iniciar** para que siga.
 - **Un `.txt` con el ADN de un bot**: la app arma un mundo mínimo para probarlo y
   lo pone a correr.
 
@@ -111,7 +111,7 @@ La columna de la derecha lista las corridas que guardaste desde Observar, la má
 reciente arriba: nombre, ciclo, cuántos bots tenía y cuándo la guardaste. La que
 está cargada ahora lleva la marca **en curso**.
 
-1. Tocá una fila para retomarla. Si es la que ya está en memoria, te lleva a
+1. Hacé clic en una fila para retomarla. Si es la que ya está en memoria, te lleva a
    Observar sin recargarla.
 2. Si tenés más de cuatro, **Ver todas** despliega la lista entera y **Ver menos**
    la vuelve a acortar.

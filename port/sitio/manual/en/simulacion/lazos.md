@@ -265,7 +265,7 @@ Three things to keep in mind:
 - **You have to ask for it every cycle.** The engine clears the sharing commands on
   every bot in every cycle.
 - **The split is gradual.** In one cycle no more energy moves than your body
-  ([[.body]]), and whoever asks pays 1 % of what moved.
+  ([[.body]]), and whoever asks pays 1% of what moved.
 
 ```adn
 ' Two-cell organism that splits its energy equally

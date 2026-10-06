@@ -88,7 +88,7 @@ two doesn't die of shock (see [[simulacion/energia#shock]]).
 
 :::nota
 In the original DarwinBots the child's body was rounded to a whole number. In
-the port it's the exact part: with 501 body and 50 %, the child takes 250.5.
+the port it's the exact part: with 501 body and 50%, the child takes 250.5.
 :::
 
 ## Where it's born {#donde-nace}
@@ -167,7 +167,7 @@ A requested birth doesn't go through if:
 | The percentage, taken modulo 100, gives 0 | No child (`100`, `200`…). |
 | The place where the child would be born is occupied | Another bot very close to that point, a shape between the parent and that point, or that point outside the field when the edges aren't connected. |
 | The simulation forbids asexual reproduction | With [[param:opt:71]], bots that aren't vegetables can't use [[.repro]] or [[.mrepro]]. Sexual reproduction is still allowed. |
-| It's a vegetable and there are already many | If the chloroplasts across the whole world exceed the [[param:base:maxPopulation]], no vegetable reproduces. Above 90 % of that cap, only one attempt in eleven goes through. |
+| It's a vegetable and there are already many | If the chloroplasts across the whole world exceed the [[param:base:maxPopulation]], no vegetable reproduces. Above 90% of that cap, only one attempt in eleven goes through. |
 
 In all these cases the command **stays written** and is retried in the next
 cycle. The most common case is the occupied place: a child that wants to
@@ -239,7 +239,7 @@ kind.
 
 The comparison above also measures how different the two DNAs are: the
 **genetic distance** is the proportion of instructions that didn't end up in
-any common run. If it goes past **60 %**, there's no child:
+any common run. If it goes past **60%**, there's no child:
 
 - the sperm is no longer good, even though [[.fertilized]] keeps showing the
   last number it had;
@@ -309,4 +309,4 @@ a relative almost always passes the test, that of a stranger almost never.
 | What memory does it inherit? | [[.timer]], 971–975 at birth and 976–990 one at a time. |
 | And if it fails? | The command stays written and is retried every cycle. |
 | Who provides the resources in the sexual kind? | The mother. The male only shoots. |
-| When is the sperm rejected? | If more than 60 % of the two DNAs doesn't match. |
+| When is the sperm rejected? | If more than 60% of the two DNAs doesn't match. |

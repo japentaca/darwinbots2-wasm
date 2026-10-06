@@ -24,10 +24,10 @@ el bot: con masa 1 escribir más de 40 (el tope por defecto) no sirve de nada, y
 masa 2 ya no suma pasar de 20. Por eso un bot pesado no puede acelerar tanto en un
 solo ciclo. Moverse cuesta energía en proporción al empujón ya recortado.
 
-<!-- 30-FISICA §2.1 (dir = up−dn, sx−dx); §2 (bot fijo sin fuerzas) -->
+<!-- 30-FISICA §2.1 (dir = up−dn, sx−dx); §2 (bot anclado sin fuerzas) -->
 `.up` se combina con [[.dn]], [[.sx]] y [[.dx]]: el motor calcula `.up − .dn` y
 `.sx − .dx` y empuja en la diagonal que resulta. Un valor negativo empuja hacia
-atrás, igual que `.dn`. Un bot clavado con [[.fixpos]] no se mueve ni paga el
+atrás, igual que `.dn`. Un bot anclado con [[.fixpos]] no se mueve ni paga el
 movimiento.
 
 ```adn

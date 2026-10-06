@@ -97,7 +97,7 @@ sube de golpe en la última parte del camino. Con el ojo de fábrica:
 | 710 | 4 |
 | 278 | 25 |
 | 134 | 100 |
-| tocándose | 32000 |
+| hacé clic enndose | 32000 |
 
 Si un ojo tiene varias cosas en su campo, da el valor de la más cercana: los
 bots no se tapan entre sí, pero el ojo solo informa del primero.

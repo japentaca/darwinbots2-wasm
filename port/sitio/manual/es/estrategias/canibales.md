@@ -308,10 +308,10 @@ stop
 
 Fijate en la condición del primer gen: gira y avanza si no ve nada **o si lo que
 ve es un hermano**. Ese `or` no es adorno: en una versión anterior que solo
-miraba `*.eye5 0 =`, dos hermanos que se cruzaban quedaban clavados frente a
+miraba `*.eye5 0 =`, dos hermanos que se cruzaban quedaban anclados frente a
 frente para siempre —ningún gen se encendía—, con el ojo frontal marcando
 más de 20000 y la energía intacta durante 40 ciclos.
-<!-- probado (re-corrido): el mismo bot sin el «or», dos copias, campo 200x200, semillas 1 a 6: al cruzarse quedan clavadas frente a frente (eye5 en 32000, energía intacta en 3000) del ciclo ~10 al 40 -->
+<!-- probado (re-corrido): el mismo bot sin el «or», dos copias, campo 200x200, semillas 1 a 6: al cruzarse quedan ancladas frente a frente (eye5 en 32000, energía intacta en 3000) del ciclo ~10 al 40 -->
 
 Qué deberías ver:
 

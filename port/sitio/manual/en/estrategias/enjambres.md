@@ -103,7 +103,7 @@ becomes food: it chases it at full speed and, as it closes in, shoots it with
 and gives back a −2 with the loot. In the run, a single copy bled a stationary prey
 dry in 16 cycles and ended with 13375 energy from 3000: the other bot's body
 converted into its own energy, which is where the whole herd comes from. After
-that, with `*.body 700 >`, each one splits off 30 % and the herd grows by
+that, with `*.body 700 >`, each one splits off 30% and the herd grows by
 itself.
 <!-- 33-SHOTS §2.1 (−6 releasebod), §5 (shot −2 de vuelta, kills); core shots.hpp releasebod (techo body·10/0.8, 20 % nrg + 8 % body); probado: 3000+1000 → presa 711/85, muerta al 16, hijo nacido al 22 con 3758 -->
 
@@ -237,7 +237,7 @@ was exactly the place worth going to.
 One extra lesson from this bot: read what the DNA _does_, not what its name
 promises. Its first gene wants to break the birth tie with an address
 calculation, but the calculation incidentally overwrites the [[.repro]] cell:
-at 9 cycles each copy writes a 1 there and gives birth to a child with 1 % of
+at 9 cycles each copy writes a 1 there and gives birth to a child with 1% of
 its energy. In the run these dwarf children (41 energy, 9 body) kept appearing
 and slowly dying. The swarm works all the same; the real strategy is messier
 than the legend.

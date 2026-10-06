@@ -149,7 +149,7 @@ stop
 
 Seguir al hermano es copiarle el rumbo con [[.refaim]] —mismo mecanismo que
 SWARM, con un contador para no reescribirlo en cada ciclo— y avanzar hacia él.
-Medido con dos copias: los rumbos convergieron y quedaron clavados ahí (460 y
+Medido con dos copias: los rumbos convergieron y quedaron anclados ahí (460 y
 460, después 759 y 759, durante veinte ciclos). La contraseña llega
 también por choque, no solo por la vista: las `in*` se llenan igual cuando los
 cuerpos se tocan ([[simulacion/vision#contacto]]).

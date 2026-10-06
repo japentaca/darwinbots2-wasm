@@ -17,7 +17,7 @@ el escenario ya cargado.
 ## La idea: un borrador {#borrador}
 <!-- web2/src/screens/Experimentar.svelte (elegir, seguirCorrida); lib/experimentar/estado.svelte.js; PLAN.md decisiones 12 y 13 -->
 
-Todo lo que tocás en Experimentar va a un **borrador**: una copia de un
+Todo lo que hacé clic ens en Experimentar va a un **borrador**: una copia de un
 escenario que podés editar sin afectar la simulación que está en marcha.
 Un _escenario_ es una configuración completa: los parámetros del mundo, las
 especies que se siembran y los objetos (obstáculos y teleporters). Los
@@ -118,7 +118,7 @@ arranque la simulación. Cada especie muestra su color, su nombre, si es
 color (con el cuadrito), la cantidad (de 1 a 10000) o quitarla con **×**.
 Sin especies, el mundo arranca vacío.
 
-Para sumar una, tocá **Agregar especie**. El diálogo pregunta **De dónde**:
+Para sumar una, hacé clic en **Agregar especie**. El diálogo pregunta **De dónde**:
 
 1. **Un bot de la biblioteca (por nombre)**: escribís parte del nombre y
    elegís entre los bots del Bestiario y los tuyos (ver [[app/bots]]).
@@ -169,7 +169,7 @@ semilla al azar**) sortea una nueva. Tiene que ser un entero entre 1 y
 1. Elegí un escenario en la columna izquierda (o seguí con el borrador).
 2. Ajustá los controles y las especies.
 3. Revisá la semilla.
-4. Tocá **Nueva simulación**.
+4. Hacé clic en **Nueva simulación**.
 
 La app arma el mundo, lo pone a correr y te lleva a [[app/observar]]. La
 simulación se llama como el escenario.

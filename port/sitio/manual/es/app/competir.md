@@ -47,12 +47,12 @@ inscribir.
 El **⚡ Partido rápido** es para probar sin armar nada: todos juntos en un
 mismo mundo, hasta 20 bots. No se guarda. Si recargás la página, se pierde.
 
-1. Tocá **⚡ Partido rápido** en la lista.
-2. En la pestaña **Participantes**, tocá **Inscribir desde la Biblioteca**,
-   buscá los bots y tocá **Inscribir**.
-3. En **Jugar**, tocá **Jugar y mirar**.
+1. Hacé clic en **⚡ Partido rápido** en la lista.
+2. En la pestaña **Participantes**, hacé clic en **Inscribir desde la Biblioteca**,
+   buscá los bots y hacé clic en **Inscribir**.
+3. En **Jugar**, hacé clic en **Jugar y mirar**.
 
-Si el resultado te interesa, escribí un nombre y tocá **Guardar como torneo**:
+Si el resultado te interesa, escribí un nombre y hacé clic en **Guardar como torneo**:
 pasa a **Mis torneos** con sus partidos. **Vaciar** quita los participantes y
 los partidos.
 

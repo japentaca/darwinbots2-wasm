@@ -14,7 +14,7 @@ leer un organismo ajeno como se lee el juego de un rival.
 
 ## La apuesta {#apuesta}
 
-<!-- 34-TIES §1 (costo de atar, lazo de nacimiento cobrado al padre), §2.1 (1 % del reparto, tope por body), §3 (multibot: costos divididos, vbody); 30-FISICA §2/§6 (un bot fijo no recibe fuerzas y su velocidad es 0) -->
+<!-- 34-TIES §1 (costo de atar, lazo de nacimiento cobrado al padre), §2.1 (1 % del reparto, tope por body), §3 (multibot: costos divididos, vbody); 30-FISICA §2/§6 (un bot anclado no recibe fuerzas y su velocidad es 0) -->
 Ser varios cuesta. Cada intento de atar cobra el costo de atar
 ([[param:cost:22]]), y hasta el lazo de nacimiento se lo cobra al padre en
 cada parto. Repartir tampoco es gratis: hay que pedirlo cada ciclo, quien
@@ -39,7 +39,7 @@ Qué compra todo eso:
 - **Redundancia.** Si el organismo se rompe, las células siguen vivas y cada
   pedazo puede volver a arrancar. Un enjambre pierde individuos; un
   multicelular pierde miembros.
-- **Marchas nuevas.** Clavarse con [[.fixpos]] (un bot fijo no recibe
+- **Marchas nuevas.** Anclarse con [[.fixpos]] (un bot anclado no recibe
   fuerzas: es un ancla) y estirar el lazo con [[.fixlen]] da modos de
   avanzar que un bot suelto no tiene, y que agarran donde el empuje de
   [[.up]] no alcanza.
@@ -52,7 +52,7 @@ un lazo.
 
 ## Caterpillar: el acordeón {#caterpillar}
 
-<!-- Caterpillar_Peter_F2_MB_04-11-08.txt (Peter); probado: --qty 1 y --qty 3, 6000 de energia, campo 6000x4000: parejas con .multi 1 a los ~25 ciclos, .fixpos alternado y complementario, .tielen oscilando entre 22 y 290, energia pareja clavada en 702/702, y avance de 2644 unidades en 225 ciclos (~12 por ciclo) hasta la pared; re-corrido (--qty 2): multi 1 al 25, 702/702 clavada, tielen 22-275, avance ~11 por ciclo -->
+<!-- Caterpillar_Peter_F2_MB_04-11-08.txt (Peter); probado: --qty 1 y --qty 3, 6000 de energia, campo 6000x4000: parejas con .multi 1 a los ~25 ciclos, .fixpos alternado y complementario, .tielen oscilando entre 22 y 290, energia pareja anclada en 702/702, y avance de 2644 unidades en 225 ciclos (~12 por ciclo) hasta la pared; re-corrido (--qty 2): multi 1 al 25, 702/702 anclada, tielen 22-275, avance ~11 por ciclo -->
 El _Caterpillar_ de Peter vive en parejas: una cabeza y un cuerpo unidos por
 un solo lazo rígido ([[.stifftie]] al máximo). No empuja con `.up`: camina
 como una oruga de juguete, plegándose y estirándose.
@@ -90,7 +90,7 @@ start
 stop
 ```
 
-<!-- Caterpillar_Peter_F2_MB_04-11-08.txt, gen «MB-sharing»; probado: la energia de la pareja queda clavada e igual (702/702) mientras viven ambos -->
+<!-- Caterpillar_Peter_F2_MB_04-11-08.txt, gen «MB-sharing»; probado: la energia de la pareja queda anclada e igual (702/702) mientras viven ambos -->
 El reparto tiene un candado. Cada Caterpillar vivo incrementa un contador
 público cada ciclo ([[.tout1]]), así que la edad que siento en el otro tiene
 que casar con el contador que me llega ([[.tin1]]): si el atado es un
@@ -137,7 +137,7 @@ cerca: clavate» queda muerto. Corré siempre lo que escribís.
 
 ## Tribolis: el gusano con oficios {#tribolis}
 
-<!-- Tribolisv1.0_F2MB_Bacillus_51008.txt (Bacillus); probado: --qty 1, 15000 de energia, 400 ciclos: el fundador se declara cola (celda 999 = 3) y pare una cabeza (999 = 1) que empuja con .velup clavado en 40; --qty 2, 15000: gusano estable de tres celulas (999 = 3 cola con un lazo, 999 = 2 tramo con dos), energia pareja en las celulas; y al romperse el gusano, cada pedazo refundo su propio gusano; re-corrido (--qty 1): gusano de tres celulas estable, energia pareja ~4590, velup 40 en la cabeza -->
+<!-- Tribolisv1.0_F2MB_Bacillus_51008.txt (Bacillus); probado: --qty 1, 15000 de energia, 400 ciclos: el fundador se declara cola (celda 999 = 3) y pare una cabeza (999 = 1) que empuja con .velup anclado en 40; --qty 2, 15000: gusano estable de tres celulas (999 = 3 cola con un lazo, 999 = 2 tramo con dos), energia pareja en las celulas; y al romperse el gusano, cada pedazo refundo su propio gusano; re-corrido (--qty 1): gusano de tres celulas estable, energia pareja ~4590, velup 40 en la cabeza -->
 El _Tribolis_ de Bacillus es un gusano con jerarquía. Cada célula se declara
 en una celda: 1 cabeza, 2 tramo, 3 cola. Todas nacen cabeza; la que queda
 sin lazos se degrada a cola y pare; y la cabeza que junta energía de sobra
@@ -175,7 +175,7 @@ stop
 ```
 
 Cada oficio tiene sus genes. La cabeza empuja a fondo —en la corrida,
-[[.velup]] quedó clavado en 40, el tope de velocidad ([[param:opt:11]])— y
+[[.velup]] quedó anclado en 40, el tope de velocidad ([[param:opt:11]])— y
 lleva el lazo a 628 con [[.fixang]], el cuerpo colgando atrás. Los tramos
 empujan más despacio para no perder la cadena y tiran los desechos. Y la
 cola es la que maneja a la presa: no la mata, la gobierna.
@@ -184,7 +184,7 @@ cola es la que maneja a la presa: no la mata, la gobierna.
 def type 999
 def tail 3
 
-' cola: le escribo un 1 en su .fixpos y la presa queda clavada
+' cola: le escribo un 1 en su .fixpos y la presa queda anclada
 cond
  *.type .tail =
  *.in1 *.out1 !=
@@ -210,7 +210,7 @@ stop
 <!-- Tribolisv1.0_F2MB_Bacillus_51008.txt: disparos de memoria (.fixpos, .setaim) y cola con veneno; 33-SHOTS §2 (valor >= 0: escritura de memoria con shootval) -->
 El truco es el disparo de memoria: [[.shoot]] con un valor positivo escribe
 tu [[.shootval]] en esa celda del blanco ([[simulacion/disparos]]). La cola
-escribe en el `.fixpos` de la presa (queda clavada) y hasta en su
+escribe en el `.fixpos` de la presa (queda anclada) y hasta en su
 [[.setaim]] (la gira media vuelta). Entre eso y su veneno, la presa llega
 mansa a la boca de la cabeza.
 
@@ -231,7 +231,7 @@ nada más. Su gracia es cómo habla la cabeza con la cola. El paso dura diez
 ciclos, marcados por un contador: en uno, la cabeza se clava y le ordena a
 la cola que se suelte; en otro, se suelta ella y le escribe directamente
 «quedate quieta» en la celda del `.fixpos` de la cola, por el lazo. Después
-acorta el lazo a 120 (la cola se arrastra hasta la cabeza clavada) y lo
+acorta el lazo a 120 (la cola se arrastra hasta la cabeza anclada) y lo
 estira a 360 (la cabeza sale empujada, con la cola de ancla).
 
 ```adn

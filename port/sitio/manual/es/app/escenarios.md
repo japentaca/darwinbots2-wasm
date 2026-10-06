@@ -36,7 +36,7 @@ animales), los muros en gris y los teleporters como anillos. Cada tarjeta tiene 
   lanzarlo.
 
 En **Experimentar**, la columna izquierda los lista en dos grupos:
-**Escenarios de fábrica** y **Míos**. Tocar uno lo carga en el borrador. Los
+**Escenarios de fábrica** y **Míos**. Hacer clic en uno lo carga en el borrador. Los
 que usan la base Liga F1 llevan la marca **F1**.
 
 ## Los escenarios de fábrica {#fabrica}
@@ -76,7 +76,7 @@ Hay tres caminos.
    entrá con **Configuración propia** desde Inicio).
 2. Cambiá parámetros, especies y lo que haga falta (ver [[app/experimentar]]
    y [[app/experimentar-avanzado]]).
-3. Tocá **Guardar como escenario**.
+3. Hacé clic en **Guardar como escenario**.
 4. Completá **Nombre**, **Descripción** (opcional) y **Etiquetas**,
    separadas por comas.
 5. Confirmá con **Guardar**.
@@ -98,7 +98,7 @@ Experimentar no permite cambiar.
 ## Modificar o borrar uno propio {#modificar}
 <!-- Experimentar.svelte (tipoBase propio: botón Borrar, diálogo borrar.pregunta); DialogoEscenario.svelte (reemplazable, casilla marcada por defecto) -->
 
-Para cambiar un escenario tuyo, cargalo, editá el borrador y tocá **Guardar
+Para cambiar un escenario tuyo, cargalo, editá el borrador y hacé clic en **Guardar
 como escenario**. Como el borrador salió de un propio, el diálogo ofrece la
 casilla **Reemplazar «…»**, ya marcada: así se pisa el escenario original.
 Si la desmarcás, se guarda como uno nuevo y el original queda como estaba.

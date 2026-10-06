@@ -17,7 +17,7 @@ ojos o manejarlo con el teclado.
 - Desde el mismo inspector, los números de la madre, los hijos o los ancestros
   son enlaces: abren el inspector de ese pariente.
 
-Para cerrarlo, tocá **×** (**Cerrar el inspector**) o hacé clic en un lugar
+Para cerrarlo, hacé clic en **×** (**Cerrar el inspector**) o hacé clic en un lugar
 vacío del mundo; el panel vuelve a **En vivo**. Si el bot muere mientras lo
 mirás, aparece **El bot murió**: los datos quedan como estaban en su último
 ciclo y **Cerrar** cierra el panel.
@@ -113,7 +113,7 @@ sentidos]]). El **?** de la cabecera del inspector abre la página del
 inspector.
 
 Para mirar algo que no está en la lista, escribilo en el cuadro de arriba y
-tocá **Consultar**. Vale:
+hacé clic en **Consultar**. Vale:
 
 - el nombre de una sysvar, con o sin punto (`nrg` o `.nrg`);
 - una dirección de memoria, de 1 a 999;
@@ -139,7 +139,7 @@ Esta pestaña muestra el texto; qué genes corrieron en el último ciclo se ve e
 <!-- lib/inspector/Consola.svelte (ATAJOS, historial ↑↓), consola.js COMANDOS; engine/sim.js consoleCmd; i18n inspector.consola.* -->
 
 La consola es la herramienta de depuración del original: lee y cambia la
-memoria de este bot con comandos de texto. Escribí el comando y tocá **Enviar**
+memoria de este bot con comandos de texto. Escribí el comando y hacé clic en **Enviar**
 (o Intro); las flechas ↑ y ↓ recorren los comandos anteriores. Los botones de
 arriba mandan los más usados de un toque, y **Limpiar** borra la salida.
 
@@ -195,7 +195,7 @@ escribe un valor en una dirección de su memoria mientras la tenés apretada.
 1. Elegí el bot y abrí la pestaña **Control**.
 2. En **Teclas**, elegí un juego: **Flechas y espacio**, **WASD y espacio**,
    **Ninguna** o tus **Personalizadas**.
-3. Tocá **Controlar este bot**. Sobre el mundo aparece **Player Bot activo**.
+3. Hacé clic en **Controlar este bot**. Sobre el mundo aparece **Player Bot activo**.
 4. Mové el mouse sobre el campo y usá las teclas. `Esc` sale.
 
 Los juegos de fábrica escriben esto:
@@ -213,7 +213,7 @@ hacia él (−1 es el disparo que le saca energía al otro, ver [[.shoot]]). Los
 laterales son relativos al bot: [[.dx]] lo empuja hacia _su_ derecha y [[.sx]]
 hacia su izquierda, así que → lo corre a la derecha de hacia donde mira.
 
-La tabla de teclas se edita: tocá la tecla de una fila y apretá otra para
+La tabla de teclas se edita: hacé clic en la tecla de una fila y apretá otra para
 cambiarla; **Memoria** acepta una dirección (1 a 999) o el nombre de una sysvar
 como `.up`; **Valor**, un entero entre −32000 y 32000; **Invertida** escribe el
 valor mientras la tecla está _suelta_. **Agregar tecla** suma una fila y la

@@ -1,6 +1,6 @@
 ---
 titulo: Movimiento
-resumen: "Las sysvars para empujar al bot, girarlo, saber hacia dónde apunta y a qué velocidad va, y dejarlo clavado en un lugar."
+resumen: "Las sysvars para empujar al bot, girarlo, saber hacia dónde apunta y a qué velocidad va, y dejarlo anclado en un lugar."
 etiquetas: [movimiento, giro, velocidad, física]
 estado: revisada
 ---
@@ -22,7 +22,7 @@ arriba, 628 a la izquierda y 942 hacia abajo.
 Las de velocidad cuentan cómo se movió el bot en el último ciclo: [[.velup]] y
 [[.veldn]] hacia adelante y atrás, [[.veldx]] y [[.velsx]] de costado, y
 [[.velscalar]] la rapidez total. [[.maxvel]] dice el tope que impone la simulación.
-Por último, [[.fixpos]] clava al bot en su lugar y [[.fixed]] informa si está clavado.
+Por último, [[.fixpos]] clava al bot en su lugar y [[.fixed]] informa si está anclado.
 
 <!-- probado: el ejemplo sale del borde y sigue -->
 Las más usadas son `.up` y `.setaim`: apuntar y avanzar. Este bot avanza siempre

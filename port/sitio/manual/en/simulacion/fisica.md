@@ -93,7 +93,7 @@ The F1 rules use Z gravity 2, static 0.6 and kinetic 0.4. A bot of mass 1 then l
 ## The fluid: density and viscosity {#fluido}
 <!-- 30-FISICA §1.1 (AddedMass), §2 (SphereDragForces, tope 0,99·v); comprobado: arrastre 0 con viscosidad 0 -->
 
-With [[param:opt:14]] and [[param:opt:15]] different from 0, the world is a fluid. Drag subtracts from the velocity a part that grows with the speed and with the radius (like kinetic friction, it doesn't depend on the mass), and never more than 99 %. If either of the two is 0, there is no drag. Density also adds the _added mass_, the fluid the bot drags along with it: more inertia, without more weight for gravity.
+With [[param:opt:14]] and [[param:opt:15]] different from 0, the world is a fluid. Drag subtracts from the velocity a part that grows with the speed and with the radius (like kinetic friction, it doesn't depend on the mass), and never more than 99%. If either of the two is 0, there is no drag. Density also adds the _added mass_, the fluid the bot drags along with it: more inertia, without more weight for gravity.
 
 This bot pushes for three cycles and then lets itself drift:
 
@@ -170,7 +170,7 @@ The shapes in the world ([[simulacion/mundo]]) are solid rectangles. A bot that 
 Each pair of edges can be connected or be a wall: [[param:opt:2]] and [[param:opt:3]] (if both are on, the world is [[param:opt:1]]).
 
 - **Connected.** A bot that leaves through one side enters through the opposite one. If it is a multicellular bot, the world moves the whole organism at once ([[simulacion/lazos]]).
-- **Wall.** A bot that touches the edge is placed against it, reads [[.edge]] as 1 and loses 5 % of its velocity on that axis (divided by its mass). It doesn't bounce and its velocity isn't cleared: if it keeps heading outward, it stays stuck to the wall, and since the placement happens before the movement, it can poke out a little past the edge.
+- **Wall.** A bot that touches the edge is placed against it, reads [[.edge]] as 1 and loses 5% of its velocity on that axis (divided by its mass). It doesn't bounce and its velocity isn't cleared: if it keeps heading outward, it stays stuck to the wall, and since the placement happens before the movement, it can poke out a little past the edge.
 
 With gravity 1 and walls, a bot at rest falls to the bottom and stays there reading [[.velscalar]] 20 and [[.edge]] 1 every cycle: gravity and the wall's braking cancel out. To tell whether a bot is stuck, look at [[.edge]] or compare its position between cycles, not its velocity.
 

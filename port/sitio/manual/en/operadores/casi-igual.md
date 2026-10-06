@@ -1,12 +1,12 @@
 ---
 titulo: %=
-resumen: "a b %= leaves true if b is within 10 % of a, limits included. With a negative a it is always false."
+resumen: "a b %= leaves true if b is within 10% of a, limits included. With a negative a it is always false."
 etiquetas: [conditions, comparisons, approximate]
 estado: revisada
 ---
 <!-- 20-VM §6.4 (%=: a−a/10 ≤ b ≤ a+a/10 en Single; a<0 siempre falso), §12; comprobado en el port -->
 
-`a b %=` is an “about equal”: it pushes _true_ if `b` is no more than 10 % away
+`a b %=` is an “about equal”: it pushes _true_ if `b` is no more than 10% away
 from `a`, above or below. The lower number, `a`, is the reference, and the
 margin is computed on it:
 
@@ -32,8 +32,8 @@ start
 stop
 ```
 
-Note the order: the reference, 3000, goes lower. `*.nrg 3000 %=` would measure
-10 % of the energy, which changes along with it.
+Note the order: the reference, 3000, goes lower. `*.nrg 3000%=` would measure
+10% of the energy, which changes along with it.
 
 :::cuidado
 A quirk inherited from DarwinBots 2.48.32: with a negative reference the margin

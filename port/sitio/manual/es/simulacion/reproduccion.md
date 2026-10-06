@@ -301,7 +301,7 @@ pariente casi siempre pasa la prueba, el de un extraño casi nunca.
 |---|---|
 | ¿Cuánto se lleva el hijo? | El porcentaje pedido, módulo 100, de energía (menos una milésima), cuerpo, cloroplastos y desechos. |
 | ¿Qué paga el padre? | Una milésima extra de energía y la copia del ADN ([[param:cost:25]]). |
-| ¿Dónde nace? | Delante del padre, tocándolo, mirando hacia él. |
+| ¿Dónde nace? | Delante del padre, hacé clic enndolo, mirando hacia él. |
 | ¿Cuánto duran juntos? | El lazo de nacimiento se corta solo a los 100 ciclos. |
 | ¿Qué memoria hereda? | [[.timer]], 971–975 al nacer y 976–990 de a una. |
 | ¿Y si falla? | La orden queda escrita y se reintenta cada ciclo. |

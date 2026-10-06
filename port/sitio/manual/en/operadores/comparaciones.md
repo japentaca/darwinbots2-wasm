@@ -13,7 +13,7 @@ There are three groups:
 
 - **Exact**: [[op:=]], [[op:!=]], [[op:<]], [[op:>]], [[op:<=]] and [[op:>=]].
   These are the ones you will use most.
-- **Approximate to 10 %**: [[op:%=]] and [[op:!%=]], for values that oscillate
+- **Approximate to 10%**: [[op:%=]] and [[op:!%=]], for values that oscillate
   and should not be compared exactly.
 - **Approximate with your own percentage**: [[op:~=]] and [[op:!~=]], which pop
   a third number with the margin.

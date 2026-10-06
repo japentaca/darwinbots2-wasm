@@ -43,8 +43,8 @@ no lo tuvo con ella; marcado como vegetal, lo tuvo igual.
 <!-- core robots.hpp UpdateBots P1: if (!DisableFixing) ManageFixed (Fixed = mem(216) > 0); comprobado: fija.txt → quieto con .fixed 1 sin la opción; con ella se mueve y lee .fixed 0 -->
 Nadie puede anclarse con [[.fixpos]]: el motor deja de leer esa dirección, y el
 bot sigue suelto aunque escriba en ella. En una prueba, un bot que escribía 1
-en `.fixpos` al nacer y después empujaba quedó clavado sin la opción; con ella
-se movió y leyó [[.fixed]] en 0. Ver [[simulacion/fisica#fijos|los bots fijos]].
+en `.fixpos` al nacer y después empujaba quedó anclado sin la opción; con ella
+se movió y leyó [[.fixed]] en 0. Ver [[simulacion/fisica#fijos|los bots anclados]].
 
 Lo que el motor deja de hacer es actualizar el estado, y eso vale para los dos
 lados: un bot que ya estaba anclado cuando se enciende la opción se queda anclado

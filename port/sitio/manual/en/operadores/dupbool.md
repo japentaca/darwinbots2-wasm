@@ -27,7 +27,7 @@ start
 stop
 ```
 
-The outer condition is “energy and body differ by more than 10 %”
+The outer condition is “energy and body differ by more than 10%”
 ([[op:!%=]]). The boolean stack goes through:
 
 | After | Boolean stack (top on the right) |

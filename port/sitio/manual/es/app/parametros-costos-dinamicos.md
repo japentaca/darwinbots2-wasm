@@ -18,7 +18,7 @@ que lo mueven solos mientras la simulación corre:
   pasa a ser gratis hasta que se recupere. Funciona aunque el ajuste esté
   apagado.
 
-Con los valores de fábrica los dos están apagados y el multiplicador queda fijo en
+Con los valores de fábrica los dos están apagados y el multiplicador queda anclado en
 1. El mecanismo paso a paso, con las cuentas, está en
 [[simulacion/ciclo#costos-dinamicos]]; acá va qué hace cada perilla y cómo
 combinarlas.
@@ -34,7 +34,7 @@ esté lleno.
 El ajuste, además, compara esa cifra con la de unos cien ciclos atrás. Solo sube
 el multiplicador si la población, además de estar por encima de la banda, creció;
 y solo lo baja si, además de estar por debajo, bajó. Si la población queda
-clavada en el mismo número que hace cien ciclos, ajusta igual, pero recién
+anclada en el mismo número que hace cien ciclos, ajusta igual, pero recién
 después de diez ciclos así.
 
 ## Cómo usarlo {#como-usarlo}

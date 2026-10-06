@@ -43,7 +43,7 @@ El paso tiene que superar la holgura de 5 grados (unos 17 en la escala de 1256) 
 sostiene el ángulo: con `10 .tieang1 addstore` el lazo no se mueve, porque cada
 ciclo pedís 10 más que lo que mide y esa diferencia queda dentro de la holgura.
 
-<!-- 30-FISICA §3.2 (holgura de 5°); comprobado con probar-adn: con 10 .tieang1 queda fijo; con 40 el lazo da vueltas (~23 por ciclo) -->
+<!-- 30-FISICA §3.2 (holgura de 5°); comprobado con probar-adn: con 10 .tieang1 queda anclado; con 40 el lazo da vueltas (~23 por ciclo) -->
 
 Los otros tres lazos tienen [[.tieang2]], [[.tieang3]] y [[.tieang4]]; el largo
 se maneja con [[.tielen1]].
