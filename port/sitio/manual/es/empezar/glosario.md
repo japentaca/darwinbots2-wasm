@@ -190,9 +190,9 @@ entera, para números, y la booleana, para verdadero y falso. Ver
 
 ## R
 
-**Réplica.** Una de varias corridas del mismo escenario con semillas
-distintas, que se corren sin dibujar para ver qué resultado se repite. Ver
-[[app/analizar]].
+**Réplica.** Una de varias corridas del mismo escenario que se corren sin
+dibujar para ver qué resultado se repite; cada una con una semilla propia
+(la primera repite la semilla de la corrida de origen). Ver [[app/analizar]].
 
 **Reproducción.** El nacimiento de un hijo: asexual con [[.repro]] (o
 [[.mrepro]], con más mutaciones) y sexual con [[.sexrepro]]. Ver

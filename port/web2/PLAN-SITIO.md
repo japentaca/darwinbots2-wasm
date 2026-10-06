@@ -336,6 +336,43 @@ en el manual y el `--lint` limpio. Lo que salió:
 - Sin arreglos pendientes de la app. Las 11 páginas `pendiente` que quedan
   son los capítulos 8 y 9.
 
+Capítulos 8 y 9 hechos el 2026-10-05: las 11 páginas (6 estrategias y 5
+técnicas) están `revisada`, con 187 citas. Lo hizo una ola de 10 redactores
+y después un revisor. Con esto **S-C cierra: cero páginas `pendiente` en
+español** (531 bloques `adn` con el lint limpio). Lo que salió:
+
+- Los redactores de estrategias corrieron los bots del Bestiario que citaron
+  y el revisor los re-corrió: Cannibot respeta a los suyos y caza extraños,
+  SWARM y Mr_Swarm se comportan como enjambres, Leechbot desangra por el
+  lazo, el P1 original ata pero no drena (su máquina queda a medio armar),
+  Tribolis y Caterpillar forman organismos, W6 solo arma parejas sin presas,
+  Russia hiberna y Teriyaki paga el precio de andar armado.
+- Correcciones del revisor: el −6 es una transferencia fiel al original
+  (484,5 cobrados contra ~510 equivalentes pagados: sin desbalance que
+  marcar; canibales lo decía mal); el aviso de enjambres nombraba a
+  _Turbulent Swarm_ como multibot (cero genes de lazo, no lo es); la
+  cronología del desangre de Leechbot; un comentario de torneos citaba un
+  `Alga_Minimalis` que no existe (es el alga de arranque de la liga);
+  `como-esta-hecho` prometía «Abrir en la app» desde los bloques (S-D no
+  existe todavía: ahora dice «Copiar»); los paréntesis de Q13/Q15 en
+  `diferencias`; y la entrada «Réplica» de `empezar/glosario` (la primera
+  réplica repite la semilla de la corrida de origen, no «semillas
+  distintas»: corregida por el orquestador tras verificar
+  `engine/replicas.js`).
+- Verificaciones notables: `semillas` midió el período del generador
+  (2^24) con un script propio y comprobó byte a byte las semillas gemelas
+  (49 y 807 dan el mismo mundo; los 65.536 mundos de C19); `formatos`
+  hizo la ida y vuelta del `.json` de liga y reprodujo el `.snp`;
+  `diferencias` re-corrió el `else` tras `cond…start`, el shock y la
+  protección del recién nacido.
+- Notas para la spec, sin tocar: el período 2^24 del LCG no está
+  documentado en `spec/` (afirmado en el manual con medición propia).
+- Sin arreglos pendientes nuevos de la app (app_a_corregir vacío).
+  Pendientes ya conocidos: el desglose del Bestiario de `port/README`
+  (545 + 115 ≠ 684; el README de la raíz dice 568) y el comentario de
+  cabecera de `ci.yml` (143/2962, desactualizado frente a los 272/4126
+  del README).
+
 ### S-D · La app enlaza al manual
 
 Los «?» y los resúmenes en el editor, Experimentar avanzado y el inspector
