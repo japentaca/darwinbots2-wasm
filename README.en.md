@@ -10,9 +10,10 @@
 > belongs to them; this repository only tries to keep their work running
 > on modern machines.
 >
-> **Site:** https://darwinbots-wasm.org (the app at `/app/`, in Spanish and
-> English, and the classic interface at `/classic/`). Every push to `main`
-> publishes it to Cloudflare Pages (`.github/workflows/sitio.yml`).
+> **Site:** https://darwinbots-wasm.org: the app at `/app/` (in Spanish and
+> English), the manual at `/en/manual/` and `/manual/` (Spanish), and the
+> classic interface at `/classic/`. Every push to `main` publishes it to
+> Cloudflare Pages (`.github/workflows/sitio.yml`).
 
 ## The original project and its community
 
@@ -104,7 +105,15 @@ derivation**:
 |---|---|
 | [`Darwinbots2/`](Darwinbots2/) | The original DarwinBots **2.48.32** source (VB6, 53,327 LOC). **Read-only**: it is the ultimate authority. Baseline at commit `02b20d7`; `git diff 02b20d7 -- Darwinbots2/` must always be empty. |
 | [`spec/`](spec/) | The **complete specification** extracted from the source (in Spanish): simulation cycle, DNA VM (77 opcodes), memory map (247 sysvars), physics, vision, shots, ties, viruses, reproduction, mutations, world and file formats — including the catalog of the original's bugs (most of them now fixed in the port, see [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29), in Spanish). [`spec/70-CASOS-DORADOS.md`](spec/70-CASOS-DORADOS.md) is the golden test suite; [`spec/PROGRESO.md`](spec/PROGRESO.md) is the authoritative status. |
-| [`port/`](port/) | The **reimplementation**: a header-only C++20 core, faithful to the original (except for the fixed bugs), compiled natively (g++/clang) and to WebAssembly (Emscripten), with the sim running in the browser on a Web Worker and Canvas 2D rendering. |
+| [`port/`](port/) | The **reimplementation**: a header-only C++20 core, faithful to the original (except for the fixed bugs), compiled natively (g++/clang) and to WebAssembly (Emscripten), with the sim running in the browser on a Web Worker. |
+
+Inside `port/`, what gets published on the site:
+
+| Folder | What it is |
+|---|---|
+| [`port/web2/`](port/web2/) | The **app** (`/app/`): Vite + Svelte 5, in Spanish and English, with six sections: Home, Observe, Experiment, Analyze, Bots and Compete. Plan and decisions in [`port/web2/PLAN.md`](port/web2/PLAN.md) (in Spanish). |
+| [`port/sitio/`](port/sitio/) | The **manual** (`/manual/` and `/en/manual/`) and the landing pages: Markdown pages in `manual/es/` and `manual/en/`, and a home-grown, dependency-free generator (`generar.mjs`) that builds the HTML. Plan in [`port/web2/PLAN-SITIO.md`](port/web2/PLAN-SITIO.md) (in Spanish). |
+| [`port/web/`](port/web/) | The **classic interface** (`/classic/`), the port's first page, frozen: it gets no changes. |
 
 The remaining top-level directories (`DBLaunch/`, `Installer/`,
 `LocalDBIM/`, …) are companion tools from that era, part of the original
@@ -123,10 +132,20 @@ source drop and kept untouched.
   The other ones DNA can notice (the persistent `mkvirus`, the
   negative-width eye…) are kept. Full list in
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
-- A web page with the full sim: physics and RNG live in `dbcore.wasm`
-  inside a Web Worker; the page only presents. It includes saving/loading
-  the sim in the VB6 binary format and the **Bestiary of 684 community
-  bots** (see [Where the demo's bots come from](#where-the-demos-bots-come-from)).
+- A web app with the full sim: physics and RNG live in `dbcore.wasm`
+  inside a Web Worker; the page only presents. You can watch the world and
+  inspect each bot, experiment with scenarios and parameters (also while it
+  runs), analyze each run (population, genetics, phylogeny, events,
+  replicas and reports), write bots with a DNA editor and organize
+  tournaments. It saves and loads the sim in the VB6 binary format
+  (`.dbsim`) and includes the **Bestiary of 684 community bots** (see
+  [Where the demo's bots come from](#where-the-demos-bots-come-from)). The
+  classic interface is still available at `/classic/`.
+- A **complete manual, in English and Spanish** (441 pages per language):
+  how the simulation works, the DNA language, one page per sysvar and per
+  operator, every parameter, tutorials, strategies and a guide to the app.
+  Its DNA examples go through the engine's lint when it is generated, and
+  the app links to it from every screen.
 
 The milestone-by-milestone detail, with hashes and dates, is in
 [`spec/PROGRESO.md`](spec/PROGRESO.md).
@@ -144,36 +163,38 @@ cmake --preset native-clang && cmake --build --preset native-clang && build-clan
 cmake --preset wasm         && cmake --build --preset wasm         && node build-wasm/dbtests.js
 ```
 
-## Running the sim in the browser
+The app and the manual (node ≥ 24):
 
 ```sh
-cd port && python -m http.server 8000
-# → http://localhost:8000/web/
+cd port/web2
+npm ci
+npm test            # node:test; with the wasm built, the tests that use it run too
+npm run check       # Biome
+npx vite build
+node ../sitio/generar.mjs --lint   # the manual in both languages: links, parity and DNA lint
 ```
 
-(Requires the `wasm` preset to be built: it produces `build-wasm/dbcore.js`
-+ `dbcore.wasm`, which the worker consumes.)
+## Running the sim in the browser
 
-## Contest and TV Channel
+Requires the `wasm` preset to be built (it produces `build-wasm/dbcore.js`
++ `dbcore.wasm`, which the worker consumes).
 
-On top of the faithful sim, the page adds two windows for watching
-Bestiary bots fight under the original's F1 league rules (host layer:
-they don't touch the core):
+```sh
+node port/sitio/generar.mjs   # optional: the manual, so the app can link to it
+cd port/web2 && npm run dev
+# → http://localhost:5173/ (the app); /classic/, /manual/ and /en/manual/ on the same server
+```
 
-- **Contest**: a hand-picked tournament. Choose 2 to 20 contenders, the
-  F1 settings are applied, and a single click resets, seeds and starts;
-  the scoreboard tracks population, round wins and the winner, with a
-  rematch button.
-- **TV Channel** (*Canal* button): back-to-back fights with no
-  intervention, like a channel broadcasting live. It draws fighters from
-  the Inventory (everything, favorites, a tag or a saved selection) in
-  *king of the hill* format: the winner stays and faces new challengers,
-  and after R wins in a row it retires undefeated. Each round has a cycle
-  cap, so no fight hangs forever. Between fights there is an interstitial
-  screen; the field shows a LIVE banner, and the window lists the latest
-  fights and a **Hall of Fame** (stored in the browser). Each fighter gets
-  a fixed color from a palette chosen to stand out on the dark field (the
-  champion keeps its color for as long as its streak lasts).
+## Compete
+
+The app's **Compete** section pits Bestiary bots or your own against each
+other under the original's F1 league rules (host layer: it doesn't touch the
+core). It has a quick match and tournaments in six formats (single match,
+which is the F1 contest, king of the hill, round robin, step ladder, world cup and
+Swiss), with an Elo table that carries over from one tournament to the next,
+seasons, a Hall of Fame and a **TV mode** that plays the whole season full
+screen. The classic interface keeps its *Contest* and *TV Channel* windows.
+Details in the manual: [Compete](https://darwinbots-wasm.org/en/manual/app/competir/).
 
 ## Project rules
 
@@ -188,6 +209,9 @@ they don't touch the core):
    every bug was replicated).
 4. The JS/render layer never recomputes physics or RNG: it only presents
    what the core outputs.
+5. Every change is reflected in the app, the manual and these READMEs, in
+   both languages. Instructions for coding agents (and the skills that
+   detail them) are in [`AGENTS.md`](AGENTS.md) (in Spanish).
 
 ## License
 
