@@ -46,7 +46,7 @@ todo, **escribió bots**. Esa comunidad es la razón de ser de este port.
 
 ### De dónde salen los bots de la demo
 
-La página incluye un **Bestiary de 568 bots reales**, escritos por la
+La página incluye un **Bestiary de 684 bots reales**, escritos por la
 comunidad y publicados a lo largo de los años en el
 [Bestiary del foro](http://forum.darwinbots.com/) (el board 13 y sus
 sub-boards). Ninguno fue escrito ni modificado para este port:
@@ -54,7 +54,9 @@ sub-boards). Ninguno fue escrito ni modificado para este port:
 - Se rastrearon los 12 sub-boards del Bestiary: F1 (143 bots), F2 (130),
   *Interesting behaviour* (64), *Short* (58), *Multi-Bots* (54),
   *Mutations* (38), *Untagged* (34), F3 (29), *Veggies* (19),
-  *Single store* (13), *EcoSim* (3) y *The Starting Gate* (3).
+  *Single store* (13), *EcoSim* (3) y *The Starting Gate* (3). Son las cifras
+  de la primera corrida; el Bestiary actual tiene 684 bots (más bots de esos
+  sub-boards y 115 del resto del foro y del wiki: ver `port/README.md`).
 - De cada tema se tomó el ADN publicado: los adjuntos `.txt` del autor
   cuando existían y, si no, el bloque de código más completo del primer
   mensaje. Solo se normalizaron los caracteres invisibles (`&nbsp;`,
@@ -108,7 +110,7 @@ original y conservadas sin tocar.
 
 **El port está completo y usable.** Los 10 milestones cerrados y verificados:
 
-- **272 casos / 4 126 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
+- **273 casos / 4 153 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
   g++ nativo, clang nativo y WASM bajo node — sin una sola divergencia
   numérica (redondeo bancario de VB6, LCG exacto, `Single`/`Double` con
   semántica VB6, sin `-ffast-math`, sin FMA implícita).
@@ -119,7 +121,7 @@ original y conservadas sin tocar.
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - Página web con la sim completa: la física y el RNG viven en `dbcore.wasm`
   dentro de un Web Worker; la página solo presenta. Incluye guardar/cargar
-  la sim en el formato binario de VB6 y el **Bestiary de 568 bots de la
+  la sim en el formato binario de VB6 y el **Bestiary de 684 bots de la
   comunidad** (ver [De dónde salen los bots](#de-dónde-salen-los-bots-de-la-demo)).
 
 El detalle milestone por milestone, con hashes y fechas, está en

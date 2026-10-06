@@ -46,7 +46,7 @@ all, **wrote bots**. That community is the reason this port exists.
 
 ### Where the demo's bots come from
 
-The page includes a **Bestiary of 568 real bots**, written by the community
+The page includes a **Bestiary of 684 real bots**, written by the community
 and published over the years in the
 [forum's Bestiary](http://forum.darwinbots.com/) (board 13 and its
 sub-boards). None of them was written or modified for this port:
@@ -54,7 +54,10 @@ sub-boards). None of them was written or modified for this port:
 - All 12 Bestiary sub-boards were crawled: F1 (143 bots), F2 (130),
   *Interesting behaviour* (64), *Short* (58), *Multi-Bots* (54),
   *Mutations* (38), *Untagged* (34), F3 (29), *Veggies* (19),
-  *Single store* (13), *EcoSim* (3) and *The Starting Gate* (3).
+  *Single store* (13), *EcoSim* (3) and *The Starting Gate* (3). These are the
+  figures from the first crawl; the current Bestiary has 684 bots (more bots
+  from those sub-boards plus 115 from the rest of the forum and the wiki: see
+  `port/README.md`).
 - From each topic the published DNA was taken: the author's `.txt`
   attachments when they existed and, otherwise, the most complete code
   block of the first post. The only normalization was of invisible
@@ -111,7 +114,7 @@ source drop and kept untouched.
 
 **The port is complete and usable.** All 10 milestones closed and verified:
 
-- **272 test cases / 4,126 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
+- **273 test cases / 4,153 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
   native g++, native clang and WASM under node — without a single numeric
   divergence (VB6 banker's rounding, exact LCG, `Single`/`Double` with VB6
   semantics, no `-ffast-math`, no implicit FMA).
@@ -122,7 +125,7 @@ source drop and kept untouched.
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - A web page with the full sim: physics and RNG live in `dbcore.wasm`
   inside a Web Worker; the page only presents. It includes saving/loading
-  the sim in the VB6 binary format and the **Bestiary of 568 community
+  the sim in the VB6 binary format and the **Bestiary of 684 community
   bots** (see [Where the demo's bots come from](#where-the-demos-bots-come-from)).
 
 The milestone-by-milestone detail, with hashes and dates, is in

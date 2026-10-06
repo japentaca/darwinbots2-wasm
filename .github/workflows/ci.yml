@@ -1,7 +1,7 @@
 # CI del port: las reglas duras del proyecto como checks automáticos.
 #  - fuentes-intactos: Darwinbots2/ debe ser idéntico a la línea base 02b20d7.
-#  - nativo (gcc y clang) + wasm: la suite entera (143 casos dorados / 2962
-#    aserciones) debe dar verde en los tres modos de build.
+#  - nativo (gcc y clang) + wasm: la suite entera (273 casos / 4153
+#    aserciones, los dorados de la spec más los de la revisión contra VB6) debe dar verde en los tres modos de build.
 #  - web2: la interfaz nueva (port/web2) instala con npm ci y pasa sus tests
 #    (node:test), Biome y el build de Vite (port/web2/PLAN.md C5).
 name: CI

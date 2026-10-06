@@ -203,7 +203,7 @@ Emscripten; presentación web separada.
   `StartSimul` (`main.frm:1357-1365`); el compactor sobrevive y la ronda
   hereda las opciones. Smoke: `node tools/pp/smoke_formas.mjs`.
 
-Estado verificado (2026-09-29): 272 casos / 4126 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 35 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
+Estado verificado (2026-10-06): 273 casos / 4153 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 35 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
 
 ## Build
 
@@ -247,7 +247,7 @@ muestra ticks/s, fps y el costo de `draw()`.
 
 El selector de especies incluye además el **Bestiary del foro oficial**:
 `web/bots/bots.json` indexa los bots bajados de forum.darwinbots.com
-(545 en la corrida del 2026-08-26, agrupados por sub-board: F1/F2/F3,
+(569 de sus sub-boards, agrupados por sub-board: F1/F2/F3,
 Short, Multi-Bots, Veggies, …), cada uno validado sembrándolo con el
 propio `dbcore.wasm`. Los de Veggies se siembran como vegetales. El
 archivador que los baja/valida/publica vive en `tools/bestiary/` (ver su
@@ -255,7 +255,7 @@ README); si `bots.json` no está, la página funciona igual con los dos
 presets de siempre.
 Desde el 2026-10-02 incluye también 115 bots del resto del foro y del wiki
 (`tools/bestiary/extra/`, categorías «Forum bots» y «Wiki bots», o la de
-liga/tipo cuando el autor la declara): 684 bots en total.
+liga/tipo cuando el autor la declara): 684 bots en total (569 + 115).
 
 Los bots del Bestiary no van al `<select>`: se eligen desde el
 **Inventario** (botón "📚 Inventory…", `web/inventory.js`), una ventana
