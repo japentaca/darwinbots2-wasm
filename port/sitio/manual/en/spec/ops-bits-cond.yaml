@@ -1,0 +1,32 @@
+# Plain-English entries: bitwise operators, comparisons and logic
+opcodes:
+  - {token: "~", sem: "Replaces the top with its complement: it flips all 32 bits, so x becomes −x − 1. With an empty stack it leaves −1."}
+  - {token: "&", sem: "Pops two numbers and pushes one with only the bits that are set in both turned on. With an empty stack it gives 0."}
+  - {token: "|", sem: "Pops two numbers and pushes one with the bits that are set in either of them turned on. With an empty stack it gives 0."}
+  - {token: "^", sem: "Pops two numbers and pushes one with the bits that are set in only one of them turned on. With an empty stack it gives 0."}
+  - {token: "++", sem: "Replaces the top with that number plus 1. At the edge of 32 bits, 2147483647 ++ gives 0."}
+  - {token: "--", sem: "Replaces the top with that number minus 1. At the edge of 32 bits, −2147483647 -- gives 0."}
+  - {token: "-", sem: "Flips the sign of the top: 5 becomes −5. It does not subtract; for subtraction use [[op:sub]]. With an empty stack it leaves 0."}
+  - {token: "<<", sem: "Shifts the bits of the top one place to the left: it multiplies it by 2. With huge numbers it can change the sign, and 1073741824 << gives 0."}
+  - {token: ">>", sem: "Shifts the bits of the top one place to the right, keeping the sign: it divides it by 2, rounding down. −1 >> stays at −1."}
+  - {token: "<", sem: "Pops two numbers a b and pushes true if a, the lower one on the stack, is less than b. With an empty stack it gives false."}
+  - {token: ">", sem: "Pops two numbers a b and pushes true if a, the lower one on the stack, is greater than b. With an empty stack it gives false."}
+  - {token: "=", sem: "Pops two numbers and pushes true if they are equal. With an empty stack it compares 0 with 0 and gives true."}
+  - {token: "!=", sem: "Pops two numbers and pushes true if they are different. With an empty stack it gives false."}
+  - {token: "%=", sem: "Pops a b and pushes true if b is within 10% of a, limits included. With a negative a it is always false."}
+  - {token: "!%=", sem: "Pops a b and pushes true if b is farther than 10% from a: the opposite of [[op:%=]]. With a negative a it is always true."}
+  - {token: "~=", sem: "Pops three numbers a b d and pushes true if b is within d% of a. If only one of a and d is negative, it is always false."}
+  - {token: "!~=", sem: "Pops three numbers a b d and pushes true if b is farther than d% from a. If only one of a and d is negative, it is always true."}
+  - {token: ">=", sem: "Pops two numbers a b and pushes true if a, the lower one on the stack, is greater than or equal to b. With an empty stack it gives true."}
+  - {token: "<=", sem: "Pops two numbers a b and pushes true if a, the lower one on the stack, is less than or equal to b. With an empty stack it gives true."}
+  - {token: "and", sem: "Pops two values from the boolean stack and pushes true if both are true. With only one it leaves it as it is; with an empty stack it pushes true."}
+  - {token: "or", sem: "Pops two values from the boolean stack and pushes true if either is true. With only one, or with an empty stack, it pushes true."}
+  - {token: "xor", sem: "Pops two values from the boolean stack and pushes true if exactly one of them is true. With only one it inverts it; with an empty stack it pushes false."}
+  - {token: "not", sem: "Inverts the top of the boolean stack. With an empty stack it pushes false, because an empty stack counts as true."}
+  - {token: "true", sem: "Pushes a true onto the boolean stack."}
+  - {token: "false", sem: "Pushes a false onto the boolean stack."}
+  - {token: "dropbool", sem: "Pops the top of the boolean stack and discards it. With an empty stack it does nothing."}
+  - {token: "clearbool", sem: "Empties the boolean stack. It does not touch the integer stack."}
+  - {token: "dupbool", sem: "Copies the top of the boolean stack. With an empty stack it does nothing, unlike [[op:dup]]."}
+  - {token: "swapbool", sem: "Swaps the top two of the boolean stack. With one value or none it does nothing."}
+  - {token: "overbool", sem: "Copies the second of the boolean stack to the top: a b becomes a b a. With a single value it pushes true; with an empty stack it does nothing."}

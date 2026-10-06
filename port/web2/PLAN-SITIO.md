@@ -456,6 +456,17 @@ Parte técnica adelantada el 2026-10-03 (antes de S-C):
   enlaces cruzados, `spec.yaml`, paridad), y el de enlaces internos recorre
   los dos idiomas.
 
+Traducción hecha el 2026-10-06 (tres olas, 55 agentes, ~6,5 M tokens): las
+429 páginas de `manual/en/` y las 10 fichas `manual/en/spec/*.yaml` están
+`revisada`; cero pendientes en los dos idiomas, `--lint` limpio, 778/778.
+Cada lote pasó por un traductor y un revisor, con un glosario es→en común y
+las anclas de los encabezados fijadas con `{#…}` iguales a las del español.
+Decisiones: el Glosario en inglés va en orden alfabético inglés (sin ancla de
+letra compartida con el español, nadie enlaza a ellas). Los tests que daban
+el inglés por sin traducir pasaron a comprobar lo contrario (ninguna ficha
+sale en español). Los revisores anotaron 128 dudas sobre el original en
+español en `port/sitio/NOTAS-TRADUCCION.md` (sin resolver).
+
 ### Cómo se traduce una página
 
 `port/sitio/manual/en/<capítulo>/<página>.md`, con el mismo frontmatter

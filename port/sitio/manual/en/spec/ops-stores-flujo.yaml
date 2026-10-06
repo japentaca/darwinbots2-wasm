@@ -1,0 +1,21 @@
+# Plain-English entries: writes to memory (stores) and flow (cond, start, else, stop, end)
+opcodes:
+  - {token: store, sem: "Pops an address and a value, and writes the value to that cell, with circular wraparound at ±32000: 32001 becomes 1. With address 0 it does not write, does not charge, and the value stays on the stack."}
+  - {token: inc, sem: "Pops an address and adds 1 to that cell. Past 32000 it wraps back to 1. With address 0 it does nothing."}
+  - {token: dec, sem: "Pops an address and subtracts 1 from that cell. It does not stop at 0, and below −32000 it wraps back to −1. With address 0 it does nothing."}
+  - {token: addstore, sem: "Pops an address and a value, and adds the value to that cell, with circular wraparound at ±32000. With address 0 the value stays on the stack."}
+  - {token: substore, sem: "Pops an address and a value, and leaves in the cell what it had minus the value, with circular wraparound at ±32000. With address 0 the value stays on the stack."}
+  - {token: multstore, sem: "Pops an address and a value, and multiplies the cell by the value, with circular wraparound at ±32000. With address 0 the value stays on the stack."}
+  - {token: divstore, sem: "Pops an address and a value, and divides the cell by the value, rounding to the nearest integer (to the even one on a tie). Dividing by 0 leaves it at 0. With address 0 the value is lost."}
+  - {token: ceilstore, sem: "Pops an address and a value, and leaves the smaller of the two in the cell: it is a ceiling. With address 0 the value is lost."}
+  - {token: floorstore, sem: "Pops an address and a value, and leaves the larger of the two in the cell: it is a floor. With address 0 the value is lost."}
+  - {token: rndstore, sem: "Pops an address and replaces the cell with a random number between 0 and what it had, both included. With −5 the result is anywhere from −5 to 0."}
+  - {token: sgnstore, sem: "Pops an address and leaves only the sign of the cell: −1, 0 or 1."}
+  - {token: absstore, sem: "Pops an address and drops the sign of the cell: −77 becomes 77."}
+  - {token: sqrstore, sem: "Pops an address and leaves in the cell its square root, rounded to the nearest integer. If it held 0 or a negative, it ends at 0."}
+  - {token: negstore, sem: "Pops an address and flips the sign of the cell: 20 becomes −20."}
+  - {token: cond, sem: "Closes the previous gene and opens a new one with its condition section. Empties the boolean stack. Everything runs there, but the stores do not write."}
+  - {token: start, sem: "Opens the body of the gene. After a [[op:cond]], it empties the boolean stack and runs only if all the conditions are true (or there are none). With no cond before it, it opens a gene without conditions."}
+  - {token: else, sem: "Opens the “otherwise” body: it runs only if the conditions of the gene were false. After a start with no cond, a stop or another else, it never runs."}
+  - {token: stop, sem: "Closes the gene: nothing runs until the next cond, start or else. It does not empty the boolean stack, unless it directly closes the conditions of a cond."}
+  - {token: end, sem: "Stops the DNA for that cycle: whatever comes after it does not run. The engine adds one at the end when it loads the bot."}

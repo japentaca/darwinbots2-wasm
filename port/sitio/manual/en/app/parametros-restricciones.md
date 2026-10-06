@@ -44,7 +44,7 @@ option and did not with it; marked as a vegetable, it got one anyway.
 <!-- core robots.hpp UpdateBots P1: if (!DisableFixing) ManageFixed (Fixed = mem(216) > 0); comprobado: fija.txt → quieto con .fixed 1 sin la opción; con ella se mueve y lee .fixed 0 -->
 Nobody can anchor with [[.fixpos]]: the engine stops reading that address, and
 the bot stays loose even if it writes to it. In one test, a bot that wrote 1 to
-`.fixpos` at birth and then pushed ended up pinned without the option; with it,
+`.fixpos` at birth and then pushed ended up anchored without the option; with it,
 it moved and read [[.fixed]] as 0. See [[simulacion/fisica#fijos|fixed bots]].
 
 What the engine stops doing is updating the state, and that goes both ways: a

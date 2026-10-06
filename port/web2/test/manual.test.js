@@ -143,8 +143,10 @@ test('inglés: las mismas páginas, con los textos fijos en inglés y enlazadas 
   const shoot = String(en.r.archivos.get('sysvars/shoot/index.html'));
   assert.match(shoot, /Open the app/);
   assert.match(shoot, /<dt>Address<\/dt>/);
-  // Los datos de la spec sin traducir salen en español, marcados.
-  assert.match(shoot, /<dd><span lang="es">/);
+  // Con el manual traducido entero, ninguna ficha sale en español.
+  for (const [ruta, html] of en.r.archivos) {
+    assert.doesNotMatch(String(html), /<(dd|p|span)[^>]* lang="es"/, ruta);
+  }
   assert.match(
     String(en.r.archivos.get('app/parametros-fisica/index.html')),
     /Parameters: Physics/,
@@ -229,6 +231,8 @@ test('fichas: la versión llana en español reemplaza el dato, enlaza y "" ocult
   // En inglés, lo que falta traducir sale de la versión llana, marcado.
   const en = armarPaginas(spec, 'en');
   en.llano = llano;
+  // Sin la traducción del repo (en/spec): lo que falta sale de la versión llana.
+  en.traduccion = cargarTraduccionSpec('en', spec, [], 'registros: []\nopcodes: []\n');
   leerMd(en.paginas, en.errores, 'en');
   const re = await generar(en, { original: es.paginas });
   assert.match(

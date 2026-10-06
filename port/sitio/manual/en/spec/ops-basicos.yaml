@@ -1,0 +1,32 @@
+# Plain-English entries: basic and advanced operators, numbers and reads
+opcodes:
+  - {token: "<numero>", effect: "Pushes the number as is onto the integer stack. The name of a sysvar without an asterisk pushes its address.", value: "The number as written, from −32768 to 32767; outside that range the bot does not load. A decimal is rounded to the nearest integer (to the even one on a tie).", cost: "Each number is charged the cost [[param:cost:0]] (0 with the F1 rules).", flow: "inside a gene: in the condition (cond) and in the body (start or else)"}
+  - {token: "*<numero> | *.<sysvar>", effect: "Pushes what is in that memory cell. You read a sense the engine writes in the next cycle.", value: "The address of the cell, from 1 to 1000. Outside that range the sign is dropped and the remainder of dividing by 1000 is taken; 0, or a misspelled sysvar, reads 1000.", cost: "Each read is charged the cost [[param:cost:1]] (0 with the F1 rules).", flow: "inside a gene: in the condition (cond) and in the body (start or else)"}
+  - {token: add, sem: "Pops two numbers and pushes their sum. Above 16,777,216 it loses precision, and past 2 billion it wraps around."}
+  - {token: sub, sem: "Pops two numbers and pushes the one below minus the one on top. With huge numbers it behaves like [[op:add]]."}
+  - {token: mult, sem: "Pops two numbers and pushes their product. If it goes past 2 billion, it stays at ±2 billion."}
+  - {token: div, sem: "Pops two numbers and pushes the one below divided by the one on top, rounded to the nearest integer (to the even one on a tie). Dividing by 0 gives 0."}
+  - {token: rnd, sem: "Pops a number n and pushes a random one between 0 and n, both included. With a negative n it is not symmetric: −5 rnd gives −4 to −1."}
+  - {token: "*", sem: "Pops an address and pushes what is in that cell. Outside 1 to 1000 the sign is dropped and the remainder of dividing by 1000 is taken; 0 reads 1000. With an empty stack it reads 1000."}
+  - {token: mod, sem: "Pops two numbers and pushes the remainder of dividing the one below by the one on top, with the sign of the one below. With a divisor of 0 it gives 0."}
+  - {token: sgn, sem: "Replaces the top with its sign: −1 if it is negative, 0 if it is zero and 1 if it is positive."}
+  - {token: abs, sem: "Replaces the top with its absolute value: it drops the sign."}
+  - {token: dup, sem: "Copies the top: a becomes a a. With an empty stack it pushes two zeros."}
+  - {token: drop, sem: "Pops the top and discards it. With an empty stack it does nothing."}
+  - {token: clear, sem: "Empties the integer stack. It does not touch the boolean stack."}
+  - {token: swap, sem: "Swaps the top two: a b becomes b a. With one number or none it does nothing."}
+  - {token: over, sem: "Copies the second item to the top: a b becomes a b a. With a single number it pushes a 0; with an empty stack it does nothing."}
+  - {token: angle, sem: "Pops a point (x below, y on top) and pushes the angle from the bot to it, in [[.aim]] units (0 to about 1256)."}
+  - {token: dist, sem: "Pops a point (x below, y on top) and pushes the distance from the bot to it, in the real size of the world. It is capped at 2 billion."}
+  - {token: ceil, sem: "Pops two numbers and pushes the smaller one. Above 16,777,216 the comparison loses precision."}
+  - {token: floor, sem: "Pops two numbers and pushes the larger one."}
+  - {token: sqr, sem: "Replaces the top with its square root, rounded to the nearest integer. If it is not positive, it gives 0."}
+  - {token: pow, sem: "Pops two numbers and pushes the one below raised to the power of the one on top, rounded. The exponent is clipped to ±10, base 0 gives 0 and the result stays at ±2 billion."}
+  - {token: pyth, sem: "Pops two numbers a and b and pushes the square root of a² + b², rounded. It is capped at 2 billion."}
+  - {token: anglecmp, sem: "Pops two angles a and b, in [[.aim]] units, and pushes a − b by the short way around: from −628 to 628."}
+  - {token: root, sem: "Pops two numbers a and b, drops their signs and pushes the b-th root of a, rounded. With b equal to 0 it gives 0."}
+  - {token: logx, sem: "Pops two numbers a and b, drops their signs and pushes the logarithm of a in base b, rounded. With b below 2 or a equal to 0 it gives 0."}
+  - {token: sin, sem: "Replaces an angle in [[.aim]] units with its sine multiplied by 32000 and rounded: from −32000 to 32000."}
+  - {token: cos, sem: "Replaces an angle in [[.aim]] units with its cosine multiplied by 32000 and rounded: from −32000 to 32000."}
+  - {token: debugint, sem: "Logs the top of the integer stack in the bot's trace, without popping it. It costs no energy. Above 16,777,216 the value may change a little."}
+  - {token: debugbool, sem: "Logs the top of the boolean stack in the bot's trace, without popping it. It costs no energy. With an empty boolean stack it pushes a true."}
