@@ -34,5 +34,6 @@
   "app.errorCarga": "This section could not be loaded. Try reloading the page.",
   "app.recargar": "Reload",
   "app.versionNueva": "There is a new version; save the run before reloading.",
-  "app.trabajos.ayudaCompetir": "Tournament rounds in the background: see them in Compete"
+  "app.trabajos.ayudaCompetir": "Tournament rounds in the background: see them in Compete",
+  "app.ayuda": "Open this screen's page in the manual"
 }

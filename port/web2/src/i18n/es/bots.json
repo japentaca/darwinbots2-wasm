@@ -1,6 +1,9 @@
 {
   "bots.biblioteca": "Biblioteca",
   "bots.nuevo": "+ Nuevo bot",
+  "bots.nuevoRuta.titulo": "Bot nuevo",
+  "bots.nuevoRuta.texto": "Ponele nombre al bot del diálogo y crealo: después se abre el editor con ese ADN.",
+  "bots.ficha.ayuda": "Abrir esta pestaña en el manual",
   "bots.buscar": "Buscar bots",
   "bots.buscarAyuda": "Nombre, archivo, etiqueta o nota",
   "bots.cargando": "Cargando…",

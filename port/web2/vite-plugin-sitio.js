@@ -1,6 +1,10 @@
 // @ts-check
 // Replica en desarrollo y en `vite preview` el layout de Pages (decisión C2):
 // `/build-wasm/*` sale de port/build-wasm/ y `/classic/*` de port/web/.
+// El manual (`/manual/` y `/en/`, para los enlaces de S10) sale de
+// port/sitio/salida/, que arma `node port/sitio/generar.mjs`: si todavía
+// no se generó, esos enlaces no aparecen en la app (igual que si la app
+// se abriera sin el sitio).
 
 import { Buffer } from 'node:buffer';
 import { createReadStream, statSync } from 'node:fs';
@@ -13,6 +17,8 @@ const aqui = fileURLToPath(new URL('.', import.meta.url));
 export const MONTAJES = [
   { prefijo: '/build-wasm/', carpeta: resolve(aqui, '../build-wasm') },
   { prefijo: '/classic/', carpeta: resolve(aqui, '../web') },
+  { prefijo: '/manual/', carpeta: resolve(aqui, '../sitio/salida/manual') },
+  { prefijo: '/en/', carpeta: resolve(aqui, '../sitio/salida/en') },
 ];
 
 /** @type {Record<string, string>} */

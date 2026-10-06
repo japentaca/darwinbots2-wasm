@@ -186,5 +186,7 @@
   "inspector.consola.ayuda.showdna": "shows the bot's DNA",
   "inspector.consola.ayuda.debug": "interpreter trace of the last cycle",
   "inspector.consola.ayuda.help": "this help",
-  "inspector.consola.ayuda.clear": "clears the output"
+  "inspector.consola.ayuda.clear": "clears the output",
+  "inspector.ayuda": "Open the inspector's page in the manual",
+  "inspector.memoria.manual": "Open {n} in the manual"
 }

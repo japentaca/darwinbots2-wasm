@@ -4,6 +4,7 @@ import { BUILD_ID } from '../build.js';
 import { idioma, idiomas, num, setIdioma, t } from '../i18n/index.svelte.js';
 import { hashDe, SECCIONES } from '../router.js';
 import { clavePlural } from './experimentar/borrador.js';
+import { urlManual } from './manual.js';
 import { cicloVisible } from './sim/ciclo.js';
 import { actual } from './sim/corrida.svelte.js';
 import { TEMAS } from './tema.js';
@@ -78,6 +79,12 @@ const trabajos = $derived.by(() => {
       destino === DESTINO_COMPARAR ? t('comparar.chip.ayuda') : t('app.trabajos.ayudaCompetir'),
   };
 });
+
+// El «?» de la barra abre la página del manual de la pantalla activa (S10):
+// cada sección se llama igual que su página (app/inicio, app/observar…).
+const ayuda = $derived(
+  urlManual(/** @type {'es' | 'en'} */ (idioma() === 'en' ? 'en' : 'es'), `app/${seccion}/`),
+);
 </script>
 
 <nav class="nav" aria-label={t('app.nav.aria')}>
@@ -181,6 +188,7 @@ const trabajos = $derived.by(() => {
       </button>
     {/each}
   </fieldset>
+  <a class="ayuda" href={ayuda} title={t('app.ayuda')} aria-label={t('app.ayuda')}>?</a>
   <span class="aviso-idioma" role="status" aria-live="polite"
     >{idiomaFallido ? t('app.idioma.error', { idioma: t(`app.idioma.${idiomaFallido}`) }) : ''}</span
   >
@@ -328,6 +336,25 @@ const trabajos = $derived.by(() => {
 .tema.on {
   color: #ffffff;
   background: var(--barra-activa);
+}
+.ayuda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--barra-borde);
+  color: var(--barra-texto);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.ayuda:hover {
+  color: #ffffff;
+  background: var(--barra-hover);
 }
 .aviso-idioma {
   color: #e0b050;

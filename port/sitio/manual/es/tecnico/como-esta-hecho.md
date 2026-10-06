@@ -108,9 +108,10 @@ parámetro salen de los datos de la spec, y un generador en Node produce
 HTML estático: cada página es un archivo que se lee sin JavaScript. Solo
 el buscador y el selector de tema usan unas pocas decenas de líneas. Los
 bloques de ADN del manual se colorean con el resaltador del editor, pasan
-el mismo lint que tus bots y llevan su botón «Copiar», para pegarlos en el
-editor de la app.
-<!-- port/web2/PLAN-SITIO.md S5, S6, S9; port/sitio/plantilla/manual.js (botón «Copiar» de los bloques adn; la ruta «Abrir en la app» queda para más adelante, S-D) -->
+el mismo lint que tus bots y llevan dos botones: **Abrir en la app**, que
+te lleva al editor con ese ADN ya cargado, y **Copiar**, para pegarlo
+donde quieras.
+<!-- port/web2/PLAN-SITIO.md S5, S6, S9, S10; port/sitio/generar.mjs (bloques adn: «Abrir en la app» → /app/#/bots/nuevo?adn=…, y «Copiar», con plantilla/manual.js); la app abre el diálogo de bot nuevo con ese ADN (src/screens/Bots.svelte) -->
 
 ## La spec, árbitro del port {#la-spec}
 

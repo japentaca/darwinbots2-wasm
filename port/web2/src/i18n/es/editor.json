@@ -201,5 +201,6 @@
   "editor.cap.reconoce": "reconoce a los suyos",
   "editor.cap.reacciona": "reacciona a los golpes",
   "editor.cap.luz": "sensible a la luz",
-  "editor.cap.autoedita": "se edita a sí mismo"
+  "editor.cap.autoedita": "se edita a sí mismo",
+  "editor.texto.manual": "Ver en el manual"
 }

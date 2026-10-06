@@ -1,7 +1,8 @@
 // @ts-check
-// Manual de darwinbots-wasm.org (port/sitio/generar.mjs; PLAN-SITIO.md S-B y S-E):
-// cobertura de sysvars, operadores y parámetros, enlaces internos, el
-// Markdown propio, el lint de los bloques ```adn y el manual en inglés.
+// Manual de darwinbots-wasm.org (port/sitio/generar.mjs; PLAN-SITIO.md S-B, S-D
+// y S-E): cobertura de sysvars, operadores y parámetros, enlaces internos, el
+// Markdown propio, el lint de los bloques ```adn, los enlaces que hace la app
+// (S10) y el manual en inglés.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
@@ -19,8 +20,9 @@ import {
 } from '../../sitio/generar.mjs';
 import { frontmatter, markdown } from '../../sitio/markdown.mjs';
 import { leerYaml } from '../../sitio/yaml.mjs';
-import { PARAMETROS } from '../engine/opciones.js';
+import { GRUPOS, PARAMETROS } from '../engine/opciones.js';
 import { COMANDOS, SYSVARS } from '../src/lib/bots/editor/vocabulario.js';
+import { SECCIONES } from '../src/router.js';
 
 const spec = cargarSpec();
 
@@ -294,6 +296,38 @@ test('extensiones: sysvars, operadores, parámetros, páginas y anclas; los roto
   assert.equal(rotos.length, 5, rotos.join('\n'));
 });
 
+test('la app enlaza páginas del manual que existen (S10)', () => {
+  const m = armarPaginas(spec);
+  // BarraSuperior: cada sección se llama igual que su página (app/<sección>).
+  for (const s of SECCIONES) assert.ok(m.paginas.has(`app/${s}`), `app/${s}`);
+  // Ficha (pestañas → app/bots), editor e inspector.
+  for (const p of ['app/bots', 'app/editor', 'app/inspector']) assert.ok(m.paginas.has(p), p);
+  // Avanzado: la página de cada grupo y, dentro, el ancla de cada parámetro.
+  for (const g of GRUPOS) assert.ok(m.paginas.has(`app/parametros-${g.id}`), g.id);
+  for (const p of PARAMETROS) {
+    assert.equal(m.parametroEn.get(p.clave), `app/parametros-${p.grupo}`, p.clave);
+  }
+});
+
+test('vocabulario.json: la página y el resumen de cada sysvar y operador', async () => {
+  for (const { r } of await generarTodo(spec)) {
+    const v = JSON.parse(String(r.archivos.get('vocabulario.json')));
+    for (const [nombre, dir] of SYSVARS) {
+      const e = v.sysvars[nombre.toLowerCase()];
+      assert.ok(e, nombre);
+      assert.ok(r.archivos.has(`${e.u}index.html`), `${nombre} → ${e.u}`);
+      assert.ok(e.r, `${nombre} sin resumen`);
+      assert.ok(v.direcciones[String(dir)], `dirección ${dir}`);
+    }
+    for (const palabras of Object.values(COMANDOS))
+      for (const w of palabras) {
+        const e = v.operadores[/^[a-z]+$/i.test(w) ? w.toLowerCase() : w];
+        assert.ok(e, w);
+        assert.ok(r.archivos.has(`${e.u}index.html`), `${w} → ${e.u}`);
+      }
+  }
+});
+
 test('markdown: bloques, en línea y escape', () => {
   const enlace = (/** @type {string} */ d) => ({ href: `#${d}`, html: d });
   const { html, titulos } = markdown(
@@ -340,7 +374,7 @@ test('markdown: bloques, en línea y escape', () => {
   );
 });
 
-test('bloques adn: coloreados, con Copiar, y al lint salvo sin-lint', async () => {
+test('bloques adn: coloreados, con Copiar y «Abrir en la app», y al lint salvo sin-lint', async () => {
   const m = armarPaginas(spec);
   const p = /** @type {any} */ (m.paginas.get('adn/estructura'));
   p.cuerpo =
@@ -359,6 +393,13 @@ test('bloques adn: coloreados, con Copiar, y al lint salvo sin-lint', async () =
   assert.match(html, /<span class="r-flu">cond<\/span>/);
   assert.match(html, /<span class="r-sys">\*\.eye5<\/span>/);
   assert.match(html, /class="copiar" data-texto="cond\n\*\.eye5 0 &gt;/);
+  // «Abrir en la app» (S6): a la raíz del sitio, con el ADN en la consulta
+  // de la ruta #/bots/nuevo (la app vive en /app/).
+  assert.match(html, />Abrir en la app<\/a>/);
+  assert.match(
+    html,
+    /href="\.\.\/\.\.\/\.\.\/app\/#\/bots\/nuevo\?adn=cond%0A\*\.eye5%200%20%3E%0Astart%0A-1%20\.shoot%20store%0Astop"/,
+  );
 });
 
 test('lint de los bloques adn con el wasm', { skip: !hayWasm() && 'falta el wasm' }, async () => {

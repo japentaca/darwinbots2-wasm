@@ -10,7 +10,8 @@
 // la sim salvo lo que el usuario escriba en la consola y la pestaña Control
 // (N4.1, decisión 15: Player Bot, diseñador de ojos y sus facilidades).
 import { onMount, untrack } from 'svelte';
-import { num, t } from '../../i18n/index.svelte.js';
+import { idioma, num, t } from '../../i18n/index.svelte.js';
+import { urlManual } from '../manual.js';
 import { vbACss } from '../mundo/color.js';
 import { ESTADO, FLAG } from '../sim/frame.js';
 import Adn from './Adn.svelte';
@@ -424,6 +425,13 @@ const estados = $derived.by(() => {
         </div>
       {/if}
     </div>
+    <a
+      class="btn x manual"
+      href={urlManual(idioma() === 'en' ? 'en' : 'es', 'app/inspector/')}
+      title={t('inspector.ayuda')}
+      aria-label={t('inspector.ayuda')}
+      >?</a
+    >
     <button
       class="btn x"
       type="button"
@@ -592,6 +600,11 @@ h2 {
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+  text-decoration: none;
+}
+.x.manual {
+  font-size: 15px;
+  font-weight: 600;
 }
 .acciones {
   display: flex;

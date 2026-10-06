@@ -105,6 +105,15 @@ El autocompletado es solo para nombres con punto. Los operadores y los
 comandos se escriben enteros: si alguno queda mal escrito, lo marca un
 aviso.
 
+## El resumen al pasar el cursor {#resumen}
+<!-- AreaAdn.svelte (tarjeta al mover el mouse: hover.js palabraBajo y entradaDe, métrica de la fuente mono, tabulador cada 4 columnas; lib/manual.js vocabularioManual baja manual/vocabulario.json una vez por idioma; los comentarios no dan tarjeta, como el autocompletado) -->
+
+Sin escribir nada, pasá el cursor por una sysvar o un operador del texto:
+aparece una tarjeta con su resumen del manual y el enlace **Ver en el
+manual**, que abre su página en otra pestaña. Sirve para leer qué hace
+`.shootval` sin irte del editor. Los comentarios no dan tarjeta, y si el
+manual del sitio no está disponible, no aparece (el editor sigue igual).
+
 ## Los avisos {#avisos}
 <!-- Editor.svelte (lista .avisos: dónde, qué, veces, Corregir); lint.js describirLint; wasm/dbcore_api.cpp db_dna_lint (lint_detail::Lint); linter.js (worker, debounce 350 ms) -->
 

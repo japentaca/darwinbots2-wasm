@@ -34,5 +34,6 @@
   "app.errorCarga": "No se pudo cargar esta sección. Probá recargar la página.",
   "app.recargar": "Recargar",
   "app.versionNueva": "Hay una versión nueva; guardá la corrida antes de recargar.",
-  "app.trabajos.ayudaCompetir": "Rondas de torneo en segundo plano: ver en Competir"
+  "app.trabajos.ayudaCompetir": "Rondas de torneo en segundo plano: ver en Competir",
+  "app.ayuda": "Abrir en el manual la página de esta pantalla"
 }

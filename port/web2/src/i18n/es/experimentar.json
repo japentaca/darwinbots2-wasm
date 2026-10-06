@@ -192,5 +192,7 @@
   "experimentar.validacion.obstaculo-tipo": "Tipo de obstáculo desconocido ({ruta}).",
   "experimentar.validacion.teleporter": "Teleporter inválido ({ruta}).",
   "experimentar.validacion.teleporters-tope": "Hay más de 10 teleporters.",
-  "experimentar.validacion.otro": "Error «{codigo}» en {ruta} {detalle}"
+  "experimentar.validacion.otro": "Error «{codigo}» en {ruta} {detalle}",
+  "experimentar.avanzado.ayudaGrupo": "Ver este grupo de parámetros en el manual",
+  "experimentar.avanzado.ayudaParam": "Ver {nombre} en el manual"
 }

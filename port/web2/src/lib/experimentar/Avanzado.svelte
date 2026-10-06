@@ -9,6 +9,7 @@
 import { tick, untrack } from 'svelte';
 import { BASES } from '../../../engine/opciones.js';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
+import { urlManual } from '../manual.js';
 import {
   clavesDeGrupo,
   escribirParametro,
@@ -85,6 +86,14 @@ const nombreBase = $derived(BASES[borrador.opciones.base]?.[idi] ?? borrador.opc
 
 /** id del control de un parámetro. @param {Parametro} p */
 const idDe = (p) => `av-${p.clave.replace(':', '-')}`;
+
+// Enlaces al manual (S10): la página de cada grupo y el ancla de cada
+// parámetro (anclaParam de port/sitio/generar.mjs: p-opt-11…).
+/** @param {string} grupo */
+const urlGrupo = (grupo) => urlManual(idi, `app/parametros-${grupo}/`);
+/** @param {Parametro} p */
+const urlParam = (p) =>
+  `${urlManual(idi, `app/parametros-${p.grupo}/`)}#p-${p.clave.replace(/:/g, '-')}`;
 
 /** @param {number} v */
 const fmt = (v) => num(v, { maximumSignificantDigits: 12 });
@@ -262,7 +271,17 @@ function descritoPor(p, inusual) {
 
     {#each grupos as g (g.id)}
       <div class="prow cabecera">
-        <span class="lbl">{g[idi]} · {g.total}</span>
+        <span class="lbl">
+          {g[idi]}
+          · {g.total}
+          <a
+            class="q"
+            href={urlGrupo(g.id)}
+            title={t('experimentar.avanzado.ayudaGrupo')}
+            aria-label={t('experimentar.avanzado.ayudaGrupo')}
+            >?</a
+          >
+        </span>
         <span class="lbl">{t('experimentar.avanzado.valor')}</span>
         <span class="lbl">{t('experimentar.avanzado.base', { base: nombreBase })}</span>
         {#if g.cambiados}
@@ -331,6 +350,13 @@ function descritoPor(p, inusual) {
                 {#if sinAplicar}
                   <span class="sr-only">{t('experimentar.cambiado.sr')}</span>
                 {/if}</label
+              >
+              <a
+                class="q"
+                href={urlParam(p)}
+                title={t('experimentar.avanzado.ayudaParam', { nombre: p[idi] })}
+                aria-label={t('experimentar.avanzado.ayudaParam', { nombre: p[idi] })}
+                >?</a
               >
               <span class="var">{p.variable}</span>
               {#if cambiado}
@@ -571,6 +597,24 @@ function descritoPor(p, inusual) {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--gris-claro);
+}
+.q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--borde-control);
+  border-radius: 50%;
+  color: var(--gris);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+.q:hover {
+  color: var(--texto);
+  background: var(--hover-claro);
 }
 .marca {
   font-size: 11px;

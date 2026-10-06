@@ -171,13 +171,14 @@ end
 
 Para sembrarlo:
 
-1. Copiá el ADN (el bloque tiene un botón **Copiar**).
-2. En Observar, pulsá **Sembrar**.
-3. En **Bot**, elegí **Pegar el ADN…**.
-4. Poné un **Nombre de la especie** (por ejemplo, «Mi primer bot»), pegá el
-   texto en **ADN** y elegí un **Color** que se distinga.
-5. Dejá la **Cantidad** en 5 y la **Energía inicial** en 3000, y pulsá
-   **Sembrar**.
+1. Tocá **Abrir en la app** en el bloque: la app abre el diálogo de bot
+   nuevo con este ADN ya cargado. (El botón **Copiar** te lo lleva al
+   portapapeles, por si preferís pegarlo a mano.)
+2. Poné un **Nombre** (por ejemplo, «Mi primer bot») y pulsá **Crear**: se
+   abre el editor con el ADN.
+3. En la ficha del bot, pulsá **Sembrar**, elegí un **Color** que se
+   distinga, dejá la **Cantidad** en 5 y la **Energía inicial** en 3000, y
+   pulsá **Sembrar en la corrida actual**.
 
 Seguilo con el inspector. En las pruebas que hicimos con el motor, sembrando
 estos cinco bots junto a los de la Sopa primordial, a los 4000 ciclos ya eran

@@ -186,5 +186,7 @@
   "inspector.consola.ayuda.showdna": "muestra el ADN del bot",
   "inspector.consola.ayuda.debug": "traza del intérprete en el último ciclo",
   "inspector.consola.ayuda.help": "esta ayuda",
-  "inspector.consola.ayuda.clear": "borra la salida"
+  "inspector.consola.ayuda.clear": "borra la salida",
+  "inspector.ayuda": "Abrir en el manual la página del inspector",
+  "inspector.memoria.manual": "Ver {n} en el manual"
 }

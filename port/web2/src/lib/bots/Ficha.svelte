@@ -5,7 +5,7 @@
 // src/lib/bots/editor/, decisión 18: los del foro son de solo lectura y se
 // editan duplicándolos) e Historial.
 import { LG_SCRATCH_ID, lgSeason } from '../../../engine/league.js';
-import { num, t } from '../../i18n/index.svelte.js';
+import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
 import { nombreTorneo, textoNota } from '../competir/textos.js';
 import {
@@ -16,6 +16,7 @@ import {
   torneos,
   tr as trCompetir,
 } from '../competir/torneos.svelte.js';
+import { urlManual } from '../manual.js';
 import Dialogo from '../observar/Dialogo.svelte';
 import {
   avisar,
@@ -299,6 +300,13 @@ async function borrar() {
         >{t(`bots.pestana.${p}`)}</a
       >
     {/each}
+    <a
+      class="manual"
+      href={urlManual(idioma() === 'en' ? 'en' : 'es', pestana === 'adn' ? 'app/editor/' : 'app/bots/')}
+      title={t('bots.ficha.ayuda')}
+      aria-label={t('bots.ficha.ayuda')}
+      >?</a
+    >
   </nav>
 
   <div class="cuerpo" class:adn={pestana === 'adn'}>
@@ -479,6 +487,25 @@ h2 {
 .tabs a.on {
   color: var(--texto);
   border-bottom-color: var(--acento);
+}
+.tabs a.manual {
+  margin-left: auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  margin-right: 8px;
+  border: 1px solid var(--borde-control);
+  border-radius: 50%;
+  color: var(--gris);
+  font-weight: 600;
+}
+.tabs a.manual:hover {
+  color: var(--texto);
+  background: var(--hover-claro);
 }
 .cuerpo {
   flex: 1;

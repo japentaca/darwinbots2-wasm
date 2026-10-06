@@ -65,7 +65,7 @@ const Actual = $derived(cargadas[ruta.seccion]);
   <BarraSuperior seccion={ruta.seccion} onMismaSeccion={cargar} />
   <main id="principal">
     {#if Actual}
-      <Actual partes={ruta.partes} />
+      <Actual partes={ruta.partes} consulta={ruta.consulta} />
     {:else if fallidas[ruta.seccion]}
       <div class="carga" role="alert">
         <p>{t('app.errorCarga')}</p>

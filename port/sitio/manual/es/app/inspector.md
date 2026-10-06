@@ -106,7 +106,11 @@ Una tabla con las sysvars más usadas del bot, su dirección y su valor,
 releídos cada medio segundo. Van agrupadas: **Cuerpo y energía**,
 **Movimiento**, **Acciones**, **Visión**, **Lazos** y **Contadores y memoria
 libre**. Cada nombre tiene su ficha en la referencia de sysvars (por ejemplo
-[[.nrg]], [[.aim]], [[.shoot]], [[.refeye]] o [[.numties]]).
+[[.nrg]], [[.aim]], [[.shoot]], [[.refeye]] o [[.numties]]), y en la tabla
+esos nombres son enlaces: un clic abre la página de esa sysvar en el manual
+(lo mismo en la tabla de ojos y en las de [[app/inspector#sentidos|los
+sentidos]]). El **?** de la cabecera del inspector abre la página del
+inspector.
 
 Para mirar algo que no está en la lista, escribilo en el cuadro de arriba y
 tocá **Consultar**. Vale:

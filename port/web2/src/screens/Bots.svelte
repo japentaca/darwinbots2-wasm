@@ -3,6 +3,8 @@
 // Bots (Nivel 3, paso N3.2; decisiones 17-20): la biblioteca a la izquierda
 // y la ficha del bot elegido. Rutas (src/lib/bots/ruta.js):
 //   #/bots                       la biblioteca
+//   #/bots/nuevo[?adn=…]         bot nuevo (con ese ADN; «Abrir en la app»
+//                                del manual, S10 de PLAN-SITIO.md)
 //   #/bots/<nombre|clave>        la ficha (Resumen)
 //   #/bots/<nombre|clave>/adn    ADN (editor)   …/historial  Historial
 import { onMount } from 'svelte';
@@ -16,11 +18,14 @@ import { leerRuta, resolverClave } from '../lib/bots/ruta.js';
 import { estadoAlmacen } from '../lib/sim/almacen.svelte.js';
 import { hashDe } from '../router.js';
 
-/** @type {{ partes?: string[] }} */
-let { partes = [] } = $props();
+/** @type {{ partes?: string[], consulta?: Record<string, string> }} */
+let { partes = [], consulta = {} } = $props();
 
 const ruta = $derived(leerRuta(partes));
-const entrada = $derived(resolverClave(bib.indice, ruta.clave));
+// `nuevo` es una palabra reservada de la ruta: nunca busca un bot así
+// llamado; abre el diálogo de bot nuevo con el ADN de la consulta.
+const esNuevo = $derived(ruta.clave === 'nuevo');
+const entrada = $derived(esNuevo ? null : resolverClave(bib.indice, ruta.clave));
 
 onMount(() => {
   asegurarBiblioteca();
@@ -28,7 +33,7 @@ onMount(() => {
 </script>
 
 <div class="bots">
-  <Biblioteca actual={entrada} />
+  <Biblioteca actual={entrada} abrirNuevo={esNuevo ? (consulta.adn ?? '') : undefined} />
   <section class="principal">
     {#if estadoAlmacen.versionVieja}
       <div class="aviso error" role="alert">{t('bots.error.almacen.version-vieja')}</div>
@@ -69,6 +74,11 @@ onMount(() => {
     {/if}
     {#if entrada}
       <Ficha {entrada} pestana={ruta.pestaña} />
+    {:else if esNuevo}
+      <div class="vacio">
+        <h2>{t('bots.nuevoRuta.titulo')}</h2>
+        <p>{t('bots.nuevoRuta.texto')}</p>
+      </div>
     {:else if bib.error}
       <p class="vacio" role="alert">{t(bib.error.clave, bib.error.params)}</p>
     {:else if !bib.listo}

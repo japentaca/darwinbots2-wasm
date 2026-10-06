@@ -12,8 +12,15 @@
 // mucho una vez por cuadro (requestAnimationFrame junta las teclas de un
 // mismo cuadro), con caché por línea (crearResaltador), y los números de
 // línea solo cambian con la cantidad.
-import { t } from '../../../i18n/index.svelte.js';
+//
+// Además (S10 de PLAN-SITIO.md): al pasar el cursor por una sysvar o un
+// operador aparece una tarjeta con su resumen del manual y el enlace a su
+// página (el vocabulario lo baja vocabulario.json una vez; si el sitio no
+// está, no aparece).
+import { idioma, t } from '../../../i18n/index.svelte.js';
+import { urlManual, vocabularioManual } from '../../manual.js';
 import { completar, esExacta, palabraEnCurso, sugerencias } from './autocompletar.js';
+import { entradaDe, offsetVisual, palabraBajo } from './hover.js';
 import { crearResaltador } from './resaltado.js';
 import { reemplazarTexto } from './textarea.js';
 
@@ -83,10 +90,12 @@ function sincronizar() {
   if (!ta) return;
   arriba = ta.scrollTop;
   izquierda = ta.scrollLeft;
+  tip = null;
 }
 
 function revisarPalabra() {
   if (!ta || soloLectura) return;
+  tip = null;
   if (ta.selectionStart !== ta.selectionEnd) {
     enCurso = null;
     return;
@@ -94,6 +103,70 @@ function revisarPalabra() {
   const w = palabraEnCurso(ta.value, ta.selectionStart);
   if (!w || (enCurso && w.ini !== enCurso.ini)) elegida = 0;
   enCurso = w;
+}
+
+// ---- Tarjeta del manual al pasar el cursor (S10) ----------------------------------
+
+const IDIOMA = () => /** @type {'es' | 'en'} */ (idioma() === 'en' ? 'en' : 'es');
+/** padding del textarea (px). */
+const PAD = { x: 10, y: 8 };
+
+/** @type {{x: number, y: number, t: string, r: string, href: string} | null} */
+let tip = $state(null);
+/** @type {HTMLDivElement | undefined} */
+let tipEl = $state();
+/** @type {import('../../manual.js').Vocabulario | null} */
+let vocab = $state(null);
+/** idioma cuyo vocabulario ya se pidió ('' = ninguno). */
+let vocabIdioma = '';
+
+/** Métrica de la fuente mono (ancho del carácter y alto de línea, px). */
+let metrica = null;
+function medidas() {
+  if (metrica) return metrica;
+  const cs = getComputedStyle(/** @type {HTMLTextAreaElement} */ (ta));
+  const alto = Number.parseFloat(cs.lineHeight) || 20;
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `${cs.fontSize} ${cs.fontFamily}`;
+  metrica = { ancho: ctx.measureText('MMMMMMMMMM').width / 10, alto };
+  return metrica;
+}
+
+/** Baja el vocabulario del manual del idioma actual (una vez por idioma). */
+function pedirVocabulario() {
+  const idi = IDIOMA();
+  if (vocabIdioma === idi) return;
+  vocabIdioma = idi;
+  vocabularioManual(idi).then((v) => {
+    if (IDIOMA() === idi) vocab = v;
+  });
+}
+
+/** La tarjeta de la palabra apuntada, o null. @param {MouseEvent} e */
+function alMover(e) {
+  if (!ta) return;
+  const m = medidas();
+  const col = Math.round((e.offsetX - PAD.x + ta.scrollLeft) / m.ancho);
+  const linea = Math.floor((e.offsetY - PAD.y + ta.scrollTop) / m.alto);
+  const w = palabraBajo(valor, offsetVisual(valor, linea, col));
+  if (!w) {
+    tip = null;
+    return;
+  }
+  if (!vocab) {
+    pedirVocabulario();
+    return;
+  }
+  const en = entradaDe(w, vocab);
+  tip = en
+    ? { x: e.offsetX, y: e.offsetY, t: en.t, r: en.r, href: urlManual(IDIOMA(), en.u) }
+    : null;
+}
+
+/** Al salir del área: la tarjeta se cierra, salvo que el cursor entre en ella. */
+function alSalir(e) {
+  if (e.relatedTarget && tipEl?.contains(/** @type {Node} */ (e.relatedTarget))) return;
+  tip = null;
 }
 
 /** @param {string} nombre */
@@ -180,11 +253,14 @@ export function irALinea(linea) {
       oninput={revisarPalabra}
       onclick={revisarPalabra}
       onkeydown={tecla}
+      onmousemove={alMover}
+      onmouseleave={alSalir}
       onkeyup={(e) => {
   if (!['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].includes(e.key)) revisarPalabra();
 }}
       onblur={() => {
   enCurso = null;
+  tip = null;
 }}
     ></textarea>
     {#if abierto}
@@ -211,6 +287,18 @@ export function irALinea(linea) {
             <span class="dir">{o.privada ? t('editor.texto.privada') : o.dir}</span>
           </div>
         {/each}
+      </div>
+    {/if}
+    {#if tip}
+      <div
+        bind:this={tipEl}
+        class="tip"
+        role="tooltip"
+        style="top: max(8px, min({tip.y + 16}px, calc(100% - 150px))); left: max(8px, min({tip.x + 14}px, calc(100% - 336px)))"
+      >
+        <span class="mono tit">{tip.t}</span>
+        <p>{tip.r}</p>
+        <a href={tip.href} target="_blank" rel="noopener">{t('editor.texto.manual')}</a>
       </div>
     {/if}
   </div>
@@ -318,6 +406,32 @@ textarea::selection {
 }
 .sug .dir {
   color: var(--gris-claro);
+}
+.tip {
+  position: absolute;
+  z-index: 6;
+  max-width: 320px;
+  padding: 8px 12px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde-control);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px var(--sombra);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.tip .tit {
+  display: block;
+  color: var(--acento);
+  font-size: 12.5px;
+  margin-bottom: 2px;
+}
+.tip p {
+  margin: 0 0 6px;
+  color: var(--texto);
+}
+.tip a {
+  color: var(--acento);
+  font-size: 12px;
 }
 :global(.r-com) {
   color: var(--codigo-com);

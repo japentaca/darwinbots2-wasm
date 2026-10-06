@@ -2,8 +2,10 @@
 // @ts-check
 // Pestaña Memoria: sysvars relevantes del bot con su dirección y su valor,
 // releídos cada medio segundo (LectorMemoria, memoria.js), más consultas
-// propias por nombre o dirección. Los nombres de sysvar no se traducen.
-import { num, t } from '../../i18n/index.svelte.js';
+// propias por nombre o dirección. Los nombres de sysvar no se traducen;
+// cada uno enlaza a su página del manual (S10 de PLAN-SITIO.md).
+import { idioma, num, t } from '../../i18n/index.svelte.js';
+import { paginaSysvar, urlManual, vocabularioManual } from '../manual.js';
 import { GRUPOS_MEMORIA, normalizarConsulta } from './memoria.js';
 
 /**
@@ -22,6 +24,21 @@ const PERIODO = 500;
 let consultas = $state([]);
 let entrada = $state('');
 let invalida = $state(false);
+
+/** Vocabulario del manual (null hasta que baja). */
+let vocab = $state(null);
+$effect(() => {
+  const idi = idioma();
+  vocabularioManual(/** @type {'es' | 'en'} */ (idi)).then((v) => {
+    if (idioma() === idi) vocab = v;
+  });
+});
+
+/** Enlace a la página del manual de un nombre, o null. @param {string} n */
+const pagina = (n) => {
+  const e = paginaSysvar(vocab, n);
+  return e ? urlManual(idioma() === 'en' ? 'en' : 'es', e.u) : null;
+};
 
 const todos = $derived([...consultas, ...GRUPOS_MEMORIA.flatMap((g) => g.sysvars)]);
 
@@ -104,7 +121,15 @@ function textoValor(n) {
       <tbody>
         {#each nombres as n (n)}
           <tr>
-            <td class="mono">{n}</td>
+            <td class="mono">
+              {#if pagina(n)}
+                <a class="var-manual" href={pagina(n)} title={t('inspector.memoria.manual', { n })}
+                  >{n}</a
+                >
+              {:else}
+                {n}
+              {/if}
+            </td>
             <td class="mono dir">{textoDir(n)}</td>
             <td class="mono">{textoValor(n)}</td>
             {#if quitables}
@@ -198,6 +223,14 @@ td:first-child {
 }
 .dir {
   color: var(--gris-claro);
+}
+.var-manual {
+  color: var(--texto);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gris-claro);
+}
+.var-manual:hover {
+  color: var(--acento);
 }
 .quitar {
   border: 0;

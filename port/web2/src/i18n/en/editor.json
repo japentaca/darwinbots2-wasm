@@ -201,5 +201,6 @@
   "editor.cap.reconoce": "recognizes kin",
   "editor.cap.reacciona": "reacts to hits",
   "editor.cap.luz": "light-sensitive",
-  "editor.cap.autoedita": "self-editing"
+  "editor.cap.autoedita": "self-editing",
+  "editor.texto.manual": "Open in the manual"
 }

@@ -541,7 +541,10 @@ export async function generar(m, o = {}) {
       if (lenguaje === 'adn') {
         if (!opciones.includes('sin-lint')) bloquesAdn.push({ ruta: `${pe}${r}`, texto });
         const html = resaltarHtml(texto).replace(/\n$/, '');
-        return `<div class="adn"><pre><code>${html}</code></pre><button type="button" class="copiar" data-texto="${escapar(texto)}">${T.copiar}</button></div>`;
+        // «Abrir en la app» (S6): la ruta #/bots/nuevo?adn=… abre el editor
+        // con ese ADN; la URL es relativa a la raíz del sitio.
+        const abrir = `${prefijo(desde)}${RAIZ_SITIO[idioma]}app/#/bots/nuevo?adn=${encodeURIComponent(texto)}`;
+        return `<div class="adn"><pre><code>${html}</code></pre><div class="acciones"><a class="abrir-app" href="${abrir}">${T.abrirEnApp}</a><button type="button" class="copiar" data-texto="${escapar(texto)}">${T.copiar}</button></div></div>`;
       }
       return `<pre><code>${escapar(texto)}</code></pre>`;
     };
@@ -649,6 +652,23 @@ export async function generar(m, o = {}) {
     if (r) busqueda.push(entradaBusqueda(p, idioma));
   }
   archivos.set('buscar.json', JSON.stringify(busqueda));
+  // El vocabulario del manual para la app (S10): la página y el resumen de
+  // cada sysvar (por nombre y por dirección) y de cada operador (por token y
+  // alias). Lo baja el editor de ADN y el inspector para enlazar cada
+  // palabra con su página.
+  const vocab = { sysvars: {}, direcciones: {}, operadores: {} };
+  for (const p of paginas.values()) {
+    const item = { u: `${p.ruta}/`, t: p.titulo, r: p.resumen || resumenGenerado(p, idioma) || '' };
+    if (p.tipo === 'sysvar')
+      for (const reg of p.datos.registros) {
+        vocab.direcciones[String(reg.addr)] = item;
+        for (const n of reg.names ?? []) vocab.sysvars[n.toLowerCase()] = item;
+      }
+    else if (p.tipo === 'operador')
+      for (const w of [p.datos.op.token, ...(p.datos.op.aliases ?? [])])
+        vocab.operadores[/^[a-z]+$/i.test(w) ? w.toLowerCase() : w] = item;
+  }
+  archivos.set('vocabulario.json', JSON.stringify(vocab));
   return { archivos, errores, bloquesAdn, orden };
 }
 

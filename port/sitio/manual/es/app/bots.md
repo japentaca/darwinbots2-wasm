@@ -138,7 +138,9 @@ Al lado, los botones de la ficha:
 | **Borrar** | Solo en los propios: lo borra con todas sus versiones, después de preguntarte. No se puede deshacer. |
 | ☆ | Favorito. |
 
-Debajo hay tres pestañas: **Resumen**, **ADN** e **Historial**.
+Debajo hay tres pestañas: **Resumen**, **ADN** e **Historial**. El **?** de
+al lado abre en el manual la página de la pestaña que estás viendo
+([[app/bots]] o el [[app/editor|editor]]).
 
 ## Resumen {#resumen}
 <!-- web2/src/lib/bots/Resumen.svelte; adn.js (descripcionAdn, leeYEscribe: lectura del texto sin compilar); etiquetas.js; profiles.json -->
@@ -224,6 +226,10 @@ No puede haber dos bots propios con el mismo nombre. Si elegís el nombre de
 un bot del foro, la app te avisa que en los escenarios y las corridas los dos
 se van a distinguir solo por el origen, y te deja usarlo igual con **Usar ese
 nombre igual**.
+
+El botón **Abrir en la app** de los bloques de ADN de este manual usa el
+mismo diálogo: abre la app en la dirección `#/bots/nuevo?adn=…` con ese ADN
+ya cargado, y vos solo elegís el nombre.
 
 ## Duplicar {#duplicar}
 <!-- Ficha.svelte duplicar (DialogoNombre: bots.duplicar.*); Editor.svelte duplicar (editor.duplicar.*) -->

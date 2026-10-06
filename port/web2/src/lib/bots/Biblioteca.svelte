@@ -45,8 +45,13 @@ import { lineasImport } from './textos.js';
 
 /** @typedef {import('../../../engine/biblioteca.js').Entrada} Entrada */
 
-/** @type {{ actual: Entrada | null }} */
-let { actual } = $props();
+/**
+ * `actual`: la ficha abierta. `abrirNuevo`: abre el diálogo de bot nuevo con
+ * ese ADN precargado (la ruta #/bots/nuevo[?adn=…]; undefined lo deja
+ * cerrado, '' usa el gen vacío de siempre).
+ * @type {{ actual: Entrada | null, abrirNuevo?: string }}
+ */
+let { actual, abrirNuevo } = $props();
 
 const vista = $derived(E.armarVista(bib.indice, ui.filtro, ui.vista, ui.sel, ui.plegados));
 const tags = $derived(todosLosTags(bib.indice));
@@ -66,12 +71,24 @@ let verLote = $state(false);
 let loteDe = $state.raw([]);
 let verGuardarSel = $state(false);
 let verNuevo = $state(false);
+/** ADN precargado del próximo diálogo de bot nuevo ('' = gen vacío). */
+let inicialNuevo = $state('');
 let tagSel = $state('');
 /** @type {HTMLInputElement | undefined} */
 let archivo = $state();
 /** @type {HTMLDetailsElement | undefined} */
 let menu = $state();
 let verMismoAdn = $state(false);
+
+// La ruta de bot nuevo (#/bots/nuevo?adn=…): mientras `abrirNuevo` esté
+// definido, el diálogo se abre (o reabre) con ese ADN. Si se cancela, la
+// prop no cambia (sigue la misma ruta) y queda cerrado; al irse a otra
+// ruta vuelve a undefined.
+$effect(() => {
+  if (abrirNuevo === undefined) return;
+  inicialNuevo = abrirNuevo;
+  verNuevo = true;
+});
 
 /** @param {Partial<import('../../../engine/biblioteca.js').Filtro>} c */
 function filtrar(c) {
@@ -85,6 +102,12 @@ const hrefDe = (e) => hrefs.get(e.id) ?? hashDe('bots', e.id);
 const hrefs = $derived(
   new Map(bib.indice.map((e) => [e.id, hashDe('bots', claveDe(e, bib.indice))])),
 );
+
+/** Bot nuevo desde el botón de la barra (gen vacío, sin ADN de la ruta). */
+function abrirBotNuevo() {
+  inicialNuevo = '';
+  verNuevo = true;
+}
 
 /** @param {Entrada} e */
 function meta(e) {
@@ -263,7 +286,7 @@ async function desdeClasica() {
     <div class="titulo">
       <h1>{t('bots.biblioteca')}</h1>
       <div class="acciones">
-        <button class="btn sm" type="button" onclick={() => (verNuevo = true)}>
+        <button class="btn sm" type="button" onclick={abrirBotNuevo}>
           {t('bots.nuevo')}
         </button>
         <details class="menu" bind:this={menu}>
@@ -653,7 +676,12 @@ async function desdeClasica() {
   aceptar={t('bots.seleccion.guardar')}
   onAceptar={guardarSeleccion}
 />
-<DialogoBot bind:abierto={verNuevo} modo="nuevo" onAceptar={crearNuevo} />
+<DialogoBot
+  bind:abierto={verNuevo}
+  modo="nuevo"
+  inicial={inicialNuevo ? { adn: inicialNuevo } : {}}
+  onAceptar={crearNuevo}
+/>
 
 <style>
 .bib {

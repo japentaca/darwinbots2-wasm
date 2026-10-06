@@ -36,6 +36,10 @@ nombre, la columna **Valor** y la columna **Base** con el nombre de la base
 - el valor que tiene en la base, y si se aplica **vivo** o necesita una
   simulación **nueva**.
 
+Cada grupo y cada parámetro llevan un **?** que abre su página del manual
+([[app/parametros-campo]], [[app/parametros-energia]]…, y la de cada
+parámetro, directo a su ficha).
+
 ## Las dos marcas de cambio {#marcas}
 <!-- Avanzado.svelte (marca ≠ base, class chg = sinAplicar); avanzado.js (cambiado vs sinAplicar) -->
 

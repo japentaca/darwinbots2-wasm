@@ -270,10 +270,15 @@ pre {
 .adn {
   position: relative;
 }
-.adn .copiar {
+.adn .acciones {
   position: absolute;
   top: 8px;
   right: 8px;
+  display: flex;
+  gap: 6px;
+}
+.adn .copiar,
+.adn .abrir-app {
   font: inherit;
   font-size: 12px;
   padding: 2px 8px;
@@ -283,7 +288,12 @@ pre {
   color: var(--gris);
   cursor: pointer;
 }
-.adn .copiar:hover {
+.adn .abrir-app {
+  text-decoration: none;
+  white-space: nowrap;
+}
+.adn .copiar:hover,
+.adn .abrir-app:hover {
   color: var(--texto);
 }
 .indice-caps {

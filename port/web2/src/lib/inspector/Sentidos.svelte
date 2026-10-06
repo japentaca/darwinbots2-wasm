@@ -5,7 +5,8 @@
 // mundo) con .eyeNdir/.eyeNwidth de 'eye-read', y tacto y gusto leídos de la
 // memoria del bot.
 import { onMount } from 'svelte';
-import { num, t } from '../../i18n/index.svelte.js';
+import { idioma, num, t } from '../../i18n/index.svelte.js';
+import { paginaSysvar, urlManual, vocabularioManual } from '../manual.js';
 import Abanico from './Abanico.svelte';
 import { SENTIDOS } from './memoria.js';
 
@@ -24,6 +25,21 @@ let { sesion, bot, vivo, datos, valorDe, leer } = $props();
 /** Relectura de la memoria y de los ojos (ms). */
 const PERIODO = 500;
 const LECTURAS = [...SENTIDOS.tacto, ...SENTIDOS.gusto, ...SENTIDOS.otros];
+
+/** Vocabulario del manual (null hasta que baja), para enlazar cada sysvar. */
+let vocab = $state(null);
+$effect(() => {
+  const idi = idioma();
+  vocabularioManual(/** @type {'es' | 'en'} */ (idi)).then((v) => {
+    if (idioma() === idi) vocab = v;
+  });
+});
+
+/** Enlace a la página del manual de un nombre, o null. @param {string} n */
+const pagina = (n) => {
+  const e = paginaSysvar(vocab, n);
+  return e ? urlManual(idioma() === 'en' ? 'en' : 'es', e.u) : null;
+};
 
 /** @type {{ dir: number[], wth: number[] } | null} */
 let crudos = $state.raw(null);
@@ -74,7 +90,13 @@ const fmt = (v) => (v === undefined ? '—' : num(v));
       <tbody>
         {#each datos.ojos as ojo, a (a)}
           <tr class:foco={a === datos.ojoFoco}>
-            <td class="mono">.eye{a + 1}</td>
+            <td class="mono">
+              {#if pagina(`.eye${a + 1}`)}
+                <a class="var-manual" href={pagina(`.eye${a + 1}`)}>{`.eye${a + 1}`}</a>
+              {:else}
+                {`.eye${a + 1}`}
+              {/if}
+            </td>
             <td class="mono">{num(ojo.visto)}</td>
             <td class="mono" title={`.eye${a + 1}dir`}>{crudos ? num(crudos.dir[a]) : '—'}</td>
             <td class="mono" title={`.eye${a + 1}width`}>{crudos ? num(crudos.wth[a]) : '—'}</td>
@@ -93,7 +115,13 @@ const fmt = (v) => (v === undefined ? '—' : num(v));
     <div class="enc"><span class="tit">{t(`inspector.sentidos.${grupo}`)}</span></div>
     <dl>
       {#each nombres as n (n)}
-        <dt class="mono">{n}</dt>
+        <dt class="mono">
+          {#if pagina(n)}
+            <a class="var-manual" href={pagina(n)}>{n}</a>
+          {:else}
+            {n}
+          {/if}
+        </dt>
         <dd class="mono">{fmt(valorDe(n))}</dd>
       {/each}
     </dl>
@@ -153,5 +181,13 @@ dt {
 dd {
   margin: 0;
   text-align: right;
+}
+.var-manual {
+  color: var(--texto);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gris-claro);
+}
+.var-manual:hover {
+  color: var(--acento);
 }
 </style>

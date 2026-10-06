@@ -1,6 +1,9 @@
 {
   "bots.biblioteca": "Library",
   "bots.nuevo": "+ New bot",
+  "bots.nuevoRuta.titulo": "New bot",
+  "bots.nuevoRuta.texto": "Give the bot in the dialog a name and create it: the editor then opens with that DNA.",
+  "bots.ficha.ayuda": "Open this tab in the manual",
   "bots.buscar": "Search bots",
   "bots.buscarAyuda": "Name, file, tag or note",
   "bots.cargando": "Loading…",

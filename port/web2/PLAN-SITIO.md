@@ -383,6 +383,41 @@ ADN) y el enlace «Abrir en la app» en los bloques `adn` del manual.
 
 **Cierre:** cada pantalla y cada parámetro llevan a su página.
 
+Hecho el 2026-10-06:
+
+- «?» en la barra superior, que sigue a la pantalla activa (cada sección se
+  llama igual que su página: `app/inicio`, `app/observar`…); en la ficha
+  del bot (al lado de las pestañas: `app/bots` o `app/editor`); en la
+  cabecera del inspector (`app/inspector`); en Experimentar avanzado, el
+  grupo y cada parámetro (al ancla `p-<clave>`, la de `anclaParam`).
+  Decisión del autor: los enlaces siguen al idioma de la app (es →
+  `../manual/`, en → `../en/manual/`, que hasta S-E dice «not been
+  translated yet»).
+- `vocabulario.json` junto a `buscar.json` (uno por idioma): la página y el
+  resumen de cada sysvar (por nombre y por dirección) y de cada operador
+  (por token y alias). Lo baja `src/lib/manual.js` (una vez por idioma,
+  cacheado): el editor muestra al pasar el cursor una tarjeta con el resumen
+  y el enlace (helpers puros en `editor/hover.js`; la métrica de la fuente
+  mono y el tabulador cada 4 columnas; sin sitio, no aparece), y el
+  inspector enlaza cada sysvar de Memoria, de las consultas y de Sentidos
+  (ojos incluidos).
+- Ruta `#/bots/nuevo[?adn=…]`: el router parsea la consulta del hash
+  (`consulta` en `Ruta`, un objeto plano); Bots abre el diálogo de bot nuevo
+  con ese ADN precargado (no crea nada sin nombre: se nombra y Crear lleva
+  al editor). `nuevo` queda reservado en la ruta de bots.
+- «Abrir en la app» en los bloques `adn` del manual (junto a «Copiar»), con
+  la URL relativa a la raíz del sitio. `vite-plugin-sitio` monta `/manual/`
+  y `/en/` desde `port/sitio/salida` en dev (antes de correr
+  `node port/sitio/generar.mjs` no hay tarjetas ni enlaces finos).
+- Manual al día con la app: `empezar/primera-simulacion` (sembrar vía
+  «Abrir en la app»), `app/bots` (#nuevo, #pestanas), `app/editor` (la
+  sección nueva #resumen), `app/experimentar-avanzado`, `app/inspector` y
+  `tecnico/como-esta-hecho`.
+- Tests: 778/778 (`router` con la consulta, `editor_hover` con hover.js y
+  manual.js, `manual.test.js` con el bloque «Abrir en la app»,
+  `vocabulario.json` y los slugs que usa la app); `biome check` y
+  `generar.mjs --lint` limpios.
+
 ### S-E · Inglés
 
 Traducción por capítulo en paralelo, con el test de paridad (S11).

@@ -12,15 +12,30 @@ export const SECCIONES = /** @type {const} */ ([
 ]);
 
 /** @typedef {typeof SECCIONES[number]} Seccion */
-/** @typedef {{ seccion: Seccion, partes: string[] }} Ruta */
+/** @typedef {{ seccion: Seccion, partes: string[], consulta: Record<string, string> }} Ruta */
 
 /**
- * Convierte un hash (`#/bots/xyz?x`) en sección + subpartes.
+ * La parte de consulta del hash (`?adn=…`) como objeto (la última valoración
+ * gana, como en un formulario). Vacía si no hay `?`.
+ * @param {string | null | undefined} hash
+ * @returns {Record<string, string>}
+ */
+export function consultaDe(hash) {
+  const q = String(hash ?? '')
+    .replace(/^#/, '')
+    .split('?')[1];
+  if (!q) return {};
+  return Object.fromEntries(new URLSearchParams(q));
+}
+
+/**
+ * Convierte un hash (`#/bots/xyz?x`) en sección + subpartes + consulta.
  * Hash vacío, `#/` o sección desconocida → inicio sin partes.
  * @param {string | null | undefined} hash
  * @returns {Ruta}
  */
 export function parsearHash(hash) {
+  const consulta = consultaDe(hash);
   const limpio = String(hash ?? '')
     .replace(/^#/, '')
     .split('?')[0];
@@ -39,9 +54,9 @@ export function parsearHash(hash) {
     ? /** @type {Seccion} */ (primera)
     : null;
   if (!seccion || (seccion === 'inicio' && resto.length === 0)) {
-    return { seccion: 'inicio', partes: [] };
+    return { seccion: 'inicio', partes: [], consulta };
   }
-  return { seccion, partes: resto };
+  return { seccion, partes: resto, consulta };
 }
 
 /**
