@@ -5,8 +5,8 @@ etiquetas: [vegetal, cloroplastos, fotosíntesis, sol, reproducción, repoblaci�
 estado: revisada
 ---
 En [[tutoriales/se-mueve]] armaste un bot que se mueve y en [[tutoriales/busca-comida]],
-uno que le busca la comida a los demás. Este tutorial juega para el otro equipo: un
-vegetal que no le corre a nadie. Toda su energía le llega del sol, y con ella llena el
+uno que sale a cazar a los demás. Este tutorial juega para el otro equipo: un
+vegetal que no persigue a nadie. Toda su energía le llega del sol, y con ella llena el
 campo de copias de sí mismo. Como siempre, cada paso le agrega un gen al ADN y te cuenta
 qué deberías ver.
 
@@ -36,7 +36,7 @@ pesa, así que las algas serias del Bestiario los fabrican por su cuenta. Hagamo
 mismo:
 
 ```adn
-' Fabrica cloroplastos mientras falte luz libre
+' Fabrica cloroplastos mientras sobre luz libre
 cond
  *.chlr *.light <
 start
@@ -45,8 +45,9 @@ stop
 ```
 
 [[.chlr]] dice cuántos tiene y [[.light]], cuánta luz libre queda en el campo: cuando
-los bots abundan, cada uno tapa su pedazo y la luz baja. Mientras falte, el gen compra
-160 por ciclo con [[.mkchlr]]; cuando la luz alcanza, se apaga solo. Sacárselos con
+los bots abundan, cada uno tapa su pedazo y la luz baja. Mientras la luz libre supere
+a los cloroplastos que tiene, el gen compra 160 por ciclo con [[.mkchlr]]; cuando los
+cloroplastos alcanzan a la luz, se apaga solo. Sacárselos con
 [[.rmchlr]] es gratis, pero no devuelve nada.
 
 <!-- 31-ENERGIA §1 y §4 (ChangeChlr: cobra solo las compras, se anula si dejaría nrg < 100), §3 (decaimiento, masa y radio); comprobado con probar-adn --veg en 4000x3000: chlr sube 160 por ciclo y se frena solo cerca de 30700 con la luz en ~30625; con --cost 8=0.2,54=1 (F1: cloroplasto 0,2 y multiplicador 1): 3085 de energia final contra 9229 con costos en 0, unos 6140 menos: lo que costaron; arrancando con 500, rondó entre 100 y 160 los primeros ~200 ciclos y recien despues despego -->
@@ -55,7 +56,7 @@ Comprar cuesta [[param:cost:8]] por cloroplasto. Con los costos apagados no se n
 con el precio de la liga F1 (0,2), un alga que arrancó con 3000 terminó su fábrica con
 unos 6140 de energía menos que una gemela con costos en 0: justo lo que le costaron
 los cloroplastos. Y como una compra se cancela entera si dejaría al bot con menos de
-100 de energía, una alga que arranca pobre no puede darse el lujo: en la prueba, una
+100 de energía, un alga que arranca pobre no puede darse el lujo: en la prueba, una
 que nació con 500 se pasó los primeros 200 ciclos pegada al piso de 100, comprando de
 a poco lo que el sol le pagaba.
 
@@ -129,7 +130,7 @@ solo, la población pasó de 1 a 2, 4, 8 y 12 bots en 500 ciclos.
 ```adn
 ' Un vegetal: fabrica cloroplastos, crece y se multiplica
 
-' Fabrica cloroplastos mientras falte luz libre
+' Fabrica cloroplastos mientras sobre luz libre
 cond
  *.chlr *.light <
 start
@@ -153,7 +154,7 @@ el campo pasan del 90 % del tope, solo uno de cada once partos sigue adelante
 ([[param:base:maxPopulation]] y [[simulacion/cloroplastos#tope]]).
 <!-- 36-REPRO §2, §0.4; cloroplastos#tope (loteria de 1/11 por encima del 90 % del tope); comprobado en 4000x3000: 1 -> 4 -> 12 -> 16 -> 21 -> 23 bots en 1500 ciclos, *.light cayo de ~31900 a 13898 -->
 
-Siembra unas quince copias marcadas como vegetal en la app y mirá el campo llenarse
+Sembrá unas quince copias marcadas como vegetal en la app y mirá el campo llenarse
 de hexágonos.
 
 ## De noche {#dia-y-noche}

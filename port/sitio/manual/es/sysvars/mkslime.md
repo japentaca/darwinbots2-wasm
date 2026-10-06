@@ -6,7 +6,7 @@ estado: revisada
 ---
 Escribí cuánta baba querés sumar en este ciclo. El motor la fabrica al final del
 ciclo, cobra 1 de energía por cada 10 de slime y deja la orden en 0. Es la única
-de las cuatro defensas con tope de 200 por ciclo en vez de 100.
+de las cuatro sustancias con tope de 200 por ciclo en vez de 100.
 
 <!-- sysvars.yaml .mkslime (MakeStuff P5, ±200/ciclo, =0 al consumir); 31-ENERGIA §0.3 -->
 

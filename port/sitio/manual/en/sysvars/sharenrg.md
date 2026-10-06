@@ -18,7 +18,7 @@ Conditions and limits:
 - In one cycle no more energy is moved than your body ([[.body]]); if the
   difference is big, it takes several cycles.
 - Whoever asks for the sharing pays 1% of what was moved.
-- The value is taken modulo 100, and a remainder of 0 (like 200) counts as 100: 100 is "everything for me"
+- The value is taken modulo 100, and a remainder of 0 (like 200) counts as 100: 100 is “everything for me”
   and 150 is 50. A 0 or a negative does nothing.
 
 <!-- 34-TIES §2 (sharing P3, solo multibot y ties no-back), §2.1 (límite por body, 1 % al iniciador); comprobado con probar-adn: con 90 en los dos, solo el hijo (creador) mueve energía, de a 500 por ciclo (su body) y pagando 5 -->

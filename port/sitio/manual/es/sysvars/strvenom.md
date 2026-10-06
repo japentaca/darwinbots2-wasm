@@ -6,7 +6,7 @@ estado: revisada
 ---
 Escribí cuánto veneno querés sumar en este ciclo; `.mkvenom` es otro nombre para
 la misma celda. El motor lo fabrica al final del ciclo, cobra 1 de energía por
-cada 1 de veneno (es la más cara de las cuatro defensas) y deja la orden en 0. El
+cada 1 de veneno (es la más cara de las cuatro sustancias) y deja la orden en 0. El
 tope es 100 por ciclo.
 
 <!-- sysvars.yaml .strvenom (alias mkvenom; MakeStuff P5, ±100/ciclo, =0 al consumir); 31-ENERGIA §0.3 (1 nrg = 1 venom) -->

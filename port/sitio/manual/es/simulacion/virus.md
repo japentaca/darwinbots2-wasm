@@ -107,9 +107,9 @@ frena con 20 de baba. En la práctica, **unas 20 de baba frenan cualquier
 virus**, sea cual sea su fuerza; con menos, pasan los más fuertes y los que
 pegan recién disparados. Más sobre la baba en [[simulacion/defensas]].
 
-El virus no distingue especies: un bot no se infecta con su propio virus,
-pero sí puede infectar a otros de su especie. Un ADN no puede pasar de 32000
-palabras: si el gen no entra, la infección no ocurre.
+El virus no distingue especies: infecta a cualquier bot que toque, también a los
+de la especie del tirador; lo único que no toca es al propio tirador. Un ADN no
+puede pasar de 32000 palabras: si el gen no entra, la infección no ocurre.
 
 Como el gen entra en cualquier lugar, **los genes que estaban después se
 corren un número**. Si la víctima usa números de gen fijos (en `.delgene` o
@@ -208,8 +208,8 @@ saltean y el veneno no puede apuntarle. Pero un bot atado sí puede, con
 | Borrar un gen | Nada |
 
 Los dos parámetros se multiplican por el multiplicador de costos de la
-simulación, como todos; la fuerza que pagás al disparar, no. Por lo demás, el gen que entra pesa en la víctima
-como cualquier otro: más ADN es más costo por ciclo (ver
+simulación, como todos; la fuerza que pagás al disparar, no. Por lo demás, el gen que entra pesa en
+la víctima como cualquier otro: más ADN es más costo por ciclo (ver
 [[adn/ejecucion]]).
 
 En los torneos, la opción de descalificación ([[param:opt:93]]) puede

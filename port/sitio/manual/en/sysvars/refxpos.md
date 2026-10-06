@@ -28,7 +28,7 @@ start
 stop
 ```
 
-In a test against a bot moving sideways, this bot kept it in
+In a test against a bot moving sideways, a bot with these two genes kept it in
 [[.eye5]] along its whole path.
 
 What you get is the position the other bot _published_, not its exact position

@@ -7,7 +7,7 @@ estado: revisada
 <!-- sysvars.yaml 711 (mem 18 del visto); core senses.hpp lookoccurr; probado: mirada.txt contra mira.txt (70 pasa a 1 cuando se miran); sysvars.yaml 18 (rango 0..~2513 con momento angular); opcodes.yaml anglecmp (Mod 1256 y diferencia con signo ±628); revisor: mirada.txt contra mirada.txt (aims 1176 y 568, 70=1) -->
 `.refaim` is the direction the bot your focus eye sees is pointing: what that
 bot reads in its [[.aim]]. A full turn is 1256; it is almost always
-between 0 and 1256, although while turning it can overshoot a little.
+between 0 and 1255, although while turning it can overshoot a little.
 
 The most useful thing is to compare it with your own heading. If the other bot is looking at you, its
 heading is yours turned around, that is, yours plus 628. The operator

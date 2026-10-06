@@ -178,9 +178,9 @@ giro. Ver [[simulacion/fisica#giro]].
 <!-- ties.hpp maketie: TIECOST × mult / (numties + 1) al final, con numties ya actualizado si el lazo salió; robots.hpp FireTies (solo con alguien a tiro) y Reproduce/sexual (maketie del lazo de nacimiento, lo paga el padre); revisor, probar-adn con 22=2: cada parto le cuesta 1 al padre; el hijo que se ata al padre paga 1 -->
 Se cobra cada vez que el bot intenta atar a otro con [[.tie]] y hay alguien a
 tiro, salga o no el lazo. También se cobra en cada parto, por el lazo de
-nacimiento: lo paga el padre (en la reproducción sexual, la madre). El precio se divide por la cantidad de lazos que el
-bot tiene después del intento más uno, así que el primer lazo cuesta la mitad del
-precio, el segundo un tercio, y así; un intento que falla, sin lazos, cuesta el
+nacimiento: lo paga el padre (en la reproducción sexual, la madre). El precio se
+divide por la cantidad de lazos que el bot tiene después del intento más uno,
+así que el primer lazo cuesta la mitad del precio, el segundo un tercio, y así; un intento que falla, sin lazos, cuesta el
 precio entero. Con las reglas F1 vale 2: un hijo le cuesta 1 de energía a un padre
 que no tenía otros lazos. Ver [[simulacion/lazos#crear]].
 :::
@@ -217,14 +217,14 @@ virus, por cada palabra del gen que copia. Ver
 :::parametro cost:26
 <!-- robots.hpp storevenom: |Delta| × VENOMCOST × mult; el costo pasa a Waste -->
 Es el costo de transacción por cada unidad de veneno que el bot fabrica con
-[[.mkvenom]], encima de la conversión fija (1 de energía por unidad). Lo que se
+[[.strvenom]], encima de la conversión fija (1 de energía por unidad). Lo que se
 paga por este costo no desaparece: se vuelve desechos ([[.waste]]). Con las reglas
 F1 vale 0,01. Ver [[simulacion/defensas#fabricar]].
 :::
 
 :::parametro cost:27
 <!-- robots.hpp storepoison -->
-Igual que el del veneno, para la toxina que se fabrica con [[.mkpoison]] (la
+Igual que el del veneno, para la toxina que se fabrica con [[.strpoison]] (la
 conversión fija es 1 de energía cada 4 unidades). El costo también se vuelve
 desechos. Con las reglas F1 vale 0,01. Ver [[simulacion/defensas#fabricar]].
 :::

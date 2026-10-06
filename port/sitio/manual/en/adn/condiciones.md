@@ -16,14 +16,14 @@ name.
 ## The comparisons {#las-comparaciones}
 <!-- 20-VM §6.4 (incluido el intervalo invertido de %= y ~= con referencia negativa, §12.4) -->
 
-They all read the stack from left to right: `a b >` asks "is `a` greater than
-`b`?". So `*.nrg 5000 >` is true when the energy is above 5000.
+They all read the stack from left to right: `a b >` asks “is `a` greater than
+`b`?”. So `*.nrg 5000 >` is true when the energy is above 5000.
 
 There are ten: [[op:<]], [[op:>]], [[op:<=]], [[op:>=]], [[op:=]], [[op:!=]] and the
-"approximate" ones [[op:%=]], [[op:!%=]], [[op:~=]] and [[op:!~=]]. The table of what
+“approximate” ones [[op:%=]], [[op:!%=]], [[op:~=]] and [[op:!~=]]. The table of what
 each one asks is in [[adn/operadores#comparaciones]].
 
-The two "approximate" ones take `a` as the reference. `100 109 %=` is true
+The two “approximate” ones take `a` as the reference. `100 109 %=` is true
 (109 is within 10 of 100) and `100 111 %=` is false. `~=` pops a third number,
 the percentage: `100 120 25 ~=` is true and `100 130 25 ~=` is not.
 
@@ -89,7 +89,7 @@ boolean, [[.refeye]] [[.myeye]] `=` leaves another on top, and `or` replaces the
 two with a single one.
 
 When a logical operator is missing an operand, it substitutes true: a lone
-`or` on an empty stack leaves true; a lone `not` leaves false (the opposite of "empty", which
+`or` on an empty stack leaves true; a lone `not` leaves false (the opposite of “empty”, which
 is true).
 
 ## Conditions inside the body {#en-linea}
@@ -101,7 +101,7 @@ of the stack and **every store that comes after it checks it**: if it's true, th
 runs; if it's false, it's skipped. The store looks at the top without popping it, so the same
 condition governs all the following stores, until something else changes it.
 
-With [[op:not]] that gives you an "else" inside the same gene:
+With [[op:not]] that gives you an “else” inside the same gene:
 
 ```adn
 ' goes forward for the first few cycles and then backward
@@ -190,7 +190,7 @@ stop
 
 The first store is skipped and leaves the 5 and the 50 on the stack. After the `true`, the
 `60 store` pops the 60 as the address and the 50 as the value: cell 60 ends up as 50,
-not 5. If a store can be skipped, make sure there are no "half-done" stores after it
+not 5. If a store can be skipped, make sure there are no “half-done” stores after it
 that count on a tidy stack.
 
 **A `start` without `cond` doesn't clear the boolean stack.** Only `cond` empties it. If a

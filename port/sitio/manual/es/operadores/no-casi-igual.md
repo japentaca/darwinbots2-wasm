@@ -26,7 +26,8 @@ stop
 ```
 
 La referencia es el cuerpo, el número de abajo. Un bot que arranca con 3000
-de energía y 1000 de cuerpo se detiene en 1200 de energía y 1180 de cuerpo,
+de energía y 1000 de cuerpo se detiene en 1200 de energía y 1180 de cuerpo
+(cada 100 de energía que pasa por [[.strbody]] da solo 10 de cuerpo),
 cuando la energía entra en el 10 % del cuerpo. El bot _This'n'That 1.01_ (Peksa), del
 Bestiario, usa la misma idea en las dos direcciones; está en
 [[op:dupbool]].

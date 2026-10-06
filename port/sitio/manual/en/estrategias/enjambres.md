@@ -65,7 +65,8 @@ the public password.
 <!-- SWARM_2.0_F2_Elite_-10.03.07.txt; probado: qty 1 contra un bot quieto, campo 600x500, semilla 11: eye6 239 al ciclo 4, presa de 3000/1000 a 711/85 al 14, muerta al 16, tirador en 13375 con kills=1; re-corrido: 711/85 al 15, muerta antes del 20, tirador en 12975, hijo antes del 25 -->
 _SWARM 2.0 F2 Elite_ (in the Bestiary,
 `SWARM_2.0_F2_Elite_-10.03.07.txt`) is a swarm of barely ten genes that doesn't
-even recognize its brothers by a signal: it only compares signatures. It opens
+even use a public password to recognize its brothers: it only compares
+signatures. It opens
 its front eye [[.eye5]] to a width of 1220, almost the whole way around, and
 since range falls with width, it sees only about 150 units around itself: it's a
 short-range radar, not a telescope.
@@ -171,8 +172,8 @@ stop
 In the run against a stationary prey, it found it within ten cycles, raised its flag
 in [[.out2]] (which its brothers can read through [[.in2]]) and left it dead
 before cycle 20, finishing with 6164 energy. Apart from that, it breaks the
-birth tie in the first cycle, turns at random and takes thirty cycles when it
-touches an edge (`*.edge` with a timer), so it doesn't pile up against the walls
+birth tie in the first cycle and, when it touches an edge, turns at random and
+stops reacting to the edge for thirty cycles (`*.edge` with a timer), so it doesn't pile up against the walls
 like SWARM, and it only reproduces with 120 body, more than 8000 energy and 100
 cycles of life: first the herd, then the children.
 <!-- 33-SHOTS §5 (−1 releasenrg: 90 % nrg, 1 % body); probado: presa 3000 → 1613 al 10, muerta al 20; cazador 4464 → 6164 -->

@@ -7,7 +7,7 @@ estado: revisada
 <!-- 20-VM §6.2 (floor = max, comparación en Long); Bestiario: Saber (1_3.txt) -->
 
 `x limit floor` leaves the larger of the two: `x` if it is above the
-floor, and the floor if not. As with [[op:ceil]], the name (_floor_) describes
+limit, and the limit if not. As with [[op:ceil]], the name (_floor_) describes
 the limit and not the operation: the result is the _maximum_. `-50 0 floor`
 gives 0 and `80 0 floor` gives 80.
 

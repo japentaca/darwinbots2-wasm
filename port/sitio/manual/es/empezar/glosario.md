@@ -52,7 +52,7 @@ otros pueden comer. Ver
 que está corriendo, sin empezar de nuevo. Queda anotado en la corrida como un
 evento. Ver [[app/experimentar]].
 
-**Caparazón** (_shell_). Defensa que absorbe parte de los disparos que roban
+**Caparazón** (_shell_). Defensa que frena parte de los disparos que roban
 cuerpo y de los de veneno. Se fabrica con [[.mkshell]]. Ver
 [[simulacion/defensas#caparazon]].
 
@@ -225,7 +225,7 @@ sale por la derecha entra por la izquierda, y lo que sale por arriba entra por
 abajo. Ver [[simulacion/mundo#bordes]].
 
 **Toxina** (_poison_). Defensa pasiva: a quien te muerde le devuelve un
-disparo de toxina que lo envenena. Se fabrica con [[.mkpoison]]. Ver
+disparo de toxina que lo envenena. Se fabrica con [[.strpoison]]. Ver
 [[simulacion/defensas#toxina]].
 
 ## V
@@ -235,7 +235,7 @@ nace con cloroplastos y la simulación lo repone cuando escasea. Ver
 [[simulacion/cloroplastos#vegetales]].
 
 **Veneno** (_venom_). Un arma: se dispara y paraliza a la víctima. Se
-fabrica con [[.mkvenom]]. Ver [[simulacion/defensas#veneno]].
+fabrica con [[.strvenom]]. Ver [[simulacion/defensas#veneno]].
 
 **Virus.** Un gen empaquetado en un disparo: el bot copia uno de sus genes y
 lo dispara, y si pega en otro bot, el gen se inserta en su ADN. Se fabrica con [[.mkvirus]]. Ver [[simulacion/virus]].

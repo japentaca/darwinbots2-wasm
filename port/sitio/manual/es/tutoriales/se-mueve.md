@@ -188,13 +188,13 @@ seguido, bajá el 20; para que vire menos, subilo.
 <!-- 20-VM §1 (en la zona de condiciones se ejecuta todo menos los stores), §6.1 (rnd); probado con probar-adn, 120 ciclos: rapidez 40, el rumbo 682 duró unos 30 ciclos y después cambió a 739, 790, 885…, unas cinco viradas en total -->
 
 Cuando lo corrimos durante 120 ciclos, mantuvo la rapidez al tope y viró
-unas cinco veces: fue derecho un trecho, cambió de rumbo, siguió, virió de
+unas cinco veces: fue derecho un trecho, cambió de rumbo, siguió, viró de
 nuevo… Lo que no hace es esquivar los bordes: al llegar a una pared siguió
 empujando contra ella y deslizándose de costado hasta que le tocó un rumbo
 que lo alejó. Si querés que gire al tocar el borde, agregá un gen que gire
 mientras [[.edge]] esté en 1: el ejemplo está en [[sysvars/movimiento]].
 
-<!-- probado: contra el borde izquierdo quedó apretado unas 50 ciclos, deslizándose, hasta el rumbo nuevo; 30-FISICA §5 (los bots no rebotan: quedan contra la pared) -->
+<!-- probado: contra el borde izquierdo quedó apretado unos 50 ciclos, deslizándose, hasta el rumbo nuevo; 30-FISICA §5 (los bots no rebotan: quedan contra la pared) -->
 
 Este esqueleto de «avanzar y virar» es el que usan los exploradores del
 Bestiario desde hace más de veinte años. El First bot 4G de Jez (marzo de

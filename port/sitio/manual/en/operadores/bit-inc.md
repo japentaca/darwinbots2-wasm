@@ -43,5 +43,5 @@ something, the flag is 0 and what was there is stored again.
 
 One inherited quirk, only at the edge of 32 bits: `++` on the largest number
 that fits on the stack (2147483647) gives 0 instead of wrapping around to the
-most negative number. With an empty stack it operates on 0 and leaves 1.
+most negative number (−2147483648). With an empty stack it operates on 0 and leaves 1.
 Its opposite is [[op:--]].

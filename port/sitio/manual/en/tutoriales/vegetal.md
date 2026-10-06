@@ -47,8 +47,8 @@ stop
 
 [[.chlr]] says how many it has and [[.light]], how much free light is left in the
 field: when bots are plentiful, each one covers its own patch and the light drops.
-While the chloroplasts fall short of it, the gene buys 160 per cycle with [[.mkchlr]]; when the light
-is enough, it switches itself off. Removing them with [[.rmchlr]] is free, but
+While the free light exceeds the chloroplasts it has, the gene buys 160 per cycle with [[.mkchlr]]; once
+the chloroplasts catch up with the light, it switches itself off. Removing them with [[.rmchlr]] is free, but
 gives nothing back.
 
 <!-- 31-ENERGIA §1 y §4 (ChangeChlr: cobra solo las compras, se anula si dejaría nrg < 100), §3 (decaimiento, masa y radio); comprobado con probar-adn --veg en 4000x3000: chlr sube 160 por ciclo y se frena solo cerca de 30700 con la luz en ~30625; con --cost 8=0.2,54=1 (F1: cloroplasto 0,2 y multiplicador 1): 3085 de energia final contra 9229 con costos en 0, unos 6140 menos: lo que costaron; arrancando con 500, rondó entre 100 y 160 los primeros ~200 ciclos y recien despues despego -->

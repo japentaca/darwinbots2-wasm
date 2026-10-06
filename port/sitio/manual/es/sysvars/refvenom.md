@@ -14,7 +14,7 @@ con el valor que eligió el atacante. Un bot con `.refvenom` alto puede hacerte 
 no (al menos hasta que fabrique). Los detalles están en
 [[simulacion/defensas]].
 
-Su pareja es [[.refpoison]], el veneno de defensa. Si no ves nada, vale 0.
+Su pareja es [[.refpoison]], la toxina, la defensa. Si no ves nada, vale 0.
 
 ```adn
 ' alguien armado con venom: me alejo

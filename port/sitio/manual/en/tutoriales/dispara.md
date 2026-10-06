@@ -15,7 +15,7 @@ reproduces.
 <!-- i18n/es/bots.json (bots.nuevo «+ Nuevo bot», sembrar); app/bots.md #nuevo #sembrar (ficha → Sembrar; «Sembrar en la corrida actual» / «Nuevo escenario con estos») -->
 
 A hunter without prey isn't noticeable, so we start with the two species. Go
-to **Bots** and create two bots with **+ New bot**: "Hunter" and "Target". Give
+to **Bots** and create two bots with **+ New bot**: “Hunter” and “Target”. Give
 the Target an empty gene, so it stays still:
 
 ```adn
@@ -83,8 +83,8 @@ start
 stop
 ```
 
-Note that the condition is `*.eye5 0 >` and not "I see something with any
-eye": the `ref*` describe what the focus eye sees, and if that eye sees
+Note that the condition is `*.eye5 0 >` and not “I see something with any
+eye”: the `ref*` describe what the focus eye sees, and if that eye sees
 nothing they are 0 — you would aim at the corner (0, 0) of the field.
 
 What you should see: the Hunter locks its heading on the target and moves

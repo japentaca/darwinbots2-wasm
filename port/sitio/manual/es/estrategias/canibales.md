@@ -7,7 +7,7 @@ estado: revisada
 Un caníbal es un bot que tiene a su propia especie en el menú. Hay de dos clases:
 los que disparan a todo lo que se mueve porque nunca aprendieron a distinguir, y
 los que eligen con reglas. Los dos viven bien en un mundo con comida; en un mundo
-sin comida, solo sobrevive el primero en volverse contra su hermano.
+sin comida, solo sobrevive el bot que primero se vuelve contra su hermano.
 
 Esta página mira a los caníbales como estrategia: qué compran con cada bala y qué
 pagan, y cómo resuelven el único problema difícil, que no es matar sino _apuntar_.
@@ -267,7 +267,7 @@ duplicando).
 
 ## Un caníbal mínimo {#minimo}
 
-Este caníbal es mío, y es el esqueleto de caza de siempre ([[tutoriales/dispara]])
+Este caníbal lo escribí para esta página, y es el esqueleto de caza de siempre ([[tutoriales/dispara]])
 con el filtro de especie del tutorial ([[tutoriales/reconoce-especie]]) y el −6
 de los bots de arriba:
 
@@ -353,6 +353,6 @@ que viven de escribir en el cuerpo ajeno sin matarlo van por otro capítulo:
 [[estrategias/parasitos]].
 
 Y si te quedan ganas de evolución: _Evolved cannibot Elite_ es, según su
-nombre, un caníbal que no lo programó nadie. Convertí el caníbal mínimo en la
+nombre, un caníbal que salió de la evolución y no de un programador. Convertí el caníbal mínimo en la
 población inicial de un experimento de [[tutoriales/evolucion]] y mirá si la
 selección inventa solita alguna de las reglas de los bots de esta página.

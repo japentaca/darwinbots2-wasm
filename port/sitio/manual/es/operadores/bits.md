@@ -50,7 +50,7 @@ prendido (ver [[op:!=]]).
 
 Ninguno falla con la pila vacía: operan sobre ceros. En el borde de los 32 bits
 hay dos rarezas heredadas del DarwinBots 2.48.32 (un resultado que debería ser
-el negativo más grande sale como 0); las cuentan [[op:++]] y [[op:<<]]. Con
+el número más negativo, −2147483648, sale como 0); las cuentan [[op:++]] y [[op:<<]]. Con
 números del tamaño de la memoria nunca vas a llegar ahí.
 
 Cada operador de esta familia que se ejecuta cobra el costo [[param:cost:4]]

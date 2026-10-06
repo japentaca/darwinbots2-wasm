@@ -39,7 +39,7 @@ start
 stop
 ```
 
-El paso tiene que superar la holgura de 5 grados (unos 17) con la que el motor
+El paso tiene que superar la holgura de 5 grados (unos 17 en la escala de 1256) con la que el motor
 sostiene el ángulo: con `10 .tieang1 addstore` el lazo no se mueve, porque cada
 ciclo pedís 10 más que lo que mide y esa diferencia queda dentro de la holgura.
 

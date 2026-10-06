@@ -15,7 +15,7 @@ disparo que sale en ese ciclo. Qué cambia depende del tipo:
   costo de un disparo. Si no te alcanza la energía, el motor lo achica a lo
   que podés pagar.
 - **−2 (regalar energía).** Cuánta energía mandás, sin signo y nunca más de
-  la que tenés; si escribís 0, el 1% de la tuya.
+  la que tenés; si escribís 0, el 1 % de la tuya.
 - **−3 y −4 (veneno y desechos).** Cuánto mandás, sin signo y nunca más de
   lo que tenés; con 0, una vigésima parte de lo que tengas.
 - **Positivo (disparo de memoria).** El valor que se escribe en la memoria

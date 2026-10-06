@@ -117,7 +117,7 @@ cycle and is a corpse in the third. Both commands, with an example of a piggy ba
 Waste ([[.waste]]) shows up in three ways:
 
 - **Making defenses.** The extra cost of [[.mkshell]], [[.mkslime]],
-  [[.mkvenom]] and [[.mkpoison]] (see [[simulacion/defensas]]) doesn't vanish: it
+  [[.strvenom]] and [[.strpoison]] (see [[simulacion/defensas]]) doesn't vanish: it
   becomes waste, one for one.
 - **Eating.** 1% of what comes in through a shot or a tie.
 - **Receiving another bot's**, with a −4 shot or through a tie with [[.sharewaste]].

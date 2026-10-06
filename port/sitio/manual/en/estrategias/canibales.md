@@ -7,8 +7,8 @@ estado: revisada
 A cannibal is a bot that has its own species on the menu. There are two kinds:
 the ones that shoot anything that moves because they never learned to tell
 things apart, and the ones that choose by rules. Both do fine in a world with
-food; in a world without food, the first one to turn on its brother is the only
-one that survives.
+food; in a world without food, the only bot that survives is the one that turns
+on its brother first.
 
 This page looks at cannibals as a strategy: what they buy with each shot and
 what they pay, and how they solve the one hard problem, which isn't killing but
@@ -269,7 +269,7 @@ doubling).
 
 ## A minimal cannibal {#minimo}
 
-This cannibal is my own, and it's the usual hunting skeleton
+I wrote this cannibal for this page, and it's the usual hunting skeleton
 ([[tutoriales/dispara]]) with the species filter from the tutorial
 ([[tutoriales/reconoce-especie]]) and the −6 from the bots above:
 
@@ -355,6 +355,6 @@ eat. The ones that live by writing to another bot's body without killing it
 belong to another chapter: [[estrategias/parasitos]].
 
 And if you still feel like evolution: _Evolved cannibot Elite_ is, by its name,
-a cannibal that nobody programmed. Turn the minimal cannibal into the starting
+a cannibal that came out of evolution, not from a programmer. Turn the minimal cannibal into the starting
 population of an experiment from [[tutoriales/evolucion]] and see whether
 selection invents some of the rules of this page's bots all on its own.

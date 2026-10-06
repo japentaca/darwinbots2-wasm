@@ -48,6 +48,6 @@ disfrazarse.
 
 :::nota
 En el DarwinBots original una mutación en vida no rehacía la cuenta: quedaba
-vieja hasta el próximo parto, virus o carga, y así lo dicen los datos de
-arriba. El port la rehace en el momento.
+vieja hasta el próximo parto, virus o carga, y así lo describe la spec del
+original. El port la rehace en el momento.
 :::

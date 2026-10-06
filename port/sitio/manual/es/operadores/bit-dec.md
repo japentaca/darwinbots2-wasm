@@ -29,6 +29,6 @@ stop
 Con 9 en la celda 50, la 51 queda en 8.
 
 Una rareza heredada, solo en el borde de los 32 bits: `--` sobre −2147483647
-debería dar el negativo más grande, pero da 0. Ningún valor de la memoria
+debería dar el más negativo (−2147483648), pero da 0. Ningún valor de la memoria
 llega ahí. Con la pila vacía opera sobre 0 y deja −1. Lo opuesto es
 [[op:++]]; el resto de la familia, en [[operadores/bits]].

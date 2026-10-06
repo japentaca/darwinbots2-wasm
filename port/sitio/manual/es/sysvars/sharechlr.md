@@ -19,7 +19,7 @@ Detalles que conviene saber:
   lazos o no. Para compartir de forma continua, escribila cada ciclo.
 - Solo comparte con parientes cercanos. Si el ADN de los dos bots difiere más de un
   25 %, no hay reparto y el bot queda bloqueado para compartir cloroplastos durante
-  8 ciclos de sol (la espera no corre de noche).
+  8 ciclos de día (la cuenta solo avanza de día, no de noche).
 - Solo cuentan los lazos que creó este bot. En un lazo que creó el otro, el reparto
   lo decide el `.sharechlr` del otro.
 

@@ -14,7 +14,7 @@ Las celdas con nombre están agrupadas por tema. La lista completa, con lo que h
 | Celdas | Qué hay | Grupo |
 |---|---|---|
 | 1–12, 18–19 | Órdenes de movimiento y disparo, edad, masa, [[.timer]] | [[sysvars/movimiento]], [[sysvars/cuerpo]] |
-| 194–221 | Lo que pasó en el ciclo: velocidad, choques, sabores, borde, posición, día | [[sysvars/contacto]], [[sysvars/posicion]] |
+| 194–221 | Lo que pasó en el ciclo: velocidad, choques, sabores, borde, posición, día (la 221 no la escribe nadie: ver más abajo) | [[sysvars/contacto]], [[sysvars/posicion]] |
 | 300–303, 310–315 | Reproducción, energía, cuerpo | [[sysvars/reproduccion]], [[sysvars/cuerpo]] |
 | 330–331, 335–341 | Lazos, ADN y virus | [[sysvars/adn-y-virus]] |
 | 400–402 | Sol y conteo de bots | [[sysvars/posicion]] |
@@ -56,7 +56,7 @@ start
 stop
 ```
 
-Al correrlo, [[.nrg]] vuelve a valer la energía real (3000) en cada ciclo, y eso es lo que la celda 60 copia al ciclo siguiente: el `1` se perdió. En cambio, la celda 61 conserva su `1`. Escribir en `.nrg` tampoco cambia la energía del bot: es solo un número que el motor publica.
+Al correrlo, [[.nrg]] vuelve a valer la energía real (3000) en cada ciclo (menos en el primero, en que un bot recién sembrado todavía la lee en 0), y eso es lo que la celda 60 copia al ciclo siguiente: el `1` se perdió. En cambio, la celda 61 conserva su `1`. Escribir en `.nrg` tampoco cambia la energía del bot: es solo un número que el motor publica.
 
 ### Quién más puede escribir tu memoria libre
 <!-- 21-MEMORIA §2 (altzheimer, shots de memoria), §4 (tieportcom, venom/poison) -->

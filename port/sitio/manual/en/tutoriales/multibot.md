@@ -119,7 +119,7 @@ the gene from step 1, it ties itself and the organism already has two cells.
 
 <!-- 34-TIES §2.1 (sharenrg: solo el creador, se borra cada ciclo, tope por body, 1 % al iniciador); comprobado con probar-adn: 3498.50/1498.50 pasan a 2493.47/2493.48 -->
 In an organism, energy belongs to everyone. With [[.sharenrg]] you write what
-percentage of the total you want to keep with each tie companion; with 50 they
+percentage of the total you want to keep with each tie partner; with 50 they
 end up even. Three conditions, always the same:
 
 - Only the one that created the tie can ask for it; since here the child is the
@@ -149,9 +149,9 @@ goes in pairs, but since every cell asks for it, the pantry evens out by itself.
 <!-- 30-FISICA §3.1 (muelle con zona muerta), §3.2 (TieTorque: impulso en ambos bots, holgura 5°); 34-TIES §0.4 (regang fija ángulo y largo) -->
 A tie is a spring: it remembers a rest length and pulls or pushes to get back to
 it. Once stiffened, it also accepts geometry commands: [[.fixlen]] sets the rest
-length and [[.fixang]] sets the angle at which the companion has to end up
+length and [[.fixang]] sets the angle at which the partner has to end up
 relative to where you're pointing. With the angle fixed, the tie works like an
-arm: if the companion drifts out of place, the engine pushes both of them
+arm: if the partner drifts out of place, the engine pushes both of them
 sideways and straightens them.
 
 We ask for a length of 300, edge to edge, and an angle of 314: a quarter turn, so
@@ -180,7 +180,7 @@ again: by ~25 cycles there are already three.
 The last thing is moving, and here it helps to know what the engine does and what
 it doesn't. Each bot pushes in _its own_ direction with [[.up]]; the engine
 doesn't split your thrust among the tied bots. What does travel through the tie
-is the spring force: if you move away, it drags your companion along. And with
+is the spring force: if you move away, it drags your partner along. And with
 the angle fixed, the torque that corrects the shape pushes both.
 
 So the simplest march is that of real worms: only the head decides. The founder is

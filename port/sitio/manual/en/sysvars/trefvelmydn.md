@@ -11,7 +11,7 @@ than it is). It exists so you can write more readable conditions, just like
 [[.veldn]] versus [[.velup]].
 
 ```adn
-' If the tied bot is falling behind, I brake
+' If the tied bot is falling behind, I brake to wait for it
 cond
 *.numties 0 >
 *.trefvelmydn 5 >

@@ -25,7 +25,7 @@ start
 stop
 ```
 
-Inside the body it gives an "otherwise": after a group of stores that depend
+Inside the body it gives an “otherwise”: after a group of stores that depend
 on a condition, `not` inverts it and the stores that follow run in the
 opposite case. The example is in [[operadores/logicos]] and in
 [[adn/condiciones#en-linea]].

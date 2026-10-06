@@ -171,7 +171,7 @@ stop
 ```
 
 ## La descomposición {#descomposicion}
-<!-- 33-SHOTS §5 (Decay); core robots.hpp Decay (body -= Decay/10, shot de min(Decay, body)); probado: alcancia.txt con opt:51=1000, opt:52=2 -->
+<!-- 33-SHOTS §5 (Decay); core robots.hpp Decay (body -= Decay/10, shot de Decay si body > Decay/10, si no body); probado: alcancia.txt con opt:51=1000, opt:52=2 -->
 
 Si nadie se lo come, un cadáver puede pudrirse. Lo regulan tres parámetros:
 

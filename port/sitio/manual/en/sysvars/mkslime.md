@@ -6,7 +6,7 @@ estado: revisada
 ---
 Write how much slime you want to add this cycle. The engine makes it at the end of
 the cycle, charges 1 energy for every 10 of slime and sets the command to 0. It is
-the only one of the four defenses with a cap of 200 per cycle instead of 100.
+the only one of the four substances with a cap of 200 per cycle instead of 100.
 
 <!-- sysvars.yaml .mkslime (MakeStuff P5, ±200/ciclo, =0 al consumir); 31-ENERGIA §0.3 -->
 

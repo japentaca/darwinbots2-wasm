@@ -190,7 +190,7 @@ The DNA ends at the first [[op:end]]; whatever follows doesn't exist for the bot
 ## Several starts in a row {#varios-start-seguidos}
 <!-- 20-VM §5.5 («start tras start») -->
 
-A second `start` isn't an "and also": it opens **another gene, with no conditions**.
+A second `start` isn't an “and also”: it opens **another gene, with no conditions**.
 
 ```adn
 ' The second start opens a new gene with no conditions

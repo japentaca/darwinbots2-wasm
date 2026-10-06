@@ -126,7 +126,7 @@ de [[app/parametros-evolucion]]).
 
 El nivel 2 no repite la regla de los lazos del 1, pero como prohíbe atar, solo
 quedan los lazos de nacimiento, que unen a bots de la misma especie. Sirve para
-torneos de bots "limpios", que compiten solo comiendo y moviéndose.
+torneos de bots «limpios», que compiten solo comiendo y moviéndose.
 :::
 
 :::parametro opt:101

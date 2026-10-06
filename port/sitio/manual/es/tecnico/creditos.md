@@ -58,7 +58,8 @@ cumplan tres condiciones:
 
 1. quien reparta el fuente conserve el aviso de copyright y la licencia
    completos;
-2. quien reparta binarios los incluya en la documentación;
+2. quien reparta binarios incluya ese mismo aviso y la licencia en la
+   documentación;
 3. sin el acuerdo del autor, la redistribución solo puede ser **no
    comercial** y sin fines de lucro.
 

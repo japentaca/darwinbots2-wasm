@@ -58,7 +58,8 @@ long as three conditions are met:
 
 1. whoever distributes the source keeps the full copyright notice and
    license;
-2. whoever distributes binaries includes them in the documentation;
+2. whoever distributes binaries includes that same notice and license in
+   the documentation;
 3. without the author's agreement, redistribution can only be
    **non-commercial** and not for profit.
 

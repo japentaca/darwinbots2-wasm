@@ -15,7 +15,7 @@ to pay for anything, but it has effects:
   every cycle (see [[simulacion/energia]]).
 - **Life.** If body drops below 0.5, the bot dies even if it has energy.
 - **Reproduction.** When reproducing, the child takes its percentage of the body (see
-  [[.repro]]); with very little body there is no birth.
+  [[.repro]]); with less than 5 body there is no birth.
 
 <!-- sysvars.yaml .body (ManageBody P5); comprobado: sembrado e hijo la leen en 0 en su primer ciclo -->
 The engine publishes it at the end of the cycle, between 0 and 32000. In its first cycle of life

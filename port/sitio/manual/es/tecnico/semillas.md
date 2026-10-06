@@ -39,8 +39,8 @@ simulación, en la columna derecha de [[app/experimentar]], con un dado (🎲,
   **Partidos** de [[app/competir]], y es la que reusa **↻ Repetir**;
 - **la primera réplica** de un trabajo de réplicas usa la de la corrida de
   origen, para repetirla (ver [[app/analizar#comparar]]);
-- **Probar** un bot en el editor corre varias semillas y, con la misma primera,
-  da siempre lo mismo (ver [[app/editor#probar]]).
+- **la prueba de un bot** (**Probar**, en el editor) corre varias semillas y,
+  con la misma primera, da siempre lo mismo (ver [[app/editor#probar]]).
 <!-- web2/src/lib/experimentar/borrador.js (SEMILLA_MAX 2147483646, parsearSemilla, semillaAleatoria); i18n experimentar.semilla.ayuda, experimentar.error.semilla; engine/replicas.js semillasReplicas (la primera es la de la corrida); lib/trabajos/prueba.js -->
 
 ## Cuándo dos corridas son idénticas {#identicas}

@@ -105,7 +105,7 @@ text”.
 | **Oscillation** | A population that goes up and down with a regular period, at least five times in a row. |
 
 Vegetables count in none of them, except extinction. Each finding has a link with
-its cycle: when you click it, a dotted line marks that cycle on all four charts.
+its cycle: when you click it, a dashed line marks that cycle on all four charts.
 If the detectors find nothing, the card says so. With the current run, the
 findings are recalculated every few seconds. They are the same sentences that
 open a report (see [[app/informes]]).
@@ -172,7 +172,7 @@ The tab has two halves.
 **Histograms.** With **Histograms of** you pick **All species** or just one,
 and with the buttons, what to measure: **DNA length**, **Generation**,
 **Accumulated mutations**, **Age**, **Energy**, **Body**, **Genes**,
-**Offspring** and **Kills**. The histogram is of the latest sample, with a dotted
+**Offspring** and **Kills**. The histogram is of the latest sample, with a dashed
 line at the median. For all species, **Change over the run** is added: a heat map
 with time on one axis and the value on the other, darker where there are more
 bots. There you can see, for example, how DNA length drifts over the run. For a
@@ -211,7 +211,7 @@ The buttons filter by type and count how many there are:
 | **Save and load** | when it was saved, resumed or loaded from a file |
 
 When you click an event, in the list or on its pin, its cycle is marked with a
-dotted line on this chart and on the Dashboard and Species ones. **Clear the
+dashed line on this chart and on the Dashboard and Species ones. **Clear the
 mark** removes it. It is useful to see what happened to the metrics right after a
 live change or an extinction.
 

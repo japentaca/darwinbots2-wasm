@@ -78,7 +78,7 @@ caparazón, después del primer pago, no vuelve a costar nada. Sumado a las
 cuotas de vivir ([[simulacion/energia#mantenimiento]]), andar armado es un
 sueldo, no una compra.
 
-## De pie: _Massed Hunter_ {#de-pie}
+## Siempre armado: _Massed Hunter_ {#de-pie}
 
 _Massed Hunter_
 (`Massed_Hunter_with_poison_and_shell_and_slime_F2_rayz_02-04-.txt`) paga el
@@ -127,7 +127,7 @@ Fijate los dos detalles que hacen la política:
   quedó envenenado). Contra cazadores grandes la reserva tiene que ir mucho
   más alta, como en el erizo de más abajo.
 
-## A pedido: _Paranoia_ {#a-pedido}
+## Armado a pedido: _Paranoia_ {#a-pedido}
 
 _Paranoia_ (`Paranoia1_F1_Eight_-02.09.04.txt`) no paga nada hasta que el
 peligro aparece, y entonces paga lo justo. Tiene dos disparadores.

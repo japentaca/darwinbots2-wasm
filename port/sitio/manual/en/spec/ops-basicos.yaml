@@ -6,7 +6,7 @@ opcodes:
   - {token: sub, sem: "Pops two numbers and pushes the one below minus the one on top. With huge numbers it behaves like [[op:add]]."}
   - {token: mult, sem: "Pops two numbers and pushes their product. If it goes past 2 billion, it stays at ±2 billion."}
   - {token: div, sem: "Pops two numbers and pushes the one below divided by the one on top, rounded to the nearest integer (to the even one on a tie). Dividing by 0 gives 0."}
-  - {token: rnd, sem: "Pops a number n and pushes a random one between 0 and n, both included. With a negative n it is not symmetric: −5 rnd gives −4 to −1."}
+  - {token: rnd, sem: "Pops a number n and pushes a random one between 0 and n, both included. With a negative n it is not symmetric: −5 rnd gives −4 to −1, without the −5 and, in practice, without the 0."}
   - {token: "*", sem: "Pops an address and pushes what is in that cell. Outside 1 to 1000 the sign is dropped and the remainder of dividing by 1000 is taken; 0 reads 1000. With an empty stack it reads 1000."}
   - {token: mod, sem: "Pops two numbers and pushes the remainder of dividing the one below by the one on top, with the sign of the one below. With a divisor of 0 it gives 0."}
   - {token: sgn, sem: "Replaces the top with its sign: −1 if it is negative, 0 if it is zero and 1 if it is positive."}
@@ -18,8 +18,8 @@ opcodes:
   - {token: over, sem: "Copies the second item to the top: a b becomes a b a. With a single number it pushes a 0; with an empty stack it does nothing."}
   - {token: angle, sem: "Pops a point (x below, y on top) and pushes the angle from the bot to it, in [[.aim]] units (0 to about 1256)."}
   - {token: dist, sem: "Pops a point (x below, y on top) and pushes the distance from the bot to it, in the real size of the world. It is capped at 2 billion."}
-  - {token: ceil, sem: "Pops two numbers and pushes the smaller one. Above 16,777,216 the comparison loses precision."}
-  - {token: floor, sem: "Pops two numbers and pushes the larger one."}
+  - {token: ceil, sem: "Pops two numbers and pushes the smaller one: it sets a ceiling and does not round, whatever the name suggests. Above 16,777,216 the comparison loses precision."}
+  - {token: floor, sem: "Pops two numbers and pushes the larger one: it sets a floor and does not round, whatever the name suggests."}
   - {token: sqr, sem: "Replaces the top with its square root, rounded to the nearest integer. If it is not positive, it gives 0."}
   - {token: pow, sem: "Pops two numbers and pushes the one below raised to the power of the one on top, rounded. The exponent is clipped to ±10, base 0 gives 0 and the result stays at ±2 billion."}
   - {token: pyth, sem: "Pops two numbers a and b and pushes the square root of a² + b², rounded. It is capped at 2 billion."}

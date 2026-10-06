@@ -11,7 +11,7 @@ rápido que él). Existe para escribir condiciones más legibles, igual que
 [[.veldn]] frente a [[.velup]].
 
 ```adn
-' Si el atado se queda atras, freno
+' Si el atado se queda atras, freno para esperarlo
 cond
 *.numties 0 >
 *.trefvelmydn 5 >

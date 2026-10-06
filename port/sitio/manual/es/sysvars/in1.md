@@ -17,8 +17,8 @@ nunca escribió su `.out1`. Esos tres casos no se distinguen entre sí: para sab
 si hay alguien adelante mirá `*.eye5`, no `*.in1`.
 <!-- 21-MEMORIA §3 (régimen A: escrito tras el ADN, borrado en el paso 12); lookoccurrShape pone in* en 0 ante una forma -->
 
-El valor llega tal cual. El ±1 al azar que aparece en los datos de arriba es de
-un modo de evolución del programa original que este port no incluye.
+El valor llega tal cual. El ±1 al azar del original, que nombra la nota del cuadro «Datos» de arriba, es de
+un modo de evolución del programa que este port no incluye.
 <!-- 32-VISION §4 (fudge = capa evo); el core no lo implementa -->
 
 La comparación típica es con tu propia salida, para reconocer a los tuyos:

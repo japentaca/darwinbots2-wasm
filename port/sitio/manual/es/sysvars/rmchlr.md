@@ -11,7 +11,7 @@ Si pedís sacar más de los que hay, quedan en 0. La orden se borra después de
 usarse. Un valor negativo no hace nada y queda escrito en la celda.
 
 Sirve para alivianar al bot (los cloroplastos pesan mucho, ver [[.mass]]) o para
-dejar de ser planta, por ejemplo antes de fabricar un virus, que exige no tener
+dejar de ser vegetal, por ejemplo antes de fabricar un virus, que exige no tener
 ninguno:
 
 ```adn

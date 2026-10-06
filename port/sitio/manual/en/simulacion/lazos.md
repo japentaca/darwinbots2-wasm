@@ -11,8 +11,8 @@ several bots stop being loose individuals and form a _multicellular_ organism
 (_multibot_): one that shares energy, holds its shape and moves as a single
 thing.
 
-This page describes the mechanism as a whole. Each cell has its own page in the
-reference, grouped in [[sysvars/lazos]].
+This page describes the mechanism as a whole. Each memory cell has its own
+page in the reference, grouped in [[sysvars/lazos]].
 
 ## Two ways to have a tie {#tipos}
 <!-- 34-TIES §1 (caminos de creación: .tie last −20, nacimiento last 100) -->
@@ -85,8 +85,9 @@ you leave `.tienum` at 0, most commands use the tie in `.tiepres`.
 <!-- 34-TIES §1 (nacimiento: last = 100, Port = 0 del lado del padre), §4.3 (puerto 0); core robots.hpp maketie(n, nuovo, …, 100, 0); DoGeneticMemory (Ties(1).last > 0); comprobado con probar-adn: el lazo dura 99 ciclos, el hijo escribe en la memoria del padre por el puerto 1 y el padre no puede escribirle; re-atarse con .tie corta la memoria genética -->
 
 Every birth ties the parent to the child. It is a soft tie that never stiffens,
-and it breaks by itself at 100 cycles. It has an oddity: the parent creates it
-with port 0, and a 0 is no use for choosing ties. So:
+and it breaks by itself at 100 cycles (to be exact, the counter starts at 100
+and the tie disappears 99 cycles after the birth). It has an oddity: the parent
+creates it with port 0, and a 0 is no use for choosing ties. So:
 
 - The **child** sees it as its tie 1 and can use it for everything: writing to the
   parent, giving it or taking energy from it, cutting it with `1 .deltie store`.

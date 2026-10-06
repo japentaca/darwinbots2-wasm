@@ -83,7 +83,7 @@ turns (see [[app/inspector]]).
 
 ## Step 3: the tournament for the eye that sees the most {#maximo}
 
-To head for the food you have to turn toward the eye with the highest number,
+To head for the food you have to turn toward the eye with the highest reading,
 and the DNA has no maximum that compares nine values in one go
 ([[op:floor]] compares in pairs). The solution is a tournament, with two cells
 of [[adn/memoria|free memory]]:
@@ -122,10 +122,10 @@ eyes are at 35, 70, 105 and 140 from the front. The gene for [[.eye1]] stores
 −140, the one for [[.eye2]] −105… and the one for [[.eye5]], 0: if what sees
 the most is the front eye, there is nothing to turn.
 
-The comparison is a plain [[op:>]], not "greater or equal": if several eyes
+The comparison is a plain [[op:>]], not “greater or equal”: if several eyes
 tie, the first one to reach that value wins, the one with the lowest number.
 And since the start gene leaves cell 50 at 0, that same cell will serve you as
-the "do I see anything?" question in the next step.
+the “do I see anything?” question in the next step.
 
 The nine genes — one per eye, identical except for the number and the turn —
 are in the complete bot at the end: the tournament always leaves what is seen
@@ -347,7 +347,7 @@ end
 ```
 
 The new gene says: with more than 5000 energy, a child that takes 30%
-([[.repro]]). You are born with 3000, so 5000 means "I ate more than enough":
+([[.repro]]). You are born with 3000, so 5000 means “I ate more than enough”:
 from a parent at 5400, the child is born with about 1600 and the parent ends
 at about 3800. The child carries the same DNA and hunts just like the parent.
 <!-- 36-REPRO §2 (per = 30 %: nrg y body al hijo, 0,1 % de impuesto); sysvars/repro (30 % de 3000/1000 → 899/300 y 2099/700) -->

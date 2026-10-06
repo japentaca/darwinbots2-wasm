@@ -79,7 +79,7 @@ anything again. Added to the dues of being alive
 ([[simulacion/energia#mantenimiento]]), going armed is a salary, not a
 purchase.
 
-## Always on: _Massed Hunter_ {#de-pie}
+## Always armed: _Massed Hunter_ {#de-pie}
 
 _Massed Hunter_
 (`Massed_Hunter_with_poison_and_shell_and_slime_F2_rayz_02-04-.txt`) pays for
@@ -127,7 +127,7 @@ Note the two details that make the policy:
   bouncing (measured: the big hunter was never poisoned). Against big hunters
   the reserve has to be much higher, as in the hedgehog further down.
 
-## On demand: _Paranoia_ {#a-pedido}
+## Armed on demand: _Paranoia_ {#a-pedido}
 
 _Paranoia_ (`Paranoia1_F1_Eight_-02.09.04.txt`) pays nothing until danger
 appears, and then it pays just enough. It has two triggers.

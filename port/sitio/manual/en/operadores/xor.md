@@ -17,7 +17,7 @@ trues or two falses), it gives _false_.
 | true true | false |
 | false false | false |
 
-It's useful for "one thing or the other, but not both". The bot _Acer Runco of
+It's useful for “one thing or the other, but not both”. The bot _Acer Runco of
 Vita, The Weed of Life_, from the Bestiary, uses it in a gene that turns and
 creates ties (here we show only the part that turns): among other conditions
 it requires either that it sees nothing straight ahead ([[.eyef]]) or that what it sees is

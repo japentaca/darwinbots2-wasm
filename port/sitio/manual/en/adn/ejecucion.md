@@ -131,6 +131,6 @@ There's no cap on energy or on time: a bot runs all its DNA every cycle even if 
 ## Which values are used {#valores}
 <!-- constants.yaml preset_f1 (COSTSTORE 0.04, CONDCOST 0.004, resto de la VM 0); 10-CICLO §2 paso 7 (costos dinámicos) -->
 
-Costs depend on the scenario. The F1 rules, the ones for competitions (in Experiment you apply them with "F1 settings"), charge 0.04 per store and 0.004 per condition and leave the other DNA costs at 0, including the length one. With those rules, ten stores per cycle cost a bot 0.4 energy per cycle; the genome length, nothing.
+Costs depend on the scenario. The F1 rules, the ones for competitions (in Experiment you apply them with “F1 settings”), charge 0.04 per store and 0.004 per condition and leave the other DNA costs at 0, including the length one. With those rules, ten stores per cycle cost a bot 0.4 energy per cycle; the genome length, nothing.
 
 The [[param:cost:54]] can move on its own if you turn on [[param:cost:56]] ([[app/parametros-costos-dinamicos]]): the engine raises or lowers it to bring the population to a target, and all the prices on this page change with it. How all this fits with the rest of the bot's expenses is in [[simulacion/energia]].

@@ -155,8 +155,8 @@ text you copy has only the DNA.
 ## Your bots, the Bestiary and files {#archivos}
 <!-- procedencia del Bestiario: port/web/bots/bots.json (673 enlaces al foro, 10 al wiki) -->
 
-- **To bring a `.txt`** into a simulation, on [[app/inicio]] use "From a
-  file": it seeds the bot into a world with algae.
+- **To bring a `.txt`** into a simulation, on [[app/inicio]] use “From a
+  file”: it seeds the bot into a world with algae.
 - **Your bots** live in the app's library ([[app/bots]]). The editor
   saves the text just as you wrote it, with comments and `def`, and each
   version separately; the engine's reconstruction is only what you copy from

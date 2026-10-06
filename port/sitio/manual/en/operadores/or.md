@@ -28,8 +28,8 @@ stop
 ```
 
 `or` combines only the top two; the [[.eye5]] condition lower down is left for
-`start`, which joins it with _and_. It reads: "sees something, and (is weak or
-the other looks bigger)".
+`start`, which joins it with _and_. It reads: “sees something, and (is weak or
+the other looks bigger)”.
 
 :::cuidado
 If `or` finds a single value on the stack, it gives **true**, whatever that

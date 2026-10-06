@@ -6,7 +6,7 @@ estado: revisada
 ---
 Write how much venom you want to add this cycle; `.mkvenom` is another name for
 the same cell. The engine makes it at the end of the cycle, charges 1 energy for
-every 1 venom (it is the most expensive of the four defenses) and sets the order to 0. The
+every 1 venom (it is the most expensive of the four substances) and sets the order to 0. The
 cap is 100 per cycle.
 
 <!-- sysvars.yaml .strvenom (alias mkvenom; MakeStuff P5, ±100/ciclo, =0 al consumir); 31-ENERGIA §0.3 (1 nrg = 1 venom) -->

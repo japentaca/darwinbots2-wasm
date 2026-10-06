@@ -6,8 +6,8 @@ estado: revisada
 ---
 <!-- 20-VM §6.2 (ceil = min, comparación en Single; core DNAceil empuja el Single); comprobado en el port -->
 
-`x ceiling ceil` leaves the smaller of the two: `x` if it is below the
-ceiling, and the ceiling if not. The name comes from that (_ceiling_), even
+`x limit ceil` leaves the smaller of the two: `x` if it is below the
+limit, and the limit if not. The name comes from that (_ceiling_), even
 though the result is the _minimum_, which confuses more than a few people.
 `7 100 ceil` gives 7 and `700 100 ceil` gives 100.
 

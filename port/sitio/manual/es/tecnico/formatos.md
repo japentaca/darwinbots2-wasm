@@ -174,7 +174,7 @@ detalles, en [[app/bots#importar]].
 - **Informe `.html`** ([[app/informes#archivo]]): un solo archivo
   autocontenido, con los gráficos y los datos embebidos; se abre sin conexión
   y se imprime en A4 desde el navegador.
-- **Series `.csv` y Todo `.json`** ([[app/informes#datos]]): las métricas de
+- **Series · CSV** y **Todo · JSON** ([[app/informes#datos]]): las métricas de
   una corrida para tu planilla, o la historia, los eventos y el linaje
   completos. Los barridos de Comparar bajan sus propios CSV.
 - **`eyes.txt`**: el gen que fija los ojos diseñados en el inspector, listo

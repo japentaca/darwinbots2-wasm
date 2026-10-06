@@ -34,7 +34,7 @@ stop
 ```
 
 La celda 52 vale 1 desde el primer ciclo. La 51, en cambio, queda en 0
-hasta el ciclo 7: mientras [[.robage]] no pasa de 5, el falso del primer gen
+durante los seis primeros ciclos de vida: mientras [[.robage]] no pasa de 5, el falso del primer gen
 llega intacto al segundo `start` y saltea su store. El tercer gen no tiene
 el problema porque su `cond` vacía la pila. Más sobre esto en
 [[adn/pilas#rareza]].

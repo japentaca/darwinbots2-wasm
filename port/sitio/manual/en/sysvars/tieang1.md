@@ -39,7 +39,7 @@ start
 stop
 ```
 
-The step has to exceed the 5-degree slack (about 17) with which the engine
+The step has to exceed the 5-degree slack (about 17 on the 1256 scale) with which the engine
 holds the angle: with `10 .tieang1 addstore` the tie doesn't move, because every
 cycle you ask for 10 more than what it measures and that difference falls within the slack.
 

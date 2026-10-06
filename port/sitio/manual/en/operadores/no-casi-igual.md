@@ -26,7 +26,8 @@ stop
 ```
 
 The reference is the body, the lower number. A bot that starts with 3000
-energy and 1000 body stops at 1200 energy and 1180 body, when the energy comes
+energy and 1000 body stops at 1200 energy and 1180 body (every 100 energy that goes
+through [[.strbody]] gives only 10 body), when the energy comes
 within 10 % of the body. The bot _This'n'That 1.01_ (Peksa), from the
 Bestiary, uses the same idea in both directions; it is covered in
 [[op:dupbool]].

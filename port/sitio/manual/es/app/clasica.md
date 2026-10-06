@@ -56,7 +56,7 @@ la consola del bot y el modo jugador están en el [[app/inspector|inspector]].
 | **Seed** | La semilla de la simulación nueva. |
 | **impacts**, **vision**, **vectors**, **gauges** | Qué se dibuja sobre el campo: impactos, visión, vectores e indicadores. |
 | **skins**, **RGB monitor** | Ver la tabla de arriba. |
-| **Player Bot** | El bot con foco apunta al puntero; flechas = motor, espacio = disparar. |
+| **Player Bot** | El bot con foco apunta al puntero; flechas = empuje (la clásica lo rotula «motor»), espacio = disparar. |
 | **View** | **Classic** (el dibujo del original) o **Enriched** (forma, color y anillos de acción), con **Color by** para elegir qué colorea. |
 | **⤢** | Vuelve la cámara a zoom 1, sin desplazamiento. La rueda acerca y arrastrar desplaza. |
 | **Save sim** / **Load sim** | Descarga la simulación como `.dbsim` o carga una. |

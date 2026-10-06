@@ -55,7 +55,7 @@ designer, the bot console and player mode are in the
 | **Seed** | The seed of the new simulation. |
 | **impacts**, **vision**, **vectors**, **gauges** | What is drawn over the field: impacts, vision, vectors and gauges. |
 | **skins**, **RGB monitor** | See the table above. |
-| **Player Bot** | The focus bot aims at the pointer; arrows = motor, space = shoot. |
+| **Player Bot** | The focus bot aims at the pointer; arrows = thrust (the classic interface labels it “motor”), space = shoot. |
 | **View** | **Classic** (the original's drawing) or **Enriched** (shape, color and action rings), with **Color by** to pick what gets colored. |
 | **⤢** | Puts the camera back at zoom 1, with no offset. The wheel zooms in and dragging pans. |
 | **Save sim** / **Load sim** | Downloads the simulation as a `.dbsim` or loads one. |

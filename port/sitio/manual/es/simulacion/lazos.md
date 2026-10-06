@@ -11,8 +11,8 @@ endurecidos, varios bots dejan de ser individuos sueltos y forman un
 _multicelular_ (_multibot_): un organismo que reparte la energía, sostiene su
 forma y se mueve como una sola cosa.
 
-Esta página cuenta el mecanismo de conjunto. Cada celda tiene su página en la
-referencia, agrupadas en [[sysvars/lazos]].
+Esta página cuenta el mecanismo de conjunto. Cada celda de memoria tiene su
+página en la referencia, agrupadas en [[sysvars/lazos]].
 
 ## Dos formas de tener un lazo {#tipos}
 <!-- 34-TIES §1 (caminos de creación: .tie last −20, nacimiento last 100) -->
@@ -87,8 +87,9 @@ dejás `.tienum` en 0, la mayoría de las órdenes usan el lazo de `.tiepres`.
 <!-- 34-TIES §1 (nacimiento: last = 100, Port = 0 del lado del padre), §4.3 (puerto 0); core robots.hpp maketie(n, nuovo, …, 100, 0); DoGeneticMemory (Ties(1).last > 0); comprobado con probar-adn: el lazo dura 99 ciclos, el hijo escribe en la memoria del padre por el puerto 1 y el padre no puede escribirle; re-atarse con .tie corta la memoria genética -->
 
 Todo parto ata al padre con el hijo. Es un lazo blando, que nunca se
-endurece, y se corta solo a los 100 ciclos. Tiene una rareza: lo crea el
-padre con el puerto 0, y un 0 no sirve para elegir lazos. Por eso:
+endurece, y se corta solo a los 100 ciclos (para ser exactos, el contador
+arranca en 100 y el lazo desaparece 99 ciclos después del parto). Tiene una
+rareza: lo crea el padre con el puerto 0, y un 0 no sirve para elegir lazos. Por eso:
 
 - El **hijo** lo ve como su lazo 1 y puede usarlo para todo: escribirle al
   padre, pasarle o sacarle energía, cortarlo con `1 .deltie store`.

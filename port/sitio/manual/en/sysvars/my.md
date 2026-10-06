@@ -15,7 +15,7 @@ the cells of [[sysvars/ref|what it sees]] bring the same counters, but from the
 other one's DNA: [[.refup]] against `.myup`, [[.refeye]] against `.myeye`,
 [[.reftie]] against `.myties`. If they match, it is most likely of the same
 species. By far the most used comparison in the Bestiary is
-`*.refeye *.myeye !=`, "what I see is not one of mine":
+`*.refeye *.myeye !=`, “what I see is not one of mine”:
 
 ```adn
 ' mark in cell 60 when what is ahead is of another species
@@ -47,6 +47,6 @@ disguising yourself.
 
 :::nota
 In the original DarwinBots a mutation during life did not redo the count: it
-stayed stale until the next birth, virus or load, and that is what the data above
-says. The port redoes it on the spot.
+stayed stale until the next birth, virus or load, and that is what the original
+spec describes. The port redoes it on the spot.
 :::

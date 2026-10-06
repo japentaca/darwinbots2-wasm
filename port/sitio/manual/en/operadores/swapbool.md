@@ -25,8 +25,8 @@ start
 stop
 ```
 
-The first `inc` depends on the top condition, "age less than 6"
-([[.robage]]); after the `swapbool` the other one rules, "age greater than 3".
+The first `inc` depends on the top condition, “age less than 6”
+([[.robage]]); after the `swapbool` the other one rules, “age greater than 3”.
 After 10 cycles cells 50 and 51 hold 6 each: cell 50 counted ages 0 to 5 and
 cell 51 ages 4 to 9. The final [[op:clearbool]] leaves the stack clean for the
 next gene.

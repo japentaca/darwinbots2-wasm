@@ -66,7 +66,8 @@ contraseña pública.
 <!-- SWARM_2.0_F2_Elite_-10.03.07.txt; probado: qty 1 contra un bot quieto, campo 600x500, semilla 11: eye6 239 al ciclo 4, presa de 3000/1000 a 711/85 al 14, muerta al 16, tirador en 13375 con kills=1; re-corrido: 711/85 al 15, muerta antes del 20, tirador en 12975, hijo antes del 25 -->
 _SWARM 2.0 F2 Elite_ (en el Bestiario,
 `SWARM_2.0_F2_Elite_-10.03.07.txt`) es un enjambre de apenas diez genes que ni
-siquiera reconoce a sus hermanos por señal: solo compara firmas. Su ojo frontal
+siquiera usa una contraseña pública para reconocer a sus hermanos: solo compara
+firmas. Su ojo frontal
 [[.eye5]] lo abre a 1220 de ancho, casi toda la vuelta, y como el alcance
 cae con el ancho, ve apenas unas 150 unidades a la redonda: es un radar de
 cerca, no un telescopio.
@@ -172,8 +173,9 @@ stop
 En la corrida contra una presa quieta, la encontró en diez ciclos, marcó su
 bandera en [[.out2]] (que sus hermanos pueden leer por [[.in2]]) y la dejó
 muerta antes del ciclo 20, cerrando con 6164 de energía. Aparte de eso, se
-corta el lazo de nacimiento en el primer ciclo, gira al azar y se toma treinta
-ciclos cuando toca un borde (`*.edge` con un temporizador), así que no se
+corta el lazo de nacimiento en el primer ciclo y, cuando toca un borde, gira al
+azar y no vuelve a reaccionar al borde durante treinta ciclos (`*.edge` con un
+temporizador), así que no se
 apila contra las paredes como SWARM, y recién se reproduce con 120 de cuerpo,
 más de 8000 de energía y 100 ciclos de vida: primero la manada, después los
 hijos.

@@ -1,6 +1,6 @@
 ---
 titulo: .reftie
-resumen: "How many times .tie appears in the DNA of the bot you are looking at: if it is greater than 0, it knows how to make ties."
+resumen: "How many times .tie appears in the DNA of the bot you are looking at: if it is greater than 0, it knows how to tie to other bots."
 etiquetas: [vision, refvars, signature, ties]
 estado: revisada
 ---

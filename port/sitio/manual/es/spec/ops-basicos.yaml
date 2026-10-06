@@ -6,7 +6,7 @@ opcodes:
   - {token: sub, sem: "Saca dos números y apila el de abajo menos el de arriba. Con números enormes se comporta igual que [[op:add]]."}
   - {token: mult, sem: "Saca dos números y apila su producto. Si pasa de 2000 millones, se queda en ±2000 millones."}
   - {token: div, sem: "Saca dos números y apila el de abajo dividido por el de arriba, redondeado al entero más cercano (al par en el empate). Dividir por 0 da 0."}
-  - {token: rnd, sem: "Saca un número n y apila uno al azar entre 0 y n, ambos incluidos. Con n negativo no es simétrico: −5 rnd da de −4 a −1."}
+  - {token: rnd, sem: "Saca un número n y apila uno al azar entre 0 y n, ambos incluidos. Con n negativo no es simétrico: −5 rnd da de −4 a −1, sin el −5 y, en la práctica, sin el 0."}
   - {token: "*", sem: "Saca una dirección y apila lo que hay en esa celda. Fuera de 1 a 1000 se le saca el signo y se toma el resto de dividir por 1000; el 0 lee la 1000. Con la pila vacía lee la 1000."}
   - {token: mod, sem: "Saca dos números y apila el resto de dividir el de abajo por el de arriba, con el signo del de abajo. Con divisor 0 da 0."}
   - {token: sgn, sem: "Cambia el tope por su signo: −1 si es negativo, 0 si es cero y 1 si es positivo."}
@@ -18,8 +18,8 @@ opcodes:
   - {token: over, sem: "Copia arriba el segundo: a b queda a b a. Con un solo número apila un 0; con la pila vacía no hace nada."}
   - {token: angle, sem: "Saca un punto (x abajo, y arriba) y apila el ángulo desde el bot hasta él, en unidades de [[.aim]] (0 a unos 1256)."}
   - {token: dist, sem: "Saca un punto (x abajo, y arriba) y apila la distancia desde el bot hasta él, en el tamaño real del mundo. Se queda en 2000 millones como máximo."}
-  - {token: ceil, sem: "Saca dos números y apila el menor. Arriba de 16.777.216 la comparación pierde precisión."}
-  - {token: floor, sem: "Saca dos números y apila el mayor."}
+  - {token: ceil, sem: "Saca dos números y apila el menor: pone un techo y no redondea, aunque el nombre lo parezca. Arriba de 16.777.216 la comparación pierde precisión."}
+  - {token: floor, sem: "Saca dos números y apila el mayor: pone un piso y no redondea, aunque el nombre lo parezca."}
   - {token: sqr, sem: "Cambia el tope por su raíz cuadrada, redondeada al entero más cercano. Si no es positivo, da 0."}
   - {token: pow, sem: "Saca dos números y apila el de abajo elevado al de arriba, redondeado. El exponente se recorta a ±10, base 0 da 0 y el resultado se queda en ±2000 millones."}
   - {token: pyth, sem: "Saca dos números a y b y apila la raíz de a² + b², redondeada. Se queda en 2000 millones como máximo."}

@@ -35,7 +35,7 @@ el ojo de fábrica, que llega a unas 1440 unidades:
 | 710 | 4 |
 | 1430 | 1 |
 
-Cada ojo da el valor de lo más cercano que ve. De noche el alcance baja un 20%,
+Cada ojo da el valor de lo más cercano que ve. De noche el alcance baja un 20 %,
 y en modo estanque se acorta con la profundidad.
 <!-- 32-VISION §0.3, §0.4, §2.6 -->
 

@@ -18,7 +18,7 @@ cycle, and each marker changes the interpreter's state as it goes by:
 - [[op:end]] ends the DNA; anything after it is not executed.
 
 Almost every gene has the form `cond … start … stop`, with `else` when you
-need an "otherwise":
+need an “otherwise”:
 
 ```adn
 ' moves forward while it has more than 2000 energy; otherwise turns

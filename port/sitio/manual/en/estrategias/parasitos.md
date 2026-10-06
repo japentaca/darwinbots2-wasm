@@ -65,7 +65,7 @@ stop
 
 The 99 in [[.sharenrg]] isn't a transfusion: it's “add your energy to mine and
 leave me 99%”, every cycle, up to its body cap. It's a much more
-profitable suction than the tutorial's `−1`, which loses 30% along the way;
+profitable suction than the tutorial's `-1`, which loses 30% along the way;
 here you only pay 1% of what's moved. It does the same to the tied bot's slime
 and shell.
 <!-- 34-TIES §2.1 (sharenrg: tope por body, 1 % al iniciador, se borra cada ciclo, solo el lado que creó el lazo); port/core ties.hpp tie_transfers (el −1 rinde 0,7) -->
@@ -81,7 +81,7 @@ ended up dry on cycle 67. The child, which had started with less, stopped at
 548 when the other became a corpse.
 <!-- probado: 800x600, semilla 1, 80 ciclos, --cada 1: lazo en el ciclo 1 (puerto 2: el 1 del gen six más el .tie inc del gen 10), multi al 53, huesped 3000 -> 2000 -> 1000 (ciclos 54-55) -> cadaver al 60; hijo al 56, padre e hijo a −300 netos por ciclo, padre cadaver al 67, hijo frena en 548; re-corrido (--cada 10): multi al 60, huesped cadaver al 60, padre cadaver al 70, hijo frena en 548.25 -->
 
-The bot also has a gene that promises to suck 1000 per cycle with `−1`, and a
+The bot also has a gene that promises to suck 1000 per cycle with `-1`, and a
 “hacker” gene that would write a 0 into the tied bot's [[.up]] to stop it.
 Together the two do neither: the hacker overwrites `.tieloc` with the address
 of `.up` (the transfer asks for a negative `.tieloc`) and leaves `.tienum`
@@ -118,8 +118,9 @@ start
 stop
 ```
 
-After tying, it sets its own tie angle to 0: the host always stays in front of
-it and travels hanging on like a remora (in the run, the angle hovered around
+After tying (the gene above only stops and cancels the turn), another gene that
+the page doesn't show sets its own tie angle to 0 with `0 .fixang`: the host
+always stays in front of it and travels hanging on like a remora (in the run, the angle hovered around
 −17, a fraction of a turn). And once multicellular, it sucks in sips,
 depending on how full the other one is:
 
@@ -227,7 +228,7 @@ species, because every child of the victim is born infected.
 
 ## A minimal sedative {#sedante}
 
-To close, a recipe of our own, built on only one of the two paths: a virus that
+To close, a recipe of our own that uses only the second of the two paths: a virus that
 neither kills nor drains, it just immobilizes. The injected gene writes 1 into [[.fixpos]], and that's it:
 `.fixpos` is a switch that the engine never clears and that physics respects
 no matter where the gene landed in the other's DNA or what the host writes

@@ -20,7 +20,7 @@ Every bot is a circle sliding on a plane. It has a position, a velocity, a mass,
 
 All of them arrive one cycle late, like all the senses ([[adn/ejecucion#retraso]]).
 
-**Mass** comes from the body, the shell and the chloroplasts: 1 for every 1000 of [[.body]], 1 for every 200 of [[.shell]] and almost 1 for every chloroplast. It never drops below 1 or goes over 32000. An ordinary bot weighs 1; one with 500 chloroplasts weighs about 500 (the details are in [[.mass]]).
+**Mass** comes from the body, the shell and the chloroplasts: 1 for every 1000 of [[.body]], 1 for every 200 of [[.shell]] and almost 1 for every chloroplast. It never drops below 1 or goes over 32000. An ordinary bot weighs 1; one with 500 chloroplasts weighs almost 500 (the details are in [[.mass]]).
 
 **The radius** grows with the body, more and more slowly:
 

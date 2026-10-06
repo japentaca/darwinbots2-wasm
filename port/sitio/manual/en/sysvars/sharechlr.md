@@ -19,7 +19,7 @@ Details worth knowing:
   ties or not. To share continuously, write it every cycle.
 - It only shares with close relatives. If the DNA of the two bots differs by more than
   25%, there is no sharing and the bot is blocked from sharing chloroplasts for
-  8 sun cycles (the wait doesn't run at night).
+  8 daytime cycles (the countdown only advances in daytime, not at night).
 - Only the ties this bot created count. On a tie the other bot created, the sharing
   is decided by the other bot's `.sharechlr`.
 

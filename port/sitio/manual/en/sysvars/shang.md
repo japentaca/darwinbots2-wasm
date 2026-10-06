@@ -14,7 +14,8 @@ Like [[.shflav]], it arrives one cycle late, lasts one cycle and is 0 if
 nothing hit you.
 
 Since it is measured in the same direction as [[.aimdx]], copying it there makes you
-turn straight toward the shooter:
+turn straight toward the shooter. This example only reacts to energy steals
+(`.shflav` −1); with `*.shflav 0 !=` it would react to any hit:
 
 ```adn
 cond
@@ -28,6 +29,6 @@ In the test, a bot that took a shot with `.shang` at 835 turned and in the
 next cycle already had the shooter in its [[.eye5]].
 
 To know whether there was a hit, don't look at `.shang`: a 0 or a very small value
-can mean "nothing hit me" or "I was hit head-on". Look at `.shflav`, which
+can mean “nothing hit me” or “I was hit head-on”. Look at `.shflav`, which
 is never 0 when there was a hit. If you only care about the side
 and not the exact angle, there are [[.shup]], [[.shdn]], [[.shdx]] and [[.shsx]].

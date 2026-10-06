@@ -44,5 +44,5 @@ algo, la marca es 0 y se vuelve a guardar lo que había.
 
 Una rareza heredada, solo en el borde de los 32 bits: `++` sobre el número
 más grande que entra en la pila (2147483647) da 0 en lugar de dar la vuelta
-al negativo más grande. Con la pila vacía opera sobre 0 y deja 1. Lo opuesto
+al más negativo (−2147483648). Con la pila vacía opera sobre 0 y deja 1. Lo opuesto
 es [[op:--]].

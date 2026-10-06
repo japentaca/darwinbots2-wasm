@@ -14,7 +14,7 @@ unidades de [[.aim]]: de 0 a unos 1256, con 0 hacia la derecha, 314 hacia arriba
 Las coordenadas son las mismas que dan [[.xpos]], [[.ypos]], [[.refxpos]] y
 [[.refypos]], así que el uso típico es apuntar hacia lo que se está viendo y
 guardar el resultado en [[.setaim]]. Es lo que hace _4-d Swarmer_, del
-Bestiario, en su gen para girar hacia las plantas; simplificado, queda así:
+Bestiario, en su gen para girar hacia los vegetales; simplificado, queda así:
 
 ```adn
 cond

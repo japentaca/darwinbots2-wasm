@@ -7,7 +7,7 @@ estado: revisada
 <!-- sysvars.yaml 711 (mem 18 del visto); core senses.hpp lookoccurr; probado: mirada.txt contra mira.txt (70 pasa a 1 cuando se miran); sysvars.yaml 18 (rango 0..~2513 con momento angular); opcodes.yaml anglecmp (Mod 1256 y diferencia con signo ±628); revisor: mirada.txt contra mirada.txt (aims 1176 y 568, 70=1) -->
 `.refaim` es la dirección en la que apunta el bot que ve tu ojo con foco: lo
 que ese bot lee en su [[.aim]]. Una vuelta completa son 1256; casi siempre está
-entre 0 y 1256, aunque mientras gira puede pasarse un poco.
+entre 0 y 1255, aunque mientras gira puede pasarse un poco.
 
 Lo más útil es compararla con tu propio rumbo. Si el otro te está mirando, su
 rumbo es el tuyo dado vuelta, o sea el tuyo más 628. El operador

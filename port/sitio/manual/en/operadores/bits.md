@@ -50,7 +50,7 @@ To ask about the flag, `*50 4 & 0 !=` leaves true if the bit is set (see
 
 None of them fails with an empty stack: they operate on zeros. At the edge of
 32 bits there are two quirks inherited from DarwinBots 2.48.32 (a result that
-should be the most negative number comes out as 0); [[op:++]] and [[op:<<]]
+should be the most negative number, −2147483648, comes out as 0); [[op:++]] and [[op:<<]]
 describe them. With numbers the size of memory you will never get there.
 
 Every operator of this family that is executed charges the cost

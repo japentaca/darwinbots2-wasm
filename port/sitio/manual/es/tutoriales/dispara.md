@@ -166,7 +166,7 @@ cazando. Dos cosas que conviene saber ([[.repro]], [[simulacion/reproduccion]]):
 
 Por qué 5000 y no más: una sola presa de 3000 deja al cazador rondando los
 6000. Con el umbral en 6000, en nuestra corrida no alcanzó el corte por 45 de
-energía y no se reprodució nunca; con 5000, apenas mató a su primera presa
+energía y no se reprodujo nunca; con 5000, apenas mató a su primera presa
 nació el hijo: el padre quedó con unos 3950 de energía y 700 de cuerpo, el
 hijo arrancó con unos 2230 y 300.
 

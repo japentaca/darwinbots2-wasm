@@ -13,7 +13,7 @@ dos son [[.hitdx]] y [[.hitsx]].
 Como todo el tacto, la escribe el motor en el paso de física y tu ADN la lee en el
 ciclo siguiente, una sola vez.
 
-Es el aviso típico de "algo me alcanzó por la espalda", donde los ojos no llegan.
+Es el aviso típico de «algo me alcanzó por la espalda», donde los ojos no llegan.
 La respuesta clásica es darse vuelta para mirarlo:
 
 ```adn

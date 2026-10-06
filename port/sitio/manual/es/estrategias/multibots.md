@@ -129,9 +129,9 @@ rigidez— en las celdas de memoria genética instantánea, así cada cría nace
 con los mismos valores sin escribirlos de nuevo ([[adn/memoria]]).
 
 :::nota
-Hasta los campeones traen typos que el editor marca. Este tiene un `=>`
-que no es ningún operador, y un `head` sin `*` que compara un 1 contra la
-dirección 101: esa condición es siempre falsa y el gen que avisaba «enemigo
+Hasta los campeones traen typos que el editor marca. En genes que acá
+no mostramos, este tiene un `=>` que no es ningún operador y un `head` sin `*`
+que compara un 1 contra la dirección 101: esa condición es siempre falsa y el gen que avisaba «enemigo
 cerca: clavate» queda muerto. Corré siempre lo que escribís.
 :::
 

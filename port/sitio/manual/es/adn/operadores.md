@@ -112,7 +112,7 @@ Cuentas más elaboradas, casi todas pensadas para moverse por el mundo:
   vacía apila un _verdadero_).
 
 El bot 4-d_Swarmer del Bestiario usa `angle` con [[.refxpos]] y [[.refypos]]
-(la posición de lo que está viendo) para girar hacia una planta:
+(la posición de lo que está viendo) para girar hacia un vegetal:
 `*.refxpos *.refypos angle .setaim store`. Con un punto fijo se ve igual de
 bien: este bot apunta hacia (3000, 2500) y avanza hacia allá (si no frena,
 se pasa de largo).

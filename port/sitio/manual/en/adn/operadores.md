@@ -74,7 +74,7 @@ An example with [[op:rnd]] and [[op:mod]]: the bot changes heading at random eve
 angle units, so `1256 rnd` is any direction at all.
 
 ```adn
-' Cambia de rumbo al azar cada 20 ciclos y avanza
+' Changes heading at random every 20 cycles and moves forward
 cond
 *.robage 20 mod 0 =
 start
@@ -118,7 +118,7 @@ this bot aims at (3000, 2500) and moves toward it (if it doesn't brake,
 it overshoots).
 
 ```adn
-' Apunta al punto (3000, 2500) y avanza hacia él
+' Aims at the point (3000, 2500) and moves toward it
 cond
 start
 3000 2500 angle .setaim store
@@ -168,7 +168,7 @@ reaching `start`, all of them are required to be true. This bot moves forward on
 while it has more than 1000 energy ([[.nrg]]):
 
 ```adn
-' Avanza mientras tenga más de 1000 de energía
+' Moves forward while it has more than 1000 energy
 cond
 *.nrg 1000 >
 start
@@ -192,7 +192,7 @@ Since `start` already joins all the conditions with an _and_, `or` is the one
 you write most: without it there is no direct way to ask for “this or that”.
 
 ```adn
-' Avanza si la celda 740 vale 0 o si la 741 vale 0
+' Moves forward if cell 740 is 0 or cell 741 is 0
 cond
 *740 0 =
 *741 0 =
@@ -248,7 +248,7 @@ A small version: move forward 10 if the central eye ([[.eye5]]) sees nothing, an
 stay still if it sees something.
 
 ```adn
-' Avanza solo si el ojo central no ve nada, sin condiciones
+' Moves forward only if the central eye sees nothing, no conditions
 cond
 start
 *.eye5 dup div 1 sub abs 10 mult .up store

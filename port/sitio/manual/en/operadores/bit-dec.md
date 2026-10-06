@@ -29,6 +29,6 @@ stop
 With 9 in cell 50, cell 51 ends up at 8.
 
 One inherited quirk, only at the edge of 32 bits: `--` on −2147483647 should
-give the most negative number, but gives 0. No memory value gets there.
+give the most negative number (−2147483648), but gives 0. No memory value gets there.
 With an empty stack it operates on 0 and leaves −1. Its opposite is [[op:++]];
 the rest of the family is in [[operadores/bits]].

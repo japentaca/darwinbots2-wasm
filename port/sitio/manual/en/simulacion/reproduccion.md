@@ -36,7 +36,8 @@ the same way:
 - A bot has **one child per cycle** at most.
 
 If a bot has both [[.repro]] and [[.mrepro]] written, a coin flip decides
-which of the two percentages is used. If it's fertilized and has [[.sexrepro]]
+which of the two percentages is used; the boosted mutation of [[.mrepro]]
+applies either way, whichever way the coin falls. If it's fertilized and has [[.sexrepro]]
 written, that cycle it tries only the sexual one and the asexual one waits,
 even if the sexual one ends up failing.
 

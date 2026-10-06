@@ -10,10 +10,10 @@ estado: revisada
 `b` (the upper one), and _false_ if not. `3 5 <` is true; `5 3 <` and `5 5 <`
 are false.
 
-It's the comparison for limits: "while I have less than", "if it hasn't
-reached yet". This bot pushes forward ([[.up]]) only while it is going slower
-than 20 ([[.velup]]). It accelerates for a few cycles and then keeps that
-speed, without going over:
+It's the comparison for limits: “while I have less than”, “if it hasn't
+reached yet”. This bot pushes forward ([[.up]]) only while it is going slower
+than 20 ([[.velup]]). It accelerates for a few cycles and then hovers around that
+speed, a unit or two above or below:
 
 ```adn
 ' pushes only while going slower than 20

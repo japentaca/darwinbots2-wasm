@@ -18,8 +18,8 @@ its `.out1`. Those three cases cannot be told apart: to know whether someone is
 ahead, look at `*.eye5`, not `*.in1`.
 <!-- 21-MEMORIA §3 (régimen A: escrito tras el ADN, borrado en el paso 12); lookoccurrShape pone in* en 0 ante una forma -->
 
-The value arrives as is. The random ±1 that shows up in the data above belongs to
-an evolution mode of the original program that this port does not include.
+The value arrives as is. The random ±1 of the original, which the note in the “Facts” box above mentions, belongs to
+an evolution mode of the program that this port does not include.
 <!-- 32-VISION §4 (fudge = capa evo); el core no lo implementa -->
 
 The typical comparison is with your own output, to recognize your own kind:

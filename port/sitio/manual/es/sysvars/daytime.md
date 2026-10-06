@@ -13,7 +13,7 @@ energía total del mundo.
 
 Para un bot con cloroplastos hay un matiz: el sol puede iluminar solo una franja del
 mundo, y si el bot está fuera de ella lee 0 aunque sea de día. Para él, `.daytime`
-quiere decir "me está dando el sol". Uno sin cloroplastos ve 1 en cualquier lugar
+quiere decir «me está dando el sol». Uno sin cloroplastos ve 1 en cualquier lugar
 mientras sea de día. Lo cuenta [[simulacion/cloroplastos]].
 
 El motor la escribe al final del ciclo, después de todo lo demás, así que tu ADN

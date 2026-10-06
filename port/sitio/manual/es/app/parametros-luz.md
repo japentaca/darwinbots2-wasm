@@ -130,7 +130,6 @@ se debilita con la profundidad, según [[param:opt:32]]. En este modo
 ([[param:opt:20]]) y sin conectar arriba con abajo ([[param:opt:2]]), los bots
 pueden flotar a la altura que elijan con [[.setboy]] (ver
 [[simulacion/mundo#gravedad|gravedad, estanque y mareas]]).
-
 :::
 
 :::parametro opt:31

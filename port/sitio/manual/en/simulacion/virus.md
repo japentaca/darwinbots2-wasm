@@ -109,8 +109,9 @@ A virus's power is always less than 1, and each unit of power is stopped by
 strength; with less, the strongest ones get through, and so do those that hit
 right after being shot. More about slime in [[simulacion/defensas]].
 
-The virus doesn't tell species apart: a bot doesn't get infected by its own
-virus, but it can infect others of its species. A DNA can't go past 32000
+The virus doesn't tell species apart: it infects any bot it touches, including
+bots of the shooter's own species; the only one it never touches is the shooter
+itself. A DNA can't go past 32000
 words: if the gene doesn't fit, the infection doesn't happen.
 
 Since the gene goes in anywhere, **the genes that came after it shift by one

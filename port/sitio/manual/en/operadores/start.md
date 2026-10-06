@@ -33,7 +33,7 @@ cycle 20. After that [[.robage]] reaches 20 and the second body stops running.
 
 Two traps:
 
-- A second `start` in a row is not an "and also": it opens **another gene with
+- A second `start` in a row is not an “and also”: it opens **another gene with
   no conditions**. If you want two bodies with the same condition, repeat the
   `cond`.
 - A `start` with no `cond` doesn't empty the boolean stack. If the previous

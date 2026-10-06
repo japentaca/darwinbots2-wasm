@@ -12,8 +12,8 @@ que `b` (el de arriba), y _falso_ si no. `3 5 <` es verdadero; `5 3 <` y
 
 Es la comparación para los límites: «mientras tenga menos de», «si todavía
 no llegó a». Este bot empuja hacia adelante ([[.up]]) solo mientras va a menos
-de 20 ([[.velup]]). Acelera unos ciclos y después mantiene esa velocidad, sin
-pasarse:
+de 20 ([[.velup]]). Acelera unos ciclos y después se queda rondando esa velocidad, con alguna
+unidad de más o de menos:
 
 ```adn
 ' empuja solo mientras va a menos de 20

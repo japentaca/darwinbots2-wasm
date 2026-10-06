@@ -124,7 +124,7 @@ por un recorte circular: se toma el resto de dividirlo por 32000, conservando el
 signo. Así 32001 se guarda como 1 y −32001 como −1. Los múltiplos exactos de 32000
 no se convierten en 0 sino en ±32000: `32000 2 mult 51 store` deja 32000.
 
-Los stores de un operando que no pueden salirse del rango (`divstore`, `rndstore`,
+Los stores que no pueden salirse del rango (`divstore`, `rndstore`,
 `sgnstore`, `absstore`, `sqrstore` y `negstore`) escriben el resultado tal cual.
 
 :::nota
@@ -157,7 +157,8 @@ En la práctica, cada sysvar es de una de estas clases (su ficha en
 | Clase | Ejemplos | Qué pasa con lo que escribís |
 |---|---|---|
 | Órdenes | [[.up]], [[.aimdx]], [[.shoot]] | El motor las aplica en este mismo ciclo y las vuelve a 0 |
-| Sentidos | [[.eye5]], [[.robage]], [[.nrg]] | El motor las reescribe; tu valor se pierde |
+| Sentidos | [[.eye5]], [[.edge]] | El motor las reescribe; tu valor se pierde |
+| Datos publicados | [[.nrg]], [[.robage]] | El motor las reescribe en cada ciclo; tu valor se pierde |
 | Configuración | [[.focuseye]], [[.out1]] | Quedan como las dejaste: el motor las lee pero no las borra |
 | Memoria libre | la 50, la 60 | Nadie las toca; son tuyas |
 

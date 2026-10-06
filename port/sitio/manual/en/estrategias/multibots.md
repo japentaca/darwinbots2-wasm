@@ -129,9 +129,9 @@ stiffness) in the instant genetic memory cells, so every offspring is born
 with the same values without writing them again ([[adn/memoria]]).
 
 :::nota
-Even champions ship with typos that the editor flags. This one has a `=>`
-that isn't any operator, and a `head` without `*` that compares a 1 against
-address 101: that condition is always false and the gene that announced “enemy
+Even champions ship with typos that the editor flags. In genes not
+shown here, this one has a `=>` that isn't any operator and a `head` without `*`
+that compares a 1 against address 101: that condition is always false and the gene that announced “enemy
 nearby: anchor yourself” is dead. Always run what you write.
 :::
 

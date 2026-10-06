@@ -1,6 +1,6 @@
 ---
 titulo: .reftie
-resumen: "Cuántas veces aparece .tie en el ADN del bot que estás viendo: si es mayor que 0, sabe tirar lazos."
+resumen: "Cuántas veces aparece .tie en el ADN del bot que estás viendo: si es mayor que 0, sabe atarse a otros bots."
 etiquetas: [visión, refvars, firma, lazos]
 estado: revisada
 ---

@@ -63,7 +63,7 @@ nada.
 
 ## Las virtudes del campeón {#virtudes}
 
-**Eficiencia antes que valor.** Corrí un duelo suelto entre dos bots con
+**Eficiencia antes que coraje.** Corrí un duelo suelto entre dos bots con
 pedigree, _Russia_ y _Teriyaki_, en el campo de la liga: en 800 ciclos no se
 cruzaron ni una vez (los dos cazan a la espera), pero a ese ritmo uno quedaba
 con 2750 de energía y el otro con 580. Si la ronda llega al tope de ciclos y se
@@ -146,7 +146,7 @@ start
 stop
 ```
 
-De día caza con una mira fina y una periferia ancha, parándose al lado del
+Cuando ve algo, caza con una mira fina y una periferia ancha, parándose al lado del
 blanco y robándole la energía con [[.shoot]] en −1. Y al que lo muerde le
 paga con veneno: la picadura le escribe 128 en el giro cada ciclo, así el
 ladrón se pasa la vida girando en redondo en vez de seguir robando. Contra un

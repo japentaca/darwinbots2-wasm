@@ -14,7 +14,7 @@ The named cells are grouped by topic. The full list, with what each one does, is
 | Cells | What is there | Group |
 |---|---|---|
 | 1–12, 18–19 | Movement and shooting commands, age, mass, [[.timer]] | [[sysvars/movimiento]], [[sysvars/cuerpo]] |
-| 194–221 | What happened in the cycle: speed, collisions, flavors, edge, position, day | [[sysvars/contacto]], [[sysvars/posicion]] |
+| 194–221 | What happened in the cycle: speed, collisions, flavors, edge, position, day (nobody writes cell 221: see below) | [[sysvars/contacto]], [[sysvars/posicion]] |
 | 300–303, 310–315 | Reproduction, energy, body | [[sysvars/reproduccion]], [[sysvars/cuerpo]] |
 | 330–331, 335–341 | Ties, DNA and viruses | [[sysvars/adn-y-virus]] |
 | 400–402 | Sun and bot count | [[sysvars/posicion]] |
@@ -44,7 +44,7 @@ Cell 221 has a name ([[.hitang]]), but in DarwinBots 2.48.32 nothing ever writes
 If you write to a cell the engine uses, the engine overwrites it. Look at this bot:
 
 ```adn
-' La celda de .nrg no sirve para guardar nada
+' The .nrg cell is no good for storing anything
 def antes 60
 def libre 61
 
@@ -56,7 +56,7 @@ start
 stop
 ```
 
-When you run it, [[.nrg]] goes back to holding the real energy (3000) every cycle, and that is what cell 60 copies on the next cycle: the `1` was lost. Cell 61, on the other hand, keeps its `1`. Writing to `.nrg` doesn't change the bot's energy either: it is just a number the engine publishes.
+When you run it, [[.nrg]] goes back to holding the real energy (3000) every cycle (except the first, where a freshly seeded bot still reads it as 0), and that is what cell 60 copies on the next cycle: the `1` was lost. Cell 61, on the other hand, keeps its `1`. Writing to `.nrg` doesn't change the bot's energy either: it is just a number the engine publishes.
 
 ### Who else can write to your free memory {#quien-mas-puede-escribir-tu-memoria-libre}
 <!-- 21-MEMORIA §2 (altzheimer, shots de memoria), §4 (tieportcom, venom/poison) -->
@@ -109,11 +109,11 @@ See [[sysvars/mem-976-990]].
 This bot counts generations in cell 971:
 
 ```adn
-' Cuenta generaciones en la memoria genetica
+' Counts generations in genetic memory
 def generacion 971
 def listo 50
 
-' Una sola vez en la vida: suma 1 a lo que heredo
+' Once in a lifetime: adds 1 to what I inherited
 cond
 *.listo 0 =
 start
@@ -121,7 +121,7 @@ start
 1 .listo store
 stop
 
-' Se reproduce a los 10 ciclos de vida
+' Reproduces at 10 cycles of life
 cond
 *.robage 10 =
 start

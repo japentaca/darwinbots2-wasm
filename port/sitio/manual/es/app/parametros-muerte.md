@@ -57,7 +57,7 @@ pudre en cada ciclo. Solo cuenta si [[param:opt:51]] no es 0.
 :::
 
 :::parametro opt:53
-<!-- core robots.hpp Decay (DecayType 2 → newshot −4, 3 → newshot −2, valor min(Decay, body), rumbo al azar) -->
+<!-- core robots.hpp Decay (DecayType 2 → newshot −4, 3 → newshot −2, valor Decay si body > Decay/10 y si no body, rumbo al azar) -->
 Si el cadáver suelta algo en cada paso de la descomposición, en una dirección
 al azar:
 
@@ -67,9 +67,10 @@ al azar:
 - **disparo de energía**: suelta un regalo de energía (−2), una pequeña
   ración para el que pase cerca.
 
-El disparo sale con el valor de [[param:opt:51]], o con el cuerpo que le
-quede si es menos; como el cuerpo vale 10 de energía, lo que suelta equivale
-a lo que pierde. Solo cuenta si [[param:opt:51]] no es 0. Ver
+El disparo sale con el valor de [[param:opt:51]] mientras al cuerpo le quede
+más de su décima parte; en el último paso sale con lo que quede de cuerpo. Como
+el cuerpo vale 10 de energía, en los pasos normales lo que suelta equivale a lo
+que pierde. Solo cuenta si [[param:opt:51]] no es 0. Ver
 [[simulacion/disparos#tipos|qué hace cada disparo]].
 :::
 

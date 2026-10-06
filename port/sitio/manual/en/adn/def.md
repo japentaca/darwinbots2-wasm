@@ -49,7 +49,7 @@ Two practical consequences:
 The app's editor warns you about almost all of these cases: a name without a `def`, a `def` below its use, a case mismatch, or a word without a dot.
 :::
 
-A name "not existing" and being 0 seems harmless, but it isn't: in a store, address 0 does nothing, and in a read `*0` reads cell 1000. A typo in a name leaves the gene writing nowhere (see [[adn/numeros#cero]]).
+A name “not existing” and being 0 seems harmless, but it isn't: in a store, address 0 does nothing, and in a read `*0` reads cell 1000. A typo in a name leaves the gene writing nowhere (see [[adn/numeros#cero]]).
 
 ## A def is just a number {#numeros}
 <!-- 20-VM §8.2-8.3 (la privada es un número; normalización en ejecución); §8.1 (val del valor); Bestiario: LoveBot_F2_Moonfisher_-_30-03-08.txt -->
@@ -76,7 +76,7 @@ stop
 
 `.reloj inc` increments cell 60; `*.reloj` reads its value; `.giro` pushes the number 314 directly, which is what gets stored in [[.aimdx]]. When you run it, cell 60 counts from 0 to 19, goes back to 0, and in that cycle the bot's [[.aim]] drops by 314 (a quarter turn to the right, because the full turn is 1256).
 
-LoveBot F2, by Moonfisher, uses the same trick to leave a "key" for its children in genetic memory:
+LoveBot F2, by Moonfisher, uses the same trick to leave a “key” for its children in genetic memory:
 
 ```adn
 ' Fragment of LoveBot F2 (Moonfisher, 2008)
@@ -121,7 +121,7 @@ Stranger still: any line that starts with the letters `def` is taken as a `def`.
 defensa 50
 ```
 
-defines a variable called `nsa` with the value 50. If a bot ever does inexplicable things, check that no line starts with "def" by accident. The editor also warns you when a line is read as a `def`.
+defines a variable called `nsa` with the value 50. If a bot ever does inexplicable things, check that no line starts with “def” by accident. The editor also warns you when a line is read as a `def`.
 
 ## use: a dead word {#use}
 <!-- 20-VM §8.5 -->

@@ -74,7 +74,7 @@ mode 4 stops in the first cycle because it can't find Mutate.
 How long each hidden-predator epoch lasts, in cycles: each one lasts between
 0.83 and 1.17 times this value, with a random part so the bots can't learn
 the schedule. It also sets the ramp of the energy boost, which grows from 0 to
-its full value during the first 8 × this value cycles of the simulation. With
+its full value during the first (8 × this value) cycles of the simulation. With
 0 (the factory value), the epochs change every cycle and the mode is useless;
 to use it, set a few thousand.
 :::
@@ -98,7 +98,7 @@ body) and that of all its living descendants, up to ten generations, and
 combines that total with the number of descendants:
 
 - at **100** (the factory value), both count equally: the score is the
-  family's invested energy times one plus the number of descendants;
+  family's invested energy multiplied by (the number of descendants + 1);
 - **below 100**, energy weighs less, and at **0** only the number of
   descendants counts;
 - **above 100**, descendants weigh less, and at **200** only the family's

@@ -22,8 +22,8 @@ had at that moment; `.fixang` is for changing it.
 <!-- 34-TIES §0.4 (regang fija el ángulo actual; solo el lado no-back) -->
 
 Its resting value is **32000**, not 0: the bot is born with 32000 and the engine
-sets it back to 32000 after using it. Writing 0 is not "nothing", it is "the tie
-straight ahead". If the bot has no ties, the value you write just stays there.
+sets it back to 32000 after using it. Writing 0 is not “nothing”, it is “the tie
+straight ahead”. If the bot has no ties, the value you write just stays there.
 
 <!-- 21-MEMORIA §9.8 (centinela 32000; reset tras el gate tienum/tiepres) -->
 

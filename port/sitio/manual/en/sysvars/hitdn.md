@@ -13,7 +13,7 @@ opposite to [[.hitup]]; the other two are [[.hitdx]] and [[.hitsx]].
 Like all touch, the engine writes it in the physics step and your DNA reads it in
 the next cycle, only once.
 
-It is the typical "something caught me from behind" alert, where the eyes do not
+It is the typical “something caught me from behind” alert, where the eyes do not
 reach. The classic response is to turn around to look at it:
 
 ```adn

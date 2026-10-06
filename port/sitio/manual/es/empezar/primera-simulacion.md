@@ -102,7 +102,7 @@ Algunas cosas para probar:
 
 1. Pulsá **Seguir**: la cámara acompaña al bot por el mundo.
 2. Pausá y avanzá con **Un ciclo**, mirando en **Genes activos este ciclo**
-   cuál gen se enciende cuando el bot ve una alga.
+   cuál gen se enciende cuando el bot ve un alga.
 3. Abrí la pestaña **ADN** para leer su programa, o **Sentidos** para ver el
    abanico de sus nueve ojos.
 4. Pulsá **Familia** para resaltar a sus descendientes en el mundo.
@@ -177,7 +177,7 @@ Para sembrarlo:
 2. Poné un **Nombre** (por ejemplo, «Mi primer bot») y pulsá **Crear**: se
    abre el editor con el ADN.
 3. En la ficha del bot, pulsá **Sembrar**, elegí un **Color** que se
-   distinga, dejá la **Cantidad** en 5 y la **Energía inicial** en 3000, y
+   distinga, dejá la **Cantidad de bots** en 5 y la **Energía inicial** en 3000, y
    pulsá **Sembrar en la corrida actual**.
 
 Seguilo con el inspector. En las pruebas que hicimos con el motor, sembrando

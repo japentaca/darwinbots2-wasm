@@ -28,7 +28,7 @@ start
 stop
 ```
 
-En una prueba contra un bot que se desplazaba de costado, este bot lo mantuvo
+En una prueba contra un bot que se desplazaba de costado, un bot con estos dos genes lo mantuvo
 en el [[.eye5]] durante todo el recorrido.
 
 Lo que llega es la posición que el otro _publicó_, no la exacta de este

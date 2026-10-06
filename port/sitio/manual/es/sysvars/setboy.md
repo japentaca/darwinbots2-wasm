@@ -9,7 +9,7 @@ La flotabilidad es un número entre 0 y 1 que el bot lleva consigo. `.setboy` la
 cambia: lo que escribas se divide por 32000 y se suma a la que ya tenía, así que
 `8000 .setboy store` sube un cuarto y `-8000 .setboy store` la baja un cuarto. El
 resultado nunca sale del rango de 0 a 1. Se aplica en el mismo ciclo y el motor
-borra la orden. El valor nuevo se lee en [[.rdboy]].
+borra la orden. El valor nuevo se lee en [[.rdboy]], que lo publica multiplicado por 32000 (de 0 a 32000).
 
 <!-- 31-ENERGIA §1 (flotabilidad en pondmode: costo ∝ min(masa,192)·Bouyancy); 36-REPRO §2 (Bouyancy heredada) -->
 Solo tiene efecto con la opción [[param:opt:30]] activada, gravedad

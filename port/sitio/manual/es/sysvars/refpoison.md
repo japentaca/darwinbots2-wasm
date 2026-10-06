@@ -1,6 +1,6 @@
 ---
 titulo: .refpoison
-resumen: "Cuánto veneno de defensa (poison) tiene guardado el bot que estás viendo: dispararle puede devolverte veneno."
+resumen: "Cuánta toxina (poison) tiene guardada el bot que estás viendo: dispararle puede devolverte un disparo de toxina."
 etiquetas: [visión, refvars, defensas, poison]
 estado: revisada
 ---
@@ -19,7 +19,7 @@ detalles están en [[simulacion/defensas]].
 Su pareja es [[.refvenom]]. Si no ves nada, vale 0.
 
 ```adn
-' a los venenosos no les disparo
+' a los que tienen toxina no les disparo
 cond
 *.eye5 0 >
 *.refeye *.myeye !=

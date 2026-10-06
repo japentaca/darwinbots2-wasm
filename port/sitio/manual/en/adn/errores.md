@@ -18,7 +18,7 @@ symptom, the cause, and a wrong and a right example. Some are caught by the
 |---|---|
 | The bot doesn't move or do anything | [[adn/errores#nombre|misspelled name]], [[adn/errores#start-stop|start or stop]], [[adn/errores#direccion|.up and *.up]] |
 | An action repeats every cycle, or gets forgotten | [[adn/errores#accion|action sysvars]] |
-| A store "sometimes" doesn't write | [[adn/errores#booleana|conditions on the stack]] |
+| A store “sometimes” doesn't write | [[adn/errores#booleana|conditions on the stack]] |
 | A condition is never met | [[adn/errores#pila-vacia|empty stack]], [[adn/errores#direccion|.up and *.up]] |
 | Odd numbers in memory | [[adn/errores#division|division by zero]], [[adn/errores#rango|out of range]] |
 | The population kills itself | [[adn/errores#especie|shooting your own species]] |
@@ -42,7 +42,7 @@ start
 stop
 ```
 
-The editor flags both: "Did you mean .up?" and "missing dot?". Right:
+The editor flags both: “Did you mean .up?” and “missing dot?”. Right:
 
 ```adn
 cond
@@ -141,7 +141,7 @@ rewritten by the engine every cycle with the real value: whatever you store ther
 lost. Neither kind works as memory. [[simulacion/ciclo]] has the
 order in which each thing happens.
 
-This bot wants to turn once, "while .aimdx is 0". Since the engine sets it
+This bot wants to turn once, “while .aimdx is 0”. Since the engine sets it
 back to 0 after each turn, it turns 100 units in _every_ cycle:
 
 ```adn
@@ -269,7 +269,7 @@ stop
 ```
 
 In the condition section (between `cond` and `start`) the opposite happens: everything
-left on the stack is joined with "and". If you want "or", you have to write
+left on the stack is joined with “and”. If you want “or”, you have to write
 [[op:or]].
 
 ## The else after the start {#else}
@@ -277,7 +277,7 @@ left on the stack is joined with "and". If you want "or", you have to write
 
 In the original DarwinBots 2.48.32, an `else` that came after a `start`
 never ran its body, whether or not the condition was met. The authors
-documented it as "same as start but active if the condition is false",
+documented it as “same as start but active if the condition is false”,
 but the program didn't do that. This port fixes it: the `else` runs when the
 gene's conditions are false.
 

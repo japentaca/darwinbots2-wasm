@@ -9,7 +9,7 @@ Buoyancy is a number between 0 and 1 that the bot carries with it. `.setboy` cha
 it: whatever you write is divided by 32000 and added to what it already had, so
 `8000 .setboy store` raises it by a quarter and `-8000 .setboy store` lowers it by a quarter. The
 result never leaves the range 0 to 1. It applies in the same cycle and the engine
-clears the order. The new value is read in [[.rdboy]].
+clears the order. The new value is read in [[.rdboy]], which publishes it multiplied by 32000 (from 0 to 32000).
 
 <!-- 31-ENERGIA §1 (flotabilidad en pondmode: costo ∝ min(masa,192)·Bouyancy); 36-REPRO §2 (Bouyancy heredada) -->
 It only has an effect with the [[param:opt:30]] option on, gravity

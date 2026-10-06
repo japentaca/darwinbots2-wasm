@@ -14,7 +14,8 @@ Como [[.shflav]], llega con un ciclo de atraso, dura un ciclo y vale 0 si no
 te pegó nada.
 
 Como está medido en el mismo sentido que [[.aimdx]], copiarlo ahí te hace
-girar justo hacia el tirador:
+girar justo hacia el tirador. Este ejemplo solo reacciona al robo de energía
+(`.shflav` −1); con `*.shflav 0 !=` reaccionaría a cualquier golpe:
 
 ```adn
 cond

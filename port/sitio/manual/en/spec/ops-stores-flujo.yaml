@@ -14,7 +14,7 @@ opcodes:
   - {token: absstore, sem: "Pops an address and drops the sign of the cell: −77 becomes 77."}
   - {token: sqrstore, sem: "Pops an address and leaves in the cell its square root, rounded to the nearest integer. If it held 0 or a negative, it ends at 0."}
   - {token: negstore, sem: "Pops an address and flips the sign of the cell: 20 becomes −20."}
-  - {token: cond, sem: "Closes the previous gene and opens a new one with its condition section. Empties the boolean stack. Everything runs there, but the stores do not write."}
+  - {token: cond, sem: "Closes the previous gene and opens a new one with its condition section. Empties the boolean stack. Everything runs in that section, but the stores do not write."}
   - {token: start, sem: "Opens the body of the gene. After a [[op:cond]], it empties the boolean stack and runs only if all the conditions are true (or there are none). With no cond before it, it opens a gene without conditions."}
   - {token: else, sem: "Opens the “otherwise” body: it runs only if the conditions of the gene were false. After a start with no cond, a stop or another else, it never runs."}
   - {token: stop, sem: "Closes the gene: nothing runs until the next cond, start or else. It does not empty the boolean stack, unless it directly closes the conditions of a cond."}

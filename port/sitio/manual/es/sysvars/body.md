@@ -15,7 +15,7 @@ pagar nada, pero tiene efectos:
   cada ciclo (ver [[simulacion/energia]]).
 - **Vida.** Si el cuerpo baja de 0,5, el bot muere aunque tenga energía.
 - **Reproducción.** Al reproducirse, el hijo se lleva su porcentaje del cuerpo (ver
-  [[.repro]]); con muy poco cuerpo no hay parto.
+  [[.repro]]); con menos de 5 de cuerpo no hay parto.
 
 <!-- sysvars.yaml .body (ManageBody P5); comprobado: sembrado e hijo la leen en 0 en su primer ciclo -->
 El motor la publica al final del ciclo, entre 0 y 32000. En su primer ciclo de vida

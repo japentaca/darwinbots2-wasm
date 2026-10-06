@@ -12,7 +12,7 @@ see is a shape, the rest of the `ref*` sysvars come in at 0 except position,
 velocity and [[.reffixed]].
 
 The catch is that 0 is also what it is when you see nothing. `.reftype` at 0
-doesn't mean "there is a bot": for that, combine it with an eye, such as [[.eye5]] or
+doesn't mean “there is a bot”: for that, combine it with an eye, such as [[.eye5]] or
 [[.eyef]].
 
 There is one more case where it is 1: when you collide with a shape without seeing

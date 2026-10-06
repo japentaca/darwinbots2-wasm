@@ -120,7 +120,7 @@ alcancía, están en [[sysvars/cuerpo]].
 Los desechos ([[.waste]]) aparecen por tres vías:
 
 - **Fabricar defensas.** El costo extra de [[.mkshell]], [[.mkslime]],
-  [[.mkvenom]] y [[.mkpoison]] (ver [[simulacion/defensas]]) no desaparece: se
+  [[.strvenom]] y [[.strpoison]] (ver [[simulacion/defensas]]) no desaparece: se
   vuelve desecho, uno por uno.
 - **Comer.** El 1 % de lo que entra por un disparo o un lazo.
 - **Recibir los de otro**, con un disparo −4 o por un lazo con [[.sharewaste]].

@@ -93,8 +93,10 @@ ciclo no supera masa × [[param:opt:19]] × este coeficiente, no se mueve, y el
 empuje se cobra igual. Si ya se está moviendo, solo frena los empujes de
 costado. Sin gravedad Z no hace nada.
 
-La app lo trae en 0 y la **Liga F1** en 0,6: con eso, un bot de masa 1 necesita
-pedir más de 1,8 de empuje (`2 .up store`) para arrancar. El umbral crece con
+La app lo trae en 0 y la **Liga F1** en 0,6: con eso, un bot de masa 1 (y
+[[param:opt:19]] en 2) tiene un umbral de 1,2 de empuje efectivo, y como el
+motor solo aprovecha el 0,66 de lo que pedís ([[param:opt:12]]), tiene que pedir
+más de 1,8 (`2 .up store`) para arrancar. El umbral crece con
 la masa, así que los bots muy pesados quedan clavados. Ver
 [[simulacion/fisica#rozamiento|el rozamiento]].
 :::

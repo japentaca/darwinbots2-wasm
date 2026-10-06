@@ -224,14 +224,14 @@ it copies. See [[simulacion/reproduccion#reparto]].
 :::parametro cost:26
 <!-- robots.hpp storevenom: |Delta| × VENOMCOST × mult; el costo pasa a Waste -->
 This is the transaction cost for each unit of venom the bot makes with
-[[.mkvenom]], on top of the fixed conversion (1 energy per unit). What is paid
+[[.strvenom]], on top of the fixed conversion (1 energy per unit). What is paid
 as this cost doesn't disappear: it becomes waste ([[.waste]]). With the F1
 rules it is 0.01. See [[simulacion/defensas#fabricar]].
 :::
 
 :::parametro cost:27
 <!-- robots.hpp storepoison -->
-Same as the venom one, for the poison made with [[.mkpoison]] (the fixed
+Same as the venom one, for the poison made with [[.strpoison]] (the fixed
 conversion is 1 energy per 4 units). The cost also becomes waste. With the F1
 rules it is 0.01. See [[simulacion/defensas#fabricar]].
 :::

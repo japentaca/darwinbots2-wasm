@@ -150,7 +150,7 @@ the paralyzed bot a command chosen by whoever shot it. See
 [[simulacion/defensas#veneno]] and [[.paralyzed]].
 
 **Poison.** A passive defense: to whoever bites you it returns a poison shot
-that poisons them. You make it with [[.mkpoison]]. See
+that poisons them. You make it with [[.strpoison]]. See
 [[simulacion/defensas#toxina]].
 
 ## R {#r}
@@ -176,7 +176,7 @@ your own. See [[app/escenarios]].
 **Seed.** The number that fixes a simulation's randomness: the same scenario
 and the same seed give the same simulation. See [[tecnico/semillas]].
 
-**Shell.** A defense that absorbs part of the shots that steal body and the
+**Shell.** A defense that stops part of the shots that steal body and the
 venom shots. You make it with [[.mkshell]]. See
 [[simulacion/defensas#caparazon]].
 
@@ -233,7 +233,7 @@ born with chloroplasts and the simulation replenishes it when it runs short.
 See [[simulacion/cloroplastos#vegetales]].
 
 **Venom.** A weapon: it is fired and paralyzes the victim. You make it with
-[[.mkvenom]]. See [[simulacion/defensas#veneno]].
+[[.strvenom]]. See [[simulacion/defensas#veneno]].
 
 **Virus.** A gene packaged in a shot: the bot copies one of its genes and fires
 it, and if it hits another bot, the gene is inserted into its DNA. You make it

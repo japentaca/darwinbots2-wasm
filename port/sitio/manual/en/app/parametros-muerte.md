@@ -56,7 +56,7 @@ rots every cycle. It only counts if [[param:opt:51]] is not 0.
 :::
 
 :::parametro opt:53
-<!-- core robots.hpp Decay (DecayType 2 → newshot −4, 3 → newshot −2, valor min(Decay, body), rumbo al azar) -->
+<!-- core robots.hpp Decay (DecayType 2 → newshot −4, 3 → newshot −2, valor Decay si body > Decay/10 y si no body, rumbo al azar) -->
 Whether the corpse releases something at each decay step, in a random
 direction:
 
@@ -66,8 +66,9 @@ direction:
 - **energy shot**: it releases an energy gift (−2), a small ration for whoever
   passes nearby.
 
-The shot goes out with the value of [[param:opt:51]], or with whatever body it
-has left if that is less; since body is worth 10 energy, what it releases equals
+The shot goes out with the value of [[param:opt:51]] as long as more than a tenth
+of that is left in the body; on the last step it goes out with whatever body is
+left. Since body is worth 10 energy, in the normal steps what it releases equals
 what it loses. It only counts if [[param:opt:51]] is not 0. See
 [[simulacion/disparos#tipos|what each shot does]].
 :::

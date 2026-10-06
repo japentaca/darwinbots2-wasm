@@ -93,8 +93,10 @@ that cycle doesn't exceed mass × [[param:opt:19]] × this coefficient, it
 doesn't move, and the thrust is charged anyway. If it is already moving, it
 only slows down sideways pushes. Without Z gravity it does nothing.
 
-The app has it at 0 and the **F1 league** at 0.6: with that, a bot of mass 1
-has to ask for more than 1.8 of thrust (`2 .up store`) to start off. The
+The app has it at 0 and the **F1 league** at 0.6: with that, a bot of mass 1 (and
+[[param:opt:19]] at 2) has a threshold of 1.2 of effective thrust, and since the
+engine only uses 0.66 of what you ask for ([[param:opt:12]]), it has to ask for
+more than 1.8 (`2 .up store`) to start off. The
 threshold grows with mass, so very heavy bots get stuck. See
 [[simulacion/fisica#rozamiento|friction]].
 :::

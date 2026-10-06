@@ -147,7 +147,7 @@ start
 stop
 ```
 
-By day it hunts with a fine sight and a wide periphery, standing next to the
+When it sees something, it hunts with a fine sight and a wide periphery, standing next to the
 target and stealing its energy with [[.shoot]] at −1. And whoever bites it, it
 pays back with venom: the sting writes 128 into the turn every cycle, so the
 thief spends its life spinning in circles instead of going on stealing.

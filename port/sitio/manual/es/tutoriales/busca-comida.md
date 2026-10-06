@@ -83,7 +83,7 @@ gira (ver [[app/inspector]]).
 
 ## Paso 3: el torneo por el ojo que más ve {#maximo}
 
-Para ir hacia la comida hay que girar hacia el ojo con el número más alto, y
+Para ir hacia la comida hay que girar hacia el ojo que lee el valor más alto, y
 el ADN no tiene un máximo que compare nueve valores de una sola tirada
 ([[op:floor]] compara de a pares). La solución es un torneo, con dos celdas
 de [[adn/memoria|memoria libre]]:

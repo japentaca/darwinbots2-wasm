@@ -161,7 +161,7 @@ cuando puede, sugiere el nombre correcto. Ver [[adn/errores#nombre]].
 
 Porque el ADN no sabe de especies: dispara a lo que tiene enfrente. Hay que
 agregarle a la condición del disparo una comparación de firmas, como
-`*.refeye *.myeye !=` («lo que veo no es de los míos»). Ver
+`*.refeye *.myeye !=` («la firma de lo que veo no es la mía»). Ver
 [[adn/errores#especie]] y [[tutoriales/reconoce-especie]].
 
 ### ¿Dónde aprendo a escribir bots? {#aprender}

@@ -39,8 +39,8 @@ doesn't store it (see [[app/escenarios]]). Other places where it appears:
   [[app/competir]], and it is the one **↻ Replay** reuses;
 - **the first replicate** of a replicates job uses the source run's seed, to
   repeat it (see [[app/analizar#comparar]]);
-- **Testing** a bot in the editor runs several seeds and, with the same first one,
-  always gives the same result (see [[app/editor#probar]]).
+- **the test of a bot** (**Test**, in the editor) runs several seeds and, with
+  the same first one, always gives the same result (see [[app/editor#probar]]).
 <!-- web2/src/lib/experimentar/borrador.js (SEMILLA_MAX 2147483646, parsearSemilla, semillaAleatoria); i18n experimentar.semilla.ayuda, experimentar.error.semilla; engine/replicas.js semillasReplicas (la primera es la de la corrida); lib/trabajos/prueba.js -->
 
 ## When two runs are identical {#identicas}

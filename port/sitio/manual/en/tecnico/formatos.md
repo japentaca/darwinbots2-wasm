@@ -174,7 +174,7 @@ in [[app/bots#importar]].
 - **Report `.html`** ([[app/informes#archivo]]): a single self-contained file,
   with the charts and the data embedded; it opens offline and prints on A4 from
   the browser.
-- **Series `.csv` and Everything `.json`** ([[app/informes#datos]]): a run's metrics
+- **Series · CSV** and **Everything · JSON** ([[app/informes#datos]]): a run's metrics
   for your spreadsheet, or the full history, events and lineage. Compare's
   sweeps download their own CSVs.
 - **`eyes.txt`**: the gene that sets the eyes designed in the inspector, ready to

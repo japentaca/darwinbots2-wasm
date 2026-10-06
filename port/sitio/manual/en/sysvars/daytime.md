@@ -13,13 +13,13 @@ world's total energy.
 
 For a bot with chloroplasts there is a nuance: the sun may light only a strip of the
 world, and if the bot is outside it, it reads 0 even in daytime. For such a bot, `.daytime`
-means "the sun is shining on me". One without chloroplasts sees 1 anywhere
+means “the sun is shining on me”. One without chloroplasts sees 1 anywhere
 as long as it is daytime. This is covered in [[simulacion/cloroplastos]].
 
 The engine writes it at the end of the cycle, after everything else, so your DNA
 reads what happened in the previous cycle.
 
-A classic use is saving energy at night. _Anon Terifica daynight_, from the Bestiary, pins
+A classic use is saving energy at night. _Anon Terifica daynight_, from the Bestiary, anchors
 itself in place when it gets dark and lets go at dawn (see [[.fixed]]):
 
 ```adn

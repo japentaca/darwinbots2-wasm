@@ -74,7 +74,7 @@ modo 4 se detiene en el primer ciclo porque no encuentra a Mutate.
 Cuánto dura cada época del depredador oculto, en ciclos: cada una dura entre 0,83
 y 1,17 veces este valor, con una parte al azar para que los bots no puedan
 aprenderse el reloj. También fija la rampa de la ayuda de energía, que crece
-desde 0 hasta su valor completo durante los primeros 8 × este valor ciclos de la
+desde 0 hasta su valor completo durante los primeros (8 × este valor) ciclos de la
 simulación. Con 0 (de fábrica), las épocas cambian en cada ciclo y el modo no
 sirve; para usarlo poné algunos miles.
 :::
@@ -97,7 +97,8 @@ todos sus descendientes vivos, hasta diez generaciones, y combina ese total con 
 cantidad de descendientes:
 
 - en **100** (de fábrica), cuentan las dos cosas por igual: el puntaje es la
-  energía invertida de la familia por la cantidad de descendientes más uno;
+  energía invertida de la familia multiplicada por (la cantidad de
+  descendientes + 1);
 - por **debajo de 100**, la energía pesa menos, y en **0** solo cuenta la cantidad
   de descendientes;
 - por **encima de 100**, los descendientes pesan menos, y en **200** solo cuenta

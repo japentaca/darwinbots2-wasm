@@ -20,7 +20,7 @@ Cada bot es un círculo que se desliza sobre un plano. Tiene una posición, una 
 
 Todas llegan con un ciclo de atraso, como todos los sentidos ([[adn/ejecucion#retraso]]).
 
-**La masa** sale del cuerpo, del caparazón y de los cloroplastos: 1 por cada 1000 de [[.body]], 1 por cada 200 de [[.shell]] y casi 1 por cada cloroplasto. Nunca baja de 1 ni pasa de 32000. Un bot común pesa 1; uno con 500 cloroplastos pesa unos 500 (los detalles, en [[.mass]]).
+**La masa** sale del cuerpo, del caparazón y de los cloroplastos: 1 por cada 1000 de [[.body]], 1 por cada 200 de [[.shell]] y casi 1 por cada cloroplasto. Nunca baja de 1 ni pasa de 32000. Un bot común pesa 1; uno con 500 cloroplastos pesa casi 500 (los detalles, en [[.mass]]).
 
 **El radio** crece con el cuerpo, cada vez más despacio:
 

@@ -22,7 +22,7 @@ for your own variables (see [[adn/numeros]] and [[adn/memoria]]).
 it is always written in this order:
 
 ```adn
-' sube: escribe 50 en .up cada ciclo
+' up: writes 50 to .up every cycle
 cond
 start
 50 .up store
@@ -44,7 +44,7 @@ steady speed.
 1 from whatever is in that cell. They are the cheapest way to keep a counter:
 
 ```adn
-' cuenta los ciclos en la celda 50
+' counts the cycles in cell 50
 start
 50 inc
 stop
@@ -124,7 +124,7 @@ through a circular clipping: the remainder of dividing it by 32000 is taken, pre
 sign. So 32001 is stored as 1 and −32001 as −1. Exact multiples of 32000
 don't become 0 but ±32000: `32000 2 mult 51 store` leaves 32000.
 
-The one-operand stores that can't go out of range (`divstore`, `rndstore`,
+The stores that can't go out of range (`divstore`, `rndstore`,
 `sgnstore`, `absstore`, `sqrstore` and `negstore`) write the result as is.
 
 :::nota
@@ -157,7 +157,8 @@ In practice, each sysvar belongs to one of these classes (its entry in
 | Class | Examples | What happens to what you write |
 |---|---|---|
 | Commands | [[.up]], [[.aimdx]], [[.shoot]] | The engine applies them in this same cycle and sets them back to 0 |
-| Senses | [[.eye5]], [[.robage]], [[.nrg]] | The engine rewrites them; your value is lost |
+| Senses | [[.eye5]], [[.edge]] | The engine rewrites them; your value is lost |
+| Published data | [[.nrg]], [[.robage]] | The engine rewrites them every cycle; your value is lost |
 | Configuration | [[.focuseye]], [[.out1]] | They stay as you left them: the engine reads them but doesn't clear them |
 | Free memory | cell 50, cell 60 | Nobody touches them; they are yours |
 

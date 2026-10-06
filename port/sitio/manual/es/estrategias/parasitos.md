@@ -64,15 +64,15 @@ stop
 ```
 
 El 99 en [[.sharenrg]] no es una transfusión: es «sumá tu energía con la mía y
-déjame el 99 %», cada ciclo, hasta el tope de su cuerpo. Es una succión mucho
-más rendidora que el `−1` del tutorial, que pierde el 30 % en el camino; acá solo
+dejame el 99 %», cada ciclo, hasta el tope de su cuerpo. Es una succión mucho
+más rendidora que el `-1` del tutorial, que pierde el 30 % en el camino; acá solo
 se paga el 1 % de lo movido. Lo mismo le hace a la baba y al caparazón del
 atado.
 <!-- 34-TIES §2.1 (sharenrg: tope por body, 1 % al iniciador, se borra cada ciclo, solo el lado que creó el lazo); port/core ties.hpp tie_transfers (el −1 rinde 0,7) -->
 
 Corrido contra un blanco que camina: lazo al primer ciclo, endurecimiento
 recién al 53 (el gen de caza re-ata cada vez que ve a la presa, y cada
-re-ata re inicia el reloj) y desde ahí el huésped se vació a mil por ciclo —
+re-ata reinicia el reloj) y desde ahí el huésped se vació a mil por ciclo —
 de 3000 a 2000 y a 1000 en los ciclos 54 y 55, cadáver al 60—, con el parásito
 cobrando 990. Después tuvo un hijo, y ahí se vio el
 costo de no mirar de quién es el atado: pibe y padre quedaron atados entre sí,
@@ -81,7 +81,7 @@ padre terminó seco al ciclo 67. El hijo, que venía con menos, frenó en 548
 cuando el otro pasó a ser cadáver.
 <!-- probado: 800x600, semilla 1, 80 ciclos, --cada 1: lazo en el ciclo 1 (puerto 2: el 1 del gen six más el .tie inc del gen 10), multi al 53, huesped 3000 -> 2000 -> 1000 (ciclos 54-55) -> cadaver al 60; hijo al 56, padre e hijo a −300 netos por ciclo, padre cadaver al 67, hijo frena en 548; re-corrido (--cada 10): multi al 60, huesped cadaver al 60, padre cadaver al 70, hijo frena en 548.25 -->
 
-El bot tiene además un gen que promete chupar 1000 por ciclo con `−1`, y un gen
+El bot tiene además un gen que promete chupar 1000 por ciclo con `-1`, y un gen
 «hacker» que le escribiría un 0 en la [[.up]] del atado para frenarlo. Los dos
 juntos no hacen ninguna de las dos cosas: el hacker pisa `.tieloc` con la
 dirección de `.up` (la transferencia pide `.tieloc` negativo) y deja `.tienum`
@@ -118,8 +118,9 @@ start
 stop
 ```
 
-Después de atar fija su propio ángulo del lazo en 0 — el huésped siempre le
-queda adelante y viaja colgado como una remora (en la corrida, el ángulo se
+Después de atar (el gen de arriba solo frena y cancela el giro), otro gen que
+la página no muestra fija su propio ángulo del lazo en 0 con `0 .fixang` — el
+huésped siempre le queda adelante y viaja colgado como una remora (en la corrida, el ángulo se
 quedó rondando los −17, una fracción de vuelta) — y una vez multicelular chupa
 a sorbitos, según lo lleno que esté el otro:
 
@@ -224,7 +225,7 @@ entera, porque cada hijo de la víctima nace contagiado.
 
 ## Un sedante mínimo {#sedante}
 
-Para cerrar, una receta propia de una sola de las dos: un virus que no mata ni
+Para cerrar, una receta propia que usa solo el segundo de los dos caminos: un virus que no mata ni
 drena, solo inmoviliza. El gen inyectado escribe 1 en [[.fixpos]], y ya está:
 `.fixpos` es un interruptor que el motor nunca borra y que la física respeta
 sin importar dónde cayó el gen en el ADN ajeno ni qué escriba después el

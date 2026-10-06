@@ -8,7 +8,7 @@ estado: revisada
 `.veldn` es exactamente [[.velup]] con el signo cambiado: positiva cuando el bot se
 mueve marcha atrás respecto de su rumbo y negativa cuando avanza. No agrega
 información; existe para que las condiciones se lean más naturales, como
-"si retrocede" en lugar de "si la velocidad hacia adelante es negativa".
+«si retrocede» en lugar de «si la velocidad hacia adelante es negativa».
 
 La publica el motor después de mover y girar al bot, y vale 0 en el primer ciclo.
 

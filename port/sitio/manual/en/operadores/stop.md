@@ -33,8 +33,8 @@ start
 stop
 ```
 
-Cell 52 holds 1 from the first cycle. Cell 51, in contrast, stays at 0 until
-cycle 7: as long as [[.robage]] doesn't go past 5, the false from the first
+Cell 52 holds 1 from the first cycle. Cell 51, in contrast, stays at 0 for the
+first six cycles of life: as long as [[.robage]] doesn't go past 5, the false from the first
 gene reaches the second `start` intact and skips its store. The third gene
 doesn't have the problem because its `cond` empties the stack. More on this in
 [[adn/pilas#rareza]].

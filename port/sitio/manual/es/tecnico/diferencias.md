@@ -133,7 +133,7 @@ Una más de la misma familia:
   dejar pasar un pico por arriba.
   <!-- port/README B3-6 -->
 
-Los virus tenían tres: **dispararlos se cobraba dos veces** (acá una);
+Los virus tenían tres errores: **dispararlos se cobraba dos veces** (acá una);
 **la potencia dependía del número del gen copiado** (copiar el gen 7 contagiaba
 siete veces más fuerte que el gen 1); y **atravesar la baba fortalecía al
 virus** en vez de gastarlo. Las tres están corregidas, y por eso la baba
@@ -189,7 +189,7 @@ Cinco de los sentidos de siempre:
   cuando la víctima muere por disparo, que era el camino sin tope.
   <!-- port/README A3-5 -->
 
-Y la **visión de las formas** tenía cuatro errores de una: la sombra de una
+Y la **visión de las formas** tenía cuatro errores a la vez: la sombra de una
 forma no coincidía con la forma (estaba girada y tapaba de más), el ancho de
 los ojos se calculaba distinto para formas que para bots, [[.eyef]] no subía a
 32000 para un bot metido dentro de una forma, y la posición de la forma solo

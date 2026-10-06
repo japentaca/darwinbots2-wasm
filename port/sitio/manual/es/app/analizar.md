@@ -10,7 +10,7 @@ cuántos bots hay de cada especie, cuánta energía tienen, qué largo tiene su 
 cuántas veces dispararon, quién es hijo de quién. Analizar dibuja todo eso y te
 ayuda a encontrar lo interesante.
 
-Se abre desde **Analizar** en la barra de navegación. Tiene siete pestañas:
+Se abre desde **Analizar** en la barra de arriba. Tiene siete pestañas:
 **Panel**, **Especies**, **Filogenia**, **Genética**, **Eventos**, **Comparar** e
 **Informes**. Las primeras cinco miran una sola corrida; las dos últimas trabajan
 con varias.
@@ -106,7 +106,7 @@ reglas».
 | **Oscilación** | Una población que sube y baja con un período regular, al menos cinco veces seguidas. |
 
 Los vegetales no cuentan en ninguno, salvo en la extinción. Cada hallazgo tiene un
-enlace con su ciclo: al tocarlo, una línea punteada marca ese ciclo en los cuatro
+enlace con su ciclo: al tocarlo, una línea discontinua marca ese ciclo en los cuatro
 gráficos. Si los detectores no encuentran nada, la tarjeta lo dice. Con la
 corrida actual, los hallazgos se recalculan cada pocos segundos. Son las mismas
 frases que abren un informe (ver [[app/informes]]).
@@ -176,7 +176,7 @@ La pestaña tiene dos mitades.
 y con los botones, qué medir: **Longitud del ADN**, **Generación**,
 **Mutaciones acumuladas**, **Edad**, **Energía**, **Cuerpo**, **Genes**, **Hijos**
 y **Presas cazadas**. El histograma es de la última muestra, con una línea
-punteada en la mediana. Para todas las especies se suma **Evolución en la
+discontinua en la mediana. Para todas las especies se suma **Evolución en la
 corrida**: un mapa de calor con el tiempo en un eje y el valor en el otro, más
 oscuro donde hay más bots. Ahí se ve, por ejemplo, cómo el largo del ADN se va
 corriendo a lo largo de la corrida. Para una sola especie hay cuatro medidas
@@ -214,7 +214,7 @@ botones filtran por tipo y cuentan cuántos hay:
 | **Guardar y cargar** | cuándo se guardó, se retomó o se cargó de un archivo |
 
 Al tocar un evento, en la lista o en su pin, su ciclo queda marcado con una línea
-punteada en este gráfico y en los del Panel y de Especies. **Quitar la marca** la
+discontinua en este gráfico y en los del Panel y de Especies. **Quitar la marca** la
 borra. Sirve para ver qué pasó con las métricas justo después de un cambio en
 caliente o de una extinción.
 

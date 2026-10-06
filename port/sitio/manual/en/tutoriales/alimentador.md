@@ -82,11 +82,11 @@ stop
 
 Three new decisions in those conditions:
 
-- **[[.refnrg]] above 100** means "this has energy and is alive": corpses,
+- **[[.refnrg]] above 100** means “this has energy and is alive”: corpses,
   which show their real energy, 0, are left off the menu.
 - **[[.refeye]] different from [[.myeye]]** is the species test from
   [[tutoriales/reconoce-especie]]: it doesn't run after your own kind.
-- **[[.tiepres]] different from 5** means "I'm not eating": 5 is the _port_
+- **[[.tiepres]] different from 5** means “I'm not eating”: 5 is the _port_
   we are going to use to call the tie in the next step, and this check keeps
   the bot from tying to two prey at once.
 
@@ -136,7 +136,7 @@ prey with the same port** leaves you with two ties called 5, and you lose
 control: port commands —transfer, fix, write to the other's memory— reach
 **both at once**, while the [[sysvars/tref|tref* cells]] only describe the
 first one and [[.deltie]] cuts one tie per pass. That is why all the hunting
-genes demand "hands free": as long as `.tiepres` is 5, this bot doesn't
+genes demand “hands free”: as long as `.tiepres` is 5, this bot doesn't
 search, approach or tie to anyone else.
 :::
 <!-- port/core ties.hpp Update_Ties/tieportcom (las órdenes con .tienum recorren TODOS los lazos con ese puerto; readtie lee el primero; el bucle de .deltie, con el corrimiento de DeleteTie, corta uno por pasada — igual que Ties.bas:193-200); core DeleteTie (borrar el lazo más antiguo deja .tiepres en 0 aunque queden otros) -->
@@ -160,8 +160,8 @@ stop
 
 Four commands: [[.readtie]] points the tie's senses (the
 [[sysvars/tref|tref* cells]]) at port 5; [[.tienum]] picks tie 5 for
-everything else; [[.tieloc]] at −1 says "transfer energy" and a negative
-[[.tieval]] says "take". You can take up to 3000 per cycle; we ask for 1000,
+everything else; [[.tieloc]] at −1 says “transfer energy” and a negative
+[[.tieval]] says “take”. You can take up to 3000 per cycle; we ask for 1000,
 and the engine trims it to whatever the prey has left.
 
 The transfer happens in the movement phase of that same cycle, and by the next
@@ -381,6 +381,6 @@ corpse around. Letting go of the dried-up prey is the improvement we added.
   you anywhere ([[.tieloc]]).
 - **The same mechanism, for good.** Everything you used here to drain someone
   else, a multibot uses to feed its own: a positive `.tieval` passes energy to
-  your companion, and [[.sharenrg]] shares it out evenly. Go on with
+  your partner, and [[.sharenrg]] shares it out evenly. Go on with
   [[tutoriales/multibot]] and, for tournament tactics,
   [[estrategias/multibots]].

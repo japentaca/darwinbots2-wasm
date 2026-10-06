@@ -161,7 +161,7 @@ it marks each one with its line and, when it can, suggests the right name. See
 
 Because the DNA doesn't know about species: it shoots whatever is in front of
 it. You have to add a signature comparison to the shot's condition, such as
-`*.refeye *.myeye !=` (“what I see isn't one of mine”). See
+`*.refeye *.myeye !=` (“the signature of what I see isn't mine”). See
 [[adn/errores#especie]] and [[tutoriales/reconoce-especie]].
 
 ### Where do I learn to write bots? {#aprender}

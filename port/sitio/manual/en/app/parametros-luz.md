@@ -133,7 +133,6 @@ mode [[param:base:maxEnergy]] isn't used. In addition, with downward gravity
 ([[param:opt:20]]) and with top and bottom not connected ([[param:opt:2]]),
 bots can float at whatever height they choose with [[.setboy]] (see
 [[simulacion/mundo#gravedad|gravity, ponds and tides]]).
-
 :::
 
 :::parametro opt:31

@@ -36,7 +36,8 @@ mismo:
 - Un bot tiene **un hijo por ciclo** como mucho.
 
 Si un bot tiene escritas [[.repro]] y [[.mrepro]] a la vez, una moneda decide
-cuál de los dos porcentajes se usa. Si está fecundado y tiene [[.sexrepro]]
+cuál de los dos porcentajes se usa; la mutación aumentada de [[.mrepro]] se
+aplica igual, gane la moneda quien gane. Si está fecundado y tiene [[.sexrepro]]
 escrita, ese ciclo intenta solo la sexual y la asexual espera, aunque la
 sexual termine fallando.
 

@@ -144,7 +144,7 @@ starting over:
 3. **Starting energy**: in Observe, **Seed** lets you choose the energy new
    bots come in with: seed a few with more energy to relaunch the population.
    <!-- app/observar #sembrar (Energía inicial del diálogo) -->
-4. **Time**: most experiments that "don't work" do work, just not yet.
+4. **Time**: most experiments that “don't work” do work, just not yet.
 
 ## Variants {#variantes}
 
