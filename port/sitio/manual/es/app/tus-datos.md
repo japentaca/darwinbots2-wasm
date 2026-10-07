@@ -24,7 +24,7 @@ cómo traerla de vuelta.
 | **Informes** | [[app/informes]] | Los informes generados. |
 | **Torneos** | [[app/competir]] | Reglas, participantes con su ADN, temporadas y todos los partidos. |
 | **Trabajos** | [[app/informes#trabajos]] | Réplicas, barridos, rondas de torneo y pruebas del editor en segundo plano, con sus resultados. |
-| **Preferencias** | toda la app | Tema, idioma, modo básico o avanzado, el tope de workers, la cortinilla del modo TV y otras elecciones de la interfaz. |
+| **Preferencias** | toda la app | Tema, idioma, modo básico o avanzado, el tope de workers, la cortinilla y el «Al terminar la pelea» de los torneos y otras elecciones de la interfaz. |
 | **Borradores del editor** | [[app/editor]] | Los cambios sin guardar de un ADN, para que sobrevivan a una recarga. |
 
 Los bots del foro (el Bestiario) **no** son tuyos: vienen del sitio y se

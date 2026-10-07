@@ -1,7 +1,7 @@
 ---
 titulo: Compete
-resumen: "Matches and tournaments between bots: the quick match, the tournament wizard, the six formats, the match rules, the standings with Elo, seasons, the Hall of Fame and TV mode."
-etiquetas: [tournaments, compete, elo, match, tv mode]
+resumen: "Matches and tournaments between bots: the quick match, the tournament wizard, the six formats, the match rules, the standings with Elo, seasons, the Hall of Fame and how to play."
+etiquetas: [tournaments, compete, elo, match, play]
 estado: revisada
 ---
 In **Compete**, bots fight each other under fixed rules and the app keeps count:
@@ -50,7 +50,7 @@ page, it is lost.
 1. Click **⚡ Quick match** in the list.
 2. In the **Entrants** tab, click **Add from the Library**, search for the bots
    and click **Add**.
-3. In **Play**, click **Play and watch**.
+3. In **Play**, click **▶ Play**.
 
 If you like the result, type a name and click **Save as tournament**: it moves to
 **My tournaments** with its matches. **Clear** removes the entrants and the
@@ -183,12 +183,34 @@ Once the season has started, the draw is locked until the next season.
 <!-- lib/competir/PanelJuego.svelte; juego.js vigiaPartido; competir.jugar.*; PLAN.md decisión 23 -->
 
 The **Play** column says how much of the season is left and who fights next. There
-are three ways to move forward.
+are two ways to move forward.
 
-**Play and watch** launches the next match in the app's simulation and takes you
-to Observe. A floating scoreboard shows the round, the cycle, the **Bots alive**
-and the **Rounds won** of each one. You can collapse it, or go back with **Go to
-Compete**. **Abandon** cuts the match without recording it.
+**▶ Play** launches the next match in the app's simulation and takes you to
+Observe, with a break screen before each fight (5 seconds by default, adjustable
+from 0 to 60). Below it, **When the fight ends** chooses how far it goes:
+
+| Option | What it does |
+|---|---|
+| **stop** | Plays one fight and stops. |
+| **go on until the end of the season** | Goes on with the remaining fights and stops after announcing the champion. It's the default. |
+| **go on with new editions** | When the season ends, it starts another one with a new draw and goes on, in a loop. |
+
+Every fight is recorded in the tournament. The choice is remembered in this
+browser and can be changed while playing, from the caption in Observe (see
+[[app/observar#tv]]). **Stop when the fight ends** and **Abandon the fight** are
+there too. If you go to another section, the tournament stops advancing: the
+fight in play ends and is recorded.
+
+**▶ Play** plays the open season with the entrants it has, even if it hasn't
+started yet: it doesn't draw them again. The new editions of **go on with new
+editions** are drawn from the tournament's pool. To watch it like on TV, Observe
+has [[app/observar#pantalla|full screen]].
+
+While a match is in play, this column shows the score with the round, the cycle,
+the **Bots alive** and the **Rounds won** of each one. **Watch in Observe** takes
+you to watch it, and **Abandon** cuts it without recording it. In the other
+sections, a floating scoreboard shows the same; you can collapse it, or go back
+with **Go to Compete**.
 
 :::cuidado
 The match takes over the Observe simulation and replaces whatever was there. While
@@ -204,23 +226,7 @@ result is the same as watching them. It notifies you when it finishes. While it
 runs, the season is locked. **Cancel the round** stops it. The quick match doesn't
 play background rounds.
 
-**⏩ Play on its own** and **📺 TV mode** play the whole season without
-intervention, with a break screen between fights (5 seconds by default, adjustable
-from 0 to 60). When they finish, they announce the champion and go on with another
-edition, in a loop. **Play on its own** does it in Observe with the side panel in
-view. **TV mode**, full screen with captions; there, the **M** key collapses the
-fight card and **With panels (Esc)** goes back to Observe without interrupting the
-play. Every fight is recorded in the tournament. To stop, use **Stop** or **Exit**,
-or go to another section: the fight in play ends and is recorded.
-
-:::cuidado
-Automatic play **draws the entrants of each edition** from the tournament's pool.
-If the open season doesn't have any matches yet, it replaces the list with a draw,
-even if the tournament is a fixed-list one. With the default configuration, the
-pool is the whole Library and 8 are drawn. If you want to play your list, play the
-first match by hand before turning it on.
-:::
-<!-- engine/torneos.js lgEdition (sin partidos: lgRedraw; temporada terminada: lgNewSeason draw); asistente.js draw {pool:'all', n:8}; tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
+<!-- engine/torneos.js lgEdition (con {sortear: false} desde tv.svelte.js; temporada terminada: lgNewSeason draw); tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
 
 ## Standings, structure and matches {#tabla}
 <!-- lib/competir/Tabla.svelte, Estructura.svelte, Partidos.svelte; vistas.js vistaEstructura; engine/league.js lgElo (K = 32 / (N − 1)), LG_ELO0, LG_H2H_MAX 14 -->

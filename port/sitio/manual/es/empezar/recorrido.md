@@ -138,10 +138,10 @@ Un **Nuevo torneo** se arma en tres pasos (formato, participantes y reglas)
 con seis formatos: partido único, rey de la colina, todos contra todos,
 escalera, mundial y suizo.
 
-Cada partido se puede **Jugar y mirar** en Observar o jugar con la **Ronda en
-segundo plano**, sin dibujar y a toda velocidad; el resultado es el mismo.
-Con **Avanzar solo** el torneo se juega entero, y el **Modo TV** lo muestra a
-pantalla completa, con rótulos. La tabla lleva puntos, Elo y desempates, y el
+Los partidos se miran en Observar con **▶ Jugar**: uno solo, la temporada
+entera o una edición tras otra, con cortinillas entre peleas y, si querés, a
+pantalla completa. También se juegan con la **Ronda en segundo plano**, sin
+dibujar y a toda velocidad; el resultado es el mismo. La tabla lleva puntos, Elo y desempates, y el
 **Salón de la fama** reúne a los bots de todos los torneos guardados, con un
 Elo único calculado sobre todos sus partidos.
 

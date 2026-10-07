@@ -171,22 +171,21 @@ test('marcador: sin almacenamiento o con uno que lanza, no falla', () => {
   assert.doesNotThrow(() => guardarPlegado(false));
 });
 
-test('marcador: el flotante no se ve en Competir ni en el modo TV, ni sin partido', () => {
+test('marcador: el flotante no se ve en Competir ni con el torneo avanzando en Observar, ni sin partido', () => {
   assert.equal(flotanteVisible('#/experimentar', true), true);
   assert.equal(flotanteVisible('#/observar', true), true);
   assert.equal(flotanteVisible('', true), true);
   assert.equal(flotanteVisible('#/experimentar', false), false);
   assert.equal(flotanteVisible('#/competir', true), false);
   assert.equal(flotanteVisible('#/competir/lg-1/tabla', true), false);
-  assert.equal(flotanteVisible('#/observar/tv', true), false);
-  assert.equal(flotanteVisible('#/observar/tv/x', true), false);
-  assert.equal(flotanteVisible('#/observar/torneo', true), false);
+  assert.equal(flotanteVisible('#/observar', true, true), false);
+  assert.equal(flotanteVisible('#/observar/x', true, true), false);
+  assert.equal(flotanteVisible('#/experimentar', true, true), true);
   assert.equal(flotanteVisible('#/competirx', true), true);
-  assert.equal(flotanteVisible('#/observar/tvx', true), true);
+  assert.equal(flotanteVisible('#/observar/tv', true), true);
   // con el router: query y codificación
   assert.equal(flotanteVisible('#/competir?x=1', true), false);
-  assert.equal(flotanteVisible('#/observar/%74v', true), false);
-  assert.equal(flotanteVisible('#/observar/x/tv', true), true);
+  assert.equal(flotanteVisible('#/%6Fbservar', true, true), false);
 });
 
 test('marcador: arranca plegado en Observar; en el resto, lo recordado', () => {

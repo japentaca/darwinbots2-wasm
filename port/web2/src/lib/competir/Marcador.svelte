@@ -5,7 +5,7 @@
 // (torneos.svelte.js) y se ve en cualquier pantalla mientras hay un
 // partido; en Competir no hace falta (el panel de juego ya lo muestra).
 // Con `integrado` (N3.6) es la tabla sola, sin marco flotante: la usa el
-// rótulo del modo TV de Observar, y en #/observar/tv el flotante no se ve.
+// rótulo del avance automático en Observar, donde entonces el flotante no se ve.
 // N4.4: el flotante se pliega a un chip (se recuerda en este navegador,
 // marcador.js; en Observar arranca plegado) y va arriba a la derecha, bajo
 // la barra y el aviso según su alto real (y a la izquierda del panel de
@@ -16,6 +16,7 @@ import { tick, untrack } from 'svelte';
 import { lgSeason } from '../../../engine/league.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe, parsearHash } from '../../router.js';
+import { avanceEncendido } from '../observar/tv/tv.svelte.js';
 import {
   flotanteVisible,
   guardarPlegado,
@@ -58,7 +59,7 @@ const vivo = $derived.by(() => {
     colores: new Map(m.fighters.map((/** @type {any} */ e) => [e.name, e.color])),
   };
 });
-const visible = $derived(!integrado && flotanteVisible(hash, !!vivo));
+const visible = $derived(!integrado && flotanteVisible(hash, !!vivo, avanceEncendido()));
 const titulo = $derived(
   vivo?.replay
     ? t('competir.marcador.repitiendo', { no: vivo.replay })

@@ -192,7 +192,8 @@ other under the original's F1 league rules (host layer: it doesn't touch the
 core). It has a quick match and tournaments in six formats (single match,
 which is the F1 contest, king of the hill, round robin, step ladder, world cup and
 Swiss), with an Elo table that carries over from one tournament to the next,
-seasons, a Hall of Fame and a **TV mode** that plays the whole season full
+seasons, a Hall of Fame and a **▶ Play** that shows one fight, the whole season
+or one edition after another, with break screens and, if you like, full
 screen. The classic interface keeps its *Contest* and *TV Channel* windows.
 Details in the manual: [Compete](https://darwinbots-wasm.org/en/manual/app/competir/).
 

@@ -23,16 +23,7 @@ import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
 import PeleaTv from '../lib/observar/tv/PeleaTv.svelte';
 import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
-import {
-  conPaneles,
-  detenerTv,
-  hayPartidoDeTorneo,
-  iniciarTv,
-  pantallaCompleta,
-  pantallaSiFalta,
-  rutaSalida,
-  seguirTorneo,
-} from '../lib/observar/tv/tv.svelte.js';
+import { avanceEncendido, detenerTv } from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { corridasGuardadas, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
 import { VELOCIDADES } from '../lib/sim/sesion.svelte.js';
@@ -41,26 +32,34 @@ import { hashDe } from '../router.js';
 /** @type {{ partes?: string[] }} */
 let { partes = [] } = $props();
 
-// Avance automático del torneo (N3.6, decisión 23): #/observar/tv, el campo
-// solo (sin paneles ni barra), a pantalla completa si el navegador la da,
-// con el rótulo encima; #/observar/torneo, lo mismo con el panel lateral y
-// la barra (sin lo que cambia el mundo). Pasar de una a otra no lo corta.
-const modoTv = $derived(partes[0] === 'tv');
-const auto = $derived(modoTv || partes[0] === 'torneo');
+// Avance automático del torneo (decisión 23, PLAN-TORNEO-EN-CURSO.md TC1):
+// lo enciende Competir (entrarTv) y se apaga al salir de Observar. La
+// pantalla completa (⛶ o F) es aparte: el campo solo, con el rótulo del
+// torneo encima si lo hay, y no toca el avance.
+const auto = $derived(avanceEncendido());
 const bloqueado = $derived(auto ? t('observar.auto.bloqueado') : '');
-const puedeSeguir = $derived(!auto && hayPartidoDeTorneo());
+let completa = $state(false);
 
-/** Sale del modo TV: lo apaga, deja la pantalla completa y vuelve a la vista del torneo. */
-function salirTv() {
-  detenerTv();
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-  if (partes[0] === 'tv') window.location.hash = rutaSalida();
-}
+// las rutas del modo TV de antes (#/observar/tv y #/observar/torneo)
+$effect(() => {
+  if (partes[0] === 'tv' || partes[0] === 'torneo') window.location.hash = hashDe('observar');
+});
 
-/** Con paneles: apaga el avance y queda en Observar. */
-function detenerAuto() {
-  detenerTv();
-  window.location.hash = hashDe('observar');
+// el avance vive mientras se esté en Observar
+$effect(() => () => detenerTv());
+
+/** Entra o sale de la pantalla completa (en el gesto del usuario: clic o tecla). */
+function alternarPantalla() {
+  if (completa) {
+    completa = false;
+    return;
+  }
+  completa = true;
+  const d = document.documentElement;
+  if (d.requestFullscreen && !document.fullscreenElement)
+    d.requestFullscreen().catch(() => {
+      // sin pantalla completa del navegador: el campo ocupa la ventana igual
+    });
 }
 
 /** @type {HTMLElement | undefined} */
@@ -85,29 +84,20 @@ function inertizarResto(el) {
   };
 }
 
-// El avance vive mientras se esté en una de sus dos rutas.
+// A pantalla completa: el resto de la app inerte; Esc (o cerrar la pantalla
+// completa desde el navegador) vuelve a la vista con paneles.
 $effect(() => {
-  if (!auto) return;
-  untrack(() => void iniciarTv());
-  return () => detenerTv();
-});
-
-// La presentación a pantalla completa: el resto de la app inerte y Esc (o
-// cerrar la pantalla completa desde el navegador) pasa a la vista con paneles.
-$effect(() => {
-  if (!modoTv) return;
-  // recarga en #/observar/tv: se intenta (entrarTv ya la pidió en el clic)
-  untrack(() => pantallaSiFalta());
+  if (!completa) return;
   const el = untrack(() => raiz);
   const desinertizar = el ? inertizarResto(el) : () => {};
-  let completa = !!document.fullscreenElement;
+  let delNavegador = !!document.fullscreenElement;
   const alCambiar = () => {
-    if (completa && !document.fullscreenElement) conPaneles();
-    completa = !!document.fullscreenElement;
+    if (delNavegador && !document.fullscreenElement) completa = false;
+    delNavegador = !!document.fullscreenElement;
   };
   /** @param {KeyboardEvent} e */
   const alTecla = (e) => {
-    if (e.key === 'Escape') conPaneles();
+    if (e.key === 'Escape') completa = false;
   };
   document.addEventListener('fullscreenchange', alCambiar);
   window.addEventListener('keydown', alTecla);
@@ -117,6 +107,20 @@ $effect(() => {
     desinertizar();
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   };
+});
+
+// F: pantalla completa (no mientras se escribe ni con un diálogo abierto)
+$effect(() => {
+  /** @param {KeyboardEvent} e */
+  const alTecla = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'f' && e.key !== 'F')) return;
+    const el = /** @type {HTMLElement | null} */ (e.target);
+    if (el?.closest?.('input, textarea, select, [contenteditable], dialog')) return;
+    e.preventDefault();
+    alternarPantalla();
+  };
+  window.addEventListener('keydown', alTecla);
+  return () => window.removeEventListener('keydown', alTecla);
 });
 
 const corrida = obtenerCorrida();
@@ -258,7 +262,7 @@ function instantanea() {
 const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
 </script>
 
-<section class="observar" class:tv={modoTv} bind:this={raiz}>
+<section class="observar" class:tv={completa} bind:this={raiz}>
   <div class="cuerpo">
     <div class="lienzo">
       <Mundo
@@ -276,15 +280,22 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
       {#if !auto}
         <IndicadorJugador {sesion} />
       {/if}
-      {#if modoTv}
-        <RotuloTv completa onSalir={salirTv} onCambiar={conPaneles} />
-      {:else if auto}
-        <RotuloTv completa={false} onSalir={detenerAuto} onCambiar={pantallaCompleta} />
+      {#if auto}
+        <RotuloTv {completa} onPantalla={alternarPantalla} />
+      {:else if completa}
+        <button
+          class="salirPantalla"
+          type="button"
+          title={t('observar.pantalla.salir.ayuda')}
+          onclick={alternarPantalla}
+        >
+          {t('observar.pantalla.salir')}
+        </button>
       {:else if verMundo}
         <BarraMundo {corrida} bind:modoBorrar {nObs} {nTps} {resaltado} onCerrar={cerrarMundo} />
       {/if}
     </div>
-    {#if !modoTv}
+    {#if !completa}
       <aside class="lateral" aria-label={t('observar.lateral.aria')}>
         {#if auto}
           <PeleaTv />
@@ -304,7 +315,7 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
     {/if}
   </div>
 
-  {#if estado.aviso && !modoTv}
+  {#if estado.aviso && !completa}
     <div
       class="aviso"
       class:error={estado.aviso.error}
@@ -323,7 +334,7 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
     </div>
   {/if}
 
-  {#if !modoTv}
+  {#if !completa}
     <div class="barra">
       <button
         class="btn pri"
@@ -405,16 +416,6 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         {t('observar.mejor')}
       </button>
       <MenuInstantanea {sesion} {corrida} nombre={estado.nombre} onPng={instantanea} />
-      {#if puedeSeguir}
-        <button
-          class="btn"
-          type="button"
-          title={t('observar.seguirTorneo.ayuda')}
-          onclick={seguirTorneo}
-        >
-          {t('observar.seguirTorneo')}
-        </button>
-      {/if}
       <button
         class="btn"
         type="button"
@@ -425,6 +426,15 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         {t('observar.corridas')}
       </button>
       <div class="relleno"></div>
+      <button
+        class="btn"
+        type="button"
+        title={t('observar.pantalla.ayuda')}
+        aria-label={t('observar.pantalla')}
+        onclick={alternarPantalla}
+      >
+        ⛶
+      </button>
       <span class="mono dato" title={t('observar.ritmo.ayuda')}
         >{t('observar.ritmo', { tps: num(sesion.stats.tps), fps: num(sesion.fps) })}</span
       >
@@ -483,7 +493,7 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   min-height: 0;
   position: relative;
 }
-/* modo TV: el campo ocupa la ventana (con o sin pantalla completa) */
+/* pantalla completa: el campo ocupa la ventana (aunque el navegador no la dé) */
 .observar.tv {
   position: fixed;
   inset: 0;
@@ -500,6 +510,20 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   min-width: 0;
   min-height: 0;
   position: relative;
+}
+.salirPantalla {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 4;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #6b6962;
+  background: rgba(21, 21, 19, 0.85);
+  color: #f4f3ef;
+  cursor: pointer;
 }
 .btn.activo {
   background: var(--chip);

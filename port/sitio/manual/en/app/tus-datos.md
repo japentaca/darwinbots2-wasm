@@ -24,7 +24,7 @@ copy and how to bring it back.
 | **Reports** | [[app/informes]] | The reports you generated. |
 | **Tournaments** | [[app/competir]] | Rules, entrants with their DNA, seasons and all the matches. |
 | **Jobs** | [[app/informes#trabajos]] | Replicates, sweeps, tournament rounds and editor tests in the background, with their results. |
-| **Preferences** | the whole app | Theme, language, basic or advanced mode, the workers cap, the TV mode curtain and other interface choices. |
+| **Preferences** | the whole app | Theme, language, basic or advanced mode, the workers cap, the tournaments' break screen and “When the fight ends” and other interface choices. |
 | **Editor drafts** | [[app/editor]] | The unsaved changes of a DNA, so they survive a reload. |
 
 The forum bots (the Bestiary) are **not** yours: they come from the site and are

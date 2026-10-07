@@ -1,14 +1,14 @@
 <script>
 // @ts-check
-// Modo TV (paso N3.6): lo que se dibuja sobre el campo. Arriba, la
-// cabecera (torneo y edición), los segundos de cortinilla y los botones
-// (a pantalla completa: «Con paneles (Esc)» y «Salir»; con paneles:
-// «Pantalla completa» y «Detener»);
-// en el centro, la cortinilla (quién contra quién, la fase de la pelea y la
-// cuenta atrás), el campeón o el error que apagó el TV; abajo a la derecha,
-// durante la pelea y en el respiro, la tarjeta oscura de PeleaTv.svelte
-// (solo a pantalla completa: con paneles, va arriba del panel derecho).
-// Una región viva fija
+// Avance automático del torneo (paso N3.6; PLAN-TORNEO-EN-CURSO.md TC1):
+// lo que se dibuja sobre el campo. Arriba, la cabecera (torneo y edición),
+// los segundos de cortinilla, «Al terminar la pelea», «Parar» (o «Seguir»
+// si ya se pidió parar), «Abandonar la pelea» con una pelea en juego y, a
+// pantalla completa, el botón para salir de ella; en el centro, la
+// cortinilla (quién contra quién, la fase de la pelea y la cuenta atrás),
+// el campeón o el error que paró el avance; abajo a la derecha, a pantalla
+// completa y durante la pelea, la tarjeta oscura de PeleaTv.svelte (sin
+// pantalla completa va arriba del panel derecho). Una región viva fija
 // (siempre montada, fuera de la vista) anuncia solo los cambios de fase;
 // la cuenta atrás y el marcador quedan fuera de ella.
 import { idioma, t } from '../../../i18n/index.svelte.js';
@@ -16,14 +16,30 @@ import { tr } from '../../competir/torneos.svelte.js';
 import { PAUSA_MAX } from './maquina.js';
 import PeleaTv from './PeleaTv.svelte';
 import { anuncioTV, rotuloTV } from './rotulo.js';
-import { contextoTv, ponerPausa, tv } from './tv.svelte.js';
+import {
+  AL_TERMINAR,
+  abandonarPelea,
+  contextoTv,
+  detenerTv,
+  hayPelea,
+  pararTv,
+  ponerAlTerminar,
+  ponerPausa,
+  seguirTv,
+  tv,
+} from './tv.svelte.js';
 
 /**
- * @type {{ completa: boolean, onSalir: () => void, onCambiar: () => void }}
- * completa: a pantalla completa (#/observar/tv) o con paneles; onSalir apaga
- * el avance; onCambiar pasa a la otra presentación sin cortarlo.
+ * @type {{ completa: boolean, onPantalla: () => void }}
+ * completa: a pantalla completa; onPantalla sale de ella (no toca el avance).
  */
-let { completa, onSalir, onCambiar } = $props();
+let { completa, onPantalla } = $props();
+
+const conPelea = $derived(hayPelea());
+
+function abandonar() {
+  if (confirm(t('observar.tv.abandonarSi'))) abandonarPelea();
+}
 
 const r = $derived(rotuloTV(tv.e, contextoTv(), tr, tv.ahora, idioma()));
 const anuncio = $derived(anuncioTV(tv.e, tr));
@@ -38,15 +54,9 @@ const centro = $derived(
 );
 
 /** @type {HTMLButtonElement | undefined} */
-let btnSalir = $state();
-/** @type {HTMLButtonElement | undefined} */
 let btnGrande = $state();
 
-// foco inicial en «Salir» (a pantalla completa: con paneles, el foco es de
-// la página); ante un error, en el botón grande
-$effect(() => {
-  if (completa) btnSalir?.focus();
-});
+// ante un error, el foco en el botón grande
 $effect(() => {
   if (hayError && btnGrande) btnGrande.focus();
 });
@@ -55,7 +65,7 @@ $effect(() => {
 <div class="oculto" aria-live="polite" aria-atomic="true">{anuncio}</div>
 <section class="tv" aria-label={t('observar.tv.aria')}>
   <div class="cab">
-    <span class="titulo">📺 {r.cabecera}</span>
+    <span class="titulo">🏆 {r.cabecera}</span>
     <label class="pausa" title={t('observar.tv.pausa.ayuda')}
       >{t('observar.tv.pausa')}
       <input
@@ -66,23 +76,49 @@ $effect(() => {
         onchange={(e) => ponerPausa(e.currentTarget.value)}
       ></label
     >
-    <button
-      class="salir"
-      type="button"
-      title={t(completa ? 'observar.tv.paneles.ayuda' : 'observar.tv.pantalla.ayuda')}
-      onclick={onCambiar}
+    <label class="pausa" title={t('observar.tv.alTerminar.ayuda')}
+      >{t('observar.tv.alTerminar')}
+      <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
+        {#each AL_TERMINAR as k (k)}
+          <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
+        {/each}
+      </select></label
     >
-      {t(completa ? 'observar.tv.paneles' : 'observar.tv.pantalla')}
-    </button>
-    <button
-      class="salir"
-      type="button"
-      title={t(completa ? 'observar.tv.salir.ayuda' : 'observar.tv.detener.ayuda')}
-      onclick={onSalir}
-      bind:this={btnSalir}
-    >
-      {t(completa ? 'observar.tv.salir' : 'observar.tv.detener')}
-    </button>
+    {#if tv.pararTras}
+      <span class="parara">{t('observar.tv.parara')}</span>
+      <button class="salir" type="button" title={t('observar.tv.seguir.ayuda')} onclick={seguirTv}>
+        {t('observar.tv.seguir')}
+      </button>
+    {:else}
+      <button
+        class="salir"
+        type="button"
+        title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
+        onclick={pararTv}
+      >
+        ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
+      </button>
+    {/if}
+    {#if conPelea}
+      <button
+        class="salir"
+        type="button"
+        title={t('observar.tv.abandonar.ayuda')}
+        onclick={abandonar}
+      >
+        {t('observar.tv.abandonar')}
+      </button>
+    {/if}
+    {#if completa}
+      <button
+        class="salir"
+        type="button"
+        title={t('observar.pantalla.salir.ayuda')}
+        onclick={onPantalla}
+      >
+        {t('observar.pantalla.salir')}
+      </button>
+    {/if}
   </div>
 
   {#if centro}
@@ -114,8 +150,8 @@ $effect(() => {
       {/if}
       {#if r.error}
         <div class="error">{r.error}</div>
-        <button class="salir grande" type="button" onclick={onSalir} bind:this={btnGrande}>
-          {t(completa ? 'observar.tv.salir' : 'observar.tv.detener')}
+        <button class="salir grande" type="button" onclick={detenerTv} bind:this={btnGrande}>
+          {t('observar.tv.cerrar')}
         </button>
       {/if}
       {#if r.aviso}
@@ -153,8 +189,9 @@ $effect(() => {
 .cab {
   pointer-events: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 8px 16px;
   padding: 52px 72px 10px 16px;
   background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
   font-size: 14px;
@@ -173,6 +210,18 @@ $effect(() => {
   font-size: 13px;
   color: #c9c7bf;
   pointer-events: auto;
+}
+.pausa select {
+  font: inherit;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #52514e;
+  background: #151513;
+  color: #f4f3ef;
+}
+.parara {
+  font-size: 13px;
+  color: #f2c14e;
 }
 .pausa input {
   width: 56px;

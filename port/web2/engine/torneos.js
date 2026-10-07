@@ -1478,15 +1478,18 @@ export function crearTorneos(deps) {
   //   tv-pool-short {pool}  "The draw pool ({pool}) has fewer than 2 bots: TV mode off."
   //   tv-pool-few {pool}    "The draw pool ({pool}) has fewer than 2 readable bots: TV mode off."
   //   tv-cup-size {n}       "A World cup needs 8, 16 or 32 entrants; this edition drew {n}: TV mode off."
-  /** @param {League} L */
-  async function lgEdition(L) {
+  // Con {sortear: false} (la nueva, PLAN-TORNEO-EN-CURSO.md TC1) la temporada
+  // sin partidos se juega con los participantes que tiene: «▶ Jugar» no pisa
+  // una lista elegida a mano. La temporada nueva tras el campeón se sortea igual.
+  /** @param {League} L @param {{sortear?: boolean}} [o] */
+  async function lgEdition(L, { sortear = true } = {}) {
     const S = lgSeason(L);
     if (/** @type {SeasonR} */ (S).ronda) return { ok: false, clave: 'round-running', params: {} };
     const ms = lgSeasonMatches(S.no);
     let r = null;
     if (!ms.length) {
       if (lgLiveSync(L)) await lgSave(L);
-      if (!S.live) r = await lgRedraw(L);
+      if (!S.live && sortear) r = await lgRedraw(L);
     } else if (lgSeasonDone(S, ms)) r = await lgNewSeason(L, { draw: true });
     const cur = lgSeason(L);
     if (cur.live) {

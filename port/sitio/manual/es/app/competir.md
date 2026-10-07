@@ -1,7 +1,7 @@
 ---
 titulo: Competir
-resumen: "Partidos y torneos entre bots: el partido rápido, el asistente de torneos, los seis formatos, las reglas del partido, la tabla con Elo, las temporadas, el Salón de la fama y el modo TV."
-etiquetas: [torneos, competir, elo, partido, modo tv]
+resumen: "Partidos y torneos entre bots: el partido rápido, el asistente de torneos, los seis formatos, las reglas del partido, la tabla con Elo, las temporadas, el Salón de la fama y cómo se juega."
+etiquetas: [torneos, competir, elo, partido, jugar]
 estado: revisada
 ---
 En **Competir** los bots pelean entre ellos con reglas fijas y la app lleva la
@@ -50,7 +50,7 @@ mismo mundo, hasta 20 bots. No se guarda. Si recargás la página, se pierde.
 1. Hacé clic en **⚡ Partido rápido** en la lista.
 2. En la pestaña **Participantes**, hacé clic en **Inscribir desde la Biblioteca**,
    buscá los bots y hacé clic en **Inscribir**.
-3. En **Jugar**, hacé clic en **Jugar y mirar**.
+3. En **Jugar**, hacé clic en **▶ Jugar**.
 
 Si el resultado te interesa, escribí un nombre y hacé clic en **Guardar como torneo**:
 pasa a **Mis torneos** con sus partidos. **Vaciar** quita los participantes y
@@ -189,12 +189,35 @@ siguiente.
 <!-- lib/competir/PanelJuego.svelte; juego.js vigiaPartido; competir.jugar.*; PLAN.md decisión 23 -->
 
 La columna **Jugar** dice cuánto falta de la temporada y quiénes pelean
-después. Hay tres formas de avanzar.
+después. Hay dos formas de avanzar.
 
-**Jugar y mirar** lanza el próximo partido en la simulación de la app y te
-lleva a Observar. Un marcador flotante muestra la ronda, el ciclo, los
-**Bots vivos** y las **Rondas ganadas** de cada uno. Podés plegarlo, o volver
-con **Ir a Competir**. **Abandonar** corta el partido sin registrarlo.
+**▶ Jugar** lanza el próximo partido en la simulación de la app y te lleva a
+Observar, con una cortinilla antes de cada pelea (5 segundos por defecto, se
+cambia de 0 a 60). Debajo, **Al terminar la pelea** elige hasta dónde sigue:
+
+| Opción | Qué hace |
+|---|---|
+| **parar** | Juega una pelea y para. |
+| **seguir hasta el final de la temporada** | Sigue con las peleas que falten y para después de anunciar al campeón. Es la opción por defecto. |
+| **seguir con nuevas ediciones** | Al terminar la temporada, empieza otra con sorteo nuevo y sigue, en bucle. |
+
+Cada pelea se registra en el torneo. La elección se recuerda en este
+navegador y se puede cambiar mientras se juega, desde el rótulo de Observar
+(ver [[app/observar#tv]]). Ahí también están **Parar al terminar la pelea** y
+**Abandonar la pelea**. Si vas a otra sección, el torneo deja de avanzar: la
+pelea en juego termina y se registra.
+
+**▶ Jugar** juega la temporada abierta con los participantes que tiene, aunque
+todavía no haya empezado: no los vuelve a sortear. Las ediciones nuevas de
+**seguir con nuevas ediciones** sí se sortean del pool del torneo. Para
+mirarlo como en la tele, Observar tiene
+[[app/observar#pantalla|pantalla completa]].
+
+Mientras hay un partido en juego, esta columna muestra el marcador con la
+ronda, el ciclo, los **Bots vivos** y las **Rondas ganadas** de cada uno.
+**Mirar en Observar** te lleva a mirarlo, y **Abandonar** lo corta sin
+registrarlo. En las otras secciones, un marcador flotante muestra lo mismo;
+podés plegarlo, o volver con **Ir a Competir**.
 
 :::cuidado
 El partido ocupa la simulación de Observar y reemplaza lo que hubiera ahí.
@@ -212,24 +235,7 @@ al terminar. Mientras corre, la temporada queda bloqueada.
 **Cancelar la ronda** la detiene. El partido rápido no juega rondas en segundo
 plano.
 
-**⏩ Avanzar solo** y **📺 Modo TV** juegan la temporada entera sin
-intervención, con una cortinilla entre peleas (5 segundos por defecto, se
-cambia de 0 a 60). Al terminar anuncian al campeón y siguen con otra edición,
-en bucle. **Avanzar solo** lo hace en Observar con el panel lateral a la
-vista. **Modo TV**, a pantalla completa con rótulos; ahí la tecla **M**
-pliega la tarjeta de la pelea y **Con paneles (Esc)** vuelve a Observar sin
-cortar el avance. Cada pelea se registra en el torneo. Para parar, usá
-**Detener** o **Salir**, o andá a otra sección: la pelea en juego termina y
-se registra.
-
-:::cuidado
-El avance automático **sortea los participantes de cada edición** del pool
-del torneo. Si la temporada abierta todavía no tiene partidos, reemplaza la
-lista por un sorteo, aunque el torneo sea de lista fija. Con la configuración
-por defecto, el pool es toda la Biblioteca y se sortean 8. Si querés jugar tu
-lista, jugá el primer partido a mano antes de encenderlo.
-:::
-<!-- engine/torneos.js lgEdition (sin partidos: lgRedraw; temporada terminada: lgNewSeason draw); asistente.js draw {pool:'all', n:8}; tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
+<!-- engine/torneos.js lgEdition (con {sortear: false} desde tv.svelte.js; temporada terminada: lgNewSeason draw); tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
 
 ## Tabla, estructura y partidos {#tabla}
 <!-- lib/competir/Tabla.svelte, Estructura.svelte, Partidos.svelte; vistas.js vistaEstructura; engine/league.js lgElo (K = 32 / (N − 1)), LG_ELO0, LG_H2H_MAX 14 -->

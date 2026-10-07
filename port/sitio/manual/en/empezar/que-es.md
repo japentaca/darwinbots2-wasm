@@ -84,7 +84,7 @@ published as it is (see [[app/clasica]]).
 | **Experiment**: change the light, the costs, the physics, add obstacles, and see what happens | Experiment | [[app/experimentar]] |
 | **Measure**: population charts, species, family tree, replicates with several seeds, reports | Analyze | [[app/analizar]] |
 | **Write bots**: a DNA editor with warnings, quick test and versions | Bots | [[app/editor]] and the [[tutoriales/se-mueve|tutorials]] |
-| **Compete**: matches and tournaments between bots, with standings, Elo and TV mode | Compete | [[app/competir]] |
+| **Compete**: matches and tournaments between bots, with standings, Elo and seasons that play themselves | Compete | [[app/competir]] |
 
 ## Where to go next {#seguir}
 <!-- solo enlaces; el orden sigue port/sitio/indice.mjs -->

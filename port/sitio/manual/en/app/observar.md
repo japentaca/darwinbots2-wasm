@@ -1,6 +1,6 @@
 ---
 titulo: Observe
-resumen: "The live world screen: the camera, time, the three views, the Live panel with its chart and its events, seeding, saving, snapshots, TV mode and the Player Bot."
+resumen: "The live world screen: the camera, full screen, time, the three views, the Live panel with its chart and its events, seeding, saving, snapshots, tournaments and the Player Bot."
 etiquetas: [observe, camera, speed, views, seed, save]
 estado: revisada
 ---
@@ -37,6 +37,14 @@ of the field.
 
 At the top left, a label reminds you which view you're using (and the “color by”,
 in the enriched view).
+
+### Full screen {#pantalla}
+<!-- Observar.svelte alternarPantalla (botón ⛶ de la barra, tecla F, Esc); i18n observar.pantalla.* -->
+
+The **⛶** button, on the right of the bottom bar, or the `F` key put the field
+alone in full screen, without the side panel or the bar. `Esc` or **Exit full
+screen (Esc)** go back to Observe as it was. Going in and out doesn't change the
+simulation or the tournament being played.
 
 ## Picking and following a bot {#seleccionar}
 <!-- Mundo.svelte alSoltar (clic = sesion.seleccionar), chip de foco (Seguir / Dejar de seguir / ×), efecto «acercar si hace falta» (z<2 → 4); i18n mundo.ayuda.clic, mundo.seguir, mundo.deseleccionar -->
@@ -301,27 +309,36 @@ over the world says **Player Bot on** and whom you're controlling, with an
 What you do in this mode isn't kept in the run: when you repeat it, it isn't
 repeated.
 
-## Tournaments and TV mode {#tv}
-<!-- Observar.svelte (modoTv, auto, seguirTorneo, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js); i18n observar.tv.*, observar.seguirTorneo, observar.auto.bloqueado; competir.jugar.tv -->
+## Tournaments {#tv}
+<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 -->
 
-A tournament's fights are played in Observe. If you're watching a tournament
-fight, the **Follow the tournament** button appears: when that fight ends, it goes
-on by itself with the following ones, with a break between one and the next.
+A tournament's fights are played in Observe: you start them with **▶ Play** in
+[[app/competir#jugar]]. Before each fight, a break screen announces who fights
+whom. During the fight, the score is shown at the top of the side panel. When it
+ends, a short pause shows the winner, and when the season closes, the champion.
 
-**TV mode**, which you turn on from [[app/competir]], plays the entire season
-without you touching anything, in full screen and with no panels. At the top it
-shows the tournament and the edition, and a card with the fight in play, the score
-and the winner. The controls:
+Above the field are the tournament, the edition and the controls:
 
 - **Break (s)**: the seconds of pause between fights (from 0 to 60).
-- `M` hides or shows the fight card, to watch with nothing on top.
-- **With panels (Esc)**: leaves full screen and keeps advancing in Observe, with
-  the side panel and the bar. From there, **Full screen** goes back to TV mode.
-- **Exit** (in full screen) or **Stop** (with panels): turns off the automatic
-  advance. The fight in play goes on and is recorded when it ends.
+- **When the fight ends**: what the tournament does when each fight ends. With
+  **stop** it plays only that one; with **go on until the end of the season** it
+  goes on until it announces the champion; with **go on with new editions** it
+  then goes on with another edition, with a new draw, in a loop. It can be
+  changed while playing.
+- **Stop when the fight ends**: the fight in play goes on and is recorded; then
+  the tournament doesn't advance any further. While it waits, **Keep going**
+  cancels it. If no fight is in play (during the break screen, for example), the
+  button says **Stop** and stops right away.
+- **Abandon the fight**: cuts the fight in play without recording it, after you
+  confirm, and the tournament stops advancing.
 
-While the tournament advances on its own, **Seed**, **World** and **Runs** are
-disabled: a fight's world can't be changed.
+In [[app/observar#pantalla|full screen]] you see the same over the field, with
+the fight card at the bottom right: `M` hides or shows it, to watch with nothing
+on top.
+
+While the tournament advances, **Seed**, **World** and **Runs** are disabled: a
+fight's world can't be changed. If you go to another section, the tournament
+stops advancing; the fight in play ends and is recorded.
 
 ## If something goes wrong {#avisos}
 <!-- Observar.svelte aviso (no error: 6 s); i18n observar.aviso.*, mundo.errorCarga.* -->

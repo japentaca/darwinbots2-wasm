@@ -440,3 +440,28 @@ test('Analizar › Eventos: los cambios de objetos del mundo entran en el filtro
     ['cambio', 'objetos'],
   );
 });
+
+test('tv: lgEdition sin sortear juega la lista elegida a mano; con sorteo (la clásica) la vuelve a sortear', async () => {
+  const T = crearTorneos(
+    depsDePrueba({
+      almacen: almacenMemoria(),
+      azar: rng(3),
+      inventario: {
+        ...inventarioVacio(),
+        items: Array.from({ length: 6 }, (_, i) => ({ key: `k${i}`, b: { name: `E${i}` } })),
+        fetchDna: async (/** @type {any} */ b) => ent(b.name).dna,
+      },
+    }),
+  );
+  await T.lgLoadAll();
+  const L = await T.lgCreate({});
+  assert.ok(await T.lgSetDraw({ mode: 'fixed', pool: 'all', n: 4 }));
+  for (const n of ['A', 'B']) assert.ok(await T.lgAdd({ name: n, dna: ent(n).dna }));
+  const nombres = () => LG.lgSeason(L).entrants.map((/** @type {any} */ e) => e.name);
+  const r = await T.lgEdition(L, { sortear: false });
+  assert.equal(r.ok, true);
+  assert.deepEqual(nombres(), ['A', 'B']);
+  await T.lgEdition(L);
+  assert.equal(nombres().length, 4);
+  assert.ok(nombres().every((n) => /^E\d$/.test(n)));
+});

@@ -85,7 +85,7 @@ publicando tal cual (ver [[app/clasica]]).
 | **Experimentar**: cambiar la luz, los costos, la física, poner obstáculos, y ver qué pasa | Experimentar | [[app/experimentar]] |
 | **Medir**: gráficos de población, especies, árbol genealógico, réplicas con varias semillas, informes | Analizar | [[app/analizar]] |
 | **Escribir bots**: un editor de ADN con avisos, prueba rápida y versiones | Bots | [[app/editor]] y los [[tutoriales/se-mueve|tutoriales]] |
-| **Competir**: partidos y torneos entre bots, con tabla, Elo y modo TV | Competir | [[app/competir]] |
+| **Competir**: partidos y torneos entre bots, con tabla, Elo y temporadas que se juegan solas | Competir | [[app/competir]] |
 
 ## Por dónde seguir {#seguir}
 <!-- solo enlaces; el orden sigue port/sitio/indice.mjs -->

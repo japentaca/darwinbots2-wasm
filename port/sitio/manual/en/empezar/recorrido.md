@@ -137,10 +137,10 @@ to 20 bots and isn't saved, unless you keep it with **Save as tournament**. A
 six formats: single match, king of the hill, round robin, step ladder, world
 cup and Swiss.
 
-Each match can be played with **Play and watch** in Observe or played with the
-**Background round**, without drawing and at full speed; the result is the
-same. With **Play on its own** the whole tournament is played through, and
-**TV mode** shows it full screen, with captions. The standings carry points,
+Matches are watched in Observe with **▶ Play**: a single one, the whole season
+or one edition after another, with break screens between fights and, if you
+like, in full screen. They can also be played with the **Background round**,
+without drawing and at full speed; the result is the same. The standings carry points,
 Elo and tiebreakers, and the **Hall of Fame** brings together the bots from all
 the saved tournaments, with a single Elo calculated over all their matches.
 

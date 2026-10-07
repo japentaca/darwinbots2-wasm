@@ -1,6 +1,6 @@
 ---
 titulo: Observar
-resumen: "La pantalla del mundo en vivo: la cámara, el tiempo, las tres vistas, el panel En vivo con su gráfico y sus eventos, sembrar, guardar, instantáneas, el modo TV y el Player Bot."
+resumen: "La pantalla del mundo en vivo: la cámara, la pantalla completa, el tiempo, las tres vistas, el panel En vivo con su gráfico y sus eventos, sembrar, guardar, instantáneas, los torneos y el Player Bot."
 etiquetas: [observar, cámara, velocidad, vistas, sembrar, guardar]
 estado: revisada
 ---
@@ -37,6 +37,14 @@ mundo mide y el tamaño del campo.
 
 Arriba a la izquierda, un rótulo recuerda la vista que estás usando (y el
 «color por», en la vista enriquecida).
+
+### Pantalla completa {#pantalla}
+<!-- Observar.svelte alternarPantalla (botón ⛶ de la barra, tecla F, Esc); i18n observar.pantalla.* -->
+
+El botón **⛶**, a la derecha de la barra de abajo, o la tecla `F` ponen el
+campo solo a pantalla completa, sin el panel lateral ni la barra. `Esc` o
+**Salir de pantalla completa (Esc)** vuelven a Observar como estaba. Entrar y
+salir no cambia la simulación ni el torneo que se esté jugando.
 
 ## Elegir y seguir un bot {#seleccionar}
 <!-- Mundo.svelte alSoltar (clic = sesion.seleccionar), chip de foco (Seguir / Dejar de seguir / ×), efecto «acercar si hace falta» (z<2 → 4); i18n mundo.ayuda.clic, mundo.seguir, mundo.deseleccionar -->
@@ -305,28 +313,37 @@ uno lo toma.
 
 Lo que hagas en este modo no queda en la corrida: al repetirla no se repite.
 
-## Torneos y modo TV {#tv}
-<!-- Observar.svelte (modoTv, auto, seguirTorneo, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js); i18n observar.tv.*, observar.seguirTorneo, observar.auto.bloqueado; competir.jugar.tv -->
+## Torneos {#tv}
+<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 -->
 
-Las peleas de un torneo se juegan en Observar. Si estás mirando una pelea de
-torneo, aparece el botón **Seguir el torneo**: al terminar esa pelea sigue solo
-con las siguientes, con una pausa entre una y otra.
+Las peleas de un torneo se juegan en Observar: se empiezan con **▶ Jugar** en
+[[app/competir#jugar]]. Antes de cada pelea, una cortinilla anuncia quién
+pelea contra quién. Durante la pelea, arriba del panel lateral se ve el
+marcador. Al terminar, un respiro muestra al ganador, y al cerrar la temporada,
+al campeón.
 
-El **Modo TV**, que se enciende desde [[app/competir]], juega la temporada
-entera sin que toques nada, a pantalla completa y sin paneles. Arriba muestra el
-torneo y la edición, y una tarjeta con la pelea en juego, el marcador y el
-ganador. Los controles:
+Arriba del campo están el torneo, la edición y los controles:
 
 - **Cortinilla (s)**: los segundos de pausa entre peleas (de 0 a 60).
-- `M` oculta o muestra la tarjeta de la pelea, para mirar sin nada encima.
-- **Con paneles (Esc)**: deja la pantalla completa y sigue avanzando en
-  Observar, con el panel lateral y la barra. Desde ahí, **Pantalla completa**
-  vuelve al modo TV.
-- **Salir** (a pantalla completa) o **Detener** (con paneles): apaga el avance
-  automático. La pelea en juego sigue y se registra al terminar.
+- **Al terminar la pelea**: qué hace el torneo cuando termina cada pelea.
+  Con **parar** juega solo esa; con **seguir hasta el final de la temporada**
+  sigue hasta anunciar al campeón; con **seguir con nuevas ediciones** sigue
+  después con otra edición, con sorteo nuevo, en bucle. Se puede cambiar
+  mientras se juega.
+- **Parar al terminar la pelea**: la pelea en juego sigue y se registra; después
+  el torneo no avanza más. Mientras espera, **Seguir** lo deja sin efecto. Si
+  no hay ninguna pelea en juego (en la cortinilla, por ejemplo), el botón dice
+  **Parar** y para enseguida.
+- **Abandonar la pelea**: corta la pelea en juego sin registrarla, después de
+  confirmar, y el torneo deja de avanzar.
 
-Mientras el torneo avanza solo, **Sembrar**, **Mundo** y **Corridas** quedan
-desactivados: no se puede cambiar el mundo de una pelea.
+A [[app/observar#pantalla|pantalla completa]] se ve lo mismo sobre el campo, con la
+tarjeta de la pelea abajo a la derecha: `M` la oculta o la muestra, para
+mirar sin nada encima.
+
+Mientras el torneo avanza, **Sembrar**, **Mundo** y **Corridas** quedan
+desactivados: no se puede cambiar el mundo de una pelea. Si vas a otra
+sección, el torneo deja de avanzar; la pelea en juego termina y se registra.
 
 ## Si algo sale mal {#avisos}
 <!-- Observar.svelte aviso (no error: 6 s); i18n observar.aviso.*, mundo.errorCarga.* -->

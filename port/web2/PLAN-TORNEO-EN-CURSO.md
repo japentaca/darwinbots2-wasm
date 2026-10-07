@@ -109,6 +109,30 @@ documentación). Sin push.
   entra y sale sin tocar el torneo; tests de `maquina.js` intactos y los de
   la UI tocada actualizados.
 
+**Hecho (2026-10-06).** Cómo quedó, y lo que se decidió al construirla:
+
+- «▶ Jugar» pasa siempre por el avance (`entrarTv`), también con *parar*:
+  una pelea con su cortinilla y se apaga. Cuándo para lo resuelve
+  `tv.svelte.js` (`debeParar`), sin tocar `maquina.js`: en la cortinilla de
+  la pelea siguiente (*parar*, o «Parar» pedido) y al terminar el rótulo
+  del campeón (salvo *ediciones*). *Temporada* es el valor por defecto; la
+  elección va en localStorage (`darwinbots2.tv-al-terminar`).
+- **No volver a sortear.** El avance de la clásica (`tvEdition`) vuelve a
+  sortear la temporada abierta si no tiene partidos, aunque sea de lista
+  fija; el manual lo avisaba. Como «▶ Jugar» reemplaza a «Jugar y mirar»,
+  eso pisaba la lista elegida a mano. `lgEdition(L, {sortear: false})` la
+  juega como está; la temporada nueva tras el campeón se sortea igual. Sin
+  la opción, `lgEdition` hace lo de la clásica (test en
+  `observar_tv.test.js`).
+- «Mirar en Observar», con una pelea del torneo en juego, también enciende
+  el avance (toma la pelea en juego); con una repetición sigue siendo un
+  enlace.
+- La pantalla completa es la del modo TV de antes (el campo solo, el resto
+  de la app inerte), pero con o sin torneo. Que conserve la disposición
+  elegida (T5/T6) queda para TC3.
+- El marcador flotante se oculta en Observar mientras el avance está
+  encendido (`flotanteVisible(hash, hayPartido, avance)`), ya no por ruta.
+
 ### TC2 · Torneo en curso global y franja (T1, T3, T9)
 
 - Sacar el ciclo de vida de los `$effect` de `Observar.svelte`; el módulo

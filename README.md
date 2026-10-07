@@ -188,7 +188,8 @@ las reglas de la liga F1 del original (capa host: no toca el core). Tiene un
 partido rápido y torneos en seis formatos (partido único, que es el concurso
 F1, rey de la colina, todos contra todos, escalera, mundial y suizo), con
 una tabla con Elo que sigue de un torneo a otro, temporadas, un Salón de la
-fama y un **modo TV** que juega la temporada entera a pantalla completa. La
+fama y un **▶ Jugar** que mira una pelea, la temporada entera o una edición
+tras otra, con cortinillas y, si querés, a pantalla completa. La
 interfaz clásica conserva sus ventanas *Contest* y *Canal de TV*. El detalle
 está en el manual: [Competir](https://darwinbots-wasm.org/manual/app/competir/).
 

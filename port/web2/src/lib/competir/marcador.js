@@ -46,15 +46,15 @@ export function guardarPlegado(plegado, almacen = almacenPorDefecto()) {
 
 /**
  * ¿Se ve el marcador flotante? No en Competir (el panel de juego ya lo
- * muestra) ni con el avance automático, #/observar/tv o #/observar/torneo
+ * muestra) ni en Observar con el avance automático del torneo encendido
  * (va integrado en el rótulo).
- * @param {string} hash @param {boolean} hayPartido
+ * @param {string} hash @param {boolean} hayPartido @param {boolean} [avance]
  */
-export function flotanteVisible(hash, hayPartido) {
+export function flotanteVisible(hash, hayPartido, avance = false) {
   if (!hayPartido) return false;
-  const { seccion, partes } = parsearHash(hash);
+  const { seccion } = parsearHash(hash);
   if (seccion === 'competir') return false;
-  if (seccion === 'observar' && (partes[0] === 'tv' || partes[0] === 'torneo')) return false;
+  if (seccion === 'observar' && avance) return false;
   return true;
 }
 

@@ -9,19 +9,18 @@
 // segundo plano de otro torneo o una nota posterior los pisan entre tic y
 // tic.
 //
-// El avance automático no depende de la presentación: #/observar/tv lo
-// muestra a pantalla completa, sin paneles; #/observar/torneo, en Observar
-// con el panel lateral y la barra. Pasar de una a otra no lo corta.
+// El avance no depende de la presentación (PLAN-TORNEO-EN-CURSO.md, TC1):
+// la pantalla completa es un botón de Observar que no lo toca.
 //
-// Entrada: entrarTv(id, {completa}) desde Competir (en el clic: con
-// `completa` pide la pantalla completa, que exige un gesto del usuario, y
-// abre #/observar/tv; sin ella, #/observar/torneo); seguirTorneo() desde
-// Observar con un partido de torneo en juego. Observar llama a iniciarTv()
-// al entrar en cualquiera de las dos rutas y a detenerTv() al dejarlas.
-// Apagar el TV no abandona el partido en curso: se registra al terminar
-// (como la clásica).
+// Entrada: entrarTv(id) desde Competir («▶ Jugar», o «Mirar» con una pelea
+// del torneo en juego): enciende el avance y abre Observar, que lo apaga al
+// dejarlo. Cuándo para lo dice «Al terminar la pelea» (tv.alTerminar):
+// 'parar' juega una pelea, 'temporada' sigue hasta el campeón y
+// 'ediciones' sigue con otra edición, en bucle (lo que hacía el modo TV).
+// pararTv() para al terminar la pelea en juego, que se registra (como la
+// clásica); abandonarPelea() la corta sin registrarla.
 
-import { LG_SCRATCH_ID, lgDrawOf, lgSeason } from '../../../../engine/league.js';
+import { lgDrawOf, lgSeason } from '../../../../engine/league.js';
 import { hashDe } from '../../../router.js';
 import { asegurarBiblioteca } from '../../bots/biblioteca.svelte.js';
 import { nombreTorneo, textoError } from '../../competir/textos.js';
@@ -49,6 +48,10 @@ const KV_PAUSA = 'darwinbots2.tv-pausa';
 const KV_PAUSA_CLASICA = 'db-tv-pause';
 /** A pantalla completa, la tarjeta de la pelea oculta ('1') o a la vista. */
 const KV_OCULTA = 'darwinbots2.tv-tarjeta-oculta';
+/** «Al terminar la pelea»: 'parar', 'temporada' o 'ediciones'. */
+const KV_AL_TERMINAR = 'darwinbots2.tv-al-terminar';
+export const AL_TERMINAR = /** @type {const} */ (['parar', 'temporada', 'ediciones']);
+/** @typedef {(typeof AL_TERMINAR)[number]} AlTerminar */
 const TIC_MS = 250;
 
 /**
@@ -66,14 +69,21 @@ class EstadoTv {
   final = $state.raw(null);
   /** a pantalla completa, la tarjeta de la pelea plegada a un chip */
   oculta = $state(leer(KV_OCULTA) === '1');
+  /** @type {AlTerminar} qué hacer al terminar cada pelea */
+  alTerminar = $state(alTerminarValido(leer(KV_AL_TERMINAR)));
+  /** «Parar al terminar esta pelea» pedido (vale solo para esta vuelta) */
+  pararTras = $state(false);
+}
+
+/** @param {any} x @returns {AlTerminar} */
+function alTerminarValido(x) {
+  return AL_TERMINAR.includes(x) ? x : 'temporada';
 }
 
 export const tv = new EstadoTv();
 
 /** Torneo pedido por entrarTv (se abre al iniciar si no es el abierto). */
 let pedido = '';
-/** entrarTv ya pidió la pantalla completa (Observar no la pide otra vez) */
-let pantallaPedida = false;
 /** sube con cada iniciar/detener: descarta respuestas del motor de otra vuelta */
 let gen = 0;
 /** @type {ReturnType<typeof setInterval> | null} */
@@ -118,6 +128,16 @@ export function ponerPausa(x) {
   tv.e = { ...tv.e, pausa: p };
 }
 
+/** Cambia «Al terminar la pelea» y lo recuerda. @param {any} x */
+export function ponerAlTerminar(x) {
+  tv.alTerminar = alTerminarValido(x);
+  try {
+    localStorage.setItem(KV_AL_TERMINAR, tv.alTerminar);
+  } catch {
+    // sin almacenamiento: no se recuerda
+  }
+}
+
 /** Pliega o despliega la tarjeta de la pelea (pantalla completa) y lo recuerda. */
 export function alternarTarjeta() {
   tv.oculta = !tv.oculta;
@@ -132,9 +152,54 @@ export function alternarTarjeta() {
 function despachar(ev) {
   if (ev.t === 'resultado') cerrarMarcador(ev.rec);
   const r = paso(tv.e, ev);
+  if (debeParar(tv.e, r.e)) {
+    detenerTv();
+    return;
+  }
   tv.e = r.e;
   if (r.accion) void ejecutar(r.accion, gen);
 }
+
+/**
+ * ¿«Al terminar la pelea» pide parar en este paso? Se para en la cortinilla
+ * de la próxima pelea (con 'parar', si ya hubo una en esta vuelta: la
+ * primera cortinilla es la de la pelea pedida) y al terminar el rótulo del
+ * campeón (salvo con 'ediciones').
+ * @param {import('./maquina.js').EstadoTV} antes @param {import('./maquina.js').EstadoTV} despues
+ */
+function debeParar(antes, despues) {
+  if (despues.fase === 'cortinilla')
+    return tv.pararTras || (tv.alTerminar === 'parar' && despues.pelea > 1);
+  if (antes.fase === 'campeon' && despues.fase === 'edicion')
+    return tv.pararTras || tv.alTerminar !== 'ediciones';
+  return false;
+}
+
+/** Fases con una pelea lanzada o en juego («Parar» espera a que termine). */
+const CON_PELEA = new Set(['lanzando', 'partido', 'resultado']);
+
+/** ¿Hay una pelea lanzada o en juego? */
+export const hayPelea = () => CON_PELEA.has(tv.e.fase);
+
+/** «Parar»: con una pelea en juego, al terminarla (se registra); si no, ya. */
+export function pararTv() {
+  if (hayPelea()) tv.pararTras = true;
+  else detenerTv();
+}
+
+/** Cancela el «Parar al terminar esta pelea» pedido. */
+export function seguirTv() {
+  tv.pararTras = false;
+}
+
+/** Corta la pelea en juego sin registrarla y apaga el avance. */
+export function abandonarPelea() {
+  detenerTv();
+  abandonar();
+}
+
+/** ¿El avance está encendido (o mostrando el error que lo paró)? */
+export const avanceEncendido = () => tv.e.fase !== 'apagado';
 
 /** El torneo del TV, si sigue siendo el abierto. */
 function ligaDelTv() {
@@ -173,7 +238,8 @@ async function ejecutar(accion, g) {
   try {
     if (accion === 'edicion') {
       await asegurarBiblioteca();
-      const r = await x.lgEdition(L);
+      // sin volver a sortear la temporada abierta (la que eligió quien juega)
+      const r = await x.lgEdition(L, { sortear: false });
       if (g === gen) despachar({ t: 'edicion', r });
     } else if (accion === 'siguiente') {
       const r = await x.lgTvNext(L);
@@ -273,76 +339,21 @@ function tic() {
 }
 
 /**
- * Desde Competir, en el clic: Observar avanzando solo con el torneo `id`,
- * a pantalla completa (si el navegador la da) o con los paneles.
- * @param {string} id @param {{completa?: boolean}} [o]
+ * Desde Competir, en el clic: enciende el avance con el torneo `id` y abre
+ * Observar. Con una pelea de ese torneo en juego, la toma (iniciarTv).
+ * @param {string} id
  */
-export function entrarTv(id, { completa = true } = {}) {
+export function entrarTv(id) {
   pedido = id;
-  if (completa) pantallaCompleta();
-  else window.location.hash = hashDe('observar', 'torneo');
-}
-
-/**
- * Del avance con paneles a pantalla completa (en el clic), sin cortarlo.
- * La pantalla completa la pide el clic: Observar no la pide otra vez.
- */
-export function pantallaCompleta() {
-  const d = typeof document !== 'undefined' ? document.documentElement : null;
-  if (d?.requestFullscreen && !document.fullscreenElement) {
-    pantallaPedida = true;
-    d.requestFullscreen().catch(() => {
-      // sin pantalla completa: Observar usa el layout sin paneles
-    });
-  }
-  window.location.hash = hashDe('observar', 'tv');
-}
-
-/** De pantalla completa a Observar con paneles, sin cortar el avance. */
-export function conPaneles() {
-  if (typeof document !== 'undefined' && document.fullscreenElement)
-    document.exitFullscreen().catch(() => {});
-  window.location.hash = hashDe('observar', 'torneo');
-}
-
-/**
- * Desde Observar con un partido del torneo abierto en juego («Jugar y
- * mirar»): que siga solo con los siguientes. iniciarTv toma la pelea en
- * juego y la registra antes de buscar la próxima.
- */
-export function seguirTorneo() {
-  window.location.hash = hashDe('observar', 'torneo');
-}
-
-/**
- * ¿Hay en juego un partido del torneo abierto (no una repetición)? Lo que
- * Observar necesita para ofrecer seguirTorneo().
- */
-export function hayPartidoDeTorneo() {
-  est.version;
-  est.marcador;
-  const x = torneos();
-  const live = x?.lg.live;
-  return !!live && !live.replay && live.league === x?.lg.cur?.id;
-}
-
-/**
- * Observar al entrar en modo TV: pide la pantalla completa solo si entrarTv
- * no la pidió (se llegó por recarga o por un enlace; sin gesto del usuario
- * el navegador puede negarla).
- */
-export function pantallaSiFalta() {
-  const ya = pantallaPedida;
-  pantallaPedida = false;
-  if (ya || typeof document === 'undefined' || document.fullscreenElement) return;
-  const d = document.documentElement;
-  if (d.requestFullscreen) d.requestFullscreen().catch(() => {});
+  void iniciarTv();
+  window.location.hash = hashDe('observar');
 }
 
 /** Enciende el TV con el torneo abierto (o el pedido por entrarTv). */
 export async function iniciarTv() {
   if (activo(tv.e)) return;
   const g = ++gen;
+  tv.pararTras = false;
   tv.e = { ...estadoInicial(), fase: 'edicion' }; // «sorteando» mientras carga
   tv.final = null;
   const x = await asegurarTorneos();
@@ -381,15 +392,10 @@ export async function iniciarTv() {
 /** Apaga el TV (el partido en curso sigue y se registra al terminar). */
 export function detenerTv() {
   gen++;
+  tv.pararTras = false;
   if (reloj !== null) clearInterval(reloj);
   reloj = null;
   tv.e = paso(tv.e, { t: 'detener' }).e;
-}
-
-/** Ruta de vuelta al salir del TV: la vista del torneo que se miraba. */
-export function rutaSalida() {
-  if (!tv.liga) return hashDe('competir');
-  return tv.liga === LG_SCRATCH_ID ? hashDe('competir', 'rapido') : hashDe('competir', tv.liga);
 }
 
 /** Nombre visible, formato y modo de sorteo del torneo del TV (para el rótulo). */

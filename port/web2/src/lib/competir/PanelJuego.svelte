@@ -1,8 +1,9 @@
 <script>
 // @ts-check
-// Jugar (decisión 23): el siguiente partido y «Jugar y mirar» (en
-// Observar), el avance automático (con paneles o en modo TV), la ronda en segundo plano (la cola: progreso, workers y aviso
-// al terminar), el marcador del partido en curso y el último partido
+// Jugar (decisión 23; PLAN-TORNEO-EN-CURSO.md TC1): el siguiente partido y
+// «▶ Jugar» con «Al terminar la pelea» (parar, seguir hasta el final de la
+// temporada o seguir con nuevas ediciones; se mira en Observar), la ronda
+// en segundo plano (la cola: progreso, workers y aviso al terminar), el marcador del partido en curso y el último partido
 // (↻ repetir, «Repetir y analizar»).
 import {
   LG_SCRATCH_ID,
@@ -15,14 +16,13 @@ import {
 } from '../../../engine/league.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
-import { entrarTv } from '../observar/tv/tv.svelte.js';
+import { AL_TERMINAR, entrarTv, ponerAlTerminar, tv } from '../observar/tv/tv.svelte.js';
 import { estadoTrabajos } from '../trabajos/trabajos.svelte.js';
 import TablaMarcador from './TablaMarcador.svelte';
 import { notaNulo, textoCampeon, textoProgreso, textoRotulo } from './textos.js';
 import {
   abandonar,
   est,
-  jugarYMirar,
   liberarRonda,
   nuevaTemporada,
   repetir,
@@ -102,7 +102,18 @@ let confirmarTemporada = $state(false);
       </div>
     {/if}
     <div class="fila">
-      <a class="btn pri" href={hashDe('observar')}>{t('competir.jugar.mirar')}</a>
+      {#if live.replay}
+        <a class="btn pri" href={hashDe('observar')}>{t('competir.jugar.mirar')}</a>
+      {:else}
+        <button
+          class="btn pri"
+          type="button"
+          title={t('competir.jugar.mirar.ayuda')}
+          onclick={() => entrarTv(L.id)}
+        >
+          {t('competir.jugar.mirar')}
+        </button>
+      {/if}
       <button class="btn" type="button" onclick={abandonar}>{t('competir.jugar.abandonar')}</button>
     </div>
   {:else}
@@ -174,11 +185,24 @@ let confirmarTemporada = $state(false);
       <button
         class="btn pri"
         type="button"
+        title={t('competir.jugar.jugar.ayuda')}
         disabled={!puedeJugar || faltaCopa}
-        onclick={jugarYMirar}
+        onclick={() => entrarTv(L.id)}
       >
-        {t('competir.jugar.jugarYMirar')}
+        ▶ {t('competir.jugar.jugar')}
       </button>
+      <label class="sub alTerminar" title={t('observar.tv.alTerminar.ayuda')}
+        >{t('observar.tv.alTerminar')}
+        <select
+          class="sel"
+          value={tv.alTerminar}
+          onchange={(e) => ponerAlTerminar(e.currentTarget.value)}
+        >
+          {#each AL_TERMINAR as k (k)}
+            <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
+          {/each}
+        </select></label
+      >
       {#if scratch}
         <p class="ayuda">{t('competir.nota.round-scratch')}</p>
       {:else}
@@ -197,27 +221,6 @@ let confirmarTemporada = $state(false);
       <p class="ayuda">{t('competir.jugar.otroEnJuego')}</p>
     {/if}
   {/if}
-  <div class="fila">
-    <button
-      class="btn"
-      type="button"
-      title={t('competir.jugar.auto.ayuda')}
-      disabled={!!ronda || !!est.ocupado}
-      onclick={() => entrarTv(L.id, { completa: false })}
-    >
-      ⏩ {t('competir.jugar.auto')}
-    </button>
-    <button
-      class="btn"
-      type="button"
-      title={t('competir.jugar.tv.ayuda')}
-      disabled={!!ronda || !!est.ocupado}
-      onclick={() => entrarTv(L.id)}
-    >
-      📺 {t('competir.jugar.tv')}
-    </button>
-  </div>
-
   {#if ronda}
     <div class="ronda">
       <div class="linea">
@@ -327,6 +330,21 @@ let confirmarTemporada = $state(false);
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+}
+.alTerminar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sel {
+  font: inherit;
+  font-size: 13px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--borde-control);
+  border-radius: 6px;
+  background: var(--campo);
+  color: var(--texto);
 }
 .linea {
   display: flex;

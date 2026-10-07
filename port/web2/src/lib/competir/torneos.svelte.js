@@ -11,7 +11,7 @@
 // leen de nuevo cuando cambia `version`), la última nota, el registro, el
 // marcador del partido en curso y el último resultado.
 //
-// Jugar y mirar (decisión 23): lgPlayNext → lanzar(plan) → la sim de la
+// Jugar (decisión 23): lgPlay desde el avance de Observar (tv.svelte.js) → la sim de la
 // página; los f1-started/f1-note/f1-over del worker van a leagueOnMessage y
 // las stats de cada frame a lgOnStats (y al marcador). Si otra cosa toma la
 // sim (una corrida nueva desde Inicio, Experimentar o una carga), el
@@ -589,19 +589,6 @@ export function abrirReglasEnExperimentar(S) {
 }
 
 // ---- Jugar ------------------------------------------------------------------------------
-
-/**
- * «Jugar y mirar» (decisión 23): el siguiente partido en la sim de la
- * página y abre Observar.
- */
-export function jugarYMirar() {
-  return accion('jugar', async () => {
-    const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
-    await asegurarBiblioteca();
-    await x.lgPlayNext();
-    if (x.lg.live) window.location.hash = hashDe('observar');
-  });
-}
 
 /** Abandona el partido en curso (no se registra). */
 export function abandonar() {
