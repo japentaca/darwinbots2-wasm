@@ -343,5 +343,7 @@
   "bots.inscribir.bloqueo": "No se puede inscribir: {nota}",
   "bots.inscribir.fallo": "No se pudo abrir «{torneo}» para inscribir el bot.",
   "bots.inscribir.falloDetalle": "No se pudo abrir «{torneo}» para inscribir el bot: {detalle}",
-  "bots.inscribir.abre": "Al inscribirlo se abre ese torneo en Competir (queda como el torneo abierto)."
+  "bots.inscribir.abre": "Al inscribirlo se abre ese torneo en Competir (queda como el torneo abierto).",
+  "bots.inscribir.noAbre": "Hay un torneo en curso: el bot se inscribe sin abrir el torneo elegido, y el que está en curso no se ofrece.",
+  "bots.inscribir.ninguno": "No hay otro torneo donde inscribirlo: el que está en curso no se edita mientras se juega."
 }

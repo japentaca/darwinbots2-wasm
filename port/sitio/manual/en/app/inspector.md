@@ -185,7 +185,8 @@ isn't kept in the run: if you repeat the run, it isn't repeated.
 
 The last tab has two tools for stepping in: the Player Bot and the eye designer.
 Neither can be used during an F1 match, and what they do to the bot's memory
-isn't kept in the run.
+isn't kept in the run. With a tournament in progress, the Player Bot doesn't
+even show up (see [[app/competir#en-curso]]).
 
 ### Player Bot {#player-bot}
 

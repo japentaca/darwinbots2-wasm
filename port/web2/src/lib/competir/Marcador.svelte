@@ -16,7 +16,7 @@ import { tick, untrack } from 'svelte';
 import { lgSeason } from '../../../engine/league.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe, parsearHash } from '../../router.js';
-import { avanceEncendido } from '../observar/tv/tv.svelte.js';
+import { abandonarPelea, avanceEncendido, hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import {
   flotanteVisible,
   guardarPlegado,
@@ -135,6 +135,13 @@ const resumen = $derived.by(() => {
     de: num(r.de),
   });
 });
+
+// Con un torneo en curso, la pelea se corta como en la franja (TC4):
+// abandonarPelea apaga el avance, con confirmación.
+function cortar() {
+  if (!hayTorneoEnCurso()) abandonar();
+  else if (confirm(t('observar.tv.abandonarSi'))) abandonarPelea();
+}
 </script>
 
 {#if integrado}
@@ -205,7 +212,7 @@ const resumen = $derived.by(() => {
       {/if}
       <div class="acciones">
         <a class="btn chico" href={hashDe('competir')}>{t('competir.marcador.irCompetir')}</a>
-        <button class="btn chico" type="button" onclick={abandonar}>
+        <button class="btn chico" type="button" onclick={cortar}>
           {t('competir.jugar.abandonar')}
         </button>
       </div>

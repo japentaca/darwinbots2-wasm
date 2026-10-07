@@ -275,7 +275,9 @@ repeat the experiment whenever you want.
 
 **Enter in a tournament** opens a list with the quick match and your tournaments,
 each with its season and how many entrants it has. You pick one and click
-**Enter**; the app opens that tournament in [[app/competir]].
+**Enter**; the app opens that tournament in [[app/competir]]. With a tournament
+in progress, that one isn't on the list and the app enters the bot in the
+chosen one without opening it (see [[app/competir#en-curso]]).
 
 Two things to keep in mind:
 

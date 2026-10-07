@@ -9,15 +9,15 @@ import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
 import { nombreTorneo, textoNota } from '../competir/textos.js';
 import {
-  abrir as abrirTorneo,
   asegurarTorneos,
   est as estCompetir,
   inscribirEn,
-  torneos,
+  temporadaConPartidos,
   tr as trCompetir,
 } from '../competir/torneos.svelte.js';
 import { urlManual } from '../manual.js';
 import Dialogo from '../observar/Dialogo.svelte';
+import { torneoEnCurso } from '../observar/tv/tv.svelte.js';
 import {
   avisar,
   avisarError,
@@ -143,6 +143,7 @@ async function guardarDatos(d) {
 let verInscribir = $state(false);
 let destino = $state(LG_SCRATCH_ID);
 let inscribiendo = $state(false);
+let leyendo = $state(false);
 /** @type {{id: string, nombre: string, temporada: number, n: number, ronda: boolean}[]} */
 let destinos = $state.raw([]);
 const elegido = $derived(destinos.find((d) => d.id === destino) ?? null);
@@ -150,6 +151,7 @@ const elegido = $derived(destinos.find((d) => d.id === destino) ?? null);
 async function abrirInscribir() {
   verInscribir = true;
   destinos = [];
+  leyendo = true;
   let x;
   try {
     x = await asegurarTorneos();
@@ -157,8 +159,14 @@ async function abrirInscribir() {
     verInscribir = false;
     avisarError(e);
     return;
+  } finally {
+    leyendo = false;
   }
-  const lista = [x.lgScratch(), ...x.lg.list.filter((L) => L.id !== LG_SCRATCH_ID)];
+  // el torneo en curso no se ofrece: no se edita mientras se juega (T8)
+  const enCurso = torneoEnCurso();
+  const lista = [x.lgScratch(), ...x.lg.list.filter((L) => L.id !== LG_SCRATCH_ID)].filter(
+    (L) => L.id !== enCurso,
+  );
   destinos = lista.map((L) => {
     const S = /** @type {any} */ (lgSeason(L));
     return {
@@ -170,7 +178,9 @@ async function abrirInscribir() {
     };
   });
   const cur = x.lg.cur?.id;
-  destino = destinos.some((d) => d.id === cur) ? /** @type {string} */ (cur) : LG_SCRATCH_ID;
+  destino = destinos.some((d) => d.id === cur)
+    ? /** @type {string} */ (cur)
+    : (destinos[0]?.id ?? LG_SCRATCH_ID);
 }
 
 async function inscribir() {
@@ -178,23 +188,17 @@ async function inscribir() {
   if (!d || d.ronda || inscribiendo) return;
   inscribiendo = true;
   try {
-    // abrir primero para ver los bloqueos de la temporada con sus partidos
-    // (sin el aviso de antes: si falla, el que queda es el de este intento)
+    // los bloqueos de la temporada, sin abrir el torneo (con un torneo en
+    // curso no se abre otro; temporadaConPartidos lee el almacén)
     estCompetir.aviso = null;
-    if (!(await abrirTorneo(d.id))) {
-      const detalle = estCompetir.aviso?.texto ?? '';
-      avisar(
-        detalle ? 'bots.inscribir.falloDetalle' : 'bots.inscribir.fallo',
-        { torneo: d.nombre, detalle },
-        { error: true },
-      );
+    const x = await asegurarTorneos();
+    const L = x.lgFind(d.id);
+    if (!L) {
+      avisar('bots.inscribir.fallo', { torneo: d.nombre }, { error: true });
       return;
     }
-    const x = torneos();
-    const L = x?.lg.cur;
-    if (!x || !L) return;
     const S = /** @type {any} */ (lgSeason(L));
-    const bloqueada = x.lgSeasonMatches(S.no).length > 0;
+    const bloqueada = await temporadaConPartidos(d.id);
     if (S.ronda) {
       avisar('bots.inscribir.bloqueo', { nota: t('competir.nota.round-running') }, { error: true });
       verInscribir = false;
@@ -207,12 +211,22 @@ async function inscribir() {
     }
     estCompetir.aviso = null;
     const notaAntes = estCompetir.nota?.n ?? 0;
-    await inscribirEn(d.id, [entrada.clave]);
+    if (!(await inscribirEn(d.id, [entrada.clave]))) {
+      const detalle = estCompetir.aviso?.texto ?? '';
+      avisar(
+        detalle ? 'bots.inscribir.falloDetalle' : 'bots.inscribir.fallo',
+        { torneo: d.nombre, detalle },
+        { error: true },
+      );
+      return;
+    }
     const a = estCompetir.aviso;
     // no se inscribió (ya estaba, mismo ADN): la nota del motor lo explica
     const n = estCompetir.nota;
     const dup = n && n.n > notaAntes && n.clave === 'entrant-dup' ? textoNota(n, trCompetir) : '';
     const nota = bloqueada ? ` ${t('competir.nota.locked')}` : '';
+    // sin abrirlo (torneo en curso), el aviso de Competir no es del torneo que se ve allí
+    if (torneoEnCurso()) estCompetir.aviso = null;
     avisar(
       'bots.inscribir.hecho',
       { torneo: d.nombre, detalle: `${dup || a?.texto || ''}${nota}`.trim() },
@@ -332,8 +346,10 @@ async function borrar() {
   bind:abierto={verInscribir}
   titulo={t('bots.inscribir.titulo', { nombre: entrada.nombre })}
 >
-  {#if !destinos.length}
+  {#if leyendo}
     <p class="help">{t('bots.inscribir.cargando')}</p>
+  {:else if !destinos.length}
+    <p class="help">{t('bots.inscribir.ninguno')}</p>
   {:else}
     <fieldset class="destinos">
       <legend class="help">{t('bots.inscribir.destino')}</legend>
@@ -353,7 +369,9 @@ async function borrar() {
       <p class="help">{t('competir.nota.round-running')}</p>
     {/if}
     <p class="help">{t('bots.inscribir.congelado')}</p>
-    <p class="help">{t('bots.inscribir.abre')}</p>
+    <p class="help">
+      {t(torneoEnCurso() ? 'bots.inscribir.noAbre' : 'bots.inscribir.abre')}
+    </p>
   {/if}
   {#snippet pie()}
     <button class="btn" type="button" onclick={() => (verInscribir = false)}>

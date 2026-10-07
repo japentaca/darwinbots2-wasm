@@ -565,5 +565,10 @@
   "competir.informe.temporadaNota": "El informe es de su última temporada (el de otra se genera desde Competir).",
   "competir.informe.sinTorneos": "No hay torneos guardados.",
   "competir.informe.sinTorneo": "el torneo ya no existe",
-  "competir.informe.irCompetir": "Ir a Competir"
+  "competir.informe.irCompetir": "Ir a Competir",
+  "competir.enCurso.bloqueo": "Hay un torneo en curso: mientras se juega no se crea, importa ni edita un torneo, ni se repite un partido. Detenelo desde la franja.",
+  "competir.enCurso.otro": "Hay un torneo en curso: no se puede abrir otro hasta detenerlo.",
+  "competir.enCurso.aviso": "Este torneo está en curso: participantes, reglas, sorteos y temporadas quedan de solo lectura hasta detenerlo.",
+  "competir.enCurso.panel": "El torneo está en curso: se mira en Observar y se controla desde la franja.",
+  "competir.torneo.enCurso": "en curso: de solo lectura"
 }

@@ -340,7 +340,7 @@ uno lo toma.
 Lo que hagas en este modo no queda en la corrida: al repetirla no se repite.
 
 ## Torneos {#tv}
-<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar; avance.js; FranjaTorneo.svelte: reanudarTv); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 y TC2 -->
+<!-- Observar.svelte (auto); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar, hayTorneoEnCurso, irAFranja; avance.js; FranjaTorneo.svelte: reanudarTv; AvisoTorneo.svelte); i18n observar.tv.*; PLAN-TORNEO-EN-CURSO.md TC1 a TC4 -->
 
 Las peleas de un torneo se juegan en Observar: se empiezan con **▶ Jugar** en
 [[app/competir#jugar]]. Antes de cada pelea, una cortinilla anuncia quién
@@ -376,9 +376,13 @@ la derecha: `M` la oculta o la muestra, para mirar sin nada encima. Con
 pelea se sigue en la pestaña **Torneo**, y **Al terminar la pelea**, **Parar**
 y **Abandonar la pelea** están en la [[app/observar#franja|franja del torneo]].
 
-Mientras el torneo avanza, **Sembrar**, **Mundo** y **Corridas** quedan
-desactivados: no se puede cambiar el mundo de una pelea. Si abrís otro torneo
-en Competir, el torneo deja de avanzar.
+Mientras dura el torneo, **Sembrar**, **Mundo**, **Guardar**, **Corridas** y
+el [[app/observar#jugador|Player Bot]] no se muestran: cambiarían la pelea.
+En su lugar, la barra de abajo tiene **🏆 Controles del torneo**, que lleva a la
+franja. La velocidad, la pausa, la vista, el color, el zoom, **Buscar el
+mejor** y la **Instantánea** siguen como siempre. En el resto de la app pasa
+lo mismo con todo lo que reemplazaría la simulación (ver
+[[app/competir#en-curso]]).
 
 ### La franja del torneo {#franja}
 
@@ -386,7 +390,9 @@ El torneo sigue aunque vayas a otra sección. Mientras dura, debajo de la barra
 superior se ve, en todas las pantallas, una franja con el torneo, la edición,
 cuánto falta de la temporada y qué está pasando: la cortinilla, **EN VIVO**,
 el ganador. Tiene **Ver**, que te trae a Observar, **Al terminar la pelea** y
-los mismos botones para parar o abandonar la pelea.
+los mismos botones para parar o abandonar la pelea. Los botones **Controles del
+torneo** de las otras pantallas te traen hasta acá, y la franja se ilumina un
+momento.
 
 Si recargás la página con un torneo en curso, la pelea que se estaba jugando
 se corta y no se registra. El torneo no sigue solo: la franja ofrece

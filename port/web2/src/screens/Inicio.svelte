@@ -8,6 +8,10 @@
 //   Ajustar   → #/experimentar/<id del escenario> (de fábrica o propio)
 //   Competir  → #/competir (escenarios con destino 'competir')
 //   Bots      → #/bots/<nombre exacto del bot> (y #/bots para la biblioteca)
+//
+// Con un torneo en curso (PLAN-TORNEO-EN-CURSO.md, TC4: T8), lo que
+// reemplaza la corrida (iniciar un escenario, retomar o abrir una corrida,
+// abrir un archivo) queda deshabilitado, con el aviso que lleva a la franja.
 import { onMount } from 'svelte';
 import { ESCENARIOS_FABRICA } from '../../engine/escenarios/fabrica.js';
 import { textoEn } from '../../engine/escenarios/index.js';
@@ -25,6 +29,8 @@ import { botsRecientes } from '../lib/inicio/recientes.js';
 import { fechaCorta, haceCuanto } from '../lib/inicio/tiempo.js';
 import VistaEscenario from '../lib/inicio/VistaEscenario.svelte';
 import { indiceBestiario } from '../lib/observar/bestiario.js';
+import AvisoTorneo from '../lib/observar/tv/AvisoTorneo.svelte';
+import { AVISO_EN_CURSO, hayTorneoEnCurso } from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { actual, corridasGuardadas, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
 import { hashDe } from '../router.js';
@@ -55,6 +61,9 @@ let avisos = $state.raw([]);
 let verTodas = $state(false);
 /** acción en curso ('' = ninguna): id del escenario o de la corrida */
 let ocupado = $state('');
+const enCurso = $derived(hayTorneoEnCurso());
+/** el porqué de los botones bloqueados por el torneo (title) */
+const porTorneo = $derived(enCurso ? t(AVISO_EN_CURSO) : undefined);
 /** @type {HTMLInputElement | undefined} */
 let inputArchivo = $state();
 /** @type {HTMLInputElement | undefined} */
@@ -167,7 +176,7 @@ function iniciar(e) {
     ir(hashDe('competir'));
     return;
   }
-  if (!puedeReemplazar()) return;
+  if (enCurso || !puedeReemplazar()) return;
   accion(
     e.id,
     async () => {
@@ -189,7 +198,7 @@ function retomar(c) {
     ir(hashDe('observar'));
     return;
   }
-  if (!puedeReemplazar()) return;
+  if (enCurso || !puedeReemplazar()) return;
   accion(
     id,
     async () => (await obtenerCorrida().cargar(id)) !== null,
@@ -200,7 +209,7 @@ function retomar(c) {
 
 /** @param {File} f */
 function abrirArchivo(f) {
-  if (!puedeReemplazar()) return;
+  if (enCurso || !puedeReemplazar()) return;
   accion(
     'archivo',
     async () => {
@@ -285,6 +294,7 @@ const recientes = $derived(
 <div class="inicio">
   <div class="principal">
     <h1 class="solo-lector">{t('inicio.titulo')}</h1>
+    <AvisoTorneo />
     {#if avisos.length}
       <div class="avisos">
         {#each avisos as a (a.clave)}
@@ -360,7 +370,8 @@ const recientes = $derived(
             <button
               class="btn pri"
               type="button"
-              disabled={!!ocupado}
+              disabled={!!ocupado || enCurso}
+              title={porTorneo}
               onclick={() => retomar(ultimaGuardada)}
             >
               {ocupado === ultimaGuardada.id ? t('inicio.cargandoCorrida') : t('inicio.ultima.retomar')}
@@ -432,7 +443,13 @@ const recientes = $derived(
               {/each}
             </div>
             <div class="botones">
-              <button class="btn pri" type="button" disabled={!!ocupado} onclick={() => iniciar(e)}>
+              <button
+                class="btn pri"
+                type="button"
+                disabled={!!ocupado || (enCurso && e.destino !== 'competir')}
+                title={e.destino !== 'competir' ? porTorneo : undefined}
+                onclick={() => iniciar(e)}
+              >
                 {#if ocupado === e.id}
                   {t('inicio.escenarios.iniciando')}
                 {:else if e.destino === 'competir'}
@@ -480,7 +497,8 @@ const recientes = $derived(
             <button
               class="btn pri"
               type="button"
-              disabled={!!ocupado}
+              disabled={!!ocupado || enCurso}
+              title={porTorneo}
               onclick={() => inputArchivo?.click()}
             >
               {ocupado === 'archivo' ? t('inicio.cargandoCorrida') : t('inicio.archivo.elegir')}
@@ -503,8 +521,10 @@ const recientes = $derived(
         <button
           type="button"
           class="fila"
-          disabled={!!ocupado}
-          title={t('inicio.corridas.retomar', { nombre: c.nombre })}
+          disabled={!!ocupado || (enCurso && !(hayActual && cor?.estado.id === c.id))}
+          title={enCurso && !(hayActual && cor?.estado.id === c.id)
+  ? porTorneo
+  : t('inicio.corridas.retomar', { nombre: c.nombre })}
           onclick={() => retomar(c)}
         >
           <span class="col">
@@ -532,7 +552,8 @@ const recientes = $derived(
         <button
           type="button"
           class="enlace"
-          disabled={!!ocupado}
+          disabled={!!ocupado || enCurso}
+          title={porTorneo}
           onclick={() => inputDbsim?.click()}
         >
           {t('inicio.corridas.importar')}

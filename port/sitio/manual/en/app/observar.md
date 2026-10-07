@@ -335,7 +335,7 @@ What you do in this mode isn't kept in the run: when you repeat it, it isn't
 repeated.
 
 ## Tournaments {#tv}
-<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar; avance.js; FranjaTorneo.svelte: reanudarTv); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 y TC2 -->
+<!-- Observar.svelte (auto); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar, hayTorneoEnCurso, irAFranja; avance.js; FranjaTorneo.svelte: reanudarTv; AvisoTorneo.svelte); i18n observar.tv.*; PLAN-TORNEO-EN-CURSO.md TC1 a TC4 -->
 
 A tournament's fights are played in Observe: you start them with **▶ Play** in
 [[app/competir#jugar]]. Before each fight, a break screen announces who fights
@@ -372,9 +372,12 @@ controls: you follow the fight in the **Tournament** tab, and **When the fight
 ends**, **Stop** and **Abandon the fight** are on the
 [[app/observar#franja|tournament strip]].
 
-While the tournament advances, **Seed**, **World** and **Runs** are disabled: a
-fight's world can't be changed. If you open another tournament in Compete, the
-tournament stops advancing.
+While the tournament lasts, **Seed**, **World**, **Save**, **Runs** and the
+[[app/observar#jugador|Player Bot]] aren't shown: they would change the
+fight. In their place, the bottom bar has **🏆 Tournament controls**, which
+takes you to the strip. Speed, pause, view, color, zoom, **Find the best** and
+**Snapshot** work as always. The rest of the app does the same with everything
+that would replace the simulation (see [[app/competir#en-curso]]).
 
 ### The tournament strip {#franja}
 
@@ -382,7 +385,9 @@ The tournament goes on even if you go to another section. While it lasts, a
 strip below the top bar shows, on every screen, the tournament, the edition,
 how much of the season is left and what's happening: the break screen,
 **LIVE**, the winner. It has **Watch**, which brings you to Observe, **When the
-fight ends** and the same buttons to stop or abandon the fight.
+fight ends** and the same buttons to stop or abandon the fight. The **Tournament
+controls** buttons on other screens bring you here, and the strip lights up for
+a moment.
 
 If you reload the page with a tournament in progress, the fight that was being
 played is cut off and isn't recorded. The tournament doesn't resume on its own:

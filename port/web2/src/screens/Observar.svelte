@@ -37,7 +37,7 @@ import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
 import PanelTorneo from '../lib/observar/tv/PanelTorneo.svelte';
 import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
-import { avanceEncendido } from '../lib/observar/tv/tv.svelte.js';
+import { avanceEncendido, irAFranja } from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { corridasGuardadas, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
 import { VELOCIDADES } from '../lib/sim/sesion.svelte.js';
@@ -51,8 +51,12 @@ let { partes = [] } = $props();
 // salir no lo enciende ni lo apaga. La pantalla completa (⛶ o F) es aparte:
 // el campo solo, con el rótulo del torneo encima si lo hay, y no toca el
 // avance.
+//
+// Bloqueos (TC4: T8): mientras dura, Sembrar, Mundo, Guardar, Corridas y el
+// Player Bot no se muestran (cambiarían la pelea); en su lugar, un botón
+// lleva a los controles del torneo (la franja; el rótulo también los
+// tiene). Velocidad, pausa, vista, lentes, zoom e instantánea siguen.
 const auto = $derived(avanceEncendido());
-const bloqueado = $derived(auto ? t('observar.auto.bloqueado') : '');
 let completa = $state(false);
 
 // las rutas del modo TV de antes (#/observar/tv y #/observar/torneo)
@@ -252,9 +256,15 @@ function cerrarMundo() {
   modoBorrar = false;
 }
 
-// con el avance automático la barra «Mundo» no se usa
+// con un torneo en curso la barra «Mundo» y los diálogos no se usan
 $effect(() => {
-  if (auto) untrack(cerrarMundo);
+  if (!auto) return;
+  untrack(() => {
+    cerrarMundo();
+    verSembrar = false;
+    verGuardar = false;
+    verCorridas = false;
+  });
 });
 
 function alternarMundo() {
@@ -463,35 +473,46 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         {/each}
       </fieldset>
       <div class="sep"></div>
-      <button
-        class="btn"
-        type="button"
-        title={bloqueado || t('observar.sembrar.ayuda')}
-        disabled={!sesion.hayMundo || auto}
-        onclick={() => (verSembrar = true)}
-      >
-        {t('observar.sembrar')}
-      </button>
-      <button
-        class="btn"
-        class:activo={verMundo}
-        type="button"
-        title={bloqueado || t('mundoObj.boton.ayuda')}
-        aria-pressed={verMundo}
-        disabled={(!sesion.hayMundo && !verMundo) || auto}
-        onclick={alternarMundo}
-      >
-        {t('mundoObj.boton')}
-      </button>
-      <button
-        class="btn"
-        type="button"
-        title={t('observar.guardar.ayuda')}
-        disabled={!sesion.hayMundo || !!estado.ocupado}
-        onclick={() => (verGuardar = true)}
-      >
-        {t('observar.guardar')}
-      </button>
+      {#if auto}
+        <button
+          class="btn"
+          type="button"
+          title={t('observar.tv.enCurso.barra.ayuda')}
+          onclick={irAFranja}
+        >
+          🏆 {t('observar.tv.enCurso.ir')}
+        </button>
+      {:else}
+        <button
+          class="btn"
+          type="button"
+          title={t('observar.sembrar.ayuda')}
+          disabled={!sesion.hayMundo}
+          onclick={() => (verSembrar = true)}
+        >
+          {t('observar.sembrar')}
+        </button>
+        <button
+          class="btn"
+          class:activo={verMundo}
+          type="button"
+          title={t('mundoObj.boton.ayuda')}
+          aria-pressed={verMundo}
+          disabled={!sesion.hayMundo && !verMundo}
+          onclick={alternarMundo}
+        >
+          {t('mundoObj.boton')}
+        </button>
+        <button
+          class="btn"
+          type="button"
+          title={t('observar.guardar.ayuda')}
+          disabled={!sesion.hayMundo || !!estado.ocupado}
+          onclick={() => (verGuardar = true)}
+        >
+          {t('observar.guardar')}
+        </button>
+      {/if}
       <button
         class="btn"
         type="button"
@@ -502,15 +523,17 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         {t('observar.mejor')}
       </button>
       <MenuInstantanea {sesion} {corrida} nombre={estado.nombre} onPng={instantanea} />
-      <button
-        class="btn"
-        type="button"
-        title={bloqueado || t('observar.corridas.ayuda')}
-        disabled={!!estado.ocupado || auto}
-        onclick={() => (verCorridas = true)}
-      >
-        {t('observar.corridas')}
-      </button>
+      {#if !auto}
+        <button
+          class="btn"
+          type="button"
+          title={t('observar.corridas.ayuda')}
+          disabled={!!estado.ocupado}
+          onclick={() => (verCorridas = true)}
+        >
+          {t('observar.corridas')}
+        </button>
+      {/if}
       <div class="relleno"></div>
       <fieldset class="seg disposicion">
         <legend class="oculto">{t('observar.disposicion')}</legend>

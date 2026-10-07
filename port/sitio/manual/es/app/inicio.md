@@ -33,8 +33,13 @@ La tarjeta de arriba cambia según lo que haya:
 
 **Continuar** te lleva a [[app/observar]] con el mundo tal como estaba, sin
 recargar nada. **Ver análisis** abre [[app/analizar]] sobre esa misma corrida.
-**Retomar** carga la corrida guardada y te lleva a Observar en pausa: hacé clic ens
-**Iniciar** para que siga.
+**Retomar** carga la corrida guardada y te lleva a Observar en pausa: hacé clic
+en **Iniciar** para que siga.
+
+Con un torneo en curso, la simulación es la de su pelea: **Retomar**, los
+**Iniciar** de los escenarios, **Elegir archivo** e **Importar .dbsim** quedan
+apagados, y arriba un aviso lo explica y lleva a la franja del torneo (ver
+[[app/competir#en-curso]]).
 
 El mundo en memoria vive mientras la pestaña esté abierta. Si recargás la página
 se pierde lo que no guardaste; lo guardado sigue en la lista de la derecha.
@@ -87,7 +92,7 @@ La última tarjeta de la galería, **Desde un archivo**, abre dos clases de
 archivo con el botón **Elegir archivo**:
 
 - **Un `.dbsim`**: una simulación guardada, tuya o de otra persona. Se carga en
-  pausa y te lleva a Observar: hacé clic ens **Iniciar** para que siga.
+  pausa y te lleva a Observar: hacé clic en **Iniciar** para que siga.
 - **Un `.txt` con el ADN de un bot**: la app arma un mundo mínimo para probarlo y
   lo pone a correr.
 

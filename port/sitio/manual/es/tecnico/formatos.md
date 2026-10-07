@@ -107,7 +107,7 @@ lo mismo.
 El menú **Instantánea** de [[app/observar]] baja dos cosas:
 
 - **Instantánea de los vivos (.snp)**: una ficha de cada bot vivo en el
-  momento en que hacé clic ens el botón, con su ADN completo. Con **Con el detalle de
+  momento en que hacés clic en el botón, con su ADN completo. Con **Con el detalle de
   mutaciones** marcado baja además un `_Mutations.txt` con la historia de
   mutaciones de cada uno.
 - **Registro de muertos**: con **Registrar los muertos** encendido, la

@@ -13,6 +13,7 @@ import { onMount, untrack } from 'svelte';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { urlManual } from '../manual.js';
 import { vbACss } from '../mundo/color.js';
+import { hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { ESTADO, FLAG } from '../sim/frame.js';
 import Adn from './Adn.svelte';
 import Consola from './Consola.svelte';
@@ -543,7 +544,10 @@ const estados = $derived.by(() => {
     {:else if pestana === 'consola'}
       <Consola texto={textoConsola} {vivo} {historial} onComando={comando} />
     {:else}
-      <ControlJugador {sesion} {vivo} />
+      <!-- el Player Bot no se ofrece con un torneo en curso (TC4: T8) -->
+      {#if !hayTorneoEnCurso()}
+        <ControlJugador {sesion} {vivo} />
+      {/if}
       <DisenadorOjos {sesion} {corrida} {bot} {vivo} {datos} {nombre} />
     {/if}
   </div>

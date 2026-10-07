@@ -9,6 +9,11 @@
 // simulación». Modo avanzado (paso N3.7, decisión 14): todos los parámetros
 // del catálogo sobre el mismo borrador (src/lib/experimentar/Avanzado.svelte);
 // el modo elegido se recuerda en localStorage.
+//
+// Con un torneo en curso (PLAN-TORNEO-EN-CURSO.md, TC4: T8), «Nueva
+// simulación» y «Aplicar a la actual» quedan deshabilitados (reemplazarían
+// o cambiarían la pelea), con el aviso que lleva a la franja; el borrador
+// se puede editar y guardar.
 import { untrack } from 'svelte';
 import {
   ESCENARIOS_FABRICA,
@@ -58,6 +63,8 @@ import DialogoEspecie from '../lib/experimentar/DialogoEspecie.svelte';
 import { escenariosPropios, estadoExp } from '../lib/experimentar/estado.svelte.js';
 import Dialogo from '../lib/observar/Dialogo.svelte';
 import { descargar, nombreArchivo } from '../lib/observar/descargas.js';
+import AvisoTorneo from '../lib/observar/tv/AvisoTorneo.svelte';
+import { AVISO_EN_CURSO, hayTorneoEnCurso } from '../lib/observar/tv/tv.svelte.js';
 import { estadoAlmacen } from '../lib/sim/almacen.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { actual, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
@@ -153,6 +160,9 @@ const escActual = $derived.by(() => {
   return e ? borradorDe(e) : null;
 });
 const ocupadoCorrida = $derived(actual.corrida?.estado.ocupado ?? '');
+const enCurso = $derived(hayTorneoEnCurso());
+/** el porqué de los botones bloqueados por el torneo (title) */
+const porTorneo = $derived(enCurso ? t(AVISO_EN_CURSO) : undefined);
 const ciclo = $derived(cicloVisible(actual.corrida?.sesion.stats.cycle));
 
 // ---- Borrador ----------------------------------------------------------------
@@ -342,7 +352,7 @@ let aplicando = $state(false);
 
 async function aplicarActual() {
   const c = actual.corrida;
-  if (!c || !escActual || !pend || aplicando) return;
+  if (!c || !escActual || !pend || aplicando || enCurso) return;
   const esc = c.estado.escenario;
   const d = diff(b, escActual);
   if (!d.mensajes.length) return;
@@ -380,6 +390,7 @@ function descartar() {
 let iniciando = $state(false);
 
 async function nuevaSim() {
+  if (enCurso) return;
   const semilla = parsearSemilla(estadoExp.semilla);
   if (semilla === null) {
     avisar('experimentar.error.semilla');
@@ -669,6 +680,7 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
       {/if}
     </div>
 
+    <AvisoTorneo />
     {#if estadoAlmacen.versionVieja}
       <div class="aviso error" role="alert">{t('experimentar.error.almacen.version-vieja')}</div>
     {:else if estadoAlmacen.bloqueado}
@@ -818,7 +830,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
             <button
               class="btn sm"
               type="button"
-              disabled={iniciando || !!ocupadoCorrida || errores.length > 0 || !semillaOk}
+              disabled={iniciando || !!ocupadoCorrida || errores.length > 0 || !semillaOk || enCurso}
+              title={porTorneo}
               onclick={nuevaSim}
             >
               {t('experimentar.nuevaSim')}
@@ -827,7 +840,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
           <button
             class="btn sm pri"
             type="button"
-            disabled={!pend.hayVivo || !!ocupadoCorrida || aplicando}
+            disabled={!pend.hayVivo || !!ocupadoCorrida || aplicando || enCurso}
+            title={porTorneo}
             onclick={aplicarActual}
           >
             {t('experimentar.aplicar', { ciclo: num(ciclo) })}
@@ -932,7 +946,8 @@ const descBorrador = $derived(b.descripcion ? textoEn(b.descripcion, idi) : '');
     <button
       class="btn pri"
       type="button"
-      disabled={iniciando || !!ocupadoCorrida || errores.length > 0 || !semillaOk}
+      disabled={iniciando || !!ocupadoCorrida || errores.length > 0 || !semillaOk || enCurso}
+      title={porTorneo}
       onclick={nuevaSim}
     >
       {iniciando ? t('experimentar.iniciando') : t('experimentar.nuevaSim')}

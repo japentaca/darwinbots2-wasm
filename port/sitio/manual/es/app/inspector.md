@@ -185,7 +185,8 @@ y no queda en la corrida: si la repetís, no se repite.
 
 La última pestaña tiene dos herramientas para intervenir: el Player Bot y el
 diseñador de ojos. Ninguna se puede usar durante un partido F1, y lo que hacen
-sobre la memoria del bot no queda en la corrida.
+sobre la memoria del bot no queda en la corrida. Con un torneo en curso, el
+Player Bot ni siquiera aparece (ver [[app/competir#en-curso]]).
 
 ### Player Bot {#player-bot}
 

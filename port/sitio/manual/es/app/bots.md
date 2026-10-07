@@ -277,8 +277,10 @@ así que podés repetir el experimento cuando quieras.
 <!-- Ficha.svelte abrirInscribir/inscribir; i18n bots.inscribir.* -->
 
 **Inscribir en torneo** abre una lista con el partido rápido y tus torneos,
-cada uno con su temporada y cuántos participantes tiene. Elegís uno y hacé clic ens
-**Inscribir**; la app abre ese torneo en [[app/competir]].
+cada uno con su temporada y cuántos participantes tiene. Elegís uno y hacés
+clic en **Inscribir**; la app abre ese torneo en [[app/competir]]. Con un
+torneo en curso, ese no aparece en la lista y la app inscribe en el elegido
+sin abrirlo (ver [[app/competir#en-curso]]).
 
 Dos cosas a tener en cuenta:
 

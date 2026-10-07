@@ -17,7 +17,7 @@ el escenario ya cargado.
 ## La idea: un borrador {#borrador}
 <!-- web2/src/screens/Experimentar.svelte (elegir, seguirCorrida); lib/experimentar/estado.svelte.js; PLAN.md decisiones 12 y 13 -->
 
-Todo lo que hacé clic ens en Experimentar va a un **borrador**: una copia de un
+Todo lo que cambiás en Experimentar va a un **borrador**: una copia de un
 escenario que podés editar sin afectar la simulación que está en marcha.
 Un _escenario_ es una configuración completa: los parámetros del mundo, las
 especies que se siembran y los objetos (obstáculos y teleporters). Los
@@ -182,6 +182,11 @@ está ocupada armando otra.
 **Nueva simulación** reemplaza la que está corriendo sin preguntar. Si querés
 conservarla, guardala antes desde Observar.
 :::
+
+Con un torneo en curso, **Nueva simulación** y **Aplicar a la actual** quedan
+apagados (reemplazarían o cambiarían la pelea), y un aviso arriba lleva a la
+franja del torneo. El borrador se puede editar y guardar igual (ver
+[[app/competir#en-curso]]).
 
 ## Aplicar a la simulación que corre {#aplicar}
 <!-- Experimentar.svelte .pendientes, aplicarActual (sesion.aplicarEnCiclo, registrarCambio), descartar; borrador.js pendientes, cambiosVivos; PLAN.md decisión 13 y C12 -->

@@ -565,5 +565,10 @@
   "competir.informe.temporadaNota": "The report covers its last season (another season's report is generated from Compete).",
   "competir.informe.sinTorneos": "There are no saved tournaments.",
   "competir.informe.sinTorneo": "the tournament no longer exists",
-  "competir.informe.irCompetir": "Go to Compete"
+  "competir.informe.irCompetir": "Go to Compete",
+  "competir.enCurso.bloqueo": "A tournament is in progress: while it plays you can't create, import or edit a tournament, or replay a match. Stop it from the strip.",
+  "competir.enCurso.otro": "A tournament is in progress: another one can't be opened until you stop it.",
+  "competir.enCurso.aviso": "This tournament is in progress: entrants, rules, draws and seasons are read-only until you stop it.",
+  "competir.enCurso.panel": "The tournament is in progress: watch it in Observe and control it from the strip.",
+  "competir.torneo.enCurso": "in progress: read-only"
 }

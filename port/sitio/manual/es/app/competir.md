@@ -218,7 +218,9 @@ Mientras hay un partido en juego, esta columna muestra el marcador con la
 ronda, el ciclo, los **Bots vivos** y las **Rondas ganadas** de cada uno.
 **Mirar en Observar** te lleva a mirarlo, y **Abandonar** lo corta sin
 registrarlo. En las otras secciones, un marcador flotante muestra lo mismo;
-podés plegarlo, o volver con **Ir a Competir**.
+podés plegarlo, o volver con **Ir a Competir**. Con un torneo en curso,
+**Abandonar** pide confirmación y además detiene el torneo, como **Abandonar la
+pelea** en la franja.
 
 :::cuidado
 El partido ocupa la simulación de Observar y reemplaza lo que hubiera ahí.
@@ -235,6 +237,29 @@ partido usa su propia semilla, el resultado es el mismo que mirándolos. Avisa
 al terminar. Mientras corre, la temporada queda bloqueada.
 **Cancelar la ronda** la detiene. El partido rápido no juega rondas en segundo
 plano.
+
+### Con un torneo en curso {#en-curso}
+<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector; i18n competir.enCurso.*, observar.tv.enCurso.* -->
+
+Mientras un torneo se juega, la simulación de la app es la de su pelea y el
+torneo abierto es ese. Por eso, hasta que lo detengas (desde la franja o con
+**Abandonar**):
+
+- **El torneo queda de solo lectura**: participantes, reglas, sorteos, el
+  nombre, la temporada nueva, ↻ y **Repetir y analizar**, **Vaciar** y
+  **Borrar**. Un aviso arriba lo explica, con **Controles del torneo**.
+- **No se abre otro torneo**: los demás se ven en la lista, más tenues, pero
+  no se abren, porque abrir otro cortaría el que se juega. Tampoco se crea
+  uno con **Nuevo torneo** ni se importa un .json (los dos abren el nuevo).
+- **No se juega otra cosa**: no se pide una **Ronda en segundo plano** de este
+  torneo. Una ronda de otro torneo pedida antes sigue corriendo.
+- **En [[app/inicio]] y [[app/experimentar]]**, lo que reemplaza la simulación
+  (iniciar un escenario, retomar una corrida, abrir un archivo, **Nueva
+  simulación**, **Aplicar a la actual**) queda apagado, con el aviso «Hay un
+  torneo en curso: detenelo para usar la simulación» y **Controles del
+  torneo**. En [[app/bots]] pasa lo mismo con **Sembrar en la corrida actual**.
+- **[[app/bots]] y [[app/analizar]] siguen libres.** **Inscribir en torneo**
+  no ofrece el torneo en curso, e inscribe en los otros sin abrirlos.
 
 <!-- engine/torneos.js lgEdition (con {sortear: false} desde tv.svelte.js; temporada terminada: lgNewSeason draw); tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
 

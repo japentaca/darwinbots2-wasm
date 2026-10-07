@@ -13,6 +13,13 @@
 //   #/competir/rapido                el partido rápido
 //   #/competir/<id>[/<vista>]        un torneo (vista: tabla, estructura,
 //                                    partidos, participantes, reglas, temporadas)
+//
+// Con un torneo en curso (PLAN-TORNEO-EN-CURSO.md, TC4: T8) el torneo
+// abierto es el que se juega y queda de solo lectura (participantes,
+// reglas, sorteos, temporada nueva, ↻, Vaciar y Borrar), con un aviso que
+// remite a la franja. Los demás torneos se ven en la lista pero no se
+// abren: el motor juega el torneo abierto, y abrir otro lo cortaría.
+// Tampoco se crea ni se importa uno (los dos abren el nuevo).
 import { onMount, untrack } from 'svelte';
 import { LG_SCRATCH_ID, lgAllTime, lgIsScratch, lgSeason } from '../../engine/league.js';
 import { generarInforme } from '../../engine/report/index.js';
@@ -54,6 +61,8 @@ import {
 } from '../lib/competir/torneos.svelte.js';
 import { vistaEstructura } from '../lib/competir/vistas.js';
 import { descargar } from '../lib/observar/descargas.js';
+import AvisoTorneo from '../lib/observar/tv/AvisoTorneo.svelte';
+import { hayTorneoEnCurso, torneoEnCurso } from '../lib/observar/tv/tv.svelte.js';
 import { almacen, estadoAlmacen } from '../lib/sim/almacen.svelte.js';
 import ListaTrabajos from '../lib/trabajos/ListaTrabajos.svelte';
 import { estadoTrabajos } from '../lib/trabajos/trabajos.svelte.js';
@@ -81,15 +90,27 @@ onMount(() => {
   asegurarTorneos();
 });
 
-// La ruta manda: abre el torneo pedido (o el partido rápido).
+// La ruta manda: abre el torneo pedido (o el partido rápido). Con un
+// torneo en curso, otro no se abre: la ruta vuelve al que se juega.
 $effect(() => {
   if (!est.listo) return;
   const p0 = partes[0];
-  untrack(() => {
-    if (p0 === 'rapido') abrir(LG_SCRATCH_ID);
-    else if (p0 && !ESPECIALES.includes(p0)) abrir(p0);
+  untrack(async () => {
+    const id = p0 === 'rapido' ? LG_SCRATCH_ID : p0 && !ESPECIALES.includes(p0) ? p0 : '';
+    if (!id || (await abrir(id))) return;
+    const enCurso = torneoEnCurso();
+    if (enCurso) {
+      const h =
+        enCurso === LG_SCRATCH_ID ? hashDe('competir', 'rapido') : hashDe('competir', enCurso);
+      window.history.replaceState(window.history.state, '', h);
+    }
   });
 });
+
+// Con un torneo en curso, el abierto es ese y queda de solo lectura.
+const congelado = $derived(hayTorneoEnCurso());
+/** ¿El torneo `id` de la lista no se puede abrir (otro está en curso)? @param {string} id */
+const otroBloqueado = (id) => congelado && snap?.L?.id !== id;
 $effect(() => {
   if (vistaRuta) vista = vistaRuta;
 });
@@ -283,11 +304,20 @@ const lineasMigracion = $derived(
 
 <div class="competir">
   <aside class="lista">
-    <a class="btn pri" href={hashDe('competir', 'nuevo')}>{t('competir.lista.nuevo')}</a>
+    <a
+      class="btn pri"
+      href={congelado ? undefined : hashDe('competir', 'nuevo')}
+      aria-disabled={congelado ? 'true' : undefined}
+      title={congelado ? t('competir.enCurso.bloqueo') : undefined}
+      >{t('competir.lista.nuevo')}</a
+    >
     <a
       class="li rapido"
       class:on={modo === 'torneo' && !!snap?.scratch}
-      href={hashDe('competir', 'rapido')}
+      class:off={congelado && !snap?.scratch}
+      href={congelado && !snap?.scratch ? undefined : hashDe('competir', 'rapido')}
+      aria-disabled={congelado && !snap?.scratch ? 'true' : undefined}
+      title={congelado && !snap?.scratch ? t('competir.enCurso.otro') : undefined}
       aria-current={modo === 'torneo' && snap?.scratch ? 'page' : undefined}
     >
       <span class="col">
@@ -301,7 +331,10 @@ const lineasMigracion = $derived(
         <a
           class="li"
           class:on={modo === 'torneo' && snap.L?.id === y.id}
-          href={hashDe('competir', y.id)}
+          class:off={otroBloqueado(y.id)}
+          href={otroBloqueado(y.id) ? undefined : hashDe('competir', y.id)}
+          aria-disabled={otroBloqueado(y.id) ? 'true' : undefined}
+          title={otroBloqueado(y.id) ? t('competir.enCurso.otro') : undefined}
           aria-current={modo === 'torneo' && snap.L?.id === y.id ? 'page' : undefined}
         >
           <span class="col">
@@ -325,7 +358,13 @@ const lineasMigracion = $derived(
     >
     <div class="relleno"></div>
     <div class="archivos">
-      <button class="btn chico" type="button" onclick={() => archivo?.click()}>
+      <button
+        class="btn chico"
+        type="button"
+        disabled={congelado}
+        title={congelado ? t('competir.enCurso.bloqueo') : undefined}
+        onclick={() => archivo?.click()}
+      >
         {t('competir.lista.importar')}
       </button>
       <button
@@ -407,6 +446,8 @@ const lineasMigracion = $derived(
       <p class="vacio" role="alert">
         {t('competir.error.carga', { detalle: textoError(est.error, tr) })}
       </p>
+    {:else if modo === 'nuevo' && congelado}
+      <AvisoTorneo clave="competir.enCurso.bloqueo" />
     {:else if modo === 'nuevo'}
       <Asistente onCancelar={() => (window.location.hash = hashDe('competir'))} />
     {:else if modo === 'salon'}
@@ -424,6 +465,7 @@ const lineasMigracion = $derived(
             <input
               class="nombre"
               value={nombreTorneo(snap.L, tr)}
+              readonly={congelado}
               aria-label={t('competir.torneo.nombre')}
               onchange={(e) => renombrar(e.currentTarget.value)}
             >
@@ -440,7 +482,9 @@ const lineasMigracion = $derived(
                 {t('competir.torneo.verActual')}
               </button>
             {/if}
-            {#if snap.actual && (snap.bloqueada || snap.ronda)}
+            {#if congelado}
+              <span class="lock">🔒 {t('competir.torneo.enCurso')}</span>
+            {:else if snap.actual && (snap.bloqueada || snap.ronda)}
               <span class="lock"
                 >🔒
                 {t(snap.ronda ? 'competir.torneo.rondaBloquea' : 'competir.torneo.bloqueada')}</span
@@ -461,7 +505,7 @@ const lineasMigracion = $derived(
             <button
               class="btn chico pri"
               type="button"
-              disabled={!!est.ocupado}
+              disabled={!!est.ocupado || congelado}
               onclick={guardarComo}
             >
               {t('competir.rapido.guardar')}
@@ -482,7 +526,7 @@ const lineasMigracion = $derived(
             <button
               class="btn chico"
               type="button"
-              disabled={snap.ronda}
+              disabled={snap.ronda || congelado}
               onclick={() => (confirmarBorrar = true)}
             >
               {t(snap.scratch ? 'competir.torneo.vaciar' : 'competir.torneo.borrar')}
@@ -493,6 +537,7 @@ const lineasMigracion = $derived(
       {#if snap.scratch}
         <p class="ayuda">{t('competir.rapido.ayuda')}</p>
       {/if}
+      <AvisoTorneo clave="competir.enCurso.aviso" />
 
       <div class="seg" role="tablist" aria-label={t('competir.torneo.vistas')}>
         {#each pestañas as p (p)}
@@ -527,14 +572,14 @@ const lineasMigracion = $derived(
             {eloHistorico}
             {jugando}
             {enCola}
-            ocupado={!!snap.live || !!est.ocupado}
+            ocupado={!!snap.live || !!est.ocupado || congelado}
             onRepetir={repetir}
           />
         {:else if vista === 'partidos'}
           <Partidos
             ms={snap.ms}
             checked={snap.checked}
-            ocupado={!!snap.live || !!est.ocupado}
+            ocupado={!!snap.live || !!est.ocupado || congelado}
             onRepetir={repetir}
             onAnalizar={repetirYAnalizar}
           />
@@ -545,19 +590,21 @@ const lineasMigracion = $derived(
             ms={snap.ms}
             actual={snap.actual}
             bloqueada={snap.bloqueada}
-            ronda={snap.ronda}
+            ronda={snap.ronda || congelado}
           />
         {:else if vista === 'reglas'}
           <Reglas
             S={snap.S}
-            editable={snap.actual && !snap.bloqueada && !snap.ronda}
+            editable={snap.actual && !snap.bloqueada && !snap.ronda && !congelado}
             motivo={!snap.actual
   ? 'competir.reglas.pasada'
-  : snap.ronda
-    ? 'competir.torneo.rondaBloquea'
-    : snap.bloqueada
-      ? 'competir.torneo.bloqueada'
-      : ''}
+  : congelado
+    ? 'competir.torneo.enCurso'
+    : snap.ronda
+      ? 'competir.torneo.rondaBloquea'
+      : snap.bloqueada
+        ? 'competir.torneo.bloqueada'
+        : ''}
           />
         {:else if vista === 'temporadas'}
           <Temporadas
@@ -565,7 +612,7 @@ const lineasMigracion = $derived(
             todos={snap.todos}
             vista={snap.S.no}
             onVer={(no) => (temporadaVista = no === snap?.cur.no ? 0 : no)}
-            puedeNueva={snap.bloqueada && !snap.ronda && !snap.live && !est.ocupado}
+            puedeNueva={snap.bloqueada && !snap.ronda && !snap.live && !est.ocupado && !congelado}
             onNueva={() => {
   temporadaVista = 0;
   nuevaTemporada();
@@ -610,6 +657,11 @@ const lineasMigracion = $derived(
   margin: 0 4px 6px;
   justify-content: center;
 }
+.btn:disabled,
+.lista > .btn.pri[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .li {
   display: flex;
   align-items: center;
@@ -633,6 +685,14 @@ const lineasMigracion = $derived(
 }
 .li.rapido.on {
   background: var(--seleccion);
+}
+/* con un torneo en curso, los demás no se abren (TC4) */
+.li.off {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.li.off:hover {
+  background: transparent;
 }
 .col {
   display: flex;

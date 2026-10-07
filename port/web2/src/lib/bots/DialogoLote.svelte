@@ -5,7 +5,8 @@
 // «Nuevo escenario con estos» (escenario propio en 'escenarios', que se abre
 // en Experimentar). Con un solo bot se eligen además el nombre de la
 // especie, el color y si es vegetal (como «To the form» de la clásica). Lo
-// puro está en ./lote.js.
+// puro está en ./lote.js. Con un torneo en curso (TC4: T8) no se siembra
+// en la corrida actual: es la pelea del torneo.
 import { untrack } from 'svelte';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
@@ -13,6 +14,8 @@ import { textoValidacion } from '../experimentar/archivo.js';
 import { colorLibre } from '../experimentar/borrador.js';
 import { crearPropios } from '../experimentar/propios.js';
 import Dialogo from '../observar/Dialogo.svelte';
+import AvisoTorneo from '../observar/tv/AvisoTorneo.svelte';
+import { hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { almacen } from '../sim/almacen.svelte.js';
 import { actual } from '../sim/corrida.svelte.js';
 import { avisar, avisarError } from './biblioteca.svelte.js';
@@ -122,7 +125,7 @@ const lineas = (sinAdn, renombrados) => [
 
 async function sembrarActual() {
   const c = actual.corrida;
-  if (!c || ocupado) return;
+  if (!c || ocupado || hayTorneoEnCurso()) return;
   ocupado = true;
   try {
     const { especies, sinAdn } = await preparar(coloresCorrida());
@@ -248,11 +251,12 @@ async function nuevoEscenario() {
     <p class="help">
       {hayMundo ? t('bots.lote.actualAyuda') : t('bots.lote.sinCorrida')}
     </p>
+    <AvisoTorneo />
     <div>
       <button
         class="btn pri"
         type="button"
-        disabled={!hayMundo || ocupado || !unicas.length}
+        disabled={!hayMundo || ocupado || !unicas.length || hayTorneoEnCurso()}
         onclick={sembrarActual}
       >
         {t('bots.lote.sembrar')}

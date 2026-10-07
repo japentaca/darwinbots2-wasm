@@ -178,6 +178,11 @@ another one.
 keep it, save it first from Observe.
 :::
 
+With a tournament in progress, **New simulation** and **Apply to current** are
+off (they would replace or change the fight), and a notice at the top takes you
+to the tournament strip. You can still edit and save the draft (see
+[[app/competir#en-curso]]).
+
 ## Applying to the running simulation {#aplicar}
 <!-- Experimentar.svelte .pendientes, aplicarActual (sesion.aplicarEnCiclo, registrarCambio), descartar; borrador.js pendientes, cambiosVivos; PLAN.md decisión 13 y C12 -->
 

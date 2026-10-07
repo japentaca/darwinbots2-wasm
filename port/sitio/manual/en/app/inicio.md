@@ -35,6 +35,11 @@ without reloading anything. **View analysis** opens [[app/analizar]] on that sam
 run. **Resume** loads the saved run and takes you to Observe paused: click
 **Start** to have it go on.
 
+With a tournament in progress, the simulation is its fight: **Resume**, the
+scenarios' **Start**, **Choose file** and **Import .dbsim** are off, and a
+notice at the top explains it and takes you to the tournament strip (see
+[[app/competir#en-curso]]).
+
 The world in memory lives as long as the tab is open. If you reload the page,
 whatever you didn't save is lost; what you saved stays in the list on the right.
 

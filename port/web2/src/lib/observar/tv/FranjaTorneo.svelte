@@ -9,6 +9,8 @@
 // un torneo en curso, ofrece «Reanudar» (no arranca solo). La región viva
 // que anuncia las fases es la del rótulo de Observar: acá no se repite.
 // BarraSuperior la carga con import dinámico (como la cola de trabajos).
+// Los avisos de los bloqueos (TC4, AvisoTorneo.svelte) llevan el foco acá
+// (irAFranja) y la franja se ilumina un momento.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { hashDe } from '../../../router.js';
 import { tr } from '../../competir/torneos.svelte.js';
@@ -21,6 +23,7 @@ import {
   descartarReanudar,
   detenerTv,
   hayPelea,
+  ID_FRANJA,
   pararTv,
   ponerAlTerminar,
   reanudarTv,
@@ -49,6 +52,8 @@ function abandonar() {
     class="franja"
     class:vivo={f.vivo}
     class:error={f.error}
+    id={ID_FRANJA}
+    tabindex="-1"
     aria-label={t('observar.tv.aria')}
   >
     <span class="punto" aria-hidden="true"></span>
@@ -129,6 +134,22 @@ function abandonar() {
   font-size: 13px;
   box-sizing: border-box;
   flex-wrap: wrap;
+}
+/* los avisos de los bloqueos (AvisoTorneo) llevan acá: la franja se ilumina */
+.franja:focus {
+  outline: none;
+}
+.franja:global(.llamada) {
+  animation: llamada 1.2s ease-out;
+}
+@keyframes llamada {
+  from {
+    box-shadow: inset 0 0 0 2px #e0b050;
+    background: #2e3a2a;
+  }
+  to {
+    box-shadow: inset 0 0 0 2px transparent;
+  }
 }
 .punto {
   width: 8px;

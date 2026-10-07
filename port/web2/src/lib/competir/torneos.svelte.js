@@ -22,6 +22,13 @@
 // (Marcador.svelte) se monta en el documento la primera vez: se ve también
 // en Observar.
 //
+// Con un torneo en curso (PLAN-TORNEO-EN-CURSO.md, TC4: T8) el torneo
+// abierto es el que se juega: no se abre otro, no se crea ni se importa
+// (abren el nuevo), no se edita y no se repite un partido (tomaría la sim).
+// Cada acción que lo haría avisa y no corre (enCursoBloquea); el avance
+// abre su torneo con `forzar`. «Inscribir en torneo» inscribe en otro sin
+// abrirlo (inscribirSinAbrir).
+//
 // Rondas en segundo plano: lgRonda → cola (TIPO_RONDA). Al terminar, el
 // alTerminar de la cola (src/lib/trabajos/trabajos.svelte.js) llama a
 // alTerminarRonda: la pestaña dueña de la cola registra la ronda (o la
@@ -30,7 +37,7 @@
 import { mount } from 'svelte';
 import { crearPaleta } from '../../../engine/adn.js';
 import { entradasDe } from '../../../engine/biblioteca.js';
-import { LG_SCRATCH_ID, lgIsScratch, lgSeason } from '../../../engine/league.js';
+import { LG_SCRATCH_ID, lgAddEntrant, lgIsScratch, lgSeason } from '../../../engine/league.js';
 import {
   escenarioDelPartido,
   inventarioDeBiblioteca,
@@ -39,7 +46,7 @@ import {
   participantesDeEntradas,
   TIPO_RONDA,
 } from '../../../engine/rondas.js';
-import { crearTorneos, ST_TORNEOS } from '../../../engine/torneos.js';
+import { crearTorneos, ST_PARTIDOS, ST_TORNEOS } from '../../../engine/torneos.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
 import { rutaAnalizar } from '../analizar/ruta.js';
@@ -49,6 +56,7 @@ import { esperarMigracion } from '../bots/migracion.svelte.js';
 import { borradorDe } from '../experimentar/borrador.js';
 import { estadoExp } from '../experimentar/estado.svelte.js';
 import { descargar } from '../observar/descargas.js';
+import { hayTorneoEnCurso, torneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { almacen } from '../sim/almacen.svelte.js';
 import { actual, corrida } from '../sim/corrida.svelte.js';
 import { especiesPrueba } from '../sim/prueba.js';
@@ -365,10 +373,35 @@ async function accion(que, fn) {
   }
 }
 
+/**
+ * Con un torneo en curso, avisa y devuelve true: la acción no corre (T8).
+ * Si se intentó abrir otro torneo, el aviso lo dice.
+ */
+function enCursoBloquea() {
+  if (!hayTorneoEnCurso()) return false;
+  avisar('competir.enCurso.bloqueo', {}, true);
+  return true;
+}
+
+/**
+ * accion() que no corre con un torneo en curso.
+ * @template R @param {string} que @param {() => Promise<R>} fn
+ */
+const accionLibre = (que, fn) => (enCursoBloquea() ? Promise.resolve(undefined) : accion(que, fn));
+
 // ---- Selección, lista y archivos ---------------------------------------------------
 
-/** Abre un torneo (o el Scratch) por id. @param {string} id */
-export function abrir(id) {
+/**
+ * Abre un torneo (o el Scratch) por id. Con un torneo en curso solo se
+ * «abre» ese (ya lo está); `forzar` es para el avance, que abre el suyo al
+ * encenderse.
+ * @param {string} id @param {boolean} [forzar]
+ */
+export function abrir(id, forzar = false) {
+  if (!forzar && hayTorneoEnCurso() && id !== torneoEnCurso()) {
+    avisar('competir.enCurso.otro', {}, true);
+    return Promise.resolve(false);
+  }
   return accion('abrir', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     const L = id === LG_SCRATCH_ID ? x.lgScratch() : x.lg.list.find((y) => y.id === id);
@@ -390,22 +423,22 @@ export function exportar() {
 
 /** Importa un .json de torneo (v1/v2 de la clásica o de la nueva). @param {string} texto */
 export function importar(texto) {
-  return accion('importar', () => /** @type {any} */ (T).lgImport(texto));
+  return accionLibre('importar', () => /** @type {any} */ (T).lgImport(texto));
 }
 
 /** Guarda el Scratch como torneo. @param {string} nombre */
 export function guardarScratch(nombre) {
-  return accion('guardar', () => /** @type {any} */ (T).lgScratchSave(nombre));
+  return accionLibre('guardar', () => /** @type {any} */ (T).lgScratchSave(nombre));
 }
 
 /** Borra el torneo abierto o vacía el Scratch. */
 export function borrarActual() {
-  return accion('borrar', () => /** @type {any} */ (T).lgDeleteCurrent());
+  return accionLibre('borrar', () => /** @type {any} */ (T).lgDeleteCurrent());
 }
 
 /** @param {string} nombre */
 export function renombrar(nombre) {
-  return accion('renombrar', () => /** @type {any} */ (T).lgRename(nombre));
+  return accionLibre('renombrar', () => /** @type {any} */ (T).lgRename(nombre));
 }
 
 /** El Hall of Fame del Canal viejo: bajarlo (y descartarlo) o solo descartarlo. @param {boolean} bajar */
@@ -438,7 +471,7 @@ export function leerSalon() {
  * @param {import('./asistente.js').Asistente} a
  */
 export function crearTorneo(a) {
-  return accion('crear', async () => {
+  return accionLibre('crear', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     await asegurarBiblioteca();
     const plan = planCreacion(a);
@@ -478,7 +511,7 @@ async function agregarClaves(claves) {
 
 /** @param {string[]} claves */
 export function agregarParticipantes(claves) {
-  return accion('agregar', async () => {
+  return accionLibre('agregar', async () => {
     await asegurarBiblioteca();
     const r = await agregarClaves(claves);
     if (r.sinAdn.length)
@@ -496,24 +529,72 @@ export function agregarParticipantes(claves) {
  */
 export async function inscribirEn(id, claves) {
   await asegurarTorneos();
+  if (hayTorneoEnCurso()) return inscribirSinAbrir(id, claves);
   if (!(await abrir(id))) return false;
   await agregarParticipantes(claves);
   return true;
 }
 
+/**
+ * «Inscribir en torneo» con un torneo en curso (T8): en otro torneo, sin
+ * abrirlo (abrirlo cortaría el que se juega); en el que se juega, no.
+ * Devuelve false si el torneo no existe o es el que se juega.
+ * @param {string} id @param {string[]} claves
+ */
+async function inscribirSinAbrir(id, claves) {
+  const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
+  const L = x.lgFind(id);
+  if (!L || id === torneoEnCurso()) return false;
+  await accion('agregar', async () => {
+    await asegurarBiblioteca();
+    const S = lgSeason(L);
+    if (/** @type {any} */ (S).ronda) {
+      avisar('competir.nota.round-running', {}, true);
+      return;
+    }
+    const { participantes, sinAdn } = await participantesDeEntradas(
+      entradasDe(bib.indice, claves),
+      adnDeEntrada,
+    );
+    let n = 0;
+    for (const p of participantes) if (lgAddEntrant(S, p)) n++;
+    await x.lgSave(L);
+    if (sinAdn.length)
+      avisar('competir.participantes.sinAdn', { nombres: sinAdn.join(', ') }, true);
+    else avisar('competir.participantes.agregados', { n });
+  });
+  return true;
+}
+
+/**
+ * ¿La temporada abierta del torneo `id` ya tiene partidos? Lee el almacén:
+ * sirve sin abrirlo (los partidos en memoria son los del torneo abierto).
+ * @param {string} id
+ */
+export async function temporadaConPartidos(id) {
+  const x = /** @type {ReturnType<typeof crearTorneos>} */ (await asegurarTorneos());
+  const L = x.lgFind(id);
+  if (!L) return false;
+  if (x.lg.cur?.id === id) return x.lgSeasonMatches(lgSeason(L).no).length > 0;
+  if (lgIsScratch(L)) return false;
+  const ms = /** @type {Match[]} */ (await almacen().porIndice(ST_PARTIDOS, 'league', id));
+  const no = lgSeason(L).no;
+  return ms.some((m) => m.season === no);
+}
+
 /** @param {number} i */
 export function quitarParticipante(i) {
-  return accion('quitar', () => /** @type {any} */ (T).lgEntrantRemove(i));
+  return accionLibre('quitar', () => /** @type {any} */ (T).lgEntrantRemove(i));
 }
 
 /** @param {number} i @param {{qty?: any, color?: string}} patch */
 export function cambiarParticipante(i, patch) {
-  return accion('participante', () => /** @type {any} */ (T).lgEntrantSet(i, patch));
+  return accionLibre('participante', () => /** @type {any} */ (T).lgEntrantSet(i, patch));
 }
 
 /** @param {Record<string, any>} patch */
 export function cambiarSorteo(patch) {
-  return accion('sorteo', async () => {
+  return accionLibre('sorteo', async () => {
     await asegurarBiblioteca();
     await /** @type {any} */ (T).lgSetDraw(patch);
   });
@@ -521,7 +602,7 @@ export function cambiarSorteo(patch) {
 
 /** Vuelve a sortear los participantes de la temporada abierta. */
 export function sortear() {
-  return accion('sortear', async () => {
+  return accionLibre('sortear', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     await asegurarBiblioteca();
     const L = x.lg.cur;
@@ -534,22 +615,22 @@ export function sortear() {
 }
 
 export function sortearGrupos() {
-  return accion('grupos', () => /** @type {any} */ (T).lgCupRedraw());
+  return accionLibre('grupos', () => /** @type {any} */ (T).lgCupRedraw());
 }
 
 /** @param {string} k @param {any} v */
 export function cambiarFormato(k, v) {
-  return accion('formato', () => /** @type {any} */ (T).lgSetFmt(k, v));
+  return accionLibre('formato', () => /** @type {any} */ (T).lgSetFmt(k, v));
 }
 
 /** @param {import('./asistente.js').SeleccionReglas} sel */
 export function cambiarReglas(sel) {
-  return accion('reglas', () => /** @type {any} */ (T).lgSetRules(reglasDeSeleccion(sel)));
+  return accionLibre('reglas', () => /** @type {any} */ (T).lgSetRules(reglasDeSeleccion(sel)));
 }
 
 /** Temporada nueva del torneo abierto. */
 export function nuevaTemporada() {
-  return accion('temporada', async () => {
+  return accionLibre('temporada', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     await asegurarBiblioteca();
     const L = x.lg.cur;
@@ -599,7 +680,7 @@ export function abandonar() {
 
 /** ↻ Repite un partido con su semilla y compara con lo registrado. @param {number} id */
 export function repetir(id) {
-  return accion('repetir', async () => {
+  return accionLibre('repetir', async () => {
     await /** @type {any} */ (T).lgReplay(id);
   });
 }
@@ -610,7 +691,7 @@ export function repetir(id) {
  * @param {number} id
  */
 export function repetirYAnalizar(id) {
-  return accion('analizar', async () => {
+  return accionLibre('analizar', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     if (x.lg.live) abandonar();
     const L = x.lg.cur;
@@ -634,7 +715,7 @@ export function repetirYAnalizar(id) {
 
 /** La ronda del torneo abierto a la cola. */
 export function rondaEnSegundoPlano() {
-  return accion('ronda', async () => {
+  return accionLibre('ronda', async () => {
     const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
     await asegurarBiblioteca();
     const r = await x.lgRonda();

@@ -343,5 +343,7 @@
   "bots.inscribir.bloqueo": "Cannot enter: {nota}",
   "bots.inscribir.fallo": "Could not open “{torneo}” to enter the bot.",
   "bots.inscribir.falloDetalle": "Could not open “{torneo}” to enter the bot: {detalle}",
-  "bots.inscribir.abre": "Entering it opens that tournament in Compete (it becomes the open tournament)."
+  "bots.inscribir.abre": "Entering it opens that tournament in Compete (it becomes the open tournament).",
+  "bots.inscribir.noAbre": "A tournament is in progress: the bot is entered without opening the chosen tournament, and the one in progress isn't offered.",
+  "bots.inscribir.ninguno": "There's no other tournament to enter it in: the one in progress can't be edited while it plays."
 }

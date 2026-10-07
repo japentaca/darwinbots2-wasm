@@ -75,7 +75,7 @@ vuelven signos de pregunta: `'#tag: Acción` queda como `Acci??n`.
 El `'#hash` es un control contra la edición a mano. El motor lo calcula sobre
 todo el texto que viene antes, y al cargar lo vuelve a calcular. Si no
 coincide, la generación y las mutaciones vuelven a 0; el ADN carga igual. Por
-eso, si hacé clic ens algo de un archivo exportado (el código, la generación, o
+eso, si cambiás algo de un archivo exportado (el código, la generación, o
 incluso si agregás un comentario arriba), el bot pierde su historia y vuelve a
 la generación 0. Cambiar los fines de línea de CR+LF a LF no la rompe. Un
 archivo sin `'#hash` conserva lo que diga su cabecera.

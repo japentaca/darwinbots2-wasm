@@ -5,6 +5,10 @@
 // temporada o seguir con nuevas ediciones; se mira en Observar), la ronda
 // en segundo plano (la cola: progreso, workers y aviso al terminar), el marcador del partido en curso y el último partido
 // (↻ repetir, «Repetir y analizar»).
+//
+// Con un torneo en curso (TC4: T8) no se juega ni se pide una ronda: el
+// aviso remite a la franja. «Abandonar» corta la pelea del torneo con
+// abandonarPelea (apaga el avance), con confirmación como en la franja.
 import {
   LG_SCRATCH_ID,
   lgCupSizeOk,
@@ -16,7 +20,15 @@ import {
 } from '../../../engine/league.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
-import { AL_TERMINAR, entrarTv, ponerAlTerminar, tv } from '../observar/tv/tv.svelte.js';
+import AvisoTorneo from '../observar/tv/AvisoTorneo.svelte';
+import {
+  AL_TERMINAR,
+  abandonarPelea,
+  entrarTv,
+  hayTorneoEnCurso,
+  ponerAlTerminar,
+  tv,
+} from '../observar/tv/tv.svelte.js';
 import { estadoTrabajos } from '../trabajos/trabajos.svelte.js';
 import TablaMarcador from './TablaMarcador.svelte';
 import { notaNulo, textoCampeon, textoProgreso, textoRotulo } from './textos.js';
@@ -72,7 +84,13 @@ const aqui = $derived(!!live && live.league === L.id);
 const colores = $derived(
   new Map((live?.fighters ?? []).map((/** @type {any} */ e) => [e.name, e.color])),
 );
-const puedeJugar = $derived(!live && !ronda && !terminada && !est.ocupado);
+const enCurso = $derived(hayTorneoEnCurso());
+const puedeJugar = $derived(!live && !ronda && !terminada && !est.ocupado && !enCurso);
+
+function cortar() {
+  if (!enCurso) abandonar();
+  else if (confirm(t('observar.tv.abandonarSi'))) abandonarPelea();
+}
 // «Empezar la temporada N»: se confirma (como en Temporadas); con sorteo si
 // los participantes se vuelven a sortear
 const conSorteo = $derived(lgDrawOf(L).mode !== 'fixed');
@@ -80,6 +98,9 @@ let confirmarTemporada = $state(false);
 </script>
 
 <section class="card bloque">
+  {#if !aqui}
+    <AvisoTorneo clave="competir.enCurso.panel" />
+  {/if}
   {#if aqui}
     <span class="lbl"
       >{live.replay
@@ -114,7 +135,7 @@ let confirmarTemporada = $state(false);
           {t('competir.jugar.mirar')}
         </button>
       {/if}
-      <button class="btn" type="button" onclick={abandonar}>{t('competir.jugar.abandonar')}</button>
+      <button class="btn" type="button" onclick={cortar}>{t('competir.jugar.abandonar')}</button>
     </div>
   {:else}
     <span class="lbl">{progreso || t('competir.jugar.siguiente')}</span>
@@ -125,7 +146,7 @@ let confirmarTemporada = $state(false);
           <button
             class="btn pri"
             type="button"
-            disabled={!!est.ocupado || !!ronda || !!live}
+            disabled={!!est.ocupado || !!ronda || !!live || enCurso}
             onclick={() => {
   confirmarTemporada = false;
   nuevaTemporada();
@@ -141,7 +162,7 @@ let confirmarTemporada = $state(false);
         <button
           class="btn pri"
           type="button"
-          disabled={!!est.ocupado || !!ronda || !!live}
+          disabled={!!est.ocupado || !!ronda || !!live || enCurso}
           onclick={() => (confirmarTemporada = true)}
         >
           {t(conSorteo ? 'competir.temporada.nuevaBotonSorteo' : 'competir.temporada.nuevaBoton', {
@@ -181,7 +202,7 @@ let confirmarTemporada = $state(false);
     {:else if S.fmt.format === 'cup' || S.fmt.format === 'swiss'}
       <p class="sub">{t('competir.jugar.alEmpezar')}</p>
     {/if}
-    {#if !terminada}
+    {#if !terminada && !enCurso}
       <button
         class="btn pri"
         type="button"
@@ -270,7 +291,7 @@ let confirmarTemporada = $state(false);
         <button
           class="link"
           type="button"
-          disabled={!!live || !!est.ocupado}
+          disabled={!!live || !!est.ocupado || enCurso}
           onclick={() => repetir(/** @type {number} */ (ultimo?.id))}
         >
           ↻ {t('competir.partidos.repetir')}
@@ -278,7 +299,7 @@ let confirmarTemporada = $state(false);
         <button
           class="link"
           type="button"
-          disabled={!!live || !!est.ocupado}
+          disabled={!!live || !!est.ocupado || enCurso}
           onclick={() => repetirYAnalizar(/** @type {number} */ (ultimo?.id))}
         >
           {t('competir.partidos.analizar')}

@@ -169,7 +169,6 @@
   "observar.pantalla.ayuda": "Observar a pantalla completa (F), con la disposición elegida; Esc vuelve. No cambia la simulación ni el torneo.",
   "observar.pantalla.salir": "Salir de pantalla completa (Esc)",
   "observar.pantalla.salir.ayuda": "Vuelve a Observar con la barra de controles. No cambia la simulación ni el torneo.",
-  "observar.auto.bloqueado": "Mientras el torneo avanza no se puede cambiar el mundo: paralo para usarlo.",
   "observar.tv.contra": "vs",
   "observar.tv.sorteando": "Preparando la edición…",
   "observar.tv.proxima": "Próxima pelea n.º {n} en {s} s",
@@ -214,5 +213,9 @@
   "observar.torneo.sinPartidos": "Todavía no se jugó ninguna pelea de esta temporada.",
   "observar.torneo.pelea": "P{n}",
   "observar.torneo.estructura": "Estructura",
-  "observar.torneo.competir": "Ver el torneo en Competir"
+  "observar.torneo.competir": "Ver el torneo en Competir",
+  "observar.tv.enCurso.aviso": "Hay un torneo en curso: detenelo para usar la simulación.",
+  "observar.tv.enCurso.ir": "Controles del torneo",
+  "observar.tv.enCurso.ir.ayuda": "Lleva a la franja del torneo, arriba: «Al terminar la pelea», Parar y Abandonar la pelea.",
+  "observar.tv.enCurso.barra.ayuda": "Mientras se juega el torneo, Sembrar, Mundo, Guardar, Corridas y el Player Bot no se muestran: cambiarían la pelea. Este botón lleva a la franja del torneo, arriba."
 }

@@ -26,7 +26,7 @@ import {
 } from '../../competir/torneos.svelte.js';
 import { sesion } from '../../sim/sesion.svelte.js';
 import { crearAvance } from './avance.js';
-import { estadoInicial, PAUSA_DEF, pausaValida } from './maquina.js';
+import { activo, estadoInicial, PAUSA_DEF, pausaValida } from './maquina.js';
 
 /** Segundos de la cortinilla (la clave de la clásica se lee como valor inicial). */
 const KV_PAUSA = 'darwinbots2.tv-pausa';
@@ -108,7 +108,7 @@ const avance = crearAvance({
   estado: tv,
   torneos: () => torneos(),
   asegurarTorneos: () => asegurarTorneos(),
-  abrir: (id) => abrir(id),
+  abrir: (id) => abrir(id, true),
   abandonar: () => abandonar(),
   asegurarBiblioteca: () => asegurarBiblioteca(),
   est: () => est,
@@ -193,6 +193,35 @@ export const detenerTv = () => avance.detener();
 
 /** ¿El avance está encendido (o mostrando el error que lo paró)? */
 export const avanceEncendido = () => tv.e.fase !== 'apagado';
+
+// Bloqueos con torneo (PLAN-TORNEO-EN-CURSO.md, TC4: T8): mientras hay un
+// torneo en curso, lo que reemplaza o altera la corrida de la página y lo
+// que cambia el torneo abierto no se usa. Cada pantalla pregunta acá y
+// explica el porqué con AVISO_EN_CURSO y AvisoTorneo.svelte (que lleva a la
+// franja). Con el error que paró el avance ya no hay torneo en curso.
+
+/** ¿Hay un torneo en curso (el avance encendido y sin error)? */
+export const hayTorneoEnCurso = () => activo(tv.e);
+
+/** El id del torneo en curso ('' = ninguno). */
+export const torneoEnCurso = () => (activo(tv.e) ? tv.liga : '');
+
+/** Clave del aviso de los bloqueos (observar.json). */
+export const AVISO_EN_CURSO = 'observar.tv.enCurso.aviso';
+
+/** Id de la franja (FranjaTorneo.svelte), a la que llevan los avisos. */
+export const ID_FRANJA = 'franja-torneo';
+
+/** Lleva el foco a la franja del torneo, con sus controles. */
+export function irAFranja() {
+  const el = document.getElementById(ID_FRANJA);
+  if (!el) return;
+  el.scrollIntoView({ block: 'nearest' });
+  el.focus();
+  el.classList.remove('llamada');
+  void el.offsetWidth; // reinicia la animación
+  el.classList.add('llamada');
+}
 
 /**
  * Enciende el avance con el torneo `id` (o el abierto). Con una pelea de

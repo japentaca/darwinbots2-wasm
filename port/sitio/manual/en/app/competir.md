@@ -210,7 +210,9 @@ While a match is in play, this column shows the score with the round, the cycle,
 the **Bots alive** and the **Rounds won** of each one. **Watch in Observe** takes
 you to watch it, and **Abandon** cuts it without recording it. In the other
 sections, a floating scoreboard shows the same; you can collapse it, or go back
-with **Go to Compete**.
+with **Go to Compete**. With a tournament in progress, **Abandon** asks for
+confirmation and also stops the tournament, like **Abandon the fight** in the
+strip.
 
 :::cuidado
 The match takes over the Observe simulation and replaces whatever was there. While
@@ -225,6 +227,31 @@ top speed and on several workers at once. Since each match uses its own seed, th
 result is the same as watching them. It notifies you when it finishes. While it
 runs, the season is locked. **Cancel the round** stops it. The quick match doesn't
 play background rounds.
+
+### With a tournament in progress {#en-curso}
+<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector; i18n competir.enCurso.*, observar.tv.enCurso.* -->
+
+While a tournament plays, the app's simulation is its fight and the open
+tournament is that one. So, until you stop it (from the strip or with
+**Abandon**):
+
+- **The tournament is read-only**: entrants, rules, draws, the name, the new
+  season, ↻ and **Replay and analyze**, **Clear** and **Delete**. A notice at
+  the top explains it, with **Tournament controls**.
+- **No other tournament opens**: the others show in the list, dimmed, but don't
+  open, because opening another would cut off the one being played. You can't
+  create one with **New tournament** or import a .json either (both open the
+  new one).
+- **Nothing else is played**: you can't ask for a **Background round** of this
+  tournament. A round of another tournament requested earlier keeps running.
+- **In [[app/inicio]] and [[app/experimentar]]**, what would replace the
+  simulation (starting a scenario, resuming a run, opening a file, **New
+  simulation**, **Apply to current**) is off, with the notice “A
+  tournament is in progress: stop it to use the simulation” and **Tournament
+  controls**. In [[app/bots]] the same goes for **Seed into the current run**.
+- **[[app/bots]] and [[app/analizar]] stay free.** **Enter in a tournament**
+  doesn't offer the tournament in progress, and enters the bot in the others
+  without opening them.
 
 <!-- engine/torneos.js lgEdition (con {sortear: false} desde tv.svelte.js; temporada terminada: lgNewSeason draw); tv/maquina.js PAUSA_DEF 5, PAUSA_MAX 60 -->
 

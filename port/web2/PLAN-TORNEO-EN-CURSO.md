@@ -240,6 +240,58 @@ documentación). Sin push.
   ni de cambiar el torneo desde la UI; cada bloqueo explica por qué y lleva
   a la franja.
 
+**Hecho (2026-10-06).** Cómo quedó, y lo que se decidió al construirla:
+
+- **El helper.** `tv.svelte.js` exporta `hayTorneoEnCurso()` (el avance
+  activo: encendido y sin error; con el error que lo paró ya no hay
+  torneo), `torneoEnCurso()` (su id), la clave del aviso
+  (`AVISO_EN_CURSO`, «Hay un torneo en curso: detenelo para usar la
+  simulación») e `irAFranja()`, que lleva el foco a la franja y la ilumina
+  un momento. `AvisoTorneo.svelte` es el aviso con su botón **Controles del
+  torneo**; solo se ve con un torneo en curso.
+- **Competir: el cambio de torneo se bloquea** (decisión del usuario, se
+  aparta de T8). El motor juega y edita el torneo abierto (`lg.cur` en
+  decenas de funciones de `engine/torneos.js`): mirar otro sin abrirlo
+  pedía separar en el motor el torneo que se juega del que se mira. Con un
+  torneo en curso, los demás aparecen tenues en la lista y no se abren;
+  una ruta a otro avisa y vuelve al que se juega. **Nuevo torneo** e
+  **Importar .json** se apagan (los dos abren el nuevo). Resuelve los dos
+  pendientes de TC2: ya no se puede abrir otro torneo, y **Abandonar**
+  (del panel y del marcador flotante, que tenía el mismo problema) pasa por
+  `abandonarPelea`, con confirmación.
+- **Dos capas.** La interfaz apaga los botones y explica; además las
+  acciones de `torneos.svelte.js` que cambian el torneo abierto o toman la
+  sim (crear, importar, guardar el Scratch, borrar, renombrar,
+  participantes, sorteos, formato, reglas, temporada nueva, ↻, «Repetir y
+  analizar», ronda) no corren con un torneo en curso (`enCursoBloquea`, con
+  aviso). `abrir(id, forzar)`: el avance abre el suyo con `forzar`.
+- **El torneo en curso, de solo lectura.** También el nombre, ↻ y la
+  temporada nueva. Participantes recibe `ronda` (el candado que ya tenía
+  para la ronda en segundo plano); Reglas, el motivo
+  `competir.torneo.enCurso`. En el panel de juego, «▶ Jugar» y la ronda
+  se reemplazan por el aviso entre peleas.
+- **Inscribir en torneo** no ofrece el torneo en curso e inscribe en los
+  otros sin abrirlos (`inscribirSinAbrir`: `lgAddEntrant` sobre la
+  temporada y `lgSave`). Para ver si la temporada ya tiene partidos sin
+  abrir el torneo, `temporadaConPartidos(id)` lee el almacén; la ficha ya
+  no abre el torneo antes de inscribir.
+- **Observar.** Sembrar, Mundo, Guardar y Corridas no se muestran (y sus
+  diálogos se cierran si el torneo empieza con uno abierto); en su lugar,
+  **🏆 Controles del torneo**, que lleva a la franja. Los controles mismos
+  no se repiten en la barra: ya están en el rótulo y en la franja. El
+  Player Bot no aparece en el inspector.
+- **Inicio, Experimentar y Bots.** Inicio apaga Retomar, los «Iniciar»,
+  «Elegir archivo» e «Importar .dbsim»; Experimentar, **Nueva simulación**
+  y **Aplicar a la actual** (cambiaría la pelea, que la vigía abandonaría).
+  En Bots, **Sembrar en la corrida actual** también se apaga, por la misma
+  razón. El borrador de Experimentar se edita y se guarda igual.
+- **T10.** Sin cambios: no se pide una ronda del torneo en curso, y una
+  ronda de otro torneo pedida antes sigue en la cola.
+- **Fuera de alcance.** El diseñador de ojos y la consola del inspector
+  siguen disponibles durante el torneo, como antes de TC4 (T8 no los
+  nombra); se pueden sumar al bloqueo más adelante. Las claves i18n viejas del plan ya no estaban;
+  se borró `observar.auto.bloqueado`.
+
 ## Documentación que toca
 
 - Manual, es y en: `app/observar.md` (disposiciones, pestañas, ⛶, F),

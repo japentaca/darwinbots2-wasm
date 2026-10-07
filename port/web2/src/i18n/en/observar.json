@@ -169,7 +169,6 @@
   "observar.pantalla.ayuda": "Observe in full screen (F), with the chosen layout; Esc goes back. It doesn't change the simulation or the tournament.",
   "observar.pantalla.salir": "Exit full screen (Esc)",
   "observar.pantalla.salir.ayuda": "Goes back to Observe with the control bar. It doesn't change the simulation or the tournament.",
-  "observar.auto.bloqueado": "While the tournament is playing the world can't be changed: stop it to use this.",
   "observar.tv.contra": "vs",
   "observar.tv.sorteando": "Preparing the edition…",
   "observar.tv.proxima": "Next fight #{n} in {s} s",
@@ -214,5 +213,9 @@
   "observar.torneo.sinPartidos": "No fight of this season has been played yet.",
   "observar.torneo.pelea": "F{n}",
   "observar.torneo.estructura": "Structure",
-  "observar.torneo.competir": "See the tournament in Compete"
+  "observar.torneo.competir": "See the tournament in Compete",
+  "observar.tv.enCurso.aviso": "A tournament is in progress: stop it to use the simulation.",
+  "observar.tv.enCurso.ir": "Tournament controls",
+  "observar.tv.enCurso.ir.ayuda": "Goes to the tournament strip at the top: “When the fight ends”, Stop and Abandon the fight.",
+  "observar.tv.enCurso.barra.ayuda": "While the tournament plays, Seed, World, Save, Runs and the Player Bot aren't shown: they would change the fight. This button goes to the tournament strip at the top."
 }
