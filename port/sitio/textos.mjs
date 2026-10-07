@@ -74,7 +74,9 @@ export const TEXTOS = {
     porDefecto: 'Por defecto',
     valores: 'Valores',
     rangoHabitual: 'Rango habitual',
-    /** @param {number} a @param {number} b */
+    /** Número con coma decimal, como en la prosa (los miles sin separar). @param {number} x */
+    num: (x) => String(x).replace('.', ','),
+    /** @param {string} a @param {string} b */
     deA: (a, b) => `${a} a ${b}`,
     siNo: 'sí / no',
     variable: 'Variable',
@@ -166,7 +168,9 @@ export const TEXTOS = {
     porDefecto: 'Default',
     valores: 'Values',
     rangoHabitual: 'Usual range',
-    /** @param {number} a @param {number} b */
+    /** @param {number} x */
+    num: (x) => String(x),
+    /** @param {string} a @param {string} b */
     deA: (a, b) => `${a} to ${b}`,
     siNo: 'yes / no',
     variable: 'Variable',

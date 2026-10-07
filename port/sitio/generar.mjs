@@ -890,12 +890,12 @@ function htmlDatos(p, c) {
               ? T.siNo
               : x.valores
                 ? x.valores
-                    .map((/** @type {any} */ v) => `${v.v} = ${escapar(v[idioma])}`)
+                    .map((/** @type {any} */ v) => `${T.num(v.v)} = ${escapar(v[idioma])}`)
                     .join(' · ')
                 : x.sugerido
-                  ? T.deA(x.sugerido.min, x.sugerido.max)
+                  ? T.deA(T.num(x.sugerido.min), T.num(x.sugerido.max))
                   : '';
-          const pd = x.valor === 'bool' ? (x.porDefecto ? T.si : T.no) : String(x.porDefecto);
+          const pd = x.valor === 'bool' ? (x.porDefecto ? T.si : T.no) : T.num(x.porDefecto);
           return `<section class="param" id="${anclaParam(x.clave)}"><h2>${escapar(x[idioma])}</h2><p class="ayuda">${escapar(x.ayuda[idioma])}</p><dl>${[
             filaDl(T.porDefecto, escapar(pd)),
             filaDl(x.valores ? T.valores : T.rangoHabitual, rango),

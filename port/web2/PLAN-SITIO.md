@@ -289,8 +289,6 @@ para los parámetros. Lo que salió:
     multiplicador de costos mientras lo mueve el ajuste dinámico; el botón
     «ADN vs fundador» compara con el ADN dominante; «Avanzar solo» y «Modo TV»
     vuelven a sortear una temporada de «Lista fija».
-  - El generador muestra «Por defecto» con punto decimal (0.66) y la prosa
-    usa coma.
 - `port/README.md`: el desglose del Bestiario (545 + 115) no da los 684 de
   `bots.json`.
 - `tecnico/semillas` y `tecnico/formatos` ya tienen muchos enlaces: tienen que
