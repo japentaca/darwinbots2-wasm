@@ -193,7 +193,7 @@ from 0 to 60). Below it, **When the fight ends** chooses how far it goes:
 |---|---|
 | **stop** | Plays one fight and stops. |
 | **go on until the end of the season** | Goes on with the remaining fights and stops after announcing the champion. It's the default. |
-| **go on with new editions** | When the season ends, it starts another one with a new draw and goes on, in a loop. |
+| **go on with new editions** | When the season ends, it starts another one and goes on, in a loop. The new edition follows the entrants mode: a **Fixed list** carries over whole; with a draw, it is drawn again. |
 
 Every fight is recorded in the tournament. The choice is remembered in this
 browser and can be changed while playing, from the caption in Observe (see
@@ -203,7 +203,8 @@ below the top bar shows it on every screen (see [[app/observar#franja]]).
 
 **▶ Play** plays the open season with the entrants it has, even if it hasn't
 started yet: it doesn't draw them again. The new editions of **go on with new
-editions** are drawn from the tournament's pool. To watch it like on TV, Observe
+editions** do the same as **New season**: a fixed list carries over whole and
+the modes with a draw take entrants from the pool. To watch it like on TV, Observe
 has [[app/observar#pantalla|full screen]].
 
 While a match is in play, this column shows the score with the round, the cycle,

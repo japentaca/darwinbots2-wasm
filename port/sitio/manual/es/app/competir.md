@@ -199,7 +199,7 @@ cambia de 0 a 60). Debajo, **Al terminar la pelea** elige hasta dónde sigue:
 |---|---|
 | **parar** | Juega una pelea y para. |
 | **seguir hasta el final de la temporada** | Sigue con las peleas que falten y para después de anunciar al campeón. Es la opción por defecto. |
-| **seguir con nuevas ediciones** | Al terminar la temporada, empieza otra con sorteo nuevo y sigue, en bucle. |
+| **seguir con nuevas ediciones** | Al terminar la temporada, empieza otra y sigue, en bucle. La edición nueva sigue el modo de participantes: la **Lista fija** pasa entera; con sorteo, se sortea de nuevo. |
 
 Cada pelea se registra en el torneo. La elección se recuerda en este
 navegador y se puede cambiar mientras se juega, desde el rótulo de Observar
@@ -210,7 +210,8 @@ franja debajo de la barra superior lo muestra en todas las pantallas (ver
 
 **▶ Jugar** juega la temporada abierta con los participantes que tiene, aunque
 todavía no haya empezado: no los vuelve a sortear. Las ediciones nuevas de
-**seguir con nuevas ediciones** sí se sortean del pool del torneo. Para
+**seguir con nuevas ediciones** hacen lo mismo que **Nueva temporada**: una
+lista fija pasa entera y los modos con sorteo sacan participantes del pool. Para
 mirarlo como en la tele, Observar tiene
 [[app/observar#pantalla|pantalla completa]].
 

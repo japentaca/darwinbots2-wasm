@@ -182,6 +182,7 @@
   "observar.tv.completa": "Edición {no} completa",
   "observar.tv.sinCampeon": "Sin campeón",
   "observar.tv.siguienteEdicion": "La próxima edición, con sorteo nuevo, empieza en {s} s",
+  "observar.tv.siguienteEdicionFija": "La próxima edición, con los mismos participantes, empieza en {s} s",
   "observar.tv.siguienteEdicionPelea": "La próxima edición, con sorteo en cada pelea, empieza en {s} s",
   "observar.tv.anuncio.proxima": "Próxima pelea n.º {n}: {vs}",
   "observar.tv.anuncio.enVivo": "En vivo: pelea n.º {n}, {vs}",

@@ -117,7 +117,9 @@ export function rotuloTV(e, ctx, tr, ahora, idioma = 'es') {
       r.pie = tr.t(
         ctx.sorteo === 'fight'
           ? 'observar.tv.siguienteEdicionPelea'
-          : 'observar.tv.siguienteEdicion',
+          : ctx.sorteo === 'fixed'
+            ? 'observar.tv.siguienteEdicionFija'
+            : 'observar.tv.siguienteEdicion',
         { s },
       );
       break;

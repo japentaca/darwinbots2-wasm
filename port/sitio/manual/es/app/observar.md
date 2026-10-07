@@ -353,7 +353,8 @@ Arriba del campo están el torneo, la edición y los controles:
 - **Al terminar la pelea**: qué hace el torneo cuando termina cada pelea.
   Con **parar** juega solo esa; con **seguir hasta el final de la temporada**
   sigue hasta anunciar al campeón; con **seguir con nuevas ediciones** sigue
-  después con otra edición, con sorteo nuevo, en bucle. Se puede cambiar
+  después con otra edición, en bucle (con los mismos participantes si el
+  torneo es de lista fija; si no, con sorteo nuevo). Se puede cambiar
   mientras se juega.
 - **Parar al terminar la pelea**: la pelea en juego sigue y se registra; después
   el torneo no avanza más. Mientras espera, **Seguir** lo deja sin efecto. Si

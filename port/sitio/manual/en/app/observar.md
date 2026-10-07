@@ -348,7 +348,8 @@ Above the field are the tournament, the edition and the controls:
 - **When the fight ends**: what the tournament does when each fight ends. With
   **stop** it plays only that one; with **go on until the end of the season** it
   goes on until it announces the champion; with **go on with new editions** it
-  then goes on with another edition, with a new draw, in a loop. It can be
+  then goes on with another edition, in a loop (with the same entrants if the
+  tournament has a fixed list; otherwise, with a new draw). It can be
   changed while playing.
 - **Stop when the fight ends**: the fight in play goes on and is recorded; then
   the tournament doesn't advance any further. While it waits, **Keep going**

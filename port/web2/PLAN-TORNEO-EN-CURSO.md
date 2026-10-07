@@ -121,8 +121,10 @@ documentación). Sin push.
   sortear la temporada abierta si no tiene partidos, aunque sea de lista
   fija; el manual lo avisaba. Como «▶ Jugar» reemplaza a «Jugar y mirar»,
   eso pisaba la lista elegida a mano. `lgEdition(L, {sortear: false})` la
-  juega como está; la temporada nueva tras el campeón se sortea igual. Sin
-  la opción, `lgEdition` hace lo de la clásica (test en
+  juega como está. La temporada nueva tras el campeón se sorteaba igual;
+  desde el 2026-10-07 sigue el modo del torneo, como «Nueva temporada»: la
+  lista fija pasa entera (lo prometía Competir) y el rótulo del campeón lo
+  dice. Sin la opción, `lgEdition` hace lo de la clásica (test en
   `observar_tv.test.js`).
 - «Mirar en Observar», con una pelea del torneo en juego, también enciende
   el avance (toma la pelea en juego); con una repetición sigue siendo un

@@ -419,11 +419,11 @@ test('TV: todos los errores (del motor y propios) y las fases tienen texto en es
     assert.equal(c.vs[1].color, LG.LG_NO_COLOR);
     assert.ok(c.grande);
     assert.equal(c.etiqueta, c.etiqueta.toUpperCase());
-    // el pie del campeón según el sorteo del torneo (el TV siempre sortea la edición nueva)
+    // el pie del campeón según el sorteo del torneo (la lista fija pasa entera
+    // a la edición nueva; las otras se sortean)
     const pie = (/** @type {string} */ sorteo) =>
       rotuloTV({ ...e, fase: 'campeon' }, { torneo: 'Copa', formato: 'rr', sorteo }, tr, 0).pie;
-    assert.equal(pie('fixed'), pie('random'));
-    assert.notEqual(pie('fight'), pie('fixed'));
+    assert.equal(new Set(['fixed', 'random', 'fight'].map(pie)).size, 3);
     assert.deepEqual(faltan, []);
   }
 });
@@ -464,4 +464,60 @@ test('tv: lgEdition sin sortear juega la lista elegida a mano; con sorteo (la cl
   await T.lgEdition(L);
   assert.equal(nombres().length, 4);
   assert.ok(nombres().every((n) => /^E\d$/.test(n)));
+});
+
+test('tv: sin sortear, la temporada nueva tras el campeón conserva la lista fija; la de sorteo se sortea', async () => {
+  for (const mode of ['fixed', 'random']) {
+    /** @type {any} */
+    let plan = null;
+    const T = crearTorneos(
+      depsDePrueba({
+        almacen: almacenMemoria(),
+        azar: rng(3),
+        inventario: {
+          ...inventarioVacio(),
+          items: Array.from({ length: 6 }, (_, i) => ({ key: `k${i}`, b: { name: `E${i}` } })),
+          fetchDna: async (/** @type {any} */ b) => ent(b.name).dna,
+        },
+        lanzar: (/** @type {any} */ p) => {
+          plan = p;
+        },
+      }),
+    );
+    await T.lgLoadAll();
+    const L = await T.lgCreate({});
+    assert.ok(await T.lgSetDraw({ mode: 'fixed', pool: 'all', n: 4 }));
+    for (const n of ['A', 'B', 'C']) assert.ok(await T.lgAdd({ name: n, dna: ent(n).dna }));
+    if (mode === 'random') assert.ok(await T.lgSetDraw({ mode, pool: 'all', n: 4 }));
+    const nombres = () => LG.lgSeason(L).entrants.map((/** @type {any} */ e) => e.name);
+    assert.equal((await T.lgEdition(L, { sortear: false })).ok, true);
+    const antes = nombres();
+    // la temporada entera: gana siempre el primero del sorteo
+    let r = await T.lgTvNext(L);
+    for (let i = 0; r.t === 'pelea' && i < 50; i++, r = await T.lgTvNext(L)) {
+      await T.lgPlay(L, r.fx);
+      const sp = plan.species.map((/** @type {any} */ s) => s.name.replace(/\.txt$/, ''));
+      await T.leagueOnMessage({ t: 'f1-started', n: sp.length });
+      await T.leagueOnMessage({
+        t: 'f1-over',
+        winner: sp[0],
+        f1: {
+          sp: sp.map((/** @type {string} */ name, j) => ({ name, wins: j ? 0 : 3, capWins: 0 })),
+        },
+        cycles: 500,
+      });
+    }
+    assert.equal(r.t, 'fin', mode);
+    const e = await T.lgEdition(L, { sortear: false });
+    assert.equal(e.ok, true, mode);
+    assert.equal(e.season, 2, mode);
+    if (mode === 'fixed') assert.deepEqual(nombres(), antes);
+    else {
+      assert.equal(nombres().length, 4);
+      assert.ok(
+        nombres().every((n) => /^E\d$/.test(n)),
+        nombres().join(),
+      );
+    }
+  }
 });

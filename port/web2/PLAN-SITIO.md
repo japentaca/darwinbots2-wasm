@@ -287,8 +287,7 @@ para los parámetros. Lo que salió:
   - Pantallas: Experimentar reemplaza la simulación sin preguntar; los avisos
     del motor de F1 y de una sola especie solo llegan a Competir; no se ve el
     multiplicador de costos mientras lo mueve el ajuste dinámico; el botón
-    «ADN vs fundador» compara con el ADN dominante; «Avanzar solo» y «Modo TV»
-    vuelven a sortear una temporada de «Lista fija».
+    «ADN vs fundador» compara con el ADN dominante.
 - `port/README.md`: el desglose del Bestiario (545 + 115) no da los 684 de
   `bots.json`.
 - `tecnico/semillas` y `tecnico/formatos` ya tienen muchos enlaces: tienen que

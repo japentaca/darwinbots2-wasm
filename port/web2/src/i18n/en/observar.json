@@ -182,6 +182,7 @@
   "observar.tv.completa": "Edition {no} complete",
   "observar.tv.sinCampeon": "No champion",
   "observar.tv.siguienteEdicion": "The next edition, with a new draw, starts in {s} s",
+  "observar.tv.siguienteEdicionFija": "The next edition, with the same entrants, starts in {s} s",
   "observar.tv.siguienteEdicionPelea": "The next edition, drawing entrants at every fight, starts in {s} s",
   "observar.tv.anuncio.proxima": "Next fight #{n}: {vs}",
   "observar.tv.anuncio.enVivo": "Live: fight #{n}, {vs}",
