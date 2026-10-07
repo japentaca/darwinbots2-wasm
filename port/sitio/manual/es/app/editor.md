@@ -146,7 +146,7 @@ Estos son todos los avisos, con un ejemplo de cada uno:
 | `.otra`, con su `def` más abajo | «.otra se define más abajo: el motor lee el ADN en orden y acá vale 0. Subí el def.» | El motor resuelve los nombres mientras lee: un `def` posterior no sirve. Ver [[adn/def#resolucion]]. |
 | `.Paso`, con `def paso` | «.Paso no coincide con su def: las variables privadas distinguen mayúsculas y acá vale 0.» | Las sysvars no distinguen mayúsculas; tus variables sí. |
 | `up` | «up vale 0: ¿falta el punto? .up» | El nombre de una sysvar sin punto. **Corregir** se lo agrega. |
-| `swapp` | «swapp no es un comando ni un número: vale 0. ¿Quisiste decir swap?» | Una palabra a una letra de un comando (solo para palabras de 4 letras o más). |
+| `swapp` | «swapp no es un comando ni un número: vale 0. ¿Quisiste decir swap?» | Una palabra a una letra de un comando, o con dos letras vecinas cambiadas de lugar (`sotre`), solo para palabras de 4 letras o más. Si hay dos candidatos, sugiere el que empieza igual: `stor` da `store`, no `stop`. |
 | `hola` | «hola no es un comando ni un número: vale 0 (¿texto sin la marca de comentario ')?» | Cualquier otra palabra suelta. Muchas veces es un comentario sin su `'`. |
 | `store` con un carácter invisible en el medio | «… tiene un carácter invisible: no se reconoce como store y vale 0.» | Pasa al copiar de páginas web o procesadores de texto. **Corregir** lo limpia. |
 | `ññ` | «… tiene caracteres invisibles o de otra codificación: vale 0.» | Letras fuera del inglés básico, o una codificación rota. |

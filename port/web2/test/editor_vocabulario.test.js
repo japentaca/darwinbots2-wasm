@@ -126,10 +126,19 @@ test('lint-dna: hallazgos del core con su línea, sin sim y por el linter del ed
     assert.equal(refshel.count, 2);
     assert.equal(describirLint(refshel).codigo, 'nombre-parecido');
     assert.deepEqual(describirLint(refshel).arreglo, { de: '*.refshel', a: '*.refshell' });
-    // la sugerencia es la del core (la última palabra a distancia 1)
+    // la sugerencia es la del core: a igual distancia, la que comparte más
+    // prefijo (store, no stop)
     const stor = describirLint(por.get('stor'));
     assert.equal(stor.codigo, 'palabra-parecida');
     assert.ok(Object.values(COMANDOS).flat().includes(String(stor.arreglo?.a)));
+    assert.deepEqual(stor.arreglo, { de: 'stor', a: 'store' });
+    // una transposición cuenta como un solo error
+    c.send({ t: 'lint-dna', dna: 'cond\nstart\n10 .up sotre\nstop\n', req: 'e' });
+    const sotre = (await esperar(c, 'e')).issues.map(describirLint);
+    assert.deepEqual(
+      sotre.map((/** @type {any} */ a) => [a.codigo, a.arreglo]),
+      [['palabra-parecida', { de: 'sotre', a: 'store' }]],
+    );
     assert.deepEqual(describirLint(por.get('12ab')).arreglo, { de: '12ab', a: '12 ab' });
     assert.equal(describirLint(por.get('up')).arreglo?.a, '.up');
     // un ADN sano: nada

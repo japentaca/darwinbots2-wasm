@@ -3358,17 +3358,29 @@ DB_EXPORT int db_sim_sysvar_tok(void* h, int n, const char* name) {
 
 namespace lint_detail {
 
+// Distancia de edición que cuenta como un solo error el cambio de dos letras
+// vecinas ("sotre" está a 1 de "store"): Damerau restringida.
 int EditDistance(const std::string& a, const std::string& b) {
-  std::vector<int> prev(b.size() + 1), cur(b.size() + 1);
+  std::vector<int> prev2(b.size() + 1), prev(b.size() + 1), cur(b.size() + 1);
   for (std::size_t j = 0; j <= b.size(); ++j) prev[j] = static_cast<int>(j);
   for (std::size_t i = 1; i <= a.size(); ++i) {
     cur[0] = static_cast<int>(i);
-    for (std::size_t j = 1; j <= b.size(); ++j)
+    for (std::size_t j = 1; j <= b.size(); ++j) {
       cur[j] = std::min({prev[j] + 1, cur[j - 1] + 1,
                          prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1)});
+      if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1])
+        cur[j] = std::min(cur[j], prev2[j - 2] + 1);
+    }
+    std::swap(prev2, prev);
     std::swap(prev, cur);
   }
   return prev[b.size()];
+}
+
+std::size_t CommonPrefix(const std::string& a, const std::string& b) {
+  std::size_t n = 0;
+  while (n < a.size() && n < b.size() && a[n] == b[n]) ++n;
+  return n;
 }
 
 // ¿Lo reconoce alguna tabla de comandos de Parse (sin ismutating)?
@@ -3594,9 +3606,12 @@ std::string Lint(const std::string& text) {
           else if (IsSysvarName(lcase(operand), sv))
             hint = "missing dot? ." + operand;
           else {
+            // A distancia 1, la que comparte más prefijo: "stor" es store, no stop
             std::string near;
             for (const char* c : kCommandWords)
-              if (EditDistance(lc, c) == 1 && lc.size() >= 4) near = c;
+              if (lc.size() >= 4 && EditDistance(lc, c) == 1 &&
+                  (near.empty() || CommonPrefix(lc, c) > CommonPrefix(lc, near)))
+                near = c;
             hint = near.empty() ? "not a command or a number (text without a ' comment mark?)"
                                 : "did you mean " + near + "?";
           }

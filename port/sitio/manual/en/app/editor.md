@@ -142,7 +142,7 @@ These are all the warnings, with an example of each:
 | `.otra`, with its `def` further down | “.otra is defined further down: the engine reads the DNA in order and here it is 0. Move the def up.” | The engine resolves names as it reads: a later `def` doesn't work. See [[adn/def#resolucion]]. |
 | `.Paso`, with `def paso` | “.Paso does not match its def: private variables are case-sensitive and here it is 0.” | Sysvars are not case-sensitive; your variables are. |
 | `up` | “up is 0: missing dot? .up” | The name of a sysvar without the dot. **Fix** adds it. |
-| `swapp` | “swapp is not a command or a number: it is 0. Did you mean swap?” | A word one letter away from a command (only for words of 4 letters or more). |
+| `swapp` | “swapp is not a command or a number: it is 0. Did you mean swap?” | A word one letter away from a command, or with two neighboring letters swapped (`sotre`), only for words of 4 letters or more. If two commands fit, it suggests the one that starts the same: `stor` gives `store`, not `stop`. |
 | `hola` | “hola is not a command or a number: it is 0 (text without the ' comment mark?).” | Any other loose word. Often it is a comment missing its `'`. |
 | `store` with an invisible character in the middle | “… has an invisible character: it is not recognized as store and is 0.” | It happens when copying from web pages or word processors. **Fix** cleans it. |
 | `ññ` | “… has invisible or encoding characters: it is 0.” | Letters outside basic English, or a broken encoding. |
