@@ -9,7 +9,7 @@ estado: revisada
 This group decides how much world there is and how it ends. It has five
 parameters: the width and height of the field, and three switches for the
 edges. In Experiment's basic mode the same values are chosen with two
-controls, **Field size** (the fifteen classic sizes) and **Edges** (walls,
+controls, **Field size** (the fifteen classic sizes and the Classic base one) and **Edges** (walls,
 toroidal, or one of the two cylinders); here they show up separately and you
 can set them by hand.
 

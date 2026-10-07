@@ -283,11 +283,13 @@ para los parámetros. Lo que salió:
   tenga guardado el juego viejo lo ve como «Personalizadas» y lo recupera eligiendo de nuevo el juego.
 - Pendiente en la app (cambia el comportamiento; sin tocar):
   - opt:31 viene en 0, así que el modo estanque sin tocarla no tiene sol.
-    «Tamaño del campo» no tiene 32000×32000, el de la base Clásica.
   - Pantallas: Experimentar reemplaza la simulación sin preguntar; los avisos
     del motor de F1 y de una sola especie solo llegan a Competir; no se ve el
-    multiplicador de costos mientras lo mueve el ajuste dinámico; el botón
-    «ADN vs fundador» compara con el ADN dominante.
+    multiplicador de costos mientras lo mueve el ajuste dinámico (el frame
+    trae `costx`, pero solo la serie de Analizar lo muestra); en Filogenia,
+    con un bot elegido, «ADN vs fundador» compara las fotos del ADN dominante
+    de la especie, no el de ese bot (en Especies, rótulo y acción coinciden).
+    Comprobados el 2026-10-07.
 - `port/README.md`: el desglose del Bestiario (545 + 115) no da los 684 de
   `bots.json`.
 - `tecnico/semillas` y `tecnico/formatos` ya tienen muchos enlaces: tienen que

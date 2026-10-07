@@ -80,7 +80,7 @@ vez: el modo avanzado muestra cada uno por separado.
 
 | Tarjeta | Control | Qué hace | Parámetros |
 |---|---|---|---|
-| **Mundo** | **Tamaño del campo** | Los tamaños clásicos del original, del 1 (el campo F1, 9237 × 6928) al 15. | [[param:base:fieldW]], [[param:base:fieldH]] |
+| **Mundo** | **Tamaño del campo** | Los tamaños clásicos del original, del 1 (el campo F1, 9237 × 6928) al 15, y **Clásica** (32000 × 32000, el de la base Clásica). | [[param:base:fieldW]], [[param:base:fieldH]] |
 | | **Bordes** | **Paredes**, **Toroidal** o un cilindro (izquierda↔derecha o arriba↔abajo). | [[param:opt:2]], [[param:opt:3]] |
 | | **Medio** | **Espacio** (nada frena), **Fluido** (agua) o **Sólido** (suelo con rozamiento). | [[param:opt:14]], [[param:opt:15]], [[param:opt:16]], [[param:opt:17]], [[param:opt:19]] |
 | **Energía** | **Energía solar** | La energía que reciben los vegetales en cada ciclo: la comida que entra al mundo. | [[param:base:maxEnergy]] |
@@ -96,8 +96,8 @@ Algunas aclaraciones:
 - **Personalizado** aparece en un selector solo cuando el valor no coincide
   con ninguna de las opciones: por ejemplo, en **Costos** después de cambiar
   un costo suelto en el modo avanzado. El campo de 32000 × 32000 de la base
-  Clásica no es ninguno de los quince tamaños, así que con esa base el
-  **Tamaño del campo** muestra **Personalizado**.
+  Clásica no es ninguno de los quince tamaños del original: tiene su propia
+  opción, **Clásica**.
 - Los números se corrigen al escribirlos: si el valor no entra en lo que el
   motor puede guardar, se lleva al tope. Si entra pero es raro, se acepta con
   un aviso que dice cuál es el rango habitual.

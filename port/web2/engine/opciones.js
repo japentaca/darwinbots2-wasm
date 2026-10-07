@@ -1628,6 +1628,12 @@ export function mensajeVivo(clave, v) {
 /** @param {Record<string, number>} a @param {(clave: string) => number} ef */
 const coincide = (a, ef) => Object.entries(a).every(([k, v]) => ef(k) === v);
 
+/** El campo de la base Clásica (32000×32000). */
+const campoClasica = () => ({
+  'base:fieldW': BASES.clasica.valores['base:fieldW'],
+  'base:fieldH': BASES.clasica.valores['base:fieldH'],
+});
+
 // Presets de medio con los valores EXACTOS de los combos del original
 // (OptionsForm.frm:4406-4453): Density, Viscosity, Static, Kinetic, Zgravity.
 export const MEDIOS = Object.freeze({
@@ -1700,16 +1706,21 @@ export const CONTROLES_BASICOS = Object.freeze([
     es: 'Tamaño del campo',
     en: 'Field size',
     ayuda: {
-      es: 'Tamaños clásicos del campo (1 = campo F1). Requiere sim nueva.',
-      en: 'Classic field sizes (1 = F1 field). Needs a new sim.',
+      es: 'Tamaños clásicos del campo (1 = campo F1) y el de la base Clásica. Requiere sim nueva.',
+      en: 'Classic field sizes (1 = F1 field) and the Classic base one. Needs a new sim.',
     },
     valor: 'enum',
     opciones: Array.from({ length: 15 }, (_, i) => {
       const [w, h] = dimensionesCampo(i + 1);
       return { v: i + 1, es: `${i + 1} · ${w}×${h}`, en: `${i + 1} · ${w}×${h}` };
-    }).concat([{ v: 0, es: 'Personalizado', en: 'Custom' }]),
+    }).concat([
+      // el campo de la base Clásica (la interfaz clásica), que no está en el slider
+      { v: 'clasica', es: 'Clásica · 32000×32000', en: 'Classic · 32000×32000' },
+      { v: 0, es: 'Personalizado', en: 'Custom' },
+    ]),
     claves: ['base:fieldW', 'base:fieldH'],
     escribe: (v) => {
+      if (v === 'clasica') return campoClasica();
       const n = Number(v);
       if (!(n >= 1 && n <= 15)) return {};
       const [w, h] = dimensionesCampo(n);
@@ -1720,7 +1731,7 @@ export const CONTROLES_BASICOS = Object.freeze([
         const [w, h] = dimensionesCampo(n);
         if (ef('base:fieldW') === w && ef('base:fieldH') === h) return n;
       }
-      return 0;
+      return coincide(campoClasica(), ef) ? 'clasica' : 0;
     },
   },
   {

@@ -386,7 +386,12 @@ test('controles básicos: 10, con textos, claves válidas y ida y vuelta', () =>
   assert.deepEqual(ctl('costos').escribe('personalizado'), {});
   // Tamaño
   assert.deepEqual(ctl('tamano').escribe(2), { 'base:fieldW': 16000, 'base:fieldH': 12000 });
-  assert.equal(ctl('tamano').lee(ef(base)), 0, '32000² no es un tamaño del slider');
+  assert.equal(ctl('tamano').lee(ef(base)), 'clasica', '32000² no es del slider: tiene su opción');
+  assert.deepEqual(ctl('tamano').escribe('clasica'), {
+    'base:fieldW': 32000,
+    'base:fieldH': 32000,
+  });
+  assert.equal(ctl('tamano').lee(ef({ ...base, 'base:fieldH': 31000 })), 0);
   assert.equal(ctl('tamano').lee(ef(valoresResueltos('f1'))), 1);
   assert.deepEqual(dimensionesCampo(1), [9237, 6928]);
   // Bordes

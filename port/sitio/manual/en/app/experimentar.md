@@ -78,7 +78,7 @@ advanced mode shows each one separately.
 
 | Card | Control | What it does | Parameters |
 |---|---|---|---|
-| **World** | **Field size** | The classic sizes from the original, from 1 (the F1 field, 9237 × 6928) to 15. | [[param:base:fieldW]], [[param:base:fieldH]] |
+| **World** | **Field size** | The classic sizes from the original, from 1 (the F1 field, 9237 × 6928) to 15, and **Classic** (32000 × 32000, the Classic base one). | [[param:base:fieldW]], [[param:base:fieldH]] |
 | | **Edges** | **Walls**, **Toroidal** or a cylinder (left↔right or top↔bottom). | [[param:opt:2]], [[param:opt:3]] |
 | | **Medium** | **Space** (nothing slows bots down), **Fluid** (water) or **Solid** (a floor with friction). | [[param:opt:14]], [[param:opt:15]], [[param:opt:16]], [[param:opt:17]], [[param:opt:19]] |
 | **Energy** | **Solar energy** | The energy vegetables receive every cycle: the food that comes into the world. | [[param:base:maxEnergy]] |
@@ -94,7 +94,7 @@ A few clarifications:
 - **Custom** shows up in a selector only when the value doesn't match any of the
   options: for example, in **Costs** after changing a single cost in advanced
   mode. The 32000 × 32000 field of the Classic base isn't any of the fifteen
-  sizes, so with that base **Field size** shows **Custom**.
+  sizes of the original: it has its own option, **Classic**.
 - Numbers are corrected as you type them: if the value doesn't fit in what the
   engine can store, it's clamped to the cap. If it fits but is odd, it's accepted
   with a notice that tells you the usual range.

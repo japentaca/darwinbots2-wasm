@@ -134,7 +134,7 @@ valor por defecto, el rango y lo que hay que saber para usarlo bien.
 ### Campo y bordes {#campo}
 El tamaño del mundo y si sus bordes son paredes o están conectados. Arriba
 del grupo está el selector **Tamaño del campo**, con los quince tamaños
-clásicos, para no escribir ancho y alto a mano. Ver
+clásicos y el de la base Clásica, para no escribir ancho y alto a mano. Ver
 [[app/parametros-campo]].
 
 ### Energía y vegetales {#energia}

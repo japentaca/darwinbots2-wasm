@@ -176,6 +176,22 @@ test('F1: la base f1 se lee como costos F1 y bordes toroidales', () => {
   assert.ok(BASES.f1);
 });
 
+test('Tamaño del campo: el 32000×32000 de la base Clásica tiene su opción', () => {
+  const tam = ctl('tamano');
+  let b = borradorDe(fab('sopa-primordial'));
+  assert.equal(b.opciones.base, 'clasica');
+  assert.equal(leerControl(tam, b), 'clasica');
+  b = escribirControl(b, tam, 3);
+  assert.deepEqual([efectivos(b)('base:fieldW'), efectivos(b)('base:fieldH')], [24000, 18000]);
+  b = escribirControl(b, tam, 'clasica');
+  assert.equal(leerControl(tam, b), 'clasica');
+  assert.deepEqual([efectivos(b)('base:fieldW'), efectivos(b)('base:fieldH')], [32000, 32000]);
+  assert.match(
+    textoValor(tam, 'clasica', 'es', (k) => k),
+    /32000×32000/,
+  );
+});
+
 test('marca de «cambiado» contra la referencia', () => {
   const ref = borradorDe(fab('sopa-primordial'));
   let b = borradorDe(ref);

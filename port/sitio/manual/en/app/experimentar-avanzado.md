@@ -129,8 +129,8 @@ its default value, the range and what you need to know to use it well.
 
 ### Field and edges {#campo}
 The size of the world and whether its edges are walls or connected. At the top
-of the group is the **Field size** selector, with the fifteen classic sizes, so
-you don't have to type the width and height by hand. See
+of the group is the **Field size** selector, with the fifteen classic sizes and the
+Classic base one, so you don't have to type the width and height by hand. See
 [[app/parametros-campo]].
 
 ### Energy and vegetables {#energia}

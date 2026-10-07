@@ -9,7 +9,7 @@ estado: revisada
 Este grupo decide cuánto mundo hay y cómo termina. Son cinco parámetros: el
 ancho y el alto del campo y tres interruptores para los bordes. En el modo
 básico de Experimentar los mismos valores se eligen con dos controles,
-**Tamaño del campo** (los quince tamaños clásicos) y **Bordes** (paredes,
+**Tamaño del campo** (los quince tamaños clásicos y el de la base Clásica) y **Bordes** (paredes,
 toroidal o uno de los dos cilindros); acá se ven sueltos y se pueden poner a
 mano.
 
