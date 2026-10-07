@@ -23,7 +23,7 @@ import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
 import PeleaTv from '../lib/observar/tv/PeleaTv.svelte';
 import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
-import { avanceEncendido, detenerTv } from '../lib/observar/tv/tv.svelte.js';
+import { avanceEncendido } from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
 import { corridasGuardadas, corrida as obtenerCorrida } from '../lib/sim/corrida.svelte.js';
 import { VELOCIDADES } from '../lib/sim/sesion.svelte.js';
@@ -32,10 +32,11 @@ import { hashDe } from '../router.js';
 /** @type {{ partes?: string[] }} */
 let { partes = [] } = $props();
 
-// Avance automático del torneo (decisión 23, PLAN-TORNEO-EN-CURSO.md TC1):
-// lo enciende Competir (entrarTv) y se apaga al salir de Observar. La
-// pantalla completa (⛶ o F) es aparte: el campo solo, con el rótulo del
-// torneo encima si lo hay, y no toca el avance.
+// Torneo en curso (decisión 23, PLAN-TORNEO-EN-CURSO.md TC1 y TC2): es un
+// estado de la app (tv.svelte.js); Observar solo lo dibuja, y entrar o
+// salir no lo enciende ni lo apaga. La pantalla completa (⛶ o F) es aparte:
+// el campo solo, con el rótulo del torneo encima si lo hay, y no toca el
+// avance.
 const auto = $derived(avanceEncendido());
 const bloqueado = $derived(auto ? t('observar.auto.bloqueado') : '');
 let completa = $state(false);
@@ -44,9 +45,6 @@ let completa = $state(false);
 $effect(() => {
   if (partes[0] === 'tv' || partes[0] === 'torneo') window.location.hash = hashDe('observar');
 });
-
-// el avance vive mientras se esté en Observar
-$effect(() => () => detenerTv());
 
 /** Entra o sale de la pantalla completa (en el gesto del usuario: clic o tecla). */
 function alternarPantalla() {

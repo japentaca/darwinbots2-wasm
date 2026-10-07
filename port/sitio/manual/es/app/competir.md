@@ -204,8 +204,9 @@ cambia de 0 a 60). Debajo, **Al terminar la pelea** elige hasta dónde sigue:
 Cada pelea se registra en el torneo. La elección se recuerda en este
 navegador y se puede cambiar mientras se juega, desde el rótulo de Observar
 (ver [[app/observar#tv]]). Ahí también están **Parar al terminar la pelea** y
-**Abandonar la pelea**. Si vas a otra sección, el torneo deja de avanzar: la
-pelea en juego termina y se registra.
+**Abandonar la pelea**. El torneo sigue aunque vayas a otra sección: una
+franja debajo de la barra superior lo muestra en todas las pantallas (ver
+[[app/observar#franja]]).
 
 **▶ Jugar** juega la temporada abierta con los participantes que tiene, aunque
 todavía no haya empezado: no los vuelve a sortear. Las ediciones nuevas de

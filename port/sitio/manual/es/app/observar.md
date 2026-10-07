@@ -314,7 +314,7 @@ uno lo toma.
 Lo que hagas en este modo no queda en la corrida: al repetirla no se repite.
 
 ## Torneos {#tv}
-<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 -->
+<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar; avance.js; FranjaTorneo.svelte: reanudarTv); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 y TC2 -->
 
 Las peleas de un torneo se juegan en Observar: se empiezan con **▶ Jugar** en
 [[app/competir#jugar]]. Antes de cada pelea, una cortinilla anuncia quién
@@ -342,8 +342,20 @@ tarjeta de la pelea abajo a la derecha: `M` la oculta o la muestra, para
 mirar sin nada encima.
 
 Mientras el torneo avanza, **Sembrar**, **Mundo** y **Corridas** quedan
-desactivados: no se puede cambiar el mundo de una pelea. Si vas a otra
-sección, el torneo deja de avanzar; la pelea en juego termina y se registra.
+desactivados: no se puede cambiar el mundo de una pelea. Si abrís otro torneo
+en Competir, el torneo deja de avanzar.
+
+### La franja del torneo {#franja}
+
+El torneo sigue aunque vayas a otra sección. Mientras dura, debajo de la barra
+superior se ve, en todas las pantallas, una franja con el torneo, la edición,
+cuánto falta de la temporada y qué está pasando: la cortinilla, **EN VIVO**,
+el ganador. Tiene **Ver**, que te trae a Observar, **Al terminar la pelea** y
+los mismos botones para parar o abandonar la pelea.
+
+Si recargás la página con un torneo en curso, la pelea que se estaba jugando
+se corta y no se registra. El torneo no sigue solo: la franja ofrece
+**Reanudar**, que sigue desde la próxima pelea, o **Descartar**.
 
 ## Si algo sale mal {#avisos}
 <!-- Observar.svelte aviso (no error: 6 s); i18n observar.aviso.*, mundo.errorCarga.* -->

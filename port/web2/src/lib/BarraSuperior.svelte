@@ -49,6 +49,17 @@ import('./trabajos/trabajos.svelte.js')
   })
   .catch((e) => console.error(e));
 
+// Franja del torneo en curso (PLAN-TORNEO-EN-CURSO.md, TC2): bajo la
+// barra, en todas las pantallas, mientras hay un torneo en curso o uno que
+// reanudar tras una recarga. Se carga aparte, como la cola de trabajos.
+/** @type {typeof import('./observar/tv/FranjaTorneo.svelte').default | null} */
+let Franja = $state.raw(null);
+import('./observar/tv/FranjaTorneo.svelte')
+  .then((m) => {
+    Franja = m.default;
+  })
+  .catch((e) => console.error(e));
+
 // Selector de idioma (N4.5): si el idioma elegido no baja (sin red, deploy
 // nuevo) y no se recargó la página (hay una corrida en memoria o ya recargó
 // una vez), aviso visible y anunciado; la región viva está siempre, vacía
@@ -194,6 +205,9 @@ const ayuda = $derived(
   >
   <a class="clasica" href="../classic/">{t('app.clasica.enlace')}</a>
 </nav>
+{#if Franja}
+  <Franja {seccion} />
+{/if}
 
 <style>
 .nav {

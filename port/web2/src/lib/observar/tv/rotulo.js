@@ -166,3 +166,24 @@ export function anuncioTV(e, tr) {
       return '';
   }
 }
+
+/**
+ * La franja del torneo en curso en la barra superior (PLAN-TORNEO-EN-CURSO.md,
+ * T3): el título (torneo, edición y progreso de la temporada) y el estado
+ * (la línea del rótulo, con el ganador en el respiro, el error que paró el
+ * avance o, si se pidió, que para al terminar esta pelea).
+ * @param {import('./maquina.js').EstadoTV} e
+ * @param {{torneo: string, formato: string, sorteo?: string, progreso?: string}} ctx
+ * @param {Tr} tr @param {number} ahora @param {boolean} pararTras
+ * @returns {{titulo: string, estado: string, vivo: boolean, error: boolean}}
+ */
+export function franjaTV(e, ctx, tr, ahora, pararTras) {
+  const r = rotuloTV(e, ctx, tr, ahora);
+  const titulo = ctx.progreso ? `${r.cabecera} · ${ctx.progreso}` : r.cabecera;
+  let estado = r.linea;
+  if (r.ganador) estado += ` · ${r.ganador}`;
+  if (r.campeon) estado += ` · ${r.campeon}`;
+  if (r.error) estado += `: ${r.error}`;
+  if (pararTras && e.fase !== 'error') estado += ` · ${tr.t('observar.tv.parara')}`;
+  return { titulo, estado, vivo: r.vivo, error: e.fase === 'error' };
+}

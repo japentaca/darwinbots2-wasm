@@ -310,7 +310,7 @@ What you do in this mode isn't kept in the run: when you repeat it, it isn't
 repeated.
 
 ## Tournaments {#tv}
-<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 -->
+<!-- Observar.svelte (auto, bloqueado); lib/observar/tv/ (RotuloTv, PeleaTv, tv.svelte.js: pararTv, abandonarPelea, alTerminar; avance.js; FranjaTorneo.svelte: reanudarTv); i18n observar.tv.*, observar.auto.bloqueado; PLAN-TORNEO-EN-CURSO.md TC1 y TC2 -->
 
 A tournament's fights are played in Observe: you start them with **▶ Play** in
 [[app/competir#jugar]]. Before each fight, a break screen announces who fights
@@ -337,8 +337,20 @@ the fight card at the bottom right: `M` hides or shows it, to watch with nothing
 on top.
 
 While the tournament advances, **Seed**, **World** and **Runs** are disabled: a
-fight's world can't be changed. If you go to another section, the tournament
-stops advancing; the fight in play ends and is recorded.
+fight's world can't be changed. If you open another tournament in Compete, the
+tournament stops advancing.
+
+### The tournament strip {#franja}
+
+The tournament goes on even if you go to another section. While it lasts, a
+strip below the top bar shows, on every screen, the tournament, the edition,
+how much of the season is left and what's happening: the break screen,
+**LIVE**, the winner. It has **Watch**, which brings you to Observe, **When the
+fight ends** and the same buttons to stop or abandon the fight.
+
+If you reload the page with a tournament in progress, the fight that was being
+played is cut off and isn't recorded. The tournament doesn't resume on its own:
+the strip offers **Resume**, which goes on from the next fight, or **Dismiss**.
 
 ## If something goes wrong {#avisos}
 <!-- Observar.svelte aviso (no error: 6 s); i18n observar.aviso.*, mundo.errorCarga.* -->

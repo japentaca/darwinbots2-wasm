@@ -198,8 +198,8 @@ from 0 to 60). Below it, **When the fight ends** chooses how far it goes:
 Every fight is recorded in the tournament. The choice is remembered in this
 browser and can be changed while playing, from the caption in Observe (see
 [[app/observar#tv]]). **Stop when the fight ends** and **Abandon the fight** are
-there too. If you go to another section, the tournament stops advancing: the
-fight in play ends and is recorded.
+there too. The tournament goes on even if you go to another section: a strip
+below the top bar shows it on every screen (see [[app/observar#franja]]).
 
 **▶ Play** plays the open season with the entrants it has, even if it hasn't
 started yet: it doesn't draw them again. The new editions of **go on with new

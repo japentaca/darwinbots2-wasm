@@ -145,6 +145,43 @@ documentación). Sin push.
   resultado por semilla: el test de la decisión 23 sigue en verde). Test
   nuevo con `node:test` sobre el módulo, sin DOM.
 
+**Hecho (2026-10-06).** Cómo quedó, y lo que se decidió al construirla:
+
+- **T1 sin módulo nuevo.** Se eligió la evolución de `tv.svelte.js`: la
+  lógica del avance (la máquina, el tic, la vigilancia del partido y
+  `debeParar`) pasó a `src/lib/observar/tv/avance.js`, un controlador sin
+  runes ni DOM con el motor, el reloj y el almacenamiento inyectados
+  (`crearAvance`). `tv.svelte.js` queda como el estado reactivo y el
+  cableado con la página. Así el test (`test/torneo_en_curso.test.js`)
+  juega temporadas enteras contra `engine/torneos.js` con un reloj falso.
+- **El worker no depende de Observar.** `conexion.js` ya devolvía el frame
+  sin dibujarlo cuando no hay dibujante, y el registro de partidos escucha
+  los frames a nivel de página (`torneos.svelte.js`). Bastó con quitar el
+  `$effect` de `Observar.svelte` que apagaba el avance.
+- **Ciclo de imports.** `torneos → Marcador → tv → torneos` dejó de ser
+  inocuo: `tv.svelte.js` arma el avance al cargarse. Las dependencias de
+  `torneos.svelte.js` se le pasan en funciones (se leen tarde) y la
+  revisión de «Reanudar» espera a que carguen los módulos.
+- **Franja.** `FranjaTorneo.svelte`, debajo de la barra (no dentro: la
+  barra es una sola fila con scroll horizontal), cargada con import
+  dinámico como la cola de trabajos. En vez de «pelea k/N» muestra el
+  progreso de la temporada de Competir (`textoProgreso(lgProgress)`): la
+  escalera, el suizo y la colina no tienen un N fijo. «Ver» no aparece en
+  Observar. Con un error, «Cerrar». No anuncia las fases: la región viva es
+  la del rótulo de Observar.
+- **Recarga.** El id va en `sessionStorage`
+  (`darwinbots2.torneo-en-curso`) mientras el avance está encendido; lo
+  borra `detener`. Tras recargar, la franja ofrece «Reanudar» (sigue sin
+  cambiar de pantalla) y «Descartar»; si el torneo ya no existe, la oferta
+  se descarta sola.
+- **Pendiente para TC4.** Abrir otro torneo en Competir todavía apaga el
+  avance con el error «Se abrió otro torneo» (el motor juega el torneo
+  abierto), y el «Abandonar» del panel de Competir corta la pelea con
+  «otra cosa tomó la simulación». Los bloqueos de TC4 los resuelven.
+- **Pestaña en segundo plano.** Con la pestaña oculta el navegador frena
+  `requestAnimationFrame` y los temporizadores: el avance y la sim (salvo
+  a velocidad máxima) van lentos. Pasaba igual antes; no se cambia.
+
 ### TC3 · Pestañas y disposiciones de Observar (T6, T7)
 
 - Panel lateral con pestañas En vivo / Torneo / Bot; el inspector pasa a la
