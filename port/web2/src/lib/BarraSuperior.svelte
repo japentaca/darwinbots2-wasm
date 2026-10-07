@@ -221,6 +221,9 @@ const ayuda = $derived(
   color: var(--barra-texto);
   box-sizing: border-box;
   overflow-x: auto;
+  /* las leyendas ocultas (absolutas) quedan dentro del scroll de la barra:
+     si no, a ancho de teléfono estiran la página a lo ancho */
+  position: relative;
 }
 .logo {
   display: flex;

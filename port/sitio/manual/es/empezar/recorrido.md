@@ -63,10 +63,12 @@ sobre el campo, **Guardar**, **Buscar el mejor**, **Instantánea** (una imagen
 del mundo o una ficha de cada bot vivo o muerto) y **Corridas**. A la derecha,
 la **Vista** y **Color por**, que cambian cómo se dibujan los bots.
 
-El panel lateral muestra **En vivo** (bots, especies, energía, generación, el
-gráfico de población y los eventos) y, cuando hacés clic en un bot, el
-**inspector**: sus recursos, sus sentidos, su memoria, su ADN, una consola y
-un modo para manejarlo con el teclado.
+El panel lateral tiene pestañas: **En vivo** (bots, especies, energía,
+generación, el gráfico de población y los eventos), **Torneo** mientras se
+juega uno y **Bot**, con el **inspector** del bot en el que hiciste clic: sus
+recursos, sus sentidos, su memoria, su ADN, una consola y un modo para
+manejarlo con el teclado. Los botones **▣ Campo**, **◧ Mixta** y **▤ Datos**
+reparten el lugar entre el mundo y el panel.
 
 Detalle en [[app/observar]] y [[app/inspector]].
 

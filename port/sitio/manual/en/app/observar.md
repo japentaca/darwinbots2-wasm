@@ -1,6 +1,6 @@
 ---
 titulo: Observe
-resumen: "The live world screen: the camera, full screen, time, the three views, the Live panel with its chart and its events, seeding, saving, snapshots, tournaments and the Player Bot."
+resumen: "The live world screen: layouts and tabs, the camera, full screen, time, the three views, the Live panel with its chart and its events, seeding, saving, snapshots, tournaments and the Player Bot."
 etiquetas: [observe, camera, speed, views, seed, save]
 estado: revisada
 ---
@@ -9,14 +9,37 @@ three parts:
 
 - **The world**, on the left: the field with the bots, the shots, the ties and
   the obstacles.
-- **The side panel**, on the right: the **Live** panel with the run's figures, or
-  the [[app/inspector|inspector]] when you pick a bot.
+- **The side panel**, on the right, with tabs: **Live** (the run's figures),
+  **Tournament** (only while a tournament is in progress) and **Bot** (the
+  [[app/inspector|inspector]] of the bot you picked).
 - **The bottom bar**: time, speed, the tools (seed, save, snapshots…) and the
   view.
 
 If you enter Observe with no world in memory, the app starts the **Primordial
 soup** scenario on its own with a new seed and sets it running. To pick another,
 go to [[app/inicio]].
+
+## Layouts and tabs {#disposiciones}
+<!-- Observar.svelte (disposicion, pestaña); lib/observar/disposicion.js (DISPOSICIONES, pestañaTras, KV_DISPOSICION); i18n observar.disposicion.*, observar.lateral.*; PLAN-TORNEO-EN-CURSO.md TC3 -->
+
+Three buttons on the bottom bar, to the left of **⛶**, share the space between
+the world and the side panel:
+
+| Button | What you see |
+|---|---|
+| **▣ Field** | the world alone, without the side panel |
+| **◧ Mixed** | the world and the side panel (the usual one) |
+| **▤ Data** | the panel at full width, and the world as a thumbnail in a corner |
+
+The world is never hidden: in **Data** it keeps running in the thumbnail, and
+you can click a bot or zoom there too. The app remembers the layout in this
+browser. On a phone, **Data** leaves the world on top, shorter, and the panel
+below.
+
+The side panel has tabs. **Live** is the usual one. **Tournament** appears
+while a [[app/observar#tv|tournament is in progress]] and opens by itself when
+it starts. **Bot** shows the [[app/inspector|inspector]]: picking a bot jumps
+to that tab, and letting it go returns to the previous one.
 
 ## The camera {#camara}
 <!-- web2/src/lib/mundo/Mundo.svelte (alTeclear, alRodar, alMover, encuadrar); lib/mundo/camara.js (ZOOM_MIN 1, ZOOM_MAX 64); i18n/es/mundo.json mundo.aria, mundo.acercar… -->
@@ -41,16 +64,19 @@ in the enriched view).
 ### Full screen {#pantalla}
 <!-- Observar.svelte alternarPantalla (botón ⛶ de la barra, tecla F, Esc); i18n observar.pantalla.* -->
 
-The **⛶** button, on the right of the bottom bar, or the `F` key put the field
-alone in full screen, without the side panel or the bar. `Esc` or **Exit full
-screen (Esc)** go back to Observe as it was. Going in and out doesn't change the
+The **⛶** button, on the right of the bottom bar, or the `F` key put Observe
+in full screen, without the bottom bar and with the chosen
+[[app/observar#disposiciones|layout]]: with **▣ Field**, the field alone; with
+**◧ Mixed** or **▤ Data**, the side panel too. `Esc` or **Exit full screen
+(Esc)** go back to Observe as it was. Going in and out doesn't change the
 simulation or the tournament being played.
 
 ## Picking and following a bot {#seleccionar}
 <!-- Mundo.svelte alSoltar (clic = sesion.seleccionar), chip de foco (Seguir / Dejar de seguir / ×), efecto «acercar si hace falta» (z<2 → 4); i18n mundo.ayuda.clic, mundo.seguir, mundo.deseleccionar -->
 
-A click on a bot picks it: it gets marked, the side panel turns into its
-[[app/inspector|inspector]] and the world draws its trail and its nine eyes. A
+A click on a bot picks it: it gets marked, the side panel jumps to the
+**Bot** tab, with its [[app/inspector|inspector]], and the world draws its
+trail and its nine eyes. A
 click on an empty spot lets it go. While nothing is picked, the label says “Click
 a bot to inspect it”.
 
@@ -152,8 +178,7 @@ a button that turns it on in one go ([[app/inspector#acciones]]).
 ## The Live panel {#en-vivo}
 <!-- lib/observar/PanelVivo.svelte (VENTANA 1000, tarjetas); i18n observar.panel.*, observar.tarjeta.* -->
 
-With no bot picked, the side panel shows **Live**, with the current cycle and
-four cards:
+The **Live** tab of the side panel shows the current cycle and four cards:
 
 | Card | What it says |
 |---|---|
@@ -314,8 +339,8 @@ repeated.
 
 A tournament's fights are played in Observe: you start them with **▶ Play** in
 [[app/competir#jugar]]. Before each fight, a break screen announces who fights
-whom. During the fight, the score is shown at the top of the side panel. When it
-ends, a short pause shows the winner, and when the season closes, the champion.
+whom. During the fight the score is shown. When it ends, a short pause shows
+the winner, and when the season closes, the champion.
 
 Above the field are the tournament, the edition and the controls:
 
@@ -332,9 +357,20 @@ Above the field are the tournament, the edition and the controls:
 - **Abandon the fight**: cuts the fight in play without recording it, after you
   confirm, and the tournament stops advancing.
 
-In [[app/observar#pantalla|full screen]] you see the same over the field, with
-the fight card at the bottom right: `M` hides or shows it, to watch with nothing
-on top.
+While the tournament lasts, the **Tournament** tab of the side panel shows the
+tournament and how much of the season is left, the fight with its score (or,
+between fights, the next one, the champion or the error that stopped it), the
+season standings and the latest results, and links to the tournament in
+Compete. With **▤ Data**, the standings are the full ones from Compete, and
+below them is the structure of the format (the matchdays, the cup bracket, the
+Swiss rounds…), read-only.
+
+With **▣ Field**, without a panel, the fight card goes over the field, at the
+bottom right: `M` hides or shows it, to watch with nothing on top. With
+**▤ Data**, the thumbnail field doesn't carry the break screen or the
+controls: you follow the fight in the **Tournament** tab, and **When the fight
+ends**, **Stop** and **Abandon the fight** are on the
+[[app/observar#franja|tournament strip]].
 
 While the tournament advances, **Seed**, **World** and **Runs** are disabled: a
 fight's world can't be changed. If you open another tournament in Compete, the

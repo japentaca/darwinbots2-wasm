@@ -191,6 +191,47 @@ documentación). Sin push.
 - **Cierre:** el mundo nunca queda oculto; ancho de teléfono sin scroll
   horizontal; la disposición se recuerda.
 
+**Hecho (2026-10-06).** Cómo quedó, y lo que se decidió al construirla:
+
+- **Lógica pura aparte.** `src/lib/observar/disposicion.js` tiene las
+  disposiciones (localStorage `darwinbots2.observar-disposicion`, Mixta por
+  defecto) y a qué pestaña se salta (`pestañaTras`): empieza el torneo →
+  Torneo; se elige un bot → Bot; se suelta el bot → Torneo o En vivo;
+  termina el torneo → En vivo (salvo mirando un bot). Test en
+  `test/observar_disposicion.test.js`.
+- **La pestaña Bot está siempre**, también sin bot elegido (dice cómo
+  elegir uno), para que las pestañas no cambien de lugar al hacer clic.
+- **Un solo canvas.** La disposición solo cambia clases: en Datos el
+  `.lienzo` pasa a `position: absolute` en una esquina (240 px de alto) y
+  `Mundo.svelte` se redimensiona con su `ResizeObserver`; nunca se
+  desmonta. En el teléfono (≤ 900 px) la miniatura va arriba, en la
+  columna, con 30vh. El zoom de la cámara se conserva al cambiar de tamaño.
+- **Pestaña Torneo** (`tv/PanelTorneo.svelte`): el torneo y el progreso, la
+  pelea (`PeleaTv`) o, entre peleas, lo que diría el rótulo (la próxima en
+  la cortinilla, el campeón, el error), la tabla y los últimos resultados.
+  En Mixta, una tabla corta (#, bot, Pts en el suizo, PJ, G, %) y 5
+  resultados; en Datos, la `Tabla` de Competir, 15 resultados y la
+  `Estructura` del formato (para todos los formatos, no solo la copa), con
+  ↻ deshabilitado: repetir un partido tomaría la sim del torneo.
+- **Sin «próxima pelea» fuera de la cortinilla.** El motor decide la pelea
+  siguiente al lanzarla (`lgEdition`/`lgTvNext`), así que solo se conoce en
+  la cortinilla. «Al terminar…» y la cortinilla no se duplican en la
+  pestaña: siguen en el rótulo del campo y en la franja.
+- **Datos y el rótulo.** Con el mundo en miniatura, `RotuloTv` no dibuja
+  nada (`mini`) salvo su región viva; la pelea se sigue en la pestaña y los
+  controles en la franja. La tarjeta oscura de la pelea va sobre el campo
+  solo en Campo (`campo`), con o sin pantalla completa.
+- **Pantalla completa.** Conserva la disposición: Campo es el campo solo
+  (como en TC1); Mixta y Datos llevan el panel. La barra de abajo se oculta
+  siempre; el botón «Salir de pantalla completa» va en la sección (sin
+  torneo, o en Datos).
+- **En vivo en Datos** pasa a dos columnas (tarjetas y eventos a la
+  izquierda, el gráfico a la derecha): a lo ancho, el gráfico crecía con el
+  ancho y ocupaba toda la pantalla.
+- **Scroll horizontal en el teléfono.** Venía de antes: las leyendas ocultas
+  («Idioma», «Tema») de `BarraSuperior.svelte` son absolutas y escapaban
+  del scroll de la barra. `.nav` con `position: relative` las contiene.
+
 ### TC4 · Bloqueos contextuales (T8, T10)
 
 - Observar, Competir, Inicio y Experimentar según T8, con un solo helper

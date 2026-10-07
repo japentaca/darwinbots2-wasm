@@ -4,8 +4,8 @@ resumen: "El panel de un bot en Observar: su resumen, lo que siente, su memoria,
 etiquetas: [inspector, memoria, sentidos, consola, ojos, player bot]
 estado: revisada
 ---
-El inspector es el panel que ocupa el lado derecho de [[app/observar]] cuando
-elegís un bot. Muestra qué tiene, qué ve, qué hay en su memoria y qué genes de
+El inspector es la pestaña **Bot** del panel lateral de [[app/observar]]:
+elegir un bot salta a ella. Muestra qué tiene, qué ve, qué hay en su memoria y qué genes de
 su ADN corrieron, y deja tocar algunas cosas: escribir en su memoria, mover sus
 ojos o manejarlo con el teclado.
 
@@ -18,7 +18,8 @@ ojos o manejarlo con el teclado.
   son enlaces: abren el inspector de ese pariente.
 
 Para cerrarlo, hacé clic en **×** (**Cerrar el inspector**) o hacé clic en un lugar
-vacío del mundo; el panel vuelve a **En vivo**. Si el bot muere mientras lo
+vacío del mundo; el panel vuelve a la pestaña de antes (**En vivo**, o
+**Torneo** si hay un torneo en curso). Si el bot muere mientras lo
 mirás, aparece **El bot murió**: los datos quedan como estaban en su último
 ciclo y **Cerrar** cierra el panel.
 

@@ -1,9 +1,15 @@
 <script>
 // @ts-check
 // Observar (paso N1.3): el mundo a la izquierda, el panel lateral a la
-// derecha («En vivo» o, con un bot seleccionado, el inspector) y la barra
-// de controles abajo. La corrida actual (escenario + semilla + eventos)
-// vive en src/lib/sim/corrida.svelte.js.
+// derecha y la barra de controles abajo. La corrida actual (escenario +
+// semilla + eventos) vive en src/lib/sim/corrida.svelte.js.
+//
+// Disposiciones y pestañas (PLAN-TORNEO-EN-CURSO.md, TC3: T6 y T7; lógica
+// en src/lib/observar/disposicion.js): ▣ Campo (el mundo solo), ◧ Mixta
+// (el mundo y el panel) y ▤ Datos (el panel a lo ancho y el mundo en
+// miniatura en una esquina). El mundo es siempre el mismo canvas: cambiar
+// de disposición solo cambia su tamaño. El panel tiene las pestañas En
+// vivo, Torneo (con un torneo en curso) y Bot (el inspector).
 import { untrack } from 'svelte';
 import { num, t } from '../i18n/index.svelte.js';
 import { inspectorVisible } from '../lib/inspector/estado.svelte.js';
@@ -15,13 +21,21 @@ import DialogoCorridas from '../lib/observar/DialogoCorridas.svelte';
 import DialogoGuardar from '../lib/observar/DialogoGuardar.svelte';
 import DialogoSembrar from '../lib/observar/DialogoSembrar.svelte';
 import { descargar, nombreArchivo, pngMundo } from '../lib/observar/descargas.js';
+import {
+  DISPOSICIONES,
+  disposicionGuardada,
+  guardarDisposicion,
+  pestañaInicial,
+  pestañasPanel,
+  pestañaTras,
+} from '../lib/observar/disposicion.js';
 import { avisoDeError } from '../lib/observar/errores.js';
 import IndicadorJugador from '../lib/observar/IndicadorJugador.svelte';
 import MenuInstantanea from '../lib/observar/MenuInstantanea.svelte';
 import BarraMundo from '../lib/observar/objetos/BarraMundo.svelte';
 import { ordenBorrar } from '../lib/observar/objetos/ordenes.js';
 import PanelVivo from '../lib/observar/PanelVivo.svelte';
-import PeleaTv from '../lib/observar/tv/PeleaTv.svelte';
+import PanelTorneo from '../lib/observar/tv/PanelTorneo.svelte';
 import RotuloTv from '../lib/observar/tv/RotuloTv.svelte';
 import { avanceEncendido } from '../lib/observar/tv/tv.svelte.js';
 import { cicloVisible } from '../lib/sim/ciclo.js';
@@ -131,6 +145,56 @@ $effect(() => {
 });
 
 const lentes = Object.keys(LENTES);
+
+// Disposición (T6): se recuerda en este navegador; la pantalla completa la
+// conserva.
+let disposicion = $state(disposicionGuardada());
+/** @param {import('../lib/observar/disposicion.js').Disposicion} d */
+function ponerDisposicion(d) {
+  disposicion = d;
+  guardarDisposicion(d);
+}
+const conPanel = $derived(disposicion !== 'campo');
+const mini = $derived(disposicion === 'datos');
+
+// Pestañas del panel (T7): empieza el torneo → Torneo; se elige un bot →
+// Bot; se suelta el bot o termina el torneo → la que corresponda.
+const conBot = $derived(inspectorVisible(sesion));
+const pestañas = $derived(pestañasPanel(auto));
+let pestaña = $state(untrack(() => pestañaInicial(auto, conBot)));
+let antes = { torneo: untrack(() => auto), bot: untrack(() => conBot) };
+$effect(() => {
+  const ahora = { torneo: auto, bot: conBot };
+  untrack(() => {
+    pestaña = pestañaTras(pestaña, antes, ahora);
+    antes = ahora;
+  });
+});
+
+const uid = $props.id();
+
+/**
+ * Pestañas con el teclado (patrón tablist): flechas, Inicio y Fin.
+ * @param {KeyboardEvent} e
+ */
+function teclaPestaña(e) {
+  const i = pestañas.indexOf(pestaña);
+  const n = pestañas.length;
+  const j =
+    e.key === 'ArrowRight'
+      ? (i + 1) % n
+      : e.key === 'ArrowLeft'
+        ? (i - 1 + n) % n
+        : e.key === 'Home'
+          ? 0
+          : e.key === 'End'
+            ? n - 1
+            : -1;
+  if (j < 0) return;
+  e.preventDefault();
+  pestaña = pestañas[j];
+  document.getElementById(`${uid}-tab-${pestañas[j]}`)?.focus();
+}
 
 // Player Bot (N4.1): se apaga al cambiar la sim, con un contest F1, con el
 // avance automático del torneo y al salir de Observar.
@@ -261,7 +325,7 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
 </script>
 
 <section class="observar" class:tv={completa} bind:this={raiz}>
-  <div class="cuerpo">
+  <div class="cuerpo" class:datos={mini}>
     <div class="lienzo">
       <Mundo
         {sesion}
@@ -279,39 +343,63 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         <IndicadorJugador {sesion} />
       {/if}
       {#if auto}
-        <RotuloTv {completa} onPantalla={alternarPantalla} />
-      {:else if completa}
-        <button
-          class="salirPantalla"
-          type="button"
-          title={t('observar.pantalla.salir.ayuda')}
-          onclick={alternarPantalla}
-        >
-          {t('observar.pantalla.salir')}
-        </button>
-      {:else if verMundo}
+        <RotuloTv {completa} onPantalla={alternarPantalla} campo={!conPanel} {mini} />
+      {:else if verMundo && !completa}
         <BarraMundo {corrida} bind:modoBorrar {nObs} {nTps} {resaltado} onCerrar={cerrarMundo} />
       {/if}
     </div>
-    {#if !completa}
+    {#if conPanel}
       <aside class="lateral" aria-label={t('observar.lateral.aria')}>
-        {#if auto}
-          <PeleaTv />
-        {/if}
-        {#if inspectorVisible(sesion)}
-          <Inspector
-            {sesion}
-            {corrida}
-            onCerrar={() => sesion.seleccionar(0)}
-            siguiendo={sesion.siguiendo}
-            onSeguir={(on) => sesion.seguir(on)}
-          />
-        {:else}
-          <PanelVivo {corrida} />
-        {/if}
+        <div class="seg pestañas" role="tablist" aria-label={t('observar.lateral.pestanas')}>
+          {#each pestañas as p (p)}
+            <button
+              type="button"
+              role="tab"
+              id={`${uid}-tab-${p}`}
+              class:on={pestaña === p}
+              aria-selected={pestaña === p}
+              aria-controls={`${uid}-panel`}
+              tabindex={pestaña === p ? 0 : -1}
+              onclick={() => (pestaña = p)}
+              onkeydown={teclaPestaña}
+            >
+              {t(`observar.lateral.${p}`)}
+            </button>
+          {/each}
+        </div>
+        <div id={`${uid}-panel`} role="tabpanel" aria-labelledby={`${uid}-tab-${pestaña}`}>
+          {#if pestaña === 'torneo' && auto}
+            <PanelTorneo amplio={mini} />
+          {:else if pestaña === 'bot'}
+            {#if conBot}
+              <Inspector
+                {sesion}
+                {corrida}
+                onCerrar={() => sesion.seleccionar(0)}
+                siguiendo={sesion.siguiendo}
+                onSeguir={(on) => sesion.seguir(on)}
+              />
+            {:else}
+              <p class="vacio">{t('observar.bot.vacio')}</p>
+            {/if}
+          {:else}
+            <PanelVivo {corrida} amplio={mini} />
+          {/if}
+        </div>
       </aside>
     {/if}
   </div>
+
+  {#if completa && (!auto || mini)}
+    <button
+      class="salirPantalla"
+      type="button"
+      title={t('observar.pantalla.salir.ayuda')}
+      onclick={alternarPantalla}
+    >
+      {t('observar.pantalla.salir')}
+    </button>
+  {/if}
 
   {#if estado.aviso && !completa}
     <div
@@ -424,6 +512,20 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
         {t('observar.corridas')}
       </button>
       <div class="relleno"></div>
+      <fieldset class="seg disposicion">
+        <legend class="oculto">{t('observar.disposicion')}</legend>
+        {#each DISPOSICIONES as d (d)}
+          <button
+            type="button"
+            class:on={disposicion === d}
+            aria-pressed={disposicion === d}
+            title={t(`observar.disposicion.${d}.ayuda`)}
+            onclick={() => ponerDisposicion(d)}
+          >
+            {t(`observar.disposicion.${d}`)}
+          </button>
+        {/each}
+      </fieldset>
       <button
         class="btn"
         type="button"
@@ -513,7 +615,7 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   position: absolute;
   left: 16px;
   bottom: 16px;
-  z-index: 4;
+  z-index: 6;
   font: inherit;
   font-size: 13px;
   padding: 6px 14px;
@@ -536,6 +638,40 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   border-left: 1px solid var(--borde);
   background: var(--fondo);
 }
+.pestañas {
+  margin-bottom: 16px;
+}
+.pestañas button {
+  flex: 1;
+}
+.vacio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gris);
+}
+/* Datos: el panel a lo ancho y el mundo (el mismo canvas) en una esquina */
+.cuerpo.datos {
+  position: relative;
+}
+.datos .lateral {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  border-left: 0;
+  padding-bottom: 272px;
+}
+.datos .lienzo {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  z-index: 5;
+  width: min(380px, 40%);
+  height: 240px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--borde-control);
+  box-shadow: 0 6px 20px var(--sombra);
+}
 @media (max-width: 900px) {
   .cuerpo {
     flex-direction: column;
@@ -550,6 +686,21 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
     overflow: visible;
     border-left: 0;
     border-top: 1px solid var(--borde);
+  }
+  /* en el teléfono la miniatura va arriba, en la columna, más baja */
+  .datos .lienzo {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    height: 30vh;
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  .datos .lateral {
+    flex: none;
+    padding-bottom: 18px;
   }
 }
 .aviso {
@@ -594,7 +745,8 @@ const nombreVisible = $derived(estado.nombre || t('observar.sinNombre'));
   opacity: 0.5;
   cursor: default;
 }
-.velocidad {
+.velocidad,
+.disposicion {
   margin: 0;
   padding: 0;
   min-width: 0;

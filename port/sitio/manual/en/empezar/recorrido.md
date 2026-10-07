@@ -63,10 +63,12 @@ speed (**× 1**, **× 10**, **× 100**, **Max**), **Seed** a new species,
 or dead) and **Runs**. On the right, the **View** and **Color by**, which
 change how the bots are drawn.
 
-The side panel shows **Live** (bots, species, energy, generation, the
-population chart and the events) and, when you click a bot, the **inspector**:
-its resources, its senses, its memory, its DNA, a console and a mode for
-driving it with the keyboard.
+The side panel has tabs: **Live** (bots, species, energy, generation, the
+population chart and the events), **Tournament** while one is being played and
+**Bot**, with the **inspector** of the bot you clicked: its resources, its
+senses, its memory, its DNA, a console and a mode for driving it with the
+keyboard. The **▣ Field**, **◧ Mixed** and **▤ Data** buttons share the space
+between the world and the panel.
 
 Details in [[app/observar]] and [[app/inspector]].
 

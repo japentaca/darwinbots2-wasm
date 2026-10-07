@@ -4,8 +4,8 @@ resumen: "A bot's panel in Observe: its summary, what it senses, its memory, its
 etiquetas: [inspector, memory, senses, console, eyes, player bot]
 estado: revisada
 ---
-The inspector is the panel that takes up the right-hand side of [[app/observar]]
-when you pick a bot. It shows what it has, what it sees, what's in its memory and
+The inspector is the **Bot** tab of the side panel in [[app/observar]]:
+picking a bot jumps to it. It shows what it has, what it sees, what's in its memory and
 which genes of its DNA ran, and it lets you touch a few things: write to its
 memory, move its eyes or drive it with the keyboard.
 
@@ -18,7 +18,8 @@ memory, move its eyes or drive it with the keyboard.
   ancestors are links: they open that relative's inspector.
 
 To close it, click **×** (**Close the inspector**) or click an empty spot in the
-world; the panel goes back to **Live**. If the bot dies while you're watching,
+world; the panel goes back to the previous tab (**Live**, or **Tournament**
+if a tournament is in progress). If the bot dies while you're watching,
 **The bot died** appears: the data stays as it was in its last cycle and
 **Close** closes the panel.
 

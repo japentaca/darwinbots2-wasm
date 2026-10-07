@@ -2,11 +2,11 @@
 // @ts-check
 // La pelea en curso del avance automático: la fase, el ganador y el
 // marcador; quién pelea solo hasta que llega el marcador, que ya trae los
-// nombres. Con paneles (#/observar/torneo) va arriba del panel derecho, sin
-// el ciclo (ya está en el panel «En vivo»). A pantalla completa
-// (`completa`, desde RotuloTv.svelte) es una tarjeta oscura abajo a la
-// derecha del campo, con el ciclo, que se pliega a un chip (botón o tecla
-// M; se recuerda en este navegador) para ver la pelea sin nada encima.
+// nombres. Con panel lateral va en su pestaña «Torneo» (PanelTorneo), sin
+// el ciclo (ya está en «En vivo»). Sin panel (disposición Campo; `completa`,
+// desde RotuloTv.svelte) es una tarjeta oscura abajo a la derecha del
+// campo, con el ciclo, que se pliega a un chip (botón o tecla M; se
+// recuerda en este navegador) para ver la pelea sin nada encima.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import Marcador from '../../competir/Marcador.svelte';
 import TablaMarcador from '../../competir/TablaMarcador.svelte';

@@ -93,7 +93,8 @@ thousands of cycles, not hundreds.
 ## 4. Look at a bot up close {#inspeccionar}
 <!-- lib/inspector/Inspector.svelte (PESTANAS); i18n/es/inspector.json; mundo.json (mundo.ayuda.clic, seguir); observar.json (observar.mejor) -->
 
-Click a bot. The panel on the right turns into the **inspector**: the name of
+Click a bot. The panel on the right jumps to the **Bot** tab, with the
+**inspector**: the name of
 its species, its generation, its mutations and its age, and its resources
 (energy, body, venom, shell, waste). On the **Summary** tab you also see its
 energy curve, what its eyes see and which genes of its DNA ran in this cycle.

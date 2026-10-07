@@ -6,11 +6,12 @@
 // si ya se pidió parar), «Abandonar la pelea» con una pelea en juego y, a
 // pantalla completa, el botón para salir de ella; en el centro, la
 // cortinilla (quién contra quién, la fase de la pelea y la cuenta atrás),
-// el campeón o el error que paró el avance; abajo a la derecha, a pantalla
-// completa y durante la pelea, la tarjeta oscura de PeleaTv.svelte (sin
-// pantalla completa va arriba del panel derecho). Una región viva fija
-// (siempre montada, fuera de la vista) anuncia solo los cambios de fase;
-// la cuenta atrás y el marcador quedan fuera de ella.
+// el campeón o el error que paró el avance; abajo a la derecha, sin panel
+// lateral (disposición Campo, TC3) y durante la pelea, la tarjeta oscura
+// de PeleaTv.svelte (con panel va en su pestaña «Torneo»). Con el mundo en
+// miniatura (disposición Datos) no se dibuja nada: lo muestra el panel. Una
+// región viva fija (siempre montada, fuera de la vista) anuncia solo los
+// cambios de fase; la cuenta atrás y el marcador quedan fuera de ella.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { tr } from '../../competir/torneos.svelte.js';
 import { PAUSA_MAX } from './maquina.js';
@@ -30,10 +31,12 @@ import {
 } from './tv.svelte.js';
 
 /**
- * @type {{ completa: boolean, onPantalla: () => void }}
- * completa: a pantalla completa; onPantalla sale de ella (no toca el avance).
+ * @type {{ completa: boolean, onPantalla: () => void, campo?: boolean, mini?: boolean }}
+ * completa: a pantalla completa; onPantalla sale de ella (no toca el avance);
+ * campo: sin panel lateral (la tarjeta de la pelea va sobre el campo);
+ * mini: el mundo en miniatura (solo la región viva).
  */
-let { completa, onPantalla } = $props();
+let { completa, onPantalla, campo = false, mini = false } = $props();
 
 const conPelea = $derived(hayPelea());
 
@@ -63,105 +66,112 @@ $effect(() => {
 </script>
 
 <div class="oculto" aria-live="polite" aria-atomic="true">{anuncio}</div>
-<section class="tv" aria-label={t('observar.tv.aria')}>
-  <div class="cab">
-    <span class="titulo">🏆 {r.cabecera}</span>
-    <label class="pausa" title={t('observar.tv.pausa.ayuda')}
-      >{t('observar.tv.pausa')}
-      <input
-        type="number"
-        min="0"
-        max={PAUSA_MAX}
-        value={tv.e.pausa}
-        onchange={(e) => ponerPausa(e.currentTarget.value)}
-      ></label
-    >
-    <label class="pausa" title={t('observar.tv.alTerminar.ayuda')}
-      >{t('observar.tv.alTerminar')}
-      <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
-        {#each AL_TERMINAR as k (k)}
-          <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
-        {/each}
-      </select></label
-    >
-    {#if tv.pararTras}
-      <span class="parara">{t('observar.tv.parara')}</span>
-      <button class="salir" type="button" title={t('observar.tv.seguir.ayuda')} onclick={seguirTv}>
-        {t('observar.tv.seguir')}
-      </button>
-    {:else}
-      <button
-        class="salir"
-        type="button"
-        title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
-        onclick={pararTv}
+{#if !mini}
+  <section class="tv" aria-label={t('observar.tv.aria')}>
+    <div class="cab">
+      <span class="titulo">🏆 {r.cabecera}</span>
+      <label class="pausa" title={t('observar.tv.pausa.ayuda')}
+        >{t('observar.tv.pausa')}
+        <input
+          type="number"
+          min="0"
+          max={PAUSA_MAX}
+          value={tv.e.pausa}
+          onchange={(e) => ponerPausa(e.currentTarget.value)}
+        ></label
       >
-        ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
-      </button>
-    {/if}
-    {#if conPelea}
-      <button
-        class="salir"
-        type="button"
-        title={t('observar.tv.abandonar.ayuda')}
-        onclick={abandonar}
-      >
-        {t('observar.tv.abandonar')}
-      </button>
-    {/if}
-    {#if completa}
-      <button
-        class="salir"
-        type="button"
-        title={t('observar.pantalla.salir.ayuda')}
-        onclick={onPantalla}
-      >
-        {t('observar.pantalla.salir')}
-      </button>
-    {/if}
-  </div>
-
-  {#if centro}
-    <div class="centro">
-      <div class="linea">{r.linea}</div>
-      {#if r.vs.length}
-        <div class="vs">
-          {#each r.vs as f, i (f.name)}
-            {#if i > 0}
-              <span class="contra">{t('observar.tv.contra')}</span>
-            {/if}
-            <span class="luchador"
-              ><span class="sw" style:background={f.color}></span>{f.name}</span
-            >
+      <label class="pausa" title={t('observar.tv.alTerminar.ayuda')}
+        >{t('observar.tv.alTerminar')}
+        <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
+          {#each AL_TERMINAR as k (k)}
+            <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
           {/each}
-        </div>
-      {/if}
-      {#if r.etiqueta}
-        <div class="etiqueta" class:grande={r.grande}>{r.etiqueta}</div>
-      {/if}
-      {#if r.campeon}
-        <div class="campeon">🏆 {r.campeon}</div>
-      {/if}
-      {#if r.como}
-        <div class="como">{r.como}</div>
-      {/if}
-      {#if r.pie}
-        <div class="pie">{r.pie}</div>
-      {/if}
-      {#if r.error}
-        <div class="error">{r.error}</div>
-        <button class="salir grande" type="button" onclick={detenerTv} bind:this={btnGrande}>
-          {t('observar.tv.cerrar')}
+        </select></label
+      >
+      {#if tv.pararTras}
+        <span class="parara">{t('observar.tv.parara')}</span>
+        <button
+          class="salir"
+          type="button"
+          title={t('observar.tv.seguir.ayuda')}
+          onclick={seguirTv}
+        >
+          {t('observar.tv.seguir')}
+        </button>
+      {:else}
+        <button
+          class="salir"
+          type="button"
+          title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
+          onclick={pararTv}
+        >
+          ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
         </button>
       {/if}
-      {#if r.aviso}
-        <div class="aviso">{r.aviso}</div>
+      {#if conPelea}
+        <button
+          class="salir"
+          type="button"
+          title={t('observar.tv.abandonar.ayuda')}
+          onclick={abandonar}
+        >
+          {t('observar.tv.abandonar')}
+        </button>
+      {/if}
+      {#if completa}
+        <button
+          class="salir"
+          type="button"
+          title={t('observar.pantalla.salir.ayuda')}
+          onclick={onPantalla}
+        >
+          {t('observar.pantalla.salir')}
+        </button>
       {/if}
     </div>
-  {:else if completa}
-    <div class="tercio"><PeleaTv completa /></div>
-  {/if}
-</section>
+
+    {#if centro}
+      <div class="centro">
+        <div class="linea">{r.linea}</div>
+        {#if r.vs.length}
+          <div class="vs">
+            {#each r.vs as f, i (f.name)}
+              {#if i > 0}
+                <span class="contra">{t('observar.tv.contra')}</span>
+              {/if}
+              <span class="luchador"
+                ><span class="sw" style:background={f.color}></span>{f.name}</span
+              >
+            {/each}
+          </div>
+        {/if}
+        {#if r.etiqueta}
+          <div class="etiqueta" class:grande={r.grande}>{r.etiqueta}</div>
+        {/if}
+        {#if r.campeon}
+          <div class="campeon">🏆 {r.campeon}</div>
+        {/if}
+        {#if r.como}
+          <div class="como">{r.como}</div>
+        {/if}
+        {#if r.pie}
+          <div class="pie">{r.pie}</div>
+        {/if}
+        {#if r.error}
+          <div class="error">{r.error}</div>
+          <button class="salir grande" type="button" onclick={detenerTv} bind:this={btnGrande}>
+            {t('observar.tv.cerrar')}
+          </button>
+        {/if}
+        {#if r.aviso}
+          <div class="aviso">{r.aviso}</div>
+        {/if}
+      </div>
+    {:else if campo}
+      <div class="tercio"><PeleaTv completa /></div>
+    {/if}
+  </section>
+{/if}
 
 <style>
 .tv {

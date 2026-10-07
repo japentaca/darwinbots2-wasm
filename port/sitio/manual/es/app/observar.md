@@ -1,6 +1,6 @@
 ---
 titulo: Observar
-resumen: "La pantalla del mundo en vivo: la cámara, la pantalla completa, el tiempo, las tres vistas, el panel En vivo con su gráfico y sus eventos, sembrar, guardar, instantáneas, los torneos y el Player Bot."
+resumen: "La pantalla del mundo en vivo: las disposiciones y las pestañas, la cámara, la pantalla completa, el tiempo, las tres vistas, el panel En vivo con su gráfico y sus eventos, sembrar, guardar, instantáneas, los torneos y el Player Bot."
 etiquetas: [observar, cámara, velocidad, vistas, sembrar, guardar]
 estado: revisada
 ---
@@ -9,14 +9,37 @@ partes:
 
 - **El mundo**, a la izquierda: el campo con los bots, los disparos, los lazos y
   los obstáculos.
-- **El panel lateral**, a la derecha: el panel **En vivo** con las cifras de la
-  corrida, o el [[app/inspector|inspector]] cuando elegís un bot.
+- **El panel lateral**, a la derecha, con pestañas: **En vivo** (las cifras de
+  la corrida), **Torneo** (solo con un torneo en curso) y **Bot** (el
+  [[app/inspector|inspector]] del bot que elegiste).
 - **La barra de abajo**: el tiempo, la velocidad, las herramientas (sembrar,
   guardar, instantáneas…) y la vista.
 
 Si entrás a Observar sin ningún mundo en memoria, la app arranca sola el
 escenario **Sopa primordial** con una semilla nueva y lo pone a correr. Para
 elegir otro, andá a [[app/inicio]].
+
+## Disposiciones y pestañas {#disposiciones}
+<!-- Observar.svelte (disposicion, pestaña); lib/observar/disposicion.js (DISPOSICIONES, pestañaTras, KV_DISPOSICION); i18n observar.disposicion.*, observar.lateral.*; PLAN-TORNEO-EN-CURSO.md TC3 -->
+
+Tres botones de la barra de abajo, a la izquierda de **⛶**, reparten el lugar
+entre el mundo y el panel lateral:
+
+| Botón | Qué se ve |
+|---|---|
+| **▣ Campo** | el mundo solo, sin el panel lateral |
+| **◧ Mixta** | el mundo y el panel lateral (la de siempre) |
+| **▤ Datos** | el panel a lo ancho, y el mundo en miniatura en una esquina |
+
+El mundo nunca se oculta: en **Datos** sigue corriendo en la miniatura, y ahí
+también se puede hacer clic en un bot o usar el zoom. La app recuerda la
+disposición en este navegador. En un teléfono, **Datos** deja el mundo arriba,
+más bajo, y el panel debajo.
+
+El panel lateral tiene pestañas. **En vivo** es la de siempre. **Torneo**
+aparece mientras hay un [[app/observar#tv|torneo en curso]] y se abre sola
+cuando empieza. **Bot** muestra el [[app/inspector|inspector]]: elegir un bot
+salta a esa pestaña, y soltarlo vuelve a la de antes.
 
 ## La cámara {#camara}
 <!-- web2/src/lib/mundo/Mundo.svelte (alTeclear, alRodar, alMover, encuadrar); lib/mundo/camara.js (ZOOM_MIN 1, ZOOM_MAX 64); i18n/es/mundo.json mundo.aria, mundo.acercar… -->
@@ -41,16 +64,19 @@ Arriba a la izquierda, un rótulo recuerda la vista que estás usando (y el
 ### Pantalla completa {#pantalla}
 <!-- Observar.svelte alternarPantalla (botón ⛶ de la barra, tecla F, Esc); i18n observar.pantalla.* -->
 
-El botón **⛶**, a la derecha de la barra de abajo, o la tecla `F` ponen el
-campo solo a pantalla completa, sin el panel lateral ni la barra. `Esc` o
+El botón **⛶**, a la derecha de la barra de abajo, o la tecla `F` ponen
+Observar a pantalla completa, sin la barra de abajo y con la
+[[app/observar#disposiciones|disposición]] elegida: con **▣ Campo**, el campo
+solo; con **◧ Mixta** o **▤ Datos**, también el panel lateral. `Esc` o
 **Salir de pantalla completa (Esc)** vuelven a Observar como estaba. Entrar y
 salir no cambia la simulación ni el torneo que se esté jugando.
 
 ## Elegir y seguir un bot {#seleccionar}
 <!-- Mundo.svelte alSoltar (clic = sesion.seleccionar), chip de foco (Seguir / Dejar de seguir / ×), efecto «acercar si hace falta» (z<2 → 4); i18n mundo.ayuda.clic, mundo.seguir, mundo.deseleccionar -->
 
-Un clic sobre un bot lo elige: queda marcado, el panel lateral pasa a ser su
-[[app/inspector|inspector]] y el mundo dibuja su rastro y sus nueve ojos. Un
+Un clic sobre un bot lo elige: queda marcado, el panel lateral salta a la
+pestaña **Bot**, con su [[app/inspector|inspector]], y el mundo dibuja su
+rastro y sus nueve ojos. Un
 clic en un lugar vacío lo suelta. Mientras no hay nada elegido, el rótulo dice
 «Clic en un bot para inspeccionarlo».
 
@@ -152,8 +178,8 @@ El inspector tiene un botón que la enciende de una vez
 ## El panel En vivo {#en-vivo}
 <!-- lib/observar/PanelVivo.svelte (VENTANA 1000, tarjetas); i18n observar.panel.*, observar.tarjeta.* -->
 
-Sin bot elegido, el panel lateral muestra **En vivo**, con el ciclo actual y
-cuatro tarjetas:
+La pestaña **En vivo** del panel lateral muestra el ciclo actual y cuatro
+tarjetas:
 
 | Tarjeta | Qué dice |
 |---|---|
@@ -318,9 +344,8 @@ Lo que hagas en este modo no queda en la corrida: al repetirla no se repite.
 
 Las peleas de un torneo se juegan en Observar: se empiezan con **▶ Jugar** en
 [[app/competir#jugar]]. Antes de cada pelea, una cortinilla anuncia quién
-pelea contra quién. Durante la pelea, arriba del panel lateral se ve el
-marcador. Al terminar, un respiro muestra al ganador, y al cerrar la temporada,
-al campeón.
+pelea contra quién. Durante la pelea se ve el marcador. Al terminar, un
+respiro muestra al ganador, y al cerrar la temporada, al campeón.
 
 Arriba del campo están el torneo, la edición y los controles:
 
@@ -337,9 +362,19 @@ Arriba del campo están el torneo, la edición y los controles:
 - **Abandonar la pelea**: corta la pelea en juego sin registrarla, después de
   confirmar, y el torneo deja de avanzar.
 
-A [[app/observar#pantalla|pantalla completa]] se ve lo mismo sobre el campo, con la
-tarjeta de la pelea abajo a la derecha: `M` la oculta o la muestra, para
-mirar sin nada encima.
+Mientras dura el torneo, la pestaña **Torneo** del panel lateral muestra el
+torneo y cuánto falta de la temporada, la pelea con su marcador (o, entre
+peleas, la próxima, el campeón o el error que lo paró), la tabla de la
+temporada y los últimos resultados, y lleva al torneo en Competir. Con
+**▤ Datos**, la tabla es la completa de Competir y debajo está la estructura
+del formato (las jornadas, el cuadro de la copa, las rondas del suizo…), de
+solo lectura.
+
+Con **▣ Campo**, sin panel, la tarjeta de la pelea va sobre el campo, abajo a
+la derecha: `M` la oculta o la muestra, para mirar sin nada encima. Con
+**▤ Datos**, el campo en miniatura no lleva la cortinilla ni los controles: la
+pelea se sigue en la pestaña **Torneo**, y **Al terminar la pelea**, **Parar**
+y **Abandonar la pelea** están en la [[app/observar#franja|franja del torneo]].
 
 Mientras el torneo avanza, **Sembrar**, **Mundo** y **Corridas** quedan
 desactivados: no se puede cambiar el mundo de una pelea. Si abrís otro torneo

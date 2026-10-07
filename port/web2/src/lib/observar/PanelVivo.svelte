@@ -11,8 +11,11 @@ import { cicloVisible } from '../sim/ciclo.js';
 import FeedEventos from './FeedEventos.svelte';
 import GraficoPoblacion from './GraficoPoblacion.svelte';
 
-/** @type {{ corrida: import('../sim/corrida-nucleo.js').NucleoCorrida }} */
-let { corrida } = $props();
+/**
+ * @type {{ corrida: import('../sim/corrida-nucleo.js').NucleoCorrida, amplio?: boolean }}
+ * amplio: disposición Datos de Observar (TC3): el gráfico a la derecha.
+ */
+let { corrida, amplio = false } = $props();
 
 const e = $derived(corrida.estado);
 const vivo = $derived(e.vivo);
@@ -68,7 +71,7 @@ const tarjetas = $derived.by(() => {
 const actuales = $derived(Object.fromEntries((vivo?.especies ?? []).map((s) => [s.nombre, s.n])));
 </script>
 
-<div class="panel">
+<div class="panel" class:amplio={amplio}>
   <div class="cab">
     <span class="lbl">{t('observar.panel.titulo')}</span>
     {#if vivo}
@@ -93,7 +96,14 @@ const actuales = $derived(Object.fromEntries((vivo?.especies ?? []).map((s) => [
   {:else}
     <p class="nota">{t('observar.panel.esperando')}</p>
   {/if}
-  <GraficoPoblacion muestras={e.muestras} colores={e.colores} intervalo={e.intervalo} {actuales} />
+  <div class="grafico">
+    <GraficoPoblacion
+      muestras={e.muestras}
+      colores={e.colores}
+      intervalo={e.intervalo}
+      {actuales}
+    />
+  </div>
   <FeedEventos feed={e.feed} />
   <a class="analisis" href={hashDe('analizar')}>{t('observar.analisis')}</a>
 </div>
@@ -150,5 +160,26 @@ const actuales = $derived(Object.fromEntries((vivo?.especies ?? []).map((s) => [
 .analisis {
   font-size: 14px;
   font-weight: 500;
+}
+/* Datos: dos columnas, el gráfico a la derecha */
+.panel.amplio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+.amplio > * {
+  grid-column: 1;
+}
+.amplio > .cab {
+  grid-column: 1 / -1;
+}
+.amplio > .grafico {
+  grid-column: 2;
+  grid-row: 2 / span 4;
+}
+@media (max-width: 900px) {
+  .panel.amplio {
+    display: flex;
+  }
 }
 </style>

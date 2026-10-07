@@ -92,7 +92,8 @@ ciclos, no en cientos.
 ## 4. Mirá a un bot de cerca {#inspeccionar}
 <!-- lib/inspector/Inspector.svelte (PESTANAS); i18n/es/inspector.json; mundo.json (mundo.ayuda.clic, seguir); observar.json (observar.mejor) -->
 
-Hacé clic en un bot. El panel de la derecha pasa a ser el **inspector**: el
+Hacé clic en un bot. El panel de la derecha salta a la pestaña **Bot**, con
+el **inspector**: el
 nombre de su especie, su generación, sus mutaciones y su edad, y sus recursos
 (energía, cuerpo, veneno, caparazón, desechos). En la pestaña **Resumen** ves
 además la curva de su energía, lo que ven sus ojos y qué genes de su ADN se
