@@ -81,7 +81,7 @@ its author — the attachment when there was one, otherwise the most
 complete code block in the first post. Only the invisible characters the
 forum had introduced were normalized. Afterwards, bots from the rest of
 the forum and from the wiki were added.
-<!-- README.md §De dónde salen los bots de la demo (sub-foros y proceso); port/README.md §Bestiary (115 extra, 684 en total) -->
+<!-- README.md §De dónde salen los bots de la demo (sub-foros y proceso); port/HISTORIA.md §Página web (Bestiary) (115 extra, 684 en total) -->
 
 Each bot was validated with the ported engine itself, not with
 heuristics: it is loaded, seeded and run for 50 cycles; one bot per topic

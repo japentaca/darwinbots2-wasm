@@ -28,7 +28,7 @@ herramientas.
 | Formatos de archivo | `tecnico/formatos.md` |
 | Bestiario, suite de tests | Cifras en `README.md`, `README.en.md`, portadas, `tecnico/creditos.md`, `.github/workflows/ci.yml` (comentario) |
 | Algo que anuncia la portada | `port/sitio/publico/index.html` y `publico/en/index.html` |
-| Una decisión o etapa | `port/web2/PLAN.md`, `PROGRESO.md` o `PLAN-SITIO.md` (no `spec/PLAN-EXTENSIONES.md` ni `spec/PROGRESO.md` para añadidos fuera de etapa) |
+| Una decisión o etapa | `port/web2/PLAN.md`, `PLAN-SITIO.md` o `PLAN-TORNEO-EN-CURSO.md` (no `spec/PLAN-EXTENSIONES.md` ni `spec/PROGRESO.md` para añadidos fuera de etapa) |
 
 Para encontrar menciones, buscá en los dos idiomas el nombre del rótulo, la
 clave i18n, la sysvar o el término:

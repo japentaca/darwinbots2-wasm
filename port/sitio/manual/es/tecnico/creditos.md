@@ -81,7 +81,7 @@ autor — el adjunto cuando existía, si no, el bloque de código más
 completo del primer mensaje. Solo se normalizaron los caracteres
 invisibles que el foro había introducido. Después se sumaron bots del
 resto del foro y del wiki.
-<!-- README.md §De dónde salen los bots de la demo (sub-foros y proceso); port/README.md §Bestiary (115 extra, 684 en total) -->
+<!-- README.md §De dónde salen los bots de la demo (sub-foros y proceso); port/HISTORIA.md §Página web (Bestiary) (115 extra, 684 en total) -->
 
 Cada bot se validó con el propio motor portado, no con heurísticas: se
 carga, se siembra y corre 50 ciclos; se publicó uno por tema y se

@@ -290,7 +290,7 @@ para los parámetros. Lo que salió:
     con un bot elegido, «ADN vs fundador» compara las fotos del ADN dominante
     de la especie, no el de ese bot (en Especies, rótulo y acción coinciden).
     Comprobados el 2026-10-07.
-- `port/README.md`: el desglose del Bestiario (545 + 115) no da los 684 de
+- `port/HISTORIA.md`: el desglose del Bestiario (545 + 115) no da los 684 de
   `bots.json`.
 - `tecnico/semillas` y `tecnico/formatos` ya tienen muchos enlaces: tienen que
   cubrir la reproducibilidad (C17, los 65.536 mundos) y los formatos `.dbsim`,
@@ -366,7 +366,7 @@ español** (531 bloques `adn` con el lint limpio). Lo que salió:
 - Notas para la spec, sin tocar: el período 2^24 del LCG no está
   documentado en `spec/` (afirmado en el manual con medición propia).
 - Sin arreglos pendientes nuevos de la app (app_a_corregir vacío).
-  Pendientes ya conocidos: el desglose del Bestiario de `port/README`
+  Pendientes ya conocidos: el desglose del Bestiario de `port/HISTORIA.md`
   (545 + 115 ≠ 684; el README de la raíz dice 568) y el comentario de
   cabecera de `ci.yml` (143/2962, desactualizado frente a los 272/4126
   del README).

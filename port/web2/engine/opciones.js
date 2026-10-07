@@ -50,7 +50,7 @@
 // Las bases (BASES) son conjuntos de valores explícitos: 'clasica' replica
 // lo que manda el reinicio de la clásica con su panel sin tocar
 // (collectOptions) y 'f1' le suma btnSetF1_Click (OptionsForm.frm:2579-2668,
-// "Ajustes F1" de port/README.md). Solo se mandan al reset los valores que
+// "Ajustes F1" de port/HISTORIA.md). Solo se mandan al reset los valores que
 // la base fija más los cambios del escenario: lo demás queda en el valor
 // del core (mandar un default puede no ser neutro: 101 pisa el
 // optMinRounds que acaba de escribir 97).

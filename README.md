@@ -57,7 +57,7 @@ sub-boards). Ninguno fue escrito ni modificado para este port:
   *Mutations* (38), *Untagged* (34), F3 (29), *Veggies* (19),
   *Single store* (13), *EcoSim* (3) y *The Starting Gate* (3). Son las cifras
   de la primera corrida; el Bestiary actual tiene 684 bots (más bots de esos
-  sub-boards y 115 del resto del foro y del wiki: ver `port/README.md`).
+  sub-boards y 115 del resto del foro y del wiki: ver `port/tools/bestiary/README.md`).
 - De cada tema se tomó el ADN publicado: los adjuntos `.txt` del autor
   cuando existían y, si no, el bloque de código más completo del primer
   mensaje. Solo se normalizaron los caracteres invisibles (`&nbsp;`,
@@ -110,6 +110,9 @@ Dentro de `port/`, lo que se publica en el sitio:
 | [`port/web2/`](port/web2/) | La **app** (`/app/`): Vite + Svelte 5, en español e inglés, con seis secciones: Inicio, Observar, Experimentar, Analizar, Bots y Competir. Plan y decisiones en [`port/web2/PLAN.md`](port/web2/PLAN.md). |
 | [`port/sitio/`](port/sitio/) | El **manual** (`/manual/` y `/en/manual/`) y las portadas: páginas en Markdown en `manual/es/` y `manual/en/`, y un generador propio sin dependencias (`generar.mjs`) que arma el HTML. Plan en [`port/web2/PLAN-SITIO.md`](port/web2/PLAN-SITIO.md). |
 | [`port/web/`](port/web/) | La **interfaz clásica** (`/classic/`), la primera página del port, congelada: no recibe cambios. |
+
+Qué documento interno mirar para cada cosa (spec, planes, historia del
+port) está en [`DOCUMENTACION.md`](DOCUMENTACION.md).
 
 El resto de los directorios de la raíz (`DBLaunch/`, `Installer/`,
 `LocalDBIM/`, …) son herramientas companion de la época, parte del drop

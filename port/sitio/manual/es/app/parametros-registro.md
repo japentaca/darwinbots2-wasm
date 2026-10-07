@@ -4,7 +4,7 @@ resumen: "El registro de muertos, que guarda una ficha de cada bot que muere, y 
 etiquetas: [registro, muertos, instantánea, gráficos, parámetros]
 estado: revisada
 ---
-<!-- opciones.js «Registro»; core database.hpp (AddRecord, Snapshot, SnapshotFitness), robots.hpp KillRobot (DeadRobotSnp / SnpExcludeVegs); port/README «Registro y análisis (etapa E6)»; web2/src/lib/observar/MenuInstantanea.svelte; i18n/es/observar.json observar.snp.* -->
+<!-- opciones.js «Registro»; core database.hpp (AddRecord, Snapshot, SnapshotFitness), robots.hpp KillRobot (DeadRobotSnp / SnpExcludeVegs); port/HISTORIA.md «Registro y análisis (etapa E6)»; web2/src/lib/observar/MenuInstantanea.svelte; i18n/es/observar.json observar.snp.* -->
 
 Este grupo controla lo que la simulación anota para analizar después. El
 parámetro importante es el registro de muertos: una ficha por cada bot que muere,

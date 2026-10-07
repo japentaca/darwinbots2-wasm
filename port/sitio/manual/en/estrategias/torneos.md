@@ -10,7 +10,7 @@ free simulation. Costs are really charged, the dead leave no food, mutations
 come switched off and the round is won by whoever lasts. Tournament strategy
 is, before anything else, economics.
 
-<!-- opciones.js ajustesF1 (btnSetF1_Click): F1_COSTOS, F1_OPTS y F1_NOMBRADAS; port/README «Ajustes F1» -->
+<!-- opciones.js ajustesF1 (btnSetF1_Click): F1_COSTOS, F1_OPTS y F1_NOMBRADAS; port/HISTORIA.md «Ajustes F1» -->
 
 ## A different court, different rules {#economia}
 

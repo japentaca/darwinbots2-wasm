@@ -1,5 +1,8 @@
 # Frontend nuevo (web2): progreso de la construcción
 
+> **Archivado.** Diario de la construcción de la app nueva (2026-09-29/30);
+> no se actualiza. Las decisiones vigentes están en `../PLAN.md`.
+
 Registro del orquestador. Fuente de verdad del alcance: `PLAN.md` (23
 decisiones + «Decisiones tomadas durante la construcción»). Fuera de `spec/`.
 

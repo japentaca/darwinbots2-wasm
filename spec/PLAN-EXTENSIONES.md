@@ -1336,7 +1336,7 @@ sin diff, smokes de host en verde (`rv/smoke_host`, `e8/smoke_e8`,
 
 ### Resultado C3 (2026-09-27) — E12 completa
 
-- `port/README.md` §"Torneos (E10, E11 y E12)": el formato World cup y su
+- `port/HISTORIA.md` §"Torneos (E10, E11 y E12)": el formato World cup y su
   smoke.
 - `PROGRESO.md`: fila de E12 ✅ y entrada.
 - La verificación en Chrome se hizo en C2 (ver arriba). Diferencia con lo

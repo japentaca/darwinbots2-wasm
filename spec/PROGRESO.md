@@ -38,7 +38,7 @@ reinicios de contexto.
 > **truncan el resto del tick en silencio** — contrato completo en `10-CICLO.md §14`,
 > corrección de origen en `00-INVENTARIO.md §1`. Documentos barridos y corregidos:
 > `00-INVENTARIO`, `10-CICLO`, `20-VM`, `opcodes.yaml`, `21-MEMORIA`, `30-FISICA`,
-> `PLAN`, `PROMPT-BLOQUE-C`, `OPEN_QUESTIONS`. Los `PROMPT-BLOQUE-A/A2/A3/B.md` se
+> `PLAN`, `PROMPT-BLOQUE-C`, `OPEN_QUESTIONS`. Los `historial/PROMPT-BLOQUE-A/A2/A3/B.md` se
 > conservan sin tocar como registro histórico (contienen la premisa vieja).
 
 ## Port C++/WASM (`port/`) — arrancado 2026-08-24 por orden del usuario
@@ -370,7 +370,7 @@ ambos de core, anteriores a PP-03.
   teleporter local dibujado; consola sin errores. Medición para la
   decisión WebGL: estrés con ~2000 bots → `draw()` ≈ 4 ms/frame vs tick
   del core ≈ 160 ms ⇒ el cuello es la sim, no el render: **WebGL
-  descartado por innecesario** (documentado en `port/README.md`
+  descartado por innecesario** (documentado en `port/HISTORIA.md`
   §"Página web"; queda como opción futura si el render dominara alguna
   vez). Fuentes sin modificar.
 

@@ -95,7 +95,7 @@ What is guaranteed: the same file, loaded in any browser, runs the same. The
 seed's full mechanics are in [[tecnico/semillas]].
 
 ### Both interfaces {#dbsim-compat}
-<!-- port/README.md «Página web» (formato binario de VB6 como .dbsim); port/web/index.html (darwinbots-cycleN.dbsim; el selector de Load sim acepta .dbsim y .sim); wasm dbcore_api.cpp db_sim_save/db_sim_load compartidos por las dos orquestaciones (paridad byte a byte, PROGRESO E1) -->
+<!-- port/HISTORIA.md «Página web» (formato binario de VB6 como .dbsim); port/web/index.html (darwinbots-cycleN.dbsim; el selector de Load sim acepta .dbsim y .sim); wasm dbcore_api.cpp db_sim_save/db_sim_load compartidos por las dos orquestaciones (paridad byte a byte, PROGRESO E1) -->
 
 The app and the classic interface share the engine and the format: a file from
 one opens in the other. The classic interface downloads it as
@@ -103,7 +103,7 @@ one opens in the other. The classic interface downloads it as
 with the old extension, `.sim`; inside it is the same thing.
 
 ## Snapshots (.snp) {#snp}
-<!-- core database.hpp (kSnpHeader, AppendSnpRecord: 14 columnas, el ADN detokenizado cierra cada registro; Snapshot/AddRecord = «Snapshot of the living» / «of the dead» de Database.bas); port/README.md «Registro y análisis»; web2 MenuInstantanea.svelte + inspector/veterano.js (ARCHIVOS_MUERTOS DeadRobots.snp / DeadRobots_Mutations.txt; vivos <corrida>-<ciclo>.snp; deadTake → drain; deadReset) -->
+<!-- core database.hpp (kSnpHeader, AppendSnpRecord: 14 columnas, el ADN detokenizado cierra cada registro; Snapshot/AddRecord = «Snapshot of the living» / «of the dead» de Database.bas); port/HISTORIA.md «Registro y análisis»; web2 MenuInstantanea.svelte + inspector/veterano.js (ARCHIVOS_MUERTOS DeadRobots.snp / DeadRobots_Mutations.txt; vivos <corrida>-<ciclo>.snp; deadTake → drain; deadReset) -->
 
 The **Snapshot** menu in [[app/observar]] downloads two things:
 

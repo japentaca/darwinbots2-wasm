@@ -131,7 +131,7 @@ Details in [[app/bots]] and [[app/editor]].
 
 ## Compete {#competir}
 <!-- i18n/es/competir.json competir.rapido.*, competir.nuevo.paso1-3, competir.formato.*, competir.jugar.*, competir.salon.ayuda -->
-<!-- web2/src/screens/Competir.svelte; lib/competir/*; i18n/es/competir.json; web2/PLAN.md decisiones 21-23; port/README.md Torneos (E10-E12) -->
+<!-- web2/src/screens/Competir.svelte; lib/competir/*; i18n/es/competir.json; web2/PLAN.md decisiones 21-23; port/HISTORIA.md Torneos (E10-E12) -->
 
 Matches and tournaments between bots. The **Quick match** brings together up
 to 20 bots and isn't saved, unless you keep it with **Save as tournament**. A
@@ -157,7 +157,7 @@ again. What is saved, where, and what happens if you clear the browser's data
 is in [[app/tus-datos]].
 
 ## The classic interface {#clasica}
-<!-- web2/PLAN.md decisión 5 (monitor RGB, skins, imagen de fondo, .gsave), decisión 17, C22; lib/bots/migracion.svelte.js y lib/competir/migracion.svelte.js (una sola vez, la clásica no se toca); port/README.md Página web, Internet Mode (E7); port/web/index.html -->
+<!-- web2/PLAN.md decisión 5 (monitor RGB, skins, imagen de fondo, .gsave), decisión 17, C22; lib/bots/migracion.svelte.js y lib/competir/migracion.svelte.js (una sola vez, la clásica no se toca); port/HISTORIA.md Página web, Internet Mode (E7); port/web/index.html -->
 
 The **Classic interface** link opens the port's first web version, at
 `/classic/`. It uses the same engine, is in English and looks more like the

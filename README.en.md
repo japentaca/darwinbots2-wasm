@@ -58,7 +58,7 @@ sub-boards). None of them was written or modified for this port:
   *Single store* (13), *EcoSim* (3) and *The Starting Gate* (3). These are the
   figures from the first crawl; the current Bestiary has 684 bots (more bots
   from those sub-boards plus 115 from the rest of the forum and the wiki: see
-  `port/README.md`).
+  `port/tools/bestiary/README.md`).
 - From each topic the published DNA was taken: the author's `.txt`
   attachments when they existed and, otherwise, the most complete code
   block of the first post. The only normalization was of invisible
@@ -114,6 +114,9 @@ Inside `port/`, what gets published on the site:
 | [`port/web2/`](port/web2/) | The **app** (`/app/`): Vite + Svelte 5, in Spanish and English, with six sections: Home, Observe, Experiment, Analyze, Bots and Compete. Plan and decisions in [`port/web2/PLAN.md`](port/web2/PLAN.md) (in Spanish). |
 | [`port/sitio/`](port/sitio/) | The **manual** (`/manual/` and `/en/manual/`) and the landing pages: Markdown pages in `manual/es/` and `manual/en/`, and a home-grown, dependency-free generator (`generar.mjs`) that builds the HTML. Plan in [`port/web2/PLAN-SITIO.md`](port/web2/PLAN-SITIO.md) (in Spanish). |
 | [`port/web/`](port/web/) | The **classic interface** (`/classic/`), the port's first page, frozen: it gets no changes. |
+
+Which internal document to read for what (spec, plans, history of the
+port) is listed, in Spanish, in [`DOCUMENTACION.md`](DOCUMENTACION.md).
 
 The remaining top-level directories (`DBLaunch/`, `Installer/`,
 `LocalDBIM/`, …) are companion tools from that era, part of the original

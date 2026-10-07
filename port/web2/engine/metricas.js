@@ -1,8 +1,9 @@
 // @ts-check
 // Catálogo de las métricas de solo lectura de E2 (decisión 7 de
 // port/web2/PLAN.md; exports de port/wasm/dbcore_api.cpp, ver «Notas para el
-// Nivel 2» en PROGRESO.md). Sin DOM: lo usan el worker (engine/sim.js, para
-// armar la muestra), la historia (engine/history.js) y la interfaz.
+// Nivel 2» en port/web2/historial/PROGRESO.md). Sin DOM: lo usan el worker
+// (engine/sim.js, para armar la muestra), la historia (engine/history.js) y
+// la interfaz.
 //
 // Los nombres de columna son claves estables (se guardan con la historia);
 // el texto visible sale de i18n en la interfaz. El orden de cada lista es el

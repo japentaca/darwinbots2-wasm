@@ -42,11 +42,11 @@ The port was built in three steps, in this order:
 2. **Rewrite the engine in C++.** With the spec written, the engine was
    rewritten in C++20, subsystem by subsystem, and compiled to
    WebAssembly so it runs in the browser.
-   <!-- port/README.md §Estado (M1..M9); README.md §Qué hay en este repositorio -->
+   <!-- port/HISTORIA.md §Milestones (M1..M9); README.md §Qué hay en este repositorio -->
 3. **The web.** On top of the compiled engine came first the classic
    interface; then the new app that this manual describes; and finally
    this site, with the generated manual.
-   <!-- port/README.md §Estado (M10); port/web2/PLAN-SITIO.md §Despliegue -->
+   <!-- port/HISTORIA.md §Milestones (M10); port/web2/PLAN-SITIO.md §Despliegue -->
 
 The order is no accident. Rewriting a 53,000-line engine “by eye” would
 have produced a simulator that was _similar_, not the same. The spec
@@ -83,7 +83,7 @@ the state of everything so it can be drawn, save and load. Files (see
 [[tecnico/formatos]]) travel through memory, not through the disk: the
 engine packs and unpacks the bytes, and whoever calls it decides where to
 store them.
-<!-- port/README.md §Estado (M10: la API completa hacia JS) -->
+<!-- port/HISTORIA.md §Milestones (M10: la API completa hacia JS) -->
 
 The simulation runs in a _Web Worker_, a separate browser thread: no
 matter how heavy the cycle is, the page never freezes, and each frame
@@ -91,7 +91,7 @@ reaches the interface as a single buffer ready to draw. The project's
 rule is strict: the presentation layer never recalculates physics or
 randomness, it only shows what the engine dumps. That is why the new app
 and the classic one, however different, give identical runs.
-<!-- port/README.md §Página web (worker, ArrayBuffer transferible); README.md §Reglas (4) -->
+<!-- port/HISTORIA.md §Página web (worker, ArrayBuffer transferible); README.md §Reglas (4) -->
 
 On top of the engine there are two interfaces. The **classic** one was
 the first web version: closer to the original program and in English;
@@ -101,7 +101,7 @@ English, with runs, analysis, an editor and tournaments (see
 [[empezar/recorrido]]). Both share the same wasm and the same
 **Bestiary**: the community's bots, indexed with their profile and
 genes, which the library offers for seeding (see [[app/bots]]).
-<!-- port/web2/PLAN.md decisiones 1 y 5; port/README.md §Bestiary; .github/workflows/sitio.yml (/build-wasm/ compartido) -->
+<!-- port/web2/PLAN.md decisiones 1 y 5; port/HISTORIA.md §Página web (Bestiary); .github/workflows/sitio.yml (/build-wasm/ compartido) -->
 
 The **manual** you're reading is generated too. The pages are written by
 hand, but the entries for each sysvar, each operator and each parameter

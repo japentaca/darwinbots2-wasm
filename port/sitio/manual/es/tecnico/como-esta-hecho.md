@@ -42,11 +42,11 @@ El port se hizo en tres pasos, y en este orden:
 2. **Reescribir el motor en C++.** Con la spec escrita, el motor se
    reescribió en C++20, subsistema por subsistema, y se compiló a
    WebAssembly para que corra en el navegador.
-   <!-- port/README.md §Estado (M1..M9); README.md §Qué hay en este repositorio -->
+   <!-- port/HISTORIA.md §Milestones (M1..M9); README.md §Qué hay en este repositorio -->
 3. **La web.** Sobre el motor compilado se armó primero la interfaz
    clásica; después, la app nueva que describe este manual; y por último
    este sitio, con el manual generado.
-   <!-- port/README.md §Estado (M10); port/web2/PLAN-SITIO.md §Despliegue -->
+   <!-- port/HISTORIA.md §Milestones (M10); port/web2/PLAN-SITIO.md §Despliegue -->
 
 El orden no es casual. Reescribir un motor de 53 000 líneas «a ojo»
 habría dado un simulador _parecido_, no el mismo. La spec convirtió la
@@ -82,7 +82,7 @@ especies, pedir el estado de todo para dibujar, guardar y cargar. Los
 archivos (ver [[tecnico/formatos]]) viajan por memoria, no por disco:
 el motor empaqueta y desempaqueta los bytes, y quien lo llama decide
 dónde guardarlos.
-<!-- port/README.md §Estado (M10: la API completa hacia JS) -->
+<!-- port/HISTORIA.md §Milestones (M10: la API completa hacia JS) -->
 
 La simulación corre en un _Web Worker_, un hilo aparte del navegador:
 por más pesado que sea el ciclo, la página nunca se congela, y cada
@@ -90,7 +90,7 @@ cuadro pasa a la interfaz como un único búfer listo para dibujar. La
 regla del proyecto es terminante: la capa de presentación nunca
 recalcula física ni azar, solo muestra lo que el motor vuelca. Por eso
 la app nueva y la clásica, siendo tan distintas, dan corridas idénticas.
-<!-- port/README.md §Página web (worker, ArrayBuffer transferible); README.md §Reglas (4) -->
+<!-- port/HISTORIA.md §Página web (worker, ArrayBuffer transferible); README.md §Reglas (4) -->
 
 Encima del motor hay dos interfaces. La **clásica** fue la primera
 versión web: más parecida al programa original y en inglés; hoy está
@@ -100,7 +100,7 @@ corridas, análisis, editor y torneos (ver [[empezar/recorrido]]). Las
 dos comparten el mismo wasm y el mismo **Bestiario**: los bots de la
 comunidad, indexados con su perfil y sus genes, que la biblioteca
 ofrece para sembrar (ver [[app/bots]]).
-<!-- port/web2/PLAN.md decisiones 1 y 5; port/README.md §Bestiary; .github/workflows/sitio.yml (/build-wasm/ compartido) -->
+<!-- port/web2/PLAN.md decisiones 1 y 5; port/HISTORIA.md §Página web (Bestiary); .github/workflows/sitio.yml (/build-wasm/ compartido) -->
 
 El **manual** que estás leyendo también se genera. Las páginas están
 escritas a mano, pero las fichas de cada sysvar, cada operador y cada

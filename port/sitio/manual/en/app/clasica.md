@@ -10,7 +10,7 @@ app's top bar. It runs the same engine, so the simulation is identical. What
 changes is how you use it: a single page with the world, a button bar and a long
 side panel, close to how the original program was.
 
-<!-- PLAN.md decisión 5 (congelada en /classic/, comparte el wasm); web2/src/lib/BarraSuperior.svelte (app.clasica.enlace); port/README.md «Página web» -->
+<!-- PLAN.md decisión 5 (congelada en /classic/, comparte el wasm); web2/src/lib/BarraSuperior.svelte (app.clasica.enlace); port/HISTORIA.md «Página web» -->
 
 Two things to know before opening it:
 

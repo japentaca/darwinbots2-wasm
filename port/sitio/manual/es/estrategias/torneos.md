@@ -10,7 +10,7 @@ simulación libre. Los costos se cobran de verdad, los muertos no dejan comida,
 las mutaciones vienen apagadas y la ronda la gana el que dura. La estrategia de
 torneo es, antes que nada, economía.
 
-<!-- opciones.js ajustesF1 (btnSetF1_Click): F1_COSTOS, F1_OPTS y F1_NOMBRADAS; port/README «Ajustes F1» -->
+<!-- opciones.js ajustesF1 (btnSetF1_Click): F1_COSTOS, F1_OPTS y F1_NOMBRADAS; port/HISTORIA.md «Ajustes F1» -->
 
 ## Otra cancha, otras reglas {#economia}
 

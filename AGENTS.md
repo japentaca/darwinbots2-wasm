@@ -21,12 +21,17 @@ Cloudflare Pages en cada push a `main` (`.github/workflows/sitio.yml`).
 |---|---|---|
 | `Darwinbots2/` y el resto de la raíz heredada (`DBLaunch/`, `Installer/`…) | Fuente VB6 original | **Solo lectura.** `git diff 02b20d7 -- Darwinbots2/` debe salir vacío (lo comprueba CI). |
 | `spec/` | Especificación extraída del fuente; `70-CASOS-DORADOS.md` es la suite de verdad, `PROGRESO.md` el estado | El fuente VB6 manda cuando hay que desambiguar. |
+| `port/README.md`, `port/HISTORIA.md` | Estado, build y bugs corregidos del port; la historia de milestones y etapas | `HISTORIA.md` es registro: no se actualiza. |
 | `port/core/` | Motor C++20 header-only | Ciclo dorado: caso en rojo → transcripción citando el fuente → verde. |
 | `port/wasm/` | API wasm (`dbcore_api.cpp`) | Exports nuevos de solo lectura; `.dbsim` idéntico byte a byte. |
 | `port/web/` | La app clásica | **Congelada**: no se toca. |
 | `port/web2/` | La app nueva (Vite + Svelte 5 + Biome, JS con JSDoc, sin TypeScript); `engine/` sin DOM, `src/` la UI, `test/` con `node:test` | Plan y decisiones en `port/web2/PLAN.md`. |
 | `port/sitio/` | Generador del sitio (`generar.mjs`), manual en `manual/es/` y `manual/en/`, portadas en `publico/` | Plan en `port/web2/PLAN-SITIO.md`. |
 | `port/tools/` | Bestiario, peleas | Cada una con su README. |
+
+Qué documento mirar para cada cosa, y cuáles son vivos y cuáles históricos
+(`spec/historial/`, `port/HISTORIA.md`, `port/web2/historial/`), está en
+[`DOCUMENTACION.md`](DOCUMENTACION.md). Un documento nuevo se agrega ahí.
 
 ## Reglas duras
 
@@ -69,8 +74,9 @@ mismo que el código. En el mismo commit (o en uno inmediatamente después):
 - **READMEs**: `README.md` **y** `README.en.md` (cifras como casos/aserciones
   o bots del Bestiario, funcionalidades, estado), `port/README.md` y el de la
   herramienta que tocaste.
-- **Planes**: `port/web2/PLAN.md`, `PROGRESO.md` o `PLAN-SITIO.md` si el
-  cambio cierra o altera una decisión o etapa.
+- **Planes**: `port/web2/PLAN.md`, `PLAN-SITIO.md` o
+  `PLAN-TORNEO-EN-CURSO.md` si el cambio cierra o altera una decisión o
+  etapa.
 
 Si un cambio no tiene nada que documentar, decilo explícitamente al cerrar
 («sin impacto en el manual»), no lo omitas en silencio. El procedimiento

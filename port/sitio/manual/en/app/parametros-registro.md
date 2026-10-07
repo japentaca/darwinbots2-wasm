@@ -4,7 +4,7 @@ resumen: "The record of the dead, which keeps a record of every bot that dies, a
 etiquetas: [recording, dead, snapshot, charts, parameters]
 estado: revisada
 ---
-<!-- opciones.js «Registro»; core database.hpp (AddRecord, Snapshot, SnapshotFitness), robots.hpp KillRobot (DeadRobotSnp / SnpExcludeVegs); port/README «Registro y análisis (etapa E6)»; web2/src/lib/observar/MenuInstantanea.svelte; i18n/es/observar.json observar.snp.* -->
+<!-- opciones.js «Registro»; core database.hpp (AddRecord, Snapshot, SnapshotFitness), robots.hpp KillRobot (DeadRobotSnp / SnpExcludeVegs); port/HISTORIA.md «Registro y análisis (etapa E6)»; web2/src/lib/observar/MenuInstantanea.svelte; i18n/es/observar.json observar.snp.* -->
 
 This group controls what the simulation records for later analysis. The
 important parameter is the record of the dead: one record for every bot that

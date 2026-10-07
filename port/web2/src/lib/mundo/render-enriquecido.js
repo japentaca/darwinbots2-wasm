@@ -1,5 +1,5 @@
 // @ts-check
-// Vista enriquecida (E6.5 en port/README.md): transcripción de
+// Vista enriquecida (E6.5 en port/HISTORIA.md): transcripción de
 // drawRichBots / drawBotDetail / ingestRichEvents / drawRichOverlays de
 // port/web/index.html. Canales: forma = vegetal (hexágono) / animal (círculo
 // con nariz al rumbo); tono = color de especie; brillo = nrg (log); anillo =

@@ -11,7 +11,7 @@ simulación es idéntica. Lo que cambia es la forma de usarla: una sola página
 con el mundo, una barra de botones y un panel lateral largo, cerca de cómo
 era el programa original.
 
-<!-- PLAN.md decisión 5 (congelada en /classic/, comparte el wasm); web2/src/lib/BarraSuperior.svelte (app.clasica.enlace); port/README.md «Página web» -->
+<!-- PLAN.md decisión 5 (congelada en /classic/, comparte el wasm); web2/src/lib/BarraSuperior.svelte (app.clasica.enlace); port/HISTORIA.md «Página web» -->
 
 Dos cosas a saber antes de abrirla:
 

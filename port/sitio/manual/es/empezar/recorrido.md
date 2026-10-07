@@ -132,7 +132,7 @@ Detalle en [[app/bots]] y [[app/editor]].
 
 ## Competir {#competir}
 <!-- i18n/es/competir.json competir.rapido.*, competir.nuevo.paso1-3, competir.formato.*, competir.jugar.*, competir.salon.ayuda -->
-<!-- web2/src/screens/Competir.svelte; lib/competir/*; i18n/es/competir.json; web2/PLAN.md decisiones 21-23; port/README.md Torneos (E10-E12) -->
+<!-- web2/src/screens/Competir.svelte; lib/competir/*; i18n/es/competir.json; web2/PLAN.md decisiones 21-23; port/HISTORIA.md Torneos (E10-E12) -->
 
 Partidos y torneos entre bots. El **Partido rápido** junta hasta 20 bots y no
 se guarda, salvo que lo conserves con **Guardar como torneo**.
@@ -158,7 +158,7 @@ volver a importarlo. Qué se guarda, dónde, y qué pasa si borrás los datos de
 navegador está en [[app/tus-datos]].
 
 ## La interfaz clásica {#clasica}
-<!-- web2/PLAN.md decisión 5 (monitor RGB, skins, imagen de fondo, .gsave), decisión 17, C22; lib/bots/migracion.svelte.js y lib/competir/migracion.svelte.js (una sola vez, la clásica no se toca); port/README.md Página web, Internet Mode (E7); port/web/index.html -->
+<!-- web2/PLAN.md decisión 5 (monitor RGB, skins, imagen de fondo, .gsave), decisión 17, C22; lib/bots/migracion.svelte.js y lib/competir/migracion.svelte.js (una sola vez, la clásica no se toca); port/HISTORIA.md Página web, Internet Mode (E7); port/web/index.html -->
 
 El enlace **Interfaz clásica** abre la primera versión web del port, en
 `/classic/`. Usa el mismo motor, está en inglés y se parece más al programa

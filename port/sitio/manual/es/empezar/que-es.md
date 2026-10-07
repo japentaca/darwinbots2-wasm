@@ -52,7 +52,7 @@ escribir una línea, sembrando los bots que ya existen. Y si querés aprender, e
 capítulo [[adn/estructura|El lenguaje del ADN]] empieza desde cero.
 
 ## Esta versión {#esta-version}
-<!-- port/README.md (Estado, Página web, Bugs del original corregidos; Bestiary: 684 bots en total); web/bots/bots.json (684 entradas); PLAN-SITIO.md S1; web2/PLAN.md decisión 17; i18n/es/inicio.json inicio.nota -->
+<!-- port/README.md (Estado, Bugs del original corregidos); port/HISTORIA.md (Página web; Bestiary: 684 bots en total); web/bots/bots.json (684 entradas); PLAN-SITIO.md S1; web2/PLAN.md decisión 17; i18n/es/inicio.json inicio.nota -->
 
 DarwinBots nació como un programa para Windows. Esta es su versión **2.48.32**
 portada a **WebAssembly**: el mismo motor de simulación, reescrito para que

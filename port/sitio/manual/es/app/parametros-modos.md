@@ -4,7 +4,7 @@ resumen: "Las reglas de concurso del original: rondas que se reinician, el modo 
 etiquetas: [F1, rondas, concurso, descalificación, torneos, parámetros]
 estado: revisada
 ---
-<!-- opciones.js «Modos de juego (F1 / rondas)»; core gamemodes.hpp (FindSpecies, Countpop), robots.hpp:2105 (Restart), sim.hpp DisqualifyAction; web2/engine/sim.js newRound/checkGameState; 50-MUNDO §5; port/README «Ajustes F1» y «Torneos» -->
+<!-- opciones.js «Modos de juego (F1 / rondas)»; core gamemodes.hpp (FindSpecies, Countpop), robots.hpp:2105 (Restart), sim.hpp DisqualifyAction; web2/engine/sim.js newRound/checkGameState; 50-MUNDO §5; port/HISTORIA.md «Ajustes F1» y «Torneos» -->
 
 Este grupo trae las reglas con las que el DarwinBots original hacía competir
 especies: una simulación que se juega por **rondas**, cada una la gana la última

@@ -45,7 +45,7 @@ UnroundedFP=0
 > access to an array"; marcar "Remove Array Bounds Checks" es lo que lo elimina)
 > `[FUENTE EXTERNA: MS aa716334]`. Coherente con `OptimizationType=2` = "No
 > Optimization". La corrección se propagó a todos los documentos afectados; los
-> `PROMPT-BLOQUE-*.md` anteriores a la corrección se conservan como registro histórico
+> `historial/PROMPT-BLOQUE-*.md` anteriores a la corrección se conservan como registro histórico
 > con la premisa vieja.
 
 Consecuencias reales sobre el binario distribuido (`CompilationType=0` = código nativo,
