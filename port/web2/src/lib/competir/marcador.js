@@ -47,24 +47,33 @@ export function guardarPlegado(plegado, almacen = almacenPorDefecto()) {
 /**
  * ¿Se ve el marcador flotante? No en Competir (el panel de juego ya lo
  * muestra) ni en Observar con el avance automático del torneo encendido
- * (va integrado en el rótulo).
+ * (va integrado en el rótulo). En pantalla angosta con el avance encendido,
+ * en ninguna sección: la franja ya dice qué pelea se juega y «Ver» lleva al
+ * marcador; el flotante tapaba el contenido (TC5).
  * @param {string} hash @param {boolean} hayPartido @param {boolean} [avance]
+ * @param {boolean} [angosta]
  */
-export function flotanteVisible(hash, hayPartido, avance = false) {
+export function flotanteVisible(hash, hayPartido, avance = false, angosta = false) {
   if (!hayPartido) return false;
+  if (angosta && avance) return false;
   const { seccion } = parsearHash(hash);
   if (seccion === 'competir') return false;
   if (seccion === 'observar' && avance) return false;
   return true;
 }
 
+/** Pantalla angosta (teléfono): el corte de la franja del torneo. */
+export const ANGOSTA = '(max-width: 640px)';
+
 /**
  * Estado plegado al entrar en una sección: en Observar arranca plegado (el
- * flotante taparía el mundo y el inspector); en las demás, lo recordado.
- * @param {string} hash @param {boolean} recordado
+ * flotante taparía el mundo y el inspector); en pantalla angosta, en todas
+ * (taparía el contenido, PLAN-TORNEO-EN-CURSO.md TC5); en las demás, lo
+ * recordado.
+ * @param {string} hash @param {boolean} recordado @param {boolean} [angosta]
  */
-export function plegadoInicial(hash, recordado) {
-  return parsearHash(hash).seccion === 'observar' ? true : recordado;
+export function plegadoInicial(hash, recordado, angosta = false) {
+  return angosta || parsearHash(hash).seccion === 'observar' ? true : recordado;
 }
 
 /** Separación del flotante respecto de los bordes y del contenido (px). */

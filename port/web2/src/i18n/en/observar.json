@@ -161,6 +161,8 @@
   "observar.tv.cerrar": "Close",
   "observar.tv.franja.ver": "Watch",
   "observar.tv.franja.ver.ayuda": "Go to Observe to watch the fight. The tournament keeps going on any screen.",
+  "observar.tv.franja.controles": "Controls",
+  "observar.tv.franja.controles.ayuda": "Shows or hides “When the fight ends”, Stop and Abandon the fight (and, in Observe, the break).",
   "observar.tv.franja.cortado": "{torneo}: the tournament in progress was cut off when the page reloaded",
   "observar.tv.franja.reanudar": "Resume",
   "observar.tv.franja.reanudar.ayuda": "Continues the tournament from the next fight. The one cut off by the reload wasn’t recorded.",

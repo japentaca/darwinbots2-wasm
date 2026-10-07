@@ -11,9 +11,13 @@
 // BarraSuperior la carga con import dinámico (como la cola de trabajos).
 // Los avisos de los bloqueos (TC4, AvisoTorneo.svelte) llevan el foco acá
 // (irAFranja) y la franja se ilumina un momento.
+// En pantalla angosta (TC5) la franja es un renglón: los controles se
+// despliegan con «Controles» (irAFranja también los despliega) y, en
+// Observar, suman la cortinilla, porque el rótulo deja el campo libre.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { hashDe } from '../../../router.js';
 import { tr } from '../../competir/torneos.svelte.js';
+import { PAUSA_MAX } from './maquina.js';
 import { franjaTV } from './rotulo.js';
 import {
   AL_TERMINAR,
@@ -26,6 +30,7 @@ import {
   ID_FRANJA,
   pararTv,
   ponerAlTerminar,
+  ponerPausa,
   reanudarTv,
   seguirTv,
   tv,
@@ -69,38 +74,67 @@ function abandonar() {
     {#if f.error}
       <button class="btn" type="button" onclick={detenerTv}>{t('observar.tv.cerrar')}</button>
     {:else}
-      <label class="campo" title={t('observar.tv.alTerminar.ayuda')}
-        ><span class="lbl">{t('observar.tv.alTerminar')}</span>
-        <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
-          {#each AL_TERMINAR as k (k)}
-            <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
-          {/each}
-        </select></label
+      <button
+        class="btn mas"
+        type="button"
+        aria-expanded={tv.controles}
+        aria-controls={`${ID_FRANJA}-controles`}
+        title={t('observar.tv.franja.controles.ayuda')}
+        onclick={() => (tv.controles = !tv.controles)}
       >
-      {#if tv.pararTras}
-        <button class="btn" type="button" title={t('observar.tv.seguir.ayuda')} onclick={seguirTv}>
-          {t('observar.tv.seguir')}
-        </button>
-      {:else}
-        <button
-          class="btn"
-          type="button"
-          title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
-          onclick={pararTv}
+        {t('observar.tv.franja.controles')} {tv.controles ? '▴' : '▾'}
+      </button>
+      <div class="controles" class:abierta={tv.controles} id={`${ID_FRANJA}-controles`}>
+        {#if seccion === 'observar'}
+          <label class="campo solo-angosta" title={t('observar.tv.pausa.ayuda')}
+            >{t('observar.tv.pausa')}
+            <input
+              type="number"
+              min="0"
+              max={PAUSA_MAX}
+              value={tv.e.pausa}
+              onchange={(e) => ponerPausa(e.currentTarget.value)}
+            ></label
+          >
+        {/if}
+        <label class="campo" title={t('observar.tv.alTerminar.ayuda')}
+          ><span class="lbl">{t('observar.tv.alTerminar')}</span>
+          <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
+            {#each AL_TERMINAR as k (k)}
+              <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
+            {/each}
+          </select></label
         >
-          ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
-        </button>
-      {/if}
-      {#if conPelea}
-        <button
-          class="btn"
-          type="button"
-          title={t('observar.tv.abandonar.ayuda')}
-          onclick={abandonar}
-        >
-          {t('observar.tv.abandonar')}
-        </button>
-      {/if}
+        {#if tv.pararTras}
+          <button
+            class="btn"
+            type="button"
+            title={t('observar.tv.seguir.ayuda')}
+            onclick={seguirTv}
+          >
+            {t('observar.tv.seguir')}
+          </button>
+        {:else}
+          <button
+            class="btn"
+            type="button"
+            title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
+            onclick={pararTv}
+          >
+            ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
+          </button>
+        {/if}
+        {#if conPelea}
+          <button
+            class="btn"
+            type="button"
+            title={t('observar.tv.abandonar.ayuda')}
+            onclick={abandonar}
+          >
+            {t('observar.tv.abandonar')}
+          </button>
+        {/if}
+      </div>
     {/if}
   </section>
 {:else if cortado}
@@ -200,6 +234,16 @@ function abandonar() {
   gap: 6px;
   font-size: 12px;
 }
+.campo input {
+  width: 52px;
+  font: inherit;
+  font-size: 12px;
+  background: #151b1a;
+  color: #e6f4f1;
+  border: 1px solid #3a4a47;
+  border-radius: 6px;
+  padding: 2px 4px;
+}
 .campo select {
   font: inherit;
   font-size: 12px;
@@ -210,9 +254,37 @@ function abandonar() {
   border-radius: 6px;
   padding: 2px 4px;
 }
+/* en pantalla ancha, los controles van en el mismo renglón */
+.controles {
+  display: contents;
+}
+.mas,
+.solo-angosta {
+  display: none;
+}
 @media (max-width: 640px) {
   .franja {
     padding: 4px 16px;
+  }
+  .texto {
+    flex-basis: 0;
+  }
+  .mas {
+    display: inline-block;
+  }
+  .controles {
+    display: none;
+  }
+  .controles.abierta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    flex-basis: 100%;
+    padding: 4px 0 2px;
+  }
+  .solo-angosta {
+    display: inline-flex;
   }
   /* sin espacio, el rótulo queda solo para el lector de pantalla */
   .campo .lbl {

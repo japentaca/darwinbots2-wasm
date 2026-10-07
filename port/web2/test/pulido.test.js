@@ -182,6 +182,9 @@ test('marcador: el flotante no se ve en Competir ni con el torneo avanzando en O
   assert.equal(flotanteVisible('#/observar/x', true, true), false);
   assert.equal(flotanteVisible('#/experimentar', true, true), true);
   assert.equal(flotanteVisible('#/competirx', true), true);
+  // en un teléfono, con el avance encendido, en ninguna sección (TC5)
+  assert.equal(flotanteVisible('#/inicio', true, true, true), false);
+  assert.equal(flotanteVisible('#/inicio', true, false, true), true);
   assert.equal(flotanteVisible('#/observar/tv', true), true);
   // con el router: query y codificación
   assert.equal(flotanteVisible('#/competir?x=1', true), false);
@@ -194,6 +197,9 @@ test('marcador: arranca plegado en Observar; en el resto, lo recordado', () => {
   assert.equal(plegadoInicial('#/experimentar', false), false);
   assert.equal(plegadoInicial('#/experimentar', true), true);
   assert.equal(plegadoInicial('', false), false);
+  // en un teléfono, plegado en todas las secciones (TC5)
+  assert.equal(plegadoInicial('#/inicio', false, true), true);
+  assert.equal(plegadoInicial('#/experimentar', false, true), true);
 });
 
 test('marcador: la posición sigue al alto real de la barra y el aviso, y esquiva el panel', () => {

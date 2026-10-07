@@ -210,7 +210,8 @@ While a match is in play, this column shows the score with the round, the cycle,
 the **Bots alive** and the **Rounds won** of each one. **Watch in Observe** takes
 you to watch it, and **Abandon** cuts it without recording it. In the other
 sections, a floating scoreboard shows the same; you can collapse it, or go back
-with **Go to Compete**. With a tournament in progress, **Abandon** asks for
+with **Go to Compete** (on a phone it starts collapsed and, with a tournament
+in progress, gives way to the [[app/observar#franja|strip]]). With a tournament in progress, **Abandon** asks for
 confirmation and also stops the tournament, like **Abandon the fight** in the
 strip.
 

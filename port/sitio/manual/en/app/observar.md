@@ -380,6 +380,7 @@ takes you to the strip. Speed, pause, view, color, zoom, **Find the best** and
 that would replace the simulation (see [[app/competir#en-curso]]).
 
 ### The tournament strip {#franja}
+<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab oculta salvo completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
 
 The tournament goes on even if you go to another section. While it lasts, a
 strip below the top bar shows, on every screen, the tournament, the edition,
@@ -388,6 +389,13 @@ how much of the season is left and what's happening: the break screen,
 fight ends** and the same buttons to stop or abandon the fight. The **Tournament
 controls** buttons on other screens bring you here, and the strip lights up for
 a moment.
+
+On a phone the strip takes a single line: **When the fight ends** and the
+buttons to stop or abandon open with **Controls ▾** (in Observe, together
+with **Break (s)**), and **Tournament controls** opens them by itself. The
+controls aren't drawn over the field, so as not to cover it, except in full
+screen, where the strip isn't shown. The floating scoreboard of the other
+sections doesn't show up either: **Watch** brings you to watch the fight.
 
 If you reload the page with a tournament in progress, the fight that was being
 played is cut off and isn't recorded. The tournament doesn't resume on its own:

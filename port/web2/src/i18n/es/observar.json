@@ -161,6 +161,8 @@
   "observar.tv.cerrar": "Cerrar",
   "observar.tv.franja.ver": "Ver",
   "observar.tv.franja.ver.ayuda": "Ir a Observar a mirar la pelea. El torneo sigue en cualquier pantalla.",
+  "observar.tv.franja.controles": "Controles",
+  "observar.tv.franja.controles.ayuda": "Muestra u oculta «Al terminar la pelea», Parar y Abandonar la pelea (y, en Observar, la cortinilla).",
   "observar.tv.franja.cortado": "{torneo}: el torneo en curso se cortó al recargar la página",
   "observar.tv.franja.reanudar": "Reanudar",
   "observar.tv.franja.reanudar.ayuda": "Sigue el torneo desde la próxima pelea. La que se cortó al recargar no se registró.",

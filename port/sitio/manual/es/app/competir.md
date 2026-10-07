@@ -218,7 +218,9 @@ Mientras hay un partido en juego, esta columna muestra el marcador con la
 ronda, el ciclo, los **Bots vivos** y las **Rondas ganadas** de cada uno.
 **Mirar en Observar** te lleva a mirarlo, y **Abandonar** lo corta sin
 registrarlo. En las otras secciones, un marcador flotante muestra lo mismo;
-podés plegarlo, o volver con **Ir a Competir**. Con un torneo en curso,
+podés plegarlo, o volver con **Ir a Competir** (en un teléfono arranca
+plegado y, con un torneo en curso, deja el lugar a la
+[[app/observar#franja|franja]]). Con un torneo en curso,
 **Abandonar** pide confirmación y además detiene el torneo, como **Abandonar la
 pelea** en la franja.
 

@@ -296,6 +296,38 @@ documentación). Sin push.
   muestran `AvisoTorneo`. Las claves i18n viejas del plan ya no estaban;
   se borró `observar.auto.bloqueado`.
 
+### TC5 · El torneo en curso en un teléfono
+
+Añadida después de TC4, al revisar en DevTools (iPhone 16, 394 px) los
+avisos de los bloqueos: los avisos entraban, pero el torneo en curso le
+quitaba la pantalla al contenido. La franja ocupaba tres renglones
+(128 px) en todas las secciones; en Observar, la cabecera del rótulo
+repetía los controles de la franja y tapaba medio campo (contra «el campo
+de juego queda siempre a la vista»); el marcador flotante (232 px, fijo)
+salía desplegado en Inicio, Experimentar y Bots y en Inicio tapaba el
+aviso.
+
+**Hecho (2026-10-07).** Todo con el corte de la franja, `ANGOSTA` =
+`(max-width: 640px)` (`competir/marcador.js`):
+
+- **Franja** (`FranjaTorneo.svelte`): un renglón con el punto, el texto,
+  «Ver» y **Controles ▾**, que despliega «Al terminar la pelea», Parar y
+  Abandonar (en Observar, también la cortinilla, que solo estaba en el
+  rótulo). El estado es `tv.controles`, y `irAFranja()` lo enciende:
+  «Controles del torneo» de los avisos los despliega. En pantalla ancha,
+  `.controles` es `display: contents` y nada cambia.
+- **Rótulo** (`RotuloTv.svelte`): sin la cabecera (`.cab`) salvo a
+  pantalla completa, donde la franja no se ve. La cortinilla, el campeón y
+  el error del centro siguen.
+- **Marcador flotante**: con el avance encendido no se muestra en ninguna
+  sección (`flotanteVisible(…, angosta)`): la franja dice qué pelea se
+  juega y «Ver» lleva al marcador de la pestaña Torneo. Sin avance, arranca
+  plegado en todas (`plegadoInicial(…, angosta)`).
+- **Fuera de alcance, para otra etapa**: en Bots, la Biblioteca mide
+  567 px en una pantalla de 394 (las acciones de su cabecera quedan
+  afuera) y la ficha de un bot se apila debajo de toda la lista, así que en
+  un teléfono no se ve.
+
 ## Documentación que toca
 
 - Manual, es y en: `app/observar.md` (disposiciones, pestañas, ⛶, F),

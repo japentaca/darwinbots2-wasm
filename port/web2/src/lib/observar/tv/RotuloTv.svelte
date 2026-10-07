@@ -12,6 +12,8 @@
 // miniatura (disposición Datos) no se dibuja nada: lo muestra el panel. Una
 // región viva fija (siempre montada, fuera de la vista) anuncia solo los
 // cambios de fase; la cuenta atrás y el marcador quedan fuera de ella.
+// En pantalla angosta (TC5) la cabecera no se dibuja salvo a pantalla
+// completa: tapaba medio campo y sus controles ya están en la franja.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { tr } from '../../competir/torneos.svelte.js';
 import { PAUSA_MAX } from './maquina.js';
@@ -68,7 +70,7 @@ $effect(() => {
 <div class="oculto" aria-live="polite" aria-atomic="true">{anuncio}</div>
 {#if !mini}
   <section class="tv" aria-label={t('observar.tv.aria')}>
-    <div class="cab">
+    <div class="cab" class:completa>
       <span class="titulo">🏆 {r.cabecera}</span>
       <label class="pausa" title={t('observar.tv.pausa.ayuda')}
         >{t('observar.tv.pausa')}
@@ -338,6 +340,11 @@ $effect(() => {
   display: flex;
   justify-content: flex-end;
   padding: 16px;
+}
+@media (max-width: 640px) {
+  .cab:not(.completa) {
+    display: none;
+  }
 }
 @media (max-width: 700px) {
   .vs {

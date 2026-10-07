@@ -18,6 +18,7 @@ import { num, t } from '../../i18n/index.svelte.js';
 import { hashDe, parsearHash } from '../../router.js';
 import { abandonarPelea, avanceEncendido, hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import {
+  ANGOSTA,
   flotanteVisible,
   guardarPlegado,
   leerPlegado,
@@ -31,6 +32,20 @@ import { abandonar, est, torneos, tr } from './torneos.svelte.js';
 
 /** @type {{ integrado?: boolean, compacto?: boolean }} compacto: ver TablaMarcador */
 let { integrado = false, compacto = false } = $props();
+
+/** Pantalla angosta (teléfono): el flotante arranca plegado en todas las
+ * secciones y, con el avance encendido, no se muestra (TC5). */
+const consulta = typeof matchMedia === 'function' ? matchMedia(ANGOSTA) : null;
+const angosta = () => !!consulta?.matches;
+let angostaViva = $state(angosta());
+$effect(() => {
+  if (!consulta) return;
+  const h = () => {
+    angostaViva = consulta.matches;
+  };
+  consulta.addEventListener('change', h);
+  return () => consulta.removeEventListener('change', h);
+});
 
 let hash = $state(typeof window !== 'undefined' ? window.location.hash : '');
 $effect(() => {
@@ -59,7 +74,9 @@ const vivo = $derived.by(() => {
     colores: new Map(m.fighters.map((/** @type {any} */ e) => [e.name, e.color])),
   };
 });
-const visible = $derived(!integrado && flotanteVisible(hash, !!vivo, avanceEncendido()));
+const visible = $derived(
+  !integrado && flotanteVisible(hash, !!vivo, avanceEncendido(), angostaViva),
+);
 const titulo = $derived(
   vivo?.replay
     ? t('competir.marcador.repitiendo', { no: vivo.replay })
@@ -67,14 +84,19 @@ const titulo = $derived(
 );
 
 let plegado = $state(
-  plegadoInicial(typeof window !== 'undefined' ? window.location.hash : '', leerPlegado()),
+  plegadoInicial(
+    typeof window !== 'undefined' ? window.location.hash : '',
+    leerPlegado(),
+    angosta(),
+  ),
 );
-// Al cambiar de sección: en Observar, plegado; en las demás, lo recordado.
+// Al cambiar de sección: en Observar (o en un teléfono), plegado; en las
+// demás, lo recordado.
 const seccionHash = $derived(parsearHash(hash).seccion);
 $effect(() => {
   seccionHash;
   untrack(() => {
-    plegado = plegadoInicial(hash, leerPlegado());
+    plegado = plegadoInicial(hash, leerPlegado(), angosta());
   });
 });
 

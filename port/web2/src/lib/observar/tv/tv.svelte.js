@@ -57,6 +57,8 @@ class EstadoTv {
   pararTras = $state(false);
   /** id del torneo cortado por una recarga ('' = ninguno): la franja ofrece «Reanudar» */
   reanudable = $state('');
+  /** en pantalla angosta, los controles de la franja desplegados (TC5) */
+  controles = $state(false);
 }
 
 /** @param {any} x @returns {AlTerminar} */
@@ -216,6 +218,7 @@ export const ID_FRANJA = 'franja-torneo';
 export function irAFranja() {
   const el = document.getElementById(ID_FRANJA);
   if (!el) return;
+  tv.controles = true; // en un teléfono están plegados
   el.scrollIntoView({ block: 'nearest' });
   el.focus();
   el.classList.remove('llamada');

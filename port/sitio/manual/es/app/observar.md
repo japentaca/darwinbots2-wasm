@@ -385,6 +385,7 @@ lo mismo con todo lo que reemplazaría la simulación (ver
 [[app/competir#en-curso]]).
 
 ### La franja del torneo {#franja}
+<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab oculta salvo completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
 
 El torneo sigue aunque vayas a otra sección. Mientras dura, debajo de la barra
 superior se ve, en todas las pantallas, una franja con el torneo, la edición,
@@ -393,6 +394,13 @@ el ganador. Tiene **Ver**, que te trae a Observar, **Al terminar la pelea** y
 los mismos botones para parar o abandonar la pelea. Los botones **Controles del
 torneo** de las otras pantallas te traen hasta acá, y la franja se ilumina un
 momento.
+
+En un teléfono la franja ocupa un solo renglón: **Al terminar la pelea** y los
+botones para parar o abandonar se despliegan con **Controles ▾** (en
+Observar, junto con **Cortinilla (s)**), y **Controles del torneo** los
+despliega solo. Sobre el campo no van los controles, para no taparlo, salvo a
+pantalla completa, donde la franja no se ve. Tampoco aparece el marcador
+flotante de las otras secciones: **Ver** te trae a mirar la pelea.
 
 Si recargás la página con un torneo en curso, la pelea que se estaba jugando
 se corta y no se registra. El torneo no sigue solo: la franja ofrece
