@@ -287,9 +287,13 @@ documentación). Sin push.
   razón. El borrador de Experimentar se edita y se guarda igual.
 - **T10.** Sin cambios: no se pide una ronda del torneo en curso, y una
   ronda de otro torneo pedida antes sigue en la cola.
-- **Fuera de alcance.** El diseñador de ojos y la consola del inspector
-  siguen disponibles durante el torneo, como antes de TC4 (T8 no los
-  nombra); se pueden sumar al bloqueo más adelante. Las claves i18n viejas del plan ya no estaban;
+- **Diseñador de ojos y consola** (sumados después de TC4, 2026-10-07; T8
+  no los nombraba). El diseñador solo lee: los campos, «Reiniciar la
+  puntería» y las Facilidades se apagan, y «Releer» y «Escribir en el ADN»
+  siguen. La consola no manda los verbos que cambian la pelea
+  (`MODIFICAN` en `consola.js`: set, energy, cycle, execrob, play, pause)
+  y lo anota en la salida; los de lectura siguen. Las dos pestañas
+  muestran `AvisoTorneo`. Las claves i18n viejas del plan ya no estaban;
   se borró `observar.auto.bloqueado`.
 
 ## Documentación que toca

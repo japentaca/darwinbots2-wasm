@@ -13,12 +13,13 @@ import { onMount, untrack } from 'svelte';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { urlManual } from '../manual.js';
 import { vbACss } from '../mundo/color.js';
+import AvisoTorneo from '../observar/tv/AvisoTorneo.svelte';
 import { hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { ESTADO, FLAG } from '../sim/frame.js';
 import Adn from './Adn.svelte';
 import Consola from './Consola.svelte';
 import ControlJugador from './ControlJugador.svelte';
-import { COMANDOS, HistorialComandos, SalidaConsola, verbo } from './consola.js';
+import { COMANDOS, HistorialComandos, MODIFICAN, SalidaConsola, verbo } from './consola.js';
 import DisenadorOjos from './DisenadorOjos.svelte';
 import {
   cabeceraAdn,
@@ -337,6 +338,11 @@ function comando(linea) {
     return;
   }
   if (!vivo) return;
+  // con un torneo en curso la consola solo lee (TC4: T8)
+  if (hayTorneoEnCurso() && MODIFICAN.has(v)) {
+    anotar(t('inspector.consola.soloLectura', { verbo: v }));
+    return;
+  }
   sesion.c.consoleCmd(bot, l);
   if (v === 'showdna') anotar(t('inspector.consola.adnEnPestana'));
   sesion.c.genes(bot);
@@ -542,9 +548,11 @@ const estados = $derived.by(() => {
     {:else if pestana === 'adn'}
       <Adn texto={adn} {vivo} onReleer={pedirAdn} />
     {:else if pestana === 'consola'}
+      <AvisoTorneo clave="inspector.consola.avisoTorneo" />
       <Consola texto={textoConsola} {vivo} {historial} onComando={comando} />
     {:else}
       <!-- el Player Bot no se ofrece con un torneo en curso (TC4: T8) -->
+      <AvisoTorneo clave="inspector.ojos.avisoTorneo" />
       {#if !hayTorneoEnCurso()}
         <ControlJugador {sesion} {vivo} />
       {/if}

@@ -179,6 +179,10 @@ What you type in the console (`set`, `energy`) changes this bot's memory and
 isn't kept in the run: if you repeat the run, it isn't repeated.
 :::
 
+With a tournament in progress the console is read-only: `set`, `energy`,
+`cycle`, `execrob`, `play` and `pause` aren't sent, because they would change
+the fight (see [[app/competir#en-curso]]). The other commands work as usual.
+
 ## Control {#control}
 <!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip y los juegos de teclas de la app lo tenían al revés (corregido el 2026-10-04). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
 <!-- lib/inspector/ControlJugador.svelte, jugador.svelte.js, veterano.js PRESETS_PB; DisenadorOjos.svelte, ACCESIBILIDAD (cost:54, opt:13), SETAIM; i18n inspector.pb.*, inspector.ojos.*, inspector.noReproducible -->
@@ -186,7 +190,7 @@ isn't kept in the run: if you repeat the run, it isn't repeated.
 The last tab has two tools for stepping in: the Player Bot and the eye designer.
 Neither can be used during an F1 match, and what they do to the bot's memory
 isn't kept in the run. With a tournament in progress, the Player Bot doesn't
-even show up (see [[app/competir#en-curso]]).
+even show up and the eye designer only reads (see [[app/competir#en-curso]]).
 
 ### Player Bot {#player-bot}
 
@@ -233,6 +237,8 @@ It shows the **Direction** and **Width** of the nine eyes ([[.eye1dir]] …
 bot's memory instantly, and the fan above shows the effect. It's for trying out
 a vision setup by eye before writing it into the DNA. **Reread** reads the bot's
 values again. What directions and widths mean is in [[simulacion/vision]].
+With a tournament in progress the fields, **Reset aim** and **Ease of access** are
+off: you can read the eyes and use **Write to DNA**, but not change them.
 
 When you like it, **Write to DNA** builds a gene that sets those eyes at birth,
 to add at the end of the DNA. It starts like this (with your values) and goes on

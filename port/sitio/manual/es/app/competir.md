@@ -239,7 +239,7 @@ al terminar. Mientras corre, la temporada queda bloqueada.
 plano.
 
 ### Con un torneo en curso {#en-curso}
-<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector; i18n competir.enCurso.*, observar.tv.enCurso.* -->
+<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector (consola.js MODIFICAN), DisenadorOjos; i18n competir.enCurso.*, observar.tv.enCurso.* -->
 
 Mientras un torneo se juega, la simulación de la app es la de su pelea y el
 torneo abierto es ese. Por eso, hasta que lo detengas (desde la franja o con
@@ -258,6 +258,9 @@ torneo abierto es ese. Por eso, hasta que lo detengas (desde la franja o con
   simulación**, **Aplicar a la actual**) queda apagado, con el aviso «Hay un
   torneo en curso: detenelo para usar la simulación» y **Controles del
   torneo**. En [[app/bots]] pasa lo mismo con **Sembrar en la corrida actual**.
+- **En el [[app/inspector]]** no aparece el Player Bot, el diseñador de ojos
+  solo lee los ojos y arma el gen, y la consola no manda los comandos que
+  cambian la pelea (`set`, `energy`, `cycle`, `execrob`, `play` y `pause`).
 - **[[app/bots]] y [[app/analizar]] siguen libres.** **Inscribir en torneo**
   no ofrece el torneo en curso, e inscribe en los otros sin abrirlos.
 

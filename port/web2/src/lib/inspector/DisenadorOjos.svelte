@@ -7,12 +7,15 @@
 // en el ADN» da el gen que fija esos ojos al nacer (copiar, descargar o, si
 // el bot es propio, abrir su ADN en el editor). «Facilidades»: costos en 0 y
 // browniano apagado (cambios en caliente registrados en la corrida) y
-// reiniciar la puntería (memoria del bot, no reproducible).
+// reiniciar la puntería (memoria del bot, no reproducible). Con un torneo en
+// curso solo se leen los ojos y se arma el gen: escribir los ojos y las
+// facilidades cambiarían la pelea (PLAN-TORNEO-EN-CURSO.md, T8).
 import { onMount } from 'svelte';
 import { crearBots } from '../../../engine/bots.js';
 import { t } from '../../i18n/index.svelte.js';
 import { hashDe } from '../../router.js';
 import { descargar } from '../observar/descargas.js';
+import { hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { almacen } from '../sim/almacen.svelte.js';
 import Abanico from './Abanico.svelte';
 import {
@@ -58,7 +61,8 @@ let clavePropio = $state('');
 let esperando = 0;
 
 const f1 = $derived(!!sesion.stats.f1);
-const puede = $derived(vivo && !f1);
+const torneo = $derived(hayTorneoEnCurso());
+const puede = $derived(vivo && !f1 && !torneo);
 const texto = $derived(textoAdnOjos(dir, ancho));
 
 function releer() {
@@ -135,7 +139,7 @@ async function abrirEditor() {
 
 /** @param {keyof typeof ACCESIBILIDAD} cual */
 async function facilidad(cual) {
-  if (f1) return;
+  if (f1 || torneo) return;
   try {
     await aplicarCambioVivo(corrida, ACCESIBILIDAD[cual]);
     nota = { clave: `inspector.ojos.hecho.${cual}` };
@@ -159,7 +163,8 @@ function reiniciarPunteria() {
     </button>
   </div>
   <p class="ayuda">{t('inspector.ojos.ayuda')}</p>
-  {#if f1}
+  <!-- con torneo en curso ya lo explica AvisoTorneo, arriba (Inspector) -->
+  {#if f1 && !torneo}
     <p class="aviso">{t('inspector.ojos.f1')}</p>
   {/if}
 
@@ -247,7 +252,7 @@ function reiniciarPunteria() {
       <button
         class="btn chico"
         type="button"
-        disabled={f1 || !sesion.hayMundo}
+        disabled={f1 || torneo || !sesion.hayMundo}
         title={t('inspector.ojos.sinCostos.ayuda')}
         onclick={() => facilidad('sinCostos')}
       >
@@ -265,7 +270,7 @@ function reiniciarPunteria() {
       <button
         class="btn chico"
         type="button"
-        disabled={f1 || !sesion.hayMundo}
+        disabled={f1 || torneo || !sesion.hayMundo}
         title={t('inspector.ojos.sinBrowniano.ayuda')}
         onclick={() => facilidad('sinBrowniano')}
       >

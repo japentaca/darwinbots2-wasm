@@ -229,7 +229,7 @@ runs, the season is locked. **Cancel the round** stops it. The quick match doesn
 play background rounds.
 
 ### With a tournament in progress {#en-curso}
-<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector; i18n competir.enCurso.*, observar.tv.enCurso.* -->
+<!-- PLAN-TORNEO-EN-CURSO.md TC4 (T8, T10); tv.svelte.js hayTorneoEnCurso, torneoEnCurso; torneos.svelte.js enCursoBloquea, abrir, inscribirSinAbrir; Competir.svelte congelado; Inicio, Experimentar, DialogoLote, Inspector (consola.js MODIFICAN), DisenadorOjos; i18n competir.enCurso.*, observar.tv.enCurso.* -->
 
 While a tournament plays, the app's simulation is its fight and the open
 tournament is that one. So, until you stop it (from the strip or with
@@ -249,6 +249,10 @@ tournament is that one. So, until you stop it (from the strip or with
   simulation**, **Apply to current**) is off, with the notice “A
   tournament is in progress: stop it to use the simulation” and **Tournament
   controls**. In [[app/bots]] the same goes for **Seed into the current run**.
+- **In the [[app/inspector]]** the Player Bot doesn't show up, the eye
+  designer only reads the eyes and builds the gene, and the console doesn't
+  send the commands that change the fight (`set`, `energy`, `cycle`,
+  `execrob`, `play` and `pause`).
 - **[[app/bots]] and [[app/analizar]] stay free.** **Enter in a tournament**
   doesn't offer the tournament in progress, and enters the bot in the others
   without opening them.

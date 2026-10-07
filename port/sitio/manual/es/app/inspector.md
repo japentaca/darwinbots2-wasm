@@ -179,6 +179,10 @@ Lo que escribís desde la consola (`set`, `energy`) cambia la memoria de este bo
 y no queda en la corrida: si la repetís, no se repite.
 :::
 
+Con un torneo en curso, la consola solo lee: `set`, `energy`, `cycle`,
+`execrob`, `play` y `pause` no se mandan, porque cambiarían la pelea (ver
+[[app/competir#en-curso]]). Los demás comandos funcionan igual.
+
 ## Control {#control}
 <!-- revisor: probar-adn con 0 .setaim: 20 .sx store sube al bot (y 1107 → 1000), .up lo lleva a la derecha (x 1496 → 1602): .sx es la izquierda del bot, como sysvars/sx.md; el tooltip y los juegos de teclas de la app lo tenían al revés (corregido el 2026-10-04). veterano.js lineasAdnOjos (Cond / *.robage 0 = / Start / pares dir-width con ' / Stop); jugador.svelte.js CLAVE_LS (teclas en localStorage) -->
 <!-- lib/inspector/ControlJugador.svelte, jugador.svelte.js, veterano.js PRESETS_PB; DisenadorOjos.svelte, ACCESIBILIDAD (cost:54, opt:13), SETAIM; i18n inspector.pb.*, inspector.ojos.*, inspector.noReproducible -->
@@ -186,7 +190,8 @@ y no queda en la corrida: si la repetís, no se repite.
 La última pestaña tiene dos herramientas para intervenir: el Player Bot y el
 diseñador de ojos. Ninguna se puede usar durante un partido F1, y lo que hacen
 sobre la memoria del bot no queda en la corrida. Con un torneo en curso, el
-Player Bot ni siquiera aparece (ver [[app/competir#en-curso]]).
+Player Bot ni siquiera aparece y el diseñador de ojos solo lee (ver
+[[app/competir#en-curso]]).
 
 ### Player Bot {#player-bot}
 
@@ -234,7 +239,9 @@ Muestra la **Dirección** y el **Ancho** de los nueve ojos ([[.eye1dir]] …
 memoria del bot al instante, y el abanico de arriba muestra el efecto. Sirve
 para probar a ojo una configuración de visión antes de escribirla en el ADN.
 **Releer** vuelve a leer los valores del bot. Qué significan direcciones y
-anchos está en [[simulacion/vision]].
+anchos está en [[simulacion/vision]]. Con un torneo en curso los campos,
+**Reiniciar la puntería** y las **Facilidades** quedan apagados: se pueden leer los ojos y
+usar **Escribir en el ADN**, pero no cambiarlos.
 
 Cuando te guste, **Escribir en el ADN** arma un gen que fija esos ojos al nacer,
 para agregar al final del ADN. Empieza así (con tus valores) y sigue igual,

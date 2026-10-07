@@ -19,6 +19,13 @@ export const COMANDOS = Object.freeze({
   debug: 'debug',
 });
 
+/** Comandos que cambian la simulación (memoria, energía, ciclos, marcha):
+ * con un torneo en curso la consola no los manda (PLAN-TORNEO-EN-CURSO.md,
+ * T8). Los demás solo leen. */
+export const MODIFICAN = Object.freeze(
+  new Set(['set', 'energy', 'cycle', 'execrob', 'play', 'pause']),
+);
+
 /** Tope de caracteres de la salida (el de la consola original: 2500). */
 export const TOPE_SALIDA = 2500;
 

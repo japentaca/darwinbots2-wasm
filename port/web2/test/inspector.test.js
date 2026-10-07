@@ -4,7 +4,13 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { H, HEADER, REG } from '../engine/protocolo.js';
 import { claseDe, resaltarAdn, tokensLinea } from '../src/lib/inspector/adn.js';
-import { HistorialComandos, SalidaConsola, verbo } from '../src/lib/inspector/consola.js';
+import {
+  COMANDOS,
+  HistorialComandos,
+  MODIFICAN,
+  SalidaConsola,
+  verbo,
+} from '../src/lib/inspector/consola.js';
 import {
   arcoOjo,
   cabeceraAdn,
@@ -414,6 +420,13 @@ test('consola: salida con tope, historial y verbo', () => {
 
   assert.equal(verbo('  Help me'), 'help');
   assert.equal(verbo(''), '');
+});
+
+test('consola: con torneo en curso solo pasan los comandos que leen (T8)', () => {
+  for (const v of MODIFICAN) assert.ok(v in COMANDOS, v);
+  assert.deepEqual([...MODIFICAN].sort(), ['cycle', 'energy', 'execrob', 'pause', 'play', 'set']);
+  for (const v of ['printeye', 'printtouch', 'printtaste', 'printmem', '?', 'showdna', 'debug'])
+    assert.equal(MODIFICAN.has(v), false, v);
 });
 
 test('hayQueCambiarBot: otro slot, o el mismo slot después de una muerte', () => {
