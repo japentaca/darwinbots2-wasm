@@ -184,7 +184,7 @@ export function paso(e, ev) {
         {
           fase: 'buscando',
           fallos,
-          aviso: { clave: 'no-arranco', params: { n: e.pelea, detalle: ev.detalle ?? '' } },
+          aviso: { clave: 'no-arranco', params: { detalle: ev.detalle ?? '' } },
         },
         'siguiente',
       );

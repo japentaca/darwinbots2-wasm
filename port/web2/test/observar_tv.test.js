@@ -394,7 +394,7 @@ test('TV: todos los errores (del motor y propios) y las fases tienen texto en es
       ganador: 'A',
       campeon: { name: 'A', how: 'cup' },
       error: { clave: 'tv-excepcion', params: { detalle: 'x' } },
-      aviso: { clave: 'no-arranco', params: { n: 2, detalle: 'x' } },
+      aviso: { clave: 'no-arranco', params: { detalle: 'x' } },
     };
     for (const fase of /** @type {const} */ ([
       'edicion',

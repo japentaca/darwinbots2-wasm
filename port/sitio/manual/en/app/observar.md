@@ -342,7 +342,8 @@ A tournament's fights are played in Observe: you start them with **▶ Play** in
 whom. During the fight the score is shown. When it ends, a short pause shows
 the winner, and when the season closes, the champion.
 
-Above the field are the tournament, the edition and the controls:
+The tournament controls are on the [[app/observar#franja|strip]] above and, in full
+screen (where the strip isn't shown), over the field, at the top:
 
 - **Break (s)**: the seconds of pause between fights (from 0 to 60).
 - **When the fight ends**: what the tournament does when each fight ends. With
@@ -359,8 +360,9 @@ Above the field are the tournament, the edition and the controls:
   confirm, and the tournament stops advancing.
 
 While the tournament lasts, the **Tournament** tab of the side panel shows the
-tournament and how much of the season is left, the fight with its score (or,
-between fights, the next one, the champion or the error that stopped it), the
+tournament and how much of the season is left, the fight with its score, the cycle and, if
+the tournament has a cycle cap, a thin bar showing how far into the round it is
+(or, between fights, the next one, the champion or the error that stopped it), the
 season standings and the latest results, and links to the tournament in
 Compete. With **▤ Data**, the standings are the full ones from Compete, and
 below them is the structure of the format (the matchdays, the cup bracket, the
@@ -381,7 +383,7 @@ takes you to the strip. Speed, pause, view, color, zoom, **Find the best** and
 that would replace the simulation (see [[app/competir#en-curso]]).
 
 ### The tournament strip {#franja}
-<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab oculta salvo completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
+<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab solo a pantalla completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
 
 The tournament goes on even if you go to another section. While it lasts, a
 strip below the top bar shows, on every screen, the tournament, the edition,
@@ -394,8 +396,8 @@ a moment.
 On a phone the strip takes a single line: **When the fight ends** and the
 buttons to stop or abandon open with **Controls ▾** (in Observe, together
 with **Break (s)**), and **Tournament controls** opens them by itself. The
-controls aren't drawn over the field, so as not to cover it, except in full
-screen, where the strip isn't shown. The floating scoreboard of the other
+controls are drawn over the field only in full screen, where the strip isn't
+shown; otherwise they would be repeated and cover the field. The floating scoreboard of the other
 sections doesn't show up either: **Watch** brings you to watch the fight.
 
 If you reload the page with a tournament in progress, the fight that was being

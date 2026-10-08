@@ -207,7 +207,7 @@ editions** do the same as **New season**: a fixed list carries over whole and
 the modes with a draw take entrants from the pool. To watch it like on TV, Observe
 has [[app/observar#pantalla|full screen]].
 
-While a match is in play, this column shows the score with the round, the cycle,
+While a match is in play, this column shows the score with the round, the cycle (with a thin bar if the format has a cycle cap),
 the **Bots alive** and the **Rounds won** of each one. **Watch in Observe** takes
 you to watch it, and **Abandon** cuts it without recording it. In the other
 sections, a floating scoreboard shows the same; you can collapse it, or go back

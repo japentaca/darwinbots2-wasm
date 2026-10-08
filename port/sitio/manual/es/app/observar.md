@@ -347,7 +347,8 @@ Las peleas de un torneo se juegan en Observar: se empiezan con **▶ Jugar** en
 pelea contra quién. Durante la pelea se ve el marcador. Al terminar, un
 respiro muestra al ganador, y al cerrar la temporada, al campeón.
 
-Arriba del campo están el torneo, la edición y los controles:
+Los controles del torneo están en la [[app/observar#franja|franja]] de arriba y, a
+pantalla completa (donde la franja no se ve), sobre el campo, arriba:
 
 - **Cortinilla (s)**: los segundos de pausa entre peleas (de 0 a 60).
 - **Al terminar la pelea**: qué hace el torneo cuando termina cada pelea.
@@ -364,8 +365,9 @@ Arriba del campo están el torneo, la edición y los controles:
   confirmar, y el torneo deja de avanzar.
 
 Mientras dura el torneo, la pestaña **Torneo** del panel lateral muestra el
-torneo y cuánto falta de la temporada, la pelea con su marcador (o, entre
-peleas, la próxima, el campeón o el error que lo paró), la tabla de la
+torneo y cuánto falta de la temporada, la pelea con su marcador, el ciclo y, si
+el torneo tiene tope de ciclos, una barra fina que muestra cuánto va de la ronda
+(o, entre peleas, la próxima, el campeón o el error que lo paró), la tabla de la
 temporada y los últimos resultados, y lleva al torneo en Competir. Con
 **▤ Datos**, la tabla es la completa de Competir y debajo está la estructura
 del formato (las jornadas, el cuadro de la copa, las rondas del suizo…), de
@@ -386,7 +388,7 @@ lo mismo con todo lo que reemplazaría la simulación (ver
 [[app/competir#en-curso]]).
 
 ### La franja del torneo {#franja}
-<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab oculta salvo completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
+<!-- TC5 (teléfono, ≤ 640 px): FranjaTorneo.svelte .mas/.controles, tv.controles (irAFranja los despliega); RotuloTv .cab solo a pantalla completa; competir/marcador.js ANGOSTA, plegadoInicial, flotanteVisible -->
 
 El torneo sigue aunque vayas a otra sección. Mientras dura, debajo de la barra
 superior se ve, en todas las pantallas, una franja con el torneo, la edición,
@@ -399,8 +401,8 @@ momento.
 En un teléfono la franja ocupa un solo renglón: **Al terminar la pelea** y los
 botones para parar o abandonar se despliegan con **Controles ▾** (en
 Observar, junto con **Cortinilla (s)**), y **Controles del torneo** los
-despliega solo. Sobre el campo no van los controles, para no taparlo, salvo a
-pantalla completa, donde la franja no se ve. Tampoco aparece el marcador
+despliega solo. Sobre el campo los controles van solo a pantalla completa,
+donde la franja no se ve; si no, se repetirían y taparían el campo. Tampoco aparece el marcador
 flotante de las otras secciones: **Ver** te trae a mirar la pelea.
 
 Si recargás la página con un torneo en curso, la pelea que se estaba jugando

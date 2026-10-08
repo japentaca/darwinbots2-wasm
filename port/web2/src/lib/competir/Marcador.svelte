@@ -30,8 +30,8 @@ import TablaMarcador from './TablaMarcador.svelte';
 import { nombreTorneo, textoRotulo } from './textos.js';
 import { abandonar, est, torneos, tr } from './torneos.svelte.js';
 
-/** @type {{ integrado?: boolean, compacto?: boolean }} compacto: ver TablaMarcador */
-let { integrado = false, compacto = false } = $props();
+/** @type {{ integrado?: boolean }} */
+let { integrado = false } = $props();
 
 /** Pantalla angosta (teléfono): el flotante arranca plegado en todas las
  * secciones y, con el avance encendido, no se muestra (TC5). */
@@ -71,6 +71,7 @@ const vivo = $derived.by(() => {
     replay: m.replay ? m.replay.no : 0,
     rounds: S?.fmt.rounds ?? 5,
     wins: S?.fmt.wins ?? 0,
+    cap: S?.fmt.cap ?? 0,
     colores: new Map(m.fighters.map((/** @type {any} */ e) => [e.name, e.color])),
   };
 });
@@ -175,7 +176,7 @@ function cortar() {
         colores={vivo.colores}
         rounds={vivo.rounds}
         wins={vivo.wins}
-        {compacto}
+        cap={vivo.cap}
       />
     </div>
   {/if}
@@ -225,6 +226,7 @@ function cortar() {
           colores={vivo.colores}
           rounds={vivo.rounds}
           wins={vivo.wins}
+          cap={vivo.cap}
         />
       {:else}
         <div class="sub">

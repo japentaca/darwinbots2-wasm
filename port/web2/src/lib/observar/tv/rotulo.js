@@ -74,7 +74,6 @@ export function rotuloTV(e, ctx, tr, ahora, idioma = 'es') {
     error: '',
     aviso: e.aviso
       ? tr.t('observar.tv.noArranco', {
-          n: tr.num(Number(e.aviso.params.n) || 0),
           detalle: String(e.aviso.params.detalle ?? ''),
         })
       : '',
@@ -89,17 +88,17 @@ export function rotuloTV(e, ctx, tr, ahora, idioma = 'es') {
       r.etiqueta = '';
       break;
     case 'cortinilla':
-      r.linea = tr.t('observar.tv.proxima', { n: tr.num(e.pelea), s });
+      r.linea = tr.t('observar.tv.proxima', { s });
       break;
     case 'lanzando':
-      r.linea = tr.t('observar.tv.preparando', { n: tr.num(e.pelea) });
+      r.linea = tr.t('observar.tv.preparando');
       break;
     case 'partido':
-      r.linea = tr.t('observar.tv.enVivo', { n: tr.num(e.pelea) });
+      r.linea = tr.t('observar.tv.enVivo');
       r.vivo = true;
       break;
     case 'resultado':
-      r.linea = tr.t('observar.tv.jugada', { n: tr.num(e.pelea) });
+      r.linea = tr.t('observar.tv.jugada');
       r.ganador = e.ganador
         ? tr.t('observar.tv.gana', { nombre: e.ganador })
         : tr.t('observar.tv.nula');
@@ -141,18 +140,17 @@ export function rotuloTV(e, ctx, tr, ahora, idioma = 'es') {
  * @param {import('./maquina.js').EstadoTV} e @param {Tr} tr @returns {string}
  */
 export function anuncioTV(e, tr) {
-  const n = tr.num(e.pelea);
   const vs = (e.fx?.fighters ?? []).map((f) => f.name).join(` ${tr.t('observar.tv.contra')} `);
   switch (e.fase) {
     case 'cortinilla': {
       const etq = e.fx ? textoRotulo(e.fx.label, tr) : '';
-      const base = tr.t('observar.tv.anuncio.proxima', { n, vs });
+      const base = tr.t('observar.tv.anuncio.proxima', { vs });
       return etq ? `${base} · ${etq}` : base;
     }
     case 'partido':
-      return tr.t('observar.tv.anuncio.enVivo', { n, vs });
+      return tr.t('observar.tv.anuncio.enVivo', { vs });
     case 'resultado':
-      return `${tr.t('observar.tv.jugada', { n })}: ${
+      return `${tr.t('observar.tv.jugada')}: ${
         e.ganador ? tr.t('observar.tv.gana', { nombre: e.ganador }) : tr.t('observar.tv.nula')
       }`;
     case 'campeon':

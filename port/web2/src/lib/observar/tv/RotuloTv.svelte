@@ -12,8 +12,8 @@
 // miniatura (disposición Datos) no se dibuja nada: lo muestra el panel. Una
 // región viva fija (siempre montada, fuera de la vista) anuncia solo los
 // cambios de fase; la cuenta atrás y el marcador quedan fuera de ella.
-// En pantalla angosta (TC5) la cabecera no se dibuja salvo a pantalla
-// completa: tapaba medio campo y sus controles ya están en la franja.
+// La cabecera solo se dibuja a pantalla completa (la franja de arriba no se
+// ve ahí); fuera de ella tapaba el campo y sus controles ya están en la franja.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { tr } from '../../competir/torneos.svelte.js';
 import { PAUSA_MAX } from './maquina.js';
@@ -70,57 +70,57 @@ $effect(() => {
 <div class="oculto" aria-live="polite" aria-atomic="true">{anuncio}</div>
 {#if !mini}
   <section class="tv" aria-label={t('observar.tv.aria')}>
-    <div class="cab" class:completa>
-      <span class="titulo">🏆 {r.cabecera}</span>
-      <label class="pausa" title={t('observar.tv.pausa.ayuda')}
-        >{t('observar.tv.pausa')}
-        <input
-          type="number"
-          min="0"
-          max={PAUSA_MAX}
-          value={tv.e.pausa}
-          onchange={(e) => ponerPausa(e.currentTarget.value)}
-        ></label
-      >
-      <label class="pausa" title={t('observar.tv.alTerminar.ayuda')}
-        >{t('observar.tv.alTerminar')}
-        <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
-          {#each AL_TERMINAR as k (k)}
-            <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
-          {/each}
-        </select></label
-      >
-      {#if tv.pararTras}
-        <span class="parara">{t('observar.tv.parara')}</span>
-        <button
-          class="salir"
-          type="button"
-          title={t('observar.tv.seguir.ayuda')}
-          onclick={seguirTv}
+    {#if completa}
+      <div class="cab">
+        <span class="titulo">🏆 {r.cabecera}</span>
+        <label class="pausa" title={t('observar.tv.pausa.ayuda')}
+          >{t('observar.tv.pausa')}
+          <input
+            type="number"
+            min="0"
+            max={PAUSA_MAX}
+            value={tv.e.pausa}
+            onchange={(e) => ponerPausa(e.currentTarget.value)}
+          ></label
         >
-          {t('observar.tv.seguir')}
-        </button>
-      {:else}
-        <button
-          class="salir"
-          type="button"
-          title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
-          onclick={pararTv}
+        <label class="pausa" title={t('observar.tv.alTerminar.ayuda')}
+          >{t('observar.tv.alTerminar')}
+          <select value={tv.alTerminar} onchange={(e) => ponerAlTerminar(e.currentTarget.value)}>
+            {#each AL_TERMINAR as k (k)}
+              <option value={k}>{t(`observar.tv.alTerminar.${k}`)}</option>
+            {/each}
+          </select></label
         >
-          ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
-        </button>
-      {/if}
-      {#if conPelea}
-        <button
-          class="salir"
-          type="button"
-          title={t('observar.tv.abandonar.ayuda')}
-          onclick={abandonar}
-        >
-          {t('observar.tv.abandonar')}
-        </button>
-      {/if}
-      {#if completa}
+        {#if tv.pararTras}
+          <span class="parara">{t('observar.tv.parara')}</span>
+          <button
+            class="salir"
+            type="button"
+            title={t('observar.tv.seguir.ayuda')}
+            onclick={seguirTv}
+          >
+            {t('observar.tv.seguir')}
+          </button>
+        {:else}
+          <button
+            class="salir"
+            type="button"
+            title={t(conPelea ? 'observar.tv.pararTras.ayuda' : 'observar.tv.parar.ayuda')}
+            onclick={pararTv}
+          >
+            ⏹ {t(conPelea ? 'observar.tv.pararTras' : 'observar.tv.parar')}
+          </button>
+        {/if}
+        {#if conPelea}
+          <button
+            class="salir"
+            type="button"
+            title={t('observar.tv.abandonar.ayuda')}
+            onclick={abandonar}
+          >
+            {t('observar.tv.abandonar')}
+          </button>
+        {/if}
         <button
           class="salir"
           type="button"
@@ -129,8 +129,8 @@ $effect(() => {
         >
           {t('observar.pantalla.salir')}
         </button>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     {#if centro}
       <div class="centro">
@@ -337,14 +337,10 @@ $effect(() => {
   color: #f2c14e;
 }
 .tercio {
+  margin-top: auto;
   display: flex;
   justify-content: flex-end;
   padding: 16px;
-}
-@media (max-width: 640px) {
-  .cab:not(.completa) {
-    display: none;
-  }
 }
 @media (max-width: 700px) {
   .vs {

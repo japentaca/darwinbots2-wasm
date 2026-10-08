@@ -216,7 +216,7 @@ mirarlo como en la tele, Observar tiene
 [[app/observar#pantalla|pantalla completa]].
 
 Mientras hay un partido en juego, esta columna muestra el marcador con la
-ronda, el ciclo, los **Bots vivos** y las **Rondas ganadas** de cada uno.
+ronda, el ciclo (con una barra fina si el formato tiene tope de ciclos), los **Bots vivos** y las **Rondas ganadas** de cada uno.
 **Mirar en Observar** te lleva a mirarlo, y **Abandonar** lo corta sin
 registrarlo. En las otras secciones, un marcador flotante muestra lo mismo;
 podés plegarlo, o volver con **Ir a Competir** (en un teléfono arranca

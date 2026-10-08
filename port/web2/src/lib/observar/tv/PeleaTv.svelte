@@ -2,11 +2,11 @@
 // @ts-check
 // La pelea en curso del avance automático: la fase, el ganador y el
 // marcador; quién pelea solo hasta que llega el marcador, que ya trae los
-// nombres. Con panel lateral va en su pestaña «Torneo» (PanelTorneo), sin
-// el ciclo (ya está en «En vivo»). Sin panel (disposición Campo; `completa`,
-// desde RotuloTv.svelte) es una tarjeta oscura abajo a la derecha del
-// campo, con el ciclo, que se pliega a un chip (botón o tecla M; se
-// recuerda en este navegador) para ver la pelea sin nada encima.
+// nombres. Con panel lateral va en su pestaña «Torneo» (PanelTorneo). Sin
+// panel (disposición Campo; `completa`, desde RotuloTv.svelte) es una
+// tarjeta oscura abajo a la derecha del campo, que se pliega a un chip
+// (botón o tecla M; se recuerda en este navegador) para ver la pelea sin
+// nada encima. En las dos, el ciclo y, con tope de ciclos, su barra.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import Marcador from '../../competir/Marcador.svelte';
 import TablaMarcador from '../../competir/TablaMarcador.svelte';
@@ -21,6 +21,11 @@ const r = $derived(rotuloTV(tv.e, contextoTv(), tr, tv.ahora, idioma()));
 const pelea = $derived(r.fase === 'lanzando' || r.fase === 'partido' || r.fase === 'resultado');
 const hayTabla = $derived(r.fase === 'resultado' ? !!tv.final : !!est.marcador?.f1);
 const plegada = $derived(completa && tv.oculta);
+// En el panel, el encabezado ya dice quién está en la colina y en qué pelea
+// va: la etiqueta «defiende la corona · pelea N» repetiría lo mismo.
+const repiteEncabezado = $derived(
+  !completa && tv.e.fx?.label?.clave === 'koth' && !!tv.e.fx.label.params?.champ,
+);
 
 // M pliega y despliega (no mientras se escribe, p. ej. en la cortinilla)
 $effect(() => {
@@ -87,7 +92,7 @@ $effect(() => {
         {/each}
       </div>
     {/if}
-    {#if r.etiqueta}
+    {#if r.etiqueta && !repiteEncabezado}
       <div class="etiqueta" class:grande={r.grande}>{r.etiqueta}</div>
     {/if}
     {#if r.ganador}
@@ -108,12 +113,11 @@ $effect(() => {
             colores={tv.final.colores}
             rounds={tv.final.rounds}
             wins={tv.final.wins}
-            compacto={!completa}
           />
         </div>
       {/if}
     {:else}
-      <div class="tabla"><Marcador integrado compacto={!completa} /></div>
+      <div class="tabla"><Marcador integrado /></div>
     {/if}
   </section>
 {/if}

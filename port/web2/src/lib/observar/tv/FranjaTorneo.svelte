@@ -12,8 +12,9 @@
 // Los avisos de los bloqueos (TC4, AvisoTorneo.svelte) llevan el foco acá
 // (irAFranja) y la franja se ilumina un momento.
 // En pantalla angosta (TC5) la franja es un renglón: los controles se
-// despliegan con «Controles» (irAFranja también los despliega) y, en
-// Observar, suman la cortinilla, porque el rótulo deja el campo libre.
+// despliegan con «Controles» (irAFranja también los despliega). En Observar
+// suman la cortinilla: el rótulo sobre el campo solo se dibuja a pantalla
+// completa, donde la franja no se ve.
 import { idioma, t } from '../../../i18n/index.svelte.js';
 import { hashDe } from '../../../router.js';
 import { tr } from '../../competir/torneos.svelte.js';
@@ -86,7 +87,7 @@ function abandonar() {
       </button>
       <div class="controles" class:abierta={tv.controles} id={`${ID_FRANJA}-controles`}>
         {#if seccion === 'observar'}
-          <label class="campo solo-angosta" title={t('observar.tv.pausa.ayuda')}
+          <label class="campo" title={t('observar.tv.pausa.ayuda')}
             >{t('observar.tv.pausa')}
             <input
               type="number"
@@ -258,8 +259,7 @@ function abandonar() {
 .controles {
   display: contents;
 }
-.mas,
-.solo-angosta {
+.mas {
   display: none;
 }
 @media (max-width: 640px) {
@@ -282,9 +282,6 @@ function abandonar() {
     gap: 8px;
     flex-basis: 100%;
     padding: 4px 0 2px;
-  }
-  .solo-angosta {
-    display: inline-flex;
   }
   /* sin espacio, el rótulo queda solo para el lector de pantalla */
   .campo .lbl {
