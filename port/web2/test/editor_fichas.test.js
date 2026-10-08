@@ -277,3 +277,45 @@ test('historial con fichas: un estado por acción; dos deshacer vuelven al origi
   assert.equal(h.deshacer(), t0, 'dos deshacer vuelven al texto original');
   assert.equal(h.rehacer(), t1);
 });
+
+test('integración de Fichas (E3.4): reemplazar, insertar, mover, borrar y dos deshacer', () => {
+  // Lo mismo que hace Editor.svelte: cada acción da el texto nuevo y el
+  // historial se anota después del cambio.
+  const h = crearHistorial();
+  let texto = 'cond .up 1\nstart 2 .aim stop\nend';
+  h.anotar(texto);
+  /** @param {{texto: string}} r */
+  const aplicar = (r) => {
+    texto = r.texto;
+    h.anotar(texto);
+  };
+  /** @param {number} linea @param {string} w */
+  const ficha = (linea, w) => {
+    const f = modeloFichas(texto)[linea].fichas.find((x) => x.w === w);
+    assert.ok(f, `la línea ${linea} tiene la ficha ${w}`);
+    return f;
+  };
+
+  // 1. el 1 de la línea cond pasa a 2
+  aplicar(reemplazarFicha(texto, ficha(0, '1'), '2'));
+  assert.equal(texto, 'cond .up 2\nstart 2 .aim stop\nend');
+
+  // 2. se inserta add antes de stop
+  aplicar(insertarEn(texto, texto.indexOf('stop'), 'add'));
+  assert.equal(texto, 'cond .up 2\nstart 2 .aim add stop\nend');
+
+  // 3. el 2 de start se mueve a antes de stop
+  aplicar(moverFicha(texto, ficha(1, '2'), texto.indexOf('stop')));
+  assert.equal(texto, 'cond .up 2\nstart .aim add 2 stop\nend');
+
+  // 4. se borra .aim
+  aplicar(borrarFicha(texto, ficha(1, '.aim')));
+  assert.equal(texto, 'cond .up 2\nstart add 2 stop\nend');
+
+  // dos deshacer vuelven al texto antes del movimiento; un rehacer lo repone
+  texto = /** @type {string} */ (h.deshacer());
+  texto = /** @type {string} */ (h.deshacer());
+  assert.equal(texto, 'cond .up 2\nstart 2 .aim add stop\nend');
+  texto = /** @type {string} */ (h.rehacer());
+  assert.equal(texto, 'cond .up 2\nstart .aim add 2 stop\nend');
+});

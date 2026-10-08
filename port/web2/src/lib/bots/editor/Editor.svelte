@@ -29,6 +29,7 @@
 import { onDestroy, untrack } from 'svelte';
 import { hashAdn } from '../../../../engine/adn.js';
 import { crearBots, diffVersiones, ErrorBots } from '../../../../engine/bots.js';
+import { insertarEn, moverFicha } from '../../../../engine/fichas.js';
 import {
   apagarGen,
   aplicarAccion,
@@ -53,16 +54,21 @@ import { hashDe } from '../../../router.js';
 import { CLAVE_PILA_PENDIENTE, valoresDePendiente } from '../../inspector/adn.js';
 import { almacen } from '../../sim/almacen.svelte.js';
 import AreaAdn from './AreaAdn.svelte';
+import { crearArrastre } from './arrastre.js';
 import { aLf, borradores } from './borrador.js';
 import DiffGenes from './DiffGenes.svelte';
 import { adnForo, bestiario, genesJson, perfiles } from './datos.js';
 import { ejemplos } from './ejemplos.js';
+import Fichas from './Fichas.svelte';
+import { crearHistorial } from './historial.js';
 import { aplicarArreglo, describirLint, palabrasMarcadas } from './lint.js';
 import { crearLinter } from './linter.js';
+import Paleta from './Paleta.svelte';
 import PanelGenes from './PanelGenes.svelte';
 import PanelPila from './PanelPila.svelte';
 import PanelProbar from './PanelProbar.svelte';
 import PanelVersiones from './PanelVersiones.svelte';
+import { defsDe } from './resaltado.js';
 import VistaGenes from './VistaGenes.svelte';
 import { SYSVARS } from './vocabulario.js';
 
@@ -93,7 +99,7 @@ let estable = $state('');
 let origenes = $state([]);
 let cargando = $state(true);
 let errorCarga = $state('');
-let modo = $state(/** @type {'texto' | 'genes'} */ ('texto'));
+let modo = $state(/** @type {'texto' | 'genes' | 'fichas'} */ ('texto'));
 let lab = $state(false);
 /** @type {import('./lint.js').HallazgoLint[]} */
 let hallazgos = $state([]);
@@ -142,6 +148,19 @@ let alineado = '';
 /** Palabras de un gen → su origen (genes insertados, apagados, de otras versiones). */
 const memoria = new Map();
 const linter = crearLinter();
+// Modo Fichas (PLAN-EDITOR E3.4). El historial es propio de Fichas (E3.2): se
+// vacía al entrar y al salir del modo, y al cambiar de bot. `posicionActiva` es
+// el último hueco tocado (o el cursor que dejó la última acción): ahí cae lo
+// que pone la paleta. Un arrastre compartido por Fichas y Paleta (E3.3).
+const historial = crearHistorial();
+/** @type {number} */
+let posicionActiva = $state(-1);
+/** @type {number | null} */
+let huecoMarcado = $state(null);
+const arrastre = crearArrastre({
+  alSoltar: (dato, hueco) => soltarArrastre(dato, hueco),
+  alMarcar: (hueco) => (huecoMarcado = hueco),
+});
 /** Contador de cargas: una carga vieja (cambio rápido de bot) se descarta. */
 let nCarga = 0;
 /** Bot (clave) del texto en pantalla: el del borrador. */
@@ -244,6 +263,10 @@ async function cargar() {
         borradorRecuperado = true;
       } else borradorAjeno = b;
     } else if (b) borradores.borrar(bot.clave);
+    // un bot nuevo empieza con su historial de Fichas vacío (E3.4)
+    historial.limpiar();
+    historial.anotar(texto);
+    posicionActiva = -1;
     adoptarPendiente(texto);
     if (origenes.some((o) => o && 'archivo' in o)) cargarLab();
   } catch (e) {
@@ -416,9 +439,11 @@ const sysvarsPila = $derived(
 );
 /** El gen del visor: el del cursor (modo texto) o el desplegado (modo genes). */
 const genCursor = $derived(modo === 'texto' ? genDeLinea(lineaCursor) : genAbierto);
+/** Hay traza si se muestra la pila (visor, o las tarjetas de Fichas). */
+const verPasos = $derived(pila || modo === 'fichas');
 /** Pasos con su palabra; vacíos si la traza no es la del texto actual. */
 const alineados = $derived(
-  pila && traza && traza.texto === estable
+  verPasos && traza && traza.texto === estable
     ? alinearPila(tokensPila, parsearTraza(traza.tsv).pasos)
     : [],
 );
@@ -439,11 +464,13 @@ const estadoPila = $derived(
 );
 
 // Pedido de traza: con el visor encendido, al quedar quieto el ADN o cambiar un
-// valor de ejemplo. Solo la respuesta al último pedido cuenta (linter.js).
+// valor de ejemplo. Solo la respuesta al último pedido cuenta (linter.js). El
+// modo Fichas también la pide: sus tarjetas muestran la pila al pasar por una
+// ficha (E3.4), aunque el visor de pila esté apagado.
 $effect(() => {
   const x = estable;
   const vals = valoresEjemplo;
-  if (!pila || lab || cargando || errorCarga) return;
+  if (!verPasos || lab || cargando || errorCarga) return;
   linter.trazar(x, memoriaDe(vals, direccionDe), SEMILLA_PILA).then(
     (tsv) => {
       if (tsv !== null) traza = { texto: x, tsv };
@@ -470,6 +497,73 @@ function aplicarTexto(nuevo, og) {
   }
   if (modo === 'texto' && area) area.reemplazar(nuevo);
   else texto = nuevo;
+  // en Fichas, cada cambio (también un restaurar o un borrador) es un paso del
+  // deshacer del modo; anotar el texto que ya está vigente no hace nada
+  if (modo === 'fichas') historial.anotar(texto);
+}
+
+/**
+ * Cambia de modo. Entrar a Fichas arranca su historial desde el texto que hay;
+ * salir (o pasar de Fichas a otro modo) lo vacía (E3.4).
+ * @param {'texto' | 'genes' | 'fichas'} m
+ */
+function cambiarModo(m) {
+  if (m === modo) return;
+  historial.limpiar();
+  if (m === 'fichas') historial.anotar(texto);
+  if (m !== 'fichas') posicionActiva = -1;
+  modo = m;
+}
+
+/** Una acción de Fichas: el texto nuevo y el cursor que deja (E3.4). @param {string} nuevo @param {number} cursor */
+function emitirFichas(nuevo, cursor) {
+  if (lectura) return;
+  aplicarTexto(nuevo);
+  posicionActiva = cursor;
+}
+
+function deshacerFichas() {
+  if (lectura) return;
+  const previo = historial.deshacer();
+  if (previo !== null) aplicarTexto(previo);
+}
+
+function rehacerFichas() {
+  if (lectura) return;
+  const siguiente = historial.rehacer();
+  if (siguiente !== null) aplicarTexto(siguiente);
+}
+
+/**
+ * Lo que suelta el arrastre compartido (E3.3): una ficha se mueve a ese hueco, y
+ * una palabra de la paleta se inserta ahí. Soltar fuera de todo hueco no hace nada.
+ * @param {any} dato @param {number | null} hueco
+ */
+function soltarArrastre(dato, hueco) {
+  if (lectura || hueco === null || modo !== 'fichas') return;
+  if (dato?.tipo === 'ficha') {
+    const r = moverFicha(texto, dato.ficha, hueco);
+    emitirFichas(r.texto, r.cursor);
+  } else if (dato?.tipo === 'palabra') {
+    const r = insertarEn(texto, Math.min(hueco, texto.length), dato.palabra);
+    emitirFichas(r.texto, r.cursor);
+  }
+}
+
+/**
+ * Dónde cae lo que pone la paleta: en el último hueco tocado (o donde dejó el
+ * cursor la última acción); si no hay ninguno, al final del texto. (El «gen del
+ * cursor» del plan no existe en Fichas: no hay cursor de línea.)
+ */
+function posicionDeInsercion() {
+  return posicionActiva >= 0 ? Math.min(posicionActiva, texto.length) : texto.length;
+}
+
+/** @param {string} palabra */
+function insertarPaleta(palabra) {
+  if (lectura) return;
+  const r = insertarEn(texto, posicionDeInsercion(), palabra);
+  emitirFichas(r.texto, r.cursor);
 }
 
 /** @param {number} n */
@@ -508,7 +602,7 @@ function arreglar(a) {
 /** @param {number} linea */
 function irA(linea) {
   if (linea <= 0) return;
-  modo = 'texto';
+  cambiarModo('texto');
   queueMicrotask(() => area?.irALinea(linea));
 }
 
@@ -672,11 +766,19 @@ function textoAvisoLab(a) {
     <div class="barra">
       <fieldset class="seg">
         <legend class="oculto">{t('editor.modo')}</legend>
-        <button type="button" class:on={modo === 'texto'} onclick={() => (modo = 'texto')}>
+        <button type="button" class:on={modo === 'texto'} onclick={() => cambiarModo('texto')}>
           {t('editor.modoTexto')}
         </button>
-        <button type="button" class:on={modo === 'genes'} onclick={() => (modo = 'genes')}>
+        <button type="button" class:on={modo === 'genes'} onclick={() => cambiarModo('genes')}>
           {t('editor.modoGenes')}
+        </button>
+        <button
+          type="button"
+          class:on={modo === 'fichas'}
+          aria-pressed={modo === 'fichas'}
+          onclick={() => cambiarModo('fichas')}
+        >
+          {t('editor.modoFichas')}
         </button>
       </fieldset>
       {#if ultima}
@@ -822,6 +924,22 @@ function textoAvisoLab(a) {
         etiqueta={t('editor.texto.etiquetaDe', { nombre: bot.nombre })}
         oncursor={(linea) => (lineaCursor = linea)}
       />
+    {:else if modo === 'fichas'}
+      <Fichas
+        {texto}
+        soloLectura={lectura}
+        {marcadas}
+        {lineasMarcadas}
+        pasos={alineados}
+        {origenes}
+        {nombreDe}
+        {arrastre}
+        marcado={huecoMarcado}
+        onaplicar={emitirFichas}
+        onhueco={(pos) => (posicionActiva = pos)}
+        ondeshacer={deshacerFichas}
+        onrehacer={rehacerFichas}
+      />
     {:else}
       <VistaGenes
         {texto}
@@ -895,26 +1013,35 @@ function textoAvisoLab(a) {
         <p class="help">{t('editor.lab.cargando')}</p>
       {/if}
     {:else}
-      {#if pila && !cargando && !errorCarga}
-        <PanelPila
-          pasos={pasosGen}
-          gen={genCursor}
-          {nombreGen}
-          valores={valoresEjemplo}
-          sysvars={sysvarsPila}
-          estado={estadoPila}
-          modo="editor"
-          onvalor={cambiarValor}
+      {#if modo === 'fichas'}
+        <Paleta
+          defs={[...defsDe(texto)]}
+          oninsertar={insertarPaleta}
+          {arrastre}
+          soloLectura={lectura}
         />
-      {/if}
-      {#if !cargando && !errorCarga}
-        <PanelProbar
-          clave={bot.clave}
-          nombre={bot.nombre}
-          vegetal={!!bot.vegetal}
-          {texto}
-          {versiones}
-        />
+      {:else}
+        {#if pila && !cargando && !errorCarga}
+          <PanelPila
+            pasos={pasosGen}
+            gen={genCursor}
+            {nombreGen}
+            valores={valoresEjemplo}
+            sysvars={sysvarsPila}
+            estado={estadoPila}
+            modo="editor"
+            onvalor={cambiarValor}
+          />
+        {/if}
+        {#if !cargando && !errorCarga}
+          <PanelProbar
+            clave={bot.clave}
+            nombre={bot.nombre}
+            vegetal={!!bot.vegetal}
+            {texto}
+            {versiones}
+          />
+        {/if}
       {/if}
       {#if esPropio}
         <PanelVersiones
