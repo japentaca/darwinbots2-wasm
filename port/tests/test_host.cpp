@@ -605,3 +605,201 @@ TEST_CASE("db_sim_add_species - tasas de mutacion por defecto, como OptionsForm"
   CHECK(S(h).rob[1].Mutables.mutarray[db::mut::P2UP] == 5000);
   db_sim_destroy(h);
 }
+
+// ---------------------------------------------------------------------------
+// PLAN-EDITOR.md E1.2 — db_dna_trace: traza de un ciclo de ExecuteDNA sobre un
+// bot descartable, en TSV (una linea por token; el formato esta en
+// web2/PLAN-EDITOR.md «Formato de traza»). Capa host: no hay equivalente en
+// VB6; el gancho del core se prueba en test_trace.cpp.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// ADN de V-01, el mismo de test_trace.cpp (13 tokens).
+const char* kAdnTraza = "cond *50 1 > start 7 100 store else 9 200 store stop";
+
+// Llama al export y libera el buffer: el texto TSV (vacio = sin traza).
+std::string Traza(const char* text, const int* mem = nullptr, int memLen = 0,
+                  int seed = 1234) {
+  char* p = db_dna_trace(text, mem, memLen, seed);
+  REQUIRE(p != nullptr);
+  std::string s = p;
+  db_free(p);
+  return s;
+}
+
+std::vector<std::string> Lineas(const std::string& tsv) {
+  std::vector<std::string> out;
+  std::size_t a = 0;
+  while (a < tsv.size()) {
+    const std::size_t nl = tsv.find('\n', a);
+    out.push_back(tsv.substr(a, nl - a));
+    a = nl + 1;
+  }
+  return out;
+}
+
+// Las 12 columnas de una linea (TAB); las vacias (ints sin nada) se conservan.
+std::vector<std::string> Columnas(const std::string& linea) {
+  std::vector<std::string> out;
+  std::size_t a = 0;
+  for (;;) {
+    const std::size_t t = linea.find('\t', a);
+    out.push_back(linea.substr(a, t == std::string::npos ? t : t - a));
+    if (t == std::string::npos) break;
+    a = t + 1;
+  }
+  return out;
+}
+
+bool Termina(const std::string& s, const std::string& fin) {
+  return s.size() >= fin.size() &&
+         s.compare(s.size() - fin.size(), fin.size(), fin) == 0;
+}
+
+}  // namespace
+
+TEST_CASE("db_dna_trace - traza del ADN de V-01 con mem[50]=5") {
+  std::vector<int> mem(1001, 0);
+  mem[50] = 5;
+  const std::string tsv = Traza(kAdnTraza, mem.data(), 1001);
+  const std::vector<std::string> l = Lineas(tsv);
+  // Misma cuenta que E1.1: un paso por token, sin el fantasma ni el `end`.
+  REQUIRE(l.size() == 13);
+  CHECK(tsv.back() == '\n');
+  for (const std::string& ln : l) CHECK(Columnas(ln).size() == 12);
+
+  // cond: idx 1, flujo siempre ejecutado, flujo COND (1), gen 1, pilas vacias.
+  const auto c0 = Columnas(l[0]);
+  CHECK(c0[0] == "1");
+  CHECK(c0[1] == std::to_string(static_cast<int>(db::tok::FLOW)));
+  CHECK(c0[3] == "1");
+  CHECK(c0[4] == "1");
+  CHECK(c0[5] == "1");
+  CHECK(c0[6] == "0");
+  CHECK(c0[7] == "");
+  CHECK(c0[8] == "0");
+  CHECK(c0[9] == "");
+  CHECK(c0[10] == "0");
+  CHECK(c0[11] == "0");
+  // *50 apila 5; 1 queda encima (de abajo hacia arriba).
+  const auto c1 = Columnas(l[1]);
+  CHECK(c1[0] == "2");
+  CHECK(c1[1] == std::to_string(static_cast<int>(db::tok::DEREF)));
+  CHECK(c1[2] == "50");
+  CHECK(c1[6] == "1");
+  CHECK(c1[7] == "5");
+  const auto c2 = Columnas(l[2]);
+  CHECK(c2[1] == std::to_string(static_cast<int>(db::tok::NUMBER)));
+  CHECK(c2[6] == "2");
+  CHECK(c2[7] == "5,1");
+  // > consume los dos enteros y deja un booleano verdadero (-1).
+  const auto c3 = Columnas(l[3]);
+  CHECK(c3[6] == "0");
+  CHECK(c3[7] == "");
+  CHECK(c3[8] == "1");
+  CHECK(c3[9] == "-1");
+  // start: cuerpo (BODY = 2), gen 1.
+  const auto c4 = Columnas(l[4]);
+  CHECK(c4[3] == "1");
+  CHECK(c4[4] == "2");
+  CHECK(c4[5] == "1");
+  // El store escribe 7 en 100 y la linea termina en "\t100\t7".
+  CHECK(Columnas(l[7])[1] == std::to_string(static_cast<int>(db::tok::STORE)));
+  CHECK(Columnas(l[7])[3] == "1");
+  CHECK(Termina(l[7], "\t100\t7"));
+  // La rama else (9 200 store) no corre y no deja rastro de escritura.
+  for (int k = 9; k <= 11; ++k) {
+    const auto c = Columnas(l[static_cast<std::size_t>(k)]);
+    CHECK(c[3] == "0");
+    CHECK(c[10] == "0");
+    CHECK(c[11] == "0");
+  }
+  CHECK(Termina(l[11], "\t0\t0"));
+}
+
+TEST_CASE("db_dna_trace - sin memoria es todo cero, y la rama else corre") {
+  const std::vector<std::string> l = Lineas(Traza(kAdnTraza));
+  REQUIRE(l.size() == 13);
+  // *50 vale 0: el comparador deja un booleano falso y start deja el flujo en
+  // CLEAR (0); el cuerpo no corre.
+  CHECK(Columnas(l[3])[9] == "0");
+  CHECK(Columnas(l[4])[4] == "0");
+  CHECK(Columnas(l[7])[3] == "0");
+  CHECK(Columnas(l[7])[10] == "0");
+  // else (ELSEBODY = 3) y su store: escribe 9 en 200.
+  CHECK(Columnas(l[8])[4] == "3");
+  CHECK(Termina(l[11], "\t200\t9"));
+}
+
+TEST_CASE("db_dna_trace - la pila de enteros se recorta a 8 entradas") {
+  const std::vector<std::string> l =
+      Lineas(Traza("cond start 1 2 3 4 5 6 7 8 9 10 11 12 stop"));
+  REQUIRE(l.size() == 15);
+  const auto last = Columnas(l.back());
+  CHECK(last[6] == "12");
+  CHECK(last[7] == "5,6,7,8,9,10,11,12");
+}
+
+TEST_CASE("db_dna_trace - memoria: indice 0 ignorado, largo corto, acotada") {
+  SUBCASE("memLen corta: lo que sobra de 1001 queda en cero") {
+    std::vector<int> mem(1001, 0);
+    mem[50] = 5;
+    mem[60] = 9;
+    const std::vector<std::string> l =
+        Lineas(Traza("cond start *50 *60 stop", mem.data(), 51));
+    REQUIRE(l.size() == 5);
+    CHECK(Columnas(l[3])[7] == "5,0");  // mem[60] no se copio
+  }
+  SUBCASE("mem[0] se ignora y los valores se acotan a Integer") {
+    std::vector<int> mem(1001, 0);
+    mem[0] = 77;
+    mem[10] = 100000;
+    mem[11] = -100000;
+    const std::vector<std::string> l =
+        Lineas(Traza("cond start *10 *11 stop", mem.data(), 1001));
+    REQUIRE(l.size() == 5);
+    CHECK(Columnas(l[3])[7] == "32767,-32768");
+  }
+  SUBCASE("sin memoria quedan las sysvars que publica el cargador") {
+    // RobScriptLoad: mem(336) = DnaLen, mem(339) = CountGenes.
+    const std::vector<std::string> l =
+        Lineas(Traza("cond start *.genes stop"));
+    REQUIRE(l.size() == 4);
+    CHECK(Columnas(l[2])[7] == "1");
+    // Con memoria, lo que pasa el llamador es lo que el gen lee: la pagina
+    // muestra los mismos numeros que usa la traza.
+    std::vector<int> mem(1001, 0);
+    const std::vector<std::string> m =
+        Lineas(Traza("cond start *.genes stop", mem.data(), 1001));
+    CHECK(Columnas(m[2])[7] == "0");
+  }
+}
+
+TEST_CASE("db_dna_trace - ADN rechazado, texto nulo y semilla") {
+  SUBCASE("def malformado: el cargador rechaza el archivo") {
+    CHECK(Traza("def x").empty());
+    CHECK(Traza("cond start 1 stop\ndef x").empty());
+    CHECK(Traza("def y 40000").empty());  // literal fuera de Integer (error 6)
+  }
+  SUBCASE("texto nulo o vacio no da traza ni rompe") {
+    char* p = db_dna_trace(nullptr, nullptr, 0, 1234);
+    REQUIRE(p != nullptr);
+    CHECK(std::string(p).empty());
+    db_free(p);
+    CHECK(Traza("").empty());
+  }
+  SUBCASE("rnd es determinista por semilla y no toca ninguna sim") {
+    void* h = db_sim_create();
+    db_sim_start(h, 1234);
+    const auto estado = db_sim_rng_state(h);
+    const std::string a = Traza("cond start 628 rnd 100 store stop", nullptr, 0, 1234);
+    const std::string b = Traza("cond start 628 rnd 100 store stop", nullptr, 0, 1234);
+    const std::string c = Traza("cond start 628 rnd 100 store stop", nullptr, 0, 4321);
+    CHECK_FALSE(a.empty());
+    CHECK(a == b);
+    CHECK(a != c);
+    CHECK(db_sim_rng_state(h) == estado);
+    db_sim_destroy(h);
+  }
+}

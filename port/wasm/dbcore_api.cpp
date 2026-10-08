@@ -3642,10 +3642,95 @@ std::string Lint(const std::string& text) {
 
 }  // namespace lint_detail
 
+// ---- Traza de un ciclo de ADN para el editor (PLAN-EDITOR.md E1) -----------
+// Decisión de capa host, fuera de la fidelidad: no existe en el original. Corre
+// ExecuteDNA UNA vez sobre un bot descartable (sin Sim: ni RNG ni estado del
+// usuario) con el gancho de traza del core encendido, y serializa lo que el
+// motor anotó. La página no evalúa nada: presenta lo que vuelca el core.
+namespace trace_detail {
+
+// Hasta 8 valores separados por coma, de abajo hacia arriba; vacío si n = 0.
+template <typename T>
+void AppendList(std::string& out, const std::array<T, 8>& v, int n) {
+  const int k = n < 8 ? n : 8;
+  for (int j = 0; j < k; ++j) {
+    if (j) out += ',';
+    out += std::to_string(static_cast<long long>(v[static_cast<std::size_t>(j)]));
+  }
+}
+
+// Una línea por paso, columnas separadas por TAB (formato de traza del plan):
+//   idx tipo valor ejec flujo gen nInts ints nBools bools dir val
+// Cada línea termina en '\n'.
+std::string Tsv(const db::TraceSink& sink) {
+  std::string out;
+  for (const db::TraceStep& s : sink.steps) {
+    out += std::to_string(static_cast<long long>(s.idx)) + '\t';
+    out += std::to_string(static_cast<int>(s.tipo)) + '\t';
+    out += std::to_string(static_cast<long long>(s.value)) + '\t';
+    out += s.ejec ? "1\t" : "0\t";
+    out += std::to_string(static_cast<int>(s.flow)) + '\t';
+    out += std::to_string(static_cast<long long>(s.gen)) + '\t';
+    out += std::to_string(s.nInts) + '\t';
+    AppendList(out, s.ints, s.nInts);
+    out += '\t' + std::to_string(s.nBools) + '\t';
+    AppendList(out, s.bools, s.nBools);
+    out += '\t' + std::to_string(static_cast<long long>(s.storeAddr));
+    out += '\t' + std::to_string(static_cast<long long>(s.storeVal));
+    out += '\n';
+  }
+  return out;
+}
+
+std::string Trace(const std::string& text, const int* mem, int memLen, int seed) {
+  try {
+    // Mismo arranque de RNG que db_sim_start: Randomize UserSeedNumber / 100.
+    db::VbRng rng;
+    rng.randomize(static_cast<double>(seed) / 100.0);
+    db::VmContext vm;
+    vm.rndy = &rng;
+    vm.gaTrack = true;  // como el bot observado: puebla ga() sin efecto en mem
+    auto bot = std::make_unique<db::Bot>();
+    if (!db::RobScriptLoadText(text, *bot, db::DefaultSysvarTable())) return "";
+    // La memoria de ejemplo pisa lo que publicó el cargador (.dnalen, .genes):
+    // lo que el llamador pasa es exactamente lo que el gen lee. Sin memoria
+    // (nullptr) queda el bot recién cargado: todo cero salvo esos dos.
+    if (mem) {
+      const int n = memLen < 1001 ? memLen : 1001;
+      for (int a = 1; a < n; ++a) {  // el índice 0 se ignora
+        const int v = mem[a];
+        bot->mem[static_cast<std::size_t>(a)] = static_cast<db::vb_integer>(
+            v < -32768 ? -32768 : (v > 32767 ? 32767 : v));  // acotado a Integer
+      }
+    }
+    db::TraceSink sink;
+    vm.trace = &sink;
+    db::ExecuteDNA(vm, *bot);
+    return Tsv(sink);
+  } catch (const db::loader_detail::VbError&) {
+    return "";
+  }
+}
+
+}  // namespace trace_detail
+
 extern "C" {
 
 DB_EXPORT char* db_dna_lint(const char* text) {
   const std::string s = lint_detail::Lint(text ? text : "");
+  char* p = static_cast<char*>(std::malloc(s.size() + 1));
+  if (p) std::memcpy(p, s.c_str(), s.size() + 1);
+  return p;
+}
+
+// PLAN-EDITOR.md E1 — traza un ciclo de ExecuteDNA sobre un bot descartable
+// (sin sim: ni RNG ni estado del usuario). mem: 1001 enteros (índice =
+// dirección 1..1000; el 0 se ignora) o nullptr = todo cero. Devuelve el TSV del
+// formato de traza (malloc; liberar con db_free) o "" si el cargador rechaza el
+// ADN. Solo lee: no toca ninguna sim.
+DB_EXPORT char* db_dna_trace(const char* text, const int* mem, int memLen,
+                             int seed) {
+  const std::string s = trace_detail::Trace(text ? text : "", mem, memLen, seed);
   char* p = static_cast<char*>(std::malloc(s.size() + 1));
   if (p) std::memcpy(p, s.c_str(), s.size() + 1);
   return p;
