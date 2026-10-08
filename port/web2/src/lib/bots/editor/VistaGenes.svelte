@@ -17,7 +17,7 @@ import { t } from '../../../i18n/index.svelte.js';
  *   origenes: import('../../../../engine/lab.js').OrigenGen[],
  *   nombreDe: (archivo: string) => string, avisos: Map<number, number>,
  *   soloLectura?: boolean, onapagar: (n: number) => void, onencender: (k: number) => void,
- *   abiertos?: Set<string>}}
+ *   abiertos?: Set<string>, onabrir?: (n: number) => void}}
  */
 let {
   texto,
@@ -29,6 +29,7 @@ let {
   onapagar,
   onencender,
   abiertos = $bindable(new Set()),
+  onabrir,
 } = $props();
 
 const lineas = $derived(texto.split('\n'));
@@ -61,11 +62,18 @@ function etiquetaPlegar(b, k) {
   });
 }
 
-/** @param {string} k */
-function alternar(k) {
+/**
+ * @param {string} k
+ * @param {import('../../../../engine/lab.js').Bloque} b
+ */
+function alternar(k, b) {
   const s = new Set(abiertos);
   if (s.has(k)) s.delete(k);
-  else s.add(k);
+  else {
+    s.add(k);
+    // PLAN-EDITOR E1.5: al desplegar un gen, el visor de pila lo sigue
+    if (b.tipo === 'gen') onabrir?.(b.n);
+  }
   abiertos = s;
 }
 
@@ -115,7 +123,7 @@ const resumen = (p) => {
         class="plegar"
         aria-expanded={abiertos.has(claves[i])}
         aria-label={etiquetaPlegar(b, claves[i])}
-        onclick={() => alternar(claves[i])}
+        onclick={() => alternar(claves[i], b)}
       >
         {abiertos.has(claves[i]) ? '▾' : '▸'}
       </button>

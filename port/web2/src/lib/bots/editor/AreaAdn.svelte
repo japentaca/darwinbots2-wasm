@@ -22,11 +22,13 @@ import { urlManual, vocabularioManual } from '../../manual.js';
 import { completar, esExacta, palabraEnCurso, sugerencias } from './autocompletar.js';
 import { entradaDe, offsetVisual, palabraBajo } from './hover.js';
 import { crearResaltador } from './resaltado.js';
+import TarjetaManual from './TarjetaManual.svelte';
 import { reemplazarTexto } from './textarea.js';
 
 /**
  * @type {{valor: string, soloLectura?: boolean, marcadas?: Set<string>,
- *   lineasMarcadas?: Set<number>, etiqueta?: string}}
+ *   lineasMarcadas?: Set<number>, etiqueta?: string,
+ *   oncursor?: (linea: number) => void}}
  */
 let {
   valor = $bindable(''),
@@ -34,7 +36,19 @@ let {
   marcadas = new Set(),
   lineasMarcadas = new Set(),
   etiqueta = '',
+  oncursor,
 } = $props();
+
+// PLAN-EDITOR E1.5: avisa la línea (base 1) donde está el cursor, solo cuando
+// cambia respecto de la última avisada (el visor de pila la sigue).
+let ultimaLinea = 0;
+function avisarCursor() {
+  if (!ta || !oncursor) return;
+  const linea = ta.value.slice(0, ta.selectionStart).split('\n').length;
+  if (linea === ultimaLinea) return;
+  ultimaLinea = linea;
+  oncursor(linea);
+}
 
 /** @type {HTMLTextAreaElement | undefined} */
 let ta = $state();
@@ -115,6 +129,11 @@ const PAD = { x: 10, y: 8 };
 let tip = $state(null);
 /** @type {HTMLDivElement | undefined} */
 let tipEl = $state();
+const estiloTip = $derived(
+  tip
+    ? `top: max(8px, min(${tip.y + 16}px, calc(100% - 150px))); left: max(8px, min(${tip.x + 14}px, calc(100% - 336px)))`
+    : '',
+);
 /** @type {import('../../manual.js').Vocabulario | null} */
 let vocab = $state(null);
 /** idioma cuyo vocabulario ya se pidió ('' = ninguno). */
@@ -222,6 +241,7 @@ export function irALinea(linea) {
   const alto = ta.scrollHeight / Math.max(1, lineas.length);
   ta.scrollTop = Math.max(0, (linea - 1) * alto - ta.clientHeight / 3);
   sincronizar();
+  avisarCursor();
 }
 </script>
 
@@ -250,13 +270,20 @@ export function irALinea(linea) {
       aria-activedescendant={abierto ? idOpcion(Math.min(elegida, opciones.length - 1)) : undefined}
       aria-autocomplete="list"
       onscroll={sincronizar}
-      oninput={revisarPalabra}
-      onclick={revisarPalabra}
+      oninput={() => {
+  revisarPalabra();
+  avisarCursor();
+}}
+      onclick={() => {
+  revisarPalabra();
+  avisarCursor();
+}}
       onkeydown={tecla}
       onmousemove={alMover}
       onmouseleave={alSalir}
       onkeyup={(e) => {
   if (!['ArrowDown', 'ArrowUp', 'Enter', 'Tab', 'Escape'].includes(e.key)) revisarPalabra();
+  avisarCursor();
 }}
       onblur={() => {
   enCurso = null;
@@ -289,18 +316,7 @@ export function irALinea(linea) {
         {/each}
       </div>
     {/if}
-    {#if tip}
-      <div
-        bind:this={tipEl}
-        class="tip"
-        role="tooltip"
-        style="top: max(8px, min({tip.y + 16}px, calc(100% - 150px))); left: max(8px, min({tip.x + 14}px, calc(100% - 336px)))"
-      >
-        <span class="mono tit">{tip.t}</span>
-        <p>{tip.r}</p>
-        <a href={tip.href} target="_blank" rel="noopener">{t('editor.texto.manual')}</a>
-      </div>
-    {/if}
+    <TarjetaManual {tip} bind:ref={tipEl} estilo={estiloTip} />
   </div>
 </div>
 
@@ -406,32 +422,6 @@ textarea::selection {
 }
 .sug .dir {
   color: var(--gris-claro);
-}
-.tip {
-  position: absolute;
-  z-index: 6;
-  max-width: 320px;
-  padding: 8px 12px;
-  background: var(--tarjeta);
-  border: 1px solid var(--borde-control);
-  border-radius: 6px;
-  box-shadow: 0 6px 18px var(--sombra);
-  font-size: 12px;
-  line-height: 1.45;
-}
-.tip .tit {
-  display: block;
-  color: var(--acento);
-  font-size: 12.5px;
-  margin-bottom: 2px;
-}
-.tip p {
-  margin: 0 0 6px;
-  color: var(--texto);
-}
-.tip a {
-  color: var(--acento);
-  font-size: 12px;
 }
 :global(.r-com) {
   color: var(--codigo-com);

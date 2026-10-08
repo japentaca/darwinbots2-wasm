@@ -39,6 +39,14 @@ import {
   origenesParaGuardar,
   realinearOrigenes,
 } from '../../../../engine/lab.js';
+import {
+  alinear as alinearPila,
+  memoriaDe,
+  parsearTraza,
+  pasosDeGen,
+  sysvarsLeidos,
+  tokensEjecutables,
+} from '../../../../engine/pila.js';
 import { t } from '../../../i18n/index.svelte.js';
 import { hashDe } from '../../../router.js';
 import { almacen } from '../../sim/almacen.svelte.js';
@@ -46,12 +54,22 @@ import AreaAdn from './AreaAdn.svelte';
 import { aLf, borradores } from './borrador.js';
 import DiffGenes from './DiffGenes.svelte';
 import { adnForo, bestiario, genesJson, perfiles } from './datos.js';
+import { ejemplos } from './ejemplos.js';
 import { aplicarArreglo, describirLint, palabrasMarcadas } from './lint.js';
 import { crearLinter } from './linter.js';
 import PanelGenes from './PanelGenes.svelte';
+import PanelPila from './PanelPila.svelte';
 import PanelProbar from './PanelProbar.svelte';
 import PanelVersiones from './PanelVersiones.svelte';
 import VistaGenes from './VistaGenes.svelte';
+import { SYSVARS } from './vocabulario.js';
+
+/** Semilla fija del visor de pila: rnd da siempre lo mismo (PLAN-EDITOR E1.5). */
+const SEMILLA_PILA = 1234;
+/** Dirección de cada sysvar del vocabulario (sin el punto del nombre). */
+const DIRECCION = new Map(SYSVARS);
+/** @param {string} nombre `.eye5` → dirección, o undefined. */
+const direccionDe = (nombre) => DIRECCION.get(nombre.replace(/^\./, ''));
 
 /**
  * @typedef {import('../../../../engine/bots.js').BotPropio} BotPropio
@@ -106,6 +124,16 @@ let confirmarRestaurar = $state(null);
 /** Genes desplegados de la vista por genes (se conservan al cambiar de modo). */
 /** @type {Set<string>} */
 let abiertos = $state(new Set());
+// Visor de pila (PLAN-EDITOR E1.5): encendido (la preferencia va a localStorage),
+// la línea del cursor (modo texto), el gen desplegado (modo genes), los valores
+// de ejemplo del bot y la última traza pedida, con el texto al que corresponde.
+let pila = $state(leerPila());
+let lineaCursor = $state(1);
+let genAbierto = $state(-1);
+/** @type {Map<string, number>} */
+let valoresEjemplo = $state(new Map());
+/** @type {{texto: string, tsv: string} | null} */
+let traza = $state(null);
 
 /** Texto con el que se alinearon los orígenes por última vez. */
 let alineado = '';
@@ -186,6 +214,7 @@ async function cargar() {
   claveCargada = '';
   baseCargada = null;
   memoria.clear();
+  genAbierto = -1;
   try {
     const r = registro?.clase === 'propio' ? registro : null;
     let adn = r?.adn ?? bot.adn ?? '';
@@ -201,6 +230,7 @@ async function cargar() {
     texto = adn;
     estable = adn;
     claveCargada = bot.clave;
+    valoresEjemplo = ejemplos.leer(bot.clave);
     // un borrador de este bot: sobre el mismo texto, se recupera; sobre
     // otro (el bot cambió por otro lado), se ofrece
     const b = r && !soloLectura ? borradores.leer(bot.clave) : null;
@@ -325,6 +355,76 @@ const avisosPorGen = $derived.by(() => {
   }
   for (const a of avisosDelLab) if ('i' in a) m.set(a.i, (m.get(a.i) ?? 0) + 1);
   return m;
+});
+
+// ---- Visor de pila (PLAN-EDITOR E1.5) ---------------------------------------------
+
+/** La preferencia «Pila» guardada en este navegador (apagada si no hay). */
+function leerPila() {
+  try {
+    return globalThis.localStorage?.getItem('dbw2.editor.pila') === '1';
+  } catch {
+    return false;
+  }
+}
+
+function alternarPila() {
+  pila = !pila;
+  try {
+    globalThis.localStorage?.setItem('dbw2.editor.pila', pila ? '1' : '0');
+  } catch {
+    // sin almacenamiento: vale por esta sesión
+  }
+}
+
+/** @param {string} nombre @param {number} valor */
+function cambiarValor(nombre, valor) {
+  const m = new Map(valoresEjemplo);
+  m.set(nombre, valor);
+  valoresEjemplo = m;
+  ejemplos.guardar(bot.clave, m);
+}
+
+const tokensPila = $derived(tokensEjecutables(estable));
+const sysvarsPila = $derived(sysvarsLeidos(tokensPila));
+/** El gen del visor: el del cursor (modo texto) o el desplegado (modo genes). */
+const genCursor = $derived(modo === 'texto' ? genDeLinea(lineaCursor) : genAbierto);
+/** Pasos con su palabra; vacíos si la traza no es la del texto actual. */
+const alineados = $derived(
+  pila && traza && traza.texto === estable
+    ? alinearPila(tokensPila, parsearTraza(traza.tsv).pasos)
+    : [],
+);
+const pasosGen = $derived(pila ? pasosDeGen(alineados, estable, genCursor) : []);
+const nombreGen = $derived(
+  pila && genCursor >= 0
+    ? (bloquesAdn(estable).find((b) => b.tipo === 'gen' && b.n === genCursor)?.nombre ?? '')
+    : '',
+);
+const estadoPila = $derived(
+  genCursor < 0
+    ? 'sinGen'
+    : !traza || traza.texto !== estable
+      ? 'cargando'
+      : alineados.length === 0
+        ? 'sinDatos'
+        : 'ok',
+);
+
+// Pedido de traza: con el visor encendido, al quedar quieto el ADN o cambiar un
+// valor de ejemplo. Solo la respuesta al último pedido cuenta (linter.js).
+$effect(() => {
+  const x = estable;
+  const vals = valoresEjemplo;
+  if (!pila || lab || cargando || errorCarga) return;
+  linter.trazar(x, memoriaDe(vals, direccionDe), SEMILLA_PILA).then(
+    (tsv) => {
+      if (tsv !== null) traza = { texto: x, tsv };
+    },
+    () => {
+      traza = { texto: x, tsv: '' };
+    },
+  );
 });
 
 /**
@@ -565,6 +665,15 @@ function textoAvisoLab(a) {
       <button
         type="button"
         class="btn sm"
+        class:on={pila}
+        aria-pressed={pila}
+        onclick={alternarPila}
+      >
+        {t('editor.pila')}
+      </button>
+      <button
+        type="button"
+        class="btn sm"
         class:on={lab}
         aria-pressed={lab}
         onclick={() => {
@@ -684,6 +793,7 @@ function textoAvisoLab(a) {
         {marcadas}
         {lineasMarcadas}
         etiqueta={t('editor.texto.etiquetaDe', { nombre: bot.nombre })}
+        oncursor={(linea) => (lineaCursor = linea)}
       />
     {:else}
       <VistaGenes
@@ -695,6 +805,7 @@ function textoAvisoLab(a) {
         soloLectura={lectura}
         onapagar={apagar}
         onencender={encender}
+        onabrir={(n) => (genAbierto = n)}
         bind:abiertos
       />
     {/if}
@@ -757,6 +868,18 @@ function textoAvisoLab(a) {
         <p class="help">{t('editor.lab.cargando')}</p>
       {/if}
     {:else}
+      {#if pila && !cargando && !errorCarga}
+        <PanelPila
+          pasos={pasosGen}
+          gen={genCursor}
+          {nombreGen}
+          valores={valoresEjemplo}
+          sysvars={sysvarsPila}
+          estado={estadoPila}
+          modo="editor"
+          onvalor={cambiarValor}
+        />
+      {/if}
       {#if !cargando && !errorCarga}
         <PanelProbar
           clave={bot.clave}

@@ -22,6 +22,7 @@ import {
   sysvarsLeidos,
   tokensEjecutables,
 } from '../engine/pila.js';
+import { crearEjemplos } from '../src/lib/bots/editor/ejemplos.js';
 import { ClienteSim, workerEngine } from './util/arnes-worker.js';
 import { hayWasm, SIN_WASM, WEB } from './util/dbcore-node.js';
 
@@ -224,4 +225,81 @@ test('wasm: el gen de ejemplo con mem[50]=5 se alinea y su store escribe 7 en 10
   } finally {
     await c.stop();
   }
+});
+
+test('wasm: el flujo del start dice la condición (2 = verdadera, 0 = falsa), como lo deduce PanelPila', {
+  skip: !hayWasm() && SIN_WASM,
+  timeout: 300000,
+}, async () => {
+  const c = new ClienteSim(workerEngine(), { copiarFrames: false });
+  try {
+    await c.wait((m) => m.t === 'ready');
+    const tokens = tokensEjecutables(E11);
+    const start = (/** @type {string} */ tsv) =>
+      alinear(tokens, parsearTraza(tsv).pasos).find((p) => p.palabra === 'start');
+    const verdadera = start(
+      await traza(
+        c,
+        E11,
+        'vrd',
+        memoriaDe(new Map([['50', 5]]), (n) => +n),
+      ),
+    );
+    assert.equal(verdadera?.flujo, 2, 'cond verdadera: el start deja el flujo en BODY');
+    const falsa = start(await traza(c, E11, 'fls'));
+    assert.equal(falsa?.flujo, 0, 'cond falsa: el start deja el flujo en CLEAR');
+  } finally {
+    await c.stop();
+  }
+});
+
+test('ejemplos: leer, guardar y borrar; el almacén se usa con el prefijo y un fallo no tira', () => {
+  /** @type {Map<string, string>} */
+  const disco = new Map();
+  const almacen = {
+    getItem: (/** @type {string} */ k) => disco.get(k) ?? null,
+    setItem: (/** @type {string} */ k, /** @type {string} */ v) => disco.set(k, v),
+    removeItem: (/** @type {string} */ k) => disco.delete(k),
+  };
+  const e = crearEjemplos({ mapa: new Map(), almacen });
+  assert.equal(e.leer('bot1').size, 0, 'sin nada guardado: vacío');
+  e.guardar(
+    'bot1',
+    new Map([
+      ['.eye5', 50.7],
+      ['.up', Number.NaN],
+    ]),
+  );
+  assert.deepEqual([...e.leer('bot1')], [['.eye5', 50]], 'enteros; los NaN no se guardan');
+  assert.equal(disco.get('dbw2.editor.pila:bot1'), '[[".eye5",50]]');
+  // otra sesión (mapa vacío) lee lo del almacén
+  const otra = crearEjemplos({ mapa: new Map(), almacen });
+  assert.deepEqual([...otra.leer('bot1')], [['.eye5', 50]]);
+  // leer devuelve una copia: cambiarla no cambia lo guardado
+  e.leer('bot1').set('.x', 1);
+  assert.equal(e.leer('bot1').has('.x'), false);
+  e.guardar('bot1', new Map());
+  assert.equal(disco.has('dbw2.editor.pila:bot1'), false, 'sin valores, se borra');
+  // un almacén que falla (cuota, permisos) no tira: queda la sesión
+  const roto = {
+    getItem: () => {
+      throw new Error('denegado');
+    },
+    setItem: () => {
+      throw new Error('cuota');
+    },
+    removeItem: () => {
+      throw new Error('denegado');
+    },
+  };
+  const f = crearEjemplos({ mapa: new Map(), almacen: roto });
+  assert.equal(f.leer('x').size, 0);
+  f.guardar('x', new Map([['.up', 3]]));
+  assert.deepEqual([...f.leer('x')], [['.up', 3]], 'la sesión lo recuerda');
+  f.borrar('x');
+  assert.equal(f.leer('x').size, 0);
+  // sin almacén (node, sin localStorage) también anda
+  const g = crearEjemplos({ mapa: new Map(), almacen: null });
+  g.guardar('y', new Map([['.dn', 2]]));
+  assert.equal(g.leer('y').get('.dn'), 2);
 });

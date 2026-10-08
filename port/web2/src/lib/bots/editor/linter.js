@@ -2,7 +2,8 @@
 // Lint del editor de ADN (decisión 18): el mensaje {t:'lint-dna'} de
 // engine/worker.js (db_dna_lint: no siembra ni toca ninguna sim) en un
 // worker propio del editor, creado al primer uso y cerrado con cerrar().
-// Solo importa la respuesta al ÚLTIMO pedido: las viejas se descartan.
+// Solo importa la respuesta al ÚLTIMO pedido de cada clase (lint y traza del
+// visor de pila, PLAN-EDITOR E1.5): las viejas se descartan.
 // La fábrica del worker se inyecta (tests); en la página es un Worker del
 // navegador con el init de C10.
 //
@@ -54,6 +55,9 @@ function workerPagina() {
   };
 }
 
+/** Un pedido en vuelo de un tipo (lint o traza). */
+/** @typedef {{req: string, res: (v: any) => void, rej: (e: Error) => void, plazo: any}} Pendiente */
+
 /**
  * @param {{crear?: () => CanalLint, plazoMs?: number}} [o]
  */
@@ -61,24 +65,34 @@ export function crearLinter(o = {}) {
   /** @type {CanalLint | null} */
   let canal = null;
   let n = 0;
-  /** @type {{res: (v: any[] | null) => void, rej: (e: Error) => void, plazo: any} | null} */
-  let pendiente = null;
-  let esperado = '';
+  // Un pedido pendiente por clase: el lint y la traza del visor de pila se
+  // piden juntos al cambiar el ADN, y no deben cancelarse entre sí.
+  /** @type {{lint: Pendiente | null, traza: Pendiente | null}} */
+  const pend = { lint: null, traza: null };
 
-  /** Resuelve el pedido pendiente (y lo saca). @param {(p: NonNullable<typeof pendiente>) => void} fn */
-  function soltar(fn) {
-    const p = pendiente;
-    pendiente = null;
+  /**
+   * Resuelve el pedido pendiente de una clase (y lo saca).
+   * @param {'lint' | 'traza'} clase @param {(p: Pendiente) => void} fn
+   */
+  function soltar(clase, fn) {
+    const p = pend[clase];
+    pend[clase] = null;
     if (!p) return;
     clearTimeout(p.plazo);
     fn(p);
+  }
+
+  /** @param {(p: Pendiente) => void} fn */
+  function soltarTodos(fn) {
+    soltar('lint', fn);
+    soltar('traza', fn);
   }
 
   /** El worker no sirve: se rechaza lo pendiente y se descarta. @param {string} detalle */
   function caer(detalle) {
     const c = canal;
     canal = null;
-    soltar((p) => p.rej(new ErrorLint(detalle)));
+    soltarTodos((p) => p.rej(new ErrorLint(detalle)));
     try {
       c?.terminar();
     } catch {
@@ -96,13 +110,40 @@ export function crearLinter(o = {}) {
         caer(String(m.msg ?? m.clave ?? 'error'));
         return;
       }
-      if (m?.t !== 'lint-dna' || m.req !== esperado) return;
-      soltar((p) => p.res(Array.isArray(m.issues) ? m.issues : []));
+      if (m?.t === 'lint-dna' && pend.lint?.req === m.req)
+        soltar('lint', (p) => p.res(Array.isArray(m.issues) ? m.issues : []));
+      else if (m?.t === 'trace-dna' && pend.traza?.req === m.req)
+        soltar('traza', (p) => p.res(String(m.tsv ?? '')));
     });
     c.alError?.((e) => {
       if (canal === c) caer(String(e?.message ?? e));
     });
     return c;
+  }
+
+  /**
+   * Manda un pedido de la clase dada y espera su respuesta. El anterior de la
+   * misma clase se resuelve con null (ya no importa).
+   * @param {'lint' | 'traza'} clase
+   * @param {Record<string, any>} mensaje sin `req`
+   * @returns {Promise<any>}
+   */
+  function pedir(clase, mensaje) {
+    soltar(clase, (p) => p.res(null));
+    let c;
+    try {
+      c = abrir();
+    } catch (e) {
+      return Promise.reject(new ErrorLint(String(/** @type {any} */ (e)?.message ?? e)));
+    }
+    const req = `${clase}${++n}`;
+    return new Promise((res, rej) => {
+      const plazo = setTimeout(() => {
+        if (pend[clase]?.req === req) caer('tiempo');
+      }, o.plazoMs ?? PLAZO_MS);
+      pend[clase] = { req, res, rej, plazo };
+      c.enviar({ ...mensaje, req });
+    });
   }
 
   return {
@@ -113,25 +154,22 @@ export function crearLinter(o = {}) {
      * @returns {Promise<import('./lint.js').HallazgoLint[] | null>}
      */
     lint(dna) {
-      soltar((p) => p.res(null));
-      let c;
-      try {
-        c = abrir();
-      } catch (e) {
-        return Promise.reject(new ErrorLint(String(/** @type {any} */ (e)?.message ?? e)));
-      }
-      esperado = `lint${++n}`;
-      const req = esperado;
-      return new Promise((res, rej) => {
-        const plazo = setTimeout(() => {
-          if (esperado === req) caer('tiempo');
-        }, o.plazoMs ?? PLAZO_MS);
-        pendiente = { res, rej, plazo };
-        c.enviar({ t: 'lint-dna', dna, req });
-      });
+      return pedir('lint', { t: 'lint-dna', dna });
+    },
+    /**
+     * Traza (TSV de db_dna_trace, sin parsear) del gen del ADN con la memoria
+     * de ejemplo; null si otro pedido lo reemplazó. Rechaza con ErrorLint si
+     * el worker no carga. Como el lint, anda sin sim (PLAN-EDITOR E1.5).
+     * @param {string} dna
+     * @param {number[] | null} mem  1001 enteros o null
+     * @param {number} seed
+     * @returns {Promise<string | null>}
+     */
+    trazar(dna, mem, seed) {
+      return pedir('traza', { t: 'trace-dna', dna, mem, seed });
     },
     cerrar() {
-      soltar((p) => p.res(null));
+      soltarTodos((p) => p.res(null));
       canal?.terminar();
       canal = null;
     },
