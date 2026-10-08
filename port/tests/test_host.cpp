@@ -1032,3 +1032,290 @@ TEST_CASE("db_sim_bot_mem_dump - copia mem[1..1000] del bot") {
   }
   db_sim_destroy(h);
 }
+
+// ---------------------------------------------------------------------------
+// PLAN-EDITOR.md E4.1 — db_sim_bot_mutate: aplica db::mutate al bot de una sim
+// descartable (la evolucion asistida del editor). Capa host, sin equivalente en
+// VB6; las rutinas de mutacion en si se prueban en test_mutations.cpp. Lo que
+// se prueba aca es lo que el export agrega: los dos modos, que el factor
+// intensifica, que restaura todo lo que toca y las dos adaptaciones al core
+// (tasas en cero de un fundador suelto, reloj del bot para las puntuales).
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// ADN de tres genes, como el que el editor pasa al worker.
+const char* kAdnMutar =
+    "cond\n*.nrg 1000 >\nstart\n50 .repro store\nstop\n\n"
+    "cond\n*.fixpos 0 =\nstart\n628 rnd 314 sub .aimdx store\nstop\n\n"
+    "cond\n*.eye5 50 >\nstart\n-1 .shoot store\nstop\nend\n";
+
+// Sim descartable como la del worker: nueva, con semilla y un fundador suelto.
+int Descartable(void*& h, int semilla = 7, const char* adn = kAdnMutar) {
+  h = db_sim_create();
+  db_sim_start(h, semilla);
+  const int n = db_sim_insert_founder(h, adn, "variante", 0, 0, 1000);
+  REQUIRE(n > 0);
+  return n;
+}
+
+std::string TextoDeBot(void* h, int n) {
+  char* p = db_sim_bot_text(h, n);
+  REQUIRE(p != nullptr);
+  std::string s = p;
+  db_free(p);
+  return s;
+}
+
+bool TasasIguales(const db::Mutationprobs& a, const db::Mutationprobs& b) {
+  if (a.Mutations != b.Mutations ||
+      a.PointWhatToChange != b.PointWhatToChange ||
+      a.CopyErrorWhatToChange != b.CopyErrorWhatToChange)
+    return false;
+  for (int i = 0; i <= 20; ++i)
+    if (a.mutarray[i] != b.mutarray[i] || a.Mean[i] != b.Mean[i] ||
+        a.StdDev[i] != b.StdDev[i])
+      return false;
+  return true;
+}
+
+}  // namespace
+
+TEST_CASE("db_sim_bot_mutate - ambos modos mutan el ADN y dejan lo demas como estaba") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  REQUIRE(db_sim_bot_genenum(h, n) == 3);
+  const std::string antes = TextoDeBot(h, n);
+  const std::vector<db::Block> dnaAntes = sim.rob[n].dna;
+  const db::Mutationprobs tasasAntes = sim.rob[n].Mutables;
+  // El fundador suelto nace de Bot{}: sin tabla de tasas y con Mutations en false.
+  REQUIRE_FALSE(tasasAntes.Mutations);
+  // Los interruptores del llamador, al reves de lo que mutate necesita.
+  sim.opts.DisableMutations = true;
+  sim.opts.EnableAutoSpeciation = true;
+  const std::size_t especies = sim.Specie.size();
+
+  const int hubo = db_sim_bot_mutate(h, n, 2, 20, 1000);
+  CHECK(hubo > 0);
+  CHECK(sim.rob[n].LastMut == hubo);  // LastMut despues - antes (antes era 0)
+  CHECK((sim.rob[n].dna != dnaAntes));
+  CHECK(TextoDeBot(h, n) != antes);
+  CHECK(sim.rob[n].DnaLen == db::DnaLen(sim.rob[n].dna));
+  CHECK(sim.rob[n].mem[db::addr::DnaLenSys] == sim.rob[n].DnaLen);
+  CHECK(sim.rob[n].genenum == db::CountGenes(sim.rob[n].dna));
+  // Se restauran los interruptores, la tabla de tasas y la agenda de las puntuales.
+  CHECK(sim.opts.DisableMutations);
+  CHECK(sim.opts.EnableAutoSpeciation);
+  CHECK(sim.Specie.size() == especies);  // la auto-especiacion estaba apagada
+  CHECK(TasasIguales(sim.rob[n].Mutables, tasasAntes));
+  CHECK_FALSE(sim.rob[n].Mutables.Mutations);
+  CHECK(sim.rob[n].age == 0);
+  CHECK(sim.rob[n].PointMutCycle == 0);
+  CHECK(sim.rob[n].PointMutBP == 0);
+  CHECK(sim.rob[n].Point2MutCycle == 0);
+  // sunbelt no se fuerza: Point2/CE2/Translocation/Amplification no corrieron.
+  CHECK_FALSE(sim.sunbelt);
+  CHECK(sim.diag.err9_mutation_insert == 0);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - en vida: puntuales que cambian valores sin tocar el largo") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  const std::vector<db::Block> dnaAntes = sim.rob[n].dna;
+  const db::vb_integer largo = sim.rob[n].DnaLen;
+  const int hubo = db_sim_bot_mutate(h, n, 0, 10, 1000);
+  CHECK(hubo > 0);
+  CHECK((sim.rob[n].dna != dnaAntes));
+  CHECK(sim.rob[n].DnaLen == largo);  // una puntual cambia tokens, no los agrega
+  CHECK(sim.rob[n].dna.size() == dnaAntes.size());
+  CHECK(sim.rob[n].age == 0);
+  CHECK(sim.rob[n].PointMutCycle == 0);
+  CHECK(sim.rob[n].PointMutBP == 0);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - en vida hace falta adelantar el reloj del bot") {
+  // El motivo de esa adaptacion: PointMutation solo dispara con age > 0 y un
+  // bot recien nacido (age = 0) solo agenda. Si el core cambia esto, el export
+  // puede simplificarse.
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  db::Bot& b = sim.rob[n];
+  db::SetDefaultMutationRates(b.Mutables);
+  b.Mutables.Mutations = true;
+  for (int i = 0; i <= 20; ++i) b.Mutables.mutarray[i] = 5;
+  b.Mutables.mutarray[db::mut::DeltaUP] = 0;
+  for (int k = 0; k < 200; ++k) db::mutate(sim, n, false);
+  CHECK(b.LastMut == 0);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - en reproduccion: la agenda de las puntuales no se toca") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  const std::vector<db::Block> dnaAntes = sim.rob[n].dna;
+  sim.rob[n].age = 1234;
+  sim.rob[n].PointMutCycle = 1300;
+  sim.rob[n].PointMutBP = 7;
+  sim.rob[n].Point2MutCycle = 9;
+  const int hubo = db_sim_bot_mutate(h, n, 1, 3, 100);
+  CHECK(hubo > 0);
+  CHECK((sim.rob[n].dna != dnaAntes));
+  CHECK(sim.rob[n].age == 1234);
+  CHECK(sim.rob[n].PointMutCycle == 1300);
+  CHECK(sim.rob[n].PointMutBP == 7);
+  CHECK(sim.rob[n].Point2MutCycle == 9);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - la agenda de un bot con edad se restaura tambien en vida") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  sim.rob[n].age = 1234;
+  sim.rob[n].PointMutCycle = 1300;
+  sim.rob[n].PointMutBP = 7;
+  sim.rob[n].Point2MutCycle = 9;
+  CHECK(db_sim_bot_mutate(h, n, 0, 5, 1000) > 0);
+  CHECK(sim.rob[n].age == 1234);
+  CHECK(sim.rob[n].PointMutCycle == 1300);
+  CHECK(sim.rob[n].PointMutBP == 7);
+  CHECK(sim.rob[n].Point2MutCycle == 9);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - el factor intensifica y 1 x 1 no exige cambio") {
+  // Misma semilla y mismo ADN: dividir las tasas por mas mete mas mutaciones.
+  int suave = 0, fuerte = 0;
+  for (int semilla = 1; semilla <= 6; ++semilla) {
+    void* a = nullptr;
+    void* b = nullptr;
+    const int na = Descartable(a, semilla);
+    const int nb = Descartable(b, semilla);
+    suave += db_sim_bot_mutate(a, na, 1, 2, 10);
+    fuerte += db_sim_bot_mutate(b, nb, 1, 2, 500);
+    db_sim_destroy(a);
+    db_sim_destroy(b);
+  }
+  CHECK(suave >= 0);
+  CHECK(fuerte > suave);
+  // Con las tasas por defecto y factor 1, una pasada puede no mutar nada: no se
+  // exige cambio, solo que no rompa nada ni devuelva negativos.
+  void* h = nullptr;
+  const int n = Descartable(h);
+  CHECK(db_sim_bot_mutate(h, n, 2, 1, 1) >= 0);
+  CHECK(S(h).rob[n].DnaLen == db::DnaLen(S(h).rob[n].dna));
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - factor menor que 1 cuenta como 1") {
+  void* a = nullptr;
+  void* b = nullptr;
+  void* c = nullptr;
+  const int na = Descartable(a, 11);
+  const int nb = Descartable(b, 11);
+  const int nc = Descartable(c, 11);
+  const int ra = db_sim_bot_mutate(a, na, 2, 40, 1);
+  const int rb = db_sim_bot_mutate(b, nb, 2, 40, 0);
+  const int rc = db_sim_bot_mutate(c, nc, 2, 40, -5);
+  CHECK(ra == rb);
+  CHECK(ra == rc);
+  CHECK(TextoDeBot(a, na) == TextoDeBot(b, nb));
+  CHECK(TextoDeBot(a, na) == TextoDeBot(c, nc));
+  CHECK(db_sim_rng_state(a) == db_sim_rng_state(b));
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+  db_sim_destroy(c);
+}
+
+TEST_CASE("db_sim_bot_mutate - determinista: misma semilla, mismo resultado") {
+  void* a = nullptr;
+  void* b = nullptr;
+  void* c = nullptr;
+  const int na = Descartable(a, 7);
+  const int nb = Descartable(b, 7);
+  const int nc = Descartable(c, 8);
+  CHECK(db_sim_bot_mutate(a, na, 2, 20, 1000) ==
+        db_sim_bot_mutate(b, nb, 2, 20, 1000));
+  db_sim_bot_mutate(c, nc, 2, 20, 1000);
+  CHECK(TextoDeBot(a, na) == TextoDeBot(b, nb));
+  CHECK(db_sim_rng_state(a) == db_sim_rng_state(b));
+  CHECK(TextoDeBot(a, na) != TextoDeBot(c, nc));  // otra semilla, otras variantes
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+  db_sim_destroy(c);
+}
+
+TEST_CASE("db_sim_bot_mutate - un ADN mutado con intensidad razonable se vuelve a cargar") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  CHECK(db_sim_bot_mutate(h, n, 2, 3, 100) > 0);
+  const std::string mutado = TextoDeBot(h, n);
+  CHECK(db_sim_insert_founder(h, mutado.c_str(), "otra", 0, 0, 1000) > 0);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - usa y restaura las tasas de un bot de especie") {
+  void* h = db_sim_create();
+  db_sim_start(h, 1234);
+  const int sp = db_sim_add_species(h, kAdnMutar, "m.txt", 0, 0, 3000, 0, 2);
+  REQUIRE(db_sim_seed_species(h, sp, 2) == 2);
+  db::Sim& sim = S(h);
+  const db::Mutationprobs tasas = sim.rob[1].Mutables;
+  REQUIRE(tasas.Mutations);
+  REQUIRE(tasas.mutarray[db::mut::DeltaUP] == 5000);
+  const std::vector<db::Block> otro = sim.rob[2].dna;
+  const db::Mutationprobs tasasOtro = sim.rob[2].Mutables;
+  const std::vector<db::Block> dnaAntes = sim.rob[1].dna;
+
+  CHECK(db_sim_bot_mutate(h, 1, 2, 10, 1000) > 0);
+  CHECK((sim.rob[1].dna != dnaAntes));
+  // La tabla vuelve entera, incluida la tasa de Delta que el export apaga.
+  CHECK(TasasIguales(sim.rob[1].Mutables, tasas));
+  // El otro bot, ni tocarlo.
+  CHECK((sim.rob[2].dna == otro));
+  CHECK(TasasIguales(sim.rob[2].Mutables, tasasOtro));
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - una tasa en cero sigue apagada") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  db::Bot& b = sim.rob[n];
+  // Tabla con las medias y desvios por defecto pero todos los operadores en 0.
+  db::SetDefaultMutationRates(b.Mutables);
+  b.Mutables.Mutations = true;
+  for (int i = 0; i <= 20; ++i) b.Mutables.mutarray[i] = 0;
+  const db::Mutationprobs tasas = b.Mutables;
+  const std::vector<db::Block> dnaAntes = b.dna;
+  CHECK(db_sim_bot_mutate(h, n, 2, 10, 1000) == 0);
+  CHECK((b.dna == dnaAntes));
+  CHECK(TasasIguales(b.Mutables, tasas));
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_mutate - bot inexistente o argumentos que no sirven") {
+  void* h = nullptr;
+  const int n = Descartable(h);
+  db::Sim& sim = S(h);
+  const std::vector<db::Block> dnaAntes = sim.rob[n].dna;
+  const int rng = db_sim_rng_state(h);
+  CHECK(db_sim_bot_mutate(h, 0, 2, 5, 1000) == 0);
+  CHECK(db_sim_bot_mutate(h, -1, 2, 5, 1000) == 0);
+  CHECK(db_sim_bot_mutate(h, 99999, 2, 5, 1000) == 0);
+  CHECK(db_sim_bot_mutate(h, n + 1, 2, 5, 1000) == 0);  // slot libre
+  CHECK(db_sim_bot_mutate(h, n, 2, 0, 1000) == 0);
+  CHECK(db_sim_bot_mutate(h, n, 2, -3, 1000) == 0);
+  CHECK((sim.rob[n].dna == dnaAntes));
+  CHECK(db_sim_rng_state(h) == rng);  // ni siquiera consumieron RNG
+  // Un bot muerto tampoco.
+  sim.rob[n].exist = false;
+  CHECK(db_sim_bot_mutate(h, n, 2, 5, 1000) == 0);
+  db_sim_destroy(h);
+}

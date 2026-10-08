@@ -3831,6 +3831,104 @@ DB_EXPORT void db_sim_bot_set_nrg(void* h, int n, float v) {
   db::Sim& s = S(h);
   if (n >= 1 && n < static_cast<int>(s.rob.size())) s.rob[n].nrg = v;
 }
+
+// PLAN-EDITOR.md E4 — aplica `db::mutate` (NeoMutations.bas:122-236) al bot `n`,
+// `veces` veces, para fabricar variantes de un ADN en el editor.
+//   modo 0 = en vida (las puntuales: PointMutation), 1 = en reproduccion (copia,
+//   insercion, inversion, borrados), 2 = ambos; cualquier otro valor cuenta como
+//   2. factor >= 1 divide las tasas (en el original son «1 cada N»: dividir
+//   intensifica); menor que 1 se toma como 1. Devuelve cuantas mutaciones hubo
+//   (LastMut despues - antes); 0 si el bot no existe, no tiene ADN o veces < 1.
+//
+// ESCRIBE en la sim, y consume RNG (sim.rndy y el cache de Gauss avanzan: es
+// parte del resultado, no se revierte). Solo para una sim descartable del
+// worker, nunca la del usuario. Lo que toca y restaura al terminar: el
+// Mutables entero del bot, sim.opts.DisableMutations y
+// EnableAutoSpeciation (se apagan para que mutate corra y no abra especies
+// nuevas), y la agenda de las puntuales (age, PointMutCycle, PointMutBP,
+// Point2MutCycle). Lo que queda como resultado de mutar: el ADN, DnaLen,
+// genenum, LastMut, Mutations (el contador del bot), color, GenMut y
+// LastMutDetail.
+//
+// Tres decisiones de capa host (el core no se toca):
+//  - Un fundador sembrado con db_sim_insert_founder nace de `Bot{}`: tasas en
+//    cero y Mutations = false (solo db_sim_seed_species copia las de la
+//    especie). Dividir ceros daria tasas de 1 (mutar cada posicion en cada
+//    pasada), asi que si las tasas, las medias y los desvios estan todos en cero
+//    se parte de SetDefaultMutationRates, como una especie recien agregada
+//    (OptionsForm.frm:3290-3296, igual que db_sim_add_species). Una tasa en cero
+//    de un bot que si tiene tabla se deja en cero (el operador esta apagado).
+//  - PointMutation (NeoMutations.bas:454-479) solo dispara con age > 0 en el
+//    instante que agendo (PointMutCycle): con el bot recien nacido (age = 0)
+//    solo agenda y nunca muta. Cada «vez» en vida agenda con age = 0, adelanta
+//    el reloj del bot hasta ese instante y deja que dispare, o sea, una
+//    tanda de puntuales por vez. Sin esto el modo 0 no mutaria nada.
+//  - Los DeltaMut (mutan las tasas del bot, no el ADN) se apagan con la tasa
+//    de DeltaUP en 0: ensuciarian la cuenta y cambiarian las tasas a mitad de
+//    la corrida.
+// sim.sunbelt (solo lo trae una sim cargada de un proceso con sunbelt) manda en
+// Point2, Copy Error 2, Translocation y Amplification: no se fuerza. En una sim
+// descartable nueva esta apagado y esos cuatro no corren.
+DB_EXPORT int db_sim_bot_mutate(void* h, int n, int modo, int veces,
+                                int factor) {
+  db::Sim& sim = S(h);
+  if (n < 1 || n > sim.MaxRobs || n >= static_cast<int>(sim.rob.size()) ||
+      !sim.rob[static_cast<std::size_t>(n)].exist)
+    return 0;
+  db::Bot& b = sim.rob[static_cast<std::size_t>(n)];
+  if (veces < 1 || b.DnaLen < 2) return 0;
+  const db::vb_single f =
+      factor < 1 ? 1.0f : static_cast<db::vb_single>(factor);
+
+  // Lo que se restaura.
+  const db::Mutationprobs mutables = b.Mutables;
+  const bool disableMutations = sim.opts.DisableMutations;
+  const bool autoSpeciation = sim.opts.EnableAutoSpeciation;
+  const db::vb_long age = b.age, pointCycle = b.PointMutCycle,
+                    pointBP = b.PointMutBP, point2Cycle = b.Point2MutCycle;
+
+  bool tasasEnCero = true;
+  for (int i = 0; i <= 20; ++i)
+    if (b.Mutables.mutarray[i] != 0.0f || b.Mutables.Mean[i] != 0.0f ||
+        b.Mutables.StdDev[i] != 0.0f)
+      tasasEnCero = false;
+  if (tasasEnCero) db::SetDefaultMutationRates(b.Mutables);
+  b.Mutables.Mutations = true;
+  for (int i = 0; i <= 20; ++i) {
+    db::vb_single& r = b.Mutables.mutarray[i];
+    if (r > 0.0f) {  // 0 = operador apagado: dividir lo prenderia
+      r = r / f;
+      if (r < 1.0f) r = 1.0f;  // max(1, r / factor)
+    }
+  }
+  b.Mutables.mutarray[db::mut::DeltaUP] = 0.0f;
+  sim.opts.DisableMutations = false;
+  sim.opts.EnableAutoSpeciation = false;
+
+  const db::vb_long antes = b.LastMut;
+  for (int v = 0; v < veces && b.DnaLen >= 2; ++v) {
+    if (modo != 1) {
+      b.age = 0;
+      b.PointMutCycle = 0;
+      db::mutate(sim, n, false);  // age = 0: agenda PointMutCycle, no dispara
+      if (b.PointMutCycle < 1) b.PointMutCycle = 1;
+      b.age = b.PointMutCycle;
+      db::mutate(sim, n, false);  // age = PointMutCycle > 0: dispara
+    }
+    if (modo != 0 && b.DnaLen >= 2) db::mutate(sim, n, true);
+  }
+  const db::vb_long hubo = b.LastMut - antes;
+
+  b.Mutables = mutables;
+  sim.opts.DisableMutations = disableMutations;
+  sim.opts.EnableAutoSpeciation = autoSpeciation;
+  b.age = age;
+  b.PointMutCycle = pointCycle;
+  b.PointMutBP = pointBP;
+  b.Point2MutCycle = point2Cycle;
+  return hubo > 0 ? static_cast<int>(hubo) : 0;
+}
+
 // console.frm:381 — `execrob`: ejecuta el ADN de todos sin avanzar el ciclo.
 DB_EXPORT void db_sim_exec_robs(void* h) { db::ExecRobs(S(h)); }
 
