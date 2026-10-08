@@ -1,7 +1,7 @@
 ---
 titulo: The DNA editor
-resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the warnings about what the engine reads differently, the gene view, versions, Test and the gene Lab."
-etiquetas: [editor, dna, warnings, versions, test, lab]
+resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the warnings about what the engine reads differently, the step-by-step stack of each gene, the gene view, versions, Test and the gene Lab."
+etiquetas: [editor, dna, warnings, stack, versions, test, lab]
 estado: revisada
 ---
 The DNA editor is the **DNA** tab of each bot's profile (see [[app/bots]]). There
@@ -38,11 +38,14 @@ From left to right:
 | `v3` | The last saved version. |
 | **unsaved** | Shows up when the text has changed since that version. |
 | **4 warnings** | How many warnings there are below the text. |
+| **Stack** | Turns the [[app/editor#pila|step-by-step stack]] viewer on or off. |
 | **Lab** | Switches the right-hand panel to the one with [[app/editor#laboratorio|Bestiary genes]]. |
 | **Version note** and **Save v4** | Save the text as a new version (see [[app/editor#versiones|Versions]]). |
 
-To the right of the text are the **Test** panel and, on your own bots,
-**Versions**. With the **Lab** turned on, that spot is taken by the genes panel.
+To the right of the text are the **Stack** panel (if you turned it on), the **Test**
+panel and, on your own bots, **Versions**. With the **Lab** turned on, that spot is
+taken by the genes panel, and the stack panel doesn't show until you turn the Lab
+off: the **Stack** button stays in the bar, but the panel waits.
 
 ## Text mode {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -101,6 +104,83 @@ appear.
 
 Autocomplete is only for names with a dot. Operators and commands are typed out in
 full: if one ends up misspelled, a warning marks it.
+
+## The step-by-step stack {#pila}
+<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace -->
+
+The **Stack** button in the bar opens a viewer that shows, step by step, how the
+engine runs the gene under the cursor: what is left on the number stack and on the
+true-or-false stack after each word, and what each `store` writes. It shows at a
+glance why a condition gives what it gives, without guessing from reading the DNA.
+How the two stacks work is in [[adn/pilas]].
+
+The panel appears on the right, above **Test** and **Versions**. The button stays
+on or off in this browser: when you come back, it is as you left it.
+
+The panel shows:
+
+- In **Text**, the gene where the cursor is. An `else` opens a gene of its own, so
+  the `else` branch shows in its own gene and not next to the `start` branch.
+- In **By gene**, the gene you last unfolded.
+
+The header says which gene it is (**Gene 2**, with its name if it has a comment
+line above it) and whether the condition came out true or false. If the gene has an
+`else`, it also says which branch ran.
+
+The table has one row per word of the gene:
+
+| Column | What it shows |
+|---|---|
+| **Word** | The word from the DNA, with its colors. |
+| **Integers** | The number stack after that word. If there are more than 8, a “+k” counts the ones that don't fit. |
+| **Booleans** | The true-or-false stack: ✓ true, ✗ false. |
+| **Note** | What happened: “writes up (1) ← 50” on a `store` that wrote; “does not run with these values” on the first row of a block the engine doesn't run. |
+
+Grey rows are the ones the engine doesn't run with the example values: for
+example, the body of the `start` when the condition is false. The engine doesn't run
+that body, so there is no stack to show. To see it, change the example values until
+the condition is true.
+
+### Example values {#valores}
+
+A gene can read sysvars with an asterisk, like `*.eye5`. Their value depends on the
+bot in the simulation, so the viewer needs one. Below the stack's title there is a
+field for each vocabulary sysvar the gene reads, starting at 0. Change it to see how the
+condition changes.
+
+These values:
+
+- Are kept **in this browser, for this bot**. They don't go into the bot, they are
+  not part of its versions and they don't travel with a file. Since they don't touch
+  the bot, they can also be changed on forum bots.
+- Only sysvars in the vocabulary get a field (`*.eye5`, `*.nrg`…). `def` variables
+  (`*.paso`) have no field: the viewer doesn't know the address the engine assigns
+  to them, so in the trace they are 0.
+
+With `*.eye5` at 80, this gene's condition is true, and the `store` writes 50 into
+`.up`, address 1:
+
+```adn
+cond *.eye5 50 > start 50 .up store stop
+```
+
+| Word | Integers | Booleans | Note |
+|---|---|---|---|
+| `*.eye5` | 80 | | |
+| `>` | | ✓ | |
+| `store` | | | writes up (1) ← 50 |
+
+With `*.eye5` at 30, the condition is false: the `start` doesn't run, and its block
+shows in grey.
+
+:::nota
+The stack is recalculated when you change the DNA or an example value. If the DNA
+doesn't load, or the trace doesn't match the text, the panel says so.
+
+**rnd** uses a fixed seed (1234) in this viewer: here `rnd` always gives the same
+number. In a real run the randomness is different, so the viewer doesn't predict what
+the bot will do.
+:::
 
 ## The hover summary {#resumen}
 <!-- AreaAdn.svelte (tarjeta al mover el mouse: hover.js palabraBajo y entradaDe, métrica de la fuente mono, tabulador cada 4 columnas; lib/manual.js vocabularioManual baja manual/vocabulario.json una vez por idioma; los comentarios no dan tarjeta, como el autocompletado) -->

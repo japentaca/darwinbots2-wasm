@@ -122,7 +122,7 @@ original y conservadas sin tocar.
 
 **El port está completo y usable.** Los 10 milestones cerrados y verificados:
 
-- **273 casos / 4 153 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
+- **284 casos / 4 432 aserciones en verde en tres modos de build** (los casos dorados de la spec más los tests de la revisión contra VB6) —
   g++ nativo, clang nativo y WASM bajo node — sin una sola divergencia
   numérica (redondeo bancario de VB6, LCG exacto, `Single`/`Double` con
   semántica VB6, sin `-ffast-math`, sin FMA implícita).
@@ -135,7 +135,7 @@ original y conservadas sin tocar.
   dentro de un Web Worker; la página solo presenta. Se observa el mundo y se
   inspecciona cada bot, se experimenta con escenarios y parámetros (también en
   caliente), se analiza cada corrida (población, genética, filogenia,
-  eventos, réplicas e informes), se escriben bots con un editor de ADN y se
+  eventos, réplicas e informes), se escriben bots con un editor de ADN, con la pila paso a paso, y se
   organizan torneos. Guarda y carga la sim en el formato binario de VB6
   (`.dbsim`) e incluye el **Bestiary de 684 bots de la comunidad** (ver
   [De dónde salen los bots](#de-dónde-salen-los-bots-de-la-demo)). La

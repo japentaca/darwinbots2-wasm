@@ -1,7 +1,7 @@
 ---
 titulo: El editor de ADN
-resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, los avisos de lo que el motor lee distinto, la vista por genes, las versiones, Probar y el Laboratorio de genes."
-etiquetas: [editor, adn, avisos, versiones, probar, laboratorio]
+resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, los avisos de lo que el motor lee distinto, la pila paso a paso de cada gen, la vista por genes, las versiones, Probar y el Laboratorio de genes."
+etiquetas: [editor, adn, avisos, pila, versiones, probar, laboratorio]
 estado: revisada
 ---
 El editor de ADN es la pestaña **ADN** de la ficha de cada bot (ver
@@ -38,12 +38,14 @@ De izquierda a derecha:
 | `v3` | La última versión guardada. |
 | **sin guardar** | Aparece cuando el texto cambió desde esa versión. |
 | **4 avisos** | Cuántos avisos hay abajo del texto. |
+| **Pila** | Enciende o apaga el visor de [[app/editor#pila|la pila paso a paso]]. |
 | **Laboratorio** | Cambia el panel de la derecha por el de [[app/editor#laboratorio|genes del Bestiario]]. |
 | **Nota de la versión** y **Guardar v4** | Guardan el texto como versión nueva (ver [[app/editor#versiones|Versiones]]). |
 
-A la derecha del texto están los paneles **Probar** y, en tus bots,
-**Versiones**. Con el
-**Laboratorio** encendido, ese lugar lo ocupa el panel de genes.
+A la derecha del texto están los paneles **Pila** (si lo encendiste),
+**Probar** y, en tus bots, **Versiones**. Con el **Laboratorio** encendido,
+ese lugar lo ocupa el panel de genes, y el de la pila no se ve hasta que lo
+apagues: el botón **Pila** sigue en la barra, pero el panel espera.
 
 ## El modo texto {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -104,6 +106,84 @@ la lista no aparece.
 El autocompletado es solo para nombres con punto. Los operadores y los
 comandos se escriben enteros: si alguno queda mal escrito, lo marca un
 aviso.
+
+## La pila paso a paso {#pila}
+<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace -->
+
+El botón **Pila** de la barra abre un visor que muestra, paso a paso, cómo
+corre el motor el gen donde está el cursor: qué queda en la pila de números y
+en la de verdadero o falso después de cada palabra, y qué escribe cada
+`store`. Sirve para ver de un vistazo por qué una condición da lo que da, sin
+adivinarlo leyendo el ADN. Cómo funcionan las dos pilas está en
+[[adn/pilas]].
+
+El panel aparece a la derecha, arriba de **Probar** y **Versiones**. El botón
+queda encendido o apagado en este navegador: al volver, sigue como lo dejaste.
+
+El panel muestra:
+
+- En **Texto**, el gen donde está el cursor. Un `else` abre un gen propio, así
+  que la rama del `else` se ve en su gen y no junto a la del `start`.
+- En **Por genes**, el gen que desplegaste por último.
+
+La cabecera dice qué gen es (**Gen 2**, con su nombre si tiene una línea de
+comentario arriba) y si la condición dio verdadera o falsa. Si el gen tiene
+`else`, dice también qué rama corrió.
+
+La tabla tiene una fila por palabra del gen:
+
+| Columna | Qué muestra |
+|---|---|
+| **Palabra** | La palabra del ADN, con sus colores. |
+| **Enteros** | La pila de números después de esa palabra. Si hay más de 8, un «+k» cuenta las que no entran. |
+| **Booleanos** | La pila de verdadero o falso: ✓ verdadero, ✗ falso. |
+| **Nota** | Qué pasó: «escribe up (1) ← 50» en un `store` que escribió; «no corre con estos valores» en la primera fila de un bloque que el motor no ejecuta. |
+
+Las filas en gris son las que el motor no ejecuta con los valores de ejemplo:
+por ejemplo, el cuerpo del `start` cuando la condición es falsa. El motor no
+corre ese cuerpo, así que no hay pila que mostrar. Para verlo, cambiá los
+valores de ejemplo hasta que la condición dé verdadera.
+
+### Valores de ejemplo {#valores}
+
+Un gen puede leer sysvars con asterisco, como `*.eye5`. Su valor depende del
+bot que esté en la simulación, así que el visor necesita uno. Debajo del
+título de la pila aparece un campo por cada sysvar del vocabulario que el gen
+lee, con 0 al principio. Cambialo para ver cómo cambia la condición.
+
+Estos valores:
+
+- Se guardan **en este navegador, para este bot**. No van al bot, no entran en
+  sus versiones y no viajan con un archivo. Como no tocan el bot, también se
+  pueden cambiar en los bots del foro.
+- Solo hay campos para los sysvars del vocabulario (`*.eye5`, `*.nrg`…). Las
+  variables de `def` (`*.paso`) no tienen campo: el visor no conoce la dirección
+  que el motor les asigna, así que en la traza valen 0.
+
+Con `*.eye5` en 80, la condición de este gen es verdadera, y el `store` escribe
+50 en `.up`, la dirección 1:
+
+```adn
+cond *.eye5 50 > start 50 .up store stop
+```
+
+| Palabra | Enteros | Booleanos | Nota |
+|---|---|---|---|
+| `*.eye5` | 80 | | |
+| `>` | | ✓ | |
+| `store` | | | escribe up (1) ← 50 |
+
+Con `*.eye5` en 30, la condición es falsa: el `start` no corre, y su bloque
+sale en gris.
+
+:::nota
+La pila se recalcula cuando cambiás el ADN o un valor de ejemplo. Si el ADN no
+carga, o la traza no coincide con el texto, el panel lo dice.
+
+**rnd** usa una semilla fija (1234) en este visor: aquí `rnd` da siempre el
+mismo número. En una corrida real el azar es otro, así que el visor no predice
+lo que hará el bot.
+:::
 
 ## El resumen al pasar el cursor {#resumen}
 <!-- AreaAdn.svelte (tarjeta al mover el mouse: hover.js palabraBajo y entradaDe, métrica de la fuente mono, tabulador cada 4 columnas; lib/manual.js vocabularioManual baja manual/vocabulario.json una vez por idioma; los comentarios no dan tarjeta, como el autocompletado) -->
