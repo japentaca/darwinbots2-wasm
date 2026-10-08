@@ -59,6 +59,10 @@ cd port && python -m http.server 8000
 ```
 
 La app nueva se sirve con `npm run dev` desde `web2/` (ver `../README.md`).
+Su editor de ADN suma cuatro herramientas (decisión 26, [`web2/PLAN-EDITOR.md`](web2/PLAN-EDITOR.md)):
+el visor de la pila paso a paso, el trazador de la pestaña ADN del inspector,
+el modo Fichas con su paleta y la evolución asistida con las mutaciones del
+motor; el balance de su ejecución está en [`web2/PLAN-EDITOR-INFORME.md`](web2/PLAN-EDITOR-INFORME.md).
 
 ## Herramientas
 
