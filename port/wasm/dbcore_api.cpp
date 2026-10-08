@@ -114,10 +114,26 @@ struct SimHandle {
     std::vector<std::array<db::vb_integer, 8>> oskin;
   } e8;
 
+  // PLAN-EDITOR.md E2 — traza del ultimo ciclo del bot con foco (solo host:
+  // nunca se escribe en la sim). `sim.traceSink` apunta a `traza` mientras el
+  // interruptor esta encendido (db_sim_trace_on). `trazaBot` es el slot al que
+  // pertenece lo guardado (0 = nada valido) y `trazaCiclo` el ciclo en que se
+  // grabo; los fija db_sim_tick, que es quien sabe de quien es la traza.
+  db::TraceSink traza;
+  int trazaCiclo = -1;
+  int trazaBot = 0;
+
   SimHandle() { wire(); }
   void wire() {
     sim.rndy = &rng;
     sim.vm.rndy = &rng;
+  }
+  // Enciende o apaga la traza y descarta lo guardado.
+  void trazaEncender(bool on) {
+    sim.traceSink = on ? &traza : nullptr;
+    traza.steps.clear();
+    trazaCiclo = -1;
+    trazaBot = 0;
   }
 };
 
@@ -355,7 +371,31 @@ DB_EXPORT void db_sim_options_ok(void* h) {
 }
 
 // Un ciclo completo de UpdateSim (los 19 pasos del tick, 10-CICLO.md §2).
-DB_EXPORT void db_sim_tick(void* h) { db::UpdateSim(S(h)); }
+// Con la traza del editor apagada (lo normal) es solo UpdateSim. Encendida
+// (db_sim_trace_on), el host anota de quien es la traza que dejo ExecRobs:
+// antes del ciclo se descarta la anterior (si el bot con foco no corre ADN,
+// p. ej. un cadaver, no puede quedar la del ciclo pasado), y despues solo vale
+// si hay pasos y el foco no se movio durante el ciclo (Player Bot/ZB lo mueven:
+// entonces no se sabe a quien pertenece, y es mejor no mostrar nada un ciclo).
+// No toca la sim ni el RNG.
+DB_EXPORT void db_sim_tick(void* h) {
+  SimHandle& Sh = H(h);
+  if (!Sh.sim.traceSink) {
+    db::UpdateSim(Sh.sim);
+    return;
+  }
+  const db::vb_integer foco = Sh.sim.robfocus;
+  Sh.traza.steps.clear();
+  Sh.trazaCiclo = -1;
+  Sh.trazaBot = 0;
+  db::UpdateSim(Sh.sim);
+  if (!Sh.traza.steps.empty() && Sh.sim.robfocus == foco) {
+    Sh.trazaBot = static_cast<int>(foco);
+    Sh.trazaCiclo = static_cast<int>(Sh.sim.opts.TotRunCycle);
+  } else {
+    Sh.traza.steps.clear();
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Opciones de sim (SimOpts esenciales, M10 punto 1)
@@ -2252,6 +2292,7 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   // agranda el vector.
   std::vector<db::Obstacle> obs = std::move(Sh.sim.Obstacles);
   const int lc = Sh.sim.leftCompactor, rc = Sh.sim.rightCompactor;
+  const bool trazaOn = Sh.sim.traceSink != nullptr;  // PLAN-EDITOR.md E2
   db::Sim prev = std::move(Sh.sim);
   Sh.sim = db::Sim{};
   CarryProcessGlobals(Sh.sim, prev);  // RV-39
@@ -2259,6 +2300,7 @@ DB_EXPORT void db_sim_load(void* h, const unsigned char* data, int len) {
   Sh.sim.leftCompactor = lc;
   Sh.sim.rightCompactor = rc;
   Sh.wire();
+  Sh.trazaEncender(trazaOn);  // el interruptor sobrevive; la traza vieja no
   db::VbBinFile f;
   f.data.assign(data, data + (len > 0 ? len : 0));
   Sh.vis = SimHandle::Vis{};  // E6.5: los slots de antes no valen
@@ -3734,6 +3776,54 @@ DB_EXPORT char* db_dna_trace(const char* text, const int* mem, int memLen,
   char* p = static_cast<char*>(std::malloc(s.size() + 1));
   if (p) std::memcpy(p, s.c_str(), s.size() + 1);
   return p;
+}
+
+// ---- Traza del bot con foco, en vivo (PLAN-EDITOR.md E2.1) ------------------
+// Como db_dna_trace pero sobre la sim del usuario: ExecRobs apunta vm.trace al
+// sink del handle solo para robfocus (sim.traceSink) y db_sim_tick anota de
+// quien es lo que quedo. Decision de capa host, fuera de la fidelidad; con la
+// traza apagada la sim es la de siempre y encendida tampoco cambia ningun
+// resultado (no consume RNG ni escribe en la sim). Estan aqui y no junto a
+// db_sim_bot_ga porque serializan con trace_detail::Tsv, definido arriba.
+
+// Enciende (on != 0) o apaga la traza del bot con foco. Descarta lo guardado,
+// de modo que tras encender no hay traza hasta que corre un ciclo.
+DB_EXPORT void db_sim_trace_on(void* h, int on) { H(h).trazaEncender(on != 0); }
+
+// La traza del ultimo ciclo del bot `n` en TSV (malloc; liberar con db_free):
+// primera linea de cabecera `#\t<ciclo>\t<n>\t<genenum>` y despues las lineas
+// del formato de traza, todas terminadas en '\n'. "" si la traza esta apagada,
+// si `n` no es el bot con foco ni el que se trazo, si no existe, o si en el
+// ultimo ciclo no corrio su ADN. El ciclo es el contador de la sim
+// (db_sim_cycle) del momento en que se grabo.
+DB_EXPORT char* db_sim_bot_trace(void* h, int n) {
+  SimHandle& Sh = H(h);
+  const db::Sim& s = Sh.sim;
+  std::string out;
+  if (s.traceSink && n >= 1 && n < static_cast<int>(s.rob.size()) &&
+      n == s.robfocus && n == Sh.trazaBot && s.rob[n].exist &&
+      !Sh.traza.steps.empty()) {
+    out = "#\t" + std::to_string(Sh.trazaCiclo) + '\t' + std::to_string(n) +
+          '\t' + std::to_string(static_cast<int>(s.rob[n].genenum)) + '\n';
+    out += trace_detail::Tsv(Sh.traza);
+  }
+  char* p = static_cast<char*>(std::malloc(out.size() + 1));
+  if (p) std::memcpy(p, out.c_str(), out.size() + 1);
+  return p;
+}
+
+// Copia mem[1..min(max, 1000)] del bot `n` en out[0..] (out[i] es la direccion
+// i + 1) y devuelve la cantidad. 0 si el bot no existe o los argumentos no
+// sirven (out nulo, max <= 0). Solo lee.
+DB_EXPORT int db_sim_bot_mem_dump(void* h, int n, int* out, int max) {
+  const db::Sim& s = S(h);
+  if (!out || max <= 0 || n < 1 || n >= static_cast<int>(s.rob.size()) ||
+      !s.rob[n].exist)
+    return 0;
+  const int c = max < db::MaxMem ? max : db::MaxMem;
+  for (int a = 1; a <= c; ++a)
+    out[a - 1] = static_cast<int>(s.rob[n].mem[static_cast<std::size_t>(a)]);
+  return c;
 }
 
 // console.frm:369 — `energy e`.

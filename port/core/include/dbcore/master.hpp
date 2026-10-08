@@ -29,10 +29,13 @@ inline void ExecRobs(Sim& sim) {
       // E6 — el gate de ga() de DNA.bas:75: foco o consola abierta. Es la
       // unica forma en que el original decide poblar la traza de genes.
       sim.vm.gaTrack = (t == sim.robfocus) || sim.rob[t].consoleOpen;
+      // Gancho del editor (PLAN-EDITOR.md E2): traza solo el bot con foco.
+      sim.vm.trace = (t == sim.robfocus) ? sim.traceSink : nullptr;
       ExecuteDNA(sim.vm, sim.rob[t]);
     }
   }
   sim.vm.gaTrack = false;
+  sim.vm.trace = nullptr;
 }
 
 // Master.bas:23-554 — UpdateSim, núcleo. La numeración de pasos es la de

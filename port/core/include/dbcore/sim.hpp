@@ -514,6 +514,11 @@ struct Sim {
                                  //   NUNCA se resetea — acumula entre rondas
                                  //   del modo 9 dentro del mismo proceso
   vb_integer robfocus = 0;       // Globals: bot con foco (Player Bot/ZB)
+  // PLAN-EDITOR.md E2: traza del bot con foco. Gancho de observación que no
+  // existe en el original; lo posee el host (no se guarda en el .dbsim ni se
+  // copia entre sims). ExecRobs apunta vm.trace aquí solo para robfocus; nulo =
+  // comportamiento intacto.
+  TraceSink* traceSink = nullptr;
   F1State f1;
   PlayerBotState pb;
   GameEvents events;

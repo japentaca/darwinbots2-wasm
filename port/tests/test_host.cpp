@@ -803,3 +803,232 @@ TEST_CASE("db_dna_trace - ADN rechazado, texto nulo y semilla") {
     db_sim_destroy(h);
   }
 }
+
+// ---------------------------------------------------------------------------
+// PLAN-EDITOR.md E2.1 — traza del bot con foco (db_sim_trace_on /
+// db_sim_bot_trace) y volcado de memoria (db_sim_bot_mem_dump). Capa host sobre
+// el gancho de ExecRobs (sim.traceSink): la traza es la del ultimo ciclo del bot
+// con foco, con una cabecera `#\tciclo\tn\tgenenum`. Solo lee: la sim evoluciona
+// igual con la traza encendida.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Sim recien arrancada con `qty` bots del ADN de la traza (slots 1..qty).
+void* SimConBotsDeTraza(int qty) {
+  void* h = db_sim_create();
+  db_sim_start(h, 1234);
+  const int sp = db_sim_add_species(h, kAdnTraza, "t.txt", 0, 1, 3000, 0, qty);
+  REQUIRE(db_sim_seed_species(h, sp, qty) == qty);
+  return h;
+}
+
+// db_sim_bot_trace como lo llama la pagina: texto TSV (vacio = sin traza).
+std::string TrazaBot(void* h, int n) {
+  char* p = db_sim_bot_trace(h, n);
+  REQUIRE(p != nullptr);
+  std::string s = p;
+  db_free(p);
+  return s;
+}
+
+}  // namespace
+
+TEST_CASE("db_sim_bot_trace - traza del bot con foco, con cabecera") {
+  void* h = SimConBotsDeTraza(1);
+  db_sim_set_focus(h, 1);
+  db_sim_trace_on(h, 1);
+  db_sim_bot_set_mem(h, 1, 50, 5);
+  // Encendida pero sin ciclo corrido: no hay nada que mostrar.
+  CHECK(TrazaBot(h, 1).empty());
+  db_sim_tick(h);
+  const std::string tsv = TrazaBot(h, 1);
+  const std::vector<std::string> l = Lineas(tsv);
+  REQUIRE(l.size() >= 12);  // cabecera + al menos 11 pasos
+  CHECK(tsv.compare(0, 2, "#\t") == 0);
+  CHECK(tsv.back() == '\n');
+  // Cabecera: ciclo de la sim, bot, cantidad de genes (la misma que el export
+  // que lee el inspector).
+  CHECK(l[0] == "#\t" + std::to_string(db_sim_cycle(h)) + "\t1\t" +
+                    std::to_string(db_sim_bot_genenum(h, 1)));
+  CHECK(db_sim_cycle(h) == 0);
+  CHECK(db_sim_bot_genenum(h, 1) == 2);
+  // Los pasos son los del formato de traza, uno por token (13), idx desde 1.
+  REQUIRE(l.size() == 14);
+  for (std::size_t k = 1; k < l.size(); ++k) {
+    const auto c = Columnas(l[k]);
+    REQUIRE(c.size() == 12);
+    CHECK(c[0] == std::to_string(k));
+  }
+  // Con mem[50] = 5 el store escribe 7 en 100; la rama else no corre.
+  CHECK(Columnas(l[8])[1] == std::to_string(static_cast<int>(db::tok::STORE)));
+  CHECK(Termina(l[8], "\t100\t7"));
+  CHECK(Columnas(l[10])[3] == "0");
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_trace - solo el bot con foco y nunca una traza vieja") {
+  void* h = SimConBotsDeTraza(2);
+  db_sim_set_focus(h, 1);
+  db_sim_trace_on(h, 1);
+  db_sim_tick(h);
+  CHECK_FALSE(TrazaBot(h, 1).empty());
+  CHECK(TrazaBot(h, 2).empty());  // n != robfocus
+  // El foco cambia sin que corra un ciclo: la traza guardada es del bot 1 y no
+  // se entrega rotulada como la del 2 (ni como la del 1, que ya no tiene foco).
+  db_sim_set_focus(h, 2);
+  CHECK(TrazaBot(h, 2).empty());
+  CHECK(TrazaBot(h, 1).empty());
+  db_sim_tick(h);
+  const std::vector<std::string> l = Lineas(TrazaBot(h, 2));
+  REQUIRE(l.size() == 14);
+  CHECK(l[0] == "#\t" + std::to_string(db_sim_cycle(h)) + "\t2\t2");
+  CHECK(db_sim_cycle(h) == 1);
+  // Sin foco no hay traza; fuera de rango tampoco.
+  db_sim_set_focus(h, 0);
+  CHECK(TrazaBot(h, 2).empty());
+  CHECK(TrazaBot(h, 0).empty());
+  CHECK(TrazaBot(h, -1).empty());
+  CHECK(TrazaBot(h, 99999).empty());
+  // Volver a encender descarta la traza guardada.
+  db_sim_set_focus(h, 2);
+  CHECK_FALSE(TrazaBot(h, 2).empty());
+  db_sim_trace_on(h, 1);
+  CHECK(TrazaBot(h, 2).empty());
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_trace - apagada no registra, y un bot sin ADN activo tampoco") {
+  void* h = SimConBotsDeTraza(1);
+  db_sim_set_focus(h, 1);
+  SUBCASE("sin encender") {
+    CHECK(S(h).traceSink == nullptr);
+    db_sim_tick(h);
+    CHECK(TrazaBot(h, 1).empty());
+  }
+  SUBCASE("encendida y despues apagada") {
+    db_sim_trace_on(h, 1);
+    CHECK(S(h).traceSink != nullptr);
+    db_sim_tick(h);
+    CHECK_FALSE(TrazaBot(h, 1).empty());
+    db_sim_trace_on(h, 0);
+    CHECK(S(h).traceSink == nullptr);
+    CHECK(TrazaBot(h, 1).empty());
+    db_sim_tick(h);
+    CHECK(TrazaBot(h, 1).empty());
+  }
+  SUBCASE("el bot con foco no corrio ADN este ciclo: no queda la del ciclo anterior") {
+    db_sim_trace_on(h, 1);
+    db_sim_tick(h);
+    REQUIRE_FALSE(TrazaBot(h, 1).empty());
+    S(h).rob[1].DisableDNA = true;  // ExecRobs lo salta (DNA.bas:1247)
+    db_sim_tick(h);
+    CHECK(TrazaBot(h, 1).empty());
+  }
+  db_sim_destroy(h);
+}
+
+TEST_CASE("db_sim_bot_trace - cargar una sim conserva el interruptor") {
+  void* h = SimConBotsDeTraza(1);
+  db_sim_trace_on(h, 1);
+  int len = 0;
+  unsigned char* buf = db_sim_save(h, &len);
+  db_sim_load(h, buf, len);  // reemplaza el Sim entero del handle
+  db_free(buf);
+  CHECK(S(h).traceSink == &H(h).traza);
+  db_sim_set_focus(h, 1);
+  CHECK(TrazaBot(h, 1).empty());  // la traza de antes de cargar no vale
+  db_sim_tick(h);
+  CHECK(Lineas(TrazaBot(h, 1)).size() == 14);
+  // Y apagada sigue apagada.
+  db_sim_trace_on(h, 0);
+  buf = db_sim_save(h, &len);
+  db_sim_load(h, buf, len);
+  db_free(buf);
+  CHECK(S(h).traceSink == nullptr);
+  db_sim_destroy(h);
+}
+
+TEST_CASE("traza del bot con foco - la sim evoluciona igual con la traza encendida") {
+  // Dos sims identicas (algas con rnd en el ADN y bots de la traza). La A
+  // enciende la traza y llama a los tres exports en cada ciclo; la B no. Los
+  // .dbsim y el estado del LCG tienen que salir iguales byte a byte.
+  auto armar = [] {
+    void* h = db_sim_create();
+    db_sim_set_field(h, 16000, 16000);
+    db_sim_set_max_energy(h, 10);
+    db_sim_set_start_chlr(h, 16000);
+    db_sim_start(h, 1234);
+    const int a = db_sim_add_species(h, kAlga, "a.txt", 1, 1, 3000, 0, 3);
+    const int t = db_sim_add_species(h, kAdnTraza, "t.txt", 0, 1, 3000, 0, 2);
+    REQUIRE(db_sim_seed_species(h, a, 3) == 3);
+    REQUIRE(db_sim_seed_species(h, t, 2) == 2);
+    db_sim_set_focus(h, 4);
+    return h;
+  };
+  void* a = armar();
+  void* b = armar();
+  db_sim_trace_on(a, 1);
+  std::vector<int> mem(1000);
+  bool huboTraza = false;
+  for (int c = 0; c < 40; ++c) {
+    db_sim_tick(a);
+    db_sim_tick(b);
+    huboTraza = huboTraza || !TrazaBot(a, 4).empty();
+    TrazaBot(a, 1);
+    CHECK(db_sim_bot_mem_dump(a, 4, mem.data(), 1000) == 1000);
+  }
+  CHECK(huboTraza);
+  CHECK(db_sim_rng_state(a) == db_sim_rng_state(b));
+  int la = 0, lb = 0;
+  unsigned char* sa = db_sim_save(a, &la);
+  unsigned char* sb = db_sim_save(b, &lb);
+  REQUIRE(la == lb);
+  CHECK(std::memcmp(sa, sb, static_cast<std::size_t>(la)) == 0);
+  db_free(sa);
+  db_free(sb);
+  db_sim_destroy(a);
+  db_sim_destroy(b);
+}
+
+TEST_CASE("db_sim_bot_mem_dump - copia mem[1..1000] del bot") {
+  void* h = SimConBotsDeTraza(1);
+  db_sim_bot_set_mem(h, 1, 50, 5);
+  db_sim_bot_set_mem(h, 1, 51, -123);
+  db_sim_bot_set_mem(h, 1, 1000, 77);
+  std::vector<int> out(1000, -999);
+  CHECK(db_sim_bot_mem_dump(h, 1, out.data(), 1000) == 1000);
+  CHECK(out[49] == 5);  // mem[i] es la direccion i + 1
+  CHECK(out[50] == -123);
+  CHECK(out[999] == 77);
+  bool igual = true;  // un solo CHECK: las 1000 direcciones coinciden
+  for (int a = 1; a <= 1000; ++a)
+    igual = igual && out[static_cast<std::size_t>(a - 1)] == db_sim_bot_mem(h, 1, a);
+  CHECK(igual);
+  SUBCASE("max corto: copia solo esas direcciones") {
+    std::vector<int> corto(60, -999);
+    CHECK(db_sim_bot_mem_dump(h, 1, corto.data(), 10) == 10);
+    CHECK(corto[9] == db_sim_bot_mem(h, 1, 10));
+    CHECK(corto[10] == -999);
+  }
+  SUBCASE("max mayor que 1000: copia 1000 y no pasa de ahi") {
+    std::vector<int> grande(1005, -999);
+    CHECK(db_sim_bot_mem_dump(h, 1, grande.data(), 1005) == 1000);
+    CHECK(grande[999] == 77);
+    CHECK(grande[1000] == -999);
+  }
+  SUBCASE("el bot no existe, o los argumentos no sirven") {
+    std::vector<int> v(1000, -999);
+    CHECK(db_sim_bot_mem_dump(h, 2, v.data(), 1000) == 0);
+    CHECK(db_sim_bot_mem_dump(h, 0, v.data(), 1000) == 0);
+    CHECK(db_sim_bot_mem_dump(h, -1, v.data(), 1000) == 0);
+    CHECK(db_sim_bot_mem_dump(h, 99999, v.data(), 1000) == 0);
+    CHECK(db_sim_bot_mem_dump(h, 1, v.data(), 0) == 0);
+    CHECK(db_sim_bot_mem_dump(h, 1, v.data(), -5) == 0);
+    CHECK(db_sim_bot_mem_dump(h, 1, nullptr, 1000) == 0);
+    bool intacto = true;  // ninguna de las llamadas de arriba escribio en v
+    for (int x : v) intacto = intacto && x == -999;
+    CHECK(intacto);
+  }
+  db_sim_destroy(h);
+}
