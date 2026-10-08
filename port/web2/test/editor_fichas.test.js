@@ -6,6 +6,8 @@
 //      palabra es identidad.
 //   3. insertarEn, borrarFicha, moverFicha, nuevaLineaTras y huecos.
 //   4. sugerenciasFicha (src/lib/bots/editor/autocompletar.js).
+//   5. Historial de deshacer (E3.2, src/lib/bots/editor/historial.js) y su
+//      uso con las acciones de fichas.
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,6 +24,7 @@ import {
 } from '../engine/fichas.js';
 import { genesTexto, tokensTexto } from '../engine/lab.js';
 import { sugerenciasFicha } from '../src/lib/bots/editor/autocompletar.js';
+import { crearHistorial } from '../src/lib/bots/editor/historial.js';
 import { WEB } from './util/dbcore-node.js';
 
 const BOTS = path.join(WEB, 'bots');
@@ -210,4 +213,67 @@ test('sugerenciasFicha: sysvars y privadas con punto, comandos sin punto, vacío
   assert.ok(cmd.includes('store') && cmd.includes('start') && cmd.includes('stop'));
   assert.ok(sugerenciasFicha('st', []).every((s) => s.tipo === 'comando' && s.dir === null));
   assert.deepEqual(sugerenciasFicha('', []), []);
+});
+
+test('historial: deshacer y rehacer recorren los textos anotados', () => {
+  const h = crearHistorial();
+  h.anotar('a');
+  h.anotar('b');
+  h.anotar('c');
+  assert.equal(h.deshacer(), 'b');
+  assert.equal(h.deshacer(), 'a');
+  assert.equal(h.deshacer(), null, 'no hay más para deshacer');
+  assert.equal(h.rehacer(), 'b');
+  assert.equal(h.rehacer(), 'c');
+  assert.equal(h.rehacer(), null, 'no hay más para rehacer');
+});
+
+test('historial: anotar descarta la rama de rehacer; anotar lo mismo no la toca', () => {
+  const h = crearHistorial();
+  h.anotar('a');
+  h.anotar('b');
+  assert.equal(h.deshacer(), 'a');
+  h.anotar('a'); // igual al vigente: no es un cambio
+  assert.equal(h.rehacer(), 'b', 'la rama de rehacer sigue');
+  assert.equal(h.deshacer(), 'a');
+  h.anotar('d'); // cambio nuevo: descarta el rehacer
+  assert.equal(h.rehacer(), null);
+  assert.equal(h.deshacer(), 'a');
+});
+
+test('historial: el tope descarta los estados más viejos', () => {
+  const h = crearHistorial(2);
+  for (const t of ['1', '2', '3', '4', '5']) h.anotar(t);
+  assert.equal(h.deshacer(), '4');
+  assert.equal(h.deshacer(), '3');
+  assert.equal(h.deshacer(), null, 'el 1 y el 2 ya no están');
+});
+
+test('historial: limpiar vacía todo y anotar vuelve a empezar', () => {
+  const h = crearHistorial();
+  h.anotar('a');
+  h.anotar('b');
+  assert.equal(h.deshacer(), 'a');
+  h.limpiar();
+  assert.equal(h.deshacer(), null);
+  assert.equal(h.rehacer(), null);
+  h.anotar('x');
+  assert.equal(h.deshacer(), null, 'el primer texto anotado no tiene anterior');
+});
+
+test('historial con fichas: un estado por acción; dos deshacer vuelven al original', () => {
+  const h = crearHistorial();
+  const t0 = 'cond 1 stop';
+  h.anotar(t0);
+  // Cambiar el 1 por 2: la ficha de índice 1 de la línea cond.
+  const ficha = modeloFichas(t0)[0].fichas[1];
+  const t1 = reemplazarFicha(t0, ficha, '2').texto;
+  assert.equal(t1, 'cond 2 stop');
+  h.anotar(t1);
+  // Insertar .up al inicio de la línea.
+  const t2 = insertarEn(t1, 0, '.up').texto;
+  h.anotar(t2);
+  assert.equal(h.deshacer(), t1);
+  assert.equal(h.deshacer(), t0, 'dos deshacer vuelven al texto original');
+  assert.equal(h.rehacer(), t1);
 });
