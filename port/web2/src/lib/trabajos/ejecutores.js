@@ -11,6 +11,9 @@
 //   prueba    «Probar» del editor de ADN (decisión 18): una unidad = una
 //             semilla de una versión, en un worker del pool
 //             (src/lib/trabajos/prueba.js).
+//   evolucion evolución asistida del editor (PLAN-EDITOR E4.3): una unidad =
+//             un texto (la base o una variante), con una prueba por semilla
+//             (src/lib/trabajos/evolucion.js).
 //   ronda     una ronda de torneo en segundo plano (decisión 23): una unidad
 //             = un partido, en un worker del pool (src/lib/trabajos/partido.js;
 //             no reintentable: se pide otra ronda).
@@ -27,6 +30,7 @@ import {
 } from '../../../engine/barrido.js';
 import { TIPO_REPLICAS, tablaReplicas, vistaParams } from '../../../engine/replicas.js';
 import { TIPO_RONDA } from '../../../engine/rondas.js';
+import { ejecutorEvolucion, TIPO_EVOLUCION } from './evolucion.js';
 import { ejecutorRonda } from './partido.js';
 import { ejecutorPrueba, TIPO_PRUEBA } from './prueba.js';
 import { correrReplica } from './replica.js';
@@ -87,6 +91,7 @@ export function ejecutores(d) {
   return {
     [TIPO_REPLICAS]: ejecutorReplicas(d),
     [TIPO_PRUEBA]: ejecutorPrueba(d),
+    [TIPO_EVOLUCION]: ejecutorEvolucion(d),
     [TIPO_RONDA]: ejecutorRonda(d),
     [TIPO_BARRIDO]: ejecutorBarrido(d),
   };

@@ -378,7 +378,7 @@ export function especiesLote(entradas, o = {}) {
  * @typedef {{id: string, nombre: string, scratch: boolean,
  *   temporadas: Array<{no: number, participante: string}>,
  *   partidos: Array<{id: number, temporada: number, no: number, gano: boolean, fecha?: string}>}} TorneoDelBot
- * @typedef {{id: string, titulo: string, estado: string, creado: string}} PruebaDelBot
+ * @typedef {{id: string, titulo: string, estado: string, creado: string, tipo: string}} PruebaDelBot
  */
 
 /**
@@ -396,7 +396,7 @@ export function especiesLote(entradas, o = {}) {
  * Corridas: almacén 'corridas' (engine/corridas.js: escenario.especies y
  * eventos 'siembra'). Torneos: 'torneos' (temporadas → participantes con el
  * ADN congelado) y 'partidos' (por índice 'league'; el participante va por
- * nombre en fighters). Pruebas: trabajos de tipo 'prueba' de la cola
+ * nombre en fighters). Pruebas: trabajos de tipo 'prueba' (y 'evolucion') de la cola
  * (engine/cola.js) cuyo params trae la clave del bot (`clave`, o `hash`
  * como en N3.1), lg o adn.
  * @param {import('./almacen.js').OperacionesAlmacen} almacen
@@ -476,13 +476,21 @@ export async function historialBot(almacen, entrada, o = {}) {
   /** @type {PruebaDelBot[]} */
   const pruebas = [];
   for (const t of await almacen.list('trabajos')) {
-    if (t?.clase !== 'trabajo' || t.tipo !== 'prueba') continue;
+    // 'evolucion' (PLAN-EDITOR E4.3) corre las mismas pruebas, con otros textos
+    if (t?.clase !== 'trabajo' || (t.tipo !== 'prueba' && t.tipo !== 'evolucion')) continue;
     const p = t.params ?? {};
     const es =
       (p.clave ?? p.hash) === entrada.clave ||
       (typeof p.lg === 'string' && lgs.has(p.lg)) ||
       (typeof p.adn === 'string' && lgs.has(lgHash(p.adn)));
-    if (es) pruebas.push({ id: t.id, titulo: t.titulo, estado: t.estado, creado: t.creado });
+    if (es)
+      pruebas.push({
+        id: t.id,
+        titulo: t.titulo,
+        estado: t.estado,
+        creado: t.creado,
+        tipo: t.tipo,
+      });
   }
   pruebas.sort((a, b) => b.creado.localeCompare(a.creado));
 

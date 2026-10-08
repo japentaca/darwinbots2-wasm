@@ -157,7 +157,12 @@ const textoEstado = (estado) =>
           {#each datos.pruebas as p (p.id)}
             <tr>
               <td>{fecha(p.creado)}</td>
-              <td>{p.titulo}</td>
+              <td>
+                {p.titulo}
+                {#if p.tipo === 'evolucion'}
+                  <span class="chip">{t('bots.historial.evolucion')}</span>
+                {/if}
+              </td>
               <td>{textoEstado(p.estado)}</td>
             </tr>
           {/each}

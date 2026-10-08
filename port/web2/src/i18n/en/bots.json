@@ -224,6 +224,7 @@
   "bots.historial.pruebas": "Quick tests",
   "bots.historial.cuando": "When",
   "bots.historial.prueba": "Test",
+  "bots.historial.evolucion": "Evolution",
   "bots.historial.estado": "Status",
   "bots.historial.estado.pendiente": "pending",
   "bots.historial.estado.corriendo": "running",
