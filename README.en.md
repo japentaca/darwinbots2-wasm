@@ -126,7 +126,7 @@ source drop and kept untouched.
 
 **The port is complete and usable.** All 10 milestones closed and verified:
 
-- **284 test cases / 4,432 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
+- **290 test cases / 4,643 assertions passing in three build modes** (the spec's golden cases plus the tests from the review against VB6) —
   native g++, native clang and WASM under node — without a single numeric
   divergence (VB6 banker's rounding, exact LCG, `Single`/`Double` with VB6
   semantics, no `-ffast-math`, no implicit FMA).
@@ -137,7 +137,7 @@ source drop and kept untouched.
   [`port/README.md`](port/README.md#bugs-del-original-corregidos-2026-09-29).
 - A web app with the full sim: physics and RNG live in `dbcore.wasm`
   inside a Web Worker; the page only presents. You can watch the world and
-  inspect each bot, experiment with scenarios and parameters (also while it
+  inspect each bot, including its live DNA (which genes fire in each cycle), experiment with scenarios and parameters (also while it
   runs), analyze each run (population, genetics, phylogeny, events,
   replicas and reports), write bots with a DNA editor, with a step-by-step stack view, and organize
   tournaments. It saves and loads the sim in the VB6 binary format

@@ -125,7 +125,7 @@ The query stays in the **Queries** group, at the top, until you remove it with
 exist”.
 
 ## DNA {#adn}
-<!-- lib/inspector/Adn.svelte, adn.js resaltarAdn; worker 'bot-text' (cabecera '#generation, '#mutations); i18n inspector.adn.* -->
+<!-- lib/inspector/Adn.svelte (barra, bloque-gen con disparo y evaluado, PanelPila en modo trazador sin memoria de ejemplo, pasar, abrir en el editor); LineaTiempoGenes.svelte (200 ciclos); adn.js claseDeGen, segmentosAdn, pendientePila, CLAVE_PILA_PENDIENTE; Inspector.svelte (traceOn con la pestaña abierta, REFRESCO_TRAZA 500, HISTORIAL_GA 200, abrirEnEditor pide memDump); worker 'bot-text' (cabecera '#generation, '#mutations); i18n inspector.adn.* -->
 
 The bot's DNA as it has it now, with its mutations, colored and with the line
 count. It starts with a few comments with its generation and its mutations.
@@ -133,9 +133,41 @@ count. It starts with a few comments with its generation and its mutations.
 a `.txt`. **Reload** asks for it again: the DNA may have changed if the bot
 mutated during its life ([[simulacion/mutaciones]]).
 
-This tab shows the text; which genes ran in the last cycle is seen in
-**Summary** ([[app/inspector#resumen]]) and, in more detail, with `debug` in the
-console.
+Each gene has its own box, with its number (**Gene 3**, counted the way the
+engine counts it: see [[adn/genes]]). What's marked is what happened in the
+bot's last cycle:
+
+- **fired** (colored box): the gene ran in that cycle.
+- **condition evaluated** (dashed border): the engine ran the gene's condition,
+  but it was false, so the `start` block didn't run.
+- No mark: the gene didn't fire and didn't get to evaluate its condition.
+
+Click a gene's header and its [[app/editor#pila|step-by-step stack]] opens below,
+with the values the bot had in that cycle, not example values. Only one gene is
+open at a time.
+
+The bar above runs the simulation:
+
+- **Pause** appears while the simulation runs and stops it.
+- **1 cycle** and **10 cycles** pause the simulation and advance it one or ten
+  cycles.
+
+While the simulation runs, the genes update every half second. When it's paused,
+they're requested when you open the tab and after each step. The trace is the one
+of the focused bot, the one you're watching. If no cycle has run since you opened
+the tab, the bar says “No trace yet” and no genes are marked.
+
+**Genes over time**, below the text, has one row per gene and one cell per cycle
+for the last 200 (the newest, on the right). A lit cell is a cycle in which that
+gene fired. On a phone the grid scrolls sideways.
+
+**Open in the editor** (with the bot alive) takes this DNA to a new bot in the
+[[app/editor|DNA editor]], with the stack turned on and the bot's real memory as
+example values. [[app/editor#valores|How those values are used]] is explained there.
+
+What ran in the last cycle is also seen in **Summary**
+([[app/inspector#resumen]]), with one square per gene, and in more detail, with
+`debug` in the console.
 
 ## Console {#consola}
 <!-- lib/inspector/Consola.svelte (ATAJOS, historial ↑↓), consola.js COMANDOS; engine/sim.js consoleCmd; i18n inspector.consola.* -->

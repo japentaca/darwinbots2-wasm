@@ -106,7 +106,7 @@ Autocomplete is only for names with a dot. Operators and commands are typed out 
 full: if one ends up misspelled, a warning marks it.
 
 ## The step-by-step stack {#pila}
-<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace -->
+<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace; Editor.svelte adoptarPendiente (valores que deja el inspector, PLAN-EDITOR E2.3) -->
 
 The **Stack** button in the bar opens a viewer that shows, step by step, how the
 engine runs the gene under the cursor: what is left on the number stack and on the
@@ -156,6 +156,13 @@ These values:
 - Only sysvars in the vocabulary get a field (`*.eye5`, `*.nrg`…). `def` variables
   (`*.paso`) have no field: the viewer doesn't know the address the engine assigns
   to them, so in the trace they are 0.
+
+From the inspector, [[app/inspector#adn|the DNA tab]] can open the editor with the
+bot's real memory as example values: **Open in the editor** takes the DNA to a new
+bot, with the stack turned on and the values the bot had at that moment, only for
+the sysvars the DNA reads. Those values live in the session: they aren't saved as
+the bot's examples until you change one. If you change one, the whole table (with
+the other values from the inspector) becomes that bot's examples.
 
 With `*.eye5` at 80, this gene's condition is true, and the `store` writes 50 into
 `.up`, address 1:

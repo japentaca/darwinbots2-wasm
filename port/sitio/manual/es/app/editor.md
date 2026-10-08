@@ -108,7 +108,7 @@ comandos se escriben enteros: si alguno queda mal escrito, lo marca un
 aviso.
 
 ## La pila paso a paso {#pila}
-<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace -->
+<!-- PanelPila.svelte (gen del cursor o el desplegado; una fila por token; chip de condición y de rama; estados sinGen/sinDatos/cargando/ok; ✓/✗; «+k» sobre 8 entradas); Editor.svelte (alternarPila, preferencia en localStorage dbw2.editor.pila; genCursor; el panel no se muestra con el Laboratorio; pedido de traza con SEMILLA_PILA 1234); ejemplos.js (valores por bot, dbw2.editor.pila:<clave>); engine/pila.js (sysvarsLeidos: solo *.nombre; pasosDeGen); Editor.svelte (sysvarsPila filtra con direccionDe: los def no tienen campo); wasm db_dna_trace; Editor.svelte adoptarPendiente (valores que deja el inspector, PLAN-EDITOR E2.3) -->
 
 El botón **Pila** de la barra abre un visor que muestra, paso a paso, cómo
 corre el motor el gen donde está el cursor: qué queda en la pila de números y
@@ -159,6 +159,14 @@ Estos valores:
 - Solo hay campos para los sysvars del vocabulario (`*.eye5`, `*.nrg`…). Las
   variables de `def` (`*.paso`) no tienen campo: el visor no conoce la dirección
   que el motor les asigna, así que en la traza valen 0.
+
+Desde el inspector, [[app/inspector#adn|la pestaña ADN]] puede abrir el editor
+con la memoria real del bot como valores de ejemplo: **Abrir en el editor** lleva
+el ADN a un bot nuevo, con la pila encendida y los valores que tenía el bot en ese
+momento, solo los de las sysvars que el ADN lee. Esos valores viven en la sesión:
+no se guardan como ejemplos del bot mientras no cambies ninguno. Si cambiás uno en
+la pila, la tabla entera (con los demás valores del inspector) pasa a ser ejemplo
+de ese bot.
 
 Con `*.eye5` en 80, la condición de este gen es verdadera, y el `store` escribe
 50 en `.up`, la dirección 1:

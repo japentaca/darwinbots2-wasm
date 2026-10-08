@@ -125,7 +125,7 @@ La consulta queda en el grupo **Consultas**, arriba, hasta que la quitás con
 **×**. Si el nombre no es nada que el bot conozca, la tabla dice «no existe».
 
 ## ADN {#adn}
-<!-- lib/inspector/Adn.svelte, adn.js resaltarAdn; worker 'bot-text' (cabecera '#generation, '#mutations); i18n inspector.adn.* -->
+<!-- lib/inspector/Adn.svelte (barra, bloque-gen con disparo y evaluado, PanelPila en modo trazador sin memoria de ejemplo, pasar, abrir en el editor); LineaTiempoGenes.svelte (200 ciclos); adn.js claseDeGen, segmentosAdn, pendientePila, CLAVE_PILA_PENDIENTE; Inspector.svelte (traceOn con la pestaña abierta, REFRESCO_TRAZA 500, HISTORIAL_GA 200, abrirEnEditor pide memDump); worker 'bot-text' (cabecera '#generation, '#mutations); i18n inspector.adn.* -->
 
 El ADN del bot tal como lo tiene ahora, con sus mutaciones, coloreado y con
 la cuenta de líneas. Empieza con unos comentarios con su generación y sus
@@ -133,8 +133,40 @@ mutaciones. **Copiar** lo pasa al portapapeles, para pegarlo en el
 [[app/editor|editor de ADN]] o en un `.txt`. **Releer** lo vuelve a pedir: el ADN puede haber
 cambiado si el bot mutó en vida ([[simulacion/mutaciones]]).
 
-Esta pestaña muestra el texto; qué genes corrieron en el último ciclo se ve en
-**Resumen** ([[app/inspector#resumen]]) y, con más detalle, con `debug` en la consola.
+Cada gen va en su recuadro, con su número (**Gen 3**, contado como lo cuenta el
+motor: ver [[adn/genes]]). Lo que se marca es lo que pasó en el último ciclo del bot:
+
+- **disparó** (recuadro coloreado): el gen corrió en ese ciclo.
+- **condición evaluada** (borde punteado): el motor corrió la condición del gen,
+  pero dio falsa, así que el bloque del `start` no se ejecutó.
+- Sin marca: el gen no disparó ni llegó a evaluar su condición.
+
+Hacé clic en el encabezado de un gen y se despliega debajo su
+[[app/editor#pila|pila paso a paso]], con los valores que el bot tenía en ese
+ciclo, no valores de ejemplo. Queda abierto un solo gen a la vez.
+
+La barra de arriba maneja la simulación:
+
+- **Pausar** aparece mientras la simulación corre y la detiene.
+- **1 ciclo** y **10 ciclos** pausan la simulación y la avanzan uno o diez ciclos.
+
+Con la simulación corriendo, los genes se actualizan cada medio segundo. En
+pausa, se piden al abrir la pestaña y después de cada paso. La traza es la del
+bot con foco, el que estás mirando. Si todavía no corrió ningún ciclo desde que
+abriste la pestaña, la barra dice «Sin traza todavía» y no hay genes marcados.
+
+**Genes en el tiempo**, debajo del texto, tiene una fila por gen y una celda por
+ciclo de los últimos 200 (la más nueva, a la derecha). Una celda encendida es un
+ciclo en que ese gen disparó. En un teléfono la cuadrícula se recorre a los costados.
+
+**Abrir en el editor** (con el bot vivo) lleva este ADN a un bot nuevo del
+[[app/editor|editor de ADN]], con la pila encendida y la memoria real del bot
+como valores de ejemplo. Cómo se usan esos valores está en
+[[app/editor#valores]].
+
+Qué genes corrieron en el último ciclo también se ve en **Resumen**
+([[app/inspector#resumen]]), con un cuadradito por gen, y con más detalle, con
+`debug` en la consola.
 
 ## Consola {#consola}
 <!-- lib/inspector/Consola.svelte (ATAJOS, historial ↑↓), consola.js COMANDOS; engine/sim.js consoleCmd; i18n inspector.consola.* -->
