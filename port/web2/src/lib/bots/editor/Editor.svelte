@@ -386,7 +386,11 @@ function cambiarValor(nombre, valor) {
 }
 
 const tokensPila = $derived(tokensEjecutables(estable));
-const sysvarsPila = $derived(sysvarsLeidos(tokensPila));
+/* Solo los sysvars del vocabulario tienen dirección: las variables de `def`
+   (`*.paso`) no entran, porque el visor no conoce la que les asigna el motor. */
+const sysvarsPila = $derived(
+  sysvarsLeidos(tokensPila).filter((nombre) => direccionDe(nombre) !== undefined),
+);
 /** El gen del visor: el del cursor (modo texto) o el desplegado (modo genes). */
 const genCursor = $derived(modo === 'texto' ? genDeLinea(lineaCursor) : genAbierto);
 /** Pasos con su palabra; vacíos si la traza no es la del texto actual. */
