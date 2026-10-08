@@ -179,8 +179,9 @@ antes de `.shoot store`.
 
 La pestaña **ADN** es el editor: el texto del bot con colores, los avisos de
 lo que el motor va a leer distinto de lo que parece, la vista gen por gen, el
-panel para **Probar** el bot y el **Laboratorio** para sumarle genes del
-Bestiario. Todo eso está en [[app/editor]].
+panel para **Probar** el bot, **Evolucionar** para sacarle variantes (solo en
+tus bots) y el **Laboratorio** para sumarle genes del Bestiario. Todo eso está
+en [[app/editor]].
 
 En los bots del foro el texto se puede leer y probar, pero no modificar.
 
@@ -197,7 +198,8 @@ tablas:
   ganados de 8 partidos · 2 temporadas») o la marca de **partido rápido**.
   **Ver** lo abre en [[app/competir]].
 - **Pruebas rápidas**: cada vez que usaste **Probar** en el editor, con su
-  estado (pendiente, corriendo, terminada, falló o cancelada).
+  estado (pendiente, corriendo, terminada, falló o cancelada). Cada ronda de
+  **Evolucionar** también aparece aquí, con el chip **Evolución**.
 
 El bot se reconoce por el hash de su ADN, el de cualquiera de sus versiones.
 Si en una corrida sembraste el mismo ADN con otro nombre, también aparece.

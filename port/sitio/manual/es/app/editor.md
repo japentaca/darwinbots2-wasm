@@ -1,7 +1,7 @@
 ---
 titulo: El editor de ADN
-resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, la vista por genes y el modo de fichas, los avisos de lo que el motor lee distinto, la pila paso a paso de cada gen, las versiones, Probar y el Laboratorio de genes."
-etiquetas: [editor, adn, avisos, pila, versiones, probar, laboratorio, fichas]
+resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, la vista por genes y el modo de fichas, los avisos de lo que el motor lee distinto, la pila paso a paso de cada gen, las versiones, Probar, Evolucionar y el Laboratorio de genes."
+etiquetas: [editor, adn, avisos, pila, versiones, probar, evolucion, laboratorio, fichas]
 estado: revisada
 ---
 El editor de ADN es la pestaña **ADN** de la ficha de cada bot (ver
@@ -42,13 +42,14 @@ De izquierda a derecha:
 | **Laboratorio** | Cambia el panel de la derecha por el de [[app/editor#laboratorio|genes del Bestiario]]. |
 | **Nota de la versión** y **Guardar v4** | Guardan el texto como versión nueva (ver [[app/editor#versiones|Versiones]]). |
 
-A la derecha del texto están los paneles **Pila** (si lo encendiste),
-**Probar** y, en tus bots, **Versiones**, en **Texto** y en **Por genes**. En
-**Fichas** ese lugar lo ocupa la **Paleta** (ver [[app/editor#fichas|Las
-fichas]]): Pila y Probar no se ven, y Versiones sigue debajo. Con el
-**Laboratorio** encendido, en cualquier modo, ese lugar lo ocupa el panel de
-genes, y la pila, la paleta, Probar y Versiones no se ven hasta que lo apagues:
-el botón **Pila** sigue en la barra, pero el panel espera.
+A la derecha del texto están los paneles **Pila** (si lo encendiste) y
+**Probar**; en tus bots siguen **Evolucionar** y **Versiones**, en **Texto** y
+en **Por genes**. En **Fichas** ese lugar lo ocupa la **Paleta** (ver
+[[app/editor#fichas|Las fichas]]): Pila, Probar y Evolucionar no se ven, y
+Versiones sigue debajo. Con el **Laboratorio** encendido, en cualquier modo, ese
+lugar lo ocupa el panel de genes, y la pila, la paleta, Probar, Evolucionar y
+Versiones no se ven hasta que lo apagues: el botón **Pila** sigue en la barra,
+pero el panel espera.
 
 ## El modo texto {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -504,6 +505,85 @@ un bot que anda bien sin costos puede morir de hambre en F1. Si tu bot no
 sobrevive, probalo también **Sin costos** para saber si el problema es lo
 que hace o lo que gasta.
 :::
+
+## Evolucionar {#evolucionar}
+<!-- PanelEvolucionar.svelte (campos, Generar y probar, tabla, Ver diff, Adoptar, Otra ronda; {#key bot.clave}); lib/bots/editor/evolucion.js (comprobarRonda, INTENSIDADES, TIPOS_MUTACION, notaAdopcion, adaptarDiff, ultimoTrabajo); lib/trabajos/evolucion.js (POR_DEFECTO_EVOLUCION k 8, mutaciones 2, factor 1; LIMITES_EVOLUCION k 1..16, factor 1..1000; unidadesEvolucion: base y una por variante; resumenEvolucion: orden por sobreviven y luego hijos por copia); engine/variantes.js (injertar, distintas); engine/sim.js variantesDe (sims descartables, semilla + i, botMutate); port/wasm/dbcore_api.cpp db_sim_bot_mutate (qué mutaciones corren y cuáles no); Editor.svelte (PanelEvolucionar solo si esPropio && !soloLectura; adoptarEvolucion → aplicarTexto); lib/trabajos/prueba.js POR_DEFECTO (con algas, F1, 3 semillas, copias 10, ciclos 5000) -->
+
+**Evolucionar** saca variantes de tu ADN con las mutaciones del motor, prueba
+cada una —y la base— con las mismas semillas, y te muestra cuál anduvo mejor.
+Sirve para ver si un cambio al azar ayuda o perjudica al bot. Aparece solo en
+tus bots, debajo de **Probar**, y no se ve en el modo **Fichas** ni con el
+**Laboratorio** encendido, igual que **Probar** (ver [[app/editor#barra|la
+barra]]).
+
+Cada variante es una pasada de las mutaciones del motor sobre el ADN de la
+base, con el tipo y la intensidad que elegiste. Son las que describe
+[[simulacion/mutaciones]]: en vida, las puntuales
+([[simulacion/mutaciones#tipos|tipos de mutación]]), y en reproducción, los
+cambios que sufre el ADN al copiarse para el hijo. Las
+[[simulacion/mutaciones#tasas|tasas]] del motor dicen con qué frecuencia pasa
+cada una. Cuatro tipos que vienen apagados en una simulación nueva (una segunda
+puntual, un segundo error de copia, la translocación y la amplificación) no
+corren aquí, ni las mutaciones **Delta**, que cambian las tasas del bot y no su
+ADN. Las variantes se generan en sims descartables del motor, no en tu
+simulación: tu bot no cambia hasta que adoptás una.
+
+Los campos del panel:
+
+| Campo | Qué es | Por defecto |
+|---|---|---|
+| **Variantes** | Cuántas variantes pedís, de 1 a 16. Pueden salir menos (ver más abajo). | 8 |
+| **Intensidad** | Cuán seguido muta el ADN. Con **4×** las tasas del motor se dividen por 4, y con **16×** por 16: una tasa de 5000 pasa a 1250 con 4× y a 312,5 con 16×. Con **1×** rigen las tasas del bot tal cual. | 1× |
+| **Mutaciones** | **En vida y en reproducción**, **Solo en vida** o **Solo en reproducción**: qué familia de mutaciones corre. | En vida y en reproducción |
+| **Copias** y **Ciclos** | Igual que en **Probar**: cuántos bots iguales se siembran y cuánto dura cada corrida. | 10 y 5000 |
+
+El escenario, las reglas y las semillas de cada prueba son los de **Probar** por
+defecto: con algas, reglas **F1** y tres semillas. El panel no los muestra.
+
+Cada ronda saca una semilla al azar, que se muestra debajo del botón junto con
+la intensidad.
+
+Al hacer clic en **Generar y probar**, el motor arma las variantes y la prueba
+de la base y de cada una entra en la cola de trabajos. Mientras el motor las
+arma, el botón dice **Generando…**. Con la cola en marcha se ven el porcentaje
+y **Cancelar**, como en **Probar**. Podés seguir editando o cambiar de bot: la
+ronda sigue en la cola, y cada bot muestra su última ronda.
+
+Cuando termina, la tabla muestra la **Base** (tu ADN, resaltada) y una fila por
+variante, numerada desde 1:
+
+| Columna | Qué mide |
+|---|---|
+| **Genes cambiados** | Cuántos genes de la base cambió la variante: los cambiados, los agregados y los quitados. |
+| **Sobreviven** | Cuántas de las copias del principio siguen vivas al final, en promedio sobre las semillas. |
+| **Hijos por copia** | Hijos directos de cada copia, en promedio (como en **Probar**). |
+| **Energía media** | La energía por bot vivo al terminar. |
+
+Las variantes van ordenadas por **Sobreviven** y, en empate, por **Hijos por
+copia**. Cada una tiene tres botones:
+
+- **Ver diff** abre la comparación gen por gen entre el texto actual del editor
+  y la variante, con la misma vista que **Comparar** en las versiones.
+- **Adoptar** pasa a tu texto solo los genes que cambió la variante; los demás
+  conservan su texto y sus comentarios. Los comentarios que estaban dentro de
+  un gen cambiado se pierden. El texto queda como cambio sin guardar, y la nota
+  de la versión sugiere algo como «evolución: variante 3 (semilla 1234,
+  intensidad 4×)». **Adoptar** no guarda una versión: si te gusta el resultado,
+  guardalo como cualquier cambio. En modo texto, Ctrl+Z lo deshace.
+- **Otra ronda desde esta** genera una ronda nueva con esa variante como base,
+  sin adoptarla en el editor. La tabla de la nueva ronda dice «Base: variante n
+  de la ronda anterior». **Ver diff** y **Adoptar** siguen comparando contra el
+  texto actual del editor, así que tras otra ronda muestran los cambios
+  acumulados, no solo los de esa ronda.
+
+Pueden salir menos variantes de las pedidas: las que quedan iguales al ADN
+original o iguales entre sí se descartan. Si el motor no saca ninguna distinta,
+el panel lo dice: «El motor no produjo variantes distintas; subí la intensidad».
+
+Las variantes que no adoptás no se guardan como versiones. La ronda queda en el
+[[app/bots#historial|historial]] del bot, en **Pruebas rápidas**, con el chip
+**Evolución**. Cuando termina, el chip de trabajos de la barra superior lleva a
+**Comparar** (ver [[app/informes#trabajos|trabajos en segundo plano]]).
 
 ## El Laboratorio {#laboratorio}
 <!-- PanelGenes.svelte (editor.lab.*: por capacidad / de un bot, solo autónomos, Ver el código, +); engine/lab.js avisosLab (dep → agregar-gen; col → remapear 971-990; gl → renumerar / agregar-gen; info sin-repro / sin-energia solo si todo el ADN viene del Bestiario); PLAN.md decisión 19 -->

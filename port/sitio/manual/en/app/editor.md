@@ -1,7 +1,7 @@
 ---
 titulo: The DNA editor
-resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the gene view and the tiles mode, the warnings about what the engine reads differently, the step-by-step stack of each gene, versions, Test and the gene Lab."
-etiquetas: [editor, dna, warnings, stack, versions, test, lab, tiles]
+resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the gene view and the tiles mode, the warnings about what the engine reads differently, the step-by-step stack of each gene, versions, Test, Evolve and the gene Lab."
+etiquetas: [editor, dna, warnings, stack, versions, test, evolution, lab, tiles]
 estado: revisada
 ---
 The DNA editor is the **DNA** tab of each bot's profile (see [[app/bots]]). There
@@ -43,12 +43,13 @@ From left to right:
 | **Version note** and **Save v4** | Save the text as a new version (see [[app/editor#versiones|Versions]]). |
 
 To the right of the text, in **Text** and **By gene**, are the **Stack** panel (if
-you turned it on), the **Test** panel and, on your own bots, **Versions**. In
-**Tiles** that spot is taken by the **Palette** (see [[app/editor#fichas|The
-tiles]]): Stack and Test don't show, and Versions stays below. With the **Lab**
-turned on, in any mode, that spot is taken by the genes panel, and the stack, the
-palette, Test and Versions don't show until you turn the Lab off: the **Stack**
-button stays in the bar, but the panel waits.
+you turned it on), the **Test** panel and, on your own bots, **Evolve** and
+**Versions**. In **Tiles** that spot is taken by the **Palette** (see
+[[app/editor#fichas|The tiles]]): Stack, Test and Evolve don't show, and Versions
+stays below. With the **Lab** turned on, in any mode, that spot is taken by the
+genes panel, and the stack, the palette, Test, Evolve and Versions don't show
+until you turn the Lab off: the **Stack** button stays in the bar, but the panel
+waits.
 
 ## Text mode {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -494,6 +495,84 @@ that does fine with no costs can starve in F1. If your bot doesn't survive, test
 with **No costs** too, to find out whether the problem is what it does or what it
 spends.
 :::
+
+## Evolve {#evolucionar}
+<!-- PanelEvolucionar.svelte (campos, Generar y probar, tabla, Ver diff, Adoptar, Otra ronda; {#key bot.clave}); lib/bots/editor/evolucion.js (comprobarRonda, INTENSIDADES, TIPOS_MUTACION, notaAdopcion, adaptarDiff, ultimoTrabajo); lib/trabajos/evolucion.js (POR_DEFECTO_EVOLUCION k 8, mutaciones 2, factor 1; LIMITES_EVOLUCION k 1..16, factor 1..1000; unidadesEvolucion: base y una por variante; resumenEvolucion: orden por sobreviven y luego hijos por copia); engine/variantes.js (injertar, distintas); engine/sim.js variantesDe (sims descartables, semilla + i, botMutate); port/wasm/dbcore_api.cpp db_sim_bot_mutate (qué mutaciones corren y cuáles no); Editor.svelte (PanelEvolucionar solo si esPropio && !soloLectura; adoptarEvolucion → aplicarTexto); lib/trabajos/prueba.js POR_DEFECTO (con algas, F1, 3 semillas, copias 10, ciclos 5000) -->
+
+**Evolve** takes variants of your DNA with the engine's mutations, tests each
+one—and the base—with the same seeds, and shows you which one did best. It helps
+you see whether a random change helps or hurts the bot. It only shows on your own
+bots, below **Test**, and it doesn't show in **Tiles** mode or with the **Lab**
+turned on, just like **Test** (see [[app/editor#barra|the top bar]]).
+
+Each variant is one pass of the engine's mutations over the base DNA, with the
+type and intensity you chose. They are the ones described in
+[[simulacion/mutaciones]]: in life, the point mutations ([[simulacion/mutaciones#tipos|mutation
+types]]), and in reproduction, the changes the DNA suffers when it is copied to
+the child. The engine's [[simulacion/mutaciones#tasas|rates]] say how often each
+one happens. Four types that are off in a new simulation (a second point
+mutation, a second copy error, translocation and amplification) don't run here,
+nor do the **Delta** mutations, which change the bot's rates and not its DNA. The
+variants are generated in disposable sims of the engine, not in your simulation:
+your bot doesn't change until you adopt one.
+
+The fields of the panel:
+
+| Field | What it is | Default |
+|---|---|---|
+| **Variants** | How many variants you ask for, from 1 to 16. There may be fewer (see below). | 8 |
+| **Intensity** | How often the DNA mutates. With **4×** the engine's rates are divided by 4, and with **16×** by 16: a rate of 5000 becomes 1250 at 4× and 312.5 at 16×. At **1×** the bot's rates apply as they are. | 1× |
+| **Mutations** | **In life and in reproduction**, **Only in life** or **Only in reproduction**: which family of mutations runs. | In life and in reproduction |
+| **Copies** and **Cycles** | As in **Test**: how many identical bots are seeded and how long each run lasts. | 10 and 5000 |
+
+The scenario, the rules and the seeds of each test are the **Test** defaults:
+with algae, **F1** rules and three seeds. The panel doesn't show them.
+
+Each round draws a random seed, shown below the button together with the
+intensity.
+
+When you click **Generate and test**, the engine builds the variants and the test
+of the base and of each one goes into the job queue. While the engine builds them
+the button says **Generating…**. With the queue running you see the percentage
+and **Cancel**, as in **Test**. You can keep editing or switch bots: the round
+stays in the queue, and each bot shows its own last round.
+
+When it ends, the table shows the **Base** (your DNA, highlighted) and one row per
+variant, numbered from 1:
+
+| Column | What it measures |
+|---|---|
+| **Genes changed** | How many genes of the base the variant changed: changed, added and removed. |
+| **Survive** | How many of the copies from the start are still alive at the end, averaged over the seeds. |
+| **Offspring per copy** | Direct children of each copy, on average (as in **Test**). |
+| **Mean energy** | Energy per living bot at the end. |
+
+The variants are sorted by **Survive** and, on a tie, by **Offspring per copy**.
+Each one has three buttons:
+
+- **View diff** opens the gene-by-gene comparison between the editor's current
+  text and the variant, with the same view as **Compare** in the versions.
+- **Adopt** brings into your text only the genes the variant changed; the rest
+  keep their text and comments. Comments inside a changed gene are lost. The text
+  becomes an unsaved change, and the version note suggests something like
+  “evolution: variant 3 (seed 1234, intensity 4×)”. **Adopt** doesn't save a
+  version: if you like the result, save it like any other change. In text mode,
+  Ctrl+Z undoes it.
+- **Another round from this one** generates a new round with that variant as the
+  base, without adopting it in the editor. The new round's table says “Base:
+  variant n from the previous round.” **View diff** and **Adopt** keep comparing
+  against the editor's current text, so after another round they show the
+  accumulated changes, not only those of that round.
+
+Fewer variants may come out than you asked for: the ones that end up equal to the
+original DNA or to each other are discarded. If the engine doesn't produce any
+distinct one, the panel says: “The engine produced no distinct variants; raise
+the intensity.”
+
+The variants you don't adopt aren't saved as versions. The round stays in the
+bot's [[app/bots#historial|history]], under **Quick tests**, with the **Evolution**
+chip. When it ends, the jobs chip in the top bar leads to **Compare** (see
+[[app/informes#trabajos|background jobs]]).
 
 ## The Lab {#laboratorio}
 <!-- PanelGenes.svelte (editor.lab.*: por capacidad / de un bot, solo autónomos, Ver el código, +); engine/lab.js avisosLab (dep → agregar-gen; col → remapear 971-990; gl → renumerar / agregar-gen; info sin-repro / sin-energia solo si todo el ADN viene del Bestiario); PLAN.md decisión 19 -->

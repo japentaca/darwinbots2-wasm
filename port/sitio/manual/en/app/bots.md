@@ -178,8 +178,9 @@ listed.
 
 The **DNA** tab is the editor: the bot's text with colors, the warnings about what
 the engine will read differently than it looks, the gene-by-gene view, the panel
-to **Test** the bot and the **Lab** to add genes from the Bestiary to it.
-All of that is in [[app/editor]].
+to **Test** the bot, **Evolve** to take variants from it (only on your own bots)
+and the **Lab** to add genes from the Bestiary to it. All of that is in
+[[app/editor]].
 
 On forum bots the text can be read and tested, but not modified.
 
@@ -195,7 +196,8 @@ tables:
   of 8 matches · 2 seasons”) or the **quick match** mark. **View** opens it in
   [[app/competir]].
 - **Quick tests**: every time you used **Test** in the editor, with its status
-  (pending, running, done, failed or cancelled).
+  (pending, running, done, failed or cancelled). Each round of **Evolve** shows
+  up here too, with the **Evolution** chip.
 
 The bot is recognized by its DNA hash, that of any of its versions. If you seeded
 the same DNA in a run under another name, it shows up too.

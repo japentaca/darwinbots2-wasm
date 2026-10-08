@@ -28,7 +28,7 @@ cerradas E1–E8, E6.5 y E10–E12; E9 (sexualidad visible) quedó en pausa y E1
 (backend) pendiente. Lo que vino después son añadidos de la capa host,
 anotados en los planes de `web2/`.
 
-Estado verificado (2026-10-07): 290 casos / 4643 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 35 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
+Estado verificado (2026-10-08): 302 casos / 4755 aserciones en verde (en los tres modos; incluye los tests de la revisión contra VB6, pilotos 1-14), con el plan de extensiones completo (E1..E8 y E6.5), PP-01/PP-03 y los añadidos de host del 2026-09-25/26: Inventario, Laboratorio, ajustes F1, Contest, Canal de TV e interfaz en inglés; después, E10 (ligas) y E11 (torneos unificados: Contest, Canal y Ligas en una sola ventana) (ver `spec/PROGRESO.md`), y 35 bugs del original corregidos (ver [Bugs del original corregidos](#bugs-del-original-corregidos-2026-09-29)).
 
 ## Build
 

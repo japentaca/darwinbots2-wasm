@@ -41,6 +41,12 @@ doesn't store it (see [[app/escenarios]]). Other places where it appears:
   repeat it (see [[app/analizar#comparar]]);
 - **the test of a bot** (**Test**, in the editor) runs several seeds and, with
   the same first one, always gives the same result (see [[app/editor#probar]]).
+- **the evolution** (**Evolve**, in the editor) tests the base and each variant
+  with the same replicate seeds, which come from the round's seed, as in
+  **Test**. The variants are generated in disposable sims of the engine, each
+  with the round's seed plus a number: the user's simulation isn't touched and
+  uses no randomness (see [[app/editor#evolucionar]]).
+<!-- web2/src/lib/trabajos/evolucion.js (unidadesEvolucion: las mismas semillas para la base y las variantes); web2 engine/sim.js variantesDe (semilla + i, sims descartables del worker); port/wasm/dbcore_api.cpp db_sim_bot_mutate -->
 <!-- web2/src/lib/experimentar/borrador.js (SEMILLA_MAX 2147483646, parsearSemilla, semillaAleatoria); i18n experimentar.semilla.ayuda, experimentar.error.semilla; engine/replicas.js semillasReplicas (la primera es la de la corrida); lib/trabajos/prueba.js -->
 
 ## When two runs are identical {#identicas}

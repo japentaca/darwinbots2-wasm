@@ -41,6 +41,12 @@ simulación, en la columna derecha de [[app/experimentar]], con un dado (🎲,
   origen, para repetirla (ver [[app/analizar#comparar]]);
 - **la prueba de un bot** (**Probar**, en el editor) corre varias semillas y,
   con la misma primera, da siempre lo mismo (ver [[app/editor#probar]]).
+- **la evolución** (**Evolucionar**, en el editor) prueba la base y cada
+  variante con las mismas semillas de réplica, que salen de la semilla de la
+  ronda, como en **Probar**. Las variantes se generan en sims descartables del
+  motor, cada una con la semilla de la ronda más un número: la simulación del
+  usuario no se toca ni consume azar (ver [[app/editor#evolucionar]]).
+<!-- web2/src/lib/trabajos/evolucion.js (unidadesEvolucion: las mismas semillas para la base y las variantes); web2 engine/sim.js variantesDe (semilla + i, sims descartables del worker); port/wasm/dbcore_api.cpp db_sim_bot_mutate -->
 <!-- web2/src/lib/experimentar/borrador.js (SEMILLA_MAX 2147483646, parsearSemilla, semillaAleatoria); i18n experimentar.semilla.ayuda, experimentar.error.semilla; engine/replicas.js semillasReplicas (la primera es la de la corrida); lib/trabajos/prueba.js -->
 
 ## Cuándo dos corridas son idénticas {#identicas}
