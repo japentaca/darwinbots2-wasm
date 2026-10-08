@@ -35,6 +35,7 @@ add_executable(dbtests
   tests/test_authors_suite.cpp
   tests/test_numeric.cpp
   tests/test_vm.cpp
+  tests/test_trace.cpp
   tests/test_memory.cpp
   tests/test_physics.cpp
   tests/test_formats.cpp

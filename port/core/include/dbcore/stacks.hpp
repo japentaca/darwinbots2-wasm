@@ -70,6 +70,12 @@ class IntStack {
 
   int size() const { return pos_; }
 
+  // Gancho de observación (PLAN-EDITOR.md E1.1): no existe en el original y no
+  // toca el estado. i = 0 es el tope; fuera de rango devuelve 0.
+  vb_long peek(int i) const {
+    return (i < 0 || i >= pos_) ? 0 : val_[pos_ - 1 - i];
+  }
+
  private:
   std::array<vb_long, 102> val_{};  // val(0..100) + margen del pos==101
   int pos_ = 0;
@@ -138,6 +144,11 @@ class BoolStack {
   }
 
   int size() const { return pos_; }
+
+  // Gancho de observación (PLAN-EDITOR.md E1.1): ver IntStack::peek.
+  int peek(int i) const {
+    return (i < 0 || i >= pos_) ? 0 : val_[pos_ - 1 - i];
+  }
 
  private:
   std::array<int, 102> val_{};

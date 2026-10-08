@@ -3,7 +3,9 @@
 // Contratos: 20-VM.md §4, §5, §7; casos dorados V-01..V-14.
 #pragma once
 
+#include <array>
 #include <cmath>
+#include <vector>
 
 #include "bot.hpp"
 #include "dnaops.hpp"
@@ -31,6 +33,29 @@ struct Costs {
   vb_single of(int i) const { return v[i] * v[COSTMULTIPLIER]; }
 };
 
+// Traza de un ciclo de ExecuteDNA (herramientas del editor, PLAN-EDITOR.md).
+// No existe en el original: es un gancho de observación. Con `trace == nullptr`
+// ExecuteDNA es byte a byte la misma; con un sink solo se anota, nunca se
+// cambia el estado ni se consume RNG.
+// Una entrada por token del ADN tokenizado (`bot.dna[1..]`, hasta el `end`).
+struct TraceStep {
+  vb_long idx = 0;            // índice en bot.dna (empieza en 1)
+  unsigned char tipo = 0;     // Block.tipo (tok::NUMBER, DEREF, ...)
+  vb_long value = 0;          // Block.value
+  bool ejec = false;          // el token corrió (no CLEAR; store con cond cierta)
+  unsigned char flow = 0;     // flujo DESPUÉS del token: 0 CLEAR, 1 COND, 2 BODY, 3 ELSEBODY
+  vb_long gen = 0;            // currgene después del token (como CountGenes, desde 1)
+  int nInts = 0;              // tamaño de la pila de enteros después del token
+  std::array<vb_long, 8> ints{};  // hasta 8 entradas superiores, de abajo hacia arriba
+  int nBools = 0;             // tamaño de la pila de booleanos
+  std::array<int, 8> bools{};     // idem (-1 verdadero, 0 falso)
+  vb_long storeAddr = 0;      // store que escribió: dirección normalizada (1..1000); si no, 0
+  vb_long storeVal = 0;       // bot.mem[storeAddr] después del store; si no, 0
+};
+struct TraceSink {
+  std::vector<TraceStep> steps;
+};
+
 // Contexto de ejecución: los stacks son globales únicos del motor — no por
 // bot — limpiados al entrar cada bot (DNA.bas:68-69; 20-VM.md §3).
 struct VmContext {
@@ -46,6 +71,9 @@ struct VmContext {
   // Es estado de modulo del original (robfocus + el objeto consola), asi que
   // aqui vive en el contexto del motor; ExecRobs lo fija por bot.
   bool gaTrack = false;
+  // Gancho de observación del editor (PLAN-EDITOR.md E1.1): si no es nulo,
+  // ExecuteDNA anota un TraceStep por token. Nulo = comportamiento intacto.
+  TraceSink* trace = nullptr;
 };
 
 namespace detail {
@@ -502,6 +530,32 @@ inline bool ExecuteFlowCommands(VmContext& vm, Bot& bot, FlowState& f, int n) {
   return ret;
 }
 
+// Gancho de observación del editor (PLAN-EDITOR.md E1.1): anota el estado
+// DESPUÉS de procesar el token `t` (índice `idx` de bot.dna). Solo lee; el
+// llamador ya comprobó que vm.trace no es nulo. `dir` es la dirección
+// normalizada si el token fue un store que escribió, 0 si no.
+inline void RecordTrace(VmContext& vm, const Bot& bot, const FlowState& f,
+                        vb_long idx, const Block& t, bool ejec, vb_long dir) {
+  TraceStep s;
+  s.idx = idx;
+  s.tipo = static_cast<unsigned char>(t.tipo);
+  s.value = t.value;
+  s.ejec = ejec;
+  s.flow = f.flow;
+  s.gen = f.currgene;
+  s.nInts = vm.ints.size();
+  const int ni = s.nInts < 8 ? s.nInts : 8;
+  for (int j = 0; j < ni; ++j) s.ints[static_cast<std::size_t>(j)] = vm.ints.peek(ni - 1 - j);
+  s.nBools = vm.bools.size();
+  const int nb = s.nBools < 8 ? s.nBools : 8;
+  for (int j = 0; j < nb; ++j) s.bools[static_cast<std::size_t>(j)] = vm.bools.peek(nb - 1 - j);
+  if (dir != 0) {
+    s.storeAddr = dir;
+    s.storeVal = bot.mem[static_cast<std::size_t>(dir)];
+  }
+  vm.trace->steps.push_back(s);
+}
+
 }  // namespace detail
 
 // DNA.bas:56-175 — un ciclo de ADN de un bot. Los stacks se limpian a la
@@ -510,6 +564,7 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
   using detail::FlowState;
   FlowState f;
 
+  if (vm.trace) vm.trace->steps.clear();  // gancho del editor (E1.1)
   vm.ints.clear();
   vm.bools.clear();
   // E6 — DNA.bas:75-82: el ReDim de ga() solo corre para el bot observado
@@ -531,15 +586,19 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
 
   for (vb_long a = 1; a < ub && a <= 32000 && !is_end(bot.dna[a]); ++a) {
     const Block& t = bot.dna[a];
+    bool ejec = false;     // gancho del editor (E1.1): el token realmente corrió
+    vb_long dir = 0;       // idem: dirección normalizada si fue un store que escribió
     switch (t.tipo) {
       case tok::NUMBER:
         if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           vm.ints.push(t.value);
           bot.nrg -= vm.costs.of(Costs::NUMCOST);
         }
         break;
       case tok::DEREF:
         if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           vb_long b = t.value;
           if (b > MaxMem || b < 1) {
             b = (t.value < 0 ? -static_cast<vb_long>(t.value)
@@ -552,28 +611,43 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
         }
         break;
       case tok::BASIC:
-        if (f.flow != FlowState::CLEAR)
+        if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           detail::ExecuteBasicCommand(vm, bot, t.value);
+        }
         break;
       case tok::ADVANCED:
-        if (f.flow != FlowState::CLEAR)
+        if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           detail::ExecuteAdvancedCommand(vm, bot, t.value, a);
+        }
         break;
       case tok::BITWISE:
-        if (f.flow != FlowState::CLEAR)
+        if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           detail::ExecuteBitwiseCommand(vm, bot, t.value);
+        }
         break;
       case tok::CONDITION:
-        if (f.flow != FlowState::CLEAR)  // COND, body o ELSEBODY
+        if (f.flow != FlowState::CLEAR) {  // COND, body o ELSEBODY
+          ejec = true;
           detail::ExecuteConditions(vm, bot, t.value);
+        }
         break;
       case tok::LOGIC:
-        if (f.flow != FlowState::CLEAR)
+        if (f.flow != FlowState::CLEAR) {
+          ejec = true;
           detail::ExecuteLogic(vm, bot, t.value);
+        }
         break;
       case tok::STORE:
         if (f.flow == FlowState::BODY || f.flow == FlowState::ELSEBODY) {
           if (detail::CondStateIsTrue(vm.bools)) {
+            ejec = true;
+            // Gancho del editor: en los 14 stores el tope de la pila es la
+            // dirección (DNA.bas:858-1154); 0 = no-op sin escritura.
+            if (vm.trace && t.value >= 1 && t.value <= 14 && vm.ints.peek(0) != 0)
+              dir = detail::normaddr(vm.ints.peek(0));
             ExecuteStores(vm, bot, t.value);
             detail::MarkGeneActive(vm, bot, f.currgene);  // DNA.bas:152 (E6)
           }
@@ -582,6 +656,7 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
       case tok::RESERVED:
         break;
       case tok::FLOW:
+        ejec = true;  // los tokens de flujo siempre corren
         if (!detail::ExecuteFlowCommands(vm, bot, f, t.value))
           bot.condnum += 1;
         bot.mem[thisgene] = static_cast<vb_integer>(f.currgene);
@@ -591,6 +666,7 @@ inline void ExecuteDNA(VmContext& vm, Bot& bot) {
       default:
         break;
     }
+    if (vm.trace) detail::RecordTrace(vm, bot, f, a, t, ejec, dir);
   }
 }
 
