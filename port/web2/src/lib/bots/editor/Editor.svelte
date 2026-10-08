@@ -12,8 +12,8 @@
 // Texto con resaltado y autocompletado (AreaAdn) o vista por genes
 // (VistaGenes); lint del core con debounce en un worker propio (linter.js);
 // avisos del lint y del Laboratorio con arreglo en un clic; panel «Genes»
-// (PanelGenes), «Probar» (PanelProbar) y versiones (PanelVersiones,
-// DiffGenes). El origen de cada gen (decisión 19) se sigue con
+// (PanelGenes), «Probar» (PanelProbar), «Evolucionar» (PanelEvolucionar, solo
+// bots propios) y versiones (PanelVersiones, DiffGenes). El origen de cada gen (decisión 19) se sigue con
 // engine/lab.js realinearOrigenes y se guarda con cada versión.
 //
 // «Sin guardar» compara el TEXTO exacto con el de la última versión (un
@@ -64,6 +64,7 @@ import { crearHistorial } from './historial.js';
 import { aplicarArreglo, describirLint, palabrasMarcadas } from './lint.js';
 import { crearLinter } from './linter.js';
 import Paleta from './Paleta.svelte';
+import PanelEvolucionar from './PanelEvolucionar.svelte';
 import PanelGenes from './PanelGenes.svelte';
 import PanelPila from './PanelPila.svelte';
 import PanelProbar from './PanelProbar.svelte';
@@ -696,6 +697,17 @@ function comparar(a, b) {
   diff = { diff: diffVersiones($state.snapshot(reg), a, b), a, b };
 }
 
+/**
+ * Adoptar una variante de la evolución (PLAN-EDITOR E4.4): el texto entra al
+ * editor como un cambio sin guardar (en el deshacer del modo texto) y la nota
+ * sugerida queda en el campo de la versión. Guardar lo decide el usuario.
+ * @param {string} nuevo @param {string} sugerida
+ */
+function adoptarEvolucion(nuevo, sugerida) {
+  aplicarTexto(nuevo);
+  nota = sugerida;
+}
+
 /** @param {unknown} e */
 function textoErrorBots(e) {
   if (e instanceof ErrorBots) {
@@ -1041,6 +1053,19 @@ function textoAvisoLab(a) {
             {texto}
             {versiones}
           />
+          {#if esPropio && !soloLectura}
+            {#key bot.clave}
+              <PanelEvolucionar
+                clave={bot.clave}
+                nombre={bot.nombre}
+                vegetal={!!bot.vegetal}
+                {texto}
+                soloLectura={lectura}
+                {linter}
+                onadoptar={adoptarEvolucion}
+              />
+            {/key}
+          {/if}
         {/if}
       {/if}
       {#if esPropio}

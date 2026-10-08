@@ -2,14 +2,21 @@
 // @ts-check
 // Diff gen por gen entre dos versiones (engine/bots.js diffVersiones): los
 // genes iguales se resumen, los cambiados se muestran lado a lado, y cada
-// gen lleva su bot de origen si lo tiene (decisión 19).
+// gen lleva su bot de origen si lo tiene (decisión 19). Sirve también para
+// comparar una variante de la evolución (PLAN-EDITOR E4.4): ahí el diff es el
+// de diffGenes con los orígenes en null (adaptarDiff, evolucion.js) y los
+// lados se rotulan con etiquetaA/etiquetaB («Base», «Variante 2»).
 import { t } from '../../../i18n/index.svelte.js';
 
 /**
  * @type {{diff: ReturnType<typeof import('../../../../engine/bots.js').diffVersiones>,
- *   a: number, b: number, nombreDe: (archivo: string) => string, oncerrar: () => void}}
+ *   a: number, b: number, nombreDe: (archivo: string) => string, oncerrar: () => void,
+ *   etiquetaA?: string | null, etiquetaB?: string | null}}
  */
-let { diff, a, b, nombreDe, oncerrar } = $props();
+let { diff, a, b, nombreDe, oncerrar, etiquetaA = null, etiquetaB = null } = $props();
+/** Rótulo de cada lado: la versión («v3») salvo que el padre pase otro. */
+const ea = $derived(etiquetaA ?? `v${a}`);
+const eb = $derived(etiquetaB ?? `v${b}`);
 
 /** Tramos: los iguales seguidos se juntan en uno. */
 const tramos = $derived.by(() => {
@@ -36,7 +43,7 @@ function origen(o) {
 
 <div class="diff">
   <div class="cab">
-    <strong>{t('editor.diff.titulo', { a: `v${a}`, b: `v${b}` })}</strong>
+    <strong>{t('editor.diff.titulo', { a: ea, b: eb })}</strong>
     <span class="help">
       {t('editor.diff.resumen', {
   iguales: diff.iguales,
@@ -57,10 +64,10 @@ function origen(o) {
           <div class="rot">
             {t(`editor.diff.${x.tipo}`)}
             {#if x.a !== null}
-              <span class="mono">v{a} · {t('editor.diff.gen', { n: x.a + 1 })}</span>
+              <span class="mono">{ea} · {t('editor.diff.gen', { n: x.a + 1 })}</span>
             {/if}
             {#if x.b !== null}
-              <span class="mono">v{b} · {t('editor.diff.gen', { n: x.b + 1 })}</span>
+              <span class="mono">{eb} · {t('editor.diff.gen', { n: x.b + 1 })}</span>
             {/if}
           </div>
           <div class="lados">

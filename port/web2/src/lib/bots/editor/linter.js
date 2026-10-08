@@ -3,7 +3,8 @@
 // engine/worker.js (db_dna_lint: no siembra ni toca ninguna sim) en un
 // worker propio del editor, creado al primer uso y cerrado con cerrar().
 // Solo importa la respuesta al ÚLTIMO pedido de cada clase (lint y traza del
-// visor de pila, PLAN-EDITOR E1.5): las viejas se descartan.
+// visor de pila, PLAN-EDITOR E1.5; variantes de la evolución, E4.4): las
+// viejas se descartan.
 // La fábrica del worker se inyecta (tests); en la página es un Worker del
 // navegador con el init de C10.
 //
@@ -55,8 +56,9 @@ function workerPagina() {
   };
 }
 
-/** Un pedido en vuelo de un tipo (lint o traza). */
+/** Un pedido en vuelo de un tipo (lint, traza o variantes). */
 /** @typedef {{req: string, res: (v: any) => void, rej: (e: Error) => void, plazo: any}} Pendiente */
+/** @typedef {'lint' | 'traza' | 'variantes'} Clase */
 
 /**
  * @param {{crear?: () => CanalLint, plazoMs?: number}} [o]
@@ -66,13 +68,14 @@ export function crearLinter(o = {}) {
   let canal = null;
   let n = 0;
   // Un pedido pendiente por clase: el lint y la traza del visor de pila se
-  // piden juntos al cambiar el ADN, y no deben cancelarse entre sí.
-  /** @type {{lint: Pendiente | null, traza: Pendiente | null}} */
-  const pend = { lint: null, traza: null };
+  // piden juntos al cambiar el ADN, y no deben cancelarse entre sí. Las
+  // variantes (evolución, E4.4) son otra clase más.
+  /** @type {{lint: Pendiente | null, traza: Pendiente | null, variantes: Pendiente | null}} */
+  const pend = { lint: null, traza: null, variantes: null };
 
   /**
    * Resuelve el pedido pendiente de una clase (y lo saca).
-   * @param {'lint' | 'traza'} clase @param {(p: Pendiente) => void} fn
+   * @param {Clase} clase @param {(p: Pendiente) => void} fn
    */
   function soltar(clase, fn) {
     const p = pend[clase];
@@ -86,6 +89,7 @@ export function crearLinter(o = {}) {
   function soltarTodos(fn) {
     soltar('lint', fn);
     soltar('traza', fn);
+    soltar('variantes', fn);
   }
 
   /** El worker no sirve: se rechaza lo pendiente y se descarta. @param {string} detalle */
@@ -114,6 +118,13 @@ export function crearLinter(o = {}) {
         soltar('lint', (p) => p.res(Array.isArray(m.issues) ? m.issues : []));
       else if (m?.t === 'trace-dna' && pend.traza?.req === m.req)
         soltar('traza', (p) => p.res(String(m.tsv ?? '')));
+      else if (m?.t === 'variantes' && pend.variantes?.req === m.req)
+        soltar('variantes', (p) =>
+          p.res({
+            textos: Array.isArray(m.textos) ? m.textos.map(String) : [],
+            error: m.error ? String(m.error) : null,
+          }),
+        );
     });
     c.alError?.((e) => {
       if (canal === c) caer(String(e?.message ?? e));
@@ -124,7 +135,7 @@ export function crearLinter(o = {}) {
   /**
    * Manda un pedido de la clase dada y espera su respuesta. El anterior de la
    * misma clase se resuelve con null (ya no importa).
-   * @param {'lint' | 'traza'} clase
+   * @param {Clase} clase
    * @param {Record<string, any>} mensaje sin `req`
    * @returns {Promise<any>}
    */
@@ -167,6 +178,26 @@ export function crearLinter(o = {}) {
      */
     trazar(dna, mem, seed) {
       return pedir('traza', { t: 'trace-dna', dna, mem, seed });
+    },
+    /**
+     * Variantes del ADN para la evolución (PLAN-EDITOR E4.2, worker 'variantes';
+     * anda sin sim). `modo` son los modos de mutación del motor (0 en vida, 1 en
+     * reproducción, 2 ambos), como en el worker. Resuelve con
+     * {textos, error} (error 'adn' si el cargador rechaza el ADN) o con null si
+     * otro pedido de variantes lo reemplazó. Rechaza con ErrorLint si el worker
+     * no carga.
+     * @param {{adn: string, k: number, modo: number, factor: number, semilla: number}} p
+     * @returns {Promise<{textos: string[], error: string | null} | null>}
+     */
+    variantes(p) {
+      return pedir('variantes', {
+        t: 'variantes',
+        adn: p.adn,
+        k: p.k,
+        modo: p.modo,
+        factor: p.factor,
+        semilla: p.semilla,
+      });
     },
     cerrar() {
       soltarTodos((p) => p.res(null));
