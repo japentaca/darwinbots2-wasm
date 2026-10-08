@@ -45,6 +45,24 @@ import {
 export const ULTIMOS = 3;
 
 /**
+ * Escalera: lgStandings pone la escalera primero y, después, a todos los que
+ * aún no tienen peldaño por Elo, con lo que el retador en curso (que ya
+ * peleó) quedaba bajo los que ni entraron. Para mostrar, los que faltan van
+ * en el orden de entrada: primero el retador en curso, después los demás.
+ * Otros formatos: las filas tal cual.
+ * @param {Season} S @param {Match[]} ms @param {any[]} rows
+ */
+function ordenEscalera(S, ms, rows) {
+  if (S.fmt.format !== 'ladder') return rows;
+  const st = lgLadderState(S, ms);
+  const puestos = new Set(st.ladder);
+  const entrada = new Map(S.entrants.map((e, i) => [e.name, i]));
+  const falta = rows.filter((r) => !puestos.has(r.name));
+  falta.sort((a, b) => (entrada.get(a.name) ?? 1e9) - (entrada.get(b.name) ?? 1e9));
+  return [...rows.filter((r) => puestos.has(r.name)), ...falta];
+}
+
+/**
  * Filas de la Tabla de una temporada (lgStandings) con lo que pide el
  * boceto: puesto, puntos y Buchholz (suizo), coronas (colina), % de las
  * rondas ganadas que decidió el tope de ciclos, ciclos promedio por
@@ -53,7 +71,7 @@ export const ULTIMOS = 3;
  * @param {Season} S @param {Match[]} ms  partidos de la temporada
  */
 export function filasTabla(S, ms) {
-  const rows = lgStandings(S, ms);
+  const rows = ordenEscalera(S, ms, lgStandings(S, ms));
   const koth = S.fmt.format === 'koth' ? lgKothState(S, ms) : null;
   const champ = lgSeasonChampion(S, ms);
   const jugados = lgPlayed(ms)

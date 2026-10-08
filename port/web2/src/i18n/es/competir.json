@@ -397,7 +397,7 @@
   "competir.tabla.nulos": "No hay empates: un nulo se vuelve a jugar.",
   "competir.tabla.desempate.swiss": "Desempate: puntos, Buchholz, Elo y rondas ganadas por extinción.",
   "competir.tabla.desempate.cup": "Orden: hasta dónde llegó cada uno, después victorias y Elo. En los grupos: victorias, duelo directo, Elo del grupo, menos rondas por tope, menos ciclos y el orden del sorteo.",
-  "competir.tabla.desempate.ladder": "Orden de la escalera; los que todavía no entraron, al final.",
+  "competir.tabla.desempate.ladder": "Orden de la escalera; después, el retador en curso y los que todavía no entraron, en el orden de inscripción.",
   "competir.tabla.desempate.rr": "Orden: victorias, después Elo y menos partidos jugados.",
   "competir.tabla.desempate.kothSinFin": "Orden: coronas (retiros invictos), después Elo y victorias.",
   "competir.tabla.desempate.elo": "Orden: Elo (1500 al empezar; en una pelea de N, el ganador le gana a cada uno de los demás), después victorias.",

@@ -397,7 +397,7 @@
   "competir.tabla.nulos": "There are no draws: a void match is played again.",
   "competir.tabla.desempate.swiss": "Ties: points, Buchholz, Elo and rounds won by extinction.",
   "competir.tabla.desempate.cup": "Order: how far each one went, then wins and Elo. In the groups: wins, head to head, group Elo, fewer rounds won at the cap, fewer cycles and the draw order.",
-  "competir.tabla.desempate.ladder": "Ladder order; those not placed yet, last.",
+  "competir.tabla.desempate.ladder": "Ladder order; then the current challenger and those not placed yet, in sign-up order.",
   "competir.tabla.desempate.rr": "Order: wins, then Elo and fewer matches played.",
   "competir.tabla.desempate.kothSinFin": "Order: crowns (undefeated retirements), then Elo and wins.",
   "competir.tabla.desempate.elo": "Order: Elo (1500 at the start; in a fight of N, the winner beats each of the others), then wins.",

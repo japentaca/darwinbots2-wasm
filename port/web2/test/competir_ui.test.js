@@ -684,6 +684,32 @@ test('vistas: tabla con Elo, % por tope, ciclos, últimos y campeón', () => {
   assert.equal(h.celdas[0][0], null);
 });
 
+test('vistas: tabla de la escalera en juego — peldaños, retador en curso, los que faltan', () => {
+  // gana siempre el de nombre menor: cada retador pierde con todos
+  const { S, ms } = temporada(
+    'ladder',
+    4,
+    {},
+    (fx) => fx.fighters.map((/** @type {any} */ e) => e.name).sort()[0],
+  );
+  const nombres = (/** @type {any[]} */ m) => V.filasTabla(S, m).map((f) => f.name);
+  // B1 quedó en el peldaño 2; B2 ya perdió con B0 y sigue desafiando; B3 no entró
+  const parcial = ms.slice(0, 2);
+  assert.deepEqual(LG.lgLadderState(S, parcial).ladder, ['B0', 'B1']);
+  assert.deepEqual(nombres(parcial), ['B0', 'B1', 'B2', 'B3']);
+  // el motor (paridad con la clásica) pone al retador bajo el que ni entró
+  assert.deepEqual(
+    LG.lgStandings(S, parcial).map((r) => r.name),
+    ['B0', 'B1', 'B3', 'B2'],
+  );
+  assert.deepEqual(nombres([]), ['B0', 'B1', 'B2', 'B3']);
+  // terminada: el orden de la escalera
+  assert.deepEqual(
+    nombres(ms),
+    LG.lgStandings(S, ms).map((r) => r.name),
+  );
+});
+
 test('vistas: calendario, colina, escalera, suizo y copa', () => {
   const rr = temporada('rr', 5, { legs: 2 });
   const cal = V.calendarioRr(rr.S, rr.ms);
