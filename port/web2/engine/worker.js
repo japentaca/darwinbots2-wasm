@@ -132,6 +132,20 @@
 //                                          {t:'mem', n, req?, id?, mem[1000]}
 //                                          (mem[i] es la dirección i+1); [] sin
 //                                          sim o si el bot no existe.
+//   {t:'variantes', adn, k, modo, factor, semilla, req?, id?}
+//                                          PLAN-EDITOR E4.2: hasta k variantes
+//                                          distintas del ADN con db_sim_bot_mutate
+//                                          (modo 0 en vida, 1 en reproducción, 2
+//                                          ambos; factor divide las tasas), cada
+//                                          una en una sim descartable (la del
+//                                          usuario no se toca). Cada textos[i] es
+//                                          el ADN del usuario con solo los genes
+//                                          que mutó reemplazados (injertar): el
+//                                          resto conserva sus comentarios. →
+//                                          {t:'variantes', req?, id?, textos[]}
+//                                          (puede tener menos de k) o
+//                                          {t:'variantes', req?, id?, error:'adn'}
+//                                          si el cargador rechaza el ADN. Anda sin sim.
 //   {t:'dna-lib', entries:[{name,dna}]}    RV-40: ADN por nombre de especie
 //   {t:'setopt', id, v, nocap?}            opción E1 en vivo (tabla de ids
 //                                          en wasm/dbcore_api.cpp)
@@ -241,6 +255,8 @@
 //                                          y una línea por token (formato en
 //                                          PLAN-EDITOR.md); "" si no hay traza.
 //   {t:'mem', n, req?, id?, mem[]}         PLAN-EDITOR E2.2: respuesta a mem-dump.
+//   {t:'variantes', req?, id?, textos[]} | {t:'variantes', req?, id?, error}
+//                                          PLAN-EDITOR E4.2: respuesta a variantes
 //   {t:'dna-missing', names[]}             RV-40: especies cargadas sin ADN
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —

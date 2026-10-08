@@ -18,6 +18,10 @@ import { bloquesAdn } from '../../../engine/lab.js';
 import { alinear, parsearTraza, sysvarsLeidos, tokensEjecutables } from '../../../engine/pila.js';
 import { SYSVARS } from '../bots/editor/vocabulario.js';
 
+// PLAN-EDITOR E4.2: la cola de SalvarobText vive en engine/variantes.js (sin
+// DOM, la usa el worker de la evolución); aquí se re-exporta para el inspector.
+export { sinColaDeGuardado } from '../../../engine/variantes.js';
+
 /** Palabras de estructura de un gen. */
 const CLAVES = new Set(['cond', 'start', 'stop', 'else', 'end']);
 
@@ -84,21 +88,6 @@ export const CLAVE_PILA_PENDIENTE = 'dbw2.editor.pila:pendiente';
 
 /** Dirección de cada sysvar del vocabulario del editor (sin el punto). */
 const DIRECCIONES = new Map(SYSVARS);
-
-/**
- * El ADN sin la cola que escribe SalvarobText después del ADN: las líneas
- * `'#hash:` y `'#tag:`. En LF, sin NUL y sin espacios al final. Es el texto que
- * se lleva al editor.
- * @param {string} texto
- * @returns {string}
- */
-export function sinColaDeGuardado(texto) {
-  const s = String(texto ?? '')
-    .replaceAll('\0', '')
-    .replace(/\r\n?/g, '\n');
-  const m = /^'#(?:hash|tag):/m.exec(s);
-  return (m ? s.slice(0, m.index) : s).replace(/\s+$/, '');
-}
 
 /**
  * Las líneas del ADN agrupadas por gen (bloquesAdn): un segmento por gen

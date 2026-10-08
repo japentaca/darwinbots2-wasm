@@ -25,6 +25,7 @@ import {
   N_ORIGEN,
 } from './metricas.js';
 import { EXTRA_MONITOR, EXTRA_SKINS, HEADER, REG, VIS_MAX_EVENTS } from './protocolo.js';
+import { distintas, injertar, sinColaDeGuardado } from './variantes.js';
 
 /**
  * @typedef {(msg: any, transfer?: Transferable[]) => void} Post
@@ -229,6 +230,10 @@ export function crearSim(opciones) {
       // PLAN-EDITOR E2: traza del bot con foco y volcado de memoria (solo lectura)
       traceOn: C('db_sim_trace_on', null, [n, n]),
       botTrace: C('db_sim_bot_trace', n, [n, n]),
+      // PLAN-EDITOR E4: fundador suelto desde texto y mutación del bot. Solo
+      // sobre la sim descartable de variantesDe (nunca sobre la del usuario).
+      insertFounder: C('db_sim_insert_founder', n, [n, s, s, n, n, n]),
+      botMutate: C('db_sim_bot_mutate', n, [n, n, n, n, n]),
       botMemDump: C('db_sim_bot_mem_dump', n, [n, n, n, n]),
       // E6.5 - vista enriquecida (solo lectura del Sim)
       visReset: C('db_sim_vis_reset', null, [n]),
@@ -1730,6 +1735,53 @@ export function crearSim(opciones) {
     return takeStr(api.traceDna(dna, mem ? scratch.traceMem.p : 0, mem ? 1001 : 0, seed | 0));
   }
 
+  // PLAN-EDITOR E4.2: variantes del ADN para la evolución asistida. Cada cuenta
+  // es una sim descartable (create/start/insertFounder/botMutate/botText/
+  // destroy); la del usuario no se toca ni consume RNG. Cada variante usa su
+  // semilla (semilla + i) para no repetir las mutaciones.
+  // El texto que devuelve el motor se decompila (el core reescribe alias y
+  // sysvars), así que cada variante se injerta sobre el ADN del usuario con la
+  // referencia (el mismo fundador sin mutar): solo cambian los genes que mutó
+  // y el resto conserva su texto y sus comentarios (injertar, engine/variantes.js).
+  /**
+   * @param {{adn?: string, k?: number, modo?: number, factor?: number, semilla?: number}} o
+   * @returns {{textos: string[]} | {error: 'adn'}}
+   */
+  function variantesDe(o) {
+    const adn = String(o.adn ?? '');
+    const k = Math.max(1, o.k | 0);
+    const modo = o.modo | 0;
+    const factor = Math.max(1, o.factor | 0);
+    const semilla = Number(o.semilla) || 0;
+    /** @type {string} */
+    let ref = '';
+    const h0 = api.create();
+    try {
+      api.start(h0, semilla);
+      const nb = api.insertFounder(h0, adn, 'variante', 0, 0, 1000);
+      if (nb < 0) return { error: 'adn' };
+      ref = sinColaDeGuardado(takeStr(api.botText(h0, nb)));
+    } finally {
+      api.destroy(h0);
+    }
+    /** @type {string[]} */
+    const hechas = [];
+    for (let i = 0; i <= k * 3 && distintas(adn, hechas).length < k; i++) {
+      const h = api.create();
+      try {
+        api.start(h, semilla + i);
+        const nb = api.insertFounder(h, adn, 'variante', 0, 0, 1000);
+        if (nb < 0) return { error: 'adn' };
+        api.botMutate(h, nb, modo, 1, factor);
+        const crudo = sinColaDeGuardado(takeStr(api.botText(h, nb)));
+        hechas.push(injertar(adn, crudo, ref));
+      } finally {
+        api.destroy(h);
+      }
+    }
+    return { textos: distintas(adn, hechas).slice(0, k) };
+  }
+
   /** @type {Map<string, number>} */
   const skinTimers = new Map(); // E8: especie (nombre + ADN) → Timer
 
@@ -2180,6 +2232,11 @@ export function crearSim(opciones) {
           ...correlacion(msg),
           issues: lintIssues(String(msg.dna ?? '')),
         });
+        break;
+      case 'variantes':
+        // PLAN-EDITOR E4.2: k variantes distintas del ADN (variantesDe). Anda
+        // sin sim y no la toca.
+        postMessage({ t: 'variantes', ...correlacion(msg), ...variantesDe(msg) });
         break;
       case 'trace-dna':
         // PLAN-EDITOR E1.3: traza de un gen para el visor de pila. Anda sin
