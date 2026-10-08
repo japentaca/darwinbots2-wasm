@@ -114,6 +114,11 @@
 //                                          → {t:'lint-dna', req?, id?, issues[]}
 //                                          (db_dna_lint, sin sembrar ni tocar
 //                                          la sim; anda también sin sim)
+//   {t:'trace-dna', dna, mem?, seed?, req?, id?}  PLAN-EDITOR E1: traza de un
+//                                          gen para el visor de pila → {t:'trace-dna',
+//                                          req?, id?, tsv} (db_dna_trace; mem = 1001
+//                                          enteros de la memoria de ejemplo o ausente;
+//                                          anda sin sim y no la toca)
 //   {t:'dna-lib', entries:[{name,dna}]}    RV-40: ADN por nombre de especie
 //   {t:'setopt', id, v, nocap?}            opción E1 en vivo (tabla de ids
 //                                          en wasm/dbcore_api.cpp)
@@ -215,6 +220,9 @@
 //                                          line, hint}] como las de 'lint'
 //                                          (line: primera línea, base 1; 0 =
 //                                          del archivo entero)
+//   {t:'trace-dna', req?, id?, tsv}        PLAN-EDITOR E1: el TSV de la traza tal
+//                                          cual (formato en PLAN-EDITOR.md, sin
+//                                          cabecera; lo parsea engine/pila.js)
 //   {t:'dna-missing', names[]}             RV-40: especies cargadas sin ADN
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —

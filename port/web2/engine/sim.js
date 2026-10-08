@@ -220,6 +220,8 @@ export function crearSim(opciones) {
       load: C('db_sim_load', null, [n, n, n]),
       free: C('db_free', null, [n]),
       lint: C('db_dna_lint', n, [s]),
+      // PLAN-EDITOR E1: traza de un gen (ExecuteDNA sobre un bot descartable)
+      traceDna: C('db_dna_trace', n, [s, n, n, n]),
       // E6.5 - vista enriquecida (solo lectura del Sim)
       visReset: C('db_sim_vis_reset', null, [n]),
       visObserve: C('db_sim_vis_observe', null, [n]),
@@ -331,6 +333,8 @@ export function crearSim(opciones) {
     lin: { p: 0, cap: 0 },
     orig: { p: 0, cap: 0 },
     dom: { p: 0, cap: 0 },
+    // PLAN-EDITOR E1: memoria de ejemplo (1001 enteros) para db_dna_trace
+    traceMem: { p: 0, cap: 0 },
   };
 
   /**
@@ -1696,6 +1700,26 @@ export function crearSim(opciones) {
     postMessage({ t: 'lint', name: sp.name, issues: lintIssues(sp.dna) });
   }
 
+  // PLAN-EDITOR E1: traza de un gen paso a paso (db_dna_trace, wasm/dbcore_api.cpp).
+  // El core carga el ADN en un bot descartable y no toca la sim del usuario.
+  // Devuelve el TSV tal cual (el parseo lo hace engine/pila.js en la página).
+  /**
+   * @param {string} dna
+   * @param {number[] | null} mem  memoria de ejemplo (1001 enteros) o null
+   * @param {number} seed
+   * @returns {string}
+   */
+  function traceSteps(dna, mem, seed) {
+    if (mem) {
+      ensure(scratch.traceMem, 1001);
+      // Cero-relleno: un `mem` corto no deja datos de una traza anterior.
+      const base = scratch.traceMem.p >> 2;
+      M.HEAP32.fill(0, base, base + 1001);
+      M.HEAP32.set(mem.slice(0, 1001), base);
+    }
+    return takeStr(api.traceDna(dna, mem ? scratch.traceMem.p : 0, mem ? 1001 : 0, seed | 0));
+  }
+
   /** @type {Map<string, number>} */
   const skinTimers = new Map(); // E8: especie (nombre + ADN) → Timer
 
@@ -2138,6 +2162,19 @@ export function crearSim(opciones) {
           t: 'lint-dna',
           ...correlacion(msg),
           issues: lintIssues(String(msg.dna ?? '')),
+        });
+        break;
+      case 'trace-dna':
+        // PLAN-EDITOR E1.3: traza de un gen para el visor de pila. Anda sin
+        // sim (como lint-dna) y no toca la sim del usuario.
+        postMessage({
+          t: 'trace-dna',
+          ...correlacion(msg),
+          tsv: traceSteps(
+            String(msg.dna ?? ''),
+            Array.isArray(msg.mem) ? msg.mem : null,
+            msg.seed | 0,
+          ),
         });
         break;
       case 'dna-lib': {
