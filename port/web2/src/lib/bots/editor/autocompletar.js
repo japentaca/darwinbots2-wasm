@@ -10,7 +10,7 @@
 // otra sugerencia con lo escrito ya completo, ↓ y Tab.
 
 import { defsDe, NOMBRES_SYSVAR } from './resaltado.js';
-import { SYSVARS } from './vocabulario.js';
+import { COMANDOS, SYSVARS } from './vocabulario.js';
 
 export const MAX_SUGERENCIAS = 12;
 
@@ -92,4 +92,40 @@ export function completar(texto, w, nombre) {
     cursor: w.ini + nuevo.length,
     insertado: nuevo,
   };
+}
+
+/**
+ * Sugerencias del modo Fichas (PLAN-EDITOR E3.1). Una palabra con punto (`.x`
+ * o `*.x`) busca entre las sysvars y las variables privadas `defs`, con las
+ * reglas de sugerencias(); una palabra sin punto busca los comandos del core
+ * que empiezan con ella (exacto primero). Vacía si no hay prefijo. `palabra`
+ * es lo que se inserta en la ficha. Está acá y no en engine/fichas.js porque
+ * depende de resaltado.js y del vocabulario de src/.
+ * @param {string} prefijo lo escrito hasta el cursor
+ * @param {Iterable<string>} defs variables privadas del ADN (sin el punto)
+ * @returns {{palabra: string, tipo: 'sysvar' | 'privada' | 'comando', dir: number | null}[]}
+ */
+export function sugerenciasFicha(prefijo, defs) {
+  const dot = /^(\*?)\.(.*)$/.exec(prefijo);
+  if (dot) {
+    // sugerencias() saca las privadas de un texto: le damos una línea `def` por cada una.
+    const texto = [...defs].map((d) => `def ${d} 0`).join('\n');
+    return sugerencias(dot[2], texto)
+      .slice(0, MAX_SUGERENCIAS)
+      .map((s) => ({
+        palabra: `${dot[1]}.${s.nombre}`,
+        tipo: /** @type {'privada' | 'sysvar'} */ (s.privada ? 'privada' : 'sysvar'),
+        dir: s.dir,
+      }));
+  }
+  if (!prefijo) return [];
+  const p = prefijo.toLowerCase();
+  const comandos = [...new Set(Object.values(COMANDOS).flat())];
+  const exactos = comandos.filter((c) => c === p);
+  const empiezan = comandos.filter((c) => c !== p && c.startsWith(p));
+  return [...exactos, ...empiezan].slice(0, MAX_SUGERENCIAS).map((c) => ({
+    palabra: c,
+    tipo: 'comando',
+    dir: null,
+  }));
 }
