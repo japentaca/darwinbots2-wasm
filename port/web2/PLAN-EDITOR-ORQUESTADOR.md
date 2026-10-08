@@ -9,8 +9,11 @@ que tocan `port/core` o `port/wasm`). Escrito el 2026-10-07.
 ## Lanzar
 
 Sesión nueva de Claude Code en la raíz del repo, con Opus 5.5 como modelo
-de la sesión (`/model` → Opus 5.5, o `claude --model opus`). Para que no
-se frene pidiendo permisos:
+de la sesión (`/model` → Opus 5.5, o `claude --model opus`) y esfuerzo
+`high` (en `/config`): el orquestador verifica y decide, no escribe
+código. El esfuerzo de los subagentes está fijado en sus definiciones
+(`desarrollador` high, `desarrollador-motor` xhigh) y el prompt lo
+repite. Para que no se frene pidiendo permisos:
 
 ```sh
 claude --model opus --dangerously-skip-permissions
@@ -37,8 +40,8 @@ E1, E2, E3 y E4 en orden, paso por paso, así:
    Agent y el prompt: «Ejecutá el paso <paso> de port/web2/PLAN-EDITOR.md.»
    (las instrucciones comunes ya están en la definición del agente):
    - Pasos E1.1, E1.2, E2.1 y E4.1 (tocan port/core o port/wasm):
-     subagent_type "desarrollador-motor".
-   - Todos los demás pasos: subagent_type "desarrollador".
+     subagent_type "desarrollador-motor", effort "xhigh".
+   - Todos los demás pasos: subagent_type "desarrollador", effort "high".
    Un paso por subagente; no juntes pasos.
 2. Cuando el subagente termine, verificá vos mismo, sin fiarte del reporte:
    git status y git diff --stat (tamaño razonable, ningún cambio en

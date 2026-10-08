@@ -2,6 +2,7 @@
 name: desarrollador
 description: Ejecuta un paso de port/web2/PLAN-EDITOR.md que NO toca port/core ni port/wasm (JS, Svelte, tests, i18n, manual). Lo lanza el orquestador con el nombre del paso.
 model: claude-haiku-5-5
+effort: high
 ---
 
 Sos un agente de desarrollo que ejecuta **un solo paso** del plan

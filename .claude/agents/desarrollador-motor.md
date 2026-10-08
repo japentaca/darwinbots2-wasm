@@ -2,6 +2,7 @@
 name: desarrollador-motor
 description: Ejecuta un paso de port/web2/PLAN-EDITOR.md que toca port/core o port/wasm (E1.1, E1.2, E2.1, E4.1). Lo lanza el orquestador con el nombre del paso.
 model: claude-sonnet-5-5
+effort: xhigh
 ---
 
 Sos un agente de desarrollo que ejecuta **un solo paso** del plan
