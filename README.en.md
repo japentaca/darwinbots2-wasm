@@ -139,7 +139,7 @@ source drop and kept untouched.
   inside a Web Worker; the page only presents. You can watch the world and
   inspect each bot, including its live DNA (which genes fire in each cycle), experiment with scenarios and parameters (also while it
   runs), analyze each run (population, genetics, phylogeny, events,
-  replicas and reports), write bots with a DNA editor, with a step-by-step stack view, and organize
+  replicas and reports), write bots with a DNA editor (text, genes and tiles), with a step-by-step stack view, and organize
   tournaments. It saves and loads the sim in the VB6 binary format
   (`.dbsim`) and includes the **Bestiary of 684 community bots** (see
   [Where the demo's bots come from](#where-the-demos-bots-come-from)). The

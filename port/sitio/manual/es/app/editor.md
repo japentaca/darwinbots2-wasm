@@ -1,7 +1,7 @@
 ---
 titulo: El editor de ADN
-resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, los avisos de lo que el motor lee distinto, la pila paso a paso de cada gen, la vista por genes, las versiones, Probar y el Laboratorio de genes."
-etiquetas: [editor, adn, avisos, pila, versiones, probar, laboratorio]
+resumen: "La pestaña ADN de la ficha de un bot: el texto con colores y autocompletado, la vista por genes y el modo de fichas, los avisos de lo que el motor lee distinto, la pila paso a paso de cada gen, las versiones, Probar y el Laboratorio de genes."
+etiquetas: [editor, adn, avisos, pila, versiones, probar, laboratorio, fichas]
 estado: revisada
 ---
 El editor de ADN es la pestaña **ADN** de la ficha de cada bot (ver
@@ -28,24 +28,27 @@ Para modificar uno:
 3. Hacé clic en **Duplicar**. Se abre la copia, ya editable.
 
 ## La barra de arriba {#barra}
-<!-- Editor.svelte barra: seg Texto/Por genes; chip v{n}; editor.sinGuardar; editor.avisos; editor.laboratorio; nota + Guardar v{n} -->
+<!-- Editor.svelte barra: seg Texto/Por genes/Fichas; chip v{n}; editor.sinGuardar; editor.avisos; editor.laboratorio; nota + Guardar v{n} -->
 
 De izquierda a derecha:
 
 | Control | Qué es |
 |---|---|
-| **Texto** / **Por genes** | Los dos modos de ver el ADN ([[app/editor#texto|texto]] o [[app/editor#genes|gen por gen]]). |
+| **Texto**, **Por genes** y **Fichas** | Los tres modos de ver el ADN ([[app/editor#texto|texto]], [[app/editor#genes|gen por gen]] o [[app/editor#fichas|fichas]]). |
 | `v3` | La última versión guardada. |
 | **sin guardar** | Aparece cuando el texto cambió desde esa versión. |
 | **4 avisos** | Cuántos avisos hay abajo del texto. |
-| **Pila** | Enciende o apaga el visor de [[app/editor#pila|la pila paso a paso]]. |
+| **Pila** | Enciende o apaga el visor de [[app/editor#pila|la pila paso a paso]]. En Fichas no cambia la vista: ahí la pila aparece al pasar el cursor por una ficha. |
 | **Laboratorio** | Cambia el panel de la derecha por el de [[app/editor#laboratorio|genes del Bestiario]]. |
 | **Nota de la versión** y **Guardar v4** | Guardan el texto como versión nueva (ver [[app/editor#versiones|Versiones]]). |
 
 A la derecha del texto están los paneles **Pila** (si lo encendiste),
-**Probar** y, en tus bots, **Versiones**. Con el **Laboratorio** encendido,
-ese lugar lo ocupa el panel de genes, y el de la pila no se ve hasta que lo
-apagues: el botón **Pila** sigue en la barra, pero el panel espera.
+**Probar** y, en tus bots, **Versiones**, en **Texto** y en **Por genes**. En
+**Fichas** ese lugar lo ocupa la **Paleta** (ver [[app/editor#fichas|Las
+fichas]]): Pila y Probar no se ven, y Versiones sigue debajo. Con el
+**Laboratorio** encendido, en cualquier modo, ese lugar lo ocupa el panel de
+genes, y la pila, la paleta, Probar y Versiones no se ven hasta que lo apagues:
+el botón **Pila** sigue en la barra, pero el panel espera.
 
 ## El modo texto {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -80,7 +83,9 @@ el motor la lee así (ver [[adn/def]]).
 lo que hacen los botones mientras estás en el modo texto: completar una
 sysvar, **Corregir** un aviso, agregar un gen del Laboratorio o restaurar una
 versión. Cada uno entra en el deshacer como si lo hubieras escrito. Lo que
-cambiás en la vista por genes (apagar o encender un gen) no entra.
+cambiás en la vista por genes (apagar o encender un gen) no entra. En
+**Fichas** el deshacer es otro, propio de ese modo: ver
+[[app/editor#deshacer-fichas|Deshacer en Fichas]].
 
 ## Autocompletar sysvars {#autocompletar}
 <!-- autocompletar.js (palabraEnCurso: .xx o *.xx fuera de comentarios; sugerencias: exacta, empiezan, contienen; privadas antes; MAX_SUGERENCIAS 12; esExacta); AreaAdn.svelte tecla() -->
@@ -119,6 +124,8 @@ adivinarlo leyendo el ADN. Cómo funcionan las dos pilas está en
 
 El panel aparece a la derecha, arriba de **Probar** y **Versiones**. El botón
 queda encendido o apagado en este navegador: al volver, sigue como lo dejaste.
+En el modo **Fichas** el panel no aparece; la pila se ve igual, al pasar el
+cursor por cada ficha ([[app/editor#pila-fichas|ver Las fichas]]).
 
 El panel muestra:
 
@@ -329,6 +336,87 @@ no paga costo de ADN. Si lo encendés, los números de los genes que le siguen
 cambian, y eso importa si algún gen usa [[.delgene]] o [[.mkvirus]] con un
 número fijo.
 :::
+
+## Las fichas {#fichas}
+<!-- Fichas.svelte (tarjeta por gen con número, nombre y origen; líneas de código como fichas con huecos «+»; comentario, def y '# se editan enteras; clic, Enter, Tab, Esc, Supr; ↑/↓ sugerencias; tip con la pila al pasar el cursor; Ctrl+Z/Ctrl+Y); Paleta.svelte (grupos de GRUPOS_MEMORIA y COMANDOS, defs, buscador, TarjetaManual); Editor.svelte (modo 'fichas', posicionActiva, emitirFichas, posicionDeInsercion, cambiarModo; el lateral muestra la Paleta en lugar de Pila y Probar; el Laboratorio gana sobre todo); historial.js (crearHistorial: anotar, deshacer, rehacer, limpiar); arrastre.js (umbral de 6 px, sin dependencias); engine/fichas.js (modeloFichas, reemplazarFicha, insertarEn, borrarFicha, moverFicha, nuevaLineaTras) -->
+
+**Fichas** muestra el mismo ADN partido en palabras: cada palabra es una
+ficha, y las fichas van agrupadas por gen, igual que en [[app/editor#genes|Por
+genes]]. Sirve para cambiar, insertar y mover palabras sin reescribir la línea
+entera.
+
+El texto sigue siendo la fuente. Cada acción de Fichas reemplaza palabras en el
+texto, y al volver a **Texto** está el mismo ADN. Las acciones de Fichas no
+tocan los comentarios ni la sangría: cambian la palabra o el lugar de la ficha
+y dejan el resto de la línea como estaba. La excepción son las líneas de
+comentario, `def` y las de los genes apagados, que se editan enteras con un clic.
+
+Cada gen es una tarjeta con su número, su nombre y su origen. Dentro, cada
+línea de código es una fila de fichas. Entre dos fichas hay un **+**: un hueco
+donde cabe una palabra. Los **+** están tenues y se ven bien al pasar el cursor
+por la línea. A la izquierda aparece el rótulo de cada zona del gen
+(**condición**, **cuerpo**, **else**). Las líneas que están fuera de todo gen
+van en una tarjeta **Fuera de genes**, y un gen apagado se ve atenuado.
+
+| Gesto | Qué pasa |
+|---|---|
+| Clic en una ficha | Se convierte en un campo con su palabra. Escribí la nueva: debajo aparecen sugerencias, que recorrés con **↑** y **↓**. **Enter** o **Tab** la aplica; **Esc** cancela. |
+| **Supr** con el campo vacío | Borra la ficha, y el espacio que sobra. |
+| Clic en un **+** | Se abre un campo vacío en ese lugar. **Enter** inserta la palabra. |
+| **Enter** en la última ficha de una línea | Abre una línea nueva con la misma sangría, con el cursor en su **+**. |
+| Arrastrar una ficha a un **+** | La mueve a ese lugar. Mientras arrastrás, el **+** de destino se marca. Si soltás fuera de todo **+**, no pasa nada. |
+| Clic en una línea de comentario, `def` o de gen apagado | Se edita entera: cambia la línea completa. |
+
+### La paleta {#paleta}
+
+En Fichas, el panel de la derecha es la **Paleta**, con las palabras que podés
+poner en el ADN. Tiene un buscador arriba y estos grupos plegables: las
+sysvars, agrupadas por tema (cada una aparece como `.x` y como `*.x`); los
+operadores, por uso (flujo, aritmética y comparación, lógica, pila y stores); y
+**Tus def**, con las variables privadas del ADN. El buscador filtra todos los
+grupos a la vez.
+
+Un clic en una palabra la pone en el ADN, en el último **+** que tocaste o en
+el lugar que dejó la última acción. Si todavía no tocaste ninguno, va al final
+del texto. Arrastrarla a un **+** la pone en ese lugar. La paleta no sabe en
+qué gen estás: en Fichas no hay «gen del cursor», así que la palabra va donde
+indica el último **+** o al final. Al pasar el cursor por una palabra aparece
+su resumen del manual, como en [[app/editor#resumen|el resumen al pasar el
+cursor]].
+
+Con la Paleta en el lateral, **Pila** y **Probar** no se ven. Para probar el
+ADN, volvé a **Texto** o a **Por genes**. **Versiones** sigue visible en tus bots.
+
+### La pila al pasar el cursor {#pila-fichas}
+
+Al pasar el cursor por una ficha aparece un recuadro con las pilas que quedan
+después de esa palabra: los números, y los verdaderos o falsos con ✓ y ✗, como
+en el [[app/editor#pila|visor de la pila]]. La pila se calcula aunque el botón
+**Pila** esté apagado, y el botón no cambia nada en este modo.
+
+Solo tienen pila las palabras que el motor ejecuta con los valores de ejemplo.
+En el cuerpo de un `start` que no corre, pasar el cursor no muestra nada, y
+tampoco si el ADN no carga o la traza no coincide con el texto. Los valores de
+ejemplo se cambian en el visor de la pila, en **Texto** o en **Por genes**.
+
+### Deshacer en Fichas {#deshacer-fichas}
+
+**Ctrl+Z** deshace y **Ctrl+Y** (o **Ctrl+Mayús+Z**) rehace, con el foco en la
+vista. Mientras editás una ficha no actúan: el campo tiene su propio deshacer.
+
+Este deshacer es propio del modo. Guarda el ADN después de cada acción de
+Fichas (cambiar, insertar, mover o borrar una ficha, poner una palabra de la
+paleta, y también restaurar una versión o recuperar un borrador). Lo que hacés
+en Fichas no entra en el deshacer de **Texto**. El historial se vacía al cambiar
+de modo o de bot: al volver a Fichas, empieza desde el texto que hay.
+
+### Lo que Fichas no hace {#fichas-limites}
+
+- **No reordena genes enteros.** Arrastrás fichas, no genes. Para apagar un
+  gen, usá [[app/editor#genes|Por genes]].
+- **No hay modo de tocar una ficha y después tocar el hueco.** En una pantalla
+  táctil, arrastrá la ficha con el dedo hasta el **+**. La paleta funciona igual:
+  un toque pone la palabra, y arrastrarla la pone donde la soltás.
 
 ## Guardar versiones {#versiones}
 <!-- Editor.svelte guardar (texto exacto; editor.guardar.*); borrador.js (por bot, localStorage, base); beforeunload; PanelVersiones.svelte (Restaurar, Comparar); DiffGenes.svelte (editor.diff.*); engine/bots.js guardarVersion/restaurarVersion -->

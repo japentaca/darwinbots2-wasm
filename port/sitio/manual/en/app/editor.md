@@ -1,7 +1,7 @@
 ---
 titulo: The DNA editor
-resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the warnings about what the engine reads differently, the step-by-step stack of each gene, the gene view, versions, Test and the gene Lab."
-etiquetas: [editor, dna, warnings, stack, versions, test, lab]
+resumen: "The DNA tab of a bot's profile: the text with colors and autocomplete, the gene view and the tiles mode, the warnings about what the engine reads differently, the step-by-step stack of each gene, versions, Test and the gene Lab."
+etiquetas: [editor, dna, warnings, stack, versions, test, lab, tiles]
 estado: revisada
 ---
 The DNA editor is the **DNA** tab of each bot's profile (see [[app/bots]]). There
@@ -28,24 +28,27 @@ To modify one:
 3. Click **Duplicate**. The copy opens, already editable.
 
 ## The top bar {#barra}
-<!-- Editor.svelte barra: seg Texto/Por genes; chip v{n}; editor.sinGuardar; editor.avisos; editor.laboratorio; nota + Guardar v{n} -->
+<!-- Editor.svelte barra: seg Texto/Por genes/Fichas; chip v{n}; editor.sinGuardar; editor.avisos; editor.laboratorio; nota + Guardar v{n} -->
 
 From left to right:
 
 | Control | What it is |
 |---|---|
-| **Text** / **By gene** | The two ways of viewing the DNA ([[app/editor#texto|text]] or [[app/editor#genes|gene by gene]]). |
+| **Text**, **By gene** and **Tiles** | The three ways of viewing the DNA ([[app/editor#texto|text]], [[app/editor#genes|gene by gene]] or [[app/editor#fichas|tiles]]). |
 | `v3` | The last saved version. |
 | **unsaved** | Shows up when the text has changed since that version. |
 | **4 warnings** | How many warnings there are below the text. |
-| **Stack** | Turns the [[app/editor#pila|step-by-step stack]] viewer on or off. |
+| **Stack** | Turns the [[app/editor#pila|step-by-step stack]] viewer on or off. In Tiles it doesn't change the view: there the stack appears when you hover over a tile. |
 | **Lab** | Switches the right-hand panel to the one with [[app/editor#laboratorio|Bestiary genes]]. |
 | **Version note** and **Save v4** | Save the text as a new version (see [[app/editor#versiones|Versions]]). |
 
-To the right of the text are the **Stack** panel (if you turned it on), the **Test**
-panel and, on your own bots, **Versions**. With the **Lab** turned on, that spot is
-taken by the genes panel, and the stack panel doesn't show until you turn the Lab
-off: the **Stack** button stays in the bar, but the panel waits.
+To the right of the text, in **Text** and **By gene**, are the **Stack** panel (if
+you turned it on), the **Test** panel and, on your own bots, **Versions**. In
+**Tiles** that spot is taken by the **Palette** (see [[app/editor#fichas|The
+tiles]]): Stack and Test don't show, and Versions stays below. With the **Lab**
+turned on, in any mode, that spot is taken by the genes panel, and the stack, the
+palette, Test and Versions don't show until you turn the Lab off: the **Stack**
+button stays in the bar, but the panel waits.
 
 ## Text mode {#texto}
 <!-- AreaAdn.svelte (textarea + capa de resaltado, números de línea, líneas marcadas); resaltado.js (clases r-flu, r-cmd, r-sys, r-num, r-ref, r-def, r-com, r-off, r-err, r-otra); textarea.js (cambios por botón con deshacer) -->
@@ -79,7 +82,8 @@ that is how the engine reads it (see [[adn/def]]).
 while you are in text mode: completing a sysvar, using **Fix** on a warning, adding a
 gene from the Lab or restoring a version. Each one goes into the undo history as if
 you had typed it. What you change in the gene view (turning a gene off or on)
-doesn't.
+doesn't. In **Tiles** the undo is a different one, specific to that mode: see
+[[app/editor#deshacer-fichas|Undo in Tiles]].
 
 ## Sysvar autocomplete {#autocompletar}
 <!-- autocompletar.js (palabraEnCurso: .xx o *.xx fuera de comentarios; sugerencias: exacta, empiezan, contienen; privadas antes; MAX_SUGERENCIAS 12; esExacta); AreaAdn.svelte tecla() -->
@@ -115,7 +119,8 @@ glance why a condition gives what it gives, without guessing from reading the DN
 How the two stacks work is in [[adn/pilas]].
 
 The panel appears on the right, above **Test** and **Versions**. The button stays
-on or off in this browser: when you come back, it is as you left it.
+on or off in this browser: when you come back, it is as you left it. In **Tiles**
+the panel doesn't appear; the stack still shows when you hover over a tile ([[app/editor#pila-fichas|see The tiles]]).
 
 The panel shows:
 
@@ -324,6 +329,86 @@ number and doesn't pay DNA cost. If you turn it on, the numbers of the genes tha
 follow it change, and that matters if some gene uses [[.delgene]] or [[.mkvirus]]
 with a fixed number.
 :::
+
+## The tiles {#fichas}
+<!-- Fichas.svelte (tarjeta por gen con número, nombre y origen; líneas de código como fichas con huecos «+»; comentario, def y '# se editan enteras; clic, Enter, Tab, Esc, Supr; ↑/↓ sugerencias; tip con la pila al pasar el cursor; Ctrl+Z/Ctrl+Y); Paleta.svelte (grupos de GRUPOS_MEMORIA y COMANDOS, defs, buscador, TarjetaManual); Editor.svelte (modo 'fichas', posicionActiva, emitirFichas, posicionDeInsercion, cambiarModo; el lateral muestra la Paleta en lugar de Pila y Probar; el Laboratorio gana sobre todo); historial.js (crearHistorial: anotar, deshacer, rehacer, limpiar); arrastre.js (umbral de 6 px, sin dependencias); engine/fichas.js (modeloFichas, reemplazarFicha, insertarEn, borrarFicha, moverFicha, nuevaLineaTras) -->
+
+**Tiles** shows the same DNA split into words: each word is a tile, and the
+tiles are grouped by gene, just like in [[app/editor#genes|By gene]]. It's for
+changing, inserting and moving words without rewriting the whole line.
+
+The text is still the source. Each action in Tiles replaces words in the text,
+and when you go back to **Text** the DNA is the same. Tile actions don't touch
+comments or indentation: they change the word or the place of the tile and
+leave the rest of the line as it was. The exception is comment lines, `def`
+lines and the lines of disabled genes, which are edited whole with one click.
+
+Each gene is a card with its number, its name and its origin. Inside, each line
+of code is a row of tiles. Between two tiles there's a **+**: a slot where a
+word fits. The **+** signs are faint and show clearly when you hover over the
+line. On the left, each zone of the gene gets its label (**condition**, **body**,
+**else**). Lines outside every gene go in a card called **Outside genes**, and a
+disabled gene looks dimmed.
+
+| Gesture | What happens |
+|---|---|
+| Click a tile | It turns into a field with its word. Type the new one: suggestions appear below, which you go through with **↑** and **↓**. **Enter** or **Tab** applies it; **Esc** cancels. |
+| **Delete** with the field empty | Deletes the tile, and the extra space. |
+| Click a **+** | An empty field opens there. **Enter** inserts the word. |
+| **Enter** on the last tile of a line | Opens a new line with the same indentation, with the cursor on its **+**. |
+| Drag a tile onto a **+** | Moves it there. While you drag, the target **+** is highlighted. If you drop outside every **+**, nothing happens. |
+| Click a comment line, a `def` line or a disabled gene's line | It's edited whole: the whole line changes. |
+
+### The palette {#paleta}
+
+In Tiles, the right-hand panel is the **Palette**, with the words you can put in
+the DNA. It has a search box at the top and these collapsible groups: the
+sysvars, grouped by theme (each one appears as `.x` and as `*.x`); the
+operators, by use (flow, arithmetic and comparison, logic, stack and stores);
+and **Your defs**, with the DNA's private variables. The search filters all the
+groups at once.
+
+A click on a word puts it in the DNA, at the last **+** you touched or where the
+last action left the cursor. If you haven't touched any yet, it goes at the end
+of the text. Dragging it onto a **+** puts it there. The palette doesn't know
+which gene you're in: in Tiles there's no "gene under the cursor", so the word
+goes where the last **+** points or at the end. Hovering over a word shows its
+summary from the manual, as in [[app/editor#resumen|the hover summary]].
+
+With the Palette in the side panel, **Stack** and **Test** don't show. To test
+the DNA, go back to **Text** or **By gene**. **Versions** stays visible on your
+bots.
+
+### The stack when you hover over a tile {#pila-fichas}
+
+Hovering over a tile shows a box with the stacks left after that word: the
+numbers, and the trues and falses with ✓ and ✗, as in the
+[[app/editor#pila|step-by-step stack viewer]]. The stack is worked out even when
+the **Stack** button is off, and the button doesn't change anything in this mode.
+
+Only words that the engine runs with the example values have a stack. In the
+body of a `start` that doesn't run, hovering shows nothing. Nor does it show
+anything if the DNA doesn't load or the trace doesn't match the text. The example
+values are changed in the stack viewer, in **Text** or **By gene**.
+
+### Undo in Tiles {#deshacer-fichas}
+
+**Ctrl+Z** undoes and **Ctrl+Y** (or **Ctrl+Shift+Z**) redoes, with the focus on
+the view. While you're editing a tile they don't act: the field has its own undo.
+
+This undo is specific to the mode. It saves the DNA after each Tiles action
+(changing, inserting, moving or deleting a tile, putting in a palette word, and
+also restoring a version or recovering a draft). What you do in Tiles doesn't go
+into the undo of **Text**. The history is emptied when you change mode or bot:
+when you come back to Tiles, it starts from the text there is.
+
+### What Tiles doesn't do {#fichas-limites}
+
+- **It doesn't reorder whole genes.** You drag tiles, not genes. To turn a gene
+  off, use [[app/editor#genes|By gene]].
+- **There's no tap-a-tile-then-tap-the-slot mode.** On a touch screen, drag the
+  tile with your finger onto the **+**. The palette works the same way: a tap
+  puts the word in, and dragging it puts it where you let go.
 
 ## Saving versions {#versiones}
 <!-- Editor.svelte guardar (texto exacto; editor.guardar.*); borrador.js (por bot, localStorage, base); beforeunload; PanelVersiones.svelte (Restaurar, Comparar); DiffGenes.svelte (editor.diff.*); engine/bots.js guardarVersion/restaurarVersion -->

@@ -135,7 +135,7 @@ original y conservadas sin tocar.
   dentro de un Web Worker; la página solo presenta. Se observa el mundo y se
   inspecciona cada bot, incluido su ADN en vivo (qué genes disparan en cada ciclo), se experimenta con escenarios y parámetros (también en
   caliente), se analiza cada corrida (población, genética, filogenia,
-  eventos, réplicas e informes), se escriben bots con un editor de ADN, con la pila paso a paso, y se
+  eventos, réplicas e informes), se escriben bots con un editor de ADN (texto, genes y fichas), con la pila paso a paso, y se
   organizan torneos. Guarda y carga la sim en el formato binario de VB6
   (`.dbsim`) e incluye el **Bestiary de 684 bots de la comunidad** (ver
   [De dónde salen los bots](#de-dónde-salen-los-bots-de-la-demo)). La
