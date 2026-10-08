@@ -62,6 +62,10 @@ export function crearSim(opciones) {
   /** @type {Record<string, (...args: any[]) => any>} */
   let api = {}; // cwraps
   let sim = 0; // handle
+  // PLAN-EDITOR E2.2: último trace-on pedido. Un handle nuevo arranca con la
+  // traza apagada (db_sim_create) y db_sim_load conserva el interruptor; por
+  // eso nuevoHandle() lo vuelve a aplicar.
+  let trazaOn = false;
 
   let running = false;
   let speed = 4; // ticks por frame; 0 = máx
@@ -222,6 +226,10 @@ export function crearSim(opciones) {
       lint: C('db_dna_lint', n, [s]),
       // PLAN-EDITOR E1: traza de un gen (ExecuteDNA sobre un bot descartable)
       traceDna: C('db_dna_trace', n, [s, n, n, n]),
+      // PLAN-EDITOR E2: traza del bot con foco y volcado de memoria (solo lectura)
+      traceOn: C('db_sim_trace_on', null, [n, n]),
+      botTrace: C('db_sim_bot_trace', n, [n, n]),
+      botMemDump: C('db_sim_bot_mem_dump', n, [n, n, n, n]),
       // E6.5 - vista enriquecida (solo lectura del Sim)
       visReset: C('db_sim_vis_reset', null, [n]),
       visObserve: C('db_sim_vis_observe', null, [n]),
@@ -335,6 +343,8 @@ export function crearSim(opciones) {
     dom: { p: 0, cap: 0 },
     // PLAN-EDITOR E1: memoria de ejemplo (1001 enteros) para db_dna_trace
     traceMem: { p: 0, cap: 0 },
+    // PLAN-EDITOR E2: memoria del bot con foco (1000 enteros) para mem-dump
+    mem: { p: 0, cap: 0 },
   };
 
   /**
@@ -1814,6 +1824,13 @@ export function crearSim(opciones) {
     graphOpen.clear();
   }
 
+  // PLAN-EDITOR E2.2: todo handle nuevo (db_sim_create) arranca con la traza
+  // apagada; si el último trace-on pedido fue encenderla, se reaplica acá.
+  function nuevoHandle() {
+    sim = api.create();
+    if (trazaOn) api.traceOn(sim, 1);
+  }
+
   /**
    * @param {any} msg  {seed, options, species[], quietF1?, limpio?, semillaColores?}
    * @param {boolean} [carryTeleporters]  true = ronda nueva
@@ -1834,7 +1851,7 @@ export function crearSim(opciones) {
     const old = sim;
     // N4.1: sin sim anterior o con `limpio` el Player Bot no pasa (RV-42).
     if (limpio || !old) pbSeguir = false;
-    sim = api.create();
+    nuevoHandle();
     const o = msg.options;
     api.setField(sim, o.fieldW, o.fieldH);
     api.setMinVegs(sim, o.minVegs);
@@ -1940,7 +1957,7 @@ export function crearSim(opciones) {
     // Sin sim todavía (worker recién creado: la página retoma una corrida
     // antes de cualquier reset): db_sim_load necesita un handle. La clásica
     // siempre tiene uno al cargar, así que con ella nada cambia.
-    if (!sim) sim = api.create();
+    if (!sim) nuevoHandle();
     const p = M._malloc(bytes.length);
     M.HEAPU8.set(bytes, p);
     api.load(sim, p, bytes.length);
@@ -2177,6 +2194,36 @@ export function crearSim(opciones) {
           ),
         });
         break;
+      // ---- PLAN-EDITOR E2.2: trazador del inspector (bot con foco) ----
+      case 'trace-on':
+        // Sin sim no hay handle que encender: se recuerda y nuevoHandle lo aplica.
+        trazaOn = !!msg.on;
+        if (sim) api.traceOn(sim, trazaOn ? 1 : 0);
+        break;
+      case 'trace-bot': {
+        // db_sim_bot_trace: "" salvo que n sea el bot con foco y haya corrido un
+        // ciclo con la traza encendida (lo decide el core).
+        const n = msg.n | 0;
+        postMessage({
+          t: 'trace',
+          n,
+          ...correlacion(msg),
+          tsv: sim ? takeStr(api.botTrace(sim, n)) : '',
+        });
+        break;
+      }
+      case 'mem-dump': {
+        // mem[i] es la dirección i+1. Sin sim (o bot inexistente), lista vacía.
+        const n = msg.n | 0;
+        let mem = [];
+        if (sim) {
+          ensure(scratch.mem, 1000);
+          const c = api.botMemDump(sim, n, scratch.mem.p, 1000);
+          mem = Array.from(new Int32Array(M.HEAP32.buffer, scratch.mem.p, c));
+        }
+        postMessage({ t: 'mem', n, ...correlacion(msg), mem });
+        break;
+      }
       case 'dna-lib': {
         // RV-40: lo que la página resolvió por nombre
         for (const e of msg.entries || []) dnaLib.set(String(e.name), String(e.dna));

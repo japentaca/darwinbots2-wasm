@@ -549,3 +549,36 @@ test('aplicarEnCiclo: pausa, pide el ciclo, manda y reanuda después de la respu
   await r;
   assert.equal(w.enviados.filter((e) => e.msg.t === 'run').length, 3, 'solo la pausa');
 });
+
+test('trazador (E2.2): trace-on sin respuesta; traceBot y memDump con id y tiempo límite', async () => {
+  const { w, c, reloj } = armar();
+  c.traceOn(true);
+  assert.deepEqual(w.enviados.at(-1)?.msg, { t: 'trace-on', on: true });
+  c.traceOn(false);
+  assert.deepEqual(w.enviados.at(-1)?.msg, { t: 'trace-on', on: false });
+
+  const p = c.traceBot(3);
+  const { id } = w.de('trace-bot')[0].msg;
+  assert.deepEqual(w.de('trace-bot')[0].msg, { t: 'trace-bot', n: 3, id });
+  w.llega({ t: 'trace', n: 3, id, tsv: '#\t9\t3\t1\n1\t9\t1\t1\t1\t1\t0\t\t0\t\t0\t0\n' });
+  assert.equal(await p, '#\t9\t3\t1\n1\t9\t1\t1\t1\t1\t0\t\t0\t\t0\t0\n');
+
+  // una respuesta vacía resuelve con "" (el bot no se trazó)
+  const q = c.traceBot(3);
+  w.llega({ t: 'trace', n: 3, id: w.de('trace-bot')[1].msg.id, tsv: '' });
+  assert.equal(await q, '');
+
+  const m = c.memDump(3);
+  const mid = w.de('mem-dump')[0].msg.id;
+  assert.deepEqual(w.de('mem-dump')[0].msg, { t: 'mem-dump', n: 3, id: mid });
+  w.llega({ t: 'mem', n: 3, id: mid, mem: [0, 5, 7] });
+  assert.deepEqual(await m, [0, 5, 7]);
+
+  // vence sin respuesta: rechaza con 'tiempo'
+  const v = c.traceBot(3);
+  reloj.avanzar(TIEMPOS.traza);
+  assert.deepEqual(await estado(v), { error: 'tiempo' });
+  const w2 = c.memDump(3);
+  reloj.avanzar(TIEMPOS.mem);
+  assert.deepEqual(await estado(w2), { error: 'tiempo' });
+});

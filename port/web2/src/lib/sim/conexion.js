@@ -10,10 +10,11 @@
 // worker no publica otro frame hasta recibir el ack. Sin dibujante (ninguna
 // pantalla muestra el mundo) el búfer se devuelve igual: la sim sigue.
 //
-// Pedidos con respuesta (save, bot-text, getopt, load con respuesta): cada uno es una promesa con
+// Pedidos con respuesta (save, bot-text, getopt, load con respuesta, trace-bot,
+// mem-dump): cada uno es una promesa con
 // tiempo límite (TIEMPOS) que se rechaza con un ErrorConexion si vence, si el
 // worker falla (onerror) o si muere (error de carga, terminar). Correlación:
-//   - save, bot-text y load viajan con `id`; si la respuesta lo trae, se empareja
+//   - save, bot-text, load, trace-bot y mem-dump viajan con `id`; si la respuesta lo trae, se empareja
 //     por id y una respuesta tardía (de un pedido ya vencido o rechazado) se
 //     descarta sin tocar a los demás.
 //   - snapshot y dead-take (N4.1) no llevan id: se emparejan en orden; si
@@ -41,6 +42,8 @@ export const TIEMPOS = Object.freeze({
   ciclo: 10_000,
   snapshot: 60_000,
   dead: 60_000,
+  traza: 10_000,
+  mem: 10_000,
 });
 
 /**
@@ -61,7 +64,7 @@ export class ErrorConexion extends Error {
 /**
  * @typedef {object} Pedido
  * @property {number} id
- * @property {'save' | 'bot-text' | 'opt' | 'valla' | 'load' | 'ciclo' | 'snapshot' | 'dead'} tipo
+ * @property {'save' | 'bot-text' | 'opt' | 'valla' | 'load' | 'ciclo' | 'snapshot' | 'dead' | 'trace' | 'mem'} tipo
  * @property {string} k           cola FIFO ('save', 'bot-text:9', 'opt:21')
  * @property {boolean} vivo       false = lápida (rechazado o vencido)
  * @property {(v: any) => void} resolver
@@ -404,6 +407,32 @@ export class ConexionSim {
     const k = n | 0;
     return this.#pedir('bot-text', `bot-text:${k}`, { t: 'bot-text', n: k }, TIEMPOS.botText, true);
   }
+  /**
+   * PLAN-EDITOR E2.2: enciende o apaga la traza del bot con foco. El worker
+   * la recuerda y la reaplica a cada sim nueva; no contesta.
+   * @param {boolean} on
+   */
+  traceOn(on) {
+    this.enviar({ t: 'trace-on', on: !!on });
+  }
+  /**
+   * Traza del último ciclo del bot n (TSV con cabecera; "" si no hay, ver
+   * engine/worker.js).
+   * @param {number} n
+   * @returns {Promise<string>}
+   */
+  traceBot(n) {
+    return this.#pedir('trace', 'trace', { t: 'trace-bot', n: n | 0 }, TIEMPOS.traza, true);
+  }
+  /**
+   * Memoria del bot n: mem[i] es la dirección i + 1 (1000 enteros; [] si no
+   * hay sim o el bot no existe).
+   * @param {number} n
+   * @returns {Promise<number[]>}
+   */
+  memDump(n) {
+    return this.#pedir('mem', 'mem', { t: 'mem-dump', n: n | 0 }, TIEMPOS.mem, true);
+  }
   /** @param {number} n @param {number} [maxrec] @param {boolean} [lineas] */
   family(n, maxrec = 0, lineas = true) {
     this.enviar({ t: 'family', n: n | 0, maxrec: maxrec | 0, lines: !!lineas });
@@ -678,6 +707,16 @@ export class ConexionSim {
         const p = this.#emparejar(`bot-text:${msg.n | 0}`, msg, true);
         if (p?.tipo === 'valla') return; // interna: no se avisa
         if (p?.vivo) p.resolver(String(msg.text ?? ''));
+        break;
+      }
+      case 'trace': {
+        const p = this.#emparejar('trace', msg, true);
+        if (p?.vivo) p.resolver(String(msg.tsv ?? ''));
+        break;
+      }
+      case 'mem': {
+        const p = this.#emparejar('mem', msg, true);
+        if (p?.vivo) p.resolver(Array.isArray(msg.mem) ? msg.mem.map(Number) : []);
         break;
       }
       case 'opt': {

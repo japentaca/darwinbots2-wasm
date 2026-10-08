@@ -119,6 +119,19 @@
 //                                          req?, id?, tsv} (db_dna_trace; mem = 1001
 //                                          enteros de la memoria de ejemplo o ausente;
 //                                          anda sin sim y no la toca)
+//   {t:'trace-on', on}                     PLAN-EDITOR E2.2: traza del bot con
+//                                          foco (db_sim_trace_on). Se recuerda y
+//                                          se reaplica a cada handle nuevo (reset,
+//                                          ronda, carga sin sim). Sin respuesta.
+//   {t:'trace-bot', n, req?, id?}          PLAN-EDITOR E2.2: traza del último
+//                                          ciclo del bot n → {t:'trace', n, req?,
+//                                          id?, tsv}. Solo si n es el bot con foco
+//                                          y el ciclo corrió con la traza encendida;
+//                                          si no, tsv = "" (db_sim_bot_trace).
+//   {t:'mem-dump', n, req?, id?}           PLAN-EDITOR E2.2: memoria del bot n →
+//                                          {t:'mem', n, req?, id?, mem[1000]}
+//                                          (mem[i] es la dirección i+1); [] sin
+//                                          sim o si el bot no existe.
 //   {t:'dna-lib', entries:[{name,dna}]}    RV-40: ADN por nombre de especie
 //   {t:'setopt', id, v, nocap?}            opción E1 en vivo (tabla de ids
 //                                          en wasm/dbcore_api.cpp)
@@ -223,6 +236,11 @@
 //   {t:'trace-dna', req?, id?, tsv}        PLAN-EDITOR E1: el TSV de la traza tal
 //                                          cual (formato en PLAN-EDITOR.md, sin
 //                                          cabecera; lo parsea engine/pila.js)
+//   {t:'trace', n, req?, id?, tsv}         PLAN-EDITOR E2.2: respuesta a trace-bot.
+//                                          tsv con cabecera `#\t<ciclo>\t<n>\t<genenum>`
+//                                          y una línea por token (formato en
+//                                          PLAN-EDITOR.md); "" si no hay traza.
+//   {t:'mem', n, req?, id?, mem[]}         PLAN-EDITOR E2.2: respuesta a mem-dump.
 //   {t:'dna-missing', names[]}             RV-40: especies cargadas sin ADN
 //   {t:'opts', vals:{id: v}}               opciones que cambió el core (E3:
 //                                          polar ice enciende la deriva) —
