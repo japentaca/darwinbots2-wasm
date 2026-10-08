@@ -27,6 +27,7 @@
 // la página pide confirmación (beforeunload) y restaurar una versión
 // también (el reemplazo pasa por el deshacer en el modo texto).
 import { onDestroy, untrack } from 'svelte';
+import { hashAdn } from '../../../../engine/adn.js';
 import { crearBots, diffVersiones, ErrorBots } from '../../../../engine/bots.js';
 import {
   apagarGen,
@@ -49,6 +50,7 @@ import {
 } from '../../../../engine/pila.js';
 import { t } from '../../../i18n/index.svelte.js';
 import { hashDe } from '../../../router.js';
+import { CLAVE_PILA_PENDIENTE, valoresDePendiente } from '../../inspector/adn.js';
 import { almacen } from '../../sim/almacen.svelte.js';
 import AreaAdn from './AreaAdn.svelte';
 import { aLf, borradores } from './borrador.js';
@@ -242,6 +244,7 @@ async function cargar() {
         borradorRecuperado = true;
       } else borradorAjeno = b;
     } else if (b) borradores.borrar(bot.clave);
+    adoptarPendiente(texto);
     if (origenes.some((o) => o && 'archivo' in o)) cargarLab();
   } catch (e) {
     if (mia !== nCarga) return;
@@ -374,6 +377,26 @@ function alternarPila() {
     globalThis.localStorage?.setItem('dbw2.editor.pila', pila ? '1' : '0');
   } catch {
     // sin almacenamiento: vale por esta sesión
+  }
+}
+
+/**
+ * Los valores de la memoria que dejó el inspector («Abrir en el editor», PLAN-EDITOR
+ * E2.3) para este ADN: si su hash coincide, se adoptan como valores de ejemplo, se
+ * enciende el visor y se borra la clave. Sin almacenamiento, no pasa nada.
+ * @param {string} adn
+ */
+function adoptarPendiente(adn) {
+  try {
+    const crudo = globalThis.sessionStorage?.getItem(CLAVE_PILA_PENDIENTE);
+    if (!crudo) return;
+    const m = valoresDePendiente(crudo, hashAdn(adn));
+    if (!m) return;
+    globalThis.sessionStorage?.removeItem(CLAVE_PILA_PENDIENTE);
+    valoresEjemplo = m;
+    pila = true;
+  } catch {
+    // sin almacenamiento: el editor abre con los valores de siempre
   }
 }
 

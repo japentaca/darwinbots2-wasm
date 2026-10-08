@@ -11,12 +11,14 @@
 // (N4.1, decisión 15: Player Bot, diseñador de ojos y sus facilidades).
 import { onMount, untrack } from 'svelte';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
+import { hashDe } from '../../router.js';
 import { urlManual } from '../manual.js';
 import { vbACss } from '../mundo/color.js';
 import AvisoTorneo from '../observar/tv/AvisoTorneo.svelte';
 import { hayTorneoEnCurso } from '../observar/tv/tv.svelte.js';
 import { ESTADO, FLAG } from '../sim/frame.js';
 import Adn from './Adn.svelte';
+import { CLAVE_PILA_PENDIENTE, pendientePila, sinColaDeGuardado } from './adn.js';
 import Consola from './Consola.svelte';
 import ControlJugador from './ControlJugador.svelte';
 import { COMANDOS, HistorialComandos, MODIFICAN, SalidaConsola, verbo } from './consola.js';
@@ -58,6 +60,10 @@ const PESTANAS = /** @type {const} */ ([
 ]);
 /** Refresco del panel (ms): los frames llegan a 60 por segundo. */
 const REFRESCO = 100;
+/** Refresco de la traza del bot con foco mientras la sim corre (ms, pestaña ADN). */
+const REFRESCO_TRAZA = 500;
+/** Ciclos de la línea de tiempo de genes (pestaña ADN). */
+const HISTORIAL_GA = 200;
 /** Ventana de la sparkline de energía (ciclos). */
 const VENTANA = 1000;
 
@@ -78,6 +84,11 @@ let base = $state(59);
 let adn = $state(null);
 /** @type {number[] | null} genes activos del último ciclo (1/0 por gen) */
 let genes = $state.raw(null);
+/** genes de los últimos ciclos (la línea de tiempo de la pestaña ADN) */
+/** @type {(number[] | null)[]} */
+let historialGa = $state.raw([]);
+/** traza del último ciclo del bot con foco (TSV; '' = ninguna) */
+let traza = $state.raw('');
 let familiaAbierta = $state(false);
 /** @type {ReturnType<typeof resumenFamilia> | null} */
 let familia = $state.raw(null);
@@ -125,6 +136,8 @@ function cambiarBot(n) {
   rel = null;
   paquete = null;
   genes = null;
+  historialGa = [];
+  traza = '';
   chispa = '';
   serie.limpiar();
   lector.bot = n;
@@ -185,7 +198,9 @@ onMount(() => {
       else if (temporizador === undefined) temporizador = setTimeout(publicar, espera);
     }),
     c.on('genes', (m) => {
-      if ((m.n | 0) === bot && Array.isArray(m.ga)) genes = m.ga;
+      if ((m.n | 0) !== bot || !Array.isArray(m.ga)) return;
+      genes = m.ga;
+      historialGa = [...historialGa.slice(-(HISTORIAL_GA - 1)), m.ga];
     }),
     c.on('family', (m) => {
       if (familiaAbierta && (m.n | 0) === bot) familia = resumenFamilia(m);
@@ -229,14 +244,89 @@ onMount(() => {
   };
 });
 
-// Los genes activos llegan tras cada frame mientras «activ» está encendido.
+// Los genes activos llegan tras cada frame mientras «activ» está encendido
+// (Resumen y ADN, PLAN-EDITOR E2.3: la línea de tiempo usa el mismo dato).
 $effect(() => {
-  if (pestana !== 'resumen' || !vivo) return;
+  if (!(pestana === 'resumen' || pestana === 'adn') || !vivo) return;
   const n = bot;
   sesion.c.activ(true);
   sesion.c.genes(n);
   return () => sesion.c.activ(false);
 });
+
+// La pestaña ADN enciende la traza del bot con foco (PLAN-EDITOR E2.3): el motor
+// guarda solo la del último ciclo. Con la sim corriendo se pide cada
+// REFRESCO_TRAZA ms; en pausa, una vez (y tras cada paso, en pasar()).
+$effect(() => {
+  if (pestana !== 'adn' || !vivo) return;
+  const n = bot;
+  sesion.c.traceOn(true);
+  untrack(() => pedirTraza(n));
+  const id = setInterval(() => {
+    if (sesion.corriendo) pedirTraza(n);
+  }, REFRESCO_TRAZA);
+  return () => {
+    clearInterval(id);
+    sesion.c.traceOn(false);
+    traza = '';
+  };
+});
+
+/** @param {number} n bot cuya traza se pide (la del foco; si no es, llega '') */
+function pedirTraza(n) {
+  sesion.c.traceBot(n).then(
+    (tsv) => {
+      if (bot === n) traza = tsv;
+    },
+    () => {
+      if (bot === n) traza = '';
+    },
+  );
+}
+
+/**
+ * Avanza k ciclos con la sim en pausa (PLAN-EDITOR E2.3). Los pasos y la traza
+ * van en orden por el worker: la traza que llega es la del último ciclo.
+ * @param {number} k
+ */
+function pasar(k) {
+  if (!vivo) return;
+  sesion.correr(false);
+  for (let i = 0; i < k; i++) sesion.c.step();
+  pedirTraza(bot);
+}
+
+/**
+ * «Abrir en el editor» (PLAN-EDITOR E2.3): pide la memoria del bot, deja en
+ * sessionStorage los valores de las sysvars que lee el ADN y va a la ruta de bot
+ * nuevo con ese ADN. El editor los adopta si el texto coincide (hashAdn).
+ */
+function abrirEnEditor() {
+  const texto = adn;
+  if (!texto || !vivo) return;
+  const sinCola = sinColaDeGuardado(texto);
+  // Sin memoria (sim vacía o pedido vencido) se abre igual, con los valores de siempre.
+  sesion.c
+    .memDump(bot)
+    .then(
+      (mem) => {
+        if (mem.length) guardarPendiente(pendientePila(sinCola, mem));
+      },
+      () => {},
+    )
+    .then(() => {
+      location.hash = `${hashDe('bots', 'nuevo')}?adn=${encodeURIComponent(sinCola)}`;
+    });
+}
+
+/** @param {{hash: string, valores: [string, number][]}} p */
+function guardarPendiente(p) {
+  try {
+    sessionStorage.setItem(CLAVE_PILA_PENDIENTE, JSON.stringify(p));
+  } catch {
+    // sin almacenamiento: el editor abre sin los valores de la memoria
+  }
+}
 
 // La consola del bot está abierta mientras se ve su pestaña.
 $effect(() => {
@@ -546,7 +636,18 @@ const estados = $derived.by(() => {
     {:else if pestana === 'memoria'}
       <Memoria {vivo} {valorDe} direccion={direccionDe} leer={leerMemoria} />
     {:else if pestana === 'adn'}
-      <Adn texto={adn} {vivo} onReleer={pedirAdn} />
+      <Adn
+        texto={adn}
+        {vivo}
+        corriendo={sesion.corriendo}
+        {genes}
+        {historialGa}
+        {traza}
+        onReleer={pedirAdn}
+        onPausar={() => sesion.correr(false)}
+        onPaso={pasar}
+        onAbrirEditor={abrirEnEditor}
+      />
     {:else if pestana === 'consola'}
       <AvisoTorneo clave="inspector.consola.avisoTorneo" />
       <Consola texto={textoConsola} {vivo} {historial} onComando={comando} />

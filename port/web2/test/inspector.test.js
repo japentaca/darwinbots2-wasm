@@ -2,8 +2,22 @@
 // Inspector del bot (paso N1.4): derivaciones puras de src/lib/inspector/.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { hashAdn } from '../engine/adn.js';
+import { tokensEjecutables } from '../engine/pila.js';
 import { H, HEADER, REG } from '../engine/protocolo.js';
-import { claseDe, resaltarAdn, tokensLinea } from '../src/lib/inspector/adn.js';
+import {
+  alineadosDeTraza,
+  CLAVE_PILA_PENDIENTE,
+  claseDe,
+  claseDeGen,
+  cuadriculaGen,
+  pendientePila,
+  resaltarAdn,
+  segmentosAdn,
+  sinColaDeGuardado,
+  tokensLinea,
+  valoresDePendiente,
+} from '../src/lib/inspector/adn.js';
 import {
   COMANDOS,
   HistorialComandos,
@@ -447,4 +461,110 @@ test('SerieCiclos.lineaBase: el 0 abajo sin negativos, adentro con negativos', (
   const b = s.lineaBase(60);
   assert.ok(b > 1 && b < 59, `base ${b}`);
   assert.equal(b, 1 + 58 - (20 / 40) * 58);
+});
+
+// ---- Pestaña ADN rehecha (PLAN-EDITOR E2.3) ----------------------------------
+
+const ADN_DOS_GENES =
+  "'#generation 3\ncond\n*.up 10 >\nstart\n1 *.up store\nstop\ncond\n*.up 5 <\nstart\n2 *.up store\nstop\nend\n";
+
+/** Traza TSV (con cabecera) de un ciclo: una línea por token ejecutable. */
+function tsvDe(texto, { flujoStart = 0 } = {}) {
+  const toks = tokensEjecutables(texto);
+  const lineas = [`#\t7\t1\t${toks.length}`];
+  toks.forEach((tk, k) => {
+    const flujo = tk.w.toLowerCase() === 'start' ? flujoStart : 1;
+    lineas.push(`${k + 1}\t0\t0\t1\t${flujo}\t1\t0\t\t0\t\t0\t0`);
+  });
+  return lineas.join('\n');
+}
+
+test('sinColaDeGuardado quita la cola de SalvarobText, en LF y sin espacios al final', () => {
+  const crudo = "cond\r\nstart\r\nstop\r\n\r\n'#hash: abc\r\n'#tag:etiqueta\r\n\r\n";
+  assert.equal(sinColaDeGuardado(crudo), 'cond\nstart\nstop');
+  assert.equal(sinColaDeGuardado('cond\nstop\n'), 'cond\nstop');
+  assert.equal(sinColaDeGuardado('cond\0\0stop'), 'condstop');
+});
+
+test('segmentosAdn: un segmento por gen y el resto como texto suelto', () => {
+  const seg = segmentosAdn(ADN_DOS_GENES);
+  assert.deepEqual(
+    seg.map((s) => [s.gen, s.n, s.lineas.length]),
+    [
+      [false, -1, 1],
+      [true, 0, 5],
+      [true, 1, 5],
+      [false, -1, 1],
+    ],
+  );
+  // el gen conserva el resaltado de sus tokens
+  assert.ok(seg[1].lineas[0].some((tk) => tk.c === 'clave' && tk.s === 'cond'));
+});
+
+test('claseDeGen: disparo del motor, condición evaluada y start sin entrar', () => {
+  const paso = (idx, palabra, ejec, flujo) => ({ idx, palabra, ejec, flujo });
+  const pasos = [paso(1, 'cond', true, 1), paso(2, '*.up', true, 1), paso(3, 'start', true, 0)];
+  assert.equal(claseDeGen(pasos, true), 'disparo');
+  assert.equal(claseDeGen(pasos, false), 'evaluado');
+  // el start entró (flujo BODY): no es evaluado, aunque la condición corrió
+  assert.equal(claseDeGen([paso(1, 'cond', true, 1), paso(2, 'start', true, 2)], false), '');
+  // sin pasos (traza que no corresponde): nada
+  assert.equal(claseDeGen([], false), '');
+});
+
+test('alineadosDeTraza: una traza por token, o [] si no corresponde', () => {
+  const alineados = alineadosDeTraza(ADN_DOS_GENES, tsvDe(ADN_DOS_GENES));
+  assert.equal(alineados.length, tokensEjecutables(ADN_DOS_GENES).length);
+  assert.equal(alineados[0].palabra, 'cond');
+  assert.equal(alineados[4].palabra, 'start');
+  // sin traza
+  assert.deepEqual(alineadosDeTraza(ADN_DOS_GENES, ''), []);
+  // una línea de menos: no se alinea
+  const corta = tsvDe(ADN_DOS_GENES).split('\n').slice(0, -1).join('\n');
+  assert.deepEqual(alineadosDeTraza(ADN_DOS_GENES, corta), []);
+});
+
+test('pendientePila: valores de las sysvars con dirección (mem[i] = dirección i+1)', () => {
+  const mem = new Array(1000).fill(0);
+  mem[0] = 7; // dirección 1 = .up
+  const p = pendientePila(sinColaDeGuardado(ADN_DOS_GENES), mem);
+  assert.equal(p.hash, hashAdn(ADN_DOS_GENES));
+  assert.deepEqual(p.valores, [['.up', 7]]);
+  // sin memoria no hay valores
+  assert.deepEqual(pendientePila(ADN_DOS_GENES, []).valores, []);
+});
+
+test('valoresDePendiente: solo para el mismo hash; roto o ajeno, null', () => {
+  const crudo = JSON.stringify({
+    hash: 'h1',
+    valores: [
+      ['.up', 7],
+      ['.dn', null],
+    ],
+  });
+  assert.deepEqual([...valoresDePendiente(crudo, 'h1')], [['.up', 7]]);
+  assert.equal(valoresDePendiente(crudo, 'otro'), null);
+  assert.equal(valoresDePendiente('{no es json', 'h1'), null);
+  assert.equal(CLAVE_PILA_PENDIENTE, 'dbw2.editor.pila:pendiente');
+});
+
+test('cuadriculaGen: el ciclo más nuevo a la derecha, huecos a la izquierda', () => {
+  const historial = [
+    [0, 1],
+    [1, 0],
+  ];
+  const cuadro = cuadriculaGen(historial, 0);
+  assert.equal(cuadro.length, 200);
+  // dos ciclos: ocupan 198 y 199; el gen 0 disparó en el más nuevo
+  assert.equal(cuadro[197], false);
+  assert.equal(cuadro[198], false);
+  assert.equal(cuadro[199], true);
+  assert.equal(cuadriculaGen(historial, 1)[198], true);
+  assert.equal(cuadriculaGen(historial, 1)[199], false);
+  // más de 200 ciclos: solo los últimos
+  const largo = Array.from({ length: 205 }, (_, k) => [k === 0 ? 1 : 0]);
+  assert.equal(
+    cuadriculaGen(largo, 0).every((c) => c === false),
+    true,
+  );
 });
