@@ -9,6 +9,7 @@
 // Errores y avisos son {clave, params} de competir.json.
 
 import { admitir, entradaDeIndice } from '../../../engine/admision.js';
+import { hashAdn } from '../../../engine/adn.js';
 import { escenarioFabrica } from '../../../engine/escenarios/fabrica.js';
 import {
   LG_CUP_SIZES,
@@ -260,6 +261,25 @@ export function validarAdmision(a, ctx) {
     avisos.push(...v.avisos);
   }
   return { errores, avisos };
+}
+
+/**
+ * Admisión (D7) de un participante YA inscrito (la lista de Participantes, L3.3):
+ * juzga el ADN congelado que guardó la temporada, no el actual de la Biblioteca.
+ * Si el índice tiene el bot (mismo hash de identidad, hashAdn), toma su board y
+ * sus caps del foro; si no, solo el análisis estático del ADN. Devuelve los
+ * errores y después los avisos, ya en la forma {clave, params}.
+ * @param {import('../../../engine/ligas.js').Liga | null} liga
+ * @param {{name: string, dna: string}} e
+ * @param {any[]} [indice]
+ * @returns {Mensaje[]}
+ */
+export function admisionDeParticipante(liga, e, indice = []) {
+  if (!liga) return [];
+  const h = hashAdn(e.dna);
+  const ent = indice.find((x) => x.hash === h);
+  const v = admitir(liga, { ...(ent ? entradaDeIndice(ent) : {}), nombre: e.name, adn: e.dna });
+  return [...v.errores, ...v.avisos];
 }
 
 /**

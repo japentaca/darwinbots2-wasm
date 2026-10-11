@@ -1,20 +1,22 @@
 <script>
 // @ts-check
 // Pool de sorteo (lgPool): toda la Biblioteca, favoritos, la selección de
-// la Biblioteca, un tag o una selección con nombre.
+// la Biblioteca, un tag o una selección con nombre. Con `liga` (el id de la
+// liga de la temporada) suma «los bots que admite <liga>» (liga:<id>, L3.3).
 import { todosLosTags } from '../../../engine/biblioteca.js';
 import { t } from '../../i18n/index.svelte.js';
 import { bib, ui } from '../bots/biblioteca.svelte.js';
 import { nombrePool } from './textos.js';
 
-/** @type {{ valor: string, onCambio: (p: string) => void, disabled?: boolean, etiqueta?: string }} */
-let { valor, onCambio, disabled = false, etiqueta = '' } = $props();
+/** @type {{ valor: string, onCambio: (p: string) => void, disabled?: boolean, etiqueta?: string, liga?: string | null }} */
+let { valor, onCambio, disabled = false, etiqueta = '', liga = null } = $props();
 
 const tr = { t, num: (/** @type {number} */ n) => String(n) };
 const opciones = $derived([
   'all',
   'fav',
   ...(ui.sel.size || valor === 'sel' ? ['sel'] : []),
+  ...(liga ? [`liga:${liga}`] : []),
   ...todosLosTags(bib.indice).map(([g]) => `tag:${g}`),
   ...bib.selecciones.map((s) => `set:${s.nombre}`),
 ]);

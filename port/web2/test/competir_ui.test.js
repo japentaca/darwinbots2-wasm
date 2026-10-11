@@ -11,6 +11,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { compile } from 'svelte/compiler';
+import { hashAdn } from '../engine/adn.js';
 import { ESCENARIOS_FABRICA } from '../engine/escenarios/fabrica.js';
 import * as LG from '../engine/league.js';
 import { LIGAS } from '../engine/ligas.js';
@@ -551,8 +552,21 @@ test('claves: cada nota, registro, rótulo, avance, sorteo, error y TV tiene tex
       limpio(X.textoError({ codigo: k, message: k }, tr), `cola ${k}`);
     for (const how of LG.LG_HOWS) limpio(X.textoCampeon({ name: 'A', how }, tr), `cómo ${how}`);
     limpio(X.textoCampeon(null, tr), 'sin campeón');
-    for (const p of ['all', 'fav', 'sel', 'tag:x', 'set:y'])
+    for (const p of ['all', 'fav', 'sel', 'tag:x', 'set:y', 'liga:f2'])
       limpio(X.nombrePool(p, tr), `pool ${p}`);
+    for (const k of ['vegetal', 'genes', 'stores', 'categoria', 'accion'])
+      limpio(
+        tr.t(`competir.admision.${k}`, {
+          nombre: 'X',
+          liga: 'F2',
+          genes: 7,
+          stores: 2,
+          max: 1,
+          board: 'F1 bots',
+          cap: 'virus',
+        }),
+        `admisión ${k}`,
+      );
     assert.deepEqual(faltan, [], `${idioma}: claves sin texto`);
   }
 });
@@ -861,7 +875,7 @@ test('filasPartidos lleva las descalificaciones y Partidos compila sin advertenc
 });
 
 test('el selector de liga y los componentes de reglas compilan sin advertencias', () => {
-  for (const nombre of ['EditorPartido', 'Asistente', 'Reglas']) {
+  for (const nombre of ['EditorPartido', 'Asistente', 'Reglas', 'Participantes', 'SelectorPool']) {
     const p = path.join(RAIZ, 'src', 'lib', 'competir', `${nombre}.svelte`);
     const r = compile(fs.readFileSync(p, 'utf8'), { filename: p });
     assert.deepEqual(
@@ -934,4 +948,46 @@ test('asistente: la admisión a la liga de las reglas (L3.2)', () => {
   assert.deepEqual(A.validarAdmision({ ...ss, modo: 'random' }, ctx), { errores: [], avisos: [] });
   // sin índice en el contexto no se juzga
   assert.deepEqual(A.validarParticipantes(ss, { tamPool: 10 }), { errores: [], avisos: [] });
+});
+
+test('participantes: admisión por liga (L3.3) y el pool liga:<id>', () => {
+  const es = traductor('es');
+  const liga = (/** @type {string} */ id) => LIGAS.find((l) => l.id === id) ?? null;
+  const uno = 'start\n1 .up store\nstop';
+  const dos = 'start\n1 .up store\n1 .dn store\nstop';
+  const indice = [
+    {
+      clave: 'c',
+      clase: 'foro',
+      nombre: 'Viejo',
+      foro: 'F1 bots',
+      hash: hashAdn(uno),
+      perfil: { genes: 1, caps: ['virus'] },
+    },
+    { clave: 'b', clase: 'propio', nombre: 'Dos', foro: null, hash: hashAdn(dos), adn: dos },
+  ];
+  // sin liga no hay nada que juzgar
+  assert.deepEqual(A.admisionDeParticipante(null, { name: 'Viejo', dna: uno }, indice), []);
+  // del foro: el board F1 bots no entra en F2 (aviso) y su capacidad virus, que F2 descalifica (aviso)
+  assert.deepEqual(
+    A.admisionDeParticipante(liga('f2'), { name: 'Viejo', dna: uno }, indice).map((m) => m.clave),
+    ['competir.admision.categoria', 'competir.admision.accion'],
+  );
+  // dos store en SS: error de forma, primero; el propio no tiene board, así que no hay aviso de categoría
+  const ss = A.admisionDeParticipante(liga('ss'), { name: 'Dos', dna: dos }, indice);
+  assert.deepEqual(
+    ss.map((m) => m.clave),
+    ['competir.admision.stores'],
+  );
+  assert.equal(ss[0].params?.stores, 2);
+  // un bot que no está en el índice se juzga por su ADN congelado (dos store en SS)
+  assert.deepEqual(
+    A.admisionDeParticipante(liga('ss'), { name: 'Otro', dna: dos }, []).map((m) => m.clave),
+    ['competir.admision.stores'],
+  );
+  // el pool liga:<id> tiene su rótulo y el texto de cada clave de admisión existe
+  assert.equal(X.nombrePool('liga:f2', es.tr), 'los bots que admite F2');
+  for (const m of A.admisionDeParticipante(liga('f2'), { name: 'Viejo', dna: uno }, indice))
+    limpio(es.tr.t(m.clave, m.params), m.clave);
+  assert.deepEqual(es.faltan, []);
 });

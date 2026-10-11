@@ -636,7 +636,7 @@ export function textoColina(f, tr) {
 }
 
 /**
- * Nombre de un pool de sorteo (lgPool: 'all', 'fav', 'sel', 'tag:…', 'set:…').
+ * Nombre de un pool de sorteo (lgPool: 'all', 'fav', 'sel', 'tag:…', 'set:…', 'liga:…').
  * @param {string} p @param {Tr} tr
  */
 export function nombrePool(p, tr) {
@@ -645,6 +645,7 @@ export function nombrePool(p, tr) {
   if (p === 'sel') return tr.t('competir.pool.sel');
   if (p.startsWith('tag:')) return tr.t('competir.pool.tag', { tag: p.slice(4) });
   if (p.startsWith('set:')) return tr.t('competir.pool.set', { nombre: p.slice(4) });
+  if (p.startsWith('liga:')) return tr.t('competir.pool.liga', { liga: p.slice(5).toUpperCase() });
   return p;
 }
 

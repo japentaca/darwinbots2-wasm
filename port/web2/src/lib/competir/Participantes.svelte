@@ -1,9 +1,4 @@
 <script>
-// @ts-check
-// Participantes de la temporada: la lista (con el ADN congelado al
-// inscribirse), su cantidad y su color; inscribir más desde la Biblioteca;
-// el sorteo (lista fija, sorteo en cada temporada o en cada pelea) y, en la
-// copa, los grupos. Todo lo de la clásica (Setup → Entrants).
 import {
   LG_MAX_FIGHTERS,
   lgCupGroupsOk,
@@ -13,9 +8,15 @@ import {
   lgPool,
   lgRrWarn,
 } from '../../../engine/league.js';
+// @ts-check
+// Participantes de la temporada: la lista (con el ADN congelado al
+// inscribirse), su cantidad y su color; inscribir más desde la Biblioteca;
+// el sorteo (lista fija, sorteo en cada temporada o en cada pelea) y, en la
+// copa, los grupos. Todo lo de la clásica (Setup → Entrants).
+import { ligaDeReglas } from '../../../engine/ligas.js';
 import { num, t } from '../../i18n/index.svelte.js';
 import { bib, ui } from '../bots/biblioteca.svelte.js';
-import { inventarioClaves } from './asistente.js';
+import { admisionDeParticipante, inventarioClaves } from './asistente.js';
 import ElegirBots from './ElegirBots.svelte';
 import SelectorPool from './SelectorPool.svelte';
 import { textoSorteo } from './textos.js';
@@ -47,6 +48,21 @@ const inv = $derived(
   inventarioClaves({ indice: bib.indice, sel: ui.sel, selecciones: bib.selecciones }),
 );
 const tamPool = $derived(lgPool(inv, dr.pool).length);
+// La liga de la temporada (D6) y la admisión de cada participante (L3.3): ⚠ en la fila.
+const liga = $derived(ligaDeReglas(S.rules));
+// Los textos de la admisión de cada participante (errores, después avisos), por hash.
+const textosAdm = $derived(
+  new Map(
+    S.entrants.map((e) => [e.hash, admisionDeParticipante(liga, e, bib.indice).map(textoAdm)]),
+  ),
+);
+const avisosDe = (/** @type {string} */ h) => textosAdm.get(h) ?? [];
+
+/** Texto de un aviso o error de admisión; la acción lleva su nombre traducido. */
+function textoAdm(/** @type {{clave: string, params?: Record<string, any>}} */ m) {
+  const p = m.params ?? {};
+  return t(m.clave, /** @type {any} */ (p.cap ? { ...p, cap: t(`bots.cap.${p.cap}`) } : p));
+}
 const pista = $derived(
   [
     textoSorteo(lgDrawHint(dr, S, bloqueada), tr),
@@ -130,7 +146,19 @@ async function inscribir() {
                 onchange={(ev) => cambiarParticipante(i, { color: ev.currentTarget.value })}
               >
             </td>
-            <td class="l">{e.name}</td>
+            <td class="l">
+              {e.name}
+              {#if avisosDe(e.hash).length}
+                <span
+                  class="adm"
+                  role="img"
+                  title={avisosDe(e.hash).join('\n')}
+                  aria-label={avisosDe(e.hash).join('. ')}
+                  >⚠</span
+                >
+                <span class="adm-texto">{avisosDe(e.hash).join(' ')}</span>
+              {/if}
+            </td>
             <td class="l gris">
               {t(
   `competir.participantes.src.${['bestiary', 'hybrid', 'form', 'preset'].includes(e.src) ? e.src : 'form'}`,
@@ -203,7 +231,12 @@ async function inscribir() {
         onchange={(e) => cambiarSorteo({ n: e.currentTarget.value })}
       >
       <span>{t('competir.elegir.de')}</span>
-      <SelectorPool valor={dr.pool} disabled={ronda} onCambio={(p) => cambiarSorteo({ pool: p })} />
+      <SelectorPool
+        valor={dr.pool}
+        disabled={ronda}
+        liga={liga?.id ?? null}
+        onCambio={(p) => cambiarSorteo({ pool: p })}
+      />
       <button
         class="btn chico"
         type="button"
@@ -349,6 +382,23 @@ input[type="color"] {
   font-size: 13px;
   color: var(--aviso-texto);
   margin: 0;
+}
+.adm {
+  color: var(--aviso-texto);
+  cursor: help;
+}
+/* el texto de la admisión solo se ve en pantalla chica; en la otra, está en el ⚠ */
+.adm-texto {
+  display: none;
+}
+@media (max-width: 640px) {
+  .adm-texto {
+    display: block;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--aviso-texto);
+    white-space: normal;
+  }
 }
 .oculto {
   position: absolute;
