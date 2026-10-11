@@ -43,6 +43,8 @@ Los añadidos fuera de etapa no van en `spec/PROGRESO.md` ni en
 | [`port/web2/PLAN-EDITOR.md`](port/web2/PLAN-EDITOR.md) | Herramientas del editor de ADN (decisión 26): visor de pila, trazador, fichas y evolución asistida, etapa por etapa. | vivo |
 | [`port/web2/PLAN-EDITOR-ORQUESTADOR.md`](port/web2/PLAN-EDITOR-ORQUESTADOR.md) | Receta y prompt para ejecutar `PLAN-EDITOR.md` sin atender, con los agentes de `.claude/agents/`. | vivo |
 | [`port/web2/PLAN-EDITOR-INFORME.md`](port/web2/PLAN-EDITOR-INFORME.md) | Informe de la ejecución de `PLAN-EDITOR.md` (2026-10-07/08): cifras, rutinas del core que cambiaron, desvíos por paso y pendientes. | histórico |
+| [`port/web2/PLAN-LIGAS.md`](port/web2/PLAN-LIGAS.md) | Ligas en los torneos (decisión 27): presets de mundo F1-F3, MB, SB, SS y F4, descalificación y admisión, paso por paso. | vivo |
+| [`port/web2/PLAN-LIGAS-ORQUESTADOR.md`](port/web2/PLAN-LIGAS-ORQUESTADOR.md) | Receta y prompt para ejecutar `PLAN-LIGAS.md` sin atender, cuidando el contexto del orquestador. | vivo |
 | [`port/web2/historial/PROGRESO.md`](port/web2/historial/PROGRESO.md) | Diario de la construcción de la app nueva (2026-09-29/30). | histórico |
 | [`port/sitio/NOTAS-TRADUCCION.md`](port/sitio/NOTAS-TRADUCCION.md) | Decisiones de estilo de la traducción al inglés. | vivo |
 | [`port/tools/bestiary/README.md`](port/tools/bestiary/README.md) | El archivador de bots del foro y del wiki. | vivo |
