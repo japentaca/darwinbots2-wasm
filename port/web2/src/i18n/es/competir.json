@@ -502,6 +502,7 @@
   "competir.participantes.sorteoBloqueado": "La temporada tiene partidos: empezá otra temporada para volver a sortear.",
   "competir.participantes.sorteados": "{n} participantes sorteados ({fallidos} ilegibles).",
   "competir.participantes.agregados": "{n} participantes inscriptos.",
+  "competir.participantes.rechazados": "Rechazados por la liga: {motivos}",
   "competir.participantes.sinAdn": "Sin ADN legible, no se inscribieron: {nombres}.",
   "competir.participantes.gruposElo": "Bombos por el Elo histórico del torneo (1500 sin historial): uno de cada bombo por grupo.",
   "competir.participantes.gruposAzar": "Sorteo puro.",

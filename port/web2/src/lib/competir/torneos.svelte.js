@@ -38,6 +38,7 @@ import { mount } from 'svelte';
 import { crearPaleta } from '../../../engine/adn.js';
 import { entradasDe } from '../../../engine/biblioteca.js';
 import { LG_SCRATCH_ID, lgAddEntrant, lgIsScratch, lgSeason } from '../../../engine/league.js';
+import { ligaDeReglas } from '../../../engine/ligas.js';
 import {
   escenarioDelPartido,
   inventarioDeBiblioteca,
@@ -73,7 +74,7 @@ import {
 } from './juego.js';
 import Marcador from './Marcador.svelte';
 import { esperarMigracionLigas } from './migracion.svelte.js';
-import { nombreTorneo, textoError } from './textos.js';
+import { nombreTorneo, textoError, textoMensaje } from './textos.js';
 
 /** @typedef {import('../../../engine/league.js').League} League */
 /** @typedef {import('../../../engine/league.js').Match} Match */
@@ -479,11 +480,8 @@ export function crearTorneo(a) {
     if (a.nombre.trim()) await x.lgRename(a.nombre);
     for (const [k, v] of plan.fmt) await x.lgSetFmt(k, v);
     await x.lgSetDraw(plan.draw);
-    if (plan.llenar === 'lista') {
-      const r = await agregarClaves(a.claves);
-      if (r.sinAdn.length)
-        avisar('competir.participantes.sinAdn', { nombres: r.sinAdn.join(', ') }, true);
-    } else if (plan.llenar === 'sorteo') {
+    if (plan.llenar === 'lista') avisarRechazos(await agregarClaves(a.claves));
+    else if (plan.llenar === 'sorteo') {
       const r = await x.lgRedraw(L);
       if (r)
         avisar('competir.participantes.sorteados', { n: r.added, fallidos: r.failed }, r.added < 2);
@@ -494,17 +492,43 @@ export function crearTorneo(a) {
 
 /**
  * Inscribe entradas de la Biblioteca en la temporada abierta (ADN congelado).
+ * La liga de la temporada rechaza a los que no admite con su ADN real (D7).
  * @param {string[]} claves
  */
 async function agregarClaves(claves) {
   const x = /** @type {ReturnType<typeof crearTorneos>} */ (T);
-  const { participantes, sinAdn } = await participantesDeEntradas(
+  const S = x.lg.cur ? lgSeason(x.lg.cur) : null;
+  const { participantes, sinAdn, rechazados } = await participantesDeEntradas(
     entradasDe(bib.indice, claves),
     adnDeEntrada,
+    ligaDeReglas(S?.rules),
   );
   let n = 0;
   for (const p of participantes) if (await x.lgAdd(p)) n++;
-  return { n, sinAdn };
+  return { n, sinAdn, rechazados };
+}
+
+/**
+ * Avisa de los que no se inscribieron: los que la liga rechazó (con el
+ * motivo) y los que no tenían ADN legible. Devuelve false si no hubo ninguno.
+ * @param {{sinAdn: string[], rechazados: {errores: {clave: string, params?: any}[]}[]}} r
+ */
+function avisarRechazos(r) {
+  const partes = [];
+  if (r.rechazados.length)
+    partes.push(
+      t('competir.participantes.rechazados', {
+        motivos: r.rechazados
+          .flatMap((x) => x.errores)
+          .map((m) => textoMensaje(m, tr))
+          .join(' '),
+      }),
+    );
+  if (r.sinAdn.length)
+    partes.push(t('competir.participantes.sinAdn', { nombres: r.sinAdn.join(', ') }));
+  if (!partes.length) return false;
+  est.aviso = { texto: partes.join(' '), aviso: true };
+  return true;
 }
 
 // ---- Participantes, formato y reglas del torneo abierto ------------------------------
@@ -514,9 +538,7 @@ export function agregarParticipantes(claves) {
   return accionLibre('agregar', async () => {
     await asegurarBiblioteca();
     const r = await agregarClaves(claves);
-    if (r.sinAdn.length)
-      avisar('competir.participantes.sinAdn', { nombres: r.sinAdn.join(', ') }, true);
-    else avisar('competir.participantes.agregados', { n: r.n });
+    if (!avisarRechazos(r)) avisar('competir.participantes.agregados', { n: r.n });
   });
 }
 
@@ -552,16 +574,15 @@ async function inscribirSinAbrir(id, claves) {
       avisar('competir.nota.round-running', {}, true);
       return;
     }
-    const { participantes, sinAdn } = await participantesDeEntradas(
+    const r = await participantesDeEntradas(
       entradasDe(bib.indice, claves),
       adnDeEntrada,
+      ligaDeReglas(S.rules),
     );
     let n = 0;
-    for (const p of participantes) if (lgAddEntrant(S, p)) n++;
+    for (const p of r.participantes) if (lgAddEntrant(S, p)) n++;
     await x.lgSave(L);
-    if (sinAdn.length)
-      avisar('competir.participantes.sinAdn', { nombres: sinAdn.join(', ') }, true);
-    else avisar('competir.participantes.agregados', { n });
+    if (!avisarRechazos(r)) avisar('competir.participantes.agregados', { n });
   });
   return true;
 }

@@ -4,9 +4,14 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { admitir, perfilLiga } from '../engine/admision.js';
+import { admitir, erroresAlInscribir, perfilLiga } from '../engine/admision.js';
+import { almacenMemoria } from '../engine/almacen.js';
 import { lgPool } from '../engine/league.js';
 import { ligaPorId } from '../engine/ligas.js';
+import { participantesDeEntradas } from '../engine/rondas.js';
+import { crearTorneos } from '../engine/torneos.js';
+import { rng } from './util/clasica-vm.js';
+import { depsDePrueba } from './util/torneos-deps.js';
 
 /** Un ADN de `n` genes que solo mueven el bot: un store por gen. */
 const nGenes = (n) =>
@@ -252,4 +257,85 @@ test("lgPool 'liga:f1' deja pasar a todo bot no vegetal; los vegetales y una lig
   ]);
   assert.deepEqual(nombresDelPool(inv, 'liga:f1'), ['Viejo', 'Mío']);
   assert.deepEqual(nombresDelPool(inv, 'liga:nada'), []);
+});
+
+// ---- Al inscribir, con el ADN real (pendientes 2 y 3 de PLAN-LIGAS-INFORME.md) -------
+
+const DOS_STORES = 'start\n1 .up store\n1 .dn store\nstop';
+const UN_STORE = 'start\n1 .up store\nstop';
+
+test('erroresAlInscribir: el ADN real de un bot del foro decide la regla de un solo store', () => {
+  const e = { ...foro('Doble', 'Single store'), clave: 'f:Doble' };
+  assert.deepEqual(claves(erroresAlInscribir('ss', e, DOS_STORES)), ['competir.admision.stores']);
+  assert.deepEqual(erroresAlInscribir('ss', e, UN_STORE), []);
+  // los genes también salen del ADN, no del perfil del índice
+  assert.deepEqual(claves(erroresAlInscribir('sb', foro('X', 'Short bots', 2), nGenes(7))), [
+    'competir.admision.genes',
+  ]);
+  assert.deepEqual(erroresAlInscribir(null, e, DOS_STORES), []);
+  assert.deepEqual(erroresAlInscribir('f1', e, DOS_STORES), []);
+});
+
+test('participantesDeEntradas rechaza con su motivo a los que la liga no admite', async () => {
+  const entradas = [
+    { ...foro('Doble', 'Single store'), archivo: 'doble.txt', vegetal: false },
+    { ...foro('Simple', 'Single store'), archivo: 'simple.txt', vegetal: false },
+    { ...propio('Mío', DOS_STORES), vegetal: false },
+  ];
+  const adnDe = (/** @type {any} */ e) => (e.archivo === 'doble.txt' ? DOS_STORES : UN_STORE);
+  const r = await participantesDeEntradas(entradas, adnDe, ligaPorId('ss'));
+  assert.deepEqual(
+    r.participantes.map((p) => p.name),
+    ['Simple'],
+  );
+  assert.deepEqual(
+    r.rechazados.map((x) => [x.nombre, claves(x.errores)]),
+    [
+      ['Doble', ['competir.admision.stores']],
+      ['Mío', ['competir.admision.stores']],
+    ],
+  );
+  // sin liga entran todos
+  const todos = await participantesDeEntradas(entradas, adnDe);
+  assert.equal(todos.participantes.length, 3);
+  assert.deepEqual(todos.rechazados, []);
+});
+
+test('el sorteo de un torneo SS salta a los que el ADN bajado deja afuera', async () => {
+  const entradas = [
+    { ...foro('Doble', 'Single store'), archivo: 'doble.txt' },
+    { ...foro('Simple', 'Single store'), archivo: 'simple.txt' },
+    { ...foro('Otro', 'Single store'), archivo: 'otro.txt' },
+  ];
+  const inv = {
+    ...inventario(entradas),
+    fetchDna: async (/** @type {any} */ b) =>
+      b.entrada.archivo === 'doble.txt' ? DOS_STORES : `start\n${b.name.length} .up store\nstop`,
+    color: () => '#888888',
+  };
+  let k = 0;
+  const T = crearTorneos(
+    depsDePrueba({
+      almacen: almacenMemoria(),
+      nuevoId: () => `T${++k}`,
+      azar: rng(2),
+      inventario: inv,
+    }),
+  );
+  await T.lgLoadAll();
+  const L = await T.lgCreate({ liga: 'ss' });
+  // el pool por liga deja pasar a los tres (el índice no trae ADN); con 'all', igual
+  for (const pool of ['liga:ss', 'all']) {
+    await T.lgSetDraw({ mode: 'random', n: 3, pool });
+    const r = await T.lgRedraw(L);
+    assert.deepEqual(r, { added: 2, failed: 0, rejected: 1 }, pool);
+    assert.deepEqual(
+      L.seasons
+        .at(-1)
+        .entrants.map((e) => e.name)
+        .sort(),
+      ['Otro', 'Simple'],
+      pool,
+    );
+  }
 });

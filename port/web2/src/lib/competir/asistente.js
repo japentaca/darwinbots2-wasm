@@ -246,14 +246,27 @@ export function ligaDeSeleccion(sel) {
  * @returns {{errores: Mensaje[], avisos: Mensaje[]}}
  */
 export function validarAdmision(a, ctx) {
+  if (a.modo !== 'fixed') return { errores: [], avisos: [] };
+  return admisionDeClaves(ligaDeSeleccion(a.reglas), a.claves, ctx.indice);
+}
+
+/**
+ * Admisión (D7) de entradas de la Biblioteca a una liga, por su índice (sin
+ * bajar el ADN de los del foro: al inscribirlos se vuelve a mirar con el ADN
+ * real). La usan el asistente y «Agregar» de Participantes. Una clave que no
+ * está en el índice no se juzga.
+ * @param {import('../../../engine/ligas.js').Liga | null} liga
+ * @param {string[]} claves @param {any[] | undefined} indice
+ * @returns {{errores: Mensaje[], avisos: Mensaje[]}}
+ */
+export function admisionDeClaves(liga, claves, indice) {
   /** @type {Mensaje[]} */
   const errores = [];
   /** @type {Mensaje[]} */
   const avisos = [];
-  const liga = ligaDeSeleccion(a.reglas);
-  if (!liga || a.modo !== 'fixed' || !a.claves.length || !ctx.indice) return { errores, avisos };
-  const porClave = new Map(ctx.indice.map((e) => [e.clave, e]));
-  for (const clave of a.claves) {
+  if (!liga || !claves.length || !indice) return { errores, avisos };
+  const porClave = new Map(indice.map((e) => [e.clave, e]));
+  for (const clave of claves) {
     const e = porClave.get(clave);
     if (!e) continue;
     const v = admitir(liga, entradaDeIndice(e));
@@ -266,18 +279,22 @@ export function validarAdmision(a, ctx) {
 /**
  * Admisión (D7) de un participante YA inscrito (la lista de Participantes, L3.3):
  * juzga el ADN congelado que guardó la temporada, no el actual de la Biblioteca.
- * Si el índice tiene el bot (mismo hash de identidad, hashAdn), toma su board y
- * sus caps del foro; si no, solo el análisis estático del ADN. Devuelve los
- * errores y después los avisos, ya en la forma {clave, params}.
+ * Si el índice tiene el bot, toma su board y sus caps del foro; si no, solo el
+ * análisis estático del ADN. Un bot del foro se busca por su archivo (el hash
+ * de profiles.json no es el hashAdn del .txt en la mayoría), y si no, por el
+ * hash de identidad (los propios). Devuelve los errores y después los avisos,
+ * ya en la forma {clave, params}.
  * @param {import('../../../engine/ligas.js').Liga | null} liga
- * @param {{name: string, dna: string}} e
+ * @param {{name: string, dna: string, file?: string}} e
  * @param {any[]} [indice]
  * @returns {Mensaje[]}
  */
 export function admisionDeParticipante(liga, e, indice = []) {
   if (!liga) return [];
   const h = hashAdn(e.dna);
-  const ent = indice.find((x) => x.hash === h);
+  const ent =
+    (e.file && indice.find((x) => x.clase === 'foro' && x.archivo === e.file)) ||
+    indice.find((x) => x.hash === h);
   const v = admitir(liga, { ...(ent ? entradaDeIndice(ent) : {}), nombre: e.name, adn: e.dna });
   return [...v.errores, ...v.avisos];
 }

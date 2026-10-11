@@ -166,7 +166,7 @@ The ones for the F1 contest from the manual ([[param:opt:91]], [[param:opt:97]],
 every match; you don't need to touch them.
 
 ## The leagues {#ligas}
-<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice), asistente.js (validarAdmision, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), Participantes.svelte (⚠), SelectorPool.svelte -->
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice, erroresAlInscribir), asistente.js (validarAdmision, admisionDeClaves, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), rondas.js participantesDeEntradas (rechazados), torneos.js lgEnroll (rechazado), Participantes.svelte (⚠ y la vista previa de Inscribir), SelectorPool.svelte -->
 
 A **league** is a world with its combat rules, named after one of DarwinBots'
 historical leagues. The **League** button under **World** picks one of the seven,
@@ -207,13 +207,14 @@ this version doesn't include: the MB league is played without them. See
 **⚖ DQ** tag next to the fighters, and its tooltip says what happened. The
 disqualified species loses the round.
 
-**Who enters.** Each league asks for a certain category of bots. In the wizard the
-league is picked in step 3, and that's where the list is checked; in **Entrants** each
-entrant is checked. There are three checks, from the strictest to the softest:
+**Who enters.** Each league asks for a certain category of bots. It's checked when bots
+are entered (in step 2 of the wizard, against the league of step 3, and with **Add from
+the Library** in **Entrants**) and, afterwards, on each entrant. There are three checks,
+from the strictest to the softest:
 
-| Check | Example | In the wizard | In Entrants |
+| Check | Example | When entering | A bot already entered |
 |---|---|---|---|
-| **DNA shape** (exact) | SB: up to 6 genes. SS: a single `store`, `inc` or `dec` in the whole DNA. | Error: the tournament can't be created. | ⚠ as an error. The bot stays on the list. |
+| **DNA shape** (exact) | SB: up to 6 genes. SS: a single `store`, `inc` or `dec` in the whole DNA. | Error: the bot doesn't get in. The wizard won't create the tournament and **Add** is disabled. | ⚠ as an error. The bot stays on the list. |
 | **Category** (forum board or a label in the name) | F2 doesn't admit a bot from the “Multi-Bots” board, unless it's called “My bot (F2MB)”. | ⚠ as a warning. | ⚠ as a warning. |
 | **Banned actions** (approximate) | F3: a bot that writes `.tie`. | ⚠ as a warning. | ⚠ as a warning. |
 
@@ -221,9 +222,13 @@ entrant is checked. There are three checks, from the strictest to the softest:
 has no board, so its category isn't checked. Its actions come from a static analysis:
 it looks at which sysvars the DNA writes, doesn't follow the stack, and doesn't see the
 targets computed while it runs. That's why it's approximate. A forum bot doesn't carry
-its DNA in the index: it's judged by its board, by the actions the core computed for its
-profile, and by the number of genes in that profile. Without its DNA at hand, the SS
-shape (one store) isn't checked for it; its category is.
+its DNA in the index: while you pick it, it's judged by its board, by the actions the
+core computed for its profile, and by the number of genes in that profile. When it's
+entered, the app downloads its DNA and checks the shape again against the real DNA: if
+it fails, it doesn't get in and a notice says why. For example, “One Man Bucket
+(SS)(F2)” is in the SS category thanks to the label in its name, but its DNA has 20
+`store`. The same goes for draws: a bot that fails is
+skipped and another one is drawn.
 
 **Name labels** count for the category only when they are in parentheses and spell an F
 followed by a digit, MB, SB or SS: “(F2)”, “(F2MB)”, “(SS)”. A forum bot from the
@@ -231,7 +236,8 @@ followed by a digit, MB, SB or SS: “(F2)”, “(F2MB)”, “(SS)”. A forum
 doesn't, because _Passive_ isn't a label.
 
 **Why ⚠ also marks errors.** The league can be changed until the season's first match, so
-a bot that fitted can stop fitting. In **Entrants** that shows as ⚠, and nothing is blocked.
+an entrant that fitted can stop fitting. That shows as ⚠ next to its name: it isn't
+taken off the list.
 
 **The pool “the bots F2 admits”** in **Entrants** uses the first two checks (shape and
 category) and leaves out the bots that fail them. Banned actions don't exclude a bot: the
@@ -255,8 +261,9 @@ frozen DNA. There you can also:
 
 **⚠** appears next to the name of the entrants that the rules' league wouldn't admit, or
 that do actions with a warning. The reason is in the ⚠ itself (hover over it) and, on
-small screens, under the name. Here the ⚠ only warns: nothing is blocked. A shape error
-stops the tournament from being created in the wizard; here it's only marked.
+small screens, under the name. On a bot already entered the ⚠ only warns. When adding
+more, though, the errors and warnings of the picked bots show under the list, and a
+shape error disables **Add**, as in the wizard.
 
 In the draw modes, the pool also offers the bots the rules' league admits (for example,
 “the bots F2 admits”). It only appears here: in the wizard the league is picked after the

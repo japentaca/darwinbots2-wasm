@@ -211,3 +211,19 @@ export function entradaDeIndice(e) {
   }
   return out;
 }
+
+/**
+ * Los errores de admisión de un bot cuyo ADN ya se bajó para inscribirlo
+ * (D7: un error de forma no lo deja entrar). `e` es su entrada del índice de
+ * la Biblioteca (o lo que se sepa: {nombre, vegetal}); el ADN real reemplaza
+ * al del índice, así que a los bots del foro también se les cuentan los
+ * genes y los `store` de verdad (la regla de un solo store de SS). Sin liga,
+ * ninguno.
+ * @param {import('./ligas.js').Liga | string | null | undefined} liga
+ * @param {Parameters<typeof entradaDeIndice>[0]} e
+ * @param {string} adn
+ * @returns {Mensaje[]}
+ */
+export function erroresAlInscribir(liga, e, adn) {
+  return admitir(liga, { ...entradaDeIndice(e), adn }).errores;
+}

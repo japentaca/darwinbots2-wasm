@@ -15,11 +15,11 @@ import {
 // copa, los grupos. Todo lo de la clásica (Setup → Entrants).
 import { ligaDeReglas } from '../../../engine/ligas.js';
 import { num, t } from '../../i18n/index.svelte.js';
-import { bib, ui } from '../bots/biblioteca.svelte.js';
-import { admisionDeParticipante, inventarioClaves } from './asistente.js';
+import { asegurarBiblioteca, bib, ui } from '../bots/biblioteca.svelte.js';
+import { admisionDeClaves, admisionDeParticipante, inventarioClaves } from './asistente.js';
 import ElegirBots from './ElegirBots.svelte';
 import SelectorPool from './SelectorPool.svelte';
-import { textoSorteo } from './textos.js';
+import { textoMensaje, textoSorteo } from './textos.js';
 import {
   agregarParticipantes,
   cambiarParticipante,
@@ -50,19 +50,23 @@ const inv = $derived(
 const tamPool = $derived(lgPool(inv, dr.pool).length);
 // La liga de la temporada (D6) y la admisión de cada participante (L3.3): ⚠ en la fila.
 const liga = $derived(ligaDeReglas(S.rules));
+// La admisión necesita el índice de la Biblioteca (el board y las caps de los del foro).
+$effect(() => {
+  if (liga) asegurarBiblioteca();
+});
 // Los textos de la admisión de cada participante (errores, después avisos), por hash.
 const textosAdm = $derived(
   new Map(
-    S.entrants.map((e) => [e.hash, admisionDeParticipante(liga, e, bib.indice).map(textoAdm)]),
+    S.entrants.map((e) => [
+      e.hash,
+      admisionDeParticipante(liga, e, bib.indice).map((m) => textoMensaje(m, tr)),
+    ]),
   ),
 );
 const avisosDe = (/** @type {string} */ h) => textosAdm.get(h) ?? [];
+// La admisión de los que se van a inscribir (D7): un error no deja inscribirlos.
+const admNuevos = $derived(admisionDeClaves(liga, nuevos, bib.indice));
 
-/** Texto de un aviso o error de admisión; la acción lleva su nombre traducido. */
-function textoAdm(/** @type {{clave: string, params?: Record<string, any>}} */ m) {
-  const p = m.params ?? {};
-  return t(m.clave, /** @type {any} */ (p.cap ? { ...p, cap: t(`bots.cap.${p.cap}`) } : p));
-}
 const pista = $derived(
   [
     textoSorteo(lgDrawHint(dr, S, bloqueada), tr),
@@ -116,7 +120,14 @@ async function inscribir() {
         accion={t('competir.participantes.inscribir', { n: num(nuevos.length) })}
         onAccion={inscribir}
         disabled={!!est.ocupado}
+        accionBloqueada={admNuevos.errores.length > 0}
       />
+      {#each admNuevos.errores as m}
+        <p class="error">{textoMensaje(m, tr)}</p>
+      {/each}
+      {#each admNuevos.avisos as m}
+        <p class="aviso">⚠ {textoMensaje(m, tr)}</p>
+      {/each}
       <p class="ayuda">{t('competir.participantes.congelado')}</p>
     </div>
   {/if}
@@ -381,6 +392,11 @@ input[type="color"] {
 .aviso {
   font-size: 13px;
   color: var(--aviso-texto);
+  margin: 0;
+}
+.error {
+  font-size: 13px;
+  color: var(--error-texto);
   margin: 0;
 }
 .adm {

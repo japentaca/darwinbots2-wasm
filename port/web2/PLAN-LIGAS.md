@@ -433,3 +433,35 @@ Archivos: `port/tools/fight/torneo.mjs`, `port/tools/fight/README.md`.
 3. `port/web2/PLAN-LIGAS-INFORME.md`: cifras de tests, desvíos por paso,
    pendientes (D5, lo que se haya salteado). Fila en `DOCUMENTACION.md`
    como histórico.
+
+---
+
+## Después de la corrida
+
+Dos pendientes del informe ([`PLAN-LIGAS-INFORME.md`](PLAN-LIGAS-INFORME.md)),
+decididos por el autor el 2026-10-11:
+
+- **Pendiente 2, bloquear en Participantes.** Un error de forma ya no deja
+  inscribir en un torneo creado: «Agregar» muestra los errores y avisos de
+  los elegidos y desactiva **Inscribir** (`admisionDeClaves` de
+  `asistente.js`). Sobre un bot ya inscrito el ⚠ sigue siendo solo una
+  marca: la liga se puede cambiar después de inscribir.
+- **Pendiente 3, SS y los bots del foro.** La forma se vuelve a mirar con
+  el ADN real en el momento de inscribir, cuando ya se bajó
+  (`erroresAlInscribir` de `admision.js`): en `participantesDeEntradas`
+  (los rechazados vuelven con su motivo y la app los avisa) y en
+  `lgEnroll`/`lgEnrollOne` de `torneos.js` (el sorteo saltea al que no
+  pasa, sea cual sea el pool). Un bot del board «Single store» con dos
+  `store` ya no entra en SS.
+
+En la prueba manual en `npm run dev` (la que pedía L4.2) salieron tres
+fallas de L3, corregidas en el mismo commit:
+
+- El ⚠ de Participantes no encontraba a los bots del foro en el índice: los
+  buscaba por `hashAdn`, y el hash de `profiles.json` coincide con el del
+  `.txt` en 58 de 684. Ahora se buscan por su archivo (`e.file`) y, si no,
+  por hash. Sin eso faltaban los avisos de categoría y las caps del foro.
+- Participantes no cargaba la Biblioteca: abierto directo, el ⚠ no tenía
+  índice. Ahora la carga si la temporada tiene liga.
+- El asistente mostraba la clave de la acción («dispara-info») en vez de su
+  nombre; las dos pantallas usan ahora `textoMensaje` de `textos.js`.

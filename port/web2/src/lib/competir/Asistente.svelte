@@ -26,7 +26,8 @@ import EditorFormato from './EditorFormato.svelte';
 import EditorPartido from './EditorPartido.svelte';
 import ElegirBots from './ElegirBots.svelte';
 import SelectorPool from './SelectorPool.svelte';
-import { crearTorneo, est } from './torneos.svelte.js';
+import { textoMensaje } from './textos.js';
+import { crearTorneo, est, tr } from './torneos.svelte.js';
 
 /** @type {{ onCancelar: () => void }} */
 let { onCancelar } = $props();
@@ -179,10 +180,10 @@ async function crear() {
   {/if}
 
   {#each errores as e, i (i)}
-    <p class="error" role="alert">{t(e.clave, /** @type {any} */ (e.params))}</p>
+    <p class="error" role="alert">{textoMensaje(e, tr)}</p>
   {/each}
   {#each avisos as e, i (i)}
-    <p class="aviso">{t(e.clave, /** @type {any} */ (e.params))}</p>
+    <p class="aviso">{textoMensaje(e, tr)}</p>
   {/each}
 
   <div class="acciones">

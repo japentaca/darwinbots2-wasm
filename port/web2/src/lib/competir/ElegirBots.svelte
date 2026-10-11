@@ -16,11 +16,19 @@ const MAX_VISTOS = 60;
 
 /**
  * @type {{ claves: string[], onCambio: (claves: string[]) => void, accion?: string,
- *   onAccion?: (claves: string[]) => void, disabled?: boolean }}
+ *   onAccion?: (claves: string[]) => void, disabled?: boolean, accionBloqueada?: boolean }}
  *   Con onAccion, la lista elegida es un borrador que se confirma con el
- *   botón `accion` (Participantes de un torneo ya creado).
+ *   botón `accion` (Participantes de un torneo ya creado). accionBloqueada
+ *   desactiva solo ese botón (la lista se sigue pudiendo cambiar).
  */
-let { claves, onCambio, accion = '', onAccion, disabled = false } = $props();
+let {
+  claves,
+  onCambio,
+  accion = '',
+  onAccion,
+  disabled = false,
+  accionBloqueada = false,
+} = $props();
 
 const uid = $props.id();
 let q = $state('');
@@ -189,7 +197,7 @@ function sortear() {
       <button
         class="btn pri chico"
         type="button"
-        disabled={disabled || !lista.length}
+        disabled={disabled || accionBloqueada || !lista.length}
         onclick={() => onAccion(claves)}
       >
         {accion}
@@ -334,5 +342,9 @@ function sortear() {
 }
 .btn.pri.chico {
   align-self: flex-start;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 </style>

@@ -980,6 +980,16 @@ test('participantes: admisión por liga (L3.3) y el pool liga:<id>', () => {
     ['competir.admision.stores'],
   );
   assert.equal(ss[0].params?.stores, 2);
+  // un bot del foro inscrito se encuentra por su archivo aunque el hash del perfil no sea el del ADN
+  const conArchivo = [{ ...indice[0], hash: 'otro-hash', archivo: 'viejo.txt' }];
+  assert.deepEqual(
+    A.admisionDeParticipante(
+      liga('f2'),
+      { name: 'Viejo', dna: uno, file: 'viejo.txt' },
+      conArchivo,
+    ).map((m) => m.clave),
+    ['competir.admision.categoria', 'competir.admision.accion'],
+  );
   // un bot que no está en el índice se juzga por su ADN congelado (dos store en SS)
   assert.deepEqual(
     A.admisionDeParticipante(liga('ss'), { name: 'Otro', dna: dos }, []).map((m) => m.clave),

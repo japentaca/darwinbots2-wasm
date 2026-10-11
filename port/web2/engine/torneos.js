@@ -118,6 +118,7 @@
 // (crearTorneos), no-launcher {} y match-running {} (lgPlay). 'error' de nota
 // lleva {message} solo si el anfitrión lanza un Error que no es ErrorLiga.
 
+import { erroresAlInscribir } from './admision.js';
 import { ACTIVOS } from './cola.js';
 import {
   ErrorLiga,
@@ -166,6 +167,7 @@ import {
   lgSwissDraw,
   lgUniqueName,
 } from './league.js';
+import { ligaDeReglas } from './ligas.js';
 import {
   alFrame,
   compararRepeticion,
@@ -514,6 +516,7 @@ export function crearTorneos(deps) {
     } catch (_e) {
       return null;
     }
+    if (rechazado(S, it, dna)) return null;
     const hash = lgHash(dna);
     const have = S.entrants.find((x) => x.hash === hash);
     if (have) return have;
@@ -679,24 +682,41 @@ export function crearTorneos(deps) {
   /** @param {Season} S @param {any} e */
   const lgAddEntrant = (S, e) => lgAddEntrantPuro(S, e, () => inv().color());
 
+  // ¿La liga de la temporada (D6) no admite al bot con su ADN ya bajado? D7:
+  // un error de forma (SB: más de 6 genes; SS: más de un store) no lo deja
+  // entrar, lo sortee el pool que lo sortee.
+  /** @param {Season} S @param {any} it @param {string} dna */
+  const rechazado = (S, it, dna) =>
+    erroresAlInscribir(
+      ligaDeReglas(S.rules),
+      it.b.entrada ?? { nombre: it.b.name, vegetal: it.b.veg },
+      dna,
+    ).length > 0;
+
   // Inscribe bots del Inventario (lee su ADN). Con `max`, para al llegar a
-  // esa cantidad de altas (el sorteo salta los ilegibles y los repetidos).
+  // esa cantidad de altas (el sorteo salta los ilegibles, los repetidos y
+  // los que la liga no admite).
   /** @param {League} L @param {any[]} items @param {number} [max] */
   async function lgEnroll(L, items, max = Infinity) {
     const S = lgSeason(L);
     let added = 0;
     let failed = 0;
+    let rejected = 0;
     for (const it of items) {
       if (added >= max) break;
+      let dna;
       try {
-        const dna = await inv().fetchDna(it.b);
-        if (lgAddEntrant(S, { name: it.b.name, dna, src: 'bestiary', file: it.b.file })) added++;
+        dna = await inv().fetchDna(it.b);
       } catch (_e) {
         failed++;
+        continue;
       }
+      if (rechazado(S, it, dna)) rejected++;
+      else if (lgAddEntrant(S, { name: it.b.name, dna, src: 'bestiary', file: it.b.file })) added++;
     }
     await lgSave(L);
-    return { added, failed };
+    // `rejected` solo si hubo: sin liga el resultado es el de la clásica (paridad).
+    return rejected ? { added, failed, rejected } : { added, failed };
   }
 
   // Sorteo de n participantes de un pool. Los que ya están en la temporada no cuentan.
@@ -1003,8 +1023,8 @@ export function crearTorneos(deps) {
   /** @param {any[]} items */
   async function lgAddItems(items) {
     if (!lg.cur || rondaEnCurso()) return null;
-    const { added, failed } = await lgEnroll(lg.cur, items);
-    lgNote('entrants-added', { added, failed, already: items.length - added - failed });
+    const { added, failed, rejected = 0 } = await lgEnroll(lg.cur, items);
+    lgNote('entrants-added', { added, failed, already: items.length - added - failed - rejected });
     lgRender();
     return { added, failed };
   }

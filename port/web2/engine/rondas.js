@@ -173,6 +173,7 @@
 // params) y round-running {} (lgPlay con una ronda en curso), sin texto en
 // la clásica.
 
+import { erroresAlInscribir } from './admision.js';
 import { aplicar, normalizar } from './escenarios/index.js';
 import {
   ErrorLiga,
@@ -676,13 +677,17 @@ export function resumenRonda(p, datos) {
  * → participantes para T.lgAdd / lgAddEntrant, con el ADN congelado ahora.
  * adnDe(entrada) → texto del ADN (los del foro: su .txt; los propios:
  * entrada.adn). Los vegetales no pelean (como lgPool). Los que no tienen
- * ADN se devuelven aparte.
+ * ADN se devuelven aparte, y también los que la `liga` del torneo no admite
+ * con su ADN real (D7: errores de forma), con esos errores.
  * @param {{clase: string, nombre: string, archivo?: string, vegetal: boolean, adn?: string}[]} entradas
  * @param {(e: any) => Promise<string | undefined> | string | undefined} adnDe
+ * @param {import('./ligas.js').Liga | null} [liga]
  */
-export async function participantesDeEntradas(entradas, adnDe) {
+export async function participantesDeEntradas(entradas, adnDe, liga = null) {
   const participantes = [];
   const sinAdn = [];
+  /** @type {{nombre: string, errores: import('./admision.js').Mensaje[]}[]} */
+  const rechazados = [];
   for (const e of entradas) {
     if (e.vegetal) continue;
     let dna;
@@ -695,6 +700,11 @@ export async function participantesDeEntradas(entradas, adnDe) {
       sinAdn.push(e.nombre);
       continue;
     }
+    const errores = erroresAlInscribir(liga, e, dna);
+    if (errores.length) {
+      rechazados.push({ nombre: e.nombre, errores });
+      continue;
+    }
     participantes.push({
       name: e.nombre,
       dna,
@@ -702,7 +712,7 @@ export async function participantesDeEntradas(entradas, adnDe) {
       file: e.archivo || '',
     });
   }
-  return { participantes, sinAdn };
+  return { participantes, sinAdn, rechazados };
 }
 
 /**

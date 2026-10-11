@@ -502,6 +502,7 @@
   "competir.participantes.sorteoBloqueado": "This season has matches: start a new season to draw again.",
   "competir.participantes.sorteados": "{n} entrants drawn ({fallidos} unreadable).",
   "competir.participantes.agregados": "{n} entrants added.",
+  "competir.participantes.rechazados": "Rejected by the league: {motivos}",
   "competir.participantes.sinAdn": "No readable DNA, not added: {nombres}.",
   "competir.participantes.gruposElo": "Pots by the tournament's all-time Elo (1500 without history): one of each pot per group.",
   "competir.participantes.gruposAzar": "Pure random draw.",

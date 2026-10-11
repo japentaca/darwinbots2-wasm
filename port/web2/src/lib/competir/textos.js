@@ -285,6 +285,19 @@ export function textoRotulo(r, tr) {
   }
 }
 
+// ---- Mensajes del asistente y de la admisión ------------------------------------------
+
+/**
+ * Texto de un mensaje {clave, params} de la validación del asistente o de la
+ * admisión a una liga (D7). Una acción prohibida (params.cap) lleva su nombre
+ * traducido (bots.cap.*), no la clave.
+ * @param {Rotulo} m @param {Tr} tr
+ */
+export function textoMensaje(m, tr) {
+  const p = m.params ?? {};
+  return tr.t(m.clave, p.cap ? { ...p, cap: tr.t(`bots.cap.${p.cap}`) } : p);
+}
+
 // ---- Errores ----------------------------------------------------------------------------
 
 /**

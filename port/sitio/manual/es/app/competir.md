@@ -171,7 +171,7 @@ Los parámetros del mundo están explicados uno por uno en
 [[param:opt:100]]) los fija el torneo en cada partido; no hace falta tocarlos.
 
 ## Las ligas {#ligas}
-<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice), asistente.js (validarAdmision, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), Participantes.svelte (⚠), SelectorPool.svelte -->
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice, erroresAlInscribir), asistente.js (validarAdmision, admisionDeClaves, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), rondas.js participantesDeEntradas (rechazados), torneos.js lgEnroll (rechazado), Participantes.svelte (⚠ y la vista previa de Inscribir), SelectorPool.svelte -->
 
 Una **liga** es un mundo con sus reglas de combate, con el nombre de una de las
 ligas históricas de DarwinBots. El radio **Liga** de **Mundo** elige una de las
@@ -211,11 +211,14 @@ esta versión no trae: la liga MB se juega sin ellas. Ver [[tecnico/diferencias]
 el rótulo **⚖ DQ** junto a los luchadores, y su aviso dice lo que pasó. La especie
 descalificada pierde la ronda.
 
-**Quién se inscribe.** Cada liga pide cierta categoría de bots. En el asistente la liga se elige en el paso 3, y ahí se mira la lista; en **Participantes** se mira cada inscrito. Hay tres controles, del más duro al más blando:
+**Quién se inscribe.** Cada liga pide cierta categoría de bots. Se mira al inscribir
+(en el paso 2 del asistente, con la liga del paso 3, y con **Inscribir desde la
+Biblioteca** en **Participantes**) y, después, sobre cada inscrito. Hay tres controles,
+del más duro al más blando:
 
-| Control | Ejemplo | En el asistente | En Participantes |
+| Control | Ejemplo | Al inscribir | Un bot ya inscrito |
 |---|---|---|---|
-| **Forma del ADN** (exacta) | SB: hasta 6 genes. SS: un solo `store`, `inc` o `dec` en todo el ADN. | Error: no deja crear el torneo. | ⚠ como error. El bot sigue en la lista. |
+| **Forma del ADN** (exacta) | SB: hasta 6 genes. SS: un solo `store`, `inc` o `dec` en todo el ADN. | Error: el bot no entra. El asistente no deja crear el torneo y **Inscribir** queda desactivado. | ⚠ como error. El bot sigue en la lista. |
 | **Categoría** (board del foro o etiqueta del nombre) | F2 no admite un bot del board «Multi-Bots», salvo que se llame «Mi bot (F2MB)». | ⚠ como aviso. | ⚠ como aviso. |
 | **Acciones prohibidas** (aproximado) | F3: un bot que escribe `.tie`. | ⚠ como aviso. | ⚠ como aviso. |
 
@@ -223,9 +226,13 @@ descalificada pierde la ronda.
 exacta, pero no tiene board, así que no se le mira la categoría. Sus acciones salen
 de un análisis estático: mira qué sysvars escribe el ADN, no sigue la pila y no ve
 los destinos que se calculan al correr. Por eso es aproximado. Un bot **del foro**
-no trae su ADN en el índice: se juzga por su board, por las acciones que calculó el
-core para su perfil y por la cantidad de genes de ese perfil. Sin ADN a mano, la
-forma de SS (un solo store) no se comprueba para él; la categoría sí.
+no trae su ADN en el índice: mientras lo elegís se juzga por su board, por las
+acciones que calculó el core para su perfil y por la cantidad de genes de ese
+perfil. Al inscribirlo, la app baja su ADN y vuelve a mirar la forma con el ADN
+real: si no pasa, no entra y un aviso dice por qué. Por ejemplo, «One Man Bucket
+(SS)(F2)» es de la categoría de SS por la etiqueta de su nombre, pero su ADN tiene 20
+`store`. Lo mismo vale para los sorteos: el bot que
+no pasa se saltea y se sortea otro.
 
 **Las etiquetas del nombre** cuentan para la categoría solo si van entre paréntesis y
 forman una F seguida de un dígito, MB, SB o SS: «(F2)», «(F2MB)», «(SS)». Un bot del
@@ -233,8 +240,8 @@ foro, de board «Multi-Bots», que se llama «Mi bot (F2MB)» entra en F2 sin av
 bot (_Passive_)» no, porque _Passive_ no es una etiqueta.
 
 **Por qué el ⚠ también marca errores.** La liga se puede cambiar hasta la primera
-pelea de la temporada, así que un bot que encajaba puede dejar de encajar. En
-**Participantes** eso se ve con ⚠, y no se bloquea nada.
+pelea de la temporada, así que un bot ya inscrito que encajaba puede dejar de encajar.
+Eso se ve con ⚠ junto a su nombre: no se lo saca de la lista.
 
 **El pool «los bots que admite F2»** de **Participantes** usa las dos primeras
 comprobaciones (forma y categoría) y deja afuera a los bots que no pasan. Las acciones
@@ -258,8 +265,9 @@ la huella de su ADN congelado. Ahí también podés:
 
 **⚠** aparece junto al nombre de los inscritos que la liga de las reglas no admitiría o
 que hacen acciones con aviso. El motivo está en el propio ⚠ (al pasar el mouse) y, en
-pantallas chicas, debajo del nombre. Acá el ⚠ solo avisa: no bloquea nada. Un error de
-forma sí impide crear el torneo en el asistente; acá solo se marca.
+pantallas chicas, debajo del nombre. Sobre un bot ya inscrito el ⚠ solo avisa. Al
+inscribir más, en cambio, los errores y avisos de los elegidos aparecen debajo de la
+lista, y un error de forma desactiva **Inscribir**, como en el asistente.
 
 En los modos con sorteo, el pool también ofrece **los bots que admite** la liga de las
 reglas (por ejemplo, **los bots que admite F2**). Solo aparece acá: en el asistente la
