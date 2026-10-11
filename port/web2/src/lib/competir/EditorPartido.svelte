@@ -1,26 +1,38 @@
 <script>
+import { textoEn } from '../../../engine/escenarios/index.js';
 // @ts-check
 // Reglas de un torneo (paso 3 del asistente y pestaña Reglas mientras la
 // temporada no tiene partidos; decisión 21): el mundo es un escenario sin
 // especies (base F1, sin costos o uno de Experimentar: de fábrica, propio o
 // el borrador) y los valores del partido.
-import { textoEn } from '../../../engine/escenarios/index.js';
+import { LIGAS } from '../../../engine/ligas.js';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { rangoCampo } from './asistente.js';
 import { textoRegla } from './textos.js';
 
 /**
  * @typedef {{id: string, origen: 'fabrica' | 'propio' | 'borrador', escenario: any}} OpcionEscenario
- * @type {{ fmt: Record<string, any>, tipo: string, escenarioId?: string,
+ * @type {{ fmt: Record<string, any>, tipo: string, liga?: string | null, escenarioId?: string,
  *   escenarios: OpcionEscenario[], bloqueado?: boolean,
  *   onFmt: (k: string, v: any) => void,
- *   onReglas: (sel: {tipo: 'f1' | 'sincostos' | 'escenario', escenario?: any, id?: string}) => void }}
+ *   onReglas: (sel: {tipo: 'liga' | 'sincostos' | 'escenario', liga?: string, escenario?: any, id?: string}) => void }}
  */
-let { fmt, tipo, escenarioId = '', escenarios, bloqueado = false, onFmt, onReglas } = $props();
+let {
+  fmt,
+  tipo,
+  liga = null,
+  escenarioId = '',
+  escenarios,
+  bloqueado = false,
+  onFmt,
+  onReglas,
+} = $props();
 
 const uid = $props.id();
 const tr = { t, num: (/** @type {number} */ x) => num(x) };
 const NUMEROS = ['qty', 'nrg', 'rounds', 'wins', 'cap', 'popCap'];
+/** La liga que muestra el selector (F1 si las reglas no dicen otra). */
+const ligaElegida = $derived(liga ?? 'f1');
 
 /** @param {OpcionEscenario} o */
 const nombreOpcion = (o) =>
@@ -42,18 +54,30 @@ function usarEscenario() {
 
 <fieldset class="bloque" disabled={bloqueado}>
   <legend class="lbl">{t('competir.reglas.mundo')}</legend>
-  <label class="opcion">
+  <div class="opcion">
     <input
       type="radio"
       name={`${uid}-r`}
-      checked={tipo === 'f1'}
-      onchange={() => onReglas({ tipo: 'f1' })}
+      checked={tipo === 'f1' || tipo === 'liga'}
+      onchange={() => onReglas({ tipo: 'liga', liga: ligaElegida })}
+      aria-label={t('competir.reglas.liga')}
     >
-    <span
-      ><strong>{t('competir.reglas.f1')}</strong>
-      <span class="ayuda">{t('competir.reglas.f1.desc')}</span></span
-    >
-  </label>
+    <span class="col">
+      <strong>{t('competir.reglas.liga')}</strong>
+      <span class="ayuda">{t('competir.reglas.liga.desc')}</span>
+      <select
+        class="sel"
+        value={ligaElegida}
+        onchange={(e) => onReglas({ tipo: 'liga', liga: e.currentTarget.value })}
+        aria-label={t('competir.reglas.elegirLiga')}
+      >
+        {#each LIGAS as l (l.id)}
+          <option value={l.id}>{t(`competir.reglas.liga.${l.id}`)}</option>
+        {/each}
+      </select>
+      <span class="ayuda">{t(`competir.reglas.liga.${ligaElegida}.desc`)}</span>
+    </span>
+  </div>
   <label class="opcion">
     <input
       type="radio"

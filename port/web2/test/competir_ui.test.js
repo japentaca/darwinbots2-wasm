@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { compile } from 'svelte/compiler';
 import { ESCENARIOS_FABRICA } from '../engine/escenarios/fabrica.js';
 import * as LG from '../engine/league.js';
 import { LIGAS } from '../engine/ligas.js';
@@ -837,4 +838,16 @@ test('vistas: resumen de reglas (escenario y foto de la clásica), partidos y te
   assert.equal(ts[0].terminada, true);
   assert.equal(ts[0].partidos, 3);
   assert.ok(ts[0].campeon);
+});
+
+test('el selector de liga y los componentes de reglas compilan sin advertencias', () => {
+  for (const nombre of ['EditorPartido', 'Asistente', 'Reglas']) {
+    const p = path.join(RAIZ, 'src', 'lib', 'competir', `${nombre}.svelte`);
+    const r = compile(fs.readFileSync(p, 'utf8'), { filename: p });
+    assert.deepEqual(
+      r.warnings.map((w) => `${w.code}: ${w.message}`),
+      [],
+      nombre,
+    );
+  }
 });

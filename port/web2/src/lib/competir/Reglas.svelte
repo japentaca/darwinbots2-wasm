@@ -9,7 +9,13 @@ import { ESCENARIOS_FABRICA } from '../../../engine/escenarios/fabrica.js';
 import { textoEn } from '../../../engine/escenarios/index.js';
 import { idioma, num, t } from '../../i18n/index.svelte.js';
 import { escenariosPropios, estadoExp } from '../experimentar/estado.svelte.js';
-import { CAMPOS_PARTIDO, ID_F1, ID_SIN_COSTOS, tipoDeReglas } from './asistente.js';
+import {
+  CAMPOS_PARTIDO,
+  ID_F1,
+  ID_SIN_COSTOS,
+  ligaSeleccionada,
+  tipoDeReglas,
+} from './asistente.js';
 import EditorFormato from './EditorFormato.svelte';
 import EditorPartido from './EditorPartido.svelte';
 import { textoError, textoFormato, textoRegla } from './textos.js';
@@ -26,6 +32,7 @@ const tr = { t, num: (/** @type {number} */ n) => num(n) };
 const idi = $derived(idioma() === 'en' ? 'en' : 'es');
 const r = $derived(resumenReglas(S.rules));
 const tipo = $derived(tipoDeReglas(S.rules));
+const liga = $derived(ligaSeleccionada(S.rules));
 const filasCambios = $derived(
   r.cambios.map(([clave, v]) => ({ clave, ...parametroVisible(clave, Number(v), idi) })),
 );
@@ -151,12 +158,15 @@ function valorFmt(k) {
     <EditorPartido
       fmt={S.fmt}
       {tipo}
+      {liga}
       escenarioId={idElegido}
       escenarios={opciones}
       onFmt={cambiarFormato}
       onReglas={(sel) =>
   cambiarReglas(
-    sel.tipo === 'escenario' ? { tipo: 'escenario', escenario: sel.escenario } : { tipo: sel.tipo },
+    sel.tipo === 'escenario'
+      ? { tipo: 'escenario', escenario: sel.escenario }
+      : { tipo: sel.tipo, liga: sel.liga },
   )}
     />
   </section>

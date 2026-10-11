@@ -13,6 +13,7 @@ import { escenariosPropios, estadoExp } from '../experimentar/estado.svelte.js';
 import {
   clavesDelPool,
   conFormato,
+  conReglas,
   erroresDelPaso,
   fmtCon,
   inventarioClaves,
@@ -152,18 +153,19 @@ async function crear() {
     <EditorPartido
       fmt={a.fmt}
       tipo={a.reglas.tipo}
+      liga={a.reglas.liga ?? null}
       {escenarioId}
       escenarios={opcionesEscenario}
       onFmt={(k, v) => (a = { ...a, fmt: fmtCon(a.fmt, k, v) })}
       onReglas={(sel) => {
   escenarioId = sel.id ?? '';
-  a = {
-    ...a,
-    reglas:
-      sel.tipo === 'escenario'
-        ? { tipo: 'escenario', escenario: $state.snapshot(sel.escenario) }
-        : { tipo: sel.tipo },
-  };
+  const reglas =
+    sel.tipo === 'escenario'
+      ? { tipo: 'escenario', escenario: $state.snapshot(sel.escenario) }
+      : sel.tipo === 'liga'
+        ? { tipo: 'liga', liga: sel.liga }
+        : { tipo: sel.tipo };
+  a = conReglas(a, /** @type {any} */ (reglas));
 }}
     />
     <p class="lock">🔒 {t('competir.nuevo.bloqueo')}</p>
