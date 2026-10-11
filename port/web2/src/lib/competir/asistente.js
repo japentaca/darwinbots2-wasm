@@ -20,12 +20,14 @@ import {
   lgShuffle,
   lgSwissRounds,
 } from '../../../engine/league.js';
+import { ligaDeReglas, ligaPorId } from '../../../engine/ligas.js';
 import { costosNinguno } from '../../../engine/opciones.js';
 import { reglasDeEscenario } from '../../../engine/rondas.js';
 
 /**
  * @typedef {'fixed' | 'random' | 'fight'} ModoEntrantes
- * @typedef {{tipo: 'f1' | 'sincostos' | 'escenario', escenario?: any}} SeleccionReglas
+ * @typedef {import('../../../engine/ligas.js').IdLiga} IdLiga
+ * @typedef {{tipo: 'f1' | 'liga' | 'sincostos' | 'escenario', liga?: IdLiga, escenario?: any}} SeleccionReglas
  * @typedef {{
  *   paso: 1 | 2 | 3,
  *   nombre: string,
@@ -306,19 +308,50 @@ export function escenarioSinCostos() {
 export function reglasDeSeleccion(sel) {
   if (sel.tipo === 'sincostos') return reglasDeEscenario(escenarioSinCostos());
   if (sel.tipo === 'escenario' && sel.escenario) return reglasDeEscenario(sel.escenario);
-  return reglasDeEscenario(escenarioF1());
+  // `{tipo: 'f1'}` es el alias de `{tipo: 'liga', liga: 'f1'}`
+  const liga = (sel.tipo === 'liga' && sel.liga ? ligaPorId(sel.liga) : null) ?? ligaPorId('f1');
+  if (!liga) throw new Error('sin liga f1');
+  const e = escenarioFabrica(liga.escenario);
+  if (!e) throw new Error(`sin escenario ${liga.escenario}`);
+  return { ...reglasDeEscenario(structuredClone(e)), liga: liga.id };
 }
 
 /**
- * Qué selección representan unas reglas guardadas (para marcar la opción).
+ * La liga de unas reglas guardadas (D6: `rules.liga`, o deducida del id del
+ * escenario en las reglas viejas); null si no tienen (escenario propio, sin
+ * costos, clásica).
+ * @param {any} rules @returns {IdLiga | null}
+ */
+export const ligaSeleccionada = (rules) => ligaDeReglas(rules)?.id ?? null;
+
+/**
+ * Elige las reglas del paso 3. Al elegir una liga con formato propuesto (F4,
+ * D3) escribe esos valores en `a.fmt`; si después el usuario los cambia no se
+ * pisan hasta que vuelva a elegir la liga.
+ * @param {Asistente} a @param {SeleccionReglas} sel @returns {Asistente}
+ */
+export function conReglas(a, sel) {
+  const liga = sel.tipo === 'liga' && sel.liga ? ligaPorId(sel.liga) : null;
+  return {
+    ...a,
+    fmt: liga?.fmt ? { ...a.fmt, ...liga.fmt } : a.fmt,
+    reglas: sel,
+  };
+}
+
+/**
+ * Qué selección representan unas reglas guardadas (para marcar la opción):
+ * 'f1' para la liga F1, 'liga' para cualquier otra (cuál: ligaSeleccionada).
  * @param {any} rules @returns {SeleccionReglas['tipo'] | 'clasica'}
  */
 export function tipoDeReglas(rules) {
   const e = rules?.escenario;
   if (!e) return 'clasica';
+  const liga = ligaDeReglas(rules);
+  if (rules.liga != null && liga) return liga.id === 'f1' ? 'f1' : 'liga';
   if (e.id === ID_F1 && !Object.keys(e.opciones?.cambios ?? {}).length) return 'f1';
   if (e.id === ID_SIN_COSTOS) return 'sincostos';
-  return 'escenario';
+  return liga ? (liga.id === 'f1' ? 'escenario' : 'liga') : 'escenario';
 }
 
 /**

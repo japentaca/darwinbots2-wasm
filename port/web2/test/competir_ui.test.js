@@ -12,6 +12,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { ESCENARIOS_FABRICA } from '../engine/escenarios/fabrica.js';
 import * as LG from '../engine/league.js';
+import { LIGAS } from '../engine/ligas.js';
 import { costosNinguno } from '../engine/opciones.js';
 import { NOTA_CENSO_VACIO, NOTA_UNA_ESPECIE } from '../engine/partido.js';
 import { juntarAreas, traducir } from '../src/i18n/core.js';
@@ -209,6 +210,58 @@ test('asistente: pasos, valores del partido y plan de creación', () => {
   assert.equal(A.planCreacion({ ...a, modo: 'random' }).llenar, 'sorteo');
   assert.equal(A.planCreacion({ ...a, modo: 'fight' }).llenar, 'pelea');
   assert.equal(A.planCreacion(A.conFormato({ ...a, modo: 'fight' }, 'cup')).llenar, 'sorteo');
+});
+
+test('asistente: cada liga trae su escenario y su id (D6), y las reglas viejas son F1', () => {
+  for (const l of LIGAS) {
+    const r = A.reglasDeSeleccion({ tipo: 'liga', liga: l.id });
+    assert.equal(r.liga, l.id);
+    assert.equal(r.escenario.id, l.escenario, l.id);
+    assert.deepEqual(r.escenario.especies, []);
+    assert.equal(A.ligaSeleccionada(r), l.id);
+    assert.equal(A.tipoDeReglas(r), l.id === 'f1' ? 'f1' : 'liga', l.id);
+  }
+  // {tipo: 'f1'} es el alias de la liga F1
+  assert.deepEqual(
+    A.reglasDeSeleccion({ tipo: 'f1' }),
+    A.reglasDeSeleccion({ tipo: 'liga', liga: 'f1' }),
+  );
+  // reglas viejas: sin `liga`, escenario partido-f1 → F1
+  const vieja = { escenario: A.reglasDeSeleccion({ tipo: 'f1' }).escenario };
+  assert.equal(A.ligaSeleccionada(vieja), 'f1');
+  assert.equal(A.tipoDeReglas(vieja), 'f1');
+  // sin costos y escenario propio no llevan liga
+  const sc = A.reglasDeSeleccion({ tipo: 'sincostos' });
+  assert.equal(sc.liga, undefined);
+  assert.equal(A.ligaSeleccionada(sc), null);
+  const sopa = /** @type {any} */ (ESCENARIOS_FABRICA.find((e) => e.especies.length > 0));
+  const rs = A.reglasDeSeleccion({ tipo: 'escenario', escenario: sopa });
+  assert.equal(rs.liga, undefined);
+  assert.equal(A.ligaSeleccionada(rs), null);
+  assert.equal(A.ligaSeleccionada({ 'o-11': '180' }), null);
+});
+
+test('asistente: elegir F4 propone capMode nrg y popCap 100; las demás ligas no tocan nada', () => {
+  const a = A.nuevoAsistente();
+  const f4 = A.conReglas(a, { tipo: 'liga', liga: 'f4' });
+  assert.equal(f4.fmt.capMode, 'nrg');
+  assert.equal(f4.fmt.popCap, 100);
+  assert.deepEqual(f4.reglas, { tipo: 'liga', liga: 'f4' });
+  // el usuario cambia los valores: no se pisan por cambiar otra cosa
+  const edit = { ...f4, fmt: A.fmtCon(A.fmtCon(f4.fmt, 'popCap', 50), 'capMode', 'off') };
+  assert.equal(edit.fmt.popCap, 50);
+  // otra liga no toca el formato
+  const f2 = A.conReglas(edit, { tipo: 'liga', liga: 'f2' });
+  assert.equal(f2.fmt.popCap, 50);
+  assert.equal(f2.fmt.capMode, edit.fmt.capMode);
+  // volver a elegir la liga F4 los repone
+  const otra = A.conReglas(f2, { tipo: 'liga', liga: 'f4' });
+  assert.equal(otra.fmt.capMode, 'nrg');
+  assert.equal(otra.fmt.popCap, 100);
+  // F1 tampoco pisa
+  assert.equal(A.conReglas(edit, { tipo: 'f1' }).fmt.popCap, 50);
+  // el plan de creación lleva la liga en las reglas
+  assert.equal(A.planCreacion(f4).reglas.liga, 'f4');
 });
 
 test('asistente: reglas del mundo = un escenario sin especies (decisión 21)', () => {
