@@ -1,0 +1,38 @@
+{
+  "formato": 1,
+  "id": "partido-f4",
+  "nombre": { "es": "Partido F4", "en": "F4 match" },
+  "descripcion": {
+    "es": "F1 con AGECOST 1 y el campo al doble de lado (18474×13856), toroidal y sin descalificación.",
+    "en": "F1 with AGECOST 1 and the field at twice the side (18474×13856), toroidal and without disqualification."
+  },
+  "etiquetas": ["competición", "F4"],
+  "destino": "competir",
+  "opciones": {
+    "base": "f1",
+    "cambios": { "cost:31": 1, "base:fieldW": 18474, "base:fieldH": 13856 }
+  },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Etch Mk II(F1)(abyaly)-15.03.2008",
+      "hash": "2feb17d7",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "Republican Wasp (F1)(Commander Keen)(25-05-2008)",
+      "hash": "f134cddc",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

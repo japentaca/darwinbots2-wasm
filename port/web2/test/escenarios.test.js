@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
+import { contarGenes } from '../engine/adn.js';
 import {
   ESCENARIOS_FABRICA,
   esDeFabrica,
@@ -410,6 +411,48 @@ test('fábrica: validan, ids únicos y bots del Bestiary con su hash', () => {
     [5, 5, 5],
   );
   assert.equal(aplicar(/** @type {any} */ (f1), 1, adnBestiario)[1].options.opts[1], 1);
+});
+
+test('las ligas de fábrica: cambios de D2, bots de su board y forma de admisión', () => {
+  const f1 = resolverOpciones(
+    /** @type {any} */ (ESCENARIOS_FABRICA.find((e) => e.id === 'partido-f1')),
+  );
+  /** @type {[string, Record<string, number>, string][]} */
+  const ligas = [
+    ['partido-f2', { 'base:maxEnergy': 30, 'opt:93': 1 }, 'F2 bots'],
+    ['partido-f3', { 'base:maxEnergy': 30, 'opt:93': 2 }, 'F3 bots'],
+    ['partido-mb', { 'base:maxEnergy': 30 }, 'Multi-Bots'],
+    ['partido-sb', { 'base:fieldW': 16000, 'base:fieldH': 12000 }, 'Short bots'],
+    ['partido-ss', {}, 'Single store'],
+    ['partido-f4', { 'cost:31': 1, 'base:fieldW': 18474, 'base:fieldH': 13856 }, 'F1 bots'],
+  ];
+  for (const [id, cambios, board] of ligas) {
+    const e = /** @type {any} */ (ESCENARIOS_FABRICA.find((x) => x.id === id));
+    assert.ok(e, id);
+    assert.equal(e.opciones.base, 'f1', id);
+    assert.equal(e.destino, 'competir', id);
+    assert.deepEqual(validar(FABRICA_CRUDA.find((x) => x.id === id)), [], id);
+    assert.deepEqual(e.opciones.cambios, cambios, id);
+    // frente a F1 difiere exactamente lo que la liga cambia
+    const r = resolverOpciones(e);
+    const difieren = Object.keys(r)
+      .filter((k) => r[k] !== f1[k])
+      .sort();
+    assert.deepEqual(difieren, Object.keys(cambios).sort(), id);
+    for (const [k, v] of Object.entries(cambios)) assert.equal(r[k], v, `${id} ${k}`);
+    // el alga y dos bots del board de la liga
+    assert.equal(e.especies.length, 3, id);
+    assert.equal(e.especies[0].vegetal, true, id);
+    for (const s of e.especies.slice(1))
+      assert.equal(archivoDe(s.bot)?.board, board, `${id}: ${s.bot}`);
+    // reglas de admisión de forma (decisión D7 del plan de ligas)
+    for (const s of e.especies.slice(1)) {
+      const adn = /** @type {string} */ (adnBestiario(s));
+      if (id === 'partido-sb') assert.ok(contarGenes(adn) <= 6, `${id}: ${s.bot} genes`);
+      if (id === 'partido-ss')
+        assert.equal((adn.match(/\b(store|inc|dec)\b/g) || []).length, 1, `${id}: ${s.bot}`);
+    }
+  }
 });
 
 test('un escenario de fábrica corre en engine/worker.js', {

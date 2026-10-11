@@ -10,6 +10,12 @@ import diaYNoche from './fabrica/dia-y-noche.json' with { type: 'json' };
 import laberinto from './fabrica/laberinto.json' with { type: 'json' };
 import oceano from './fabrica/oceano.json' with { type: 'json' };
 import partidoF1 from './fabrica/partido-f1.json' with { type: 'json' };
+import partidoF2 from './fabrica/partido-f2.json' with { type: 'json' };
+import partidoF3 from './fabrica/partido-f3.json' with { type: 'json' };
+import partidoF4 from './fabrica/partido-f4.json' with { type: 'json' };
+import partidoMB from './fabrica/partido-mb.json' with { type: 'json' };
+import partidoSB from './fabrica/partido-sb.json' with { type: 'json' };
+import partidoSS from './fabrica/partido-ss.json' with { type: 'json' };
 import sopaPrimordial from './fabrica/sopa-primordial.json' with { type: 'json' };
 import { normalizar, validar } from './index.js';
 
@@ -18,6 +24,12 @@ export const FABRICA_CRUDA = Object.freeze([
   sopaPrimordial,
   depredadorYPresa,
   partidoF1,
+  partidoF2,
+  partidoF3,
+  partidoMB,
+  partidoSB,
+  partidoSS,
+  partidoF4,
   diaYNoche,
   laberinto,
   oceano,

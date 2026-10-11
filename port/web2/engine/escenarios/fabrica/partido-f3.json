@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-f3",
+  "nombre": { "es": "Partido F3", "en": "F3 match" },
+  "descripcion": {
+    "es": "Dos bots de liga F3 frente a frente con los ajustes de liga F3: energía solar por ciclo a 30 y descalificación F3 (sin ties, virus, info shots, venom, poison, slime, shell, .delgene ni sexrepro).",
+    "en": "Two F3 league bots face to face with the F3 league settings: solar energy per cycle at 30 and F3 disqualification (no ties, viruses, info shots, venom, poison, slime, shell, .delgene or sexrepro)."
+  },
+  "etiquetas": ["competición", "F3"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": { "base:maxEnergy": 30, "opt:93": 2 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "(F3)Beholder ver.1b(miniscule changes)11-12-2014",
+      "hash": "58545921",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "[F3 BOT] Sentry [Spike] 4-19-2015",
+      "hash": "bff338c4",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

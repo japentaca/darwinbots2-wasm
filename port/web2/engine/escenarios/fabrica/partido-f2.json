@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-f2",
+  "nombre": { "es": "Partido F2", "en": "F2 match" },
+  "descripcion": {
+    "es": "Dos bots de liga F2 frente a frente con los ajustes de liga F2: energía solar por ciclo a 30 y descalificación F2 (alimentarse por tie de otra especie, virus).",
+    "en": "Two F2 league bots face to face with the F2 league settings: solar energy per cycle at 30 and F2 disqualification (eating through another species' tie, viruses)."
+  },
+  "etiquetas": ["competición", "F2"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": { "base:maxEnergy": 30, "opt:93": 1 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Spinner v1.5 (F2) (Moonfisher) 04-05-08",
+      "hash": "494462e4",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "Gimmick1.0(F2)(Ikke)11.6.2008.txt",
+      "hash": "434a18ea",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

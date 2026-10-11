@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-ss",
+  "nombre": { "es": "Partido SS", "en": "SS match" },
+  "descripcion": {
+    "es": "Dos bots de un solo store frente a frente con los ajustes de liga F1, sin cambios.",
+    "en": "Two single-store bots face to face with the F1 league settings, with no changes."
+  },
+  "etiquetas": ["competición", "SS"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": {} },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal_Archaea (SS)(MacadamiaNuts) - 10.08.2007",
+      "hash": "ec05efbf",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "Brevis (SS) (F2) (Moonfisher) 22-03-08",
+      "hash": "49424a37",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

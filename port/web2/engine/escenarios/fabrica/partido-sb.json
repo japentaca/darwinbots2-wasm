@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-sb",
+  "nombre": { "es": "Partido SB", "en": "SB match" },
+  "descripcion": {
+    "es": "Dos bots cortos frente a frente con los ajustes de liga F1 y un campo de 16000×12000.",
+    "en": "Two short bots face to face with the F1 league settings and a 16000×12000 field."
+  },
+  "etiquetas": ["competición", "SB"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": { "base:fieldW": 16000, "base:fieldH": 12000 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Pacifist v0.01",
+      "hash": "c916af73",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "Guardian-0.9",
+      "hash": "0457a7be",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}

@@ -63,19 +63,34 @@ const SKIP = { skip: !hayWasm() && SIN_WASM, timeout: 60_000 };
 
 const OPT_IDS = PARAMETROS.filter((p) => p.tipo === 'opt').map((p) => /** @type {number} */ (p.id));
 
-/** @param {any} Mod */
+/**
+ * Sim de prueba sobre el wasm. Lleva la cuenta de los handles vivos (creados
+ * y no destruidos: el motor destruye el anterior al resetear) para liberarlos
+ * con `liberar()`; sin eso, cada comparación deja dos sims en el heap de wasm
+ * y con los escenarios de fábrica se agota (std::bad_alloc).
+ * @param {any} Mod
+ */
 function nuevaSim(Mod) {
   /** @type {number[]} */
   const handles = [];
+  /** @type {Set<number>} */
+  const vivos = new Set();
   const espia = Object.create(Mod);
   espia.cwrap = (/** @type {string} */ nm, /** @type {any} */ r, /** @type {any} */ a) => {
     const f = Mod.cwrap(nm, r, a);
-    if (nm !== 'db_sim_create') return f;
-    return () => {
-      const h = f();
-      handles.push(h);
-      return h;
-    };
+    if (nm === 'db_sim_create')
+      return () => {
+        const h = f();
+        handles.push(h);
+        vivos.add(h);
+        return h;
+      };
+    if (nm === 'db_sim_destroy')
+      return (/** @type {number} */ h) => {
+        vivos.delete(h);
+        return f(h);
+      };
+    return f;
   };
   /** @type {any[]} */
   const msgs = [];
@@ -88,7 +103,16 @@ function nuevaSim(Mod) {
     fecha: () => new Date(Date.UTC(2026, 0, 15, 13, 2, 3)),
     azar: () => 0.5,
   });
-  return { handle: sim.handle, msgs, h: () => handles[handles.length - 1] };
+  const destruir = Mod.cwrap('db_sim_destroy', null, ['number']);
+  return {
+    handle: sim.handle,
+    msgs,
+    h: () => handles[handles.length - 1],
+    liberar: () => {
+      for (const h of vivos) destruir(h);
+      vivos.clear();
+    },
+  };
 }
 
 /** @param {Escenario} e */
@@ -175,6 +199,8 @@ test('aplicar cada control básico en vivo = reset con el borrador', SKIP, async
     b.handle(reset(esperado));
     const fa = foto(a);
     const fb = foto(b);
+    a.liberar();
+    b.liberar();
     casos++;
     const dif = Object.keys(fa.o).filter((k) => !Object.is(fa.o[k], fb.o[k]));
     if (dif.length || fa.bytes !== fb.bytes)

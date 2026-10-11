@@ -1,0 +1,35 @@
+{
+  "formato": 1,
+  "id": "partido-mb",
+  "nombre": { "es": "Partido MB", "en": "MB match" },
+  "descripcion": {
+    "es": "Dos multi-bots frente a frente en el mundo de F2 (energía solar por ciclo a 30) y sin descalificación. Sin las MB kill restrictions: esta versión no las trae.",
+    "en": "Two multi-bots face to face in the F2 world (solar energy per cycle at 30) with no disqualification. Without the MB kill restrictions: this version does not include them."
+  },
+  "etiquetas": ["competición", "MB"],
+  "destino": "competir",
+  "opciones": { "base": "f1", "cambios": { "base:maxEnergy": 30 } },
+  "especies": [
+    {
+      "bot": "Alga minimalis 3.0",
+      "hash": "7688556d",
+      "cantidad": 5,
+      "color": "#30d030",
+      "vegetal": true
+    },
+    {
+      "bot": "Animal Multi(MB)(Peter)",
+      "hash": "c4711047",
+      "cantidad": 5,
+      "color": "#4aa3ff",
+      "vegetal": false
+    },
+    {
+      "bot": "BotBot 1.1 (MB)(F2)(Bacillus)-14.05.08",
+      "hash": "dfedab10",
+      "cantidad": 5,
+      "color": "#ff4f9a",
+      "vegetal": false
+    }
+  ]
+}
