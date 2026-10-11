@@ -154,6 +154,41 @@ Los pasos 2 y 4 necesitan `port/build-wasm/dbcore.js` compilado (preset `wasm`).
       página con 75 bots por especie; ganar con 500 pediría otro diseño
       (p. ej. huir del enjambre).
 
+    Revisión del 2026-10-11. Análisis de qué genes podrían darle más
+    poder en las peleas largas, las que llegan al tope de 5000: medido
+    con 5 fundadores, tope 5000 por energía, AGECOST 1 y 150 bots por
+    especie, 5 semillas por rival con la misma semilla para todas las
+    variantes, primero contra 38 rivales duros, después 10 semillas
+    contra Etch Mk II y al final el Bestiary entero (3155 peleas por
+    variante).
+    - Queda: `.ploc` apuntado a `.shoot` al nacer. Sin fijarlo, el
+      rebote de poison escribía el pval en una celda al azar del
+      atacante (`Shots.bas`/`Ties.bas`: `Ploc` aleatorio si
+      `mem(834) = 0`); ahora el que se envenena con Ringo se queda sin
+      tirar mientras dura. Bestiary entero: 3148-7 → 3150-5 y rondas
+      perdidas 35 → 22; Etch Mk II 0-5 → 2-3 (con 10 semillas, de 0-10 y
+      5 rondas a 4-6 y 18 rondas).
+    - Probado y descartado. En el core el `-6` pasa por el shell a
+      razón 20:1, así que un shell de 500 lo absorbe entero; el `-1` no
+      pasa por el shell pero rebota si el poison del rival supera su
+      potencia `(20 + body/5)·log2(shootval/2)`. Escalar el shootval
+      del `-1` al poison del rival (hasta 64) se funde: 181-9 en duros,
+      ThisnThat de 5-0 a 1-4 y la población cae de 20 a 1-7 bots.
+      Shootval 0 (coste 2 en vez de 48): 145-45; la potencia por ciclo
+      manda sobre la eficiencia. `.ploc` en `.tieval`, `.repro` o
+      `.shootval` 32000: sin efecto. Venom con `.vloc` (en
+      `.shootval` 32000 o en `.shoot`; cada 20 ciclos al acorazado o
+      cada 4 en alerta, aun atado): sin efecto propio, Etch 0-10.
+      Colchón de poison a 3000 tras una caída: Etch 0-10 con 0 rondas.
+      Cloroplastos: la luz llega a cualquier bot con `chlr`, pero la
+      masa sube `chlr·31680/32000` y queda inmóvil.
+    - Las derrotas cortas quedaron fuera a propósito. Gimmick a 1
+      fundador: Ringo no se envenena (0-1 por muestra); pierde la
+      carrera de crías, 29 bots contra 2 a los 250 ciclos. Etch a 500:
+      600-1000 ciclos por ronda. Gerbal3 con reglas del panel es un bot
+      fijo con cloroplastos: Ringo no lo encuentra y se muere de hambre
+      en el campo de 32000 (nrg 3000 → 337 en 4000 ciclos).
+
 - **Bots extra** (`extra/`): bots del resto del foro (boards que no son
   el Bestiary: DNA - General, Newbie, Bot Tavern, Evolution Sims,
   Suggestions…, y las respuestas de los temas del Bestiary, que el

@@ -12,6 +12,10 @@
 '  .vshoot/.mkvirus/.delgene a 0 y .repro solo 0 o 20.
 '- Poison nunca menos de 800: rechaza los lazos que chupan 1000 y le
 '  devuelve envenenados los -1 de Multiply4 (con 300 le chupaba todo).
+'- Poison con .ploc en .shoot: el que se envenena con Ringo (un -1 o un
+'  drenaje por lazo que su poison rechaza) se queda sin tirar mientras
+'  dura; sin fijarlo, el rebote escribia en una celda al azar. Contra
+'  Etch Mk II a 150 bots por especie pasa de 0-10 a 4-6.
 '- Ojo central ancho y acercamiento por distancia: no pierde el blanco.
 '- Tiro barato (-1 con shootval 0) contra rivales de poca energia y
 '  poco poison: no se funde disparando caro a los enjambres.
@@ -74,10 +78,11 @@ start
 0 .fixpos store
 stop
 
-'Nacimiento: ojos en abanico y media vuelta
+'Nacimiento: ojos en abanico, media vuelta y el poison apuntado a .shoot
 cond
 *.robage 0 =
 start
+.shoot .ploc store
 800 .eye1dir store
 300 .eye1width store
 600 .eye2dir store
