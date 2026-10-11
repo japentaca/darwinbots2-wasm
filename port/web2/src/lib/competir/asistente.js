@@ -8,6 +8,7 @@
 //
 // Errores y avisos son {clave, params} de competir.json.
 
+import { admitir, entradaDeIndice } from '../../../engine/admision.js';
 import { escenarioFabrica } from '../../../engine/escenarios/fabrica.js';
 import {
   LG_CUP_SIZES,
@@ -20,7 +21,7 @@ import {
   lgShuffle,
   lgSwissRounds,
 } from '../../../engine/league.js';
-import { ligaDeReglas, ligaPorId } from '../../../engine/ligas.js';
+import { ligaDeEscenario, ligaDeReglas, ligaPorId } from '../../../engine/ligas.js';
 import { costosNinguno } from '../../../engine/opciones.js';
 import { reglasDeEscenario } from '../../../engine/rondas.js';
 
@@ -186,7 +187,7 @@ export function inventarioClaves(o) {
   return {
     items: o.indice.map((e) => ({
       key: e.clave,
-      b: { name: e.nombre, file: e.archivo || '', veg: !!e.vegetal },
+      b: { name: e.nombre, file: e.archivo || '', veg: !!e.vegetal, entrada: e },
     })),
     sel: new Set(o.sel ?? []),
     sets: new Map((o.selecciones ?? []).map((s) => [s.nombre, { keys: s.claves }])),
@@ -222,8 +223,49 @@ export function sortearClaves(pool, ya, n, rnd = Math.random) {
 export const partidosRr = (n, legs) => ((n * (n - 1)) / 2) * (legs === 2 ? 2 : 1);
 
 /**
- * Validación del paso 2. tamPool = bots que tiene el pool elegido.
- * @param {Asistente} a @param {{tamPool: number}} ctx
+ * La liga que fijan las reglas del paso 3 (para la admisión), o null si no hay
+ * (sin costos, escenario propio, la clásica). `{tipo: 'f1'}` es la liga F1.
+ * @param {SeleccionReglas} sel
+ * @returns {import('../../../engine/ligas.js').Liga | null}
+ */
+export function ligaDeSeleccion(sel) {
+  if (sel.tipo === 'f1') return ligaPorId('f1');
+  if (sel.tipo === 'liga') return sel.liga ? ligaPorId(sel.liga) : null;
+  if (sel.tipo === 'escenario' && sel.escenario?.id) return ligaDeEscenario(sel.escenario.id);
+  return null;
+}
+
+/**
+ * Admisión (D7) de los participantes de la lista fija a la liga de las reglas:
+ * errores (forma del ADN, vegetales) y avisos (categoría, acciones). ctx.indice
+ * = el índice de la Biblioteca (engine/biblioteca.js); un participante que no
+ * está en el índice no se juzga. Los sorteos no se validan acá: el pool
+ * `liga:<id>` ya los filtra (lgPool).
+ * @param {Asistente} a @param {{indice?: any[]}} ctx
+ * @returns {{errores: Mensaje[], avisos: Mensaje[]}}
+ */
+export function validarAdmision(a, ctx) {
+  /** @type {Mensaje[]} */
+  const errores = [];
+  /** @type {Mensaje[]} */
+  const avisos = [];
+  const liga = ligaDeSeleccion(a.reglas);
+  if (!liga || a.modo !== 'fixed' || !a.claves.length || !ctx.indice) return { errores, avisos };
+  const porClave = new Map(ctx.indice.map((e) => [e.clave, e]));
+  for (const clave of a.claves) {
+    const e = porClave.get(clave);
+    if (!e) continue;
+    const v = admitir(liga, entradaDeIndice(e));
+    errores.push(...v.errores);
+    avisos.push(...v.avisos);
+  }
+  return { errores, avisos };
+}
+
+/**
+ * Validación del paso 2. tamPool = bots que tiene el pool elegido; indice (si
+ * viene) permite la admisión a la liga de las reglas (validarAdmision).
+ * @param {Asistente} a @param {{tamPool: number, indice?: any[]}} ctx
  * @returns {{errores: Mensaje[], avisos: Mensaje[]}}
  */
 export function validarParticipantes(a, ctx) {
@@ -259,6 +301,9 @@ export function validarParticipantes(a, ctx) {
         avisos.push({ clave: 'competir.val.rrLargo', params: { n: partidosRr(nn, a.fmt.legs) } });
     }
   }
+  const adm = validarAdmision(a, ctx);
+  errores.push(...adm.errores);
+  avisos.push(...adm.avisos);
   return { errores, avisos };
 }
 
@@ -356,14 +401,15 @@ export function tipoDeReglas(rules) {
 
 /**
  * ¿Se puede pasar del paso actual? (los errores de ese paso).
- * @param {Asistente} a @param {{tamPool: number}} ctx
+ * @param {Asistente} a @param {{tamPool: number, indice?: any[]}} ctx
  * @returns {Mensaje[]}
  */
 export function erroresDelPaso(a, ctx) {
   if (a.paso === 1) return [];
   if (a.paso === 2) return validarParticipantes(a, ctx).errores;
   /** @type {Mensaje[]} */
-  const out = validarValores(a.fmt);
+  // la liga se elige en este paso: la admisión de los participantes se vuelve a mirar
+  const out = [...validarValores(a.fmt), ...validarAdmision(a, ctx).errores];
   try {
     reglasDeSeleccion(a.reglas);
   } catch {
@@ -374,7 +420,7 @@ export function erroresDelPaso(a, ctx) {
 
 /**
  * Paso siguiente (si el actual no tiene errores) o el anterior.
- * @param {Asistente} a @param {1 | -1} dir @param {{tamPool: number}} ctx
+ * @param {Asistente} a @param {1 | -1} dir @param {{tamPool: number, indice?: any[]}} ctx
  * @returns {Asistente}
  */
 export function mover(a, dir, ctx) {

@@ -105,6 +105,10 @@
  * @typedef {() => number} Rnd
  */
 
+// lgPool 'liga:<id>' (PLAN-LIGAS.md, L3.2) usa la admisión de las ligas.
+import { admitir, entradaDeIndice } from './admision.js';
+import { ligaPorId } from './ligas.js';
+
 /** Error con clave para t() (la interfaz arma el texto). */
 export class ErrorLiga extends Error {
   /** @param {string} clave @param {Record<string, any>} [params] */
@@ -158,7 +162,7 @@ export const LG_FORMATS = ['single', 'koth', 'rr', 'ladder', 'cup', 'swiss'];
 // temporada nueva), sorteo de n del pool en cada temporada nueva ('random')
 // o sorteo en cada pelea ('fight', salvo la copa, que entonces sortea en
 // cada temporada: ver lgLiveFill). El pool es un filtro de lgPool ('all',
-// 'fav', 'sel', 'tag:…', 'set:…').
+// 'fav', 'sel', 'tag:…', 'set:…', 'liga:<id>').
 export const LG_DRAW_DEFAULT = { mode: 'fixed', pool: 'all', n: 8 };
 // Sin tope real: el sorteo toma a lo sumo lo que tiene el pool. Este número
 // solo acota lo que llega de un archivo o de un campo mal escrito.
@@ -1630,6 +1634,10 @@ export const lgLaunchList = (f, fighters) =>
 // Pool del Inventario, como el del Canal (no vegetales, un nombre por especie).
 // inv = {items: [{key, b}], sel: Set, sets: Map, userRec(key) → {fav, tags}}
 // (inv y userRec de inventory.js en la clásica).
+// 'liga:<id>' (L3.2, D7): los que admite esa liga sin errores y dentro de su
+// categoría; las acciones prohibidas solo avisan, así que no excluyen (las
+// juzga la descalificación). Cada ítem lleva su entrada de la Biblioteca en
+// `b.entrada` (engine/biblioteca.js; sin ella, solo `b.name` y `b.veg`).
 /** @param {any} inv @param {string} filter */
 export function lgPool(inv, filter) {
   let items = inv.items.filter((/** @type {any} */ it) => !it.b.veg);
@@ -1642,6 +1650,16 @@ export function lgPool(inv, filter) {
     const set = inv.sets.get(filter.slice(4));
     const keys = new Set(set ? set.keys : []);
     items = items.filter((/** @type {any} */ it) => keys.has(it.key));
+  } else if (filter.startsWith('liga:')) {
+    const liga = ligaPorId(filter.slice(5));
+    items = liga
+      ? items.filter((/** @type {any} */ it) => {
+          const v = admitir(liga, entradaDeIndice(it.b.entrada ?? { nombre: it.b.name }));
+          return (
+            !v.errores.length && !v.avisos.some((m) => m.clave === 'competir.admision.categoria')
+          );
+        })
+      : [];
   } else if (filter !== 'all') items = [];
   const seen = new Set();
   return items.filter((/** @type {any} */ it) => !seen.has(it.b.name) && seen.add(it.b.name));

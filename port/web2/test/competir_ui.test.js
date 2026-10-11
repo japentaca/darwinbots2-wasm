@@ -871,3 +871,67 @@ test('el selector de liga y los componentes de reglas compilan sin advertencias'
     );
   }
 });
+
+test('asistente: la admisión a la liga de las reglas (L3.2)', () => {
+  const dosStore = 'start\n1 .up store\n1 .dn store\nstop';
+  const uno = 'start\n1 .up store\nstop';
+  const indice = [
+    { clave: 'a', clase: 'propio', nombre: 'Uno', foro: null, adn: uno },
+    { clave: 'b', clase: 'propio', nombre: 'Dos', foro: null, adn: dosStore },
+    { clave: 'c', clase: 'foro', nombre: 'Viejo', foro: 'F1 bots', perfil: { genes: 1, caps: [] } },
+  ];
+  const ctx = { tamPool: 10, indice };
+  const base = { ...A.nuevoAsistente('swiss'), claves: ['a', 'b', 'c'] };
+  const con = (/** @type {any} */ reglas) => A.conReglas(base, reglas);
+  // sin liga (o F1) no hay errores ni avisos de admisión
+  assert.deepEqual(A.validarParticipantes(base, ctx), { errores: [], avisos: [] });
+  assert.deepEqual(A.validarParticipantes(con({ tipo: 'sincostos' }), ctx).errores, []);
+  // SS: el de dos store es un error; aparece en el paso 2 y también al pasar del 3 al final
+  const ss = con({ tipo: 'liga', liga: 'ss' });
+  const v = A.validarParticipantes(ss, ctx);
+  assert.deepEqual(
+    v.errores.map((e) => e.clave),
+    ['competir.admision.stores'],
+  );
+  assert.equal(v.errores[0].params?.nombre, 'Dos');
+  assert.deepEqual(
+    v.avisos.map((e) => e.clave),
+    ['competir.admision.categoria'], // «Viejo» es de «F1 bots»
+  );
+  assert.equal(A.erroresDelPaso({ ...ss, paso: 2 }, ctx).length, 1);
+  assert.equal(A.erroresDelPaso({ ...ss, paso: 3 }, ctx).length, 1);
+  assert.equal(A.mover({ ...ss, paso: 2 }, 1, ctx).paso, 2, 'no se puede seguir');
+  // un escenario de fábrica de una liga cuenta como esa liga; uno propio, no
+  assert.equal(
+    A.erroresDelPaso(
+      {
+        ...con({
+          tipo: 'escenario',
+          escenario: ESCENARIOS_FABRICA.find((e) => e.id === 'partido-ss'),
+        }),
+        paso: 3,
+      },
+      ctx,
+    ).length,
+    1,
+  );
+  assert.equal(
+    A.erroresDelPaso(
+      {
+        ...con({
+          tipo: 'escenario',
+          escenario: { ...ESCENARIOS_FABRICA.find((e) => e.id === 'partido-ss'), id: 'mio' },
+        }),
+        paso: 3,
+      },
+      ctx,
+    ).length,
+    0,
+  );
+  // sin los de la lista fija quitados el asistente deja crear
+  assert.deepEqual(A.erroresDelPaso({ ...ss, claves: ['a'], paso: 3 }, ctx), []);
+  // sorteo: no se juzga a nadie (el pool liga:<id> ya filtra)
+  assert.deepEqual(A.validarAdmision({ ...ss, modo: 'random' }, ctx), { errores: [], avisos: [] });
+  // sin índice en el contexto no se juzga
+  assert.deepEqual(A.validarParticipantes(ss, { tamPool: 10 }), { errores: [], avisos: [] });
+});

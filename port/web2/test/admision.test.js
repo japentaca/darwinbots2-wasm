@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { admitir, perfilLiga } from '../engine/admision.js';
+import { lgPool } from '../engine/league.js';
 import { ligaPorId } from '../engine/ligas.js';
 
 /** Un ADN de `n` genes que solo mueven el bot: un store por gen. */
@@ -171,4 +172,84 @@ test('admitir acepta el objeto de la liga o su id', () => {
     admitir('sb', { nombre: 'X', adn }),
     admitir(ligaPorId('sb'), { nombre: 'X', adn }),
   );
+});
+
+// ---- lgPool 'liga:<id>' (paso L3.2) -----------------------------------------------
+
+/** Un inventario como el de la Biblioteca: cada ítem lleva su entrada en `b.entrada`. */
+function inventario(entradas) {
+  return {
+    items: entradas.map((e) => ({
+      key: e.clave,
+      b: { name: e.nombre, file: '', veg: !!e.vegetal, entrada: e },
+    })),
+    sel: new Set(),
+    sets: new Map(),
+    userRec: () => ({ fav: false, tags: [] }),
+  };
+}
+
+const propio = (nombre, adn) => ({
+  clave: `p:${nombre}`,
+  clase: 'propio',
+  nombre,
+  foro: null,
+  adn,
+});
+const foro = (nombre, board, genes = 1, caps = []) => ({
+  clave: `f:${nombre}`,
+  clase: 'foro',
+  nombre,
+  foro: board,
+  perfil: { genes, caps },
+});
+const nombresDelPool = (inv, filtro) => lgPool(inv, filtro).map((it) => it.b.name);
+
+test("lgPool 'liga:sb' deja afuera al de siete genes y a los de otra categoría", () => {
+  const inv = inventario([
+    propio('Corto', nGenes(6)),
+    propio('Largo', nGenes(7)),
+    foro('ForoLargo', 'Short bots', 9),
+    foro('ForoCorto', 'Short bots', 2),
+    foro('Otro', 'F1 bots', 2),
+  ]);
+  assert.deepEqual(nombresDelPool(inv, 'liga:sb'), ['Corto', 'ForoCorto']);
+});
+
+test("lgPool 'liga:ss' mira los store del ADN de los propios", () => {
+  const inv = inventario([
+    propio('Uno', 'start\n1 .up store\nstop'),
+    propio('Dos', 'start\n1 .up store\n1 .dn store\nstop'),
+    foro('SS', 'Single store'),
+    foro('Corto', 'Short bots'),
+  ]);
+  assert.deepEqual(nombresDelPool(inv, 'liga:ss'), ['Uno', 'SS']);
+});
+
+test("lgPool 'liga:f2' excluye a un «F1 bots» y deja a un propio", () => {
+  const inv = inventario([
+    foro('Viejo', 'F1 bots'),
+    foro('Nuevo', 'F2 bots'),
+    foro('Mejor', 'F3 bots'),
+    propio('Mío', nGenes(1)),
+  ]);
+  assert.deepEqual(nombresDelPool(inv, 'liga:f2'), ['Nuevo', 'Mejor', 'Mío']);
+});
+
+test("lgPool 'liga:f3': las acciones prohibidas solo avisan, no excluyen", () => {
+  const inv = inventario([
+    propio('Atador', 'start\n1 .tie store\nstop'),
+    foro('Virus', 'F3 bots', 2, ['virus']),
+  ]);
+  assert.deepEqual(nombresDelPool(inv, 'liga:f3'), ['Atador', 'Virus']);
+});
+
+test("lgPool 'liga:f1' deja pasar a todo bot no vegetal; los vegetales y una liga inexistente, no", () => {
+  const inv = inventario([
+    foro('Viejo', 'F1 bots'),
+    { ...foro('Pasto', 'Veggies'), vegetal: true },
+    propio('Mío', nGenes(9)),
+  ]);
+  assert.deepEqual(nombresDelPool(inv, 'liga:f1'), ['Viejo', 'Mío']);
+  assert.deepEqual(nombresDelPool(inv, 'liga:nada'), []);
 });

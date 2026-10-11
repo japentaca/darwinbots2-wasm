@@ -20,11 +20,14 @@
 // la UI usa sus `caps` ya calculadas por el core (profiles.json) y este
 // módulo recibe las que vengan en `entrada.caps`.
 //
+// No importa engine/adn.js (que importa league.js) para no hacer un ciclo de
+// módulos: league.js usa este archivo en lgPool (liga:<id>, paso L3.2).
+//
 // Los mensajes tienen la forma {clave, params} que usa el asistente
 // (competir.admision.<motivo>, en src/i18n/*/competir.json).
 
-import { contarGenes } from './adn.js';
 import { ligaPorId } from './ligas.js';
+import { genesAdn } from './lineage.js';
 import { tokensEjecutables } from './pila.js';
 import { COMANDOS, SYSVARS } from './vocabulario.js';
 
@@ -32,7 +35,7 @@ import { COMANDOS, SYSVARS } from './vocabulario.js';
  * @typedef {{clave: string, params?: Record<string, string | number>}} Mensaje
  * @typedef {{genes: number, stores: number, escribe: Set<string>, caps: Set<string>}} Perfil
  * @typedef {{nombre?: string, board?: string | null, veg?: boolean, adn: string,
- *   caps?: string[]}} Entrada
+ *   caps?: string[], genes?: number}} Entrada
  * @typedef {{ok: boolean, errores: Mensaje[], avisos: Mensaje[]}} Veredicto
  */
 
@@ -98,7 +101,7 @@ export function perfilLiga(adn) {
   if (escr(/^mkslime$/)) caps.add('limo');
   if (escr(/^delgene$/)) caps.add('autoedita');
   if (escr(/^sexrepro$/)) caps.add('repro-sex');
-  return { genes: contarGenes(adn), stores, escribe, caps };
+  return { genes: genesAdn(adn).genes.length, stores, escribe, caps };
 }
 
 /** Una etiqueta de liga suelta o pegada a otras: «F2», «F2MB», «F3SB». */
@@ -147,6 +150,8 @@ export function admitir(liga, entrada) {
   if (entrada.veg) errores.push({ clave: 'competir.admision.vegetal', params: { nombre } });
 
   const perfil = perfilLiga(entrada.adn);
+  // sin ADN a mano (un bot del foro sin bajar) la cantidad de genes la da el perfil de la Biblioteca
+  if (!entrada.adn && entrada.genes !== undefined) perfil.genes = entrada.genes;
   const { maxGenes, maxStores } = L.forma ?? {};
   if (maxGenes !== undefined && perfil.genes > maxGenes)
     errores.push({
@@ -179,4 +184,30 @@ export function admitir(liga, entrada) {
       });
 
   return { ok: errores.length === 0, errores, avisos };
+}
+
+/**
+ * Una entrada del índice de la Biblioteca (engine/biblioteca.js) → la
+ * `entrada` de admitir(). Los del foro traen su board, sus `caps` (las
+ * calculó el core) y la cantidad de genes del perfil, pero no el ADN (se
+ * baja a pedido); los propios traen el ADN y se analizan con perfilLiga. Sin
+ * perfil (un bot del foro que profiles.json no conoce) no hay caps ni genes:
+ * solo cuenta la categoría.
+ * @param {{nombre?: string, foro?: string | null, vegetal?: boolean, clase?: string, adn?: string,
+ *   perfil?: {genes: number, caps: string[]} | null}} e
+ * @returns {Entrada}
+ */
+export function entradaDeIndice(e) {
+  /** @type {Entrada} */
+  const out = {
+    nombre: e.nombre ?? '',
+    board: e.foro ?? null,
+    veg: !!e.vegetal,
+    adn: e.adn ?? '',
+  };
+  if (e.clase === 'foro' && e.perfil) {
+    out.caps = e.perfil.caps;
+    out.genes = e.perfil.genes;
+  }
+  return out;
 }

@@ -19,6 +19,7 @@ import {
   inventarioClaves,
   mover,
   nuevoAsistente,
+  validarAdmision,
   validarParticipantes,
 } from './asistente.js';
 import EditorFormato from './EditorFormato.svelte';
@@ -70,9 +71,15 @@ const tamPool = $derived(
     a.pool,
   ).length,
 );
-const ctx = $derived({ tamPool });
+const ctx = $derived({ tamPool, indice: bib.indice });
 const errores = $derived(erroresDelPaso(a, ctx));
-const avisos = $derived(a.paso === 2 ? validarParticipantes(a, ctx).avisos : []);
+const avisos = $derived(
+  a.paso === 2
+    ? validarParticipantes(a, ctx).avisos
+    : a.paso === 3
+      ? validarAdmision(a, ctx).avisos
+      : [],
+);
 const nParticipantes = $derived(
   a.modo === 'fixed' ? a.claves.length : Math.min(Number(a.n) || 0, tamPool),
 );
