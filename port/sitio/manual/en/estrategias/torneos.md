@@ -14,7 +14,7 @@ is, before anything else, economics.
 
 ## A different court, different rules {#economia}
 
-The world of a match with the **F1 base** is small and without corners: a
+The world of a match in the **F1 league** is small and without corners: a
 9237 × 6928 field with both axes connected (no walls to hide behind), floor
 with friction, a maximum speed of 180 and no day or night. Two details that
 change the whole design:

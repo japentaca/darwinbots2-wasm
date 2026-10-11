@@ -170,7 +170,7 @@ the live changes and its events. It is saved in the browser or downloaded as
 ## S {#s}
 
 **Scenario.** A world ready to run: parameters, species to seed and objects
-(obstacles, teleporters). The app ships seven built-in ones and you can save
+(obstacles, teleporters). The app ships thirteen built-in ones and you can save
 your own. See [[app/escenarios]].
 
 **Seed.** The number that fixes a simulation's randomness: the same scenario

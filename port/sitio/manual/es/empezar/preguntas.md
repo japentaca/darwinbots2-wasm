@@ -30,7 +30,7 @@ Un bot muere cuando se queda sin energía (ver [[simulacion/muerte#causas]]).
 Las causas más comunes:
 
 - **El mundo cobra costos y no hay comida.** Con los costos de la liga F1 (el
-  escenario Partido F1, o **Costos** en «F1»), un bot que se mueve gasta
+  partido de liga, como el Partido F1, o **Costos** en «F1»), un bot que se mueve gasta
   energía todo el tiempo; en una prueba, el bot de
   [[empezar/primera-simulacion#tu-bot|tu primera simulación]] perdía unos 0,6
   por ciclo sin comer. Si no encuentra qué comer, se apaga en unos miles de
@@ -43,7 +43,7 @@ Las causas más comunes:
 - **Hay un depredador.** Mirá los eventos y el gráfico de población: si una
   especie crece mientras otra cae, la está cazando.
 
-En los escenarios de fábrica, salvo Partido F1, los costos están en 0: ahí
+En los escenarios de fábrica, salvo los partidos de liga, los costos están en 0: ahí
 nadie pierde energía por vivir, y casi todas las muertes son de bots
 cazados.
 
@@ -61,7 +61,7 @@ reintenta cada ciclo. La lista completa está en
 <!-- mutaciones #quien-muta #mrepro #encender; opciones.js F1_NOMBRADAS mutations: 0 (Partido F1, Ajustes F1); dbcore_api.cpp db_sim_add_species con tasas de fábrica (commit 175f691) -->
 
 - **Las mutaciones están apagadas.** Fijate en el control **Mutaciones** de
-  Experimentar. El escenario Partido F1 y el botón **Ajustes F1** las apagan.
+  Experimentar. Los partidos de liga y el botón **Ajustes F1** las apagan.
 - **Falta tiempo.** Con las tasas de fábrica, un hijo nacido con [[.repro]]
   sale cambiado muy de vez en cuando (en un bot de 20 instrucciones, cerca de 1
   de cada 60), y la mayoría de esos cambios rompen algo. La evolución se ve en

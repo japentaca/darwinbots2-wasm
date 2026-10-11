@@ -57,6 +57,12 @@ cuántas especies trae). La app viene con estos:
 | **Sopa primordial** | Algas y un animal mínimo en el mundo por defecto, con mutaciones: el punto de partida para ver evolucionar a una especie. |
 | **Depredador y presa** | Un cazador sobre un campo de algas: ¿se agota la comida o se equilibran las poblaciones? |
 | **Partido F1** | Dos bots de liga F1 frente a frente con los ajustes de la liga. |
+| **Partido F2** | Dos bots de liga F2 frente a frente, con su energía solar y su descalificación. |
+| **Partido F3** | Dos bots de liga F3 frente a frente, con su energía solar y su descalificación. |
+| **Partido MB** | Dos multi-bots en el mundo de F2, sin descalificación. |
+| **Partido SB** | Dos bots cortos, en un campo más grande. |
+| **Partido SS** | Dos bots de un solo store, con los ajustes de la liga F1. |
+| **Partido F4** | Dos bots de liga frente a frente, en un campo al doble de lado y con la cuota de vejez en 1. |
 | **Día y noche** | El sol se pone cada 1000 ciclos y la población oscila. |
 | **Laberinto** | Un laberinto en espiral que los bots pueden ver. |
 | **Océano** | Física de agua en un mundo que se cierra sobre sí mismo; las algas flotan a la deriva. |
@@ -70,7 +76,7 @@ Cada tarjeta tiene dos botones:
 - **Ajustar** abre el escenario en [[app/experimentar]], donde cambiás especies y
   parámetros antes de arrancar.
 
-**Partido F1** es distinto: en vez de **Iniciar** dice **Elegir bots** y te lleva
+Los **partidos** de liga son distintos: en vez de **Iniciar** dice **Elegir bots** y te lleva
 a [[app/competir]], porque un partido se arma eligiendo a los rivales.
 
 Los escenarios que guardes desde Experimentar aparecen en la misma galería

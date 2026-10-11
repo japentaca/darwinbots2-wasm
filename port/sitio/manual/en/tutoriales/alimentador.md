@@ -120,7 +120,7 @@ engine ties it to the bot it is looking at. The 5 is the _port_: the name _you_
 will use to pick that tie; the prey will call it 1, by its order of arrival
 ([[simulacion/lazos#puertos]]). The command is always cleared, whether it
 works or not, and every attempt charges the cost of tying ([[param:cost:22]]):
-0 in the built-in simulations, 2 in the F1 league.
+0 in the built-in simulations except the league matches, 2 in the F1 league.
 
 The prey can still get away: its slime deflects the attempt ([[.slime]] — above
 92 no tie is possible) and every attempt, whether it works or not, costs it 20

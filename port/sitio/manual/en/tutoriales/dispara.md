@@ -131,7 +131,7 @@ over 6000 energy.
 Two more adjustments, for when you need them:
 
 - **The cost.** Every shot has a price ([[param:cost:23]]: 2 in the F1
-  league), but in the built-in scenarios, except the F1 match, costs are at 0:
+  league), but in the built-in scenarios, except the league matches, costs are at 0:
   here shooting is free. In the F1, each shot comes out of your energy
   ([[app/experimentar]]).
   <!-- simulacion/energia #mantenimiento (escenarios de fábrica salvo F1 con costos 0); opciones.js preset F1 (cost:23 = 2; por defecto 0) -->

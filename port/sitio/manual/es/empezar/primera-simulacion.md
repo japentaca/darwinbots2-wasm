@@ -16,13 +16,19 @@ arriba dice «Todavía no hay corridas» y el botón **Elegir un escenario** te
 baja a la galería.
 
 Un _escenario_ es un mundo listo para usar: el tamaño del campo, la física, la
-luz, los costos y las especies que se siembran al empezar. La app trae siete:
+luz, los costos y las especies que se siembran al empezar. La app trae trece:
 
 | Escenario | Qué tiene |
 |---|---|
 | Sopa primordial | Algas y un animal mínimo, con mutaciones. El punto de partida para ver evolucionar a una especie. |
 | Depredador y presa | Zebedee V2.1 cazando sobre un campo de algas. |
 | Partido F1 | Dos bots de liga frente a frente, con las reglas de la liga F1. |
+| Partido F2 | Dos bots de liga F2 frente a frente, con su energía solar y su descalificación. |
+| Partido F3 | Dos bots de liga F3 frente a frente, con su energía solar y su descalificación. |
+| Partido MB | Dos multi-bots en el mundo de F2, sin descalificación. |
+| Partido SB | Dos bots cortos, en un campo más grande. |
+| Partido SS | Dos bots de un solo store, con las reglas de la liga F1. |
+| Partido F4 | Dos bots de liga frente a frente, en un campo al doble de lado y con la cuota de vejez en 1. |
 | Día y noche | El sol se pone cada 1000 ciclos y la población oscila. |
 | Laberinto | Un laberinto en espiral que los bots pueden ver. |
 | Océano | Física de agua en un mundo sin bordes. |
@@ -34,7 +40,7 @@ mundo con una semilla nueva al azar, lo pone a correr y te lleva a
 
 El otro botón de cada tarjeta, **Ajustar**, abre el escenario en Experimentar
 para cambiarlo antes de empezar (ver [[app/escenarios]]). En la tarjeta de
-Partido F1 el botón principal no dice Iniciar sino **Elegir bots**, y te lleva
+los partidos de liga el botón principal no dice Iniciar sino **Elegir bots**, y te lleva
 a Competir, porque un partido se arma eligiendo contrincantes.
 
 :::nota

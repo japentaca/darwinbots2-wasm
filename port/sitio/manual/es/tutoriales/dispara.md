@@ -130,7 +130,7 @@ energía.
 Dos ajustes más, para cuando los necesites:
 
 - **El costo.** Cada disparo tiene precio ([[param:cost:23]]: 2 en la liga
-  F1), pero en los escenarios de fábrica, salvo el Partido F1, los costos
+  F1), pero en los escenarios de fábrica, salvo los partidos de liga, los costos
   están en 0: acá disparar es gratis. En la F1, cada tiro sale de tu energía
   ([[app/experimentar]]).
   <!-- simulacion/energia #mantenimiento (escenarios de fábrica salvo F1 con costos 0); opciones.js preset F1 (cost:23 = 2; por defecto 0) -->

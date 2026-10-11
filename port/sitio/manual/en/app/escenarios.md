@@ -42,14 +42,20 @@ The ones that use the F1 league base carry the **F1** mark.
 ## The built-in scenarios {#fabrica}
 <!-- web2/engine/escenarios/fabrica/*.json; fabrica.js (orden); probado: t1.mjs (cantidad de cambios y energía 3000 en todos) -->
 
-The app comes with seven. All of them start from the Classic base except the
-F1 match, and in all of them the species start with 3000 energy.
+The app comes with thirteen. Six start from the Classic base, and the seven
+league matches from the F1 league base. In all of them the species start with 3000 energy.
 
 | Scenario | Species | What changes in the world | What it's for |
 |---|---|---|---|
 | **Primordial soup** | 15 Alga minimalis 3.0 (vegetable) and 5 Animal Minimalis | Nothing: the default world, with mutations. | The starting point to watch a species evolve. |
 | **Predator and prey** | 25 Alga minimalis 3.0 (vegetable) and 5 Zebedee V2.1 | Solar energy at 20 (double). | See whether the food runs out or the populations balance. |
 | **F1 match** | 5 Alga minimalis 3.0 (vegetable), 5 Devincio Dominator and 5 Carnatus Orbis | F1 league base: costs, physics and a toroidal 9237 × 6928 field. | A face-off with league rules. |
+| **F2 match** | 5 Alga minimalis 3.0 (vegetable), 5 Spinner v1.5 (F2) and 5 Gimmick1.0 (F2) | F1 league base with solar energy at 30 and F2 disqualification. | A face-off in the F2 league. |
+| **F3 match** | 5 Alga minimalis 3.0 (vegetable), 5 Beholder ver.1b (F3) and 5 Sentry [Spike] (F3) | F1 league base with solar energy at 30 and F3 disqualification. | A face-off in the F3 league. |
+| **MB match** | 5 Alga minimalis 3.0 (vegetable), 5 Animal Multi (MB) and 5 BotBot 1.1 (MB) | F1 league base with solar energy at 30, no disqualification. | Multi-bots in the F2 world. |
+| **SB match** | 5 Alga minimalis 3.0 (vegetable), 5 Pacifist v0.01 and 5 Guardian-0.9 | F1 league base with a 16000 × 12000 field. | Short bots on a bigger field. |
+| **SS match** | 5 Alga minimalis 3.0 (vegetable), 5 Animal_Archaea (SS) and 5 Brevis (SS) | F1 league base, unchanged. | Single-store bots. |
+| **F4 match** | 5 Alga minimalis 3.0 (vegetable), 5 Etch Mk II (F1) and 5 Republican Wasp (F1) | F1 league base with the old-age upkeep at 1 and the field at twice the side (18474 × 13856), no disqualification. | A new world: F1 with a higher cost and a bigger field. |
 | **Day and night** | 20 Alga minimalis 3.0 (vegetable) and 5 Animal Minimalis | Day and night of 1000 cycles. | Watch the population oscillate when there's no sun at night. |
 | **Maze** | 20 Alga minimalis 3.0 (vegetable) and 8 Animal Minimalis | A spiral maze, and the bots see the shapes. | See who learns to move between the walls. |
 | **Ocean** | 20 Alga Cohesum (vegetable) and 6 Hunter V2.2 | Fluid medium (water) and a toroidal world. | A hunter chasing drifting algae. |
@@ -58,9 +64,9 @@ F1 match, and in all of them the species start with 3000 energy.
 In the table the bot names are shortened: each one's full name is in the
 species list in Experiment and in [[app/bots]].
 
-The **F1 match** is different from the rest: on Home its button says **Pick
+The **league matches** (F1, F2, F3, MB, SB, SS and F4 match) are different from the rest: on Home their button says **Pick
 bots** and takes you to [[app/competir]], where you choose who faces whom. From
-Experiment it launches like any other.
+Experiment they launch like any other scenario.
 
 The built-in ones can't be modified or deleted. To change one, load it and
 edit the draft; if you want to keep the result, save it as your own.
@@ -87,7 +93,7 @@ mark.
 **By duplicating a built-in one.** With a built-in scenario loaded, **Duplicate
 as my own** instantly creates a copy that is yours, named “… (copy)”, and
 leaves it open for editing. The copy keeps everything, including the special
-behavior of the F1 match on Home.
+behavior of the league matches on Home.
 
 **From the Library.** Pick one or more bots in [[app/bots]] and, in the dialog
 for seeding them, use **New scenario with these**: it creates a custom scenario

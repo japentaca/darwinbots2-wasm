@@ -71,6 +71,10 @@ propia capa, y sus arreglos no cuentan como correcciones.
   El original solo leía los suyos; varios bots del foro, tal como están, ahí
   no cargaban. Es una decisión propia del port.
   <!-- REVISION-PORT.md RV-04 (el cargador tolera LF; los bots del Bestiario son solo-LF) -->
+- **Las ligas de la app son escenarios de fábrica.** Los valores de F2, F3, MB, SB y SS son los que el programa original fijaba con sus botones de liga. F4 no existe en el original: es un añadido del port, F1 con la cuota de vejez en 1 y el campo al doble de lado. Ver [[app/competir#ligas]].
+  <!-- PLAN-LIGAS.md D1-D4 y D8; OptionsForm.frm:2670-2690 (botones F2 y SB), frmGset.frm:304-345 (DQ F2 y F3) -->
+- **Faltan las MB kill restrictions.** El original las tiene, pero la API wasm no deja marcarlas por especie: la liga MB se juega sin ellas.
+  <!-- PLAN-LIGAS.md D5; core kill_mb (master.hpp); port/wasm db_sim_add_species -->
 - **La interfaz es otra.** La app nueva no es el programa de Windows; la más
   parecida es la [[app/clasica]]. Ver [[empezar/preguntas#diferencias]].
 

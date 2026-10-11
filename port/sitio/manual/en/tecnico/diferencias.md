@@ -68,6 +68,10 @@ site have a layer of their own, and its fixes don't count as corrections.
   only read its own; several forum bots, as they are, wouldn't load there. It is
   a decision of the port's own.
   <!-- REVISION-PORT.md RV-04 (el cargador tolera LF; los bots del Bestiario son solo-LF) -->
+- **The app's leagues are built-in scenarios.** The values of F2, F3, MB, SB and SS are the ones the original program set with its league buttons. F4 isn't in the original: it's an addition of the port, F1 with the old-age upkeep at 1 and the field at twice the side. See [[app/competir#ligas]].
+  <!-- PLAN-LIGAS.md D1-D4 y D8; OptionsForm.frm:2670-2690 (botones F2 y SB), frmGset.frm:304-345 (DQ F2 y F3) -->
+- **The MB kill restrictions are missing.** The original has them, but the wasm API doesn't let you set them per species: the MB league is played without them.
+  <!-- PLAN-LIGAS.md D5; core kill_mb (master.hpp); port/wasm db_sim_add_species -->
 - **The interface is different.** The new app is not the Windows program; the
   closest one is the [[app/clasica]]. See [[empezar/preguntas#diferencias]].
 

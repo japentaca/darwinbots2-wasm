@@ -17,13 +17,19 @@ down to the gallery.
 
 A _scenario_ is a ready-to-use world: the size of the field, the physics, the
 light, the costs and the species that are seeded at the start. The app ships
-seven:
+thirteen:
 
 | Scenario | What it has |
 |---|---|
 | Primordial soup | Algae and a minimal animal, with mutations. The starting point to watch a species evolve. |
 | Predator and prey | Zebedee V2.1 hunting over a field of algae. |
 | F1 match | Two league bots face to face, under the F1 league rules. |
+| F2 match | Two F2 league bots face to face, with their solar energy and their disqualification. |
+| F3 match | Two F3 league bots face to face, with their solar energy and their disqualification. |
+| MB match | Two multi-bots in the F2 world, with no disqualification. |
+| SB match | Two short bots, on a bigger field. |
+| SS match | Two single-store bots, under the F1 league rules. |
+| F4 match | Two league bots face to face, on a field with twice the side and the old-age upkeep at 1. |
 | Day and night | The sun sets every 1000 cycles and the population oscillates. |
 | Maze | A spiral maze the bots can see. |
 | Ocean | Water physics in a world with no edges. |
@@ -34,8 +40,8 @@ the world with a new random seed, sets it running and takes you to
 **Observe**.
 
 The other button on each card, **Tweak**, opens the scenario in Experiment so
-you can change it before starting (see [[app/escenarios]]). On the F1 match
-card the main button doesn't say Start but **Pick bots**, and takes you to
+you can change it before starting (see [[app/escenarios]]). On the league matches' cards
+the main button doesn't say Start but **Pick bots**, and takes you to
 Compete, because a match is set up by choosing the entrants.
 
 :::nota

@@ -31,7 +31,7 @@ A bot dies when it runs out of energy (see [[simulacion/muerte#causas]]). The
 most common causes:
 
 - **The world charges costs and there's no food.** With the F1 league costs
-  (the F1 match scenario, or **Costs** set to “F1”), a bot that moves spends
+  (a league match, like the F1 match, or **Costs** set to “F1”), a bot that moves spends
   energy all the time; in one test, the bot from
   [[empezar/primera-simulacion#tu-bot|your first simulation]] lost about 0.6
   per cycle without eating. If it can't find anything to eat, it dies out in a
@@ -44,7 +44,7 @@ most common causes:
 - **There's a predator.** Look at the events and the population chart: if one
   species grows while another falls, it's hunting it.
 
-In the built-in scenarios, except F1 match, costs are 0: there, nobody loses
+In the built-in scenarios, except the league matches, costs are 0: there, nobody loses
 energy just for living, and almost every death is a bot that was hunted.
 
 ### Why doesn't my bot reproduce? {#no-se-reproduce}
@@ -60,8 +60,8 @@ written and is retried every cycle. The full list is in
 ### Why don't they evolve? {#no-evolucionan}
 <!-- mutaciones #quien-muta #mrepro #encender; opciones.js F1_NOMBRADAS mutations: 0 (Partido F1, Ajustes F1); dbcore_api.cpp db_sim_add_species con tasas de fábrica (commit 175f691) -->
 
-- **Mutations are off.** Check the **Mutations** control in Experiment. The F1
-  match scenario and the **F1 settings** button turn them off.
+- **Mutations are off.** Check the **Mutations** control in Experiment. The league
+  matches and the **F1 settings** button turn them off.
 - **It takes time.** With the factory rates, a child born with [[.repro]] comes
   out changed only once in a great while (in a bot of 20 instructions, about 1
   in 60), and most of those changes break something. Evolution shows up over

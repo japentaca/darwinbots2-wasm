@@ -67,7 +67,7 @@ charge you a transaction fee per unit. In the app's F1 league that fee doubles
 the price of shell and slime (0.1 per unit, [[param:cost:29]] and
 [[param:cost:28]]) and barely touches poison and venom (0.01,
 [[param:cost:27]] and [[param:cost:26]]), all multiplied by
-[[param:cost:54]]. In the built-in scenarios, except the F1 match, the costs
+[[param:cost:54]]. In the built-in scenarios, except the league matches, the costs
 are 0 and you only pay the conversion.
 
 What really costs is upkeep. Slime and poison lose 2% per cycle

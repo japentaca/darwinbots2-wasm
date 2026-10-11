@@ -47,7 +47,7 @@ The steps:
    sets it running and takes you to Observe.
 
 :::cuidado
-The **F1 match** scenario and the **F1 settings** button turn mutations off.
+The **league matches** and the **F1 settings** button turn mutations off.
 If you come from there, turn them back on by hand.
 :::
 <!-- opciones.js F1_NOMBRADAS (mutations: 0); empezar/preguntas #no-evolucionan -->

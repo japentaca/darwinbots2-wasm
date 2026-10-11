@@ -118,7 +118,7 @@ lo ata al bot que está viendo. El 5 es el _puerto_: el nombre con el que _vos_
 vas a elegir ese lazo; la presa lo va a llamar 1, por su orden de llegada
 ([[simulacion/lazos#puertos]]). La orden se borra siempre, salga o no, y cada
 intento cobra el costo de atar ([[param:cost:22]]): 0 en las simulaciones de
-fábrica, 2 en la liga F1.
+fábrica salvo los partidos de liga, 2 en la liga F1.
 
 La presa todavía puede zafar: su baba desvía el intento ([[.slime]] — con más
 de 92 no hay lazo posible) y cada intento, salga o no, le gasta 20

@@ -210,7 +210,7 @@ relative-dodger. The eyes are added in the next tutorial.
   settings, and friction, fluid or gravity completely change how a bot slides.
   The mechanism is in [[simulacion/fisica]] and you play with the values in
   [[app/experimentar]].
-- **Energy and costs.** In the built-in scenarios, except F1 match, moving costs
+- **Energy and costs.** In the built-in scenarios, except the league matches, moving costs
   nothing. But where costs are turned on they're really charged: with the F1
   rules every push, every turn and every DNA instruction costs energy, and a bot
   that only moves forward can starve to death. How each thing is charged is in

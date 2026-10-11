@@ -47,7 +47,7 @@ Los pasos:
    pone a correr y te lleva a Observar.
 
 :::cuidado
-El escenario **Partido F1** y el botón **Ajustes F1** apagan las mutaciones. Si
+Los **partidos de liga** y el botón **Ajustes F1** apagan las mutaciones. Si
 venís de ahí, volvé a encenderlas a mano.
 :::
 <!-- opciones.js F1_NOMBRADAS (mutations: 0); empezar/preguntas #no-evolucionan -->

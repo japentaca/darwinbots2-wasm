@@ -131,8 +131,9 @@ The rules have two parts.
 
 **World**: the world's parameters, without species.
 
-- **F1 base**: the F1 league settings. Costs, physics and a toroidal 9237 × 6928
-  field.
+- **League**: the world and the combat rules of one of the seven leagues: F1
+  (the base), F2, F3, MB, SB, SS and F4. You pick it from the list, and below it
+  you read what changes. See [[app/competir#ligas|The leagues]].
 - **No costs**: the F1 base with every cost at 0. Bots spend no energy.
 - **From Experiment**: the options and objects of a scenario (built-in, your own
   or the **Experiment draft**), without its species. See [[app/escenarios]].
@@ -163,6 +164,48 @@ The world's parameters are explained one by one in [[app/experimentar-avanzado]]
 The ones for the F1 contest from the manual ([[param:opt:91]], [[param:opt:97]],
 [[param:opt:98]], [[param:opt:99]], [[param:opt:100]]) are set by the tournament in
 every match; you don't need to touch them.
+
+## The leagues {#ligas}
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ) -->
+
+A **league** is a world with its combat rules, named after one of DarwinBots'
+historical leagues. The **League** button under **World** picks one of the seven,
+and changing it changes the world and the fight rules. Like the other rules, it stays
+fixed from the season's first match.
+
+| League | World | What it disqualifies |
+|---|---|---|
+| **F1** | The base: costs, physics and a toroidal 9237 × 6928 field. | Nothing. |
+| **F2** | The base, with solar energy per cycle at 30. | Eating through another species' tie, and viruses. |
+| **F3** | As F2. | Ties, viruses, info shots, venom, poison, slime, shell, `.delgene` and sexrepro. |
+| **MB** | Multi-bots, in the F2 world. | Nothing. |
+| **SB** | The base, with a 16000 × 12000 field. | Nothing. |
+| **SS** | The base, unchanged. | Nothing. |
+| **F4** | The base, with the old-age upkeep ([[param:cost:31]]) at 1 and the field at twice the side (18474 × 13856). | Nothing. |
+
+**Where they come from.** The values of F2, F3, MB and SB are the ones the original
+program set with its league buttons, and the disqualifications are the ones the
+community set for each league. SS uses the base unchanged.
+
+**F4 isn't in the original.** It's an addition of this version: F1 with the old-age
+upkeep at 1 and the field at twice the side, toroidal like F1. At that cost, a bot
+that neither hunts nor eats runs out in about 3000 cycles, instead of living almost
+for free. When you pick it, the wizard proposes **At the cap, the round goes to**
+“the species with the most energy” and **Max bots per species** at 100. They're
+proposals: you change them in step 3.
+
+**Two quirks of the original, kept.** A disqualification kills the whole species, and
+the species is the one of the bot that does the action, even if an info shot from
+another bot forced it. And in F2, sexrepro doesn't disqualify: it was a community rule
+that the program never enforced. See [[tecnico/diferencias]].
+
+**MB has no kill restrictions.** The original had the _MB kill restrictions_, which
+this version doesn't include: the MB league is played without them. See
+[[tecnico/diferencias]].
+
+**Disqualifications show** in **Matches**: a match row with a DQ carries the
+**⚖ DQ** tag next to the fighters, and its tooltip says what happened. The
+disqualified species loses the round.
 
 ## Entrants {#participantes}
 <!-- lib/competir/Participantes.svelte; competir.participantes.* -->

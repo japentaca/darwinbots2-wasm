@@ -56,6 +56,12 @@ brings). The app comes with these:
 | **Primordial soup** | Algae and a minimal animal in the default world, with mutations: the starting point to watch a species evolve. |
 | **Predator and prey** | A hunter over a field of algae: does the food run out or do the populations balance? |
 | **F1 match** | Two F1 league bots face to face with the league settings. |
+| **F2 match** | Two F2 league bots face to face, with their solar energy and their disqualification. |
+| **F3 match** | Two F3 league bots face to face, with their solar energy and their disqualification. |
+| **MB match** | Two multi-bots in the F2 world, with no disqualification. |
+| **SB match** | Two short bots, on a bigger field. |
+| **SS match** | Two single-store bots, with the F1 league settings. |
+| **F4 match** | Two league bots face to face, on a field with twice the side and the old-age upkeep at 1. |
 | **Day and night** | The sun sets every 1000 cycles and the population oscillates. |
 | **Maze** | A spiral maze the bots can see. |
 | **Ocean** | Water physics in a world that closes in on itself; the algae float adrift. |
@@ -69,7 +75,7 @@ Each card has two buttons:
 - **Tweak** opens the scenario in [[app/experimentar]], where you change species
   and parameters before starting.
 
-**F1 match** is different: instead of **Start** it says **Pick bots** and takes
+The **league matches** are different: instead of **Start** they say **Pick bots** and take
 you to [[app/competir]], because a match is set up by choosing the rivals.
 
 The scenarios you save from Experiment show up in the same gallery after the

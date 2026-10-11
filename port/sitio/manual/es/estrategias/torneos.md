@@ -14,7 +14,7 @@ torneo es, antes que nada, economía.
 
 ## Otra cancha, otras reglas {#economia}
 
-El mundo de un partido con la **Base F1** es chico y sin rincones: un campo de
+El mundo de un partido de la **liga F1** es chico y sin rincones: un campo de
 9237 × 6928 con los dos ejes conectados (no hay paredes donde esconderse),
 suelo con rozamiento, una velocidad máxima de 180 y sin día ni noche. Dos
 detalles que cambian todo el diseño:

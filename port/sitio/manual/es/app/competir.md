@@ -133,8 +133,9 @@ Las reglas tienen dos partes.
 
 **Mundo**: los parámetros del mundo, sin especies.
 
-- **Base F1**: los ajustes de liga F1. Costos, física y un campo de
-  9237 × 6928 toroidal.
+- **Liga**: el mundo y las reglas de combate de una de las siete ligas: F1
+  (la base), F2, F3, MB, SB, SS y F4. Se elige en la lista, y debajo se lee
+  lo que cambia. Ver [[app/competir#ligas|Las ligas]].
 - **Sin costos**: la base F1 con todos los costos en 0. Los bots no gastan
   energía.
 - **Desde Experimentar**: las opciones y los objetos de un escenario (de
@@ -168,6 +169,47 @@ Los parámetros del mundo están explicados uno por uno en
 [[app/experimentar-avanzado]]. Los del concurso F1 manual
 ([[param:opt:91]], [[param:opt:97]], [[param:opt:98]], [[param:opt:99]],
 [[param:opt:100]]) los fija el torneo en cada partido; no hace falta tocarlos.
+
+## Las ligas {#ligas}
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ) -->
+
+Una **liga** es un mundo con sus reglas de combate, con el nombre de una de las
+ligas históricas de DarwinBots. El radio **Liga** de **Mundo** elige una de las
+siete, y cambiarla cambia el mundo y las reglas de la pelea. Como el resto de las
+reglas, queda fija desde el primer partido de la temporada.
+
+| Liga | Mundo | Qué descalifica |
+|---|---|---|
+| **F1** | La base: costos, física y campo 9237 × 6928 toroidal. | Nada. |
+| **F2** | La base, con la energía solar por ciclo en 30. | Alimentarse por tie de otra especie, y virus. |
+| **F3** | Como F2. | Ties, virus, info shots, venom, poison, slime, shell, `.delgene` y sexrepro. |
+| **MB** | Multi-bots, en el mundo de F2. | Nada. |
+| **SB** | La base, con un campo de 16000 × 12000. | Nada. |
+| **SS** | La base, sin cambios. | Nada. |
+| **F4** | La base, con la cuota de vejez ([[param:cost:31]]) en 1 y el campo al doble de lado (18474 × 13856). | Nada. |
+
+**De dónde salen.** Los valores de F2, F3, MB y SB son los que el programa
+original fijaba con sus botones de liga, y las descalificaciones son las que la
+comunidad fijó para cada una. SS usa la base sin cambios.
+
+**F4 no existe en el original.** Es un añadido de esta versión: F1 con la cuota de
+vejez en 1 y el campo al doble de lado, toroidal como F1. Con ese costo, un bot que
+no caza ni come se gasta en unos 3000 ciclos, en vez de vivir casi sin costo. Al
+elegirla, el asistente propone **Al tope, la ronda es de** «la especie con más
+energía» y **Máximo de bots por especie** en 100. Son propuestas: en el paso 3 se
+cambian.
+
+**Dos rarezas del original, que se conservan.** La descalificación mata a la especie
+entera, y es la especie del bot que hace la acción, aunque la acción la haya forzado
+un info shot de otro bot. Y en F2 el sexrepro no descalifica: era una norma de la
+comunidad que el programa nunca impuso. Ver [[tecnico/diferencias]].
+
+**MB va sin kill restrictions.** El original tenía las _MB kill restrictions_, que
+esta versión no trae: la liga MB se juega sin ellas. Ver [[tecnico/diferencias]].
+
+**Las descalificaciones se ven** en **Partidos**: la fila de un partido con DQ lleva
+el rótulo **⚖ DQ** junto a los luchadores, y su aviso dice lo que pasó. La especie
+descalificada pierde la ronda.
 
 ## Participantes {#participantes}
 <!-- lib/competir/Participantes.svelte; competir.participantes.* -->

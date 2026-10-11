@@ -42,14 +42,20 @@ que usan la base Liga F1 llevan la marca **F1**.
 ## Los escenarios de fábrica {#fabrica}
 <!-- web2/engine/escenarios/fabrica/*.json; fabrica.js (orden); probado: t1.mjs (cantidad de cambios y energía 3000 en todos) -->
 
-La app trae siete. Todos parten de la base Clásica salvo el Partido F1, y en
-todos las especies arrancan con 3000 de energía.
+La app trae trece. Seis parten de la base Clásica y los siete partidos de liga, de la base Liga F1; en
+todos, las especies arrancan con 3000 de energía.
 
 | Escenario | Especies | Qué cambia del mundo | Para qué sirve |
 |---|---|---|---|
 | **Sopa primordial** | 15 Alga minimalis 3.0 (vegetal) y 5 Animal Minimalis | Nada: el mundo por defecto, con mutaciones. | El punto de partida para ver evolucionar a una especie. |
 | **Depredador y presa** | 25 Alga minimalis 3.0 (vegetal) y 5 Zebedee V2.1 | Energía solar en 20 (el doble). | Ver si la comida se agota o las poblaciones se equilibran. |
 | **Partido F1** | 5 Alga minimalis 3.0 (vegetal), 5 Devincio Dominator y 5 Carnatus Orbis | Base Liga F1: costos, física y campo 9237 × 6928 toroidal. | Un enfrentamiento con reglas de liga. |
+| **Partido F2** | 5 Alga minimalis 3.0 (vegetal), 5 Spinner v1.5 (F2) y 5 Gimmick1.0 (F2) | Liga F1 con energía solar en 30 y descalificación F2. | Un enfrentamiento de la liga F2. |
+| **Partido F3** | 5 Alga minimalis 3.0 (vegetal), 5 Beholder ver.1b (F3) y 5 Sentry [Spike] (F3) | Liga F1 con energía solar en 30 y descalificación F3. | Un enfrentamiento de la liga F3. |
+| **Partido MB** | 5 Alga minimalis 3.0 (vegetal), 5 Animal Multi (MB) y 5 BotBot 1.1 (MB) | Liga F1 con energía solar en 30, sin descalificación. | Multi-bots en el mundo de F2. |
+| **Partido SB** | 5 Alga minimalis 3.0 (vegetal), 5 Pacifist v0.01 y 5 Guardian-0.9 | Liga F1 con un campo de 16000 × 12000. | Bots cortos en un campo más grande. |
+| **Partido SS** | 5 Alga minimalis 3.0 (vegetal), 5 Animal_Archaea (SS) y 5 Brevis (SS) | Liga F1, sin cambios. | Bots de un solo store. |
+| **Partido F4** | 5 Alga minimalis 3.0 (vegetal), 5 Etch Mk II (F1) y 5 Republican Wasp (F1) | Liga F1 con la cuota de vejez en 1 y el campo al doble de lado (18474 × 13856), sin descalificación. | Un mundo nuevo: F1 más caro y más grande. |
 | **Día y noche** | 20 Alga minimalis 3.0 (vegetal) y 5 Animal Minimalis | Día y noche de 1000 ciclos. | Ver oscilar a la población cuando de noche no hay sol. |
 | **Laberinto** | 20 Alga minimalis 3.0 (vegetal) y 8 Animal Minimalis | Un laberinto en espiral, y los bots ven las formas. | Ver quién aprende a moverse entre las paredes. |
 | **Océano** | 20 Alga Cohesum (vegetal) y 6 Hunter V2.2 | Medio fluido (agua) y mundo toroidal. | Un cazador persiguiendo algas a la deriva. |
@@ -58,9 +64,9 @@ todos las especies arrancan con 3000 de energía.
 En la tabla los nombres de los bots van abreviados: el nombre completo de
 cada uno está en la lista de especies de Experimentar y en [[app/bots]].
 
-El **Partido F1** es distinto de los demás: en Inicio su botón dice **Elegir
+Los **partidos** de liga (Partido F1, F2, F3, MB, SB, SS y F4) son distintos de los demás: en Inicio su botón dice **Elegir
 bots** y te lleva a [[app/competir]], donde elegís quién se enfrenta. Desde
-Experimentar se lanza como cualquier otro.
+Experimentar se lanzan como cualquier escenario.
 
 Los de fábrica no se pueden modificar ni borrar. Para cambiar uno, cargalo y
 editá el borrador; si querés conservar el resultado, guardalo como propio.
@@ -87,7 +93,7 @@ El escenario aparece en **Míos** y en la galería de Inicio, con la marca
 **Duplicando uno de fábrica.** Con un escenario de fábrica cargado, **Duplicar
 como propio** crea al instante una copia tuya, con el nombre «… (copia)», y
 la deja abierta para editar. La copia conserva todo, incluido el comportamiento
-especial del Partido F1 en Inicio.
+especial de los partidos de liga en Inicio.
 
 **Desde la Biblioteca.** Elegí uno o varios bots en [[app/bots]] y, en el
 diálogo para sembrarlos, usá **Nuevo escenario con estos**: crea un

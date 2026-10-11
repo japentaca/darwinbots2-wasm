@@ -191,7 +191,7 @@ cd port/web2 && npm run dev
 ## Compete
 
 The app's **Compete** section pits Bestiary bots or your own against each
-other under the original's F1 league rules (host layer: it doesn't touch the
+other under the original's league rules (F1, F2, F3, MB, SB and SS) and a new one, F4 (host layer: it doesn't touch the
 core). It has a quick match and tournaments in six formats (single match,
 which is the F1 contest, king of the hill, round robin, step ladder, world cup and
 Swiss), with an Elo table that carries over from one tournament to the next,

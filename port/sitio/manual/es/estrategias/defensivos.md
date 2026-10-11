@@ -66,7 +66,7 @@ puede cobrarte una transacción por unidad. En la liga F1 de la app esa
 transacción dobla el precio del caparazón y de la baba (0,1 por unidad,
 [[param:cost:29]] y [[param:cost:28]]) y casi no toca la toxina y el veneno
 (0,01, [[param:cost:27]] y [[param:cost:26]]), todo multiplicado por
-[[param:cost:54]]. En los escenarios de fábrica, salvo el Partido F1, los
+[[param:cost:54]]. En los escenarios de fábrica, salvo los partidos de liga, los
 costos vienen en 0 y solo pagás la conversión.
 
 Lo que de verdad cuesta es el mantenimiento. La baba y la toxina pierden el

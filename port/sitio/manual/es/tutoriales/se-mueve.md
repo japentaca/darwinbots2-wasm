@@ -211,7 +211,7 @@ un esquiva-parientes. Los ojos se agregan en el tutorial que sigue.
   completo cómo se desliza un bot. El mecanismo está en
   [[simulacion/fisica]] y se juega con los valores en
   [[app/experimentar]].
-- **Energía y costos.** En los escenarios de fábrica, salvo Partido F1,
+- **Energía y costos.** En los escenarios de fábrica, salvo los partidos de liga,
   moverse no gasta nada. Pero donde los costos están encendidos se cobran
   de verdad: con las reglas F1 cada empujón, cada giro y cada instrucción
   del ADN salen energía, y un bot que solo avanza puede morirse de hambre.

@@ -187,7 +187,7 @@ cd port/web2 && npm run dev
 ## Competir
 
 La sección **Competir** de la app enfrenta bots del Bestiary o propios con
-las reglas de la liga F1 del original (capa host: no toca el core). Tiene un
+las reglas de las ligas del original (F1, F2, F3, MB, SB y SS) y de una nueva, F4 (capa host: no toca el core). Tiene un
 partido rápido y torneos en seis formatos (partido único, que es el concurso
 F1, rey de la colina, todos contra todos, escalera, mundial y suizo), con
 una tabla con Elo que sigue de un torneo a otro, temporadas, un Salón de la

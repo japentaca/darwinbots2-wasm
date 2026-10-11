@@ -102,7 +102,7 @@ pintar el mundo según la distancia al bot seleccionado. Ver
 cuando se le acaba, muere. Ver [[simulacion/energia]] y [[.nrg]].
 
 **Escenario.** Un mundo listo para correr: parámetros, especies a sembrar y
-objetos (obstáculos, teleporters). La app trae siete de fábrica y podés
+objetos (obstáculos, teleporters). La app trae trece de fábrica y podés
 guardar los tuyos. Ver [[app/escenarios]].
 
 **Especie.** Un grupo de bots con el mismo nombre: todos los que se sembraron
