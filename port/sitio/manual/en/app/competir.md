@@ -166,22 +166,22 @@ The ones for the F1 contest from the manual ([[param:opt:91]], [[param:opt:97]],
 every match; you don't need to touch them.
 
 ## The leagues {#ligas}
-<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ) -->
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice), asistente.js (validarAdmision, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), Participantes.svelte (⚠), SelectorPool.svelte -->
 
 A **league** is a world with its combat rules, named after one of DarwinBots'
 historical leagues. The **League** button under **World** picks one of the seven,
 and changing it changes the world and the fight rules. Like the other rules, it stays
 fixed from the season's first match.
 
-| League | World | What it disqualifies |
-|---|---|---|
-| **F1** | The base: costs, physics and a toroidal 9237 × 6928 field. | Nothing. |
-| **F2** | The base, with solar energy per cycle at 30. | Eating through another species' tie, and viruses. |
-| **F3** | As F2. | Ties, viruses, info shots, venom, poison, slime, shell, `.delgene` and sexrepro. |
-| **MB** | Multi-bots, in the F2 world. | Nothing. |
-| **SB** | The base, with a 16000 × 12000 field. | Nothing. |
-| **SS** | The base, unchanged. | Nothing. |
-| **F4** | The base, with the old-age upkeep ([[param:cost:31]]) at 1 and the field at twice the side (18474 × 13856). | Nothing. |
+| League | Who enters | World | What it disqualifies |
+|---|---|---|---|
+| **F1** | Any bot that isn't a vegetal. | The base: costs, physics and a toroidal 9237 × 6928 field. | Nothing. |
+| **F2** | The bots of the “F2 bots” and “F3 bots” boards. | The base, with solar energy per cycle at 30. | Eating through another species' tie, and viruses. |
+| **F3** | Only the bots of the “F3 bots” board. | As F2. | Ties, viruses, info shots, venom, poison, slime, shell, `.delgene` and sexrepro. |
+| **MB** | The bots of the “Multi-Bots” board. | Multi-bots, in the F2 world. | Nothing. |
+| **SB** | The bots of the “Short bots” and “Single store” boards. | The base, with a 16000 × 12000 field. | Nothing. |
+| **SS** | The bots of the “Single store” board. | The base, unchanged. | Nothing. |
+| **F4** | Any bot that isn't a vegetal. | The base, with the old-age upkeep ([[param:cost:31]]) at 1 and the field at twice the side (18474 × 13856). | Nothing. |
 
 **Where they come from.** The values of F2, F3, MB and SB are the ones the original
 program set with its league buttons, and the disqualifications are the ones the
@@ -207,6 +207,39 @@ this version doesn't include: the MB league is played without them. See
 **⚖ DQ** tag next to the fighters, and its tooltip says what happened. The
 disqualified species loses the round.
 
+**Who enters.** Each league asks for a certain category of bots. In the wizard the
+league is picked in step 3, and that's where the list is checked; in **Entrants** each
+entrant is checked. There are three checks, from the strictest to the softest:
+
+| Check | Example | In the wizard | In Entrants |
+|---|---|---|---|
+| **DNA shape** (exact) | SB: up to 6 genes. SS: a single `store`, `inc` or `dec` in the whole DNA. | Error: the tournament can't be created. | ⚠ as an error. The bot stays on the list. |
+| **Category** (forum board or a label in the name) | F2 doesn't admit a bot from the “Multi-Bots” board, unless it's called “My bot (F2MB)”. | ⚠ as a warning. | ⚠ as a warning. |
+| **Banned actions** (approximate) | F3: a bot that writes `.tie`. | ⚠ as a warning. | ⚠ as a warning. |
+
+**How each bot is judged.** An own bot is judged by its DNA: the shape is exact, but it
+has no board, so its category isn't checked. Its actions come from a static analysis:
+it looks at which sysvars the DNA writes, doesn't follow the stack, and doesn't see the
+targets computed while it runs. That's why it's approximate. A forum bot doesn't carry
+its DNA in the index: it's judged by its board, by the actions the core computed for its
+profile, and by the number of genes in that profile. Without its DNA at hand, the SS
+shape (one store) isn't checked for it; its category is.
+
+**Name labels** count for the category only when they are in parentheses and spell an F
+followed by a digit, MB, SB or SS: “(F2)”, “(F2MB)”, “(SS)”. A forum bot from the
+“Multi-Bots” board named “My bot (F2MB)” gets into F2 with no warning; “My bot (_Passive_)”
+doesn't, because _Passive_ isn't a label.
+
+**Why ⚠ also marks errors.** The league can be changed until the season's first match, so
+a bot that fitted can stop fitting. In **Entrants** that shows as ⚠, and nothing is blocked.
+
+**The pool “the bots F2 admits”** in **Entrants** uses the first two checks (shape and
+category) and leaves out the bots that fail them. Banned actions don't exclude a bot: the
+referee is the disqualification. See [[app/competir#participantes]].
+
+None of this existed in the original: it's an addition of the app (see
+[[tecnico/diferencias]]).
+
 ## Entrants {#participantes}
 <!-- lib/competir/Participantes.svelte; competir.participantes.* -->
 
@@ -219,6 +252,15 @@ frozen DNA. There you can also:
 - remove one with **Remove**, if it hasn't played yet in this season;
 - change the **Entrants** mode and, in the modes with a draw, the pool and **How
   many**; **Draw** replaces the list with a new draw.
+
+**⚠** appears next to the name of the entrants that the rules' league wouldn't admit, or
+that do actions with a warning. The reason is in the ⚠ itself (hover over it) and, on
+small screens, under the name. Here the ⚠ only warns: nothing is blocked. A shape error
+stops the tournament from being created in the wizard; here it's only marked.
+
+In the draw modes, the pool also offers the bots the rules' league admits (for example,
+“the bots F2 admits”). It only appears here: in the wizard the league is picked after the
+pool. See [[app/competir#ligas]].
 
 Once the season has started, the draw is locked until the next season.
 

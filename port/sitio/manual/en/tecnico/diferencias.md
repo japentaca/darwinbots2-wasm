@@ -72,6 +72,12 @@ site have a layer of their own, and its fixes don't count as corrections.
   <!-- PLAN-LIGAS.md D1-D4 y D8; OptionsForm.frm:2670-2690 (botones F2 y SB), frmGset.frm:304-345 (DQ F2 y F3) -->
 - **The MB kill restrictions are missing.** The original has them, but the wasm API doesn't let you set them per species: the MB league is played without them.
   <!-- PLAN-LIGAS.md D5; core kill_mb (master.hpp); port/wasm db_sim_add_species -->
+- **Admission to the leagues is an addition of the app.** The rules for entering each
+  league were the community's, and the original program didn't check them. The app
+  checks the DNA shape, the category and the actions the league disqualifies, from the
+  bot's DNA or its forum profile; the actions are an approximate analysis. See
+  [[app/competir#ligas]].
+  <!-- PLAN-LIGAS.md D7; engine/admision.js (L3.1), asistente.js y league.js lgPool (L3.2-L3.3) -->
 - **The interface is different.** The new app is not the Windows program; the
   closest one is the [[app/clasica]]. See [[empezar/preguntas#diferencias]].
 

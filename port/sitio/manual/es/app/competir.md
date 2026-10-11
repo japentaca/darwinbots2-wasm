@@ -171,22 +171,22 @@ Los parámetros del mundo están explicados uno por uno en
 [[param:opt:100]]) los fija el torneo en cada partido; no hace falta tocarlos.
 
 ## Las ligas {#ligas}
-<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ) -->
+<!-- engine/ligas.js LIGAS (PLAN-LIGAS.md D1-D5 y D8); engine/escenarios/fabrica/partido-*.json (base f1 con cambios); engine/opciones.js F1_OPTS (opt:93) y F1_NOMBRADAS; i18n competir.reglas.liga.*; EditorPartido.svelte (radio Liga, select; propuesta de F4 en el asistente); Partidos.svelte (⚖ DQ); D7: engine/admision.js (perfilLiga, admitir, entradaDeIndice), asistente.js (validarAdmision, validarParticipantes, erroresDelPaso), league.js lgPool (liga:<id>), Participantes.svelte (⚠), SelectorPool.svelte -->
 
 Una **liga** es un mundo con sus reglas de combate, con el nombre de una de las
 ligas históricas de DarwinBots. El radio **Liga** de **Mundo** elige una de las
 siete, y cambiarla cambia el mundo y las reglas de la pelea. Como el resto de las
 reglas, queda fija desde el primer partido de la temporada.
 
-| Liga | Mundo | Qué descalifica |
-|---|---|---|
-| **F1** | La base: costos, física y campo 9237 × 6928 toroidal. | Nada. |
-| **F2** | La base, con la energía solar por ciclo en 30. | Alimentarse por tie de otra especie, y virus. |
-| **F3** | Como F2. | Ties, virus, info shots, venom, poison, slime, shell, `.delgene` y sexrepro. |
-| **MB** | Multi-bots, en el mundo de F2. | Nada. |
-| **SB** | La base, con un campo de 16000 × 12000. | Nada. |
-| **SS** | La base, sin cambios. | Nada. |
-| **F4** | La base, con la cuota de vejez ([[param:cost:31]]) en 1 y el campo al doble de lado (18474 × 13856). | Nada. |
+| Liga | Quién se inscribe | Mundo | Qué descalifica |
+|---|---|---|---|
+| **F1** | Cualquier bot que no sea vegetal. | La base: costos, física y campo 9237 × 6928 toroidal. | Nada. |
+| **F2** | Los del board «F2 bots» y «F3 bots». | La base, con la energía solar por ciclo en 30. | Alimentarse por tie de otra especie, y virus. |
+| **F3** | Solo los del board «F3 bots». | Como F2. | Ties, virus, info shots, venom, poison, slime, shell, `.delgene` y sexrepro. |
+| **MB** | Los del board «Multi-Bots». | Multi-bots, en el mundo de F2. | Nada. |
+| **SB** | Los de los boards «Short bots» y «Single store». | La base, con un campo de 16000 × 12000. | Nada. |
+| **SS** | Los del board «Single store». | La base, sin cambios. | Nada. |
+| **F4** | Cualquier bot que no sea vegetal. | La base, con la cuota de vejez ([[param:cost:31]]) en 1 y el campo al doble de lado (18474 × 13856). | Nada. |
 
 **De dónde salen.** Los valores de F2, F3, MB y SB son los que el programa
 original fijaba con sus botones de liga, y las descalificaciones son las que la
@@ -211,6 +211,38 @@ esta versión no trae: la liga MB se juega sin ellas. Ver [[tecnico/diferencias]
 el rótulo **⚖ DQ** junto a los luchadores, y su aviso dice lo que pasó. La especie
 descalificada pierde la ronda.
 
+**Quién se inscribe.** Cada liga pide cierta categoría de bots. En el asistente la liga se elige en el paso 3, y ahí se mira la lista; en **Participantes** se mira cada inscrito. Hay tres controles, del más duro al más blando:
+
+| Control | Ejemplo | En el asistente | En Participantes |
+|---|---|---|---|
+| **Forma del ADN** (exacta) | SB: hasta 6 genes. SS: un solo `store`, `inc` o `dec` en todo el ADN. | Error: no deja crear el torneo. | ⚠ como error. El bot sigue en la lista. |
+| **Categoría** (board del foro o etiqueta del nombre) | F2 no admite un bot del board «Multi-Bots», salvo que se llame «Mi bot (F2MB)». | ⚠ como aviso. | ⚠ como aviso. |
+| **Acciones prohibidas** (aproximado) | F3: un bot que escribe `.tie`. | ⚠ como aviso. | ⚠ como aviso. |
+
+**Cómo se juzga a cada bot.** Un bot **propio** se juzga por su ADN: la forma es
+exacta, pero no tiene board, así que no se le mira la categoría. Sus acciones salen
+de un análisis estático: mira qué sysvars escribe el ADN, no sigue la pila y no ve
+los destinos que se calculan al correr. Por eso es aproximado. Un bot **del foro**
+no trae su ADN en el índice: se juzga por su board, por las acciones que calculó el
+core para su perfil y por la cantidad de genes de ese perfil. Sin ADN a mano, la
+forma de SS (un solo store) no se comprueba para él; la categoría sí.
+
+**Las etiquetas del nombre** cuentan para la categoría solo si van entre paréntesis y
+forman una F seguida de un dígito, MB, SB o SS: «(F2)», «(F2MB)», «(SS)». Un bot del
+foro, de board «Multi-Bots», que se llama «Mi bot (F2MB)» entra en F2 sin aviso; «Mi
+bot (_Passive_)» no, porque _Passive_ no es una etiqueta.
+
+**Por qué el ⚠ también marca errores.** La liga se puede cambiar hasta la primera
+pelea de la temporada, así que un bot que encajaba puede dejar de encajar. En
+**Participantes** eso se ve con ⚠, y no se bloquea nada.
+
+**El pool «los bots que admite F2»** de **Participantes** usa las dos primeras
+comprobaciones (forma y categoría) y deja afuera a los bots que no pasan. Las acciones
+no excluyen: el árbitro es la descalificación. Ver [[app/competir#participantes]].
+
+Nada de esto existía en el original: es un añadido de la app (ver
+[[tecnico/diferencias]]).
+
 ## Participantes {#participantes}
 <!-- lib/competir/Participantes.svelte; competir.participantes.* -->
 
@@ -223,6 +255,15 @@ la huella de su ADN congelado. Ahí también podés:
 - quitar a uno con **Quitar**, si todavía no jugó en esta temporada;
 - cambiar el modo de **Participantes** y, en los modos con sorteo, el pool y
   **Cuántos**; **Sortear** reemplaza la lista por un sorteo nuevo.
+
+**⚠** aparece junto al nombre de los inscritos que la liga de las reglas no admitiría o
+que hacen acciones con aviso. El motivo está en el propio ⚠ (al pasar el mouse) y, en
+pantallas chicas, debajo del nombre. Acá el ⚠ solo avisa: no bloquea nada. Un error de
+forma sí impide crear el torneo en el asistente; acá solo se marca.
+
+En los modos con sorteo, el pool también ofrece **los bots que admite** la liga de las
+reglas (por ejemplo, **los bots que admite F2**). Solo aparece acá: en el asistente la
+liga se elige después del pool. Ver [[app/competir#ligas]].
 
 Con la temporada empezada, el sorteo queda bloqueado hasta la temporada
 siguiente.

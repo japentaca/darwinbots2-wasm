@@ -75,6 +75,12 @@ propia capa, y sus arreglos no cuentan como correcciones.
   <!-- PLAN-LIGAS.md D1-D4 y D8; OptionsForm.frm:2670-2690 (botones F2 y SB), frmGset.frm:304-345 (DQ F2 y F3) -->
 - **Faltan las MB kill restrictions.** El original las tiene, pero la API wasm no deja marcarlas por especie: la liga MB se juega sin ellas.
   <!-- PLAN-LIGAS.md D5; core kill_mb (master.hpp); port/wasm db_sim_add_species -->
+- **La admisión a las ligas es un añadido de la app.** Las reglas de inscripción de cada
+  liga eran de la comunidad, y el programa original no las comprobaba. La app revisa la
+  forma del ADN, la categoría y las acciones que la liga descalifica, con el ADN del bot
+  o con su perfil del foro; las acciones son un análisis aproximado. Ver
+  [[app/competir#ligas]].
+  <!-- PLAN-LIGAS.md D7; engine/admision.js (L3.1), asistente.js y league.js lgPool (L3.2-L3.3) -->
 - **La interfaz es otra.** La app nueva no es el programa de Windows; la más
   parecida es la [[app/clasica]]. Ver [[empezar/preguntas#diferencias]].
 
