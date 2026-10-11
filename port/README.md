@@ -69,7 +69,7 @@ motor; el balance de su ejecución está en [`web2/PLAN-EDITOR-INFORME.md`](web2
 | Herramienta | Qué hace |
 |---|---|
 | [`tools/bestiary/`](tools/bestiary/README.md) | Baja, valida y publica los bots del Bestiary del foro y los extra del foro y del wiki (684 en total), con sus perfiles genéticos. |
-| [`tools/fight/`](tools/fight/README.md) | `dbfight` (un partido F1 con el core nativo) y `torneo.mjs` (rey de la colina, suizo, duelo) sin navegador. |
+| [`tools/fight/`](tools/fight/README.md) | `dbfight` (un partido F1 con el core nativo) y `torneo.mjs` (rey de la colina, suizo, duelo, ligas con `--liga`) sin navegador. |
 | `tools/imrelay/` | Relay WebSocket de Internet Mode (`node tools/imrelay/relay.mjs`, Node ≥ 22) y su smoke. |
 | `tools/pp/`, `tools/rv/`, `tools/e8/`, `tools/e10/`, `tools/e11/`, `tools/e12/`, `tools/swiss/` | Smokes de cada etapa (`node tools/<carpeta>/smoke_*.mjs`; necesitan `build-wasm/dbcore.js`). Qué prueba cada uno, en [`HISTORIA.md`](HISTORIA.md). |
 

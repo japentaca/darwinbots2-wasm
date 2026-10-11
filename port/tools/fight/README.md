@@ -41,6 +41,28 @@ node tools/fight/torneo.mjs koth --bots a.txt,b.txt,c.txt --retire 3 \
   --qty 10 --cap 8000 --cap-mode nrg --popcap 300 --min-vegs 20 --max-energy 60
 ```
 
+### Ligas: las reglas de la app
+
+`--liga <id>` aplica una liga de la app sobre el F1: los cambios de su
+escenario de fábrica (`web2/engine/escenarios/fabrica/partido-<id>.json`),
+sin copiar los números. Implica `--preset f1`.
+
+| Liga | Cambios sobre F1 |
+|---|---|
+| `f1` | ninguno |
+| `f2` | energía solar por ciclo 30 (`maxEnergy`) y descalificación nivel 1 (`opt:93 = 1`) |
+| `f3` | energía solar por ciclo 30 y descalificación nivel 2 (`opt:93 = 2`) |
+| `mb` | energía solar por ciclo 30, sin descalificación |
+| `sb` | campo de 16000×12000 |
+| `ss` | ninguno |
+| `f4` | AGECOST 1 (`cost:31`) y campo de 18474×13856; sin `--cap-mode` ni `--popcap` usa `nrg` y 100 |
+
+Lo que se pase con `--max-energy`, `--opt` o `--cost` pisa la liga:
+
+```sh
+node tools/fight/torneo.mjs swiss --liga f3 --seed 1
+```
+
 ### Perfilar muchos bots: sistema suizo
 
 El rey de la colina encuentra un campeón, pero no ordena al resto: si un bot
@@ -107,6 +129,11 @@ node tools/fight/torneo.mjs swiss --cap 5000 --cap-mode nrg --cost 31=1 --popcap
 - `--cost 31=1` (AGECOST): 1 de energía por bot y por ciclo; sin cazar ni
   comer, un bot de 3000 muere en ~3000 ciclos.
 
+Con la liga F4 la misma receta es `swiss --liga f4 --cap 5000 --seed 1` (AGECOST 1,
+`nrg` y 100 por especie por defecto), pero con el campo al doble de lado
+(18474×13856). La calibración de abajo se hizo con el campo de F1: F4 no está
+recalibrada.
+
 Calibración (8 bots, 4 que ganaban por tope y 4 agresivos, 3 rondas):
 
 | Variante | Rondas por tope | Pacifist | Red queen |
@@ -134,7 +161,7 @@ Todas las opciones están en la cabecera de `torneo.mjs`: participantes
 (`--bots`, `--limit`), formato (`--retire`, `--endless`, `--no-repeat`),
 partido (`--qty`, `--nrg`, `--rounds`, `--wins`, `--cap`, `--cap-mode`,
 `--popcap`), mundo (`--min-vegs`, `--repop-amount`, `--repop-cooldown`,
-`--max-energy`, `--max-pop`, `--opt id=v`, `--cost i=v`, `--preset f1|panel`),
+`--max-energy`, `--max-pop`, `--opt id=v`, `--cost i=v`, `--preset f1|panel`, `--liga`),
 `--seed` (el torneo entero reproducible: cruces y semillas de cada partido),
 `--match-seed` (en `duel`, la semilla del partido tal cual: reproduce un
 partido de un JSON con el mismo orden de luchadores),

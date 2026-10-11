@@ -38,6 +38,10 @@
 //   --max-pop n          economía vegetal (los del preset F1: 10, 10, 25, 40, 25)
 //   --opt id=v --cost i=v  cualquier opción o coste (ids de dbcore_api.cpp)
 //   --preset f1|panel    reglas: preset F1 (f1) o el panel por defecto (panel)
+//   --liga f1|f2|f3|mb|sb|ss|f4  liga: los cambios de su escenario de fábrica
+//                        (web2/engine/escenarios/fabrica/partido-<id>.json)
+//                        sobre el F1; implica --preset f1. Con f4 y sin
+//                        --cap-mode ni --popcap: nrg y 100 (como la web)
 //   --seed n             semilla del torneo: fija las de cada partido (al azar)
 //   --match-seed n       duel: la semilla del partido tal cual (la del JSON de
 //                        un torneo), en vez de derivarla de --seed
@@ -94,6 +98,18 @@ function pageRules() {
   };
 }
 
+// ---- Ligas ----------------------------------------------------------------------
+// Los escenarios de fábrica de la app (la misma fuente que la web): cada liga
+// es {base: 'f1', cambios} sobre el F1 de arriba. No se copian los números.
+const LIGAS = ['f1', 'f2', 'f3', 'mb', 'sb', 'ss', 'f4'];
+function ligaCambios(id) {
+  if (!LIGAS.includes(id)) throw new Error(`--liga ${id}: no existe (${LIGAS.join('|')})`);
+  const file = path.join(PORT_DIR, 'web2', 'engine', 'escenarios', 'fabrica', `partido-${id}.json`);
+  const { base, cambios } = JSON.parse(fs.readFileSync(file, 'utf8')).opciones;
+  if (base !== 'f1') throw new Error(`${file}: la base ${base} no es F1`);
+  return cambios;
+}
+
 const cssToVbColor = (css) =>
   parseInt(css.slice(1, 3), 16) + parseInt(css.slice(3, 5), 16) * 256 + parseInt(css.slice(5, 7), 16) * 65536;
 
@@ -110,12 +126,26 @@ function buildRules(page, a) {
   // Fuera del panel de opciones (aside): gráficas y registro de muertos.
   Object.assign(opts, { 110: 200, 111: 0, 112: 0 });
   let field = [32000, 32000], shape = 'wall';
+  if (a.liga && (a.preset || 'f1') !== 'f1') throw new Error('--liga necesita --preset f1');
   if ((a.preset || 'f1') === 'f1') {
     for (const i in costs) costs[i] = page.f1Costs[i] ?? 0;
     for (const id in page.f1Opts) opts[id] = page.f1Opts[id];
     for (const k in page.f1Keys) base[k] = page.f1Keys[k];
     field = [9237, 6928];
     shape = 'tor';
+  }
+  // --liga: los cambios de la liga sobre el F1 (base:fieldW y base:fieldH van
+  // al campo). Los --max-energy y demás, y los --opt y --cost, los pisan.
+  if (a.liga) {
+    for (const [clave, v] of Object.entries(ligaCambios(a.liga))) {
+      const i = clave.indexOf(':'), tipo = clave.slice(0, i), nombre = clave.slice(i + 1);
+      if (tipo === 'base' && nombre === 'fieldW') field[0] = v;
+      else if (tipo === 'base' && nombre === 'fieldH') field[1] = v;
+      else if (tipo === 'base') base[nombre] = v;
+      else if (tipo === 'cost') costs[+nombre] = v;
+      else if (tipo === 'opt') opts[+nombre] = v;
+      else throw new Error(`liga ${a.liga}: cambio desconocido ${clave}`);
+    }
   }
   opts[2] = shape === 'tor' || shape === 'v' ? 1 : 0;
   opts[3] = shape === 'tor' || shape === 'h' ? 1 : 0;
@@ -418,7 +448,11 @@ async function main() {
     ...D, format: 'koth', k: 2,
     retire: num(a.retire, D.retire), kothEnd: a.endless ? 'never' : 'retire', noRepeat: !!a['no-repeat'],
     qty: num(a.qty, D.qty), nrg: num(a.nrg, D.nrg), rounds: num(a.rounds, D.rounds), wins: num(a.wins, D.wins),
-    cap: num(a.cap, D.cap), capMode: a['cap-mode'] || D.capMode, popCap: num(a.popcap, D.popCap),
+    // Con la liga F4, sin --cap-mode ni --popcap: energía al tope y 100 por
+    // especie, lo que propone el asistente de la web.
+    cap: num(a.cap, D.cap),
+    capMode: a['cap-mode'] || (a.liga === 'f4' ? 'nrg' : D.capMode),
+    popCap: num(a.popcap, a.liga === 'f4' ? 100 : D.popCap),
   });
 
   // El alga de arranque va como archivo, igual que los luchadores.
