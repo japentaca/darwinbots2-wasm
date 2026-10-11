@@ -11,7 +11,7 @@
 // {t:'speed', n: 0} antes (máxima velocidad; el worker se auto-agenda sin
 // esperar 'ack'). Los frames no se devuelven: el worker publica uno y deja
 // de armarlos. El resultado se lee como en «Jugar y mirar»
-// (interpretarMensaje de engine/partido.js: f1-started, f1-note y f1-over,
+// (interpretarMensaje de engine/partido.js: f1-started, f1-note, f1-dq y f1-over,
 // con el marcador final y los ciclos que trae el f1-over) y al terminar se
 // pausa la sim. Una barrera ({t:'ciclo', req}) separa los mensajes de lo
 // que el worker haya dicho antes (otro partido, otra réplica).
@@ -121,6 +121,7 @@ export function correrPartido(o) {
         f1: vivo.f1,
         cycles: vivo.cycles || 0,
         capRounds: vivo.capRounds,
+        ...(vivo.dq?.length ? { dq: [...vivo.dq] } : {}),
         wins,
         capWins,
         fighters: fighters.map((f) => f.name),

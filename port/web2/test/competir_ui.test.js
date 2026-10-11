@@ -840,6 +840,26 @@ test('vistas: resumen de reglas (escenario y foto de la clásica), partidos y te
   assert.ok(ts[0].campeon);
 });
 
+test('filasPartidos lleva las descalificaciones y Partidos compila sin advertencias', () => {
+  const base = { season: 1, fighters: ['A', 'B'], winner: 'B' };
+  const filas = V.filasPartidos(
+    /** @type {any} */ ([
+      { ...base, no: 1, dq: ['Robot "A.txt" has been disqualified for making a tie.'] },
+      { ...base, no: 2 },
+    ]),
+  );
+  assert.deepEqual(filas.find((f) => f.no === 1)?.dq, [
+    'Robot "A.txt" has been disqualified for making a tie.',
+  ]);
+  assert.deepEqual(filas.find((f) => f.no === 2)?.dq, []);
+  const p = path.join(RAIZ, 'src', 'lib', 'competir', 'Partidos.svelte');
+  const r = compile(fs.readFileSync(p, 'utf8'), { filename: p });
+  assert.deepEqual(
+    r.warnings.map((w) => `${w.code}: ${w.message}`),
+    [],
+  );
+});
+
 test('el selector de liga y los componentes de reglas compilan sin advertencias', () => {
   for (const nombre of ['EditorPartido', 'Asistente', 'Reglas']) {
     const p = path.join(RAIZ, 'src', 'lib', 'competir', `${nombre}.svelte`);

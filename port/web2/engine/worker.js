@@ -240,6 +240,8 @@
 //   {t:'stopped'}                          E5: el core pidió parar la sim
 //                                          (Form1.Active = False del original)
 //   {t:'f1-note', kind}                    contest: 'single' | 'many' | 'cap'
+//   {t:'f1-dq', lines[]}                   PLAN-LIGAS L2.4: líneas de descalificación del
+//                                          core (también van al log con «DQ: »)
 //   {t:'f1-started', n}                    respuesta a f1start (nº especies)
 //   {t:'f1-over', winner, f1, cycles}      E5: contest terminado (E10: marcador y ciclos) ·
 //   {t:'bot-text', n, text} · {t:'lint', name, issues[]} · {t:'opt', id, v} ·

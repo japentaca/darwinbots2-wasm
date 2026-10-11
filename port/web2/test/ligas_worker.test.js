@@ -11,11 +11,16 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { almacenMemoria } from '../engine/almacen.js';
 import { escenarioFabrica } from '../engine/escenarios/fabrica.js';
-import { planPartido } from '../engine/partido.js';
+import { lgScratchNew } from '../engine/league.js';
+import { interpretarMensaje, nuevoVivo, planPartido } from '../engine/partido.js';
 import { mensajesDelPlan, reglasDeEscenario } from '../engine/rondas.js';
+import { crearTorneos } from '../engine/torneos.js';
+import { correrPartido } from '../src/lib/trabajos/partido.js';
 import { ClienteSim, workerEngine } from './util/arnes-worker.js';
 import { hayWasm, SIN_WASM } from './util/dbcore-node.js';
+import { depsDePrueba } from './util/torneos-deps.js';
 
 const VALORES = { nrg: 3000, rounds: 1, wins: 1, cap: 300, capMode: 'pop', popCap: 15 };
 // Hace slime desde el primer ciclo (acción prohibida en F3) y se reproduce.
@@ -80,7 +85,9 @@ async function jugar(idEscenario) {
     const dq = c.msgs
       .filter((m) => m.t === 'log' && String(m.msg).startsWith('DQ: '))
       .map((m) => String(m.msg));
-    return { dq, over };
+    // L2.4: las mismas líneas viajan al anfitrión como f1-dq (sin el prefijo).
+    const dqMsgs = c.msgs.filter((m) => m.t === 'f1-dq').flatMap((m) => m.lines);
+    return { dq, dqMsgs, over };
   } finally {
     await c.stop();
   }
@@ -90,8 +97,13 @@ test('la DQ de F3 llega al log del worker y el pasivo gana la ronda', {
   skip: !hayWasm() && SIN_WASM,
   timeout: 600000,
 }, async () => {
-  const { dq, over } = await jugar('partido-f3');
+  const { dq, dqMsgs, over } = await jugar('partido-f3');
   assert.equal(over.t, 'f1-over');
+  assert.deepEqual(
+    dqMsgs.map((l) => `DQ: ${l}`),
+    dq,
+    'f1-dq lleva las mismas líneas que el log',
+  );
   assert.ok(
     dq.some((l) => /Slimer/.test(l) && /has been disqualified for making slime\./.test(l)),
     `línea DQ de Slimer: ${JSON.stringify(dq)}`,
@@ -103,6 +115,86 @@ test('con las reglas F1 el mismo partido no descalifica a nadie', {
   skip: !hayWasm() && SIN_WASM,
   timeout: 600000,
 }, async () => {
-  const { dq } = await jugar('partido-f1');
+  const { dq, dqMsgs } = await jugar('partido-f1');
   assert.deepEqual(dq, []);
+  assert.deepEqual(dqMsgs, []);
+});
+
+test('correrPartido (ronda en segundo plano) devuelve la DQ en el resultado', {
+  skip: !hayWasm() && SIN_WASM,
+  timeout: 600000,
+}, async () => {
+  const w = workerEngine();
+  try {
+    const canal = {
+      enviar: (/** @type {any} */ m) => w.postMessage(m),
+      on: (/** @type {(m: any) => void} */ fn) => {
+        w.on('message', fn);
+        return () => {
+          w.off('message', fn);
+        };
+      },
+    };
+    const r = await correrPartido({ canal, plan: planDe('partido-f3'), cadaMs: 20 });
+    assert.equal(r.winner, 'Pasivo');
+    assert.ok(
+      r.dq?.some((l) => /Slimer/.test(l) && /disqualified for making slime/.test(l)),
+      JSON.stringify(r.dq),
+    );
+  } finally {
+    await w.terminate();
+  }
+});
+
+// ---- Sin wasm: el reductor y el registro -------------------------------------------
+
+test('interpretarMensaje: f1-dq se acumula en el partido y no lo termina', () => {
+  const m = nuevoVivo({ league: 'x', season: 1, fighters: [], label: null });
+  // Antes del censo (mensajes de la sim anterior) se ignora.
+  assert.equal(interpretarMensaje(m, { t: 'f1-dq', lines: ['viejo'] }), null);
+  assert.equal(m.dq, undefined);
+  interpretarMensaje(m, { t: 'f1-started', n: 2 });
+  assert.equal(interpretarMensaje(m, { t: 'f1-dq', lines: ['a', 'b'] }), null);
+  assert.equal(interpretarMensaje(m, { t: 'f1-dq', lines: ['c'] }), null);
+  assert.deepEqual(m.dq, ['a', 'b', 'c']);
+});
+
+test('el registro del partido lleva dq solo si hubo descalificaciones', async () => {
+  const T = crearTorneos(depsDePrueba({ almacen: almacenMemoria() }));
+  await T.lgLoadAll();
+  const sc = lgScratchNew(null, {}, ['A', 'B']);
+  T.lg.scratch = sc;
+  const F = sc.L.seasons[0].entrants;
+  for (const n of ['A', 'B'])
+    F.push({ name: n, dna: `${n} .up store`, hash: n, src: 'form', file: '', color: '#fff' });
+  await T.lgSelect(sc.L);
+  /** @param {string[]} [lineas] */
+  const jugar1 = async (lineas) => {
+    T.lg.live = {
+      league: sc.L.id,
+      season: 1,
+      fighters: F,
+      label: 'x',
+      ready: false,
+      capRounds: 0,
+      cycles: 0,
+      f1: null,
+      lastWins: null,
+      replay: null,
+      seed: 1,
+    };
+    await T.leagueOnMessage({ t: 'f1-started', n: 2 });
+    if (lineas) await T.leagueOnMessage({ t: 'f1-dq', lines: lineas });
+    await T.leagueOnMessage({
+      t: 'f1-over',
+      winner: 'B',
+      f1: { sp: F.map((e) => ({ name: e.name, wins: e.name === 'B' ? 1 : 0, capWins: 0 })) },
+      cycles: 10,
+    });
+  };
+  await jugar1(['Robot "A.txt" has been disqualified for making slime.']);
+  await jugar1();
+  const [con, sin] = sc.matches;
+  assert.deepEqual(con.dq, ['Robot "A.txt" has been disqualified for making slime.']);
+  assert.ok(!('dq' in sin));
 });

@@ -45,7 +45,7 @@
 //        lanzamiento(plan) → {escenario, semilla, f1}; corrida.iniciar(
 //          escenario, semilla); for (m of f1) sesion.c.enviar(m);
 //          sesion.correr(true)
-//        y reenvía a T.leagueOnMessage(msg) los f1-started, f1-note y
+//        y reenvía a T.leagueOnMessage(msg) los f1-started, f1-note, f1-dq y
 //        f1-over del worker, y a T.lgOnStats(stats) el stats de cada frame.
 //        (Sin corrida: mandar mensajesDelPlan(plan) tal cual al worker.)
 //      El resultado llega como alEvento {t:'resultado', rec}.
@@ -218,7 +218,8 @@ import {
  *   rules?: Record<string, any>, participantes?: ParticipanteRonda[],
  *   partidos: PartidoParams[]}} ParamsRonda
  * @typedef {{winner: string, note: string, f1: any, cycles: number, capRounds: number,
- *   wins: number[], capWins: number[], fighters: string[], seed: number}} ResultadoPartido
+ *   wins: number[], capWins: number[], fighters: string[], seed: number,
+ *   dq?: string[]}} ResultadoPartido  dq: solo si hubo descalificaciones (f1-dq)
  */
 
 /** Tipo de trabajo de la cola (engine/cola.js) de una ronda de torneo. */

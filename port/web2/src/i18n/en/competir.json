@@ -459,6 +459,8 @@
   "competir.partidos.semilla": "Seed",
   "competir.partidos.acciones": "Actions",
   "competir.partidos.nulo": "void",
+  "competir.partidos.dq": "⚖ DQ",
+  "competir.partidos.dq.ayuda": "Disqualifications in this match (the disqualified species loses the round):\n{lineas}",
   "competir.partidos.repetir": "Replay",
   "competir.partidos.repetirNo": "Replay match #{no} with the same seed",
   "competir.partidos.analizar": "Replay and analyze",

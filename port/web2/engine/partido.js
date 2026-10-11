@@ -1,7 +1,7 @@
 // @ts-check
 // Un partido de torneo contra el worker, sin DOM: qué se le manda para
 // lanzarlo (reinicio con semilla, modo F1, topes, siembra, censo y arranque)
-// y cómo se leen sus respuestas (f1-started, f1-note, f1-over y el f1 de
+// y cómo se leen sus respuestas (f1-started, f1-note, f1-dq, f1-over y el f1 de
 // cada frame). El estado del partido en curso (lg.live) lo guarda
 // engine/torneos.js; aquí están las funciones que lo leen y lo actualizan.
 //
@@ -372,7 +372,7 @@ export function contestRoundWinner(prev, f1) {
 /**
  * @typedef {{league: string, season: number, fighters: any[], label: any, ready: boolean,
  *   capRounds: number, cycles: number, f1: any, lastWins: number[] | null, replay: any,
- *   seed?: number}} Vivo
+ *   seed?: number, dq?: string[]}} Vivo  dq: líneas de descalificación (f1-dq), si hubo
  */
 
 /** @param {{league: string, season: number, fighters: any[], label: any, replay?: any}} o @returns {Vivo} */
@@ -393,7 +393,8 @@ export function nuevoVivo(o) {
 
 // Un mensaje del worker para el partido en curso (leagueOnMessage). Hasta
 // la respuesta al censo del partido (f1-started) llegan mensajes y frames de
-// la sim anterior: se ignoran. Actualiza m y devuelve qué hacer:
+// la sim anterior: se ignoran. Un f1-dq suma sus líneas a m.dq (y devuelve
+// null). Actualiza m y devuelve qué hacer:
 //   null · {t: 'registrar', winner, note?} · {t: 'tope'} (una ronda llegó al
 //   tope de ciclos; el criterio es fmt.capMode).
 /** @param {Vivo} m @param {any} msg */
@@ -404,6 +405,16 @@ export function interpretarMensaje(m, msg) {
     return out;
   }
   if (!m.ready) return null;
+  if (msg.t === 'f1-dq') {
+    // PLAN-LIGAS L2.4: las descalificaciones del partido (de todas sus rondas)
+    // se acumulan para el registro. No termina nada.
+    if (Array.isArray(msg.lines))
+      m.dq = [
+        ...(m.dq || []),
+        ...msg.lines.filter((/** @type {any} */ l) => typeof l === 'string'),
+      ];
+    return null;
+  }
   if (msg.t === 'f1-note' && msg.kind === 'single')
     return { t: 'registrar', winner: '', note: NOTA_UNA_ESPECIE };
   if (msg.t === 'f1-note' && msg.kind === 'cap') {

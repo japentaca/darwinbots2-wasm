@@ -1054,8 +1054,14 @@ export function crearSim(opciones) {
     let stopped = false;
     const ev = api.events(sim);
     if (ev) {
-      if (ev & (1 << 13))
-        for (const line of takeStr(api.eventsDq(sim)).split('\n')) if (line) log(`DQ: ${line}`);
+      if (ev & (1 << 13)) {
+        const lines = takeStr(api.eventsDq(sim))
+          .split('\n')
+          .filter((line) => line);
+        for (const line of lines) log(`DQ: ${line}`);
+        // PLAN-LIGAS L2.4: el torneo guarda las descalificaciones en el registro.
+        if (lines.length) postMessage({ t: 'f1-dq', lines });
+      }
       if (ev & (1 << 10))
         log(`F1: winner ${takeStr(api.eventsWinner(sim))} (${api.f1Contests(sim) + 1} rounds)`);
       if (ev & (1 << 11)) {

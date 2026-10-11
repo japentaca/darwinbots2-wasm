@@ -459,6 +459,8 @@
   "competir.partidos.semilla": "Semilla",
   "competir.partidos.acciones": "Acciones",
   "competir.partidos.nulo": "nulo",
+  "competir.partidos.dq": "⚖ DQ",
+  "competir.partidos.dq.ayuda": "Descalificaciones en este partido (la especie descalificada pierde la ronda):\n{lineas}",
   "competir.partidos.repetir": "Repetir",
   "competir.partidos.repetirNo": "Repetir el partido n.º {no} con la misma semilla",
   "competir.partidos.analizar": "Repetir y analizar",

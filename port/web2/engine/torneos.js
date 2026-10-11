@@ -960,11 +960,12 @@ export function crearTorneos(deps) {
       cycles: m.cycles || 0,
       capRounds: m.capRounds,
       note: note || '',
+      ...(m.dq?.length ? { dq: [...m.dq] } : {}),
       ...(extra || {}),
     };
   }
 
-  // Un mensaje del worker (el anfitrión reenvía f1-started, f1-note y f1-over).
+  // Un mensaje del worker (el anfitrión reenvía f1-started, f1-note, f1-dq y f1-over).
   /** @param {any} msg */
   function leagueOnMessage(msg) {
     const m = lg.live;
@@ -1314,6 +1315,7 @@ export function crearTorneos(deps) {
               f1: res.f1,
               cycles: res.cycles || 0,
               capRounds: res.capRounds || 0,
+              dq: res.dq,
             };
             const rec = armarRegistro(
               m,

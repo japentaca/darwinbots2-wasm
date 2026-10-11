@@ -217,7 +217,7 @@ function escuchar() {
   if (escuchando) return;
   escuchando = true;
   const s = sesion();
-  for (const tipo of ['f1-started', 'f1-note', 'f1-over'])
+  for (const tipo of ['f1-started', 'f1-note', 'f1-dq', 'f1-over'])
     s.c.on(tipo, (/** @type {any} */ m) => {
       if (T?.lg.live) T.leagueOnMessage(m);
     });

@@ -155,6 +155,7 @@ export function filasPartidos(ms) {
       rounds: m.rounds || (m.wins ?? []).reduce((a, b) => a + b, 0),
       seed: m.seed,
       note: m.note || '',
+      dq: m.dq ?? [],
       ronda: /** @type {any} */ (m).ronda ?? null,
     }));
 }

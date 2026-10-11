@@ -60,6 +60,13 @@ const filas = $derived(filasPartidos(ms));
                     <span class="mono gris"> {m.wins[i]}</span>
                   {/if}
                 {/each}
+                {#if m.dq.length}
+                  <span
+                    class="dq"
+                    title={t('competir.partidos.dq.ayuda', { lineas: m.dq.join('\n') })}
+                    >{t('competir.partidos.dq')}</span
+                  >
+                {/if}
               </td>
               <td class="l fuerte">
                 {#if m.winner}
@@ -153,6 +160,14 @@ const filas = $derived(filasPartidos(ms));
 .gris,
 .vs {
   color: var(--gris-claro);
+}
+.dq {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--error-texto);
+  cursor: help;
+  white-space: nowrap;
 }
 .ok {
   color: var(--acento);

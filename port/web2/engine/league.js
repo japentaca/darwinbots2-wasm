@@ -98,7 +98,9 @@
  * @typedef {{id: string, name: string, notes?: string, created: string, draw?: any, seasons: Season[]}} League
  * @typedef {{id?: number, league?: string, season: number, no: number, fighters: string[], winner: string,
  *   seed?: number, wins?: number[], capWins?: number[], rounds?: number, cycles?: number,
- *   capRounds?: number, note?: string, date?: string, format?: string}} Match
+ *   capRounds?: number, note?: string, date?: string, format?: string, dq?: string[]}} Match
+ *   dq: las líneas de descalificación del partido (`Robot "x.txt" has been disqualified
+ *   for …`, del core, PLAN-LIGAS L2.4); solo está si hubo alguna.
  * @typedef {{clave: string, params: Record<string, any>}} Rotulo
  * @typedef {() => number} Rnd
  */
