@@ -2,6 +2,7 @@
 import { mount } from 'svelte';
 import App from './App.svelte';
 import './app.css';
+import { iniciarAnalitica } from './lib/analitica.js';
 import { borrarMarcaRecarga, ESPERA_BORRAR_MARCA, recargarTrasFallo } from './lib/recarga.js';
 import { actual } from './lib/sim/corrida.svelte.js';
 
@@ -21,6 +22,8 @@ destino.replaceChildren();
 
 const app = mount(App, { target: destino });
 setTimeout(() => borrarMarcaRecarga(), ESPERA_BORRAR_MARCA);
+// Cada sección (#hash) cuenta como una vista en la analítica (PLAN-SITIO.md S13).
+iniciarAnalitica();
 
 // Lo que arranca en segundo plano se carga aparte (import dinámico, N4.4):
 // no va en el chunk principal ni demora la primera pantalla.

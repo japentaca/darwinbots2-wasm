@@ -990,6 +990,7 @@ function plantilla(p, cuerpo, c) {
 <script>try{const t=localStorage.getItem('darwinbots2.tema');if(t==='claro'||t==='oscuro')document.documentElement.dataset.tema=t;}catch{}</script>
 <link rel="stylesheet" href="${pre}manual.css?v=${c.version}">
 <script src="${pre}manual.js?v=${c.version}" defer></script>
+${ANALITICA}
 </head>
 <body data-raiz="${pre}">
 <header class="barra">
@@ -1062,6 +1063,11 @@ ${tokensApp()}
 
 ${CSS_MANUAL}`;
 }
+
+// Analítica (PLAN-SITIO.md S13): Umami propio en stats.jape.com.ar, sin
+// cookies. data-domains hace que no cuente las pruebas locales.
+const ANALITICA =
+  '<script defer src="https://stats.jape.com.ar/s.js" data-website-id="0f376c42-02fd-46d7-af54-ff73027ce08a" data-domains="darwinbots-wasm.org"></script>';
 
 const CSS_MANUAL = fs
   .readFileSync(path.join(AQUI, 'plantilla', 'manual.css'), 'utf8')

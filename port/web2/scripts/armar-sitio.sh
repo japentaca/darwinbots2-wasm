@@ -69,4 +69,9 @@ sed -i -E "s#importScripts\('\.\./build-wasm/dbcore\.js', 'imnet\.js'\)#importSc
 test "$(grep -c "\.js?v=$V" "$DEST/classic/index.html")" -ge 5
 test "$(grep -c "?v=$V" "$DEST/classic/worker.js")" -ge 2
 
+# Analítica de la clásica (PLAN-SITIO.md S13): port/web/ está congelada, así
+# que el script de Umami se agrega en la copia, como el versionado de arriba.
+sed -i 's#</head>#<script defer src="https://stats.jape.com.ar/s.js" data-website-id="0f376c42-02fd-46d7-af54-ff73027ce08a" data-domains="darwinbots-wasm.org"></script>\n</head>#' "$DEST/classic/index.html"
+test "$(grep -c 'stats.jape.com.ar/s.js' "$DEST/classic/index.html")" -eq 1
+
 echo "sitio armado en $DEST (version $V)"

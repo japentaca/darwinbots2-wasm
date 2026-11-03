@@ -23,6 +23,7 @@ Como `PLAN.md`, es un añadido fuera de etapa: no se registra en `spec/`.
 | S10 | La app enlaza al manual | Un «?» en cada pantalla abre su página (`../manual/…`); en el editor de ADN, el resumen de un sysvar u operador al pasar el cursor enlaza a su página; Experimentar avanzado y el inspector enlazan sus entradas. |
 | S11 | Idioma | Español primero; el inglés (`/en/`, `/en/manual/`) se traduce después, con un test de paridad. Sysvars, opcodes y nombres de bots no se traducen (decisión 4). |
 | S12 | Verificación | Cada capítulo lo revisa un agente distinto del redactor, que contrasta cada afirmación con la spec y deja la cita (`10-CICLO §4`) en un comentario del `.md`. Los ejemplos de ADN pasan `db_dna_lint`; los que dicen «hace X» se corren unos ciclos sin dibujar y se comprueba X. |
+| S13 | Analítica | Umami propio en `stats.jape.com.ar` (sin cookies, no guarda datos personales), sitio `darwinbots-wasm.org` con un solo id para todo. El script va en las portadas (`publico/`), en cada página del manual (`ANALITICA` en `generar.mjs`), en la app (`web2/index.html`; `src/lib/analitica.js` avisa cada cambio de `#hash` como una vista, porque el script solo ve `pushState`) y en la clásica, que está congelada: lo agrega `armar-sitio.sh` en la copia. `data-domains` deja afuera `npm run dev` y las pruebas locales. Decidido por el autor (2026-11-03). |
 
 ## Despliegue
 
